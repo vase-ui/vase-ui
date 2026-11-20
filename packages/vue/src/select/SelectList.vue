@@ -28,9 +28,15 @@ const state: SelectListState = {};
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 watch(
   [element, elementId],
-  ([list, current]) => {
+  ([list, current], _, onCleanup) => {
+    if (!list) return;
     context.listElement.value = list;
-    context.listId.value = list ? current : undefined;
+    context.listId.value = current;
+    onCleanup(() => {
+      if (context.listElement.value !== list) return;
+      context.listElement.value = null;
+      context.listId.value = undefined;
+    });
   },
   { flush: 'sync', immediate: true },
 );

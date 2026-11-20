@@ -129,6 +129,21 @@ describe('the parts', () => {
     expect(trigger()).toHaveAttribute('aria-controls', 'second');
   });
 
+  test('a Select.List that leaves gives the listbox back to the popup, and a popup that leaves is no longer named', async () => {
+    const show = reactive({ list: true, popup: true });
+    await mountSelect({ list: {}, show, root: { defaultOpen: true } });
+    await opened();
+    expect(trigger()).toHaveAttribute('aria-controls', byTestId('list').id);
+    show.list = false;
+    await nextTick();
+    expect(popup()).toHaveAttribute('role', 'listbox');
+    expect(trigger()).toHaveAttribute('aria-controls', popup().id);
+    show.popup = false;
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger()).not.toHaveAttribute('aria-controls');
+  });
+
   test('render the tag of `as`', async () => {
     await mountSelect({ root: { as: 'section' }, trigger: { as: 'span' }, value: { as: 'b' } });
     expect(byTestId('root').localName).toBe('section');
@@ -919,6 +934,22 @@ describe('item alignment', () => {
     await userEvent.click(trigger());
     await opened();
     expectAligned('right');
+  });
+
+  test('with no Select.Value, puts the popup at the inline start of the trigger', async () => {
+    const show = reactive({ value: true });
+    await mountSelect({
+      ...aligned,
+      show,
+      root: { defaultValue: 'banana' },
+      trigger: { style: 'margin: 200px 0 0 100px' },
+    });
+    show.value = false;
+    await nextTick();
+    await userEvent.click(trigger());
+    await opened();
+    const left = byTestId('positioner').getBoundingClientRect().left;
+    expect(Math.abs(left - trigger().getBoundingClientRect().left)).toBeLessThan(1);
   });
 
   test('goes to the anchored place for an open whose trigger is near the top of the view', async () => {

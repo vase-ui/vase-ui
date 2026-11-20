@@ -26,7 +26,17 @@ defineSlots<{
 const context = injectSelectRoot('Value');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-watch(element, (span) => (context.valueElement.value = span), { flush: 'sync', immediate: true });
+watch(
+  element,
+  (span, _, onCleanup) => {
+    if (!span) return;
+    context.valueElement.value = span;
+    onCleanup(() => {
+      if (context.valueElement.value === span) context.valueElement.value = null;
+    });
+  },
+  { flush: 'sync', immediate: true },
+);
 
 const state = computed<SelectValueState>(() => ({
   value: context.value,

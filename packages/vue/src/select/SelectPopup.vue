@@ -52,11 +52,14 @@ const elementId = computed(() => givenId(props.id) ?? generatedId);
 watch(element, (popup) => root.setPopup(popup), { flush: 'sync', immediate: true });
 watch(
   [element, elementId],
-  ([popup, current]) => (context.popupId.value = popup ? current : undefined),
-  {
-    flush: 'sync',
-    immediate: true,
+  ([popup, current], _, onCleanup) => {
+    if (!popup) return;
+    context.popupId.value = current;
+    onCleanup(() => {
+      if (context.popupId.value === current) context.popupId.value = undefined;
+    });
   },
+  { flush: 'sync', immediate: true },
 );
 watch(
   () => props.finalFocus,
