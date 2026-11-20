@@ -89,7 +89,6 @@ function onPointerdown(event: PointerEvent) {
   };
   press = started;
   timer.start(LONG_PRESS, () => {
-    press = null;
     menu.setAnchor(at(started.x, started.y, started.type === 'touch' ? 10 : 0));
     root.request(true, 'trigger-press', started.event);
     if (root.open) skipsLift.value = true;

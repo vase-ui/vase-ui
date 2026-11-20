@@ -118,6 +118,12 @@ describe('the open', () => {
     expect(popup()).toBe(null);
   });
 
+  test('a root that opens with no press opens at the top left of the view', async () => {
+    await mountContextMenu({ root: { defaultOpen: true } });
+    await placed();
+    expect(popup()!.checkVisibility()).toBe(true);
+  });
+
   test('a disabled root prevents nothing and opens nothing', async () => {
     const { trigger } = await mountContextMenu({ root: { disabled: true } });
     const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
@@ -152,7 +158,7 @@ describe('press, drag, release', () => {
 
   test('a release outside closes the menu only after 500 ms; a release within 8 px of the point keeps it', async () => {
     const log: string[] = [];
-    await mountContextMenu({ root: rootEvents(log) });
+    const { trigger } = await mountContextMenu({ root: rootEvents(log) });
     await rightPress(100, 80);
     await placed();
     await rightRelease({ x: 104, y: 84 });
@@ -160,9 +166,22 @@ describe('press, drag, release', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()).toBe(null));
     log.length = 0;
-    await rightPress(100, 80);
+    // A press and a release in one task: the release comes before 500 ms on a busy machine too.
+    trigger.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 100,
+        clientY: 80,
+        buttons: 2,
+      }),
+    );
+    document
+      .getElementById('outside')!
+      .dispatchEvent(
+        new PointerEvent('pointerup', { bubbles: true, button: 2, clientX: 250, clientY: 180 }),
+      );
     await placed();
-    await rightRelease({ x: 250, y: 180 });
     expect(popup()).not.toBe(null);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()).toBe(null));

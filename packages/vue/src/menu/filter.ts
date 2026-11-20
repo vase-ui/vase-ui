@@ -144,7 +144,6 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
         event.preventDefault();
         submenu.openWithKey('first', 'list-navigation', event, highlighted?.element);
       } else if (event.key === start && atStart && menu.parent) {
-        event.preventDefault();
         menu.root.request(false, 'list-navigation', event);
       } else if (empty) {
         menu.passUp(event);
@@ -171,7 +170,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
     },
     takePointer() {
       const element = input.value;
-      if (!menu || !element) return;
+      if (!menu) return;
       const doc = ownerDocument(element);
       const active = activeElement(doc);
       const popup = menu.root.popup;

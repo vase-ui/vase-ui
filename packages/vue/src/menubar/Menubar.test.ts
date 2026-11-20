@@ -117,6 +117,25 @@ describe('while a menu of the bar is open', () => {
     expect(popupOf('edit')).not.toBe(null);
   });
 
+  test('an arrow key of the bar that moves to the next menu prevents its default; with `loopFocus` false, the key at the end keeps the menu open', async () => {
+    const log: string[] = [];
+    await mountBar({ roots: logged(log), bar: { loopFocus: false } });
+    element('view').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(element('view-1')));
+    let right: KeyboardEvent | undefined;
+    document.addEventListener('keydown', (event) => (right ??= event), { once: true });
+    await userEvent.keyboard('{ArrowRight}');
+    expect(right?.defaultPrevented).toBe(false);
+    expect(popupOf('view')).not.toBe(null);
+    expect(log).toEqual(['view true list-navigation']);
+    let left: KeyboardEvent | undefined;
+    document.addEventListener('keydown', (event) => (left ??= event), { once: true });
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(left?.defaultPrevented).toBe(true);
+    await waitFor(() => expect(popupOf('edit')).not.toBe(null));
+  });
+
   test('`openOnHover` false keeps the menu of a trigger closed at a pointer move', async () => {
     await mountBar({ triggers: { edit: { openOnHover: false } } });
     await userEvent.click(element('file'));

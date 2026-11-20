@@ -12,6 +12,7 @@ type Item = {
   native?: boolean;
   hidden?: boolean;
   link?: boolean;
+  absent?: boolean;
 };
 
 const item = (key: string) => document.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
@@ -129,6 +130,13 @@ describe('the keys that the list does not use', () => {
     await nextTick();
     expect(highlighted()).toBe('a');
     expect(composing.defaultPrevented).toBe(false);
+  });
+
+  test('an item that renders no element is out of the list', async () => {
+    await mountList({ items: [{ key: 'a' }, { key: 'x', absent: true }, { key: 'b' }] });
+    container().focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    expect(highlighted()).toBe('b');
   });
 
   test('an empty list does not prevent an arrow key', async () => {

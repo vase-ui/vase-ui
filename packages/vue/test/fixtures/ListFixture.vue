@@ -11,6 +11,7 @@ type Item = {
   native?: boolean;
   hidden?: boolean;
   link?: boolean;
+  absent?: boolean;
 };
 
 // A list of items in a box that scrolls, with an input that owns the focus in virtual mode.
@@ -66,6 +67,7 @@ function onKeydown(event: KeyboardEvent) {
       :native="item.native"
       :hidden="item.hidden"
       :link="item.link"
+      :absent="item.absent"
     />
   </div>
 </template>

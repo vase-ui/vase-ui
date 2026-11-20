@@ -7,6 +7,7 @@ import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
 import MenuEachPartSlot from '../../test/fixtures/MenuEachPartSlot.vue';
+import MenuHandleTrigger from '../../test/fixtures/MenuHandleTrigger.vue';
 import MenuPartAlone from '../../test/fixtures/MenuPartAlone.vue';
 import MenuViewportParts from '../../test/fixtures/MenuViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
@@ -146,11 +147,12 @@ describe('the parts', () => {
     await placed();
     expect(trigger).toHaveAttribute('aria-controls', byTestId('list')!.id);
     expect(byTestId('group')).toHaveAttribute('aria-labelledby', byTestId('group-label')!.id);
-    shown.list = false;
     shown.label = false;
     await nextTick();
-    expect(trigger).toHaveAttribute('aria-controls', popup()!.id);
     expect(byTestId('group')).not.toHaveAttribute('aria-labelledby');
+    shown.list = false;
+    await nextTick();
+    expect(trigger).toHaveAttribute('aria-controls', popup()!.id);
     shown.popup = false;
     await nextTick();
     expect(trigger).not.toHaveAttribute('aria-controls');
@@ -359,6 +361,14 @@ describe('the trigger', () => {
     await opened();
   });
 
+  test('the keys on a trigger of a handle that no root uses do nothing', async () => {
+    mount(MenuHandleTrigger);
+    await nextTick();
+    byTestId('trigger')!.focus();
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(popup()).toBe(null);
+  });
+
   test('a click with no press, as `click()` gives, opens the menu', async () => {
     const { trigger } = await mountMenu();
     trigger.click();
@@ -449,6 +459,18 @@ describe('press, drag, release', () => {
     await placed();
     expect(document.elementFromPoint(point.x, point.y)).not.toBe(trigger);
     await release();
+    expect(popup()).not.toBe(null);
+  });
+
+  test('a release in the popup but on no item keeps the menu open', async () => {
+    const { trigger } = await mountMenu({ list: {} });
+    const { release } = await holdPress(trigger);
+    await placed();
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    const text = [...popup()!.querySelectorAll('span')].find(
+      (span) => span.textContent === 'Text',
+    )!;
+    await release(centerOf(text));
     expect(popup()).not.toBe(null);
   });
 
@@ -579,13 +601,13 @@ describe('the keys of the list', () => {
     expect(active()).toBe(item('a'));
   });
 
-  test('a key open, a close and a press: the press opens the menu with no highlight', async () => {
-    const { trigger } = await mountMenu();
+  test('a key open, a close and a press: the press opens the menu with no highlight, also with `keepMounted`', async () => {
+    const { trigger } = await mountMenu({ portal: { keepMounted: true } });
     trigger.focus();
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(active()).toBe(item('a')));
     await userEvent.keyboard('{Escape}');
-    await closed();
+    await waitFor(() => expect(popup()).toHaveAttribute('hidden'));
     await userEvent.click(trigger);
     await waitFor(() => expect(active()).toBe(popup()));
     expect(document.querySelector('[data-highlighted]')).toBe(null);
@@ -1067,6 +1089,35 @@ describe('submenus', () => {
     expect(sub).toEqual(['true trigger-hover', 'false sibling-open']);
   });
 
+  test('a mouse press on a submenu trigger that opens on hover opens nothing before the delay', async () => {
+    const { trigger } = await mountMenu({ submenu: { trigger: { delay: 1000 } } });
+    await userEvent.click(trigger);
+    await placed();
+    await userEvent.click(item('sub'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(subPopup()).toBe(null);
+  });
+
+  test('a submenu trigger with `openOnHover` false: a key on the open submenu highlights its first item, and a later press opens it with no highlight', async () => {
+    const { trigger } = await mountMenu({ submenu: { trigger: { openOnHover: false } } });
+    await openWithKeyboard(trigger);
+    await userEvent.keyboard('{End}{Enter}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowLeft}');
+    await closed(subPopup);
+    await userEvent.click(item('sub'));
+    await opened(subPopup);
+    expect(active()).toBe(item('sub'));
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowLeft}');
+    await closed(subPopup);
+    await userEvent.click(item('sub'));
+    await opened(subPopup);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(item('s1')).not.toHaveAttribute('data-highlighted');
+  });
+
   test('a mouse press on a submenu trigger that opens on hover does nothing; with `openOnHover` false it toggles', async () => {
     const { trigger } = await mountMenu({ submenu: { trigger: { openOnHover: false } } });
     await userEvent.click(trigger);
@@ -1165,12 +1216,16 @@ describe('the arrow and the anchor', () => {
   const centerX = (element: Element) => centerOf(element).x;
 
   test('the arrow points to the center of the trigger', async () => {
-    const { trigger } = await mountMenu({ arrow });
+    const { trigger } = await mountMenu({
+      arrow,
+      positioner: { align: 'start' },
+      items: [{ key: 'a', text: 'An item with a long text' }],
+    });
     await userEvent.click(trigger);
     await placed();
     const element = byTestId('arrow')!;
     await waitFor(() => expect(Math.abs(centerX(element) - centerX(trigger))).toBeLessThan(1));
-    expect(element).toHaveAttribute('data-align', 'center');
+    expect(element).toHaveAttribute('data-align', 'start');
     expect(element).not.toHaveAttribute('data-uncentered');
   });
 
@@ -1225,6 +1280,8 @@ describe('the viewport', () => {
       observer.disconnect();
     }
     expect(sizes).not.toEqual([]);
+    // At the end of the animation the popup has no size of its own.
+    expect(element.style.getPropertyValue('--popup-height')).toBe('');
   });
 });
 

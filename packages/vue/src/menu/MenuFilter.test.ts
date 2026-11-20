@@ -246,8 +246,8 @@ describe('the highlight', () => {
     expect(clicks).toEqual(['false']);
     const stop = (event: KeyboardEvent) => event.preventDefault();
     popup()!.addEventListener('keydown', stop, { capture: true });
-    await userEvent.keyboard('{ArrowDown}');
-    expect(highlighted()).toBe('apple');
+    await userEvent.keyboard('{Enter}');
+    expect(clicks).toEqual(['false']);
     popup()!.removeEventListener('keydown', stop, { capture: true });
   });
 

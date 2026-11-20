@@ -226,7 +226,11 @@ export function useMenuRoot<Payload>(
   const hover = shallowRef<{ readonly inTriangle: boolean; readonly closeDelay: number } | null>(
     null,
   );
-  const anchor = shallowRef<VirtualElement>();
+  // A context menu that opens with no press, as with `defaultOpen`, opens at the top left of the
+  // view.
+  const anchor = shallowRef<VirtualElement | undefined>(
+    place === 'context' ? { getBoundingClientRect: () => new DOMRect() } : undefined,
+  );
   const filter = provider ? useMenuFilter(provider) : null;
 
   const fullWidth = shallowRef(false);

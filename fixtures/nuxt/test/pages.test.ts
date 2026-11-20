@@ -1210,23 +1210,24 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
-// A server renders the bar with its native buttons: the bar gives its one tab stop after the mount.
-// It renders no popup.
-async function expectMenubarPage(page: Page) {
+// A server renders the bar with its native buttons: the bar gives its one tab stop, to the first
+// trigger, after the mount. It renders no popup.
+async function expectMenubarPage(page: Page, { hydrated }: { hydrated: boolean }) {
   expect(await readAttributes(page.getByTestId('menubar'), ['role', 'aria-orientation'])).toEqual({
     role: 'menubar',
     'aria-orientation': 'horizontal',
   });
 
   const attributeNames = ['role', 'aria-haspopup', 'aria-expanded', 'tabindex'];
-  const trigger = {
-    role: 'menuitem',
-    'aria-haspopup': 'menu',
-    'aria-expanded': 'false',
-    tabindex: null,
-  };
-  expect(await readAttributes(page.getByTestId('file'), attributeNames)).toEqual(trigger);
-  expect(await readAttributes(page.getByTestId('edit'), attributeNames)).toEqual(trigger);
+  const trigger = { role: 'menuitem', 'aria-haspopup': 'menu', 'aria-expanded': 'false' };
+  expect(await readAttributes(page.getByTestId('file'), attributeNames)).toEqual({
+    ...trigger,
+    tabindex: hydrated ? '0' : null,
+  });
+  expect(await readAttributes(page.getByTestId('edit'), attributeNames)).toEqual({
+    ...trigger,
+    tabindex: hydrated ? '-1' : null,
+  });
   expect(await page.locator('[role="menu"]').count()).toBe(0);
 }
 
@@ -1922,7 +1923,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
   },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
-  { path: '/menubar', expectPage: expectMenubarPage },
+  {
+    path: '/menubar',
+    expectPage: (page) => expectMenubarPage(page, { hydrated: false }),
+    expectHydratedPage: (page) => expectMenubarPage(page, { hydrated: true }),
+  },
   {
     path: '/context-menu',
     expectPage: expectContextMenuPageOnServer,

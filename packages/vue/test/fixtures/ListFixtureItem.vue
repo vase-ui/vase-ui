@@ -9,6 +9,8 @@ const props = defineProps<{
   native?: boolean;
   hidden?: boolean;
   link?: boolean;
+  /** The item renders no element. */
+  absent?: boolean;
 }>();
 const list = inject<List>('list')!;
 const element = shallowRef<HTMLElement | null>(null);
@@ -20,8 +22,9 @@ const setElement = (el: unknown) => (element.value = el as HTMLElement | null);
 </script>
 
 <template>
+  <template v-if="absent" />
   <button
-    v-if="native"
+    v-else-if="native"
     v-bind="mergeProps(attributes, { 'data-key': itemKey })"
     :ref="setElement"
     :disabled="disabled"
