@@ -56,7 +56,7 @@
       "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Switch` is the part: one native `<input type=\"checkbox\" role=\"switch\">`, so it needs no `nativeButton`. Its types are `Switch.Props`, `Switch.State` and `Switch.ChangeEventReason`, and the flat names `SwitchProps`, `SwitchState` and `SwitchChangeEventReason`. `readonly` is in place of `readOnly`, and `value` and `form` are plain attributes. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required` and `[aria-readonly=\"true\"]`, so the input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required` and `data-readonly`."
+      "reason": "`Switch` is the part: one native `<input type=\"checkbox\" role=\"switch\">`, so it needs no `nativeButton`. Its types are `Switch.Props`, `Switch.State` and `Switch.ChangeEventReason`, and the flat names `SwitchProps`, `SwitchState` and `SwitchChangeEventReason`. `readonly` is in place of `readOnly`, and `value` and `form` are plain attributes. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required`, `:focus`, `[aria-readonly=\"true\"]` and `[aria-invalid=\"true\"]`, so the input has no `data-checked`, `data-unchecked`, `data-filled`, `data-disabled`, `data-required`, `data-focused`, `data-readonly` and `data-invalid`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/switch/types.md",

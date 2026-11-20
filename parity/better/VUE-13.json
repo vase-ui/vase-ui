@@ -5,6 +5,6 @@
     "https://vuejs.org/api/reactivity-core.html#watch",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/form/Form.tsx#L71-L75"
   ],
-  "behavior": "`Form` follows a change that the developer makes in place to a reactive `errors` object, such as a new key or a new message in an array. Base UI sees only a new object.",
+  "behavior": "`Form` follows a change in place to a reactive `errors` object, such as a new key or a new message in an array. Base UI sees only a new object.",
   "dueWith": "packages/react/src/form/Form.tsx"
 }

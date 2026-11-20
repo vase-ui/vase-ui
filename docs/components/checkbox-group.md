@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue checkbox group component that provides shared state to a series of checkboxes.
+description: An unstyled Vue checkbox group component that holds the shared state of a series of checkboxes.
 ---
 
 <script setup lang="ts">
@@ -80,7 +80,7 @@ To make a checkbox that controls the other checkboxes of a `CheckboxGroup`:
 1. Give the values of all the child checkboxes to the `allValues` prop of `CheckboxGroup`.
 2. Give the `parent` prop to the parent `Checkbox`.
 
-The group can be controlled or uncontrolled. The parent checkbox is indeterminate while some, but not all, child checkboxes are checked. Then the first click on the parent checks all of them, the second click clears them, and the third click gives back the selection of the children. A disabled child keeps its state.
+The group can be controlled or uncontrolled. The parent checkbox is indeterminate while some, but not all, child checkboxes are checked. Then the first click on the parent checks all of them, and the second click clears them. The third click checks the same children as before the first click. A disabled child keeps its state.
 
 <DemoFrame>
   <DemoCheckboxGroupParent />

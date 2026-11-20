@@ -47,7 +47,7 @@ A group of parts that gives a form control a label and validation.
 
 ## Anatomy
 
-Import the component and assemble its parts:
+Import the components and assemble their parts:
 
 <<< ./field/Anatomy.vue
 
@@ -55,7 +55,7 @@ Import the component and assemble its parts:
 
 ### Show a message for one failure
 
-The default slot of `Field.Root` gives the validity, the errors and the value of the field. Use it to show a message for one failure:
+The default slot of `Field.Root` gives the validity, the errors and the value of the field. Use them in the content of a `Field.Error`, so that the control names the message in `aria-describedby`:
 
 <<< ./field/RootSlot.vue
 

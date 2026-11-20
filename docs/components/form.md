@@ -94,7 +94,7 @@ The demo keeps the response in one state object. It disables the button while th
 
 ### Submit form values as a JavaScript object
 
-The second argument of `submit` has the values of the form in an object, by the `name` of each field that is not disabled. Use it to change the values before you send them, or to send them to an API. Each value has the type that its control gives: a string for `Input`, a boolean for `Checkbox` and `Switch`, and the value of a `RadioGroup` or of a `CheckboxGroup`.
+The second argument of `submit` has the values of the form in an object, by the `name` of each field that is not disabled. Use it to change the values before you send them, or to send them to an API. Each value has the type that its control gives. `Input` gives a string, `Checkbox` and `Switch` give a boolean, and `RadioGroup` and `CheckboxGroup` give their value.
 
 <<< ./form/FormSubmit.vue
 

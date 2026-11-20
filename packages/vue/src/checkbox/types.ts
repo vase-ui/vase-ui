@@ -21,7 +21,8 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
    */
   modelValue?: boolean;
   /**
-   * The checked state at the mount of a checkbox that has no `modelValue`.
+   * The checked state of a checkbox that has no `modelValue`, at the mount and at a native reset of
+   * the form.
    * @default false
    */
   defaultChecked?: boolean;
@@ -58,8 +59,8 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
   value?: string;
   /**
    * The value in the data of a form while the checkbox is unchecked. The form gets it after the
-   * mount, from an enabled checkbox that has a name. A checkbox in a group and the parent checkbox
-   * ignore it.
+   * mount, from an enabled checkbox that has a name. The parent checkbox and a checkbox with a
+   * `value` in a group ignore it.
    */
   uncheckedValue?: string;
   /** The `id` of the checkbox. With no `id`, the checkbox has an id of its own. */

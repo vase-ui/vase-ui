@@ -1,6 +1,6 @@
 {
   "id": "VUE-2",
   "evidence": ["https://github.com/mui/base-ui/issues/5597"],
-  "behavior": "The server HTML of `RadioGroup` has its role, the id of its label in `aria-labelledby`, the checked radio, and the name and the value of each radio. The checked radio has the tab stop before and after the hydration.",
+  "behavior": "The server HTML of `RadioGroup` has its role and the id of its label in `aria-labelledby`. It also has the checked radio, and the name and the value of each radio. The checked radio has the tab stop before and after the hydration.",
   "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
 }

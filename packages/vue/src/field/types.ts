@@ -27,9 +27,10 @@ export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
     formValues: FormValues,
   ) => FieldValidateResult | Promise<FieldValidateResult>;
   /**
-   * When the field validates its control: `'submit'` at each submit of the form and, after the
-   * first submit, at each change; `'blur'` when the focus leaves the control; `'change'` at each
-   * change. With no `validationMode`, the field takes the mode of its form, or else `'submit'`.
+   * The moments when the field validates its control. With `'submit'`, the field validates at each
+   * submit of the form, and at each change after the first submit. With `'blur'`, it validates when
+   * the focus leaves the control. With `'change'`, it validates at each change. With no
+   * `validationMode`, the field takes the mode of its form, or else `'submit'`.
    */
   validationMode?: FormValidationMode;
   /**

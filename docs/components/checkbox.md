@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue checkbox component that is easy to customize.
+description: An unstyled Vue checkbox component that you can style.
 ---
 
 <script setup lang="ts">
@@ -47,7 +47,7 @@ A native checkbox that you can style.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the checkbox a `<label>` element, or put it in a `Field`. See [Labeling a checkbox](#labeling-a-checkbox) and the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Give the checkbox a `<label>` element, or a `Field.Label` in a `Field`. See [Labeling a checkbox](#labeling-a-checkbox) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 

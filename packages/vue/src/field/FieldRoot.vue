@@ -277,7 +277,14 @@ provide(fieldPartsKey, {
   },
 });
 
-defineExpose({ element, validate: validateAtOnce });
+defineExpose({
+  element,
+  /**
+   * Validates the field at once. A required control with no value is invalid, also when the user
+   * did not change it. It does not wait for a promise of `validate`.
+   */
+  validate: validateAtOnce,
+});
 
 function elementProps() {
   return mergeProps(fieldStateAttributes(state.value, isDisabled.value), attrs);

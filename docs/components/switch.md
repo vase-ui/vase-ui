@@ -47,7 +47,7 @@ A control that shows whether a setting is on or off.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the switch a `<label>` element, or put it in a `Field`. See [Labeling a switch](#labeling-a-switch) and the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Give the switch a `<label>` element, or a `Field.Label` in a `Field`. See [Labeling a switch](#labeling-a-switch) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 

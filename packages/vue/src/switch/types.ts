@@ -19,7 +19,7 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
    */
   modelValue?: boolean;
   /**
-   * The switch is on at the mount, when it has no `modelValue`.
+   * The switch is on at the mount and at a native reset of the form, when it has no `modelValue`.
    * @default false
    */
   defaultChecked?: boolean;

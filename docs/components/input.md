@@ -47,7 +47,7 @@ A native input element that works with [Field](/components/field).
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the input a `<label>` element, or put it in a `Field`. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Give the input a `<label>` element, or a `Field.Label` in a `Field`. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 

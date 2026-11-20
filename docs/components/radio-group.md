@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue radio group component that provides shared state to a series of radio buttons.
+description: An unstyled Vue radio group component that holds the shared state of a series of radio buttons.
 ---
 
 <script setup lang="ts">

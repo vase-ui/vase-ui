@@ -67,7 +67,7 @@
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Checkbox` is the part: one native `<input type=\"checkbox\">`, so it needs no `nativeButton`. Its types are `Checkbox.Props`, `Checkbox.State` and `Checkbox.ChangeEventReason`, and the flat names `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason`. `readonly` is in place of `readOnly`, and `form` is a plain attribute. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required`, `[aria-readonly=\"true\"]` and `[aria-invalid=\"true\"]`, so the input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-readonly` and `data-invalid`."
+      "reason": "`Checkbox` is the part: one native `<input type=\"checkbox\">`, so it needs no `nativeButton`. Its types are `Checkbox.Props`, `Checkbox.State` and `Checkbox.ChangeEventReason`, and the flat names `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason`. `readonly` is in place of `readOnly`, and `form` is a plain attribute. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required`, `:focus`, `[aria-readonly=\"true\"]` and `[aria-invalid=\"true\"]`, so the input has no `data-checked`, `data-unchecked`, `data-filled`, `data-disabled`, `data-required`, `data-focused`, `data-readonly` and `data-invalid`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",

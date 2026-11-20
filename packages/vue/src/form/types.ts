@@ -12,9 +12,10 @@ export interface FormProps<
    */
   errors?: FormErrors;
   /**
-   * When the fields of the form validate: `'submit'` at each submit and, after the first submit, at
-   * each change; `'blur'` when the focus leaves a control; `'change'` at each change. The
-   * `validationMode` of a `Field.Root` wins.
+   * The moments when the fields of the form validate. With `'submit'`, a field validates at each
+   * submit, and at each change after the first submit. With `'blur'`, it validates when the focus
+   * leaves its control. With `'change'`, it validates at each change. The `validationMode` of a
+   * `Field.Root` wins.
    * @default 'submit'
    */
   validationMode?: FormValidationMode;
