@@ -35,7 +35,10 @@ export interface AlertDialogRootProps<Payload = unknown> extends Omit<
   DialogRootProps<Payload>,
   'modal' | 'disablePointerDismissal' | 'handle'
 > {
-  /** Connects the root to triggers outside it and to code. */
+  /**
+   * Connects the root to triggers outside it and to code. The type refuses a handle from
+   * `Dialog.createHandle()`.
+   */
   handle?: AlertDialogHandle<Payload> | undefined;
 }
 
@@ -43,6 +46,7 @@ export interface AlertDialogRootState {}
 
 export interface AlertDialogTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /** The root names the active trigger by this id in `triggerId`. */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -51,7 +55,10 @@ export interface AlertDialogTriggerProps<Payload = unknown>
   disabled?: boolean | undefined;
   /** The payload that the alert dialog gets when this trigger opens it. */
   payload?: Payload | undefined;
-  /** Connects the trigger to a root outside it. */
+  /**
+   * Connects the trigger to a root outside it. The type refuses a handle from
+   * `Dialog.createHandle()`.
+   */
   handle?: AlertDialogHandle<Payload> | undefined;
 }
 

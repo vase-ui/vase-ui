@@ -5,6 +5,7 @@ description: An unstyled Vue alert dialog component that needs a response from t
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAlertDialogDetachedTriggersControlled from '../demos/alert-dialog/detached-triggers-controlled/css-modules/index.vue';
@@ -56,10 +57,6 @@ Import the component and assemble its parts:
 
 <<< ./alert-dialog/Anatomy.vue
 
-The popup has the role `alertdialog`. An alert dialog is always modal, and a press outside the popup does not close it. The Escape key and `AlertDialog.Close` close it. `AlertDialog.Root` has no `modal` prop and no `disablePointerDismissal` prop.
-
-Put the popup and the backdrop each in a `<Transition appear>` to animate them, and select the parts with the selectors of Dialog. See [Animation](/components/dialog#animation) and [Styling](/components/dialog#styling).
-
 ## Examples
 
 ### Detached triggers
@@ -109,7 +106,7 @@ More than one trigger can open the same alert dialog. Give the same `handle` to 
 
 <<< ./alert-dialog/MultipleDetachedTriggers.vue{8-9}
 
-The alert dialog can show different content for each trigger. Give a `payload` to each `AlertDialog.Trigger`. The default slot of `AlertDialog.Root` gets the `payload` of the trigger that opened the alert dialog.
+The alert dialog can show different content for each trigger. Give a `payload` to each `AlertDialog.Trigger`. The default slot of `AlertDialog.Root` gets the `payload` of the active trigger.
 
 The type argument of `createHandle()` gives the type of the payload:
 
@@ -117,7 +114,7 @@ The type argument of `createHandle()` gives the type of the payload:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, give `open` to `AlertDialog.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with `v-model:trigger-id` on the root and the `id` of each `AlertDialog.Trigger`.
+To control the open state, bind it with `v-model:open` on `AlertDialog.Root`. With more than one trigger, also bind the active trigger with `v-model:trigger-id`, and give an `id` to each `AlertDialog.Trigger`.
 
 The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
 
@@ -152,7 +149,7 @@ The `openChange` event gives `eventDetails` as its second argument. Its `trigger
 
 ### Open from a menu
 
-To open an alert dialog from a menu, control the open state of the alert dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
+To open an alert dialog from a menu, bind the open state of the alert dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
 
 <DemoFrame>
   <DemoAlertDialogOpenFromMenu />
@@ -183,24 +180,22 @@ To open an alert dialog from a menu, control the open state of the alert dialog 
 
 </DemoSource>
 
-## Portal target
-
-Set `to` on `AlertDialog.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
 
-## createHandle
+### createHandle
 
-Creates a handle that connects an `AlertDialog.Root` with detached `AlertDialog.Trigger` parts. The type argument of the function is the type of the payload.
+Makes a handle that connects an `AlertDialog.Root` to `AlertDialog.Trigger` parts outside it.
 
-<ApiReference name="AlertDialog.createHandle" :heading-level="3" />
+<ApiReference name="AlertDialog.createHandle" :heading-level="4" />
 
 ### Handle
 
-`AlertDialog.Handle` is the class of the handle. The types of `AlertDialog.Root` and `AlertDialog.Trigger` accept only a handle of this class, and not a handle from `Dialog.createHandle()`.
+The class of the handle, which opens and closes the alert dialog from code.
 
 <ApiReference name="AlertDialog.Handle" :heading-level="4" />
 
-`open(null)`, and `open()` with an `id` that no trigger has, open the alert dialog with no trigger. `openWithPayload()` also opens it with no trigger, and the default slot of the root gets its payload until a trigger opens the alert dialog. A `computed` that reads `isOpen` follows the open state.
+## Differences from Base UI
+
+<BaseUiDifferences />

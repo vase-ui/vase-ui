@@ -45,7 +45,7 @@
       "upstream": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/snap.test.ts",
-      "reason": "`snap.test.ts` tests the heights of the snap points: the units, the values with no height, the clamp, the last of two equal heights, an empty list and a popup with no height. `Drawer.test.ts` tests the offset of a point on the popup. A drawer has a viewport, so the case for a drawer with no viewport has no counterpart, and `KeepAlive` needs no code (section 5)."
+      "reason": "`snap.test.ts` tests the heights of the snap points: the units, the values with no height, the clamp, the last of two equal heights, an empty list and a popup with no height. `Drawer.test.ts` tests the offset of a point on the popup. A drawer has a viewport, so the case for a drawer with no viewport has no counterpart, and `KeepAlive` needs no code."
     },
     {
       "upstream": "packages/react/src/drawer/root/useDrawerSnapPoints.test.ts",
@@ -69,7 +69,7 @@
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.keyboard.test.tsx",
-      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider with the new parts. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code (section 5)."
+      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
@@ -80,161 +80,161 @@
     {
       "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopupCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeAreaDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewportCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewportDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerBackdropCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerBackdropDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerCloseDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerPopupCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerPopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerSwipeAreaDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerViewportCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "DrawerViewportDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Root",
       "prop": "onOpenChangeComplete",
       "kind": "not-applicable",
-      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+      "reason": "Listen to `@after-enter` and `@after-leave` of the `<Transition>` around the popup. They run after its animations end."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Root",
       "prop": "actionsRef",
       "kind": "not-applicable",
-      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done` (rule 8.9)."
+      "reason": "A template ref of the root has `close()`. To keep the popup until a JavaScript animation ends, give `:css=\"false\"` to the `<Transition>` around it, and call `done` in its `leave` hook."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Trigger",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The trigger reads its element to know if it is a native button, so it needs no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Close",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "`Drawer.Close` is `Dialog.Close`. The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The button reads its element to know if it is a native button, so it needs no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Portal",
       "prop": "render",
       "kind": "not-applicable",
-      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>` that renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+      "reason": "The portal is a `<Teleport>` and renders no element, so it has no `as` and no `element` slot. Put an element in the portal when you need one."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the backdrop animates it, it is in the DOM only while the drawer is open or leaves, and a kept backdrop has `[hidden]` (rules 8.9 and 8.15)."
+      "reason": "A `<Transition>` around the backdrop animates it, in place of `data-starting-style`, `data-ending-style` and the `transitionStatus` of the state. A closed backdrop leaves the DOM, or has `[hidden]` with `keepMounted`, so it needs no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the popup animates it, it is in the DOM only while the drawer is open or leaves, and a kept popup has `[hidden]`. `.x-leave-to[data-swipe-direction]` and `[data-swipe-dismiss]` select its leave (rules 8.9 and 8.15)."
+      "reason": "A `<Transition>` around the popup animates it, in place of `data-starting-style`, `data-ending-style` and the `transitionStatus` of the state. A closed popup leaves the DOM, or has `[hidden]` with `keepMounted`, so it needs no `data-open` and `data-closed`. `[data-swipe-dismiss]` and `[data-swipe-direction]` with the leave class select the leave after a swipe."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
       "entry": "Viewport",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the viewport has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: closed is `[hidden]` with `keepMounted`, or `:has(> .x-leave-active)` while its popup leaves (rules 8.9 and 8.15)."
+      "reason": "The viewport is new in the DOM at each open, so a CSS animation on it runs at the open. `:has(> .v-leave-active)` selects it while its popup leaves, and `[hidden]` while `keepMounted` keeps it closed. These take the place of `data-starting-style`, `data-ending-style`, `data-open`, `data-closed` and the `transitionStatus` of the state."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Root",
       "emit": "update:triggerId",
-      "reason": "`v-model:trigger-id` binds the `triggerId` prop, so the root emits `update:triggerId` after `openChange` (rule 8.5)."
+      "reason": "`v-model:trigger-id` binds the active trigger, as `v-model:open` binds the open state."
     },
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>`. With `disabled`, the parts render in place, also on a server. Base UI has no such prop."
+      "reason": "The portal is a `<Teleport>`. With `disabled`, it renders its content in place, also in the server HTML."
     },
     {
       "entry": "Portal",
       "prop": "defer",
-      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>`, and `defer` is a prop of `<Teleport>`. Base UI has no such prop."
+      "reason": "The portal is a `<Teleport>`. With `defer`, it moves its content after the rest of the update mounts, so its target can come later in the same template."
     },
     {
       "entry": "Trigger",
@@ -252,7 +252,7 @@
       "entry": "Popup",
       "prop": "id",
       "nativeAttribute": true,
-      "reason": "The part gives `id` to its element, or a generated id, and the trigger names it in `aria-controls`, so it is a declared prop (rule 8.4). Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `id` to its element, or a generated id, and the trigger names it in `aria-controls`, so it is a declared prop. Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Title",
@@ -277,7 +277,7 @@
     {
       "entry": "createHandle",
       "returns": "DrawerHandle<Payload>",
-      "reason": "`Drawer.Handle` is the class `DrawerHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+      "reason": "The return type names the class `DrawerHandle`, which the namespace exports as `Drawer.Handle`."
     }
   ],
   "notApplicableCommits": [],
