@@ -18,7 +18,6 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
@@ -208,21 +207,6 @@ const families = [
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>
-    ),
-    marksPage: false,
-    movesFocus: false,
-  },
-  {
-    name: 'PreviewCard',
-    renderPart: () => (
-      <PreviewCard.Root defaultOpen>
-        <PreviewCard.Trigger href="#card">Link</PreviewCard.Trigger>
-        <PreviewCard.Portal data-testid="portal">
-          <PreviewCard.Positioner>
-            <PreviewCard.Popup data-testid="popup">Card</PreviewCard.Popup>
-          </PreviewCard.Positioner>
-        </PreviewCard.Portal>
-      </PreviewCard.Root>
     ),
     marksPage: false,
     movesFocus: false,

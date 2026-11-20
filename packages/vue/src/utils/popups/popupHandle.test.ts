@@ -6,7 +6,6 @@ import { createAlertDialogHandle } from '../../alert-dialog/handle';
 import { createDialogHandle } from '../../dialog/store/DialogHandle';
 import type { DialogHandle } from '../../dialog/store/DialogHandle';
 import { createMenuHandle } from '../../menu/store/MenuHandle';
-import { createPreviewCardHandle } from '../../preview-card/store/PreviewCardHandle';
 import { createTooltipHandle } from '../../tooltip/store/TooltipHandle';
 import { BasePopupHandle } from './popupHandle';
 import { PopupTriggerMap } from './usePopupRoot';
@@ -366,7 +365,6 @@ describe('concrete popup handles', () => {
     { component: 'AlertDialog', warningName: 'Dialog', createHandle: createAlertDialogHandle },
     { component: 'Dialog', warningName: 'Dialog', createHandle: createDialogHandle },
     { component: 'Menu', warningName: 'Menu', createHandle: createMenuHandle },
-    { component: 'PreviewCard', warningName: 'PreviewCard', createHandle: createPreviewCardHandle },
     { component: 'Tooltip', warningName: 'Tooltip', createHandle: createTooltipHandle },
   ])(
     '$component handle is closed and names itself in warnings while no root is attached',

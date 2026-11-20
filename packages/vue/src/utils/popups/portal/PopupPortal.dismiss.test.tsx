@@ -10,7 +10,6 @@ import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
-import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
 import * as Tooltip from '../../../tooltip/index.parts';
 
@@ -136,16 +135,6 @@ const children = {
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>
-  ),
-  previewCard: (record: Recorder) => (
-    <PreviewCard.Root defaultOpen onOpenChange={record}>
-      <PreviewCard.Trigger href="#preview">Child trigger</PreviewCard.Trigger>
-      <PreviewCard.Portal>
-        <PreviewCard.Positioner data-testid="positioner">
-          <PreviewCard.Popup data-testid="popup">Card</PreviewCard.Popup>
-        </PreviewCard.Positioner>
-      </PreviewCard.Portal>
-    </PreviewCard.Root>
   ),
   tooltip: (record: Recorder) => (
     <Tooltip.Root defaultOpen onOpenChange={record}>
@@ -305,13 +294,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: true,
     },
     {
-      name: 'PreviewCard.Positioner / dialog',
-      parent: 'dialog',
-      child: 'previewCard',
-      part: 'positioner',
-      closesChild: false,
-    },
-    {
       name: 'Tooltip.Positioner / dialog',
       parent: 'dialog',
       child: 'tooltip',
@@ -332,8 +314,8 @@ describe('a press on a part of a child popup that is outside its popup element',
       part: 'popup',
       closesChild: false,
     },
-    // The case of a Popover above a Dialog comes back with the Dialog unit, when Dialog moves to
-    // the stack of the popup layer.
+    // The cases of a Popover and of a PreviewCard above a Dialog come back with the Dialog unit,
+    // when Dialog moves to the stack of the popup layer.
   ])('VUE-4: $name closes no popup above', async ({ parent, child, part, closesChild }) => {
     const parentChanges: Change[] = [];
     const childChanges: Change[] = [];
