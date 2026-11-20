@@ -25,7 +25,15 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const state: SelectListState = {};
 
-watch(element, (list) => (context.listElement.value = list), { flush: 'sync', immediate: true });
+const elementId = computed(() => givenId(props.id) ?? generatedId);
+watch(
+  [element, elementId],
+  ([list, current]) => {
+    context.listElement.value = list;
+    context.listId.value = list ? current : undefined;
+  },
+  { flush: 'sync', immediate: true },
+);
 
 const hidesScrollbar = computed(
   () => (context.arrows.value > 0 && context.root.interaction !== 'touch') || context.aligned.value,
@@ -35,7 +43,7 @@ useStyleDisableScrollbar(() => (hidesScrollbar.value ? element.value : null));
 function elementProps() {
   return mergeProps(
     {
-      id: givenId(props.id) ?? generatedId,
+      id: elementId.value,
       role: 'listbox',
       tabindex: -1,
       'aria-multiselectable': context.multiple ? 'true' : undefined,

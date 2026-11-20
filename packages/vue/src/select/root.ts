@@ -75,6 +75,9 @@ export interface SelectContext {
   readonly side: ShallowRef<Side | 'none' | null>;
   /** The popup element shows. */
   readonly popupShown: ShallowRef<boolean>;
+  /** The `id` of the mounted popup, and of the mounted `Select.List`, for `aria-controls`. */
+  readonly popupId: ShallowRef<string | undefined>;
+  readonly listId: ShallowRef<string | undefined>;
   /** The list can scroll up and down. */
   readonly scrollable: ShallowRef<{ up: boolean; down: boolean }>;
   /** The number of mounted scroll arrows. */
@@ -178,6 +181,8 @@ export function useSelectRoot(
   const aligned = shallowRef(false);
   const side = shallowRef<Side | 'none' | null>(null);
   const popupShown = shallowRef(false);
+  const popupId = shallowRef<string>();
+  const listId = shallowRef<string>();
   const scrollable = shallowRef({ up: false, down: false });
   const arrows = shallowRef(0);
   const finalFocus = shallowRef<FocusTarget>();
@@ -384,6 +389,8 @@ export function useSelectRoot(
     aligned,
     side,
     popupShown,
+    popupId,
+    listId,
     scrollable,
     arrows,
     finalFocus,

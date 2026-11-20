@@ -117,6 +117,18 @@ describe('the parts', () => {
     expect(trigger()).toHaveAttribute('aria-readonly', 'true');
   });
 
+  test('VUE-73: aria-controls of the open trigger follows the id of the popup', async () => {
+    const popupProps = reactive<Props>({ id: 'first' });
+    await mountSelect({ popup: popupProps });
+    expect(trigger()).not.toHaveAttribute('aria-controls');
+    await userEvent.click(trigger());
+    await opened();
+    expect(trigger()).toHaveAttribute('aria-controls', 'first');
+    popupProps.id = 'second';
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-controls', 'second');
+  });
+
   test('render the tag of `as`', async () => {
     await mountSelect({ root: { as: 'section' }, trigger: { as: 'span' }, value: { as: 'b' } });
     expect(byTestId('root').localName).toBe('section');

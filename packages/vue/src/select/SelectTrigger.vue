@@ -102,7 +102,6 @@ function onBlur(event: FocusEvent) {
 
 function elementProps() {
   const open = root.open;
-  const container = context.container();
   const merged = trigger.button.mergeAttributes(
     {
       ...(field && controlAttributes(field)),
@@ -110,7 +109,8 @@ function elementProps() {
       role: 'combobox',
       'aria-haspopup': 'listbox',
       'aria-expanded': open ? 'true' : 'false',
-      'aria-controls': open && container?.id ? container.id : undefined,
+      // The list, else the popup. A popup with a list is no listbox.
+      'aria-controls': open ? (context.listId.value ?? context.popupId.value) : undefined,
       'aria-labelledby': field?.labelId ?? context.labelId,
       'aria-readonly': context.readonly ? 'true' : undefined,
       'aria-required': context.required ? 'true' : undefined,

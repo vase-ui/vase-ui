@@ -48,7 +48,16 @@ const state = computed<SelectPopupState>(() => ({
   align: positioner.align.value,
 }));
 
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 watch(element, (popup) => root.setPopup(popup), { flush: 'sync', immediate: true });
+watch(
+  [element, elementId],
+  ([popup, current]) => (context.popupId.value = popup ? current : undefined),
+  {
+    flush: 'sync',
+    immediate: true,
+  },
+);
 watch(
   () => props.finalFocus,
   (target) => (context.finalFocus.value = target),
@@ -93,7 +102,7 @@ function elementProps() {
     : { role: 'presentation' };
   return mergeProps(
     {
-      id: givenId(props.id) ?? generatedId,
+      id: elementId.value,
       tabindex: -1,
       ...listProps,
       'data-side': state.value.side,
