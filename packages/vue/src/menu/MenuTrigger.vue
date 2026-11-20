@@ -95,8 +95,9 @@ function onPointerdown(event: PointerEvent) {
   });
 }
 
-// The `mousedown` of a press that opened the menu would give the focus back to a button in
-// Chromium and Firefox, after the popup took it (test/measurements/menu.test.ts).
+// The `mousedown` of a press that opened the menu would give the focus back to a button, after the
+// popup took it. WebKit on macOS gives a button no focus at a press
+// (test/measurements/menu.test.ts).
 function onMousedown(event: MouseEvent) {
   if (openedAtPress) event.preventDefault();
 }

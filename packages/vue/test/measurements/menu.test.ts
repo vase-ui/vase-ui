@@ -206,7 +206,7 @@ describe('Enter and Space (MM6)', () => {
 });
 
 describe('a press on a button, a drag, and the release on an item (MM7)', () => {
-  test('gives the item `pointerup` and the common ancestor `click`; the button has the focus after the press but in WebKit', async () => {
+  test('gives the item `pointerup` and the common ancestor `click`; the button has the focus after the press but in WebKit on macOS', async () => {
     html(`<button id="trigger" style="position: absolute; left: 0; top: 0; width: 100px; height: 30px">Trigger</button>
       <div id="popup" hidden style="position: absolute; left: 0; top: 40px; width: 200px">
         <div id="item" role="menuitem" style="height: 30px">Item</div></div>`);
@@ -215,7 +215,8 @@ describe('a press on a button, a drag, and the release on an item (MM7)', () => 
     try {
       await userEvent.pointer([{ coords: { x: 50, y: 15 } }, '[MouseLeft>]']);
       const focus = document.activeElement?.id || document.activeElement?.localName;
-      expect(focus).toBe(server.browser === 'webkit' ? 'body' : 'trigger');
+      const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+      expect(focus).toBe(webkitOnMac ? 'body' : 'trigger');
       await userEvent.pointer([{ coords: { x: 50, y: 55 } }, '[/MouseLeft]']);
       expect(log).toEqual(['pointerup item', 'click div']);
     } finally {

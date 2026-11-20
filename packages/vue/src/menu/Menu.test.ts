@@ -6,6 +6,7 @@ import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
+import MenuEachPartSlot from '../../test/fixtures/MenuEachPartSlot.vue';
 import MenuPartAlone from '../../test/fixtures/MenuPartAlone.vue';
 import MenuViewportParts from '../../test/fixtures/MenuViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
@@ -127,6 +128,14 @@ describe('the parts', () => {
     await waitFor(() => expect(names.filter((name) => !refs[name]?.element)).toEqual([]));
     expect(names.filter((name) => refs[name]?.element?.getAttribute('class') !== 'part')).toEqual(
       [],
+    );
+  });
+
+  test('each part with the `element` slot gives its attributes to the element of the slot, and none to the slot', async () => {
+    mount(MenuEachPartSlot);
+    await waitFor(() => expect(document.querySelectorAll('.part')).toHaveLength(18));
+    expect([...document.querySelectorAll('.part')].map((element) => element.className)).toEqual(
+      Array.from({ length: 18 }, () => 'part'),
     );
   });
 
