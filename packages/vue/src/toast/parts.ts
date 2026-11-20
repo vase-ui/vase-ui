@@ -60,7 +60,7 @@ export namespace Portal {
 /**
  * The region that holds the toasts.
  * Renders a `<div>` element.
- * @selector `[data-expanded]` The pointer is on the viewport, or the viewport has the focus.
+ * @selector `[data-expanded]` The pointer is on the viewport, or the keyboard focus is in it.
  * @cssVariable `--toast-frontmost-height` The height of the frontmost toast, in pixels.
  */
 export const Viewport: typeof ToastViewport = ToastViewport;
@@ -72,14 +72,14 @@ export namespace Viewport {
 /**
  * One toast.
  * Renders a `<div>` element.
- * @selector `[data-expanded]` The viewport is expanded: the pointer is on it, or it has the focus.
+ * @selector `[data-expanded]` The viewport is expanded: the pointer is on it, or the keyboard focus is in it.
  * @selector `[data-type]` The `type` of the toast. The toast of a `promise` call has `loading`, `success` or `error`.
  * @selector `[data-swiping]` The user swipes the toast.
- * @selector `[data-swipe-direction]` The direction of the swipe that closed the toast: `up`, `down`, `left` or `right`.
+ * @selector `[data-swipe-direction]` The direction of the swipe while the user swipes the toast, and of the swipe that closed it: `up`, `down`, `left` or `right`.
  * @selector `[inert]` The toast is over the `limit` of the provider.
  * @cssVariable `--toast-index` The place of the toast in the list. The frontmost toast has 0.
  * @cssVariable `--toast-offset-y` The vertical offset of the toast in the expanded viewport, in pixels.
- * @cssVariable `--toast-height` The height of the toast with no height of a style, in pixels.
+ * @cssVariable `--toast-height` The natural height of the toast, with `height: auto`, in pixels.
  * @cssVariable `--toast-swipe-movement-x` The horizontal movement of the swipe, in pixels.
  * @cssVariable `--toast-swipe-movement-y` The vertical movement of the swipe, in pixels.
  */
@@ -93,7 +93,7 @@ export namespace Root {
  * The container of the content of a toast.
  * Renders a `<div>` element.
  * @selector `[data-behind]` The toast is behind the frontmost toast.
- * @selector `[data-expanded]` The viewport is expanded: the pointer is on it, or it has the focus.
+ * @selector `[data-expanded]` The viewport is expanded: the pointer is on it, or the keyboard focus is in it.
  */
 export const Content: typeof ToastContent = ToastContent;
 export namespace Content {

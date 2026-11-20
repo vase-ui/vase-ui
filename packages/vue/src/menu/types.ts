@@ -192,7 +192,10 @@ export interface MenuPositionerState {
 
 export interface MenuPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  /** The trigger names the popup by this id in `aria-controls`. With no value, a generated id. */
+  /**
+   * The trigger names the popup by this id in `aria-controls`, when the menu has no `Menu.List`.
+   * With no value, a generated id.
+   */
   id?: string | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that

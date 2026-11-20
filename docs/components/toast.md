@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue toast component to generate notifications.
+description: An unstyled Vue toast component that generates notifications.
 ---
 
 <script setup lang="ts">
@@ -102,7 +102,7 @@ Use the `--toast-index` CSS variable for the stacking order of the toasts. The t
 }
 ```
 
-The `--toast-offset-y` CSS variable gives the vertical offset of a toast when the toasts are positioned absolutely with a translation offset. Use it with the `data-expanded` attribute. The attribute is present while the pointer is on the viewport or the viewport has the focus.
+The `--toast-offset-y` CSS variable gives the vertical offset of a toast when the toasts are positioned absolutely with a translation offset. Use it with the `data-expanded` attribute. The attribute is present while the pointer is on the viewport or the keyboard focus is in it.
 
 ```css
 .Toast[data-expanded] {
@@ -444,6 +444,12 @@ Give `loading.id` to update or close the toast with that id. An id that the list
 
 ### Additional types
 
+#### ToastObject
+
+The `toast` prop of `<Toast.Root>` and each item of `toasts` have this type.
+
+<ApiReference name="ToastObject" />
+
 #### ToastManagerAddOptions
 
 <ApiReference name="ToastManagerAddOptions" />
@@ -451,6 +457,18 @@ Give `loading.id` to update or close the toast with that id. An id that the list
 #### ToastManagerUpdateOptions
 
 <ApiReference name="ToastManagerUpdateOptions" />
+
+#### ToastManagerPromiseOptions
+
+The options of the `promise` method.
+
+<ApiReference name="ToastManagerPromiseOptions" />
+
+#### ToastManagerPositionerProps
+
+The props of `<Toast.Positioner>` in the `positionerProps` option of a toast.
+
+<ApiReference name="ToastManagerPositionerProps" />
 
 ## Differences from Base UI
 

@@ -208,19 +208,19 @@
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "The classes of `<Transition>` animate the backdrop, so the state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`."
+      "reason": "The classes of `<Transition>` animate the backdrop, so the state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`. A closed backdrop is out of the DOM, or it has `hidden` with `keepMounted` of the portal, so CSS selects `[hidden]` and the backdrop has no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "The classes of `<Transition>` animate the popup, so the state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`."
+      "reason": "The classes of `<Transition>` animate the popup, so the state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`. A closed popup is out of the DOM, or it has `hidden` with `keepMounted` of the portal, so CSS selects `[hidden]` and the popup has no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Content",
       "kind": "not-applicable",
-      "reason": "The classes of its `transition` animate the content, so the state has no `transitionStatus`, and the content has no `data-starting-style` and `data-ending-style`."
+      "reason": "The classes of its `transition` animate the content, so the state has no `transitionStatus`, and the content has no `data-starting-style` and `data-ending-style`. The content of a closed item is out of the DOM, or it has `hidden` with `keepMounted`, so CSS selects `[hidden]` and the content has no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",

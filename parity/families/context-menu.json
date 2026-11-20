@@ -98,13 +98,13 @@
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the part, so the state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`."
+      "reason": "`<Transition>` animates the part, so the state has no `transitionStatus`, and the part has no `data-starting-style` and `data-ending-style`. A closed part is out of the DOM, or it has `hidden` with `keepMounted` of the portal, so CSS selects `[hidden]` and the part has no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "`<Transition>` animates the part, so the state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`."
+      "reason": "`<Transition>` animates the part, so the state has no `transitionStatus`, and the part has no `data-starting-style` and `data-ending-style`. A closed part is out of the DOM, or it has `hidden` with `keepMounted` of the portal, so CSS selects `[hidden]` and the part has no `data-open` and `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -134,7 +134,7 @@
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
       "kind": "not-applicable",
-      "reason": "With a Vue default, the part cannot find out that a prop is absent, and the positioner of a submenu shares the props. `side` and `align` thus have no Vue default, as in Base UI. A context menu with no `side` and an `align` that is not `center` opens over the pointer, with `sideOffset` -5 and `alignOffset` 2. A submenu takes the side `'inline-end'`. The default `align` is `'start'` for a context menu and for a submenu."
+      "reason": "With a Vue default, the part cannot find out that a prop is absent, and the positioner of a submenu shares the props. `side`, `align`, `sideOffset`, `alignOffset` and `arrowPadding` thus have no Vue default, and their default follows the place of the menu, as in Base UI. `side` is `'inline-end'` for a submenu, else `'bottom'`. `align` is `'start'`. A context menu with no `side` and an `align` that is not `center` opens over the pointer, with `sideOffset` -5 and `alignOffset` 2, else both are 0. `arrowPadding` is 0 for a context menu, else 5."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",

@@ -23,9 +23,11 @@ export type ToastLabel = string | number | (() => VNodeChild);
 export interface ToastObject<Data extends object = any> {
   /** The id of the toast. An `add` with the id of an open toast updates that toast. */
   id: string;
+  /** The title. `Toast.Title` shows it when the part has no content of its own. */
   title?: ToastLabel | undefined;
   /** The type of the toast, such as `'success'`, for styles and for the content. */
   type?: string | undefined;
+  /** The description. `Toast.Description` shows it when the part has no content of its own. */
   description?: ToastLabel | undefined;
   /**
    * The time in milliseconds before the toast closes. `0` keeps the toast open. With no value, the

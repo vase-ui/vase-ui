@@ -349,7 +349,7 @@ export namespace FilterProvider {
 /**
  * A text input for the query of the filter.
  * Renders an `<input>` element.
- * @selector `[data-highlighted]` The input shows its focus ring: a key gave it the focus, and no key moved the highlight to an item.
+ * @selector `[data-highlighted]` The input shows its focus ring: it matched `:focus-visible` when it got the focus, and no item has the highlight.
  * @selector `:disabled` The input is disabled.
  */
 export const Input: typeof MenuInput = MenuInput;
