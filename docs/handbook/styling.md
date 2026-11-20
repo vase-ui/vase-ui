@@ -103,9 +103,10 @@ Give the class name that the library makes to the `class` attribute of the part.
 
 ## Differences from Base UI
 
-| Base UI                                                                    | Vase UI                                                                                                                            |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `className`, a string or a function of the state                           | The `class` attribute. For a class from the state, bind `:class` on your element in the `element` slot.                            |
-| `style`, an object or a function of the state                              | The `style` attribute. For a style from the state, bind `:style` on your element in the `element` slot.                            |
-| A data attribute for each state, such as `data-checked` or `data-disabled` | A CSS pseudo-class or an ARIA attribute of the same element, where one gives the state. A `data-*` attribute for each other state. |
-| `DirectionProvider` and `useDirection`                                     | The `dir` attribute on an element around the parts. Each part reads the direction of its own element.                              |
+| Base UI                                                                                   | Vase UI                                                                                                                            |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `className`, a string or a function of the state                                          | The `class` attribute. For a class from the state, bind `:class` on your element in the `element` slot.                            |
+| `style`, an object or a function of the state                                             | The `style` attribute. For a style from the state, bind `:style` on your element in the `element` slot.                            |
+| A data attribute for each state, such as `data-checked` or `data-disabled`                | A CSS pseudo-class or an ARIA attribute of the same element, where one gives the state. A `data-*` attribute for each other state. |
+| `DirectionProvider` and `useDirection`                                                    | The `dir` attribute on an element around the parts. Each part reads the direction of its own element.                              |
+| Constants of the names, such as `MenuItemDataAttributes` and `MenuPositionerCssVariables` | No constants. Write the selector or the variable name that the API reference of the part lists.                                    |

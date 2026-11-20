@@ -31,11 +31,11 @@ interface ChangeEventDetails {
 - `cancel()` stops the change.
 - `isCanceled` tells whether a listener stopped the change.
 
-After the listeners, the part emits the update of its model with the new value, such as `update:open` or `update:modelValue`, unless a listener stopped the change.
+After the listeners, the part emits the update of its model, such as `update:open` or `update:modelValue`. It emits no update for a stopped change.
 
 `@vase-ui/vue/types` exports `ChangeEventDetails`, and `GenericEventDetails` with only `reason` and `event`, for an event that a listener cannot stop. The details of a popup part have three more members:
 
-- `allowPropagation()` lets the native event go on where the popup stops it.
+- `allowPropagation()` lets the native event propagate where the popup stops it.
 - `isPropagationAllowed` tells whether a listener called `allowPropagation()`.
 - `trigger` is the trigger that opens the popup. At a close, it is the active trigger, while that trigger is in the document.
 
@@ -49,7 +49,7 @@ Call `cancel()` before the listener returns. A call after an `await` has no effe
 
 ### Allow the propagation of the DOM event
 
-A popup stops the propagation of the <kbd>Esc</kbd> key that closes it, so that a popup below it stays open. Call `allowPropagation()` to let the key go on:
+A popup stops the propagation of the <kbd>Esc</kbd> key that closes it, so that a popup below it stays open. Call `allowPropagation()` to let the key event propagate:
 
 <<< ../examples/customization/AllowPropagation.vue{5-7}
 

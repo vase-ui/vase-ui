@@ -20,7 +20,7 @@ For example, a tab renders a `<button>`. The first tab of the sample gives a com
 
 <<< ../examples/composition/CustomTab.vue{9-14}
 
-A part that is a native form control, a form or an image has no `as`: `Input`, `Checkbox`, `Radio`, `Switch`, `Form`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. Use the `element` slot.
+A part that is a native form control, another form element or an image has no `as`. Examples are `Input`, `NumberField.Input`, `Checkbox`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. Use the `element` slot.
 
 The component needs one root element, and Vue gives the attributes to it. The part reads the element from the `element` that the component exposes, else from its root element. A component in [Vapor mode](#vapor-mode) has no root element for the part, so it must expose `element`. Expose `element` as a ref, so that the part sees each change of it.
 
@@ -39,6 +39,10 @@ A part takes the props that it declares. It gives each other attribute and liste
 - Vue joins the `class` values and merges the `style` values.
 - Vue calls each listener.
 - For each other attribute, the value that you give wins. A value of `undefined` or `null` also wins, and Vue then writes no attribute.
+
+A part that writes its own id takes `id` as a prop. An `id` that is empty or holds only white space counts as no `id`, and the part keeps its own id.
+
+In a `Field`, the controls of Select, Combobox, Autocomplete and the date and time fields add the ids of the field to your `aria-describedby`.
 
 Set a prop on the part, and not on the component in `as` or in the slot. For example, set `disabled` on `Toolbar.Button`: the toolbar then keeps the button in its keyboard navigation.
 
@@ -120,7 +124,7 @@ Put a `<Transition>` in the portal, around the part that it animates. See [Anima
 `KeepAlive` takes the elements of a held part out of the document. A part has no code for a hold:
 
 - A held part gets no event.
-- A held control has no form. It is not in the form data, it does not stop a submit, and a reset does not change it. When it comes back, it has the same value and belongs to its form again.
+- A held control has no form. It is not in the form data, it does not stop a submit, and a reset does not change it. When it returns, it has the same value and belongs to its form again.
 - A toolbar moves its tab stop to an item that is in the document, so that <kbd>Tab</kbd> still reaches the toolbar.
 
 ## Vapor mode
@@ -138,6 +142,8 @@ Vase UI parts are Vue components. An application in Vapor mode renders them with
 | `render` with a function of the props and the state                        | The `element` slot, with `props`, `elementRef` and `state`.                                                                                             |
 | A component in `render` takes a `ref` and spreads its props on its element | A component in `as` or in the `element` slot gets the attributes as fallthrough attributes. It exposes `element`, else its root element is the element. |
 | `ref` on a part gives its element                                          | A template ref on a part gives its exposed members. Read `element`.                                                                                     |
+| `render` keeps the `ref` of each part that it merges                       | An element takes one `ref`. To keep the ref of the part, call `elementRef` in your function ref.                                                        |
+| An empty `id` stays on the element in most parts                           | An `id` that is empty or holds only white space counts as no `id`. The part keeps its own id.                                                           |
 | `mergeProps` and `mergePropsN`                                             | `mergeProps` of Vue: `import { mergeProps } from 'vue'`.                                                                                                |
 | `useRender`                                                                | [useElement](/utils/use-element) and the `element` slot in your template.                                                                               |
 | A `Portal` part renders a `<div>`                                          | A `Portal` part renders a `<Teleport>` and no element.                                                                                                  |

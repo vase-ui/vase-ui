@@ -5,13 +5,13 @@ description: A guide to rendering Vase UI components on the server.
 
 # Server rendering
 
-Vase UI components render on the server and hydrate in the browser with no mismatch.
+Vase UI components render on the server, and the browser hydrates them.
 
 ## What the server renders
 
 Each part renders with `renderToString` of Vue. The server HTML has what the first render of the browser has: the elements, their attributes, the text and the form inputs.
 
-A closed panel that `keepMounted` or `hiddenUntilFound` keeps in the DOM, such as a panel of `Collapsible` or `Tabs`, is in the server HTML too. Find-in-page and a search engine can then read it before the app runs.
+A closed panel that `keepMounted` or `hiddenUntilFound` keeps in the DOM, such as a panel of `Collapsible` or `Tabs`, is in the server HTML too. A search engine can then read its text. Find-in-page finds only the text of a `hiddenUntilFound` panel: a closed panel with `keepMounted` is `hidden` and `inert`.
 
 ## Popups and portals
 
@@ -24,11 +24,11 @@ With `disabled`, a `Portal` part renders its content in its place, also on the s
 The server and the browser must render the same HTML. So no part reads a value of the visitor in a render. Give each such value, or the part uses one fixed value on both sides.
 
 - **Locale.** A part uses its `locale` prop, else the nearest [`LocaleProvider`](/utils/locale-provider), else `en-US`. It never reads the locale of the visitor. A server and a browser can still have other `Intl` data for one locale. Then the text of the browser wins after the hydration. Give `data-allow-mismatch="text"` to your own element that shows such a text.
-- **Time zone and today.** No part reads the clock in a render. A part that needs today reads it after the mount. A server that knows the day of the visitor gives it with the data of the page, such as the `today` prop of `Calendar`. See [Dates and times](/handbook/dates-and-times).
+- **Time zone and today.** No part reads the clock in a render. A part that needs today reads it after the mount. A server that knows the day of the visitor gives it with the data of the page, such as the `today` prop of `Calendar`. In your own template, an expression of `Temporal.Now` can give the browser another day than the server. See [Dates and times](/handbook/dates-and-times).
 - **Direction.** A server cannot read the direction of an element around a part. `Slider.Root` places its thumbs in the server HTML, so give it its own `dir`. See [Text direction](/handbook/styling#text-direction).
-- **Measures.** A server cannot measure the page. A part that places itself by a measure, such as `Tabs.Indicator` or a panel of `Resizable` with a length size, takes its measure after the mount. With `renderBeforeHydration`, `Tabs.Indicator` places itself with an inline script before the app starts.
+- **Measures.** A server cannot measure the page. A part that places itself by a measure takes the measure after the mount. Examples are `Tabs.Indicator` and a panel of `Resizable` with a length size. With `renderBeforeHydration`, `Tabs.Indicator` places itself with an inline script before the app starts.
 
-Where the server HTML and the first render of the browser can differ in a value that the browser corrects, the part has `data-allow-mismatch`, and Vue shows no message.
+The server HTML and the first render of the browser can differ in a value that the browser corrects. The part then has `data-allow-mismatch`, and Vue shows no message for that value.
 
 ## Before the hydration
 
