@@ -192,15 +192,21 @@ function portals() {
 }
 
 // A closed popup that stays in the DOM is `hidden`. A popup of the popup layer can be a child of
-// `<body>` itself. The older popups have `data-open`.
-const OPEN_POPUP = '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])';
-
+// `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
+// whole document. The older popups have `data-open`.
 function openPopups() {
-  return portals().flatMap((portal) =>
-    [portal, ...portal.querySelectorAll<HTMLElement>(OPEN_POPUP)].filter((element) =>
-      element.matches(OPEN_POPUP),
-    ),
-  );
+  return [
+    ...new Set([
+      ...portals().flatMap((portal) =>
+        [portal, ...portal.querySelectorAll<HTMLElement>('[data-open]')].filter((element) =>
+          element.matches('[data-open]'),
+        ),
+      ),
+      ...document.querySelectorAll<HTMLElement>(
+        '[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      ),
+    ]),
+  ];
 }
 
 /** The animations that run and that end. A demo can animate its popup with a script. */

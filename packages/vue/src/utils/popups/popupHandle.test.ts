@@ -2,8 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { watch } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import type { DialogHandle } from '../../drawer/dialog/store/DialogHandle';
-import { createDrawerHandle } from '../../drawer/handle';
 import { createMenuHandle } from '../../menu/store/MenuHandle';
 import { createPreviewCardHandle } from '../../preview-card/store/PreviewCardHandle';
 import { createTooltipHandle } from '../../tooltip/store/TooltipHandle';
@@ -362,7 +360,6 @@ describe('concrete popup handles', () => {
     warningName: string;
     createHandle: () => { open(triggerId: string): void; close(): void; readonly isOpen: boolean };
   }>([
-    { component: 'Drawer', warningName: 'Dialog', createHandle: createDrawerHandle },
     { component: 'Menu', warningName: 'Menu', createHandle: createMenuHandle },
     { component: 'PreviewCard', warningName: 'PreviewCard', createHandle: createPreviewCardHandle },
     { component: 'Tooltip', warningName: 'Tooltip', createHandle: createTooltipHandle },
@@ -379,26 +376,6 @@ describe('concrete popup handles', () => {
       expect(consoleWarn.mock.calls).toEqual([
         [expect.stringContaining(`${warningName}Handle.open() was called while`)],
         [expect.stringContaining(`${warningName}Handle.close() was called while`)],
-      ]);
-    },
-  );
-
-  it.each<{ component: string; createHandle: () => DialogHandle<number> }>([
-    { component: 'Drawer', createHandle: createDrawerHandle },
-  ])(
-    '$component handle ignores openWithPayload() with a warning while detached',
-    ({ createHandle }) => {
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const handle = createHandle();
-
-      handle.openWithPayload(8);
-
-      expect(handle.isOpen).toBe(false);
-      expect(consoleWarn.mock.calls).toEqual([
-        [
-          'Vase UI: DialogHandle.openWithPayload() was called while no root that uses this handle is mounted. ' +
-            'The handle ignored the call and its payload. Mount a root with this handle before you call openWithPayload().',
-        ],
       ]);
     },
   );

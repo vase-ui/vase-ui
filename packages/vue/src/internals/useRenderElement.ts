@@ -16,13 +16,7 @@ import {
 } from 'vue';
 // eslint-disable-next-line no-restricted-imports -- The second focus listener gives an error of a handler to the error handler of the app, as a Vue listener does. Vue needs the instance of the part for that. A Vapor component gets `null`. Vue's listener on an element of a Vapor template skips no event, so there the second listener calls no handler.
 import { getCurrentInstance } from 'vue';
-import type {
-  ComponentPublicInstance,
-  CSSProperties,
-  InjectionKey,
-  MaybeRefOrGetter,
-  ShallowRef,
-} from 'vue';
+import type { ComponentPublicInstance, InjectionKey, MaybeRefOrGetter, ShallowRef } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { EMPTY_OBJECT } from '../common/empty';
 import { getServerElement } from '../common/hydration';
@@ -339,11 +333,7 @@ export function useRenderElement<
     }
 
     // A style can be a string or an array in Vue, so `mergeObjects` does not fit here.
-    const style = normalizeStyle([
-      outProps.style,
-      styleAttribute,
-      params.overridingStyle?.(),
-    ]) as Record<string, unknown>;
+    const style = normalizeStyle([outProps.style, styleAttribute]) as Record<string, unknown>;
     // On a server, Vue writes `style=""` for a `style` key that has no value. On a client, Vue
     // removes the whole `style` attribute when the key goes away. That also removes each
     // declaration that a part writes to the DOM, so the key stays after a render that wrote it.
@@ -527,11 +517,6 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    * The part then warns when the slot does not mount `children`.
    */
   children?: boolean | undefined;
-  /**
-   * Returns a style of the part that wins over the `style` attribute.
-   * An empty object or `undefined` adds no style.
-   */
-  overridingStyle?: (() => CSSProperties | undefined) | undefined;
   /**
    * With `false`, `elementProps` gives no value of the server HTML while Vue hydrates the part.
    * `useRender` passes `false`, because the template of a consumer can start with another element.

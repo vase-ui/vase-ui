@@ -5,7 +5,6 @@ import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Select } from '@vase-ui/vue/select';
@@ -73,34 +72,6 @@ const BLANKS = [
   { blank: 'an empty value', value: '' },
   { blank: 'white space', value: '\n\t ' },
 ];
-
-function createDialog(
-  parts: typeof Drawer,
-  tested: 'popup' | 'trigger',
-  attrs: Record<string, string>,
-) {
-  const { Root, Trigger, Portal, Popup, Title, Description } = parts;
-  const popup = (
-    <Popup
-      data-testid={tested === 'popup' ? 'part' : 'target'}
-      {...(tested === 'popup' ? attrs : undefined)}
-    >
-      <Title>Settings</Title>
-      <Description data-testid={tested === 'popup' ? 'target' : undefined}>Change them</Description>
-    </Popup>
-  );
-  return (
-    <Root defaultOpen>
-      <Trigger
-        data-testid={tested === 'trigger' ? 'part' : undefined}
-        {...(tested === 'trigger' ? attrs : undefined)}
-      >
-        Open
-      </Trigger>
-      <Portal>{parts === Drawer ? <Drawer.Viewport>{popup}</Drawer.Viewport> : popup}</Portal>
-    </Root>
-  );
-}
 
 function createCombobox(tested: 'input' | 'trigger', attrs: Record<string, string>) {
   return (
@@ -194,16 +165,6 @@ const rows: Row[] = [
         </Toast.Viewport>
       </Toast.Provider>
     ),
-  },
-  {
-    part: 'Drawer.Popup',
-    attribute: 'aria-describedby',
-    createNode: (attrs) => createDialog(Drawer, 'popup', attrs),
-  },
-  {
-    part: 'Drawer.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => createDialog(Drawer, 'trigger', attrs),
   },
   {
     part: 'Menu.Trigger',

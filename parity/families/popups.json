@@ -40,6 +40,14 @@
       "upstream": "packages/react/test/dialogRootSharedTests.tsx",
       "kind": "not-applicable",
       "reason": "The file is a suite that the roots of Dialog and Alert Dialog share. `Dialog.test.ts` tests the trigger and the reason in `openChange`, the `close` action and `openWithPayload()` with no shared suite. The `unmount` action is cut (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "describe": ["concrete popup handles"],
+      "title": "$component handle ignores openWithPayload() with a warning while detached",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "The table has the one row Drawer. The handle of Drawer is the handle of Dialog, and the case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests `openWithPayload()` with no root."
     }
   ],
   "surfaceAdditions": [],

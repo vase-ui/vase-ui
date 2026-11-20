@@ -32,6 +32,9 @@ export const CLASS_NAMES_WITHOUT_RULE: ReadonlySet<string> = new Set([
   'peer',
   // A marker of the demo. The class `has-[.combobox-clear]` of another element names it.
   'combobox-clear',
+  // A marker of the demo. The leave of the drawer popup adds it, and the class `has-[>.leaving]` of
+  // the viewport names it.
+  'leaving',
   // The theme of the Base UI docs has no red other than `red-400` and `red-700`, so the item has no
   // red text there. The CSS-module demo has no red text on that item either.
   'text-red-600',

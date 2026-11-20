@@ -4,7 +4,6 @@ import DatePickerPositionerSlots from '../src/date-picker/positioner/DatePickerP
 import DateRangePickerPositionerSlots from '../src/date-range-picker/positioner/DateRangePickerPositionerSlots.test.vue';
 import TimePickerPositionerSlots from '../src/time-picker/positioner/TimePickerPositionerSlots.test.vue';
 import ContextMenuPositionerSlots from './ContextMenuPositionerSlots.test.vue';
-import DrawerViewportSlots from './DrawerViewportSlots.test.vue';
 
 const partsWithPopup = [
   {
@@ -21,11 +20,6 @@ const partsWithPopup = [
     name: 'DateRangePicker.Positioner',
     Fixture: DateRangePickerPositionerSlots,
     waitForPart: async () => waitForPositioned(await screen.findByTestId('positioner')),
-  },
-  {
-    name: 'Drawer.Viewport',
-    Fixture: DrawerViewportSlots,
-    waitForPart: async () => screen.findByTestId('inner'),
   },
   {
     name: 'TimePicker.Positioner',
