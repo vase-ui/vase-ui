@@ -2,9 +2,10 @@
 // pointer rule, the focus and the scroll of the list), and through the parts where the plan names
 // them (SN1 to SN4). Each one states what the browser or Vue does, so that the parts have code only
 // where they do not do it. SN5 is `Select.test.ts` "animation" in the Vapor setups.
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import {
+  createApp,
   defineComponent,
   h,
   nextTick,
@@ -118,7 +119,11 @@ function mountTransition(
           }),
       ),
   });
-  mount(app);
+  // A virtual DOM app in each setup: the measurement is of Vue, with no part.
+  const host = root!.appendChild(document.createElement('div'));
+  const instance = createApp(app);
+  instance.mount(host);
+  onTestFinished(() => instance.unmount());
   return { log, open };
 }
 

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
@@ -45,16 +45,21 @@ describe('server render and hydration', () => {
     await waitFor(() => expect(listboxOf(document.body)).not.toBe(null));
   });
 
-  test('a disabled portal of an open root renders the popup in place, hidden until its first place', async () => {
-    const props = { root: { defaultOpen: true }, portal: { disabled: true } };
-    const root = await renderOnServer('SelectParts', props);
-    const popup = listboxOf(root)!;
-    expect(popup).not.toBe(null);
-    const positioner = popup.parentElement!;
-    expect(positioner.style.visibility).toBe('hidden');
-    hydrate(SelectParts, props, root);
-    await nextTick();
-    expect(listboxOf(root)).toBe(popup);
-    await waitFor(() => expect(positioner.style.visibility).toBe(''));
-  });
+  // In a Vapor app with virtual DOM parts, Vue 3.6 hydrates a disabled `<Teleport>` in a slot and
+  // then takes its end comment for the next node, the input of the root.
+  (inject('app') === 'vapor-interop' ? test.fails : test)(
+    'a disabled portal of an open root renders the popup in place, hidden until its first place',
+    async () => {
+      const props = { root: { defaultOpen: true }, portal: { disabled: true } };
+      const root = await renderOnServer('SelectParts', props);
+      const popup = listboxOf(root)!;
+      expect(popup).not.toBe(null);
+      const positioner = popup.parentElement!;
+      expect(positioner.style.visibility).toBe('hidden');
+      hydrate(SelectParts, props, root);
+      await nextTick();
+      expect(listboxOf(root)).toBe(popup);
+      await waitFor(() => expect(positioner.style.visibility).toBe(''));
+    },
+  );
 });

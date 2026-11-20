@@ -11,6 +11,7 @@ import SelectParts from '../../test/fixtures/SelectParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { clientCenter, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
@@ -128,6 +129,8 @@ describe('the parts', () => {
     expect(String(mountError(SelectInTransition, { noRoot: true }))).toContain(
       '<Select.Trigger> must be inside <Select.Root>',
     );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });
 
