@@ -9,7 +9,7 @@ import ToastList from './ToastList.vue';
   <Toast.Provider>
     <ToastButton />
     <Toast.Portal>
-      <Toast.Viewport :class="styles.Viewport">
+      <Toast.Viewport :class="styles.Viewport" aria-label="Notifications">
         <ToastList />
       </Toast.Viewport>
     </Toast.Portal>

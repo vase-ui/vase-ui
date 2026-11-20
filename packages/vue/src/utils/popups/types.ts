@@ -104,8 +104,8 @@ export interface PopupInteractionContext {
 
 /**
  * The store that the interaction composables, the focus manager and positioning read and write.
- * A popup store implements it directly. Navigation Menu and Toast keep their open state outside a
- * store, so they use `FloatingRootStore`.
+ * A popup store implements it directly. Navigation Menu keeps its open state outside a store, so it
+ * uses `FloatingRootStore`.
  */
 export interface PopupInteractionStore {
   select: PopupInteractionReader;

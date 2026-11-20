@@ -1111,7 +1111,7 @@ async function expectToastViewport(page: Page) {
 }
 
 // The viewport in the page is in the server HTML. A portal renders after the mount, so the server
-// HTML has no element of the viewport in `Toast.Portal`.
+// HTML has no viewport in `Toast.Portal`.
 async function expectToastPageOnServer(page: Page) {
   await expectToastViewport(page);
   expect(await page.getByTestId('anchored-viewport').count()).toBe(0);
@@ -1122,7 +1122,7 @@ async function expectHydratedToastPage(page: Page) {
   expect(
     await page
       .getByTestId('anchored-viewport')
-      .evaluate((element) => element.parentElement?.hasAttribute('data-vase-ui-portal')),
+      .evaluate((element) => element.parentElement === element.ownerDocument.body),
   ).toBe(true);
 }
 

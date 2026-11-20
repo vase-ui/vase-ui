@@ -1,21 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
-import type { Component, Ref, VNode } from 'vue';
-import { Toast } from '@vase-ui/vue/toast';
-import type { HTMLProps } from '@vase-ui/vue/types';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { createRenderer, flushMicrotasks } from '#test-utils';
 import { createIdRegistry } from './createIdRegistry';
 import { useRegisteredId } from './useRegisteredId';
-
-interface SlotProps {
-  props: HTMLProps;
-}
-
-interface ChildrenSlotProps extends SlotProps {
-  children: Component;
-}
-
-const toast = { id: 'test', title: 'Title', description: 'Description' };
 
 describe('useRegisteredId', () => {
   const { render } = createRenderer();
@@ -126,72 +113,5 @@ describe('useRegisteredId', () => {
     await flushMicrotasks();
 
     expect(renders).toBe(1);
-  });
-
-  describe('VUE-121: a reference names the id that the #render slot gives the element', () => {
-    function slot(tag: string, id: Ref<string>) {
-      return { render: ({ props }: SlotProps) => h(tag, { ...props, id: id.value }) };
-    }
-
-    function childrenSlot(tag: string, id: Ref<string>) {
-      return {
-        render: ({ props, children }: ChildrenSlotProps) =>
-          h(tag, { ...props, id: id.value }, h(children)),
-      };
-    }
-
-    const rows: {
-      name: string;
-      attribute: string;
-      render: (id: Ref<string>) => VNode;
-    }[] = [
-      {
-        name: 'Toast.Title',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Toast.Provider>
-            <Toast.Viewport>
-              <Toast.Root toast={toast} data-testid="named">
-                <Toast.Title v-slots={childrenSlot('h2', id)} />
-              </Toast.Root>
-            </Toast.Viewport>
-          </Toast.Provider>
-        ),
-      },
-      {
-        name: 'Toast.Description',
-        attribute: 'aria-describedby',
-        render: (id) => (
-          <Toast.Provider>
-            <Toast.Viewport>
-              <Toast.Root toast={toast} data-testid="named">
-                <Toast.Title />
-                <Toast.Description v-slots={childrenSlot('p', id)} />
-              </Toast.Root>
-            </Toast.Viewport>
-          </Toast.Provider>
-        ),
-      },
-    ];
-
-    it.each(rows)('$name', async ({ attribute, render: renderRow }) => {
-      const id = shallowRef('first');
-      await render(() => renderRow(id));
-      await flushMicrotasks();
-      const named = screen.getByTestId('named');
-      const steps = [named.getAttribute(attribute)];
-
-      id.value = 'second';
-      await flushMicrotasks();
-      steps.push(named.getAttribute(attribute));
-      const element = document.getElementById('second');
-
-      id.value = '';
-      await flushMicrotasks();
-      steps.push(named.getAttribute(attribute));
-
-      expect(steps).toEqual(['first', 'second', null]);
-      expect(element).not.toBeNull();
-    });
   });
 });

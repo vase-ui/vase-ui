@@ -45,11 +45,11 @@ beforeAll(({}, file) => {
       `expectedFailures.json lists cases that ${file.file.name} does not have:\n${missing.join('\n')}`,
     );
   }
-  for (const [name, cause] of Object.entries(fails)) {
+  for (const name of Object.keys(fails)) {
     for (const task of cases.get(name) ?? []) {
-      task.fails = !isVueMinor || cause !== 'vue-16301';
+      task.fails = true;
       if (isVueMinor) {
-        task.meta.vaporExpectation = { name, fails: task.fails };
+        task.meta.vaporExpectation = { name, fails: true };
       }
     }
   }

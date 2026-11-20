@@ -90,7 +90,7 @@ The families that the `element` slot does not replace yet have the `#render` slo
 
 <<< ../examples/composition/RenderSlot.vue{10-14}
 
-Under `#render`, the part does not render its default slot. Put the content in your element. The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Toast.Viewport` inside your element to keep its focus guards. A development build warns if the slot opens without those children.
+Under `#render`, the part does not render its default slot. Put the content in your element. The default slot also gets `{ state }`. Some parts give `#render` another slot prop, such as the `text` of `TimePicker.Item`.
 
 The `element` slot of `Slider.Thumb` gives its range input as `inputProps` and `inputRef`. Render the input in your element, or in another place:
 

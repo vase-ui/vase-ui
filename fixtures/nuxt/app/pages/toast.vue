@@ -22,7 +22,7 @@ function addAnchoredToast() {
   <main>
     <Toast.Provider>
       <ToastAddButton />
-      <Toast.Viewport data-testid="viewport">
+      <Toast.Viewport data-testid="viewport" aria-label="Notifications">
         <ToastStack />
       </Toast.Viewport>
     </Toast.Provider>
@@ -31,7 +31,7 @@ function addAnchoredToast() {
         copy
       </button>
       <Toast.Portal>
-        <Toast.Viewport data-testid="anchored-viewport">
+        <Toast.Viewport data-testid="anchored-viewport" aria-label="Anchored notifications">
           <ToastAnchoredStack />
         </Toast.Viewport>
       </Toast.Portal>
