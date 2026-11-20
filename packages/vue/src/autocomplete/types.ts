@@ -69,7 +69,7 @@ export interface AutocompleteRootChangeEventDetails extends ComboboxRootChangeEv
 
 export interface AutocompleteRootProps<Item = unknown>
   extends ComboboxSharedRootProps<Item>, AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
-  /** The text of the input. `v-model` binds it. */
+  /** The text of the input. `v-model` binds it. An inline completion in the input is not in it. */
   modelValue?: string | undefined;
   /** The text at the mount of an uncontrolled root. */
   defaultValue?: string | undefined;
