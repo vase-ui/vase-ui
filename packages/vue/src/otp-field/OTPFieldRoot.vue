@@ -105,11 +105,12 @@ const characters = computed(() => Array.from(code.value));
 const validLength = computed(() => Number.isInteger(props.length) && props.length > 0);
 const end = computed(() => Math.min(characters.value.length, props.length - 1));
 
-const slots = shallowReactive<HTMLInputElement[]>([]);
-const sortedSlots = computed(() => [...slots].sort(byDocumentOrder));
+const mountedSlots = shallowReactive<HTMLInputElement[]>([]);
+const sortedSlots = computed(() => [...mountedSlots].sort(byDocumentOrder));
 // The slot of the last `focus` event, while the focus is in the field.
 const focused = shallowRef<HTMLInputElement>();
 const tabStop = computed(() => {
+  // A slot that went is in no list, so the end slot then has the tab stop.
   const index = indexOf(focused.value ?? null);
   return index >= 0 ? index : end.value;
 });
@@ -131,12 +132,12 @@ const state = computed<OTPFieldRootState>(() => ({
   length: props.length,
   value: code.value,
 }));
-const inputmode = computed(() => props.inputmode ?? inputmodeOf(props.validationType));
+const keyboardHint = computed(() => props.inputmode ?? inputmodeOf(props.validationType));
 // `maxlength` counts UTF-16 code units, and one character of `none` can take two.
 const maxlength = computed(() =>
   props.validationType === 'none' ? props.length * 2 : props.length,
 );
-const name = computed(() => field?.name ?? props.name);
+const entryName = computed(() => field?.name ?? props.name);
 
 watch(code, (next) => field?.setValue(next, next !== ''), { immediate: true });
 
@@ -215,12 +216,12 @@ if (process.env.NODE_ENV !== 'production') {
   });
   // A slot adds itself in a later post-flush callback than this one, so the count waits a tick.
   watch(
-    [() => slots.length, () => props.length],
+    [() => mountedSlots.length, () => props.length],
     async (_, __, onCleanup) => {
       let stale = false;
       onCleanup(() => (stale = true));
       await nextTick();
-      const count = slots.length;
+      const count = mountedSlots.length;
       if (stale || !validLength.value || count === 0 || count === props.length) return;
       warn(
         '<OTPField.Root> `length` must match the number of rendered ' +
@@ -243,7 +244,7 @@ provide(otpFieldKey, {
     return elementId.value;
   },
   get inputmode() {
-    return inputmode.value;
+    return keyboardHint.value;
   },
   get autocomplete() {
     return props.autocomplete;
@@ -266,11 +267,8 @@ provide(otpFieldKey, {
   claimIndex: () => claimed++,
   indexOf,
   addSlot(slot) {
-    slots.push(slot);
-    return () => {
-      slots.splice(slots.indexOf(slot), 1);
-      if (focused.value === slot) focused.value = undefined;
-    };
+    mountedSlots.push(slot);
+    return () => mountedSlots.splice(mountedSlots.indexOf(slot), 1);
   },
   enter,
   remove,
@@ -284,7 +282,7 @@ provide(otpFieldKey, {
     slot.select();
   },
   onEnter(slot) {
-    const own: Element[] = [...slots];
+    const own: Element[] = [...mountedSlots];
     if (formInput.value) own.push(formInput.value);
     if (slot.form) submitImplicitly(slot.form, own);
   },
@@ -313,12 +311,12 @@ function elementProps() {
 function formInputProps() {
   return {
     type: 'text',
-    id: name.value == null ? `${elementId.value}-hidden-input` : undefined,
-    name: name.value,
+    id: entryName.value == null ? `${elementId.value}-hidden-input` : undefined,
+    name: entryName.value,
     form: props.form,
     value: code.value,
     autocomplete: props.autocomplete,
-    inputmode: inputmode.value,
+    inputmode: keyboardHint.value,
     maxlength: maxlength.value,
     pattern: patternOf(props.validationType, props.length),
     disabled: isDisabled.value,
@@ -342,9 +340,7 @@ function activeIndex() {
 }
 
 function focusSlot(index: number) {
-  const slot = sortedSlots.value[index];
-  slot?.focus();
-  slot?.select();
+  sortedSlots.value[index]?.focus();
 }
 
 function enter(index: number, text: string, reason: 'input-change' | 'input-paste', event: Event) {
@@ -389,7 +385,7 @@ function onFormInput(event: Event) {
     nextTick(showValue);
     return;
   }
-  const next = refuse(formInput.value!.value, 'input-change', event);
+  const next = refuse((event.currentTarget as HTMLInputElement).value, 'input-change', event);
   // A fill must not take the focus from another control.
   const focus = element.value?.matches(':focus-within')
     ? Math.min(Array.from(next).length, props.length - 1)
@@ -418,7 +414,6 @@ function edit(
   focus: number | undefined,
   completes?: OTPFieldRootCompleteEventDetails,
 ) {
-  pending = undefined;
   let changed = false;
   if (next === code.value) {
     if (focus !== undefined) focusSlot(focus);

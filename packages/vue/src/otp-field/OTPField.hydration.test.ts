@@ -78,6 +78,11 @@ describe('server render and hydration', () => {
     expect(root.querySelector('[role=group]')).toBe(group);
   });
 
+  test('the server HTML of a slot has one autocorrect attribute: the value of the developer, or off', async () => {
+    const { slots } = await serverHtml({ inputs: [{ autocorrect: 'on' }, {}] });
+    expect(slots.map((slot) => slot.getAttribute('autocorrect'))).toEqual(['on', 'off']);
+  });
+
   test('the server HTML of a field names the group and each slot with the label, and describes the group', async () => {
     const { root, group, slots, formInput } = await serverHtml({
       field: { name: 'otp' },

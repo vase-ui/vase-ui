@@ -9,6 +9,7 @@ import {
 } from '@vase-ui/vue/otp-field';
 import { pasteText } from '../../test/clipboard';
 import { dataAttributes, leave, recordValidate } from '../../test/field';
+import OTPFieldInFieldset from '../../test/fixtures/OTPFieldInFieldset.vue';
 import OTPFieldInForm from '../../test/fixtures/OTPFieldInForm.vue';
 import OTPFieldInputAlone from '../../test/fixtures/OTPFieldInputAlone.vue';
 import OTPFieldInToolbar from '../../test/fixtures/OTPFieldInToolbar.vue';
@@ -92,11 +93,22 @@ async function press(slot: HTMLInputElement, key: string) {
   await settle();
 }
 
-/** Sends a key with Ctrl or Meta. A real Meta key can start a shortcut of the browser. */
-async function pressWith(modifier: 'ctrlKey' | 'metaKey', slot: HTMLInputElement, key: string) {
+/** Sends a key with modifiers. A real Meta key can start a shortcut of the browser. */
+async function pressWith(
+  modifier: 'ctrlKey' | 'metaKey',
+  slot: HTMLInputElement,
+  key: string,
+  init: KeyboardEventInit = {},
+) {
   slot.focus();
   slot.dispatchEvent(
-    new KeyboardEvent('keydown', { key, [modifier]: true, bubbles: true, cancelable: true }),
+    new KeyboardEvent('keydown', {
+      key,
+      [modifier]: true,
+      bubbles: true,
+      cancelable: true,
+      ...init,
+    }),
   );
   await settle();
 }
@@ -501,6 +513,9 @@ describe('the keys that move the focus', () => {
       expect(focused()).toBe(3);
       await pressWith(modifier, slots[3]!, 'ArrowLeft');
       expect(focused()).toBe(0);
+      // With Alt too, an arrow moves one slot.
+      await pressWith(modifier, slots[1]!, 'ArrowRight', { altKey: true });
+      expect(focused()).toBe(2);
     },
   );
 
@@ -760,6 +775,19 @@ describe('a fill', () => {
     ]);
   });
 
+  test('a fill of a slot that has no focus fills the slots and keeps the focus where it is', async () => {
+    const { slots, values, root } = await mountField({ around: true });
+    const before = root.querySelector<HTMLElement>('#before')!;
+    before.focus();
+    slots[0]!.value = '1234';
+    slots[0]!.dispatchEvent(
+      new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' }),
+    );
+    await settle();
+    expect(values()).toEqual(['1', '2', '3', '4', '', '']);
+    expect(document.activeElement).toBe(before);
+  });
+
   test('a fill of the form input replaces the code, with valueInvalid and valueComplete; the focus moves only when the field has it', async () => {
     const log: string[] = [];
     const { slots, formInput, values, focused, root } = await mountField({
@@ -841,10 +869,14 @@ describe('valueComplete', () => {
 
   test('a complete paste completes the code each time, also with the code of the field; a paste in a later slot too', async () => {
     const log: string[] = [];
-    const { slots } = await mountField({ root: recorded(log, { defaultValue: '12' }) });
+    const { slots, focused } = await mountField({
+      root: recorded(log, { defaultValue: '12' }),
+    });
     await paste(slots[2]!, '3456');
     await paste(slots[0]!, '654321');
     await paste(slots[0]!, '654321');
+    // A paste of the code of the field moves the focus too.
+    expect(focused()).toBe(5);
     expect(log.filter((entry) => entry.startsWith('complete'))).toEqual([
       'complete 123456 input-paste',
       'complete 654321 input-paste',
@@ -892,7 +924,7 @@ describe('autoSubmit', () => {
     const root = recorded(log, { name: 'code', autoSubmit: true });
     const { slots, form } = await mountField({ root });
     form.addEventListener('submit', () =>
-      log.push(`submit ${String(new FormData(form).get('code'))}`),
+      log.push(`submit ${new FormData(form).get('code') as string}`),
     );
     await type(slots[0]!, '12345');
     expect(log.filter((entry) => entry.startsWith('submit'))).toEqual([]);
@@ -964,6 +996,20 @@ describe('disabled and read-only', () => {
     },
   );
 
+  test('a Fieldset.Root names the group and each slot with its legend, and disables them', async () => {
+    const scene = reactive({ disabled: false });
+    const { root } = mount(OTPFieldInFieldset, { scene });
+    await nextTick();
+    const group = root.querySelector('[role=group]')!;
+    const slots = [...group.querySelectorAll<HTMLInputElement>('input:not([aria-hidden])')];
+    expect(group).toHaveAttribute('aria-labelledby', 'legend');
+    expect(slots.every((slot) => slot.getAttribute('aria-labelledby') === 'legend')).toBe(true);
+    scene.disabled = true;
+    await settle();
+    expect(group).toHaveAttribute('data-disabled');
+    expect(slots.every((slot) => slot.matches(':disabled'))).toBe(true);
+  });
+
   test('VUE-112: a disabled fieldset disables the root and each slot', async () => {
     const { group, slots, formInput } = await mountField({ fieldsetDisabled: true });
     expect(group).toHaveAttribute('data-disabled');
@@ -1002,6 +1048,12 @@ describe('the field', () => {
     expect(slots[0]).not.toHaveAttribute('aria-labelledby');
     expect(slots[1]).not.toHaveAttribute('aria-labelledby');
     expect(slots[2]).toHaveAttribute('aria-labelledby', labelId);
+  });
+
+  test('an aria-label of the developer on the root names the group in place of the label of the field', async () => {
+    const { group } = await mountField({ field: {}, root: { 'aria-label': 'Verification' } });
+    expect(group).not.toHaveAttribute('aria-labelledby');
+    expect(group).toHaveAccessibleName('Verification');
   });
 
   test('with no field, a native label names the first slot, and aria-labelledby on the root names the group', async () => {
@@ -1057,6 +1109,17 @@ describe('the field', () => {
     expect(log).toEqual(['12']);
     expect(group).toHaveAttribute('data-touched');
     expect(slots[0]).toHaveAttribute('data-touched');
+  });
+
+  test('an edit removes the error that the form has for the name of the field', async () => {
+    const { root } = mount(OTPFieldInForm, {
+      field: { name: 'code' },
+      errors: { code: 'Server error' },
+    });
+    await nextTick();
+    expect(root.querySelector('#error')).toHaveTextContent('Server error');
+    await type(root.querySelector<HTMLInputElement>('input')!, '1');
+    expect(root.querySelector('#error')).toBeNull();
   });
 
   test('a Form validates the code at the submit, and shows its error for the name of the field', async () => {

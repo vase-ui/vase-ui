@@ -2,9 +2,7 @@
 import { reactive, ref, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
-import { Field } from '@vase-ui/vue/field';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { OTPField } from '@vase-ui/vue/otp-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeField } from '@vase-ui/vue/time-field';
@@ -21,14 +19,11 @@ const filter = ref('');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
 const quantity = ref<number | null>(1);
-const code = ref('');
 const volume = ref(50);
 const range = ref([20, 80]);
 const when = shallowRef<Temporal.PlainDate | null>(null);
 const alarm = shallowRef<Temporal.PlainTime | null>(null);
 const changes = reactive<Record<string, number>>({});
-const submits = ref(0);
-const completes = ref(0);
 
 function count(name: string) {
   changes[name] = (changes[name] ?? 0) + 1;
@@ -42,7 +37,7 @@ function handleFilterInput(event: Event) {
 
 <template>
   <main>
-    <form data-testid="form" @submit.prevent="submits += 1">
+    <form data-testid="form" @submit.prevent>
       <Toolbar.Root>
         <Toolbar.Input
           :value="filter"
@@ -87,19 +82,6 @@ function handleFilterInput(event: Event) {
       >
         <NumberField.Input aria-label="Quantity" data-testid="quantity-input" />
       </NumberField.Root>
-      <Field.Root>
-        <Field.Label>Code</Field.Label>
-        <OTPField.Root
-          v-model="code"
-          name="code"
-          :length="4"
-          auto-submit
-          @value-change="count('code')"
-          @value-complete="completes += 1"
-        >
-          <OTPField.Input v-for="index in 4" :key="index" :data-testid="`code-${index}`" />
-        </OTPField.Root>
-      </Field.Root>
       <Slider.Root
         v-model="volume"
         name="volume"
@@ -136,7 +118,6 @@ function handleFilterInput(event: Event) {
         font,
         fruit,
         quantity,
-        code,
         volume,
         range,
         when: when?.toString() ?? null,
@@ -144,8 +125,6 @@ function handleFilterInput(event: Event) {
       })
     }}</output>
     <output data-testid="changes">{{ JSON.stringify(changes) }}</output>
-    <output data-testid="submits">{{ submits }}</output>
-    <output data-testid="completes">{{ completes }}</output>
 
     <a href="/" data-testid="away">Away</a>
   </main>

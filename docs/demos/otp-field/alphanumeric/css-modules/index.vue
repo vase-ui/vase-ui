@@ -6,14 +6,16 @@ import styles from './index.module.css';
 const CODE_LENGTH = 6;
 
 const id = useId();
+const labelId = `${id}-label`;
 const descriptionId = `${id}-description`;
 </script>
 
 <template>
   <div :class="styles.Field">
-    <label :for="id" :class="styles.Label">Recovery code</label>
+    <label :id="labelId" :for="id" :class="styles.Label">Recovery code</label>
     <OTPField.Root
       :id="id"
+      :aria-labelledby="labelId"
       :length="CODE_LENGTH"
       validation-type="alphanumeric"
       :aria-describedby="descriptionId"

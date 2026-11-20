@@ -94,8 +94,8 @@ function inputOf(event: Event) {
   return event.currentTarget as HTMLInputElement;
 }
 
-// The press would put a caret in the character. Each click selects it, also a click on the slot
-// that has the focus, which gets no `focus` event.
+// The press would put a caret in the character, also on the slot that has the focus, which gets no
+// `focus` event. The slot takes the focus itself, and the focus selects the character.
 function onMousedown(event: MouseEvent) {
   event.preventDefault();
   root.focusSlot(index.value);
@@ -110,7 +110,6 @@ function onInput(event: Event) {
 }
 
 function onPaste(event: ClipboardEvent) {
-  if (root.state.disabled || root.state.readonly) return;
   event.preventDefault();
   root.enter(index.value, event.clipboardData?.getData('text/plain') ?? '', 'input-paste', event);
 }
@@ -120,7 +119,6 @@ function onCompositionstart() {
 }
 
 function onCompositionend(event: CompositionEvent) {
-  if (!composing) return;
   composing = false;
   root.enter(index.value, inputOf(event).value, 'input-change', event);
 }
