@@ -973,10 +973,14 @@ describe('the focus', () => {
     await userEvent.click(trigger);
     const element = await opened();
     await waitFor(() => expect(element.querySelector('button')).toHaveFocus());
+    // The leave lasts 300 ms, so the case reads the state at the focus and not after a poll.
+    let atFocus: { leaving: boolean; inUse: boolean } | undefined;
+    trigger.addEventListener('focus', () => {
+      atFocus = { leaving: element.isConnected, inUse: !inert(trigger) && !hidden(trigger) };
+    });
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(trigger).toHaveFocus());
-    expect(element.isConnected).toBe(true);
-    expect(inert(trigger) || hidden(trigger)).toBe(false);
+    expect(atFocus).toEqual({ leaving: true, inUse: true });
   });
 
   test('a dialog with no trigger that opened while <body> had the focus gives the focus to nothing at its close', async () => {
