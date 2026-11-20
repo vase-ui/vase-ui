@@ -19,7 +19,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import * as Combobox from '../../combobox/index.parts';
+import * as Combobox from '../../combobox/parts';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';

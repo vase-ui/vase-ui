@@ -111,13 +111,13 @@ const items = Combobox.createItems(fruits, {
             class="max-h-[min(22.5rem,var(--available-height))] overflow-y-auto overscroll-contain py-1 scroll-py-1 outline-0 data-empty:p-0"
           >
             <template #item="{ item }">
-              <Combobox.Item
+              <Combobox.Item v-slot="{ state }"
                 :value="item.id"
                 class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
               >
-                <Combobox.ItemIndicator class="col-start-1">
+                <span v-if="state.selected" class="col-start-1">
                   <CheckIcon />
-                </Combobox.ItemIndicator>
+                </span>
                 <span class="col-start-2">{{ item.name }}</span>
               </Combobox.Item>
             </template>

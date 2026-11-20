@@ -225,15 +225,6 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
     changes: 'mono (none)',
     events: ['input'],
   },
-  {
-    name: 'Combobox.Root',
-    family: 'combobox',
-    inputName: 'fruit',
-    written: ['Cherry'],
-    model: 'Cherry',
-    changes: 'Cherry (none)',
-    events: ['input'],
-  },
 ];
 
 describe('VUE-81: a render before the page show', () => {

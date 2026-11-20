@@ -430,12 +430,12 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
 
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
-const ROOT_MEMBERS = ['unmount', 'close', 'inputElement'];
+const COMBOBOX_ROOT_MEMBERS = ['close', 'element', 'inputElement'];
 
 for (const { family, part, members } of [
-  { family: 'select', part: 'Select.Root', members: ROOT_MEMBERS },
-  { family: 'combobox', part: 'Combobox.Root', members: ROOT_MEMBERS },
-  { family: 'autocomplete', part: 'Autocomplete.Root', members: ROOT_MEMBERS },
+  { family: 'select', part: 'Select.Root', members: ['unmount', 'close', 'inputElement'] },
+  { family: 'combobox', part: 'Combobox.Root', members: COMBOBOX_ROOT_MEMBERS },
+  { family: 'autocomplete', part: 'Autocomplete.Root', members: COMBOBOX_ROOT_MEMBERS },
   {
     family: 'resizable',
     part: 'Resizable.Panel',

@@ -90,10 +90,10 @@ const items = Combobox.createItems(fruits, {
           </Combobox.Empty>
           <Combobox.List :class="styles.List">
             <template #item="{ item }">
-              <Combobox.Item :value="item.id" :class="styles.Item">
-                <Combobox.ItemIndicator :class="styles.ItemIndicator">
+              <Combobox.Item v-slot="{ state }" :value="item.id" :class="styles.Item">
+                <span v-if="state.selected" :class="styles.ItemIndicator">
                   <CheckIcon />
-                </Combobox.ItemIndicator>
+                </span>
                 <span :class="styles.ItemText">{{ item.name }}</span>
               </Combobox.Item>
             </template>

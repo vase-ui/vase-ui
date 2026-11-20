@@ -108,9 +108,12 @@ const state = computed<ComboboxInputState>(() => ({
 const composed = shallowRef<string | null>(null);
 let compositionEnded = false;
 
+// An input in a kept popup shows the text of the close until the next open.
+const shown = () => (inPopup ? (context.keptText ?? context.shownText) : context.shownText);
+
 function showText() {
   const el = element.value;
-  if (el && composed.value === null && el.value !== context.shownText) el.value = context.shownText;
+  if (el && composed.value === null && el.value !== shown()) el.value = shown();
 }
 
 function write(text: string, event: Event) {
@@ -279,7 +282,7 @@ function elementProps() {
   const required = context.required && isControl.value;
   const own: Record<string, unknown> = {
     id: id.value,
-    value: composed.value ?? context.shownText,
+    value: composed.value ?? shown(),
     disabled: isDisabled.value,
     readonly: context.readonly,
     form: context.form,

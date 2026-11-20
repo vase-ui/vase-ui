@@ -144,10 +144,10 @@ const protocols = ['http', 'https', 'ssh'];
               <Combobox.Empty>No matches</Combobox.Empty>
               <Combobox.List>
                 <template #item="{ item }">
-                  <Combobox.Item :value="item">
-                    <Combobox.ItemIndicator>
+                  <Combobox.Item v-slot="{ state }" :value="item">
+                    <span v-if="state.selected" class="col-start-1">
                       <CheckIcon />
-                    </Combobox.ItemIndicator>
+                    </span>
                     <span class="col-start-2">{{ item }}</span>
                   </Combobox.Item>
                 </template>

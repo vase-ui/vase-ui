@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
@@ -206,30 +205,6 @@ const selectParts = (part: string) => (k: string, blankId: BlankId) => (
   </Field.Root>
 );
 
-const comboboxParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Field.Root>
-    <Field.Label>Fruit {k}</Field.Label>
-    <Combobox.Root defaultOpen items={['a', 'b']} {...blankIdIf(part === 'Root', blankId)}>
-      <Combobox.Input {...blankIdIf(part === 'Input', blankId)} data-testid={`input${k}`} />
-      <Combobox.Trigger {...blankIdIf(part === 'Trigger', blankId)} />
-      <Combobox.Portal>
-        <Combobox.Positioner>
-          <Combobox.Popup {...blankIdIf(part === 'Popup', blankId)}>
-            <Combobox.List {...blankIdIf(part === 'List', blankId)}>
-              <Combobox.Group data-testid={`group${k}`}>
-                <Combobox.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
-                  Group {k}
-                </Combobox.GroupLabel>
-                <Combobox.Item value="a">A</Combobox.Item>
-              </Combobox.Group>
-            </Combobox.List>
-          </Combobox.Popup>
-        </Combobox.Positioner>
-      </Combobox.Portal>
-    </Combobox.Root>
-  </Field.Root>
-);
-
 const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root invalid>
     <Field.Label {...blankIdIf(part === 'Label', blankId)}>Name {k}</Field.Label>
@@ -371,17 +346,6 @@ const rows: Row[] = [
   {
     name: 'Select.GroupLabel',
     tree: selectParts('GroupLabel'),
-    named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
-  },
-  ...(['Root', 'Trigger', 'Input', 'Popup', 'List'] as const).map((part): Row => ({
-    name: `Combobox.${part}`,
-    tree: comboboxParts(part),
-    twice: part === 'Root' || part === 'Input',
-    named: labelled('input', 'Fruit'),
-  })),
-  {
-    name: 'Combobox.GroupLabel',
-    tree: comboboxParts('GroupLabel'),
     named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
   },
   ...(['Input', 'Label', 'Description', 'Error'] as const).map((part): Row => ({

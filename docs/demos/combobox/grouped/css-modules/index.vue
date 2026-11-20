@@ -102,18 +102,18 @@ const groupedProduce: ProduceGroup[] = groupProduce(produceData);
           </Combobox.Empty>
           <Combobox.List :class="styles.List">
             <template #item="{ item: group }">
-              <Combobox.Group :items="group.items" :class="styles.Group">
+              <Combobox.Group :class="styles.Group">
                 <Combobox.GroupLabel :class="styles.GroupLabel">
                   {{ group.value }}
                 </Combobox.GroupLabel>
-                <Combobox.Collection v-slot="{ item }">
-                  <Combobox.Item :class="styles.Item" :value="item">
-                    <Combobox.ItemIndicator :class="styles.ItemIndicator">
+                <template v-for="item in group.items" :key="item.value">
+                  <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="item">
+                    <span v-if="state.selected" :class="styles.ItemIndicator">
                       <CheckIcon />
-                    </Combobox.ItemIndicator>
+                    </span>
                     <span :class="styles.ItemText">{{ item.label }}</span>
                   </Combobox.Item>
-                </Combobox.Collection>
+                </template>
               </Combobox.Group>
             </template>
           </Combobox.List>

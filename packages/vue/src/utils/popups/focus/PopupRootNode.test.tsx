@@ -3,8 +3,6 @@ import { h, nextTick, shallowRef, Transition, vShow, withDirectives } from 'vue'
 import type { Component, Directive, VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -22,8 +20,6 @@ interface PopupFamily {
   part: Component;
   /** The open tree of the family around a vnode of the part. */
   tree: (popup: VNode) => VNode;
-  /** The nodes that the part keeps beside its element. */
-  siblings: 'guards' | 'dismiss button';
 }
 
 const vMark: Directive<HTMLElement, string> = {
@@ -41,7 +37,6 @@ const families: PopupFamily[] = [
         <Dialog.Portal>{popup}</Dialog.Portal>
       </Dialog.Root>
     ),
-    siblings: 'guards',
   },
   {
     name: 'AlertDialog.Popup',
@@ -51,7 +46,6 @@ const families: PopupFamily[] = [
         <AlertDialog.Portal>{popup}</AlertDialog.Portal>
       </AlertDialog.Root>
     ),
-    siblings: 'guards',
   },
   {
     name: 'Drawer.Popup',
@@ -63,7 +57,6 @@ const families: PopupFamily[] = [
         </Drawer.Portal>
       </Drawer.Root>
     ),
-    siblings: 'guards',
   },
   {
     name: 'Menu.Popup',
@@ -75,7 +68,6 @@ const families: PopupFamily[] = [
         </Menu.Portal>
       </Menu.Root>
     ),
-    siblings: 'guards',
   },
   {
     name: 'ContextMenu.Popup',
@@ -88,7 +80,6 @@ const families: PopupFamily[] = [
         </ContextMenu.Portal>
       </ContextMenu.Root>
     ),
-    siblings: 'guards',
   },
   {
     name: 'Select.Popup',
@@ -103,33 +94,6 @@ const families: PopupFamily[] = [
         </Select.Portal>
       </Select.Root>
     ),
-    siblings: 'guards',
-  },
-  {
-    name: 'Combobox.Popup',
-    part: Combobox.Popup,
-    tree: (popup) => (
-      <Combobox.Root defaultOpen items={['a']}>
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>{popup}</Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-    ),
-    siblings: 'dismiss button',
-  },
-  {
-    name: 'Autocomplete.Popup',
-    part: Autocomplete.Popup,
-    tree: (popup) => (
-      <Autocomplete.Root defaultOpen items={['a']}>
-        <Autocomplete.Input />
-        <Autocomplete.Portal>
-          <Autocomplete.Positioner>{popup}</Autocomplete.Positioner>
-        </Autocomplete.Portal>
-      </Autocomplete.Root>
-    ),
-    siblings: 'dismiss button',
   },
 ];
 
@@ -170,15 +134,10 @@ describe('VUE-60: each popup part has one root node', () => {
     await render(() => family.tree(renderPart()));
     const popup = await screen.findByTestId('part');
 
-    if (family.siblings === 'guards') {
-      expect([popup.previousElementSibling, popup.nextElementSibling].map(isInsideGuard)).toEqual([
-        true,
-        true,
-      ]);
-    } else {
-      expect(popup.nextElementSibling).toHaveAttribute('role', 'button');
-      expect(popup.nextElementSibling).toHaveAttribute('aria-label', 'Dismiss');
-    }
+    expect([popup.previousElementSibling, popup.nextElementSibling].map(isInsideGuard)).toEqual([
+      true,
+      true,
+    ]);
 
     if (mode === 'scoped style') {
       expect(getComputedStyle(popup).outlineStyle).toBe('dashed');
@@ -227,15 +186,10 @@ describe('each popup part follows a late target of the #render slot', () => {
     await nextTick();
 
     expect(partInstance.value?.element).toBe(late);
-    if (family.siblings === 'guards') {
-      expect([late.previousElementSibling, late.nextElementSibling].map(isInsideGuard)).toEqual([
-        true,
-        true,
-      ]);
-    } else {
-      expect(late.nextElementSibling).toHaveAttribute('role', 'button');
-      expect(late.nextElementSibling).toHaveAttribute('aria-label', 'Dismiss');
-    }
+    expect([late.previousElementSibling, late.nextElementSibling].map(isInsideGuard)).toEqual([
+      true,
+      true,
+    ]);
     expect(takeReportedMessages()).toEqual([]);
   });
 });

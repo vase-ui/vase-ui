@@ -92,20 +92,20 @@ const groupedTags: TagGroup[] = groupTags(tagsData);
             class="outline-0 overflow-y-auto py-1 scroll-py-1 overscroll-contain max-h-[min(22.5rem,var(--available-height))] data-empty:p-0"
           >
             <template #item="{ item: group }">
-              <Autocomplete.Group :items="group.items" class="block pb-2 last:pb-0">
+              <Autocomplete.Group class="block pb-2 last:pb-0">
                 <Autocomplete.GroupLabel
                   class="p-2 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
                 >
                   {{ group.value }}
                 </Autocomplete.GroupLabel>
-                <Autocomplete.Collection v-slot="{ item: tag }">
+                <template v-for="tag in group.items" :key="tag.value">
                   <Autocomplete.Item
                     class="flex cursor-default items-center gap-2 py-2 pr-2 pl-2 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-0 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
                     :value="tag"
                   >
                     {{ tag.label }}
                   </Autocomplete.Item>
-                </Autocomplete.Collection>
+                </template>
               </Autocomplete.Group>
             </template>
           </Autocomplete.List>

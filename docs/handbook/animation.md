@@ -97,7 +97,7 @@ A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs
 
 When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, and with no positioner, on the backdrop. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
 
-When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a [Select](#animate-a-select-popup), and in some cases the popup of a [Combobox or Autocomplete](#animate-a-combobox-or-autocomplete-popup). The root emits `openChangeComplete` with `false`.
+When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a [Select](#animate-a-select-popup). The root emits `openChangeComplete` with `false`.
 
 Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The example of a Select popup animates `opacity`, so Vase UI ends the exit on its own.
 
@@ -158,10 +158,6 @@ The popup of [Select](/components/select) is not in the DOM until the select is 
 <<< ../demos/handbook-animation/animated-select-motion/css-modules/index.module.css
 
 :::
-
-### Animate a Combobox or Autocomplete popup
-
-The popup of [Combobox](/components/combobox) or [Autocomplete](/components/autocomplete) can stay in the DOM with no `keepMounted`. With no `items` prop on the root, the popup enters the DOM when the `Trigger` part gets the focus or a press. Without `multiple`, the popup of a Combobox also enters when the root reads a value from its hidden input. With the `items` prop, it then enters only if no item has that value or label. After that, the popup stays in the DOM, and it is hidden while it is closed. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
 
 ### Manual unmounting
 

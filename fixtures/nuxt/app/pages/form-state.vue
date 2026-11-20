@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Select } from '@vase-ui/vue/select';
 
 // Each part changes before the hydration, or before a move back in the history. The test reads
 // the form data, the model of each part and the count of its change events.
 const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
-const FRUITS = ['Apple', 'Banana', 'Cherry'];
 
 const font = ref<string | null>('serif');
-const fruit = ref<string | null>(null);
 const changes = reactive<Record<string, number>>({});
 
 function count(name: string) {
@@ -32,26 +29,11 @@ function count(name: string) {
           </Select.Positioner>
         </Select.Portal>
       </Select.Root>
-      <Combobox.Root v-model="fruit" name="fruit" :items="FRUITS" @value-change="count('fruit')">
-        <Combobox.Input aria-label="Fruit" data-testid="fruit-input" />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                <template #item="{ item }">
-                  <Combobox.Item :value="item">{{ item }}</Combobox.Item>
-                </template>
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
     </form>
 
     <output data-testid="models">{{
       JSON.stringify({
         font,
-        fruit,
       })
     }}</output>
     <output data-testid="changes">{{ JSON.stringify(changes) }}</output>

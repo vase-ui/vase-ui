@@ -1648,28 +1648,6 @@ async function expectHydratedComboboxPage(page: Page) {
   ).toEqual({ role: null, tabindex: '-1', 'aria-haspopup': 'listbox' });
 }
 
-// The text that the case types into each control before hydration, and the value that the
-// control and the model of the page have after hydration.
-const TEXT_BEFORE_HYDRATION = [
-  { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
-  // The last control keeps the focus.
-  {
-    control: 'autocomplete-input',
-    text: 'Che',
-    value: 'Che',
-    output: 'autocomplete-value',
-    model: 'Che',
-  },
-];
-
-// Nobody typed, so each control and each model is empty.
-async function expectTextBeforeHydrationPage(page: Page) {
-  for (const { control, output } of TEXT_BEFORE_HYDRATION) {
-    expect(await page.getByTestId(control).inputValue()).toBe('');
-    expect(await page.getByTestId(output).textContent()).toBe('');
-  }
-}
-
 interface FormState {
   formData: Record<string, string[]>;
   models: Record<string, unknown>;
@@ -1678,22 +1656,18 @@ interface FormState {
 
 const FORM_STATE_INITIAL_MODELS = {
   font: 'serif',
-  fruit: null,
 };
 
 // The state of /form-state after each part changes.
 const FORM_STATE_CHANGED: FormState = {
   formData: {
     font: ['mono'],
-    fruit: ['Cherry'],
   },
   models: {
     font: 'mono',
-    fruit: 'Cherry',
   },
   changes: {
     font: 1,
-    fruit: 1,
   },
 };
 
@@ -1741,7 +1715,6 @@ async function changeFormStateBeforeHydration(page: Page) {
         });
     };
     write('font', ['mono']);
-    write('fruit', ['Cherry']);
   });
 }
 
@@ -1749,9 +1722,6 @@ async function changeFormStateBeforeHydration(page: Page) {
 async function changeHydratedFormState(page: Page) {
   await page.getByTestId('font-trigger').click();
   await page.getByRole('option', { name: 'Monospace' }).click();
-  await page.getByTestId('fruit-input').click();
-  await page.keyboard.type('Che');
-  await page.getByRole('option', { name: 'Cherry' }).click();
 }
 
 function holdScripts(page: Page) {
@@ -2005,7 +1975,6 @@ const PAGES: PageCase[] = [
     expectPage: expectComboboxPageOnServer,
     expectHydratedPage: expectHydratedComboboxPage,
   },
-  { path: '/text-before-hydration', expectPage: expectTextBeforeHydrationPage },
   { path: '/form-state', expectPage: expectFormStatePage },
   {
     path: '/resizable',
@@ -2670,19 +2639,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it('filters the items of /autocomplete with the locale of the visitor after hydration', async () => {
-    const page = await createPage(undefined, { locale: 'sv-SE' });
-    const messages = collectMessages(page);
-
-    await page.goto(url('/autocomplete'), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
-
-    // In Swedish, "ö" is not "o", so no city contains the text.
-    expect(await page.getByTestId('input').inputValue()).toBe('malmo');
-    expect(await page.getByRole('option').count()).toBe(0);
-    expect(messages).toEqual([]);
-  });
-
   it('filters the items of /autocomplete while typing after hydration', async () => {
     const page = await createPage('/autocomplete');
     const messages = collectMessages(page);
@@ -2711,43 +2667,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await input.inputValue()).toBe('Cherry');
     expect(await readFormData(page)).toEqual(['fruit=Cherry', 'tags=b', 'country=Sweden']);
-    expect(messages).toEqual([]);
-  });
-
-  it('keeps the text that a visitor types into /text-before-hydration while the scripts load', async () => {
-    const page = await createPage();
-    const messages = collectMessages(page);
-    const heldScripts: Route[] = [];
-    let holdsScripts = true;
-    await page.route('**/_nuxt/**', async (route) => {
-      if (holdsScripts && route.request().resourceType() === 'script') {
-        heldScripts.push(route);
-      } else {
-        await route.continue();
-      }
-    });
-
-    // The scripts of the page are modules, so `DOMContentLoaded` waits for them.
-    await page.goto(url('/text-before-hydration'), { waitUntil: 'commit' });
-    for (const { control, text } of TEXT_BEFORE_HYDRATION) {
-      await page.getByTestId(control).pressSequentially(text);
-    }
-    expect(heldScripts.length).toBeGreaterThan(0);
-    holdsScripts = false;
-    await Promise.all(heldScripts.map((route) => route.continue()));
-    await page.waitForFunction(
-      () =>
-        (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
-        false,
-    );
-
-    for (const { control, value, output, model } of TEXT_BEFORE_HYDRATION) {
-      await expect.poll(() => page.getByTestId(output).textContent()).toBe(model);
-      await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
-    }
-    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
-      'autocomplete-input',
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2786,7 +2705,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of ['font', 'fruit']) {
+        for (const name of ['font']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

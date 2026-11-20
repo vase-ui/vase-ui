@@ -574,12 +574,9 @@
    three classes and wins. A Select sheet does this for its dark highlight. The last selector is
    the Tailwind variant: the text has the class `text-neutral-500`, in an item with the light
    highlight class. */
-:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemDescription_'],
-:where(:root:not(.dark)) [data-vase-ui-portal] [class*='_ItemSubtitle_'],
-:root:not(.dark)
-  [data-vase-ui-portal]
-  [class*='data-highlighted:before:bg-neutral-100']
-  [class~='text-neutral-500'] {
+:where(:root:not(.dark)) [role='option'] [class*='_ItemDescription_'],
+:where(:root:not(.dark)) [role='option'] [class*='_ItemSubtitle_'],
+:root:not(.dark) [class*='data-highlighted:before:bg-neutral-100'] [class~='text-neutral-500'] {
   color: oklch(43.9% 0 0deg);
 }
 
@@ -587,7 +584,7 @@
    dark theme. On the highlight of an item, `oklch(26.9% 0 0)`, that text has 4.02:1 contrast. The
    sheets have no lighter blue, so this rule uses the next lighter blue of the Tailwind palette,
    which has 5.74:1 there. */
-.dark [data-vase-ui-portal] mark {
+.dark [role='option'] mark {
   color: oklch(70.7% 0.165 254.624deg);
 }
 
@@ -599,7 +596,7 @@
 
 /* The Forms demos of Base UI give the URL line of an option `whitespace-nowrap`. The list is as
    wide as its input, and the URL is wider than a list of `16rem`. This rule lets that text wrap. */
-[data-vase-ui-portal] [role='option'] [class~='whitespace-nowrap'] {
+[role='option'] [class~='whitespace-nowrap'] {
   overflow-wrap: anywhere;
   white-space: normal;
 }

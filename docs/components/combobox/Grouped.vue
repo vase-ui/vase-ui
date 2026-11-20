@@ -26,11 +26,11 @@ const groups: ProduceGroupItem[] = [
         <Combobox.Popup>
           <Combobox.List>
             <template #item="{ item: group }">
-              <Combobox.Group :items="group.items">
+              <Combobox.Group>
                 <Combobox.GroupLabel>{{ group.value }}</Combobox.GroupLabel>
-                <Combobox.Collection v-slot="{ item }">
+                <template v-for="item in group.items" :key="item.value">
                   <Combobox.Item :value="item">{{ item }}</Combobox.Item>
-                </Combobox.Collection>
+                </template>
               </Combobox.Group>
             </template>
           </Combobox.List>

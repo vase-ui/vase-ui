@@ -170,6 +170,9 @@ function elementProps() {
         tabindex: -1,
         'aria-haspopup': 'listbox',
         'aria-controls': open ? context.listId : undefined,
+        // The labels of the input name the button beside it.
+        'aria-labelledby':
+          [field?.labelId, context.labelId].filter(Boolean).join(' ') || undefined,
         ...(field && fieldStateAttributes(field.state)),
       };
   Object.assign(own, {

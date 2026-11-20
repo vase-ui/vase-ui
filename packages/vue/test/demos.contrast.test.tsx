@@ -120,7 +120,7 @@ function demoPath(demo: string, variant: string) {
 
 function highlightedItem() {
   return waitFor(() => {
-    const item = document.querySelector('[data-vase-ui-portal] [data-highlighted]');
+    const item = document.querySelector('[data-highlighted]');
     expect(item).toBeInTheDocument();
     return item!;
   });
@@ -146,7 +146,7 @@ async function openWithKeyboard(trigger: HTMLElement) {
   trigger.focus();
   await userEvent.keyboard('{ArrowDown}');
   await waitFor(() => {
-    expect(trigger).toHaveAttribute('data-pressed');
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
   return trigger;
 }

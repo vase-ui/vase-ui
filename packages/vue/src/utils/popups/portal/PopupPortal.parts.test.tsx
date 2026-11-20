@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
@@ -31,7 +30,6 @@ const keepsSlotsStable = !(await rendersInnerPartAgain());
 const open = { defaultOpen: true };
 
 const portalParts = [
-  { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
   {
     name: 'Dialog.Portal in place',

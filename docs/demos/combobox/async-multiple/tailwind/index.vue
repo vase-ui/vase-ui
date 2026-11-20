@@ -63,7 +63,7 @@ const emptyMessage = computed(() => {
   return 'Try a different search term.';
 });
 
-function handleOpenChangeComplete(open: boolean) {
+function handleOpenChange(open: boolean) {
   if (!open) {
     searchResults.value = selectedValues.value;
     blockStartStatus.value = false;
@@ -281,7 +281,7 @@ const allUsers: DirectoryUser[] = [
     :is-item-equal-to-value="(item: DirectoryUser, value: DirectoryUser) => item.id === value.id"
     multiple
     :filter="null"
-    @open-change-complete="handleOpenChangeComplete"
+    @update:open="handleOpenChange"
     @value-change="handleValueChange"
     @input-value-change="handleInputValueChange"
   >
@@ -363,13 +363,13 @@ const allUsers: DirectoryUser[] = [
             </Combobox.Empty>
             <Combobox.List>
               <template #item="{ item: user }">
-                <Combobox.Item
+                <Combobox.Item v-slot="{ state }"
                   class="grid cursor-default grid-cols-[1rem_1fr] items-start gap-2 px-2 py-2 text-sm leading-[1.2rem] outline-none select-none [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-neutral-950 [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-100 dark:[@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:before:bg-neutral-800"
                   :value="user"
                 >
-                  <Combobox.ItemIndicator class="col-start-1 mt-1">
+                  <span v-if="state.selected" class="col-start-1 mt-1">
                     <CheckIcon />
-                  </Combobox.ItemIndicator>
+                  </span>
                   <span class="col-start-2 flex flex-col gap-1">
                     <span class="text-sm leading-5 font-bold">{{ user.name }}</span>
                     <span class="text-xs">{{ user.email }}</span>

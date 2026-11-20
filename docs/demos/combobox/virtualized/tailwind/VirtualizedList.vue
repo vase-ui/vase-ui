@@ -79,7 +79,7 @@ defineExpose({ virtualizer });
     :style="{ '--total-size': `${totalSize}px` }"
   >
     <div role="presentation" class="relative w-full" :style="{ height: `${totalSize}px` }">
-      <Combobox.Item
+      <Combobox.Item v-slot="{ state }"
         v-for="{ virtualItem, item } in rows"
         :key="virtualItem.index"
         :ref="measureItem"
@@ -98,9 +98,9 @@ defineExpose({ virtualizer });
           transform: `translateY(${virtualItem.start}px)`,
         }"
       >
-        <Combobox.ItemIndicator class="col-start-1">
+        <span v-if="state.selected" class="col-start-1">
           <CheckIcon />
-        </Combobox.ItemIndicator>
+        </span>
         <span class="col-start-2">{{ item.name }}</span>
       </Combobox.Item>
     </div>

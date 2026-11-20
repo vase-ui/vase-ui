@@ -9,7 +9,6 @@ import {
   screen,
   within,
 } from '#test-utils';
-import * as Combobox from '../../combobox/index.parts';
 import * as Select from '../../select/index.parts';
 import LabelPosition from './LabelPosition.test.vue';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
@@ -72,27 +71,8 @@ function Control(props: { id: string; testid?: string }) {
 describe('useLabel', () => {
   const { render } = createRenderer();
 
-  describe.each(['Select.Label', 'Combobox.Label'])('%s', (labelType) => {
+  describe.each(['Select.Label'])('%s', () => {
     const TestControl = defineComponent(() => () => {
-      if (labelType === 'Combobox.Label') {
-        return (
-          <Combobox.Root>
-            <Combobox.Label>Country</Combobox.Label>
-            <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Input aria-label="Search countries" />
-                  <Combobox.List>
-                    <Combobox.Item value="fr">France</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-        );
-      }
-
       return (
         <Select.Root>
           <Select.Label>Country</Select.Label>
@@ -220,12 +200,12 @@ describe('useLabel', () => {
   it('focuses a control in the light DOM from a label in a shadow root', async () => {
     const { container } = createShadowContainer();
     const { user } = await render(
-      <Combobox.Root>
+      <Select.Root>
         <Teleport to={container}>
-          <Combobox.Label>Country</Combobox.Label>
+          <Select.Label>Country</Select.Label>
         </Teleport>
-        <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-      </Combobox.Root>,
+        <Select.Trigger id="country">Choose a country</Select.Trigger>
+      </Select.Root>,
     );
 
     await user.click(within(container).getByText('Country'));
@@ -237,14 +217,14 @@ describe('useLabel', () => {
     const outer = createShadowContainer();
     const inner = createShadowContainer(outer.shadowRoot);
     const { user } = await render(
-      <Combobox.Root>
+      <Select.Root>
         <Teleport to={inner.container}>
-          <Combobox.Label>Country</Combobox.Label>
+          <Select.Label>Country</Select.Label>
         </Teleport>
         <Teleport to={outer.container}>
-          <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+          <Select.Trigger id="country">Choose a country</Select.Trigger>
         </Teleport>
-      </Combobox.Root>,
+      </Select.Root>,
     );
 
     await user.click(within(inner.container).getByText('Country'));

@@ -9,7 +9,6 @@ import type { ComboboxItemProps, ComboboxItemState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ComboboxItemProps>(), {
-  value: () => null,
   index: undefined,
   disabled: false,
 });
@@ -28,10 +27,12 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
+// An item with no value has the value `null`.
+const value = () => (props.value === undefined ? null : props.value);
 // Each value that the item reads is a primitive of its own, so a highlight step renders only the
 // two items whose highlight changes (discussion #665).
 const disabled = computed(() => context.disabled || props.disabled);
-const selected = computed(() => context.isSelected(props.value));
+const selected = computed(() => context.isSelected(value()));
 const { highlighted, attributes } = useListItem(context.list, element, {
   label: () => undefined,
   disabled: () => disabled.value,
@@ -42,7 +43,7 @@ watch(
     if (!el) return;
     onCleanup(
       context.addItem(el, {
-        value: () => props.value,
+        value,
         index: () => props.index,
       }),
     );
@@ -57,7 +58,7 @@ const state = computed<ComboboxItemState>(() => ({
 }));
 
 function onClick(event: MouseEvent) {
-  if (!disabled.value) context.select(props.value, event);
+  if (!disabled.value) context.select(value(), event);
 }
 
 function elementProps() {

@@ -207,8 +207,8 @@ const top100Movies: Movie[] = [
       <Autocomplete.Input placeholder="e.g. Pulp Fiction or 1994" :class="styles.Input" />
     </label>
 
-    <Autocomplete.Portal :hidden="!hasStatus">
-      <Autocomplete.Positioner :class="styles.Positioner" :side-offset="4" align="start">
+    <Autocomplete.Portal>
+      <Autocomplete.Positioner :hidden="!hasStatus" :class="styles.Positioner" :side-offset="4" align="start">
         <Autocomplete.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
           <div :class="styles.Viewport">
             <Autocomplete.Status>

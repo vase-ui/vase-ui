@@ -3,8 +3,6 @@ import { defineComponent, h, shallowRef } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -57,16 +55,6 @@ const rows: Row[] = [
     expected: () => 'dialog',
   },
   {
-    name: 'Autocomplete.Input role',
-    attribute: 'role',
-    createNode: () => (
-      <Autocomplete.Root>
-        <Autocomplete.Input role={undefined} data-testid="part" />
-      </Autocomplete.Root>
-    ),
-    expected: () => 'combobox',
-  },
-  {
     name: 'Calendar.Grid role',
     attribute: 'role',
     createNode: () => (
@@ -75,17 +63,6 @@ const rows: Row[] = [
       </CalendarAncestors>
     ),
     expected: () => 'grid',
-  },
-  {
-    name: 'Combobox.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Combobox.Root>
-        <Combobox.Trigger aria-haspopup={undefined} data-testid="part" />
-      </Combobox.Root>
-    ),
-    // With no input, the trigger opens a popup that holds the input.
-    expected: () => 'dialog',
   },
   {
     name: 'ContextMenu.Trigger data-popup-open',

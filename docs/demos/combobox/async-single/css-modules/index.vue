@@ -56,7 +56,7 @@ const emptyMessage = computed(() => {
   return 'Try a different search term.';
 });
 
-function handleOpenChangeComplete(open: boolean) {
+function handleOpenChange(open: boolean) {
   if (!open && selectedValue.value) {
     searchResults.value = [selectedValue.value];
   }
@@ -267,7 +267,7 @@ const allUsers: DirectoryUser[] = [
     :item-to-string-label="(user: DirectoryUser) => user.name"
     :is-item-equal-to-value="(item: DirectoryUser, value: DirectoryUser) => item.id === value.id"
     :filter="null"
-    @open-change-complete="handleOpenChangeComplete"
+    @update:open="handleOpenChange"
     @value-change="handleValueChange"
     @input-value-change="handleInputValueChange"
   >
@@ -304,10 +304,10 @@ const allUsers: DirectoryUser[] = [
             </Combobox.Empty>
             <Combobox.List>
               <template #item="{ item: user }">
-                <Combobox.Item :class="styles.Item" :value="user">
-                  <Combobox.ItemIndicator :class="styles.ItemIndicator">
+                <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="user">
+                  <span v-if="state.selected" :class="styles.ItemIndicator">
                     <CheckIcon />
-                  </Combobox.ItemIndicator>
+                  </span>
                   <span :class="styles.ItemText">
                     <span :class="styles.ItemTitle">{{ user.name }}</span>
                     <span :class="styles.ItemEmail">{{ user.email }}</span>

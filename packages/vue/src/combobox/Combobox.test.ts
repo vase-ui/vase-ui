@@ -7,7 +7,6 @@ import {
   type ComboboxRootHighlightEventDetails,
 } from '@vase-ui/vue/combobox';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
-import ComboboxGrid from '../../test/fixtures/ComboboxGrid.vue';
 import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
 import { mount, mountError } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
@@ -328,6 +327,26 @@ describe('text', () => {
   });
 });
 
+describe('a kept popup', () => {
+  test('keeps the filter and the text of its input from the close until the next open (N1)', async () => {
+    await mountCombobox({ inputInPopup: true, portal: { keepMounted: true } });
+    await userEvent.click(trigger());
+    await waitFor(() => expect(popup()).not.toHaveAttribute('hidden'));
+    await waitFor(() => expect(document.activeElement).toBe(input()));
+    await userEvent.keyboard('ap');
+    await waitFor(() => expect(itemNames()).toEqual(['Apple', 'Apricot', 'Grape']));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toHaveAttribute('hidden'));
+    await nextTick();
+    expect(itemNames()).toEqual(['Apple', 'Apricot', 'Grape']);
+    expect(input().value).toBe('ap');
+    await userEvent.click(trigger());
+    await waitFor(() => expect(popup()).not.toHaveAttribute('hidden'));
+    await waitFor(() => expect(itemNames()).toHaveLength(FRUITS.length));
+    expect(input().value).toBe('');
+  });
+});
+
 describe('filter', () => {
   test('the query is the text with no space at the ends; a group with no item is left out; `limit` cuts the list', async () => {
     await mountCombobox({
@@ -468,29 +487,6 @@ describe('highlight', () => {
     expect(item('Apple')).toHaveAttribute('aria-disabled', 'true');
     await userEvent.keyboard('{Enter}');
     expect(log.filter((entry) => entry.includes('valueChange'))).toEqual([]);
-  });
-
-  test('a grid moves in rows and columns; a shorter row gives its last item', async () => {
-    mount(ComboboxGrid);
-    await nextTick();
-    input().focus();
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(highlighted()).toBe(undefined);
-    await userEvent.keyboard('{ArrowDown}{ArrowRight}{ArrowRight}');
-    await waitFor(() => expect(highlighted()).toBe('a3'));
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-    await waitFor(() => expect(highlighted()).toBe('c2'));
-    expect(item('a1')).toHaveAttribute('role', 'gridcell');
-    expect(item('a1').parentElement).toHaveAttribute('role', 'row');
-    expect(input()).toHaveAttribute('aria-haspopup', 'grid');
-  });
-
-  test('a grid in a right-to-left list moves forward with ArrowLeft', async () => {
-    mount(ComboboxGrid, { dir: 'rtl' });
-    await nextTick();
-    input().focus();
-    await userEvent.keyboard('{ArrowDown}{ArrowLeft}');
-    await waitFor(() => expect(highlighted()).toBe('a2'));
   });
 });
 

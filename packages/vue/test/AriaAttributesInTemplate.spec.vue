@@ -1,6 +1,6 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
-import * as Combobox from '../src/combobox/index.parts';
+import * as Combobox from '../src/combobox/parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import { Resizable } from '../src/resizable';

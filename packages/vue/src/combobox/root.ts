@@ -135,6 +135,8 @@ export interface ComboboxRootContext {
   readonly text: string;
   /** The text that the input shows: the text, or the inline completion of a key highlight. */
   readonly shownText: string;
+  /** The text of the close, which an input in a kept popup shows until the next open. */
+  readonly keptText: string | null;
   readonly hasValue: boolean;
   /** The data of `items`, or `undefined`. */
   readonly data: readonly unknown[] | undefined;
@@ -323,7 +325,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   });
   // The user typed text after the open.
   const typed = shallowRef(false);
+  // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
+  // the text of its input until the next open (test/measurements/combobox.test.ts, N1).
+  const kept = shallowRef<{ query: string; text: string } | null>(null);
   const query = computed(() => {
+    if (kept.value) return kept.value.query;
     const trimmed = text.value.trim();
     // A single combobox shows each item while its input shows the label of its value.
     if (source.mode === 'single' && !typed.value && trimmed === labelOf(valueModel.value).trim()) {
@@ -535,9 +541,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       if (!open) {
         list.highlight(null, 'none');
         lastHighlight = { value: undefined, index: -1 };
+        kept.value = root.keepMounted ? { query: query.value, text: text.value } : null;
         resetText();
         return;
       }
+      kept.value = null;
       // The items mount in this update.
       void nextTick(() => {
         if (!root.open || list.highlighted) return;
@@ -821,6 +829,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
     get shownText() {
       return completion.value ?? text.value;
+    },
+    get keptText() {
+      return kept.value?.text ?? null;
     },
     get hasValue() {
       return hasValue.value;

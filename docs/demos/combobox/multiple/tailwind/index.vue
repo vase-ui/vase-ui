@@ -109,13 +109,13 @@ const langs: ProgrammingLanguage[] = [
           </Combobox.Empty>
           <Combobox.List>
             <template #item="{ item: language }">
-              <Combobox.Item
-                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-selected:relative data-selected:z-0 data-selected:text-neutral-950 data-selected:before:absolute data-selected:before:inset-0 data-selected:before:z-[-1] [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-white [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-950 dark:data-selected:text-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950 dark:[@media(hover:hover)]:data-highlighted:before:bg-white"
+              <Combobox.Item v-slot="{ state }"
+                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none aria-selected:relative aria-selected:z-0 aria-selected:text-neutral-950 aria-selected:before:absolute aria-selected:before:inset-0 aria-selected:before:z-[-1] [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-white [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-950 dark:aria-selected:text-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950 dark:[@media(hover:hover)]:data-highlighted:before:bg-white"
                 :value="language"
               >
-                <Combobox.ItemIndicator class="col-start-1">
+                <span v-if="state.selected" class="col-start-1">
                   <CheckIcon />
-                </Combobox.ItemIndicator>
+                </span>
                 <span class="col-start-2">{{ language.value }}</span>
               </Combobox.Item>
             </template>

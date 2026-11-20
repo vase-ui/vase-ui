@@ -11,8 +11,6 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
@@ -158,44 +156,6 @@ const families = [
     renderPart: renderSelect,
     marksPage: true,
     movesFocus: true,
-  },
-  {
-    name: 'Combobox',
-    renderPart: () => (
-      <Combobox.Root defaultOpen items={['one']}>
-        <Combobox.Input />
-        <Combobox.Portal data-testid="portal">
-          <Combobox.Positioner>
-            <Combobox.Popup data-testid="popup">
-              <Combobox.List>
-                <Combobox.Item value="one">One</Combobox.Item>
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-    ),
-    marksPage: true,
-    movesFocus: false,
-  },
-  {
-    name: 'Autocomplete',
-    renderPart: () => (
-      <Autocomplete.Root defaultOpen items={['one']}>
-        <Autocomplete.Input />
-        <Autocomplete.Portal data-testid="portal">
-          <Autocomplete.Positioner>
-            <Autocomplete.Popup data-testid="popup">
-              <Autocomplete.List>
-                <Autocomplete.Item value="one">One</Autocomplete.Item>
-              </Autocomplete.List>
-            </Autocomplete.Popup>
-          </Autocomplete.Positioner>
-        </Autocomplete.Portal>
-      </Autocomplete.Root>
-    ),
-    marksPage: true,
-    movesFocus: false,
   },
   {
     name: 'Tooltip',

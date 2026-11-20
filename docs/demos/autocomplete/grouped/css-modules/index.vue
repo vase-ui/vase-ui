@@ -84,15 +84,15 @@ const groupedTags: TagGroup[] = groupTags(tagsData);
           </Autocomplete.Empty>
           <Autocomplete.List :class="styles.List">
             <template #item="{ item: group }">
-              <Autocomplete.Group :items="group.items" :class="styles.Group">
+              <Autocomplete.Group :class="styles.Group">
                 <Autocomplete.GroupLabel :class="styles.GroupLabel">
                   {{ group.value }}
                 </Autocomplete.GroupLabel>
-                <Autocomplete.Collection v-slot="{ item: tag }">
+                <template v-for="tag in group.items" :key="tag.value">
                   <Autocomplete.Item :class="styles.Item" :value="tag">
                     {{ tag.label }}
                   </Autocomplete.Item>
-                </Autocomplete.Collection>
+                </template>
               </Autocomplete.Group>
             </template>
           </Autocomplete.List>

@@ -191,11 +191,11 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`.
+// A closed popup that stays in the DOM is `hidden`. The popup of a combobox has its list.
 function openPopups() {
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden]), :not([hidden]) > [role="listbox"]',
     ),
   ]);
 }

@@ -259,10 +259,10 @@ const countries: Country[] = [
               </Combobox.Empty>
               <Combobox.List :class="styles.List">
                 <template #item="{ item: country }">
-                  <Combobox.Item :value="country" :class="styles.Item">
-                    <Combobox.ItemIndicator :class="styles.ItemIndicator">
+                  <Combobox.Item v-slot="{ state }" :value="country" :class="styles.Item">
+                    <span v-if="state.selected" :class="styles.ItemIndicator">
                       <CheckIcon />
-                    </Combobox.ItemIndicator>
+                    </span>
                     <span :class="styles.ItemText">{{ country.label }}</span>
                   </Combobox.Item>
                 </template>

@@ -100,10 +100,10 @@ const langs: ProgrammingLanguage[] = [
           </Combobox.Empty>
           <Combobox.List>
             <template #item="{ item: language }">
-              <Combobox.Item :class="styles.Item" :value="language">
-                <Combobox.ItemIndicator :class="styles.ItemIndicator">
+              <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="language">
+                <span v-if="state.selected" :class="styles.ItemIndicator">
                   <CheckIcon />
-                </Combobox.ItemIndicator>
+                </span>
                 <span :class="styles.ItemText">{{ language.value }}</span>
               </Combobox.Item>
             </template>

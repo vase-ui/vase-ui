@@ -63,8 +63,8 @@ An input combined with a list of predefined items to select.
 - **Combobox is a Select with a filter**: Use Combobox when the value must be one of a set of predefined items. It works like [Select](/components/select), but the user types in an input to filter the items. Prefer Combobox to Select when the list is long enough to need a filter.
 - **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
 - **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
-- **Form controls must have an accessible name**: If `<Combobox.Input>` is the form control, label it with a native `<label>` or with `<Field.Label>`. When no label is visible, give it an `aria-label`. `<Combobox.Label>` labels `<Combobox.Trigger>`. Use it for the [input inside popup](#input-inside-popup) pattern, where the trigger is the form control. See the [forms guide](/handbook/forms).
-- **Closing animations**: The popup stays rendered until its closing animation finishes. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself.
+- **Form controls must have an accessible name**: Label the control with a native `<label>`, `<Field.Label>` or `<Combobox.Label>`. `<Combobox.Label>` names the control: the input, or the trigger when the input is in the popup. When no label is visible, give the control an `aria-label`. See the [forms guide](/handbook/forms).
+- **Animations**: Put `<Combobox.Popup>` in a `<Transition>` to animate it. A popup in a portal with `keepMounted` stays in the DOM with `hidden`, so a style on `[hidden]` animates it.
 
 ## Anatomy
 
@@ -72,13 +72,13 @@ Import the component and assemble its parts:
 
 <<< ./combobox/Anatomy.vue
 
-`Combobox.Root` renders no element. It renders hidden inputs beside its content. A combobox with a `name` submits its value with the form. With `multiple`, it submits one entry for each selected item.
+`Combobox.Root` renders a `<div>`. The inputs of its form are its last children. A combobox with a `name` submits its value with the form. With `multiple`, it submits one entry for each selected item. A hidden text input with no name has the constraint validation and takes an autofill. Give `autocomplete` to the root for an autofill.
 
 Bind the value with `v-model`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:modelValue`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event. Without `multiple`, a pick of the selected item emits no `valueChange` and no `update:modelValue`. For the text that the input has, the root emits no `inputValueChange` and no `update:inputValue`. A press of `Combobox.Clear`, or Escape in a closed input, emits no `valueChange` and no `update:modelValue` when the combobox has no value.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Combobox.Input`. After the hydration, the root emits `inputValueChange` and `update:inputValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+An item shows its selected state in its default slot: `<Combobox.Item v-slot="{ state }">` gives `state.selected`. A style can read `[aria-selected="true"]` on the item.
 
-The root takes a value that a program or the browser writes into its hidden input before the page hydrates, as it takes an autofill. It also takes a value that the browser restores after a move back in the history or a reload. The root then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A combobox with no `name`, no field, no `autoComplete` and no `required` keeps its value, because its hidden input is `type="hidden"`.
+The typeahead of a closed trigger and an autofill by the label of an item read the labels of `items`, or the items of a popup that stays in the DOM (`keepMounted` on the portal).
 
 ## Item values
 
@@ -413,7 +413,7 @@ Set `to` on `Combobox.Portal` to select a target. For example, `to="#overlays"` 
 
 Matches items against a query using `Intl.Collator` for robust string matching. Use it when you filter the items yourself. Call it in `setup`. To make the filter follow a value that changes, give it a ref or a getter for its options.
 
-With no `locale`, the filter uses `en-US` until the component mounts. The server and the first client render then give the same list.
+With no `locale`, the filter uses the locale of the nearest `LocaleProvider`, else `en-US`. The server and the client then give the same list.
 
 <ApiReference name="Combobox.useFilter" :heading-level="3" />
 

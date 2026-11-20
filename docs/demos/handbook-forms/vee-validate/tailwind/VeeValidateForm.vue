@@ -56,11 +56,16 @@ function submitForm(data: FormValues) {
 
 const formElement = useTemplateRef('formElement');
 
-// The element with the name of a field can be the hidden input of a part. That input gives the
-// focus to the control of the part.
+// The element with the name of a field can be a hidden input of a part, which takes no focus. The
+// part then has a text input that gives the focus to its control.
 const onSubmit = handleSubmit(submitForm, ({ errors }) => {
   const [name] = Object.keys(errors);
-  formElement.value?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+  const named = formElement.value?.querySelector<HTMLInputElement>(`[name="${name}"]`);
+  const target =
+    named?.type === 'hidden'
+      ? named.parentElement?.querySelector<HTMLElement>('input:not([type="hidden"])')
+      : named;
+  target?.focus();
 });
 
 function required(value: unknown) {
@@ -221,10 +226,10 @@ const protocols = ['http', 'https', 'ssh'];
                 <Combobox.Empty>No matches</Combobox.Empty>
                 <Combobox.List>
                   <template #item="{ item }">
-                    <Combobox.Item :value="item">
-                      <Combobox.ItemIndicator>
+                    <Combobox.Item v-slot="{ state }" :value="item">
+                      <span v-if="state.selected" class="col-start-1">
                         <CheckIcon />
-                      </Combobox.ItemIndicator>
+                      </span>
                       <span class="col-start-2">{{ item }}</span>
                     </Combobox.Item>
                   </template>
