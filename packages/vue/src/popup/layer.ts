@@ -428,17 +428,18 @@ function startHide() {
   hideScope = effectScope(true);
   hideScope.run(() => {
     watch(
+      // A new object for each change of the stack, so that the last close also stops the watcher.
       () => {
         const top = stack.findLast((entry) => entry.layer.hide);
-        if (!top) return null;
+        if (!top) return { hide: false as const, inside: [] };
         const { root } = top.layer;
-        const hide = top.layer.hide as 'inert' | 'aria-hidden';
         const index = stack.indexOf(top);
         return {
-          hide,
+          hide: top.layer.hide,
           inside: [
             root.popup,
             ...root.parts,
+            ...root.portalElements,
             root.activeTrigger,
             ...stack.slice(index + 1).flatMap(layerElements),
           ],
@@ -450,9 +451,9 @@ function startHide() {
   });
 }
 
-function writeHide(next: { hide: 'inert' | 'aria-hidden'; inside: (Element | null)[] } | null) {
+function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
-  if (next) {
+  if (next.hide) {
     const kept = new Set<Node>();
     for (const element of next.inside) {
       if (!element?.isConnected) continue;
