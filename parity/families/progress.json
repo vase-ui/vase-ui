@@ -8,27 +8,27 @@
     {
       "upstream": "packages/react/src/progress/indicator/ProgressIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/progress/label/ProgressLabelDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/progress/root/ProgressRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/progress/track/ProgressTrackDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/progress/value/ProgressValueDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/progress/indicator/ProgressIndicator.test.tsx",
@@ -66,7 +66,7 @@
       "title": "keeps every composed part synchronized through the status cycle",
       "kind": "replaced",
       "test": "packages/vue/src/progress/Progress.test.ts",
-      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text (rule 8.13). WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
+      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text. WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
     },
     {
       "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
@@ -74,7 +74,7 @@
       "title": "keeps non-finite value %s indeterminate",
       "kind": "replaced",
       "test": "packages/vue/src/progress/Progress.test.ts",
-      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text (rule 8.13). WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
+      "reason": "While the progress is indeterminate, the root has no `aria-valuetext`, because the part ships no fixed English text. WAI-ARIA 1.2 says the state by the absence of `aria-valuenow`, and a screen reader says it in the language of the user. `getAriaValueText` or `aria-valuetext` gives a text of the developer."
     },
     {
       "upstream": "packages/react/src/progress/root/ProgressRoot.test.tsx",
@@ -112,37 +112,37 @@
       "entry": "Root",
       "prop": "aria-valuetext",
       "kind": "not-applicable",
-      "reason": "The row is a native attribute. It reaches the element as an attribute of the developer and wins over the text of the part."
+      "reason": "`aria-valuetext` is an attribute, not a prop. It reaches the element with the other attributes, and it wins over the text of the part."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "ProgressRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "ProgressTrackDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "ProgressIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "ProgressValueDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/progress/types.md",
       "entry": "ProgressLabelDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

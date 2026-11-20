@@ -5,32 +5,32 @@
     {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/list/TabsListDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanelDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/root/TabsRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/tab/TabsTabDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicatorCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The indicator writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The indicator writes the variable names that the API reference lists, and CSS reads them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tabs/root/stateAttributesMapping.ts",
@@ -142,7 +142,7 @@
       "title": "renders as an anchor and toggles selection when `nativeButton` is false",
       "kind": "replaced",
       "test": "packages/vue/src/tabs/Tabs.test.ts",
-      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). A link in the `element` slot activates with a press, Enter and Space."
+      "reason": "The tab reads the element that it renders, so it has no `nativeButton`. A link in the `element` slot activates with a press, Enter and Space."
     },
     {
       "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
@@ -163,7 +163,7 @@
       "describe": ["<Tabs.Panel />"],
       "title": "sets the panel index data attribute",
       "kind": "not-applicable",
-      "reason": "`data-index` is cut (rule 8.15). It counts only the panels in the DOM. The developer has the index where they render the panels, `:nth-child()` selects by place, and `data-activation-direction` gives the side for a slide."
+      "reason": "The panel has no `data-index`, which counts only the panels in the DOM. The developer has the index where they render the panels, `:nth-child()` selects by place, and `data-activation-direction` gives the side for a slide."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
@@ -171,7 +171,7 @@
       "title": "triggers enter animation via data-starting-style when mounting",
       "kind": "replaced",
       "test": "packages/vue/src/tabs/Tabs.test.ts",
-      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes (rule 8.9). The panel has no `data-starting-style` and no `data-ending-style`."
+      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes. The panel has no `data-starting-style` and no `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
@@ -179,7 +179,7 @@
       "title": "applies data-ending-style before unmount",
       "kind": "replaced",
       "test": "packages/vue/src/tabs/Tabs.test.ts",
-      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes (rule 8.9). The panel has no `data-starting-style` and no `data-ending-style`."
+      "reason": "`<Transition>` around `Tabs.Panel` gives the enter and leave classes. The panel has no `data-starting-style` and no `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
@@ -224,37 +224,37 @@
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsListDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsTabDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsPanelDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "TabsIndicatorCssVariables",
       "kind": "not-applicable",
-      "reason": "The indicator writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The indicator writes the variable names that the API reference lists, and CSS reads them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
@@ -267,13 +267,13 @@
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Tab",
       "kind": "not-applicable",
-      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). `class`, `style`, `as` and the `element` slot replace `className`, `style` and `render`. The tab has no `data-active` and no `data-disabled`: CSS selects `[aria-selected=\"true\"]` and `[aria-disabled=\"true\"]` (rule 8.15)."
+      "reason": "The tab reads the element that it renders, so it has no `nativeButton`. CSS selects `[aria-selected=\"true\"]` and `[aria-disabled=\"true\"]`, so the tab has no `data-active` and no `data-disabled`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Panel",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The panel has no `data-hidden`, which `[hidden]` selects, and no `data-index` (rule 8.15). `class`, `style`, `as` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "`<Transition>` around the panel animates it, so the state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`. CSS selects a closed panel that stays in the DOM with `[hidden]`, so the panel has no `data-hidden`. The index of your `v-for` gives the index, and CSS has `:nth-child()`, so the panel has no `data-index`."
     }
   ],
   "surfaceAdditions": [

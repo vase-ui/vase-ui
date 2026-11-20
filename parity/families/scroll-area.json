@@ -8,42 +8,42 @@
     {
       "upstream": "packages/react/src/scroll-area/content/ScrollAreaContentDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/root/ScrollAreaRootCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/root/ScrollAreaRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumbDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
@@ -133,7 +133,7 @@
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "Scrollbar",
       "kind": "not-applicable",
-      "reason": "`hovering` and `data-hovering` are cut. CSS `:hover` of the root gives the same hook. The other props, states and attributes of the scrollbar stay."
+      "reason": "CSS `:hover` of the root gives the same hook, so the state has no `hovering`, and the scrollbar has no `data-hovering`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
@@ -145,49 +145,49 @@
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaRootCssVariables",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaViewportDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaViewportCssVariables",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaContentDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaScrollbarDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaScrollbarCssVariables",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "ScrollAreaThumbDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

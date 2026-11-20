@@ -8,32 +8,32 @@
     {
       "upstream": "packages/react/src/accordion/header/AccordionHeaderDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/item/AccordionItemDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/panel/AccordionPanelDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/root/AccordionRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/trigger/AccordionTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/panel/AccordionPanelCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The panel writes the variable names that the API reference lists, and CSS reads them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/accordion/item/stateAttributesMapping.ts",
@@ -68,101 +68,101 @@
       "upstream": "packages/react/src/accordion/panel/AccordionPanel.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/accordion/Accordion.test.ts",
-      "reason": "`Accordion.test.ts` tests the defaults of the root for the panels, an empty `id`, `role`, `<Transition>` and find-in-page. `Accordion.hydration.test.ts` tests the server HTML and `aria-labelledby` in it. A `<Transition>` around the panel replaces `data-starting-style`, `data-ending-style` and `transitionStatus` (rule 8.9). Vue has no `Activity`, and a part keeps no state about `KeepAlive` (rule 5)."
+      "reason": "`Accordion.test.ts` tests the defaults of the root for the panels, an empty `id`, `role`, `<Transition>` and find-in-page. `Accordion.hydration.test.ts` tests the server HTML and `aria-labelledby` in it. A `<Transition>` around the panel replaces `data-starting-style`, `data-ending-style` and `transitionStatus`. Vue has no `Activity`, and a part keeps no state about `KeepAlive`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Root",
       "prop": "loopFocus",
       "kind": "not-applicable",
-      "reason": "Base UI deprecated the prop, and it has no effect. `parity/scope.json` lists it as not ported."
+      "reason": "Base UI deprecated the prop, and it has no effect."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Root",
       "prop": "orientation",
       "kind": "not-applicable",
-      "reason": "Base UI deprecated the prop, and it does not change the keyboard. `parity/scope.json` lists it as not ported. The parts have no state `orientation` and no `data-orientation`, which is always `vertical`."
+      "reason": "Base UI deprecated the prop, and it does not change the keyboard. The parts have no state `orientation` and no `data-orientation`, which is always `vertical`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Panel",
       "prop": "hiddenUntilFound",
       "kind": "not-applicable",
-      "reason": "An absent `hiddenUntilFound` takes the value of `Accordion.Root`, and `hiddenUntilFound={false}` overrides it. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. With no value on the root, the part uses `false`, which is the default that Base UI documents."
+      "reason": "An absent `hiddenUntilFound` takes the value of `Accordion.Root`, and `false` overrides it. Vue gives an absent Boolean prop the value `false`, so the declared default is `undefined`. With no value on the root, the part uses `false`, the default of Base UI."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Panel",
       "prop": "keepMounted",
       "kind": "not-applicable",
-      "reason": "An absent `keepMounted` takes the value of `Accordion.Root`, and `keepMounted={false}` overrides it. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. With no value on the root, the part uses `false`, which is the default that Base UI documents."
+      "reason": "An absent `keepMounted` takes the value of `Accordion.Root`, and `false` overrides it. Vue gives an absent Boolean prop the value `false`, so the declared default is `undefined`. With no value on the root, the part uses `false`, the default of Base UI."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The root has no `data-orientation`, which is always `vertical` (`parity/scope.json`). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The root has no `data-orientation`, which is always `vertical`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Item",
       "kind": "not-applicable",
-      "reason": "The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The item has no `data-index`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The index of your `v-for` gives the index, and CSS has `:nth-child()`, so the state has no `index`. `!state.open` gives `hidden`, and `after-leave` of `<Transition>` gives the end of a close, so the state has no `hidden`. The state has no `orientation`, which is always `vertical`. The item has no `data-index`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Header",
       "kind": "not-applicable",
-      "reason": "The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The header has no `data-index`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The index of your `v-for` gives the index, and CSS has `:nth-child()`, so the state has no `index`. `!state.open` gives `hidden`, and `after-leave` of `<Transition>` gives the end of a close, so the state has no `hidden`. The state has no `orientation`, which is always `vertical`. The header has no `data-index`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Trigger",
       "kind": "not-applicable",
-      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3). The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The trigger has no `data-panel-open`, no `data-disabled` and no `data-index`: CSS selects `[aria-expanded=\"true\"]` and `:disabled` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton`. The index of your `v-for` gives the index, and CSS has `:nth-child()`, so the state has no `index`. `!state.open` gives `hidden`, and `after-leave` of `<Transition>` gives the end of a close, so the state has no `hidden`. The state has no `orientation`, which is always `vertical`. CSS selects `[aria-expanded=\"true\"]`, and `:disabled` on a native button or `[aria-disabled=\"true\"]` on another element, so the trigger has no `data-panel-open` and no `data-disabled`. The trigger has no `data-index`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "Panel",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The state has no `index`: the index of the `v-for` of the developer gives it, and CSS has `:nth-child()`. It has no `hidden`: `!state.open` gives it, and `after-leave` of `<Transition>` gives the end of a close. It has no `orientation`, which is always `vertical` (`parity/scope.json`). The panel has no `data-open`, `data-index` and `data-orientation`: CSS selects `:not([hidden])` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "`<Transition>` around the panel animates it, so the state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`. The index of your `v-for` gives the index, and CSS has `:nth-child()`, so the state has no `index`. `!state.open` gives `hidden`, and `after-leave` of `<Transition>` gives the end of a close, so the state has no `hidden`. The state has no `orientation`, which is always `vertical`. CSS selects an open panel with `:not([hidden])`, so the panel has no `data-open`. The panel has no `data-index` and no `data-orientation`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionItemDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionHeaderDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionPanelDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
       "entry": "AccordionPanelCssVariables",
       "kind": "not-applicable",
-      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The panel writes the variable names that the API reference lists, and CSS reads them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

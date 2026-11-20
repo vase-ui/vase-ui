@@ -26,6 +26,8 @@ import type {
 /**
  * Groups the tabs and the corresponding panels.
  * Renders a `<div>` element.
+ * @selector `[data-orientation]` The orientation of the tabs: `horizontal` or `vertical`.
+ * @selector `[data-activation-direction]` The side of the new active tab from the old one: `left`, `right`, `up`, `down` or `none`.
  */
 export const Root: typeof TabsRoot = TabsRoot;
 export namespace Root {
@@ -37,8 +39,10 @@ export namespace Root {
 }
 
 /**
- * Groups the individual tab buttons.
- * Renders a `<div>` element.
+ * Groups the individual tab buttons. At the mount, a list that scrolls shows its active tab.
+ * Renders a `<div>` element with the role `tablist`.
+ * @selector `[aria-orientation="vertical"]` The tabs are vertical.
+ * @selector `[data-activation-direction]` The side of the new active tab from the old one: `left`, `right`, `up`, `down` or `none`.
  */
 export const List: typeof TabsList = TabsList;
 export namespace List {
@@ -48,7 +52,11 @@ export namespace List {
 
 /**
  * An individual interactive tab button that toggles the corresponding panel.
- * Renders a `<button>` element.
+ * Renders a `<button>` element with the role `tab`.
+ * @selector `[aria-selected="true"]` The tab is active.
+ * @selector `[aria-disabled="true"]` The tab is disabled.
+ * @selector `[data-orientation]` The orientation of the tabs: `horizontal` or `vertical`.
+ * @selector `[data-activation-direction]` The side of the new active tab from the old one: `left`, `right`, `up`, `down` or `none`.
  */
 export const Tab: typeof TabsTab = TabsTab;
 export namespace Tab {
@@ -62,7 +70,10 @@ export namespace Tab {
 
 /**
  * A panel displayed when the corresponding tab is active.
- * Renders a `<div>` element.
+ * Renders a `<div>` element with the role `tabpanel`.
+ * @selector `[hidden]` The panel is closed, and `keepMounted` keeps it in the DOM.
+ * @selector `[data-orientation]` The orientation of the tabs: `horizontal` or `vertical`.
+ * @selector `[data-activation-direction]` The side of the new active tab from the old one: `left`, `right`, `up`, `down` or `none`.
  */
 export const Panel: typeof TabsPanel = TabsPanel;
 export namespace Panel {
@@ -73,6 +84,14 @@ export namespace Panel {
 /**
  * A visual indicator that can be styled to match the position of the currently active tab.
  * Renders a `<span>` element.
+ * @selector `[data-orientation]` The orientation of the tabs: `horizontal` or `vertical`.
+ * @selector `[data-activation-direction]` The side of the new active tab from the old one: `left`, `right`, `up`, `down` or `none`.
+ * @cssVariable `--active-tab-left` The distance from the left edge of the list to the active tab, in pixels.
+ * @cssVariable `--active-tab-right` The distance from the right edge of the list to the active tab, in pixels.
+ * @cssVariable `--active-tab-top` The distance from the top edge of the list to the active tab, in pixels.
+ * @cssVariable `--active-tab-bottom` The distance from the bottom edge of the list to the active tab, in pixels.
+ * @cssVariable `--active-tab-width` The width of the active tab, in pixels.
+ * @cssVariable `--active-tab-height` The height of the active tab, in pixels.
  */
 export const Indicator: typeof TabsIndicator = TabsIndicator;
 export namespace Indicator {

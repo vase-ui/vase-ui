@@ -25,7 +25,9 @@ export interface AccordionRootProps<Value = any>
    */
   disabled?: boolean;
   /**
-   * A closed panel stays in the DOM, with `hidden` and `inert`. The `keepMounted` of a panel wins.
+   * A closed panel stays in the DOM, with `hidden` and `inert`, so its content keeps its state, and
+   * the server HTML has it. `<Transition>` does not animate such a panel: animate it with CSS on
+   * `[hidden]`. The `keepMounted` of a panel wins.
    * @default false
    */
   keepMounted?: boolean;
@@ -91,7 +93,11 @@ export interface AccordionTriggerState extends AccordionItemState {
 
 export interface AccordionPanelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  /** A closed panel stays in the DOM, with `hidden` and `inert`. With none, the root decides. */
+  /**
+   * A closed panel stays in the DOM, with `hidden` and `inert`, so its content keeps its state, and
+   * the server HTML has it. `<Transition>` does not animate such a panel: animate it with CSS on
+   * `[hidden]`. With none, the root decides.
+   */
   keepMounted?: boolean;
   /**
    * A closed panel stays in the DOM with `hidden="until-found"`, so that find-in-page of the

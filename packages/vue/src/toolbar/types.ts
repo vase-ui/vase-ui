@@ -48,12 +48,15 @@ export interface ToolbarGroupState {
 export interface ToolbarButtonProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /**
-   * The user cannot press the button.
+   * The user cannot press the button. The toolbar stops each click, press and key on it. Tab,
+   * Escape, F1 to F12 and the keys with Ctrl, Alt or Meta pass. Hover and focus events pass too, so
+   * a tooltip can say why the button is disabled.
    * @default false
    */
   disabled?: boolean;
   /**
-   * A disabled button stays in the arrow keys of the toolbar, and keeps the focus.
+   * A disabled button stays in the arrow keys of the toolbar, and keeps the focus. With `false`, the
+   * arrow keys pass it.
    * @default true
    */
   focusableWhenDisabled?: boolean;
@@ -79,6 +82,7 @@ export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
   disabled?: boolean;
   /**
    * A disabled input stays in the arrow keys of the toolbar, and keeps the focus. It is read-only.
+   * With `false`, the arrow keys pass it.
    * @default true
    */
   focusableWhenDisabled?: boolean;
@@ -86,8 +90,11 @@ export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
   modelValue?: NonNullable<InputProps['modelValue']>;
   /** The first text of an input that owns its text. */
   defaultValue?: NonNullable<InputProps['defaultValue']>;
+  /** The id of the input, or of the element of the `element` slot. */
   id?: string;
+  /** The name of the input in the form data. */
   name?: string;
+  /** The user cannot edit the text. A disabled input that keeps the focus is read-only too. */
   readonly?: boolean;
 }
 

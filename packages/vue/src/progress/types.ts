@@ -10,13 +10,20 @@ export interface ProgressRootState {
 export interface ProgressRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The value. With no value, `null` or a value that is not finite, the progress is indeterminate,
-   * as a `<progress>` with no `value`.
+   * as a `<progress>` with no `value`. A value out of the range counts as the nearest end of the
+   * range.
    * @default null
    */
   value?: number | null;
-  /** @default 0 */
+  /**
+   * The value at the start of the range.
+   * @default 0
+   */
   min?: number;
-  /** @default 100 */
+  /**
+   * The value at the end of the range.
+   * @default 100
+   */
   max?: number;
   /** The format of the text. With none, the text is the percent of the range. */
   format?: Intl.NumberFormatOptions;
@@ -27,13 +34,19 @@ export interface ProgressRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLA
   locale?: Intl.LocalesArgument;
   /**
    * Makes `aria-valuetext` from the text, which is `''` while the progress is indeterminate, and
-   * the `value` prop.
+   * the `value` prop. With no function, an indeterminate progress has no `aria-valuetext`, and a
+   * screen reader says the state in the language of the user.
    */
   getAriaValueText?: (formattedValue: string, value: number | null) => string;
 }
 
 export interface ProgressLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The progress bar names the label by this id in `aria-labelledby` from the mount on. To name the
+   * bar in the server HTML too, give `Progress.Root` this id in `aria-labelledby`. An `id` in the
+   * `element` slot does not name the bar.
+   */
   id?: string;
 }
 
