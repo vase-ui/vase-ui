@@ -128,6 +128,7 @@ export type MenuSubmenuRootChangeEventDetails = MenuRootChangeEventDetails;
 
 export interface MenuTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /** The root names the active trigger by this id in `triggerId`. With no value, a generated id. */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -140,7 +141,8 @@ export interface MenuTriggerProps<Payload = unknown>
   handle?: MenuHandle<Payload> | undefined;
   /**
    * A mouse that rests on the trigger also opens the menu. In a menubar, `false` also stops the
-   * open by a hover while another menu of the bar is open.
+   * open by a hover while another menu of the bar is open. A wrapper component that declares this
+   * prop needs the default `undefined`, because Vue gives an absent Boolean prop the value `false`.
    */
   openOnHover?: boolean | undefined;
   /**
@@ -190,6 +192,7 @@ export interface MenuPositionerState {
 
 export interface MenuPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The trigger names the popup by this id in `aria-controls`. With no value, a generated id. */
   id?: string | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
@@ -234,6 +237,10 @@ export interface MenuViewportState {
 
 /** The props of each item. */
 interface MenuItemCommonProps {
+  /**
+   * `Menu.Input` names the highlighted item by this id in `aria-activedescendant`. With no value, a
+   * generated id.
+   */
   id?: string | undefined;
   /** The text that the typeahead and the filter read. With no value, the text of the item. */
   label?: string | undefined;
@@ -383,6 +390,7 @@ export interface MenuGroupState {}
 
 export interface MenuGroupLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The group names the label by this id in `aria-labelledby`. With no value, a generated id. */
   id?: string | undefined;
 }
 
@@ -394,6 +402,10 @@ export interface MenuSeparatorState extends SeparatorState {}
 
 export interface MenuListProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The trigger and `Menu.Input` name the list by this id in `aria-controls`. With no value, a
+   * generated id.
+   */
   id?: string | undefined;
 }
 
@@ -442,6 +454,7 @@ type InputAttributes = Omit<
 > & { autocomplete?: string | null | undefined };
 
 export interface MenuInputProps extends /* @vue-ignore */ InputAttributes {
+  /** A `<label>` names the input by this id in `for`. With no value, a generated id. */
   id?: string | undefined;
   /**
    * The user cannot type in the input.

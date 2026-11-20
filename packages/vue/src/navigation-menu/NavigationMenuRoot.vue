@@ -45,7 +45,11 @@ function elementProps() {
   return { ...attrs };
 }
 
-defineExpose({ element, close });
+defineExpose({
+  element,
+  /** Closes the open item. */
+  close,
+});
 </script>
 
 <template>

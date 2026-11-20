@@ -164,7 +164,9 @@ export interface ToastRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
   /** The toast of the root. */
   toast: ToastObject;
   /**
-   * The directions of a swipe that closes the toast.
+   * The directions of a swipe that closes the toast. The root writes a `touch-action` for them, so a
+   * touch swipe does not scroll the page: `pan-y` for horizontal directions, `pan-x` for vertical
+   * directions, and `none` for both.
    * @default ['down', 'right']
    */
   swipeDirection?: SwipeDirection | SwipeDirection[] | undefined;
@@ -192,6 +194,7 @@ export interface ToastContentState {
 
 export interface ToastTitleProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The toast names the title by this id in `aria-labelledby`. With no value, a generated id. */
   id?: string | undefined;
 }
 
@@ -201,6 +204,10 @@ export interface ToastTitleState {
 
 export interface ToastDescriptionProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The toast names the description by this id in `aria-describedby`, or in `aria-labelledby` when
+   * the toast has no title and no name of its own. With no value, a generated id.
+   */
   id?: string | undefined;
 }
 
