@@ -41,8 +41,8 @@ function countTransitions(target: Element) {
 /** The patch of Vue 3.5, or `Infinity` for a later Vue. */
 const patchOf35 = version.startsWith('3.5.') ? Number(version.split('.')[2]) : Infinity;
 
-// The panels of Collapsible and Accordion, `Field.Error` and `Tabs.Panel` render their element in
-// this way.
+// The parts that call `useEnterAfterLeave` render their element in this way. `Avatar.Image` removes
+// its element only in an update of its own props, which renders its `<Transition>` again.
 describe('a <Transition> around a component that renders its root element by injected state', () => {
   // In a Vapor component, `<Transition>` takes the old element back. Vue 3.5.28 and earlier give
   // the second element its enter, and Vue 3.5.29 and later keep its enter classes
@@ -68,6 +68,24 @@ describe('a <Transition> around a component that renders its root element by inj
         ? 'MeasurePanel measure-panel-enter-from measure-panel-enter-active'
         : 'MeasurePanel',
     ]);
+  });
+
+  test('a close that also renders the <Transition> again, and an open during the leave, end the leave at once and give the new element its enter', async () => {
+    const scene = reactive({ open: false, version: 0 });
+    const { root: host } = mount(MeasureInjectedPanel, { scene });
+    const panels = () => [...host.querySelectorAll('.MeasurePanel')];
+    scene.open = true;
+    await nextTick();
+    await wait(300);
+    const [old] = panels();
+    Object.assign(scene, { open: false, version: 1 });
+    await nextTick();
+    scene.open = true;
+    await nextTick();
+    expect(panels()).toHaveLength(1);
+    expect(panels()[0]).not.toBe(old);
+    await wait(500);
+    expect(panels().map((panel) => panel.className)).toEqual(['MeasurePanel']);
   });
 });
 

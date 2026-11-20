@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { mergeProps, onUnmounted, useAttrs, type HTMLAttributes } from 'vue';
+import { computed, mergeProps, onUnmounted, useAttrs, type HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectScrollArea } from './root';
 
 defineOptions({ inheritAttrs: false });
@@ -17,6 +18,9 @@ defineSlots<{
 const root = injectScrollArea('Corner');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
+
+const { waiting } = useEnterAfterLeave(() => !root.state.cornerHidden, element);
+const shown = computed(() => !root.state.cornerHidden && !waiting.value);
 
 const remove = root.addCorner();
 onUnmounted(remove);
@@ -42,12 +46,12 @@ function elementProps() {
 
 <template>
   <slot
-    v-if="!root.state.cornerHidden && $slots.element"
+    v-if="shown && $slots.element"
     name="element"
     :props="elementProps()"
     :elementRef="setElement"
   />
-  <div v-else-if="!root.state.cornerHidden" v-bind="elementProps()" :ref="setElement">
+  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
     <slot />
   </div>
 </template>
