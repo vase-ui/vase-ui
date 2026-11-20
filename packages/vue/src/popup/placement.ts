@@ -494,6 +494,26 @@ function transformOrigin(
   };
 }
 
+// A popup that covers the view leaves no room for a swipe outside, so a touch open locks the page.
+const FULL_WIDTH_TOLERANCE = 20;
+
+/** The placed positioner is as wide as the view, within 20 px. */
+export function useFullWidth(
+  positioner: Readonly<Ref<HTMLElement | null>>,
+  placed: Readonly<Ref<boolean>>,
+) {
+  const fullWidth = shallowRef(false);
+  watch(placed, (isPlaced) => {
+    const element = positioner.value;
+    fullWidth.value =
+      isPlaced &&
+      !!element &&
+      element.offsetWidth >=
+        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
+  });
+  return fullWidth;
+}
+
 /**
  * The `referenceHidden` strategy of `hide()` of Floating UI. An anchor with `display: none` has a
  * rectangle of zeros, and it is hidden too.
