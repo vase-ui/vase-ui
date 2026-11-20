@@ -17,7 +17,12 @@ providePortal();
 </script>
 
 <template>
-  <Teleport v-if="portal.rendered.value" :to="portal.target.value" :disabled :defer>
+  <Teleport
+    v-if="portal.rendered.value"
+    :to="portal.target.value"
+    :disabled="disabled"
+    :defer="defer"
+  >
     <div
       v-if="portal.blocks.value"
       :ref="portal.setBlock"
