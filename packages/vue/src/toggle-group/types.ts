@@ -44,6 +44,7 @@ export interface ToggleGroupState {
   disabled: boolean;
   /** More than one toggle can be pressed. */
   multiple: boolean;
+  /** The axis of the arrow keys. */
   orientation: 'horizontal' | 'vertical';
 }
 

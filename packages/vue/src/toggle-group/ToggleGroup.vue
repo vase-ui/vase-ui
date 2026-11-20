@@ -60,7 +60,7 @@ const state = computed<ToggleGroupState>(() => ({
 const tabStop = computed(() => {
   if (toolbar) return undefined;
   const last = focused.value;
-  if (last && !last.disabled && toggles.includes(last)) return last;
+  if (last && !last.disabled) return last;
   return enabledToggles()[0];
 });
 
@@ -80,7 +80,10 @@ provide(toggleGroupKey, {
   press,
   addToggle(toggle) {
     toggles.push(toggle);
-    return () => toggles.splice(toggles.indexOf(toggle), 1);
+    return () => {
+      toggles.splice(toggles.indexOf(toggle), 1);
+      if (focused.value === toggle) focused.value = undefined;
+    };
   },
 });
 
