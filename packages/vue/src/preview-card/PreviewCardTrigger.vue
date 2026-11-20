@@ -66,13 +66,11 @@ function elementProps() {
     { onPointerenter: recordHoveredLine, onPointermove: recordHoveredLine },
     hover.listeners,
     focus.listeners,
-    {
-      id: elementId.value,
-      'data-popup-open': open.value ? '' : undefined,
-      // The link has the focus, so its ancestors get no Escape that closes the card.
-      onKeydown: onLayerKeydown,
-    },
+    { id: elementId.value, 'data-popup-open': open.value ? '' : undefined },
     attrs,
+    // The link has the focus, so its ancestors get no Escape that closes the card. A listener of
+    // the developer on the link runs first and can call `preventDefault()`.
+    { onKeydown: onLayerKeydown },
   );
 }
 

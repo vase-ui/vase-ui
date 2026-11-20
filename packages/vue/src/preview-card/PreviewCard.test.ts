@@ -469,6 +469,22 @@ describe('the dismissal', () => {
     expect(triggers).toEqual([trigger()]);
   });
 
+  test('a keydown listener of the developer on the link runs first, so its preventDefault() keeps the card open at Escape', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountCard({
+      root: rootEvents(log, { defaultOpen: true }),
+      triggers: [
+        { key: 't', attrs: { onKeydown: (event: KeyboardEvent) => event.preventDefault() } },
+      ],
+    });
+    await opened();
+    trigger().focus();
+    await userEvent.keyboard('{Escape}');
+    await wait(20);
+    expect(popup()).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
   test('Escape closes only the top card; a press in a nested card keeps the parent open', async () => {
     const log: string[] = [];
     await mountCard({
