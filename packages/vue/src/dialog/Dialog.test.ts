@@ -437,6 +437,43 @@ describe('the handle', () => {
     expect(popup()).toBe(null);
   });
 
+  test('open(null) on a root with one trigger opens with no active trigger', async () => {
+    const handle = Dialog.createHandle();
+    const { trigger } = await mountDialog({ root: { handle } });
+    handle.open(null);
+    await opened();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('after open(null), the close gives the focus back to the element that had it, and not to the trigger of an earlier open', async () => {
+    const handle = Dialog.createHandle();
+    const { trigger } = await mountDialog({
+      root: { handle },
+      triggers: [{ key: 'a' }, { key: 'b' }],
+    });
+    await userEvent.click(trigger('a'));
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    byId('before').focus();
+    handle.open(null);
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await waitFor(() => expect(byId('before')).toHaveFocus());
+  });
+
+  test('openWithPayload() on an open dialog with no trigger gives the parts the new payload', async () => {
+    const handle = Dialog.createHandle<string>();
+    await mountDialog({ root: { handle }, triggers: [] });
+    handle.openWithPayload('first');
+    await opened();
+    expect(byTestId('payload')).toHaveTextContent('first');
+    handle.openWithPayload('second');
+    await waitFor(() => expect(byTestId('payload')).toHaveTextContent('second'));
+  });
+
   // Vue 3.6 runs no `<Suspense>` in a Vapor app with Vapor parts.
   test.skipIf(inject('app') === 'vapor')(
     'a <Suspense> that replaces a page by a page with the same handle gives the handle to the new page',
@@ -614,7 +651,8 @@ describe('modal', () => {
   });
 
   describe.skipIf(server.browser !== 'chromium')('a touch outside', () => {
-    async function touchDialog(modal: boolean | 'trap-focus', backdrop: boolean) {
+    /** `backdrop` is the style of a backdrop. */
+    async function touchDialog(modal: boolean | 'trap-focus', backdrop?: string) {
       const reasons: string[] = [];
       await mountDialog({
         root: {
@@ -624,7 +662,7 @@ describe('modal', () => {
             reasons.push(`${details.reason} ${details.event.type}`),
         },
         popup: { initialFocus: false },
-        backdrop: backdrop ? { style: 'position: fixed; inset: 0; touch-action: none' } : undefined,
+        backdrop: backdrop === undefined ? undefined : { style: backdrop },
       });
       await opened();
       return reasons;
@@ -638,16 +676,34 @@ describe('modal', () => {
       { modal: 'trap-focus', backdrop: true },
       { modal: false, backdrop: true },
     ] as const)(
-      'with modal=$modal and a backdrop=$backdrop closes at the `click` of a tap, and not at a drag',
+      'with modal=$modal and a backdrop=$backdrop closes at the `click` of a tap',
+      async ({ modal, backdrop }) => {
+        append('div', surface);
+        const reasons = await touchDialog(
+          modal,
+          backdrop ? 'position: fixed; inset: 0' : undefined,
+        );
+        await touchDrag(point, point, 1);
+        await closed();
+        expect(reasons).toEqual(['outside-press click']);
+      },
+    );
+
+    // The fixed element of a modal dialog and the backdrop take each touch from the page. The
+    // backdrop has no scroll of its own, so a drag on it sends `pointermove`.
+    test.each([
+      { modal: true, backdrop: undefined },
+      { modal: 'trap-focus', backdrop: 'position: fixed; inset: 0; touch-action: none' },
+      { modal: false, backdrop: 'position: fixed; inset: 0; touch-action: none' },
+    ] as const)(
+      'with modal=$modal closes nothing at a drag on the fixed element or the backdrop',
       async ({ modal, backdrop }) => {
         append('div', surface);
         const reasons = await touchDialog(modal, backdrop);
         await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
         await new Promise((resolve) => setTimeout(resolve, 50));
         expect(popup()).not.toBe(null);
-        await touchDrag(point, point, 0);
-        await closed();
-        expect(reasons).toEqual(['outside-press click']);
+        expect(reasons).toEqual([]);
       },
     );
 
@@ -655,7 +711,7 @@ describe('modal', () => {
       'with modal=%s and no backdrop closes at a drag',
       async (modal) => {
         append('div', surface);
-        const reasons = await touchDialog(modal, false);
+        const reasons = await touchDialog(modal);
         await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
         await closed();
         expect(reasons).toEqual(['outside-press pointermove']);
@@ -664,7 +720,7 @@ describe('modal', () => {
 
     test('a pinch closes nothing', async () => {
       append('div', surface);
-      await touchDialog(false, false);
+      await touchDialog(false);
       const { cdp } = await import('vitest/browser');
       const session = cdp();
       const frame = window.frameElement!.getBoundingClientRect();
@@ -886,10 +942,11 @@ describe('the focus', () => {
       const text = byTestId('text') as HTMLTextAreaElement;
       await waitFor(() => expect(text).toHaveFocus());
       await userEvent.keyboard('x');
+      // The viewport is at the top left of the view. The block or the backdrop has the rest.
       const target =
-        part === 'block'
-          ? { x: window.innerWidth - 10, y: window.innerHeight - 10 }
-          : { x: 20, y: 20 };
+        part === 'viewport'
+          ? { x: 20, y: 20 }
+          : { x: window.innerWidth - 10, y: window.innerHeight - 10 };
       await userEvent.pointer({ coords: target, keys: '[MouseLeft]' });
       await opened('confirm');
       await waitFor(() => expect(byTestId('back')).toHaveFocus());
@@ -1002,6 +1059,61 @@ describe('the focus', () => {
     await closed('popup-1');
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(document.activeElement).toBe(document.body);
+  });
+
+  test('a dialog with no trigger that is not modal puts the Tab out of the popup in the place of the element that had the focus before the open', async () => {
+    const root = reactive<Props>({ modal: false, open: false });
+    await mountDialog({ root, triggers: [] });
+    byId('before').focus();
+    root.open = true;
+    await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(byId('before')).toHaveFocus();
+    byTestId('button')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(byId('after')).toHaveFocus();
+  });
+
+  test('a dialog with no trigger that opened while <body> had the focus leaves the Tab after the popup in the order of the document', async () => {
+    const root = reactive<Props>({ modal: false, open: false });
+    await mountDialog({ root, triggers: [] });
+    (document.activeElement as HTMLElement | null)?.blur();
+    root.open = true;
+    const element = await opened();
+    await waitFor(() => expect(byTestId('field')).toHaveFocus());
+    byTestId('button')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(element.nextElementSibling);
+  });
+
+  test('a `finalFocus` in the popup that leaves gives the focus to the trigger', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const { root } = mount(DialogInTransition, {
+      popup: { finalFocus: () => byTestId('popup')!.querySelector('button') },
+    });
+    await nextTick();
+    const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
+    await userEvent.click(trigger);
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  test('a dialog that opens in the update that closes a modal dialog keeps the focus', async () => {
+    const scene = siblings({ 0: false, 1: false });
+    mount(DialogSiblings, { dialogs: [{}, { trigger: false, root: { modal: false } }], scene });
+    await nextTick();
+    await userEvent.click(document.querySelector<HTMLElement>('[data-key="0"]')!);
+    await opened('popup-0');
+    await waitFor(() => expect(byTestId('next-0')).toHaveFocus());
+    scene.open[0] = false;
+    scene.open[1] = true;
+    await closed('popup-0');
+    await opened('popup-1');
+    await waitFor(() => expect(byTestId('next-1')).toHaveFocus());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(byTestId('next-1')).toHaveFocus();
   });
 });
 
@@ -1157,40 +1269,73 @@ describe('the viewport, the backdrop and the leave', () => {
     const element = await opened();
     const parts = [element, byTestId('viewport')!, byTestId('backdrop')!];
     root.open = false;
-    await waitFor(() => expect(element).toHaveAttribute('hidden'));
-    for (const part of parts) {
-      expect(part).toHaveAttribute('hidden');
-      expect(part).toHaveAttribute('inert');
-    }
+    await waitFor(() => {
+      for (const part of parts) {
+        expect(part).toHaveAttribute('hidden');
+        expect(part).toHaveAttribute('inert');
+      }
+    });
     root.open = true;
-    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
-    for (const part of parts) {
-      expect(part).not.toHaveAttribute('hidden');
-      expect(part).not.toHaveAttribute('inert');
-    }
+    await waitFor(() => {
+      for (const part of parts) {
+        expect(part).not.toHaveAttribute('hidden');
+        expect(part).not.toHaveAttribute('inert');
+      }
+    });
   });
 
   test('a popup in a <Transition> in the viewport gets its leave classes; the viewport and the backdrop stay inert while they leave, and a press reaches the page', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    // The leave lasts 300 ms, so the case reads the state at the start of each leave.
     const log = new Set<string>();
-    mount(DialogInTransition, { root: { defaultOpen: true }, log });
-    const element = await opened();
+    const inertAtLeave: boolean[] = [];
+    const record = {
+      add(entry: string) {
+        log.add(entry);
+        if (entry.startsWith('popup')) {
+          inertAtLeave.push(viewport.isConnected, viewport.inert, backdrop.inert);
+        }
+      },
+    };
+    mount(DialogInTransition, { root: { defaultOpen: true }, log: record });
+    await opened();
     const viewport = byTestId('viewport')!;
     const backdrop = byTestId('backdrop')!;
-    await waitFor(() => expect([element.className, backdrop.className]).toEqual(['', '']));
     const pressed: string[] = [];
     byId('page').addEventListener('click', () => pressed.push('page'));
     await userEvent.keyboard('{Escape}');
-    await nextTick();
-    expect(element.classList).toContain('pop-leave-active');
-    expect(backdrop.classList).toContain('fade-leave-active');
-    expect(viewport.isConnected).toBe(true);
-    expect(viewport).toHaveAttribute('inert');
-    expect(backdrop).toHaveAttribute('inert');
+    await waitFor(() => expect(log.has('popup pop-leave-from pop-leave-active')).toBe(true));
+    expect(log.has('backdrop fade-leave-from fade-leave-active')).toBe(true);
+    expect(inertAtLeave).toEqual([true, true, true]);
     await press(byId('page'));
     expect(pressed).toEqual(['page']);
     await waitFor(() => expect(log.has('after-leave')).toBe(true));
     await waitFor(() => expect(viewport.isConnected).toBe(false));
+  });
+
+  test('an open while the popup leaves waits for the end of the leave, so the page has one popup', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const { root } = mount(DialogInTransition);
+    await nextTick();
+    const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
+    await userEvent.click(trigger);
+    const first = await opened();
+    // The leave lasts 300 ms. A press after its end also gives one popup.
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(trigger);
+    expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
+    await waitFor(() => expect(first.isConnected).toBe(false));
+    const second = await opened();
+    await waitFor(() => expect(second.className).toBe(''));
+  });
+
+  test('a press in a popup in a viewport keeps its default action, so a field takes the focus', async () => {
+    const { trigger } = await mountDialog({ viewport: { style: 'position: fixed; inset: 0' } });
+    await userEvent.click(trigger());
+    await opened();
+    byTestId('button')!.focus();
+    await userEvent.click(byTestId('field')!);
+    expect(byTestId('field')).toHaveFocus();
   });
 
   test('the viewport and the backdrop of a dialog under a modal dialog are inert until that dialog closes; a dialog that closes under it stays inert while it leaves', async () => {
@@ -1373,6 +1518,17 @@ describe('with a popover', () => {
     await closed('popover');
     expect(byTestId('parent')).not.toBe(null);
     expect([...log]).toEqual(['popover false escape-key']);
+  });
+
+  test('a popover above a dialog is no dialog above it', async () => {
+    const scene = sceneOf({ nested: false, popover: false });
+    mount(DialogWithPopovers, { variant: 'popover-above', scene });
+    const parent = await opened('parent');
+    scene.popover = true;
+    await opened('popover');
+    await nextTick();
+    expect(parent).not.toHaveAttribute('data-nested-dialog-open');
+    expect(parent.style.getPropertyValue('--nested-dialogs')).toBe('0');
   });
 
   test('a dialog with no trigger does not give the focus to the trigger of a popover that was open at the mount', async () => {
