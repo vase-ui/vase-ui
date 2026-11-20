@@ -5,6 +5,7 @@ description: An unstyled Vue menu component that shows a list of actions in a dr
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoMenuArrow from '../demos/menu/arrow/css-modules/index.vue';
@@ -70,32 +71,11 @@ Import the component and assemble its parts:
 
 <<< ./menu/Anatomy.vue
 
-## Animation
-
-The popup and the backdrop are in the DOM only while the menu is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. A submenu leaves before its parent popup leaves.
-
-With `keepMounted` on `Menu.Portal`, the closed popup stays in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate it with CSS on `[hidden]`.
-
-## Style hooks
-
-| Hook                     | Part                      | When                                                                                                |
-| ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `[aria-expanded="true"]` | trigger                   | The menu of the trigger is open.                                                                    |
-| `[data-popup-open]`      | submenu trigger           | The submenu is open.                                                                                |
-| `[aria-checked="true"]`  | checkbox item, radio item | The item is checked.                                                                                |
-| `[aria-disabled="true"]` | item                      | The item is disabled. A disabled trigger has `:disabled`.                                           |
-| `[data-highlighted]`     | item, input               | The item has the highlight, or the input shows its focus ring.                                      |
-| `[data-instant]`         | popup                     | A key opened or closed the menu, or the menu moved to another trigger or another menu of a menubar. |
-
 ## Examples
 
 ### Open on hover
 
-To open the menu when the pointer is on the trigger, set the `openOnHover` prop of `<Menu.Trigger>`.
-
-In a [menubar](/components/menubar), the pointer on a trigger opens its menu while another menu of the menubar is open. Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to keep this behavior.
-
-The `delay` prop gives the time in milliseconds to wait before the menu opens on hover.
+To open the menu when the pointer is on the trigger, set the `openOnHover` prop of `<Menu.Trigger>`. The `delay` prop gives the time in milliseconds to wait before the menu opens on hover.
 
 <DemoFrame>
   <DemoMenuOpenOnHover />
@@ -233,7 +213,7 @@ Use `<Menu.GroupLabel>` to add a label to a `<Menu.Group>` or a `<Menu.RadioGrou
 
 ### Nested menu
 
-To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.SubmenuTrigger>` for the item that opens the nested menu.
+To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.SubmenuTrigger>` for the item that opens the nested menu. When the parent menu closes, the popup of an open submenu leaves first.
 
 <<< ./menu/Submenu.vue{13-22}
 
@@ -535,30 +515,28 @@ Give the same handle from `Menu.createHandle()` to the root and to its detached 
 
 <<< ./menu/DetachedFilter.vue{4,8,11}
 
-## Portal target
-
-Set `to` on `Menu.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
 
-## useFilter
+### useFilter
 
 `Menu.useFilter` returns the functions `contains`, `startsWith` and `endsWith`. They compare a text with a query in the locale of the user. Use them when you filter the items yourself.
 
-<ApiReference name="Menu.useFilter" :heading-level="3" />
+<ApiReference name="Menu.useFilter" :heading-level="4" />
 
-## createHandle
+### createHandle
 
 Creates a handle that connects a `<Menu.Root>` with detached `<Menu.Trigger>` parts. The type argument of the function is the type of the payload.
 
-<ApiReference name="Menu.createHandle" :heading-level="3" />
+<ApiReference name="Menu.createHandle" :heading-level="4" />
 
 ### Handle
 
-`Menu.createHandle()` returns a `Menu.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
+`Menu.createHandle()` returns a `Menu.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root. While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
 
 <ApiReference name="Menu.Handle" :heading-level="4" />
 
-While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
+## Differences from Base UI
+
+<BaseUiDifferences />

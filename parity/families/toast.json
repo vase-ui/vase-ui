@@ -5,62 +5,62 @@
     {
       "upstream": "packages/react/src/toast/action/ToastActionDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/close/ToastCloseDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/content/ToastContentDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/description/ToastDescriptionDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/positioner/ToastPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/positioner/ToastPositionerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/root/ToastRootCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/root/ToastRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/title/ToastTitleDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewportCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewportDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toast/utils/focusVisible.ts",
@@ -76,7 +76,7 @@
       "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the action: its `<button type=\"button\">`, `as`, the content of `actionProps.children` over the slot, the attributes and listeners of `actionProps`, and no render with no content. The part reads its element, so it has no `nativeButton` (rule 8.3)."
+      "reason": "`Toast.test.ts` tests the action: its `<button type=\"button\">`, `as`, the content of `actionProps.children` over the slot, the attributes and listeners of `actionProps`, and no render with no content. The part reads its element, so it has no `nativeButton`."
     },
     {
       "upstream": "packages/react/src/toast/arrow/ToastArrow.test.tsx",
@@ -100,7 +100,7 @@
       "upstream": "packages/react/src/toast/createToastManager.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/provider.test.ts",
-      "reason": "`provider.test.ts` and `Toast.test.ts` test the manager: `add`, `update`, `close` and `promise` in each provider from the mount to the unmount, the timers of an update, and the promise of each provider (VUE-90). The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+      "reason": "`provider.test.ts` and `Toast.test.ts` test the manager: `add`, `update`, `close` and `promise` in each provider from the mount to the unmount, the timers of an update, and the promise of each provider (VUE-90). The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/toast/description/ToastDescription.test.tsx",
@@ -118,7 +118,7 @@
       "upstream": "packages/react/src/toast/portal/ToastPortal.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the portal: the viewport in `<body>`, and in place with no portal. The portal renders no element of its own, so it has no `render` and `className`."
+      "reason": "`Toast.test.ts` tests the portal: the viewport in `<body>`, and in place with no portal. The portal renders no element of its own."
     },
     {
       "upstream": "packages/react/src/toast/positioner/ToastPositioner.test.tsx",
@@ -130,25 +130,25 @@
       "upstream": "packages/react/src/toast/provider/ToastProvider.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/provider.test.ts",
-      "reason": "`provider.test.ts` tests the provider: a change of `timeout` and `limit` that a part below reads in the same update, and the timers. The provider has no pause for a held branch: Vue has no `Activity`, and a part keeps no state about `KeepAlive` (rule 5)."
+      "reason": "`provider.test.ts` tests the provider: a change of `timeout` and `limit` that a part below reads in the same update, and the timers. Vue has no `Activity`, and a part keeps no state about `KeepAlive`, so the provider has no pause for a held branch."
     },
     {
       "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the root: the role, the variables, the ids, Escape (VUE-127), the priority `high`, the `inert` of a limited toast and the leave in `<TransitionGroup>`. `Toast.swipe.test.ts` tests the swipe with a real pointer. A list with an index key gives a root another toast; a list of toasts needs `:key=\"toast.id\"`, as the Vue guide asks. The second name `data-swipe-ignore` is cut: the one name is `data-vase-ui-swipe-ignore`. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+      "reason": "`Toast.test.ts` tests the root: the role, the variables, the ids, Escape (VUE-127), the priority `high`, the `inert` of a limited toast and the leave in `<TransitionGroup>`. `Toast.swipe.test.ts` tests the swipe with a real pointer. A list with an index key gives a root another toast, so a list of toasts needs `:key=\"toast.id\"`, as the Vue guide asks. The attribute that stops a swipe has one name, `data-vase-ui-swipe-ignore`, and no second name `data-swipe-ignore`. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/toast/store.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/toast/provider.test.ts",
-      "reason": "`provider.test.ts` and `Toast.test.ts` test the list and the timers: the time that is left at a stop, a full time for a timer with no time left, and each state that stops the timers. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+      "reason": "`provider.test.ts` and `Toast.test.ts` test the list and the timers: the time that is left at a stop, a full time for a timer with no time left, and each state that stops the timers. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the composable: `add`, `update`, `close`, `promise`, `limit`, `timeout`, the ids and the list with the parts. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style` (rule 8.9)."
+      "reason": "`Toast.test.ts` tests the composable: `add`, `update`, `close`, `promise`, `limit`, `timeout`, the ids and the list with the parts. The list has the open toasts only, and `<TransitionGroup>` around the roots animates their enter and leave, so the parts have no transition status and no `data-starting-style` or `data-ending-style`."
     },
     {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
@@ -166,7 +166,7 @@
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the viewport: the region, F6, Tab and Shift+Tab with the sentinels, Escape (VUE-130), the focus at a close, the hover, the window and the page (BUG-6174, VUE-76), and the alerts. The viewport has no default name: the developer gives `aria-label` in the language of the page (rule 8.13)."
+      "reason": "`Toast.test.ts` tests the viewport: the region, F6, Tab and Shift+Tab with the sentinels, Escape (VUE-130), the focus at a close, the hover, the window and the page (BUG-6174, VUE-76), and the alerts. The developer gives the viewport an `aria-label` in the language of the page, so the viewport has no default name."
     },
     {
       "upstream": "packages/react/src/toast/createToastManager.spec.tsx",
@@ -184,79 +184,79 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastActionDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastCloseDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastContentDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastDescriptionDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastPositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastPositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastRootCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastTitleDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastViewportCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastViewportDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the root has no `data-starting-style`, `data-ending-style` and `data-limited`: `<TransitionGroup>` around the roots animates them, and a limited root has `[inert]` (rules 8.9 and 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "`<TransitionGroup>` around the roots animates them, and CSS selects a limited root with `[inert]`. The state thus has no `transitionStatus`, and the root has no `data-starting-style`, `data-ending-style` and `data-limited`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -270,84 +270,20 @@
       "entry": "Close",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The button reads the element that it renders, so it has no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Action",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The button reads the element that it renders, so it has no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Positioner",
-      "prop": "disableAnchorTracking",
       "kind": "not-applicable",
-      "reason": "The row gives the default `false`. The part has no Vue default: a prop that is absent takes `disableAnchorTracking` of `positionerProps` of the toast, and `false` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "align",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `'center'`. The part has no Vue default: a prop that is absent takes `align` of `positionerProps` of the toast, and `'center'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "alignOffset",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `alignOffset` of `positionerProps` of the toast, and `0` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "side",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `'top'`. The part has no Vue default: a prop that is absent takes `side` of `positionerProps` of the toast, and `'top'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "sideOffset",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `sideOffset` of `positionerProps` of the toast, and `0` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "arrowPadding",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `5`. The part has no Vue default: a prop that is absent takes `arrowPadding` of `positionerProps` of the toast, and `5` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "collisionBoundary",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `'clipping-ancestors'`. The part has no Vue default: a prop that is absent takes `collisionBoundary` of `positionerProps` of the toast, and `'clipping-ancestors'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "collisionPadding",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `5`. The part has no Vue default: a prop that is absent takes `collisionPadding` of `positionerProps` of the toast, and `5` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "sticky",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `false`. The part has no Vue default: a prop that is absent takes `sticky` of `positionerProps` of the toast, and `false` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Positioner",
-      "prop": "positionMethod",
-      "kind": "not-applicable",
-      "reason": "The row gives the default `'absolute'`. The part has no Vue default: a prop that is absent takes `positionMethod` of `positionerProps` of the toast, and `'absolute'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "With a Vue default, the part cannot find out that a prop is absent. The props of the placement thus have no Vue default. A prop that is absent takes the same key of `positionerProps` of the toast, else the default of Base UI: `'top'` for `side`, `'center'` for `align`, 0 for `sideOffset` and `alignOffset`, 5 for `arrowPadding` and `collisionPadding`, `'clipping-ancestors'` for `collisionBoundary`, `'absolute'` for `positionMethod`, and `false` for `sticky` and `disableAnchorTracking`."
     }
   ],
   "surfaceAdditions": [

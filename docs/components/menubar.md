@@ -5,6 +5,7 @@ description: An unstyled Vue menu bar component that provides commands and optio
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoMenubarHero from '../demos/menubar/hero/css-modules/index.vue';
@@ -50,10 +51,10 @@ Import the component and assemble its parts:
 
 <<< ./menubar/Anatomy.vue
 
-While a menu of the menubar is open, the pointer on another trigger opens the menu of that trigger. Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to keep this behavior.
-
-The trigger of the open menu has `[aria-expanded="true"]`. Style the menubar while a menu is open with `:has([aria-expanded="true"])`, and its axis with `[aria-orientation]`.
-
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

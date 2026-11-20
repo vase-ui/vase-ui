@@ -1,10 +1,11 @@
 ---
 order: 1
-description: An unstyled Vue toast component to generate notifications.
+description: An unstyled Vue toast component that generates notifications.
 ---
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoToastAnchored from '../demos/toast/anchored/css-modules/index.vue';
@@ -67,24 +68,16 @@ Import the component and assemble its parts:
 
 <<< ./toast/Anatomy.vue
 
-`Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider, and render a `Toast.Root` for each toast of the list in a `<TransitionGroup>`. Give each root `:key="toast.id"`. Most demos have such a component, `ToastList.vue`.
-
 ## General usage
 
 - `<Toast.Provider>` can be wrapped around your entire app, so that all toasts render in the same viewport.
+- `Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider. Render a `Toast.Root` for each toast in a `<TransitionGroup>`, with `:key="toast.id"`.
+- To change the element of a root or a positioner in the `<TransitionGroup>`, use `as`. With the `element` slot, Vue 3.5.12 gives the element no classes, and later versions warn in development.
 - The viewport is a landmark region. Give it a name with `aria-label`, in the language of your page.
 - <kbd>F6</kbd> moves the focus into the landmark region of the toast viewport, so that users can move between the toasts with the keyboard. Press <kbd>F6</kbd> again to move the focus back to where it was.
 - <kbd>Esc</kbd> closes the toast that has the focus. After <kbd>F6</kbd>, <kbd>Esc</kbd> elsewhere in the viewport moves the focus back to where it was. A popup under the toasts, such as a dialog, stays open for that press.
 - Add the `data-vase-ui-swipe-ignore` attribute to an element in a toast to stop the swipe to dismiss on that element. An interactive element does not start a swipe.
-- The root writes `touch-action` from its `swipeDirection`: `pan-y` for horizontal directions, `pan-x` for vertical directions, and `none` for both. A touch swipe then does not scroll the page.
-
-## Lifetime
-
-`toasts` holds the open toasts only. `close` removes a toast from the list at once and calls its `onClose`. `<TransitionGroup>` keeps the element of the closed toast for its leave, and `onRemove` runs when the element is out of the document. A toast with no `<TransitionGroup>` leaves at once. To change the element of a root or a positioner in the group, use `as`. With the `element` slot, Vue 3.5.12 gives the element no classes, and later versions warn in development.
-
-## Under a modal popup
-
-The toasts stay in use under a modal popup, such as a dialog, and a screen reader announces them. You need no setup for this.
+- The toasts stay in use under a modal popup, such as a dialog, and a screen reader announces them.
 
 ## Global manager
 
@@ -109,7 +102,7 @@ Use the `--toast-index` CSS variable for the stacking order of the toasts. The t
 }
 ```
 
-The `--toast-offset-y` CSS variable gives the vertical offset of a toast when the toasts are positioned absolutely with a translation offset. Use it with the `data-expanded` attribute. The attribute is present while the pointer is on the viewport or the viewport has the focus.
+The `--toast-offset-y` CSS variable gives the vertical offset of a toast when the toasts are positioned absolutely with a translation offset. Use it with the `data-expanded` attribute. The attribute is present while the pointer is on the viewport or the keyboard focus is in it.
 
 ```css
 .Toast[data-expanded] {
@@ -163,8 +156,7 @@ The `--toast-swipe-movement-x` and `--toast-swipe-movement-y` CSS variables give
   &[data-swipe-direction='down'] {
     transform: translateY(calc(var(--toast-swipe-movement-y) + 150%));
   }
-  /* Note: --offset-y is defined locally in these examples and derives from
-   --toast-offset-y, --toast-index, and swipe movement values */
+  /* The examples calculate --offset-y from --toast-offset-y, --toast-index and the swipe movement. */
   &[data-swipe-direction='left'] {
     transform: translateX(calc(var(--toast-swipe-movement-x) - 150%)) translateY(var(--offset-y));
   }
@@ -376,25 +368,27 @@ To stack toasts of different heights, clamp the height of each toast to the heig
 
 :::
 
-## Portal target
-
-Set `to` on `Toast.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. With `disabled`, the viewport renders in place, also on the server. With `defer`, the portal moves the viewport after the rest of the update mounts. The portal renders no element of its own. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
 
-## useToastManager
+### createToastManager
+
+Creates a toast manager for the `toastManager` prop of `<Toast.Provider>`. See [Global manager](#global-manager).
+
+<ApiReference name="Toast.createToastManager" :heading-level="4" />
+
+### useToastManager
 
 Manages the toasts. Call it in `setup` of a component inside a `<Toast.Provider>`.
 
 <<< ./toast/ManagerMethods.vue#usage{ts}
 
-It returns `toasts` as a `ComputedRef` of the list. Read `toasts.value` in a script. A template unwraps a `toasts` that you destructure at the top level of `<script setup>`.
+It returns `toasts`, a `ComputedRef` of the list of the open toasts. Read `toasts.value` in a script. A template unwraps a `toasts` that you destructure at the top level of `<script setup>`.
 
-<ApiReference name="Toast.useToastManager" :heading-level="3" />
+<ApiReference name="Toast.useToastManager" :heading-level="4" />
 
-### `add` method
+#### `add` method
 
 Makes a toast and adds it to the list of toasts.
 
@@ -414,7 +408,7 @@ For a toast with the priority `high`, a screen reader announces the `title` and 
 
 `<Toast.Title>` gives the toast its accessible name, and `<Toast.Description>` gives its description. A toast with no title gets its name from `<Toast.Description>`. To give such a toast another name, set `aria-label` on `<Toast.Root>`. A toast with no title and no description needs that `aria-label`.
 
-### `update` method
+#### `update` method
 
 Changes the options of the toast.
 
@@ -424,7 +418,7 @@ The options replace the values of the toast. Custom `data` is also replaced as a
 
 <<< ./toast/ManagerMethods.vue#update-function{ts}
 
-### `close` method
+#### `close` method
 
 Closes the toast. The toast goes from the list at once, and its element leaves in the `<TransitionGroup>`.
 
@@ -434,7 +428,7 @@ To close all toasts, give no id:
 
 <<< ./toast/ManagerMethods.vue#close-all{ts}
 
-### `promise` method
+#### `promise` method
 
 Makes an asynchronous toast with three states: `loading`, `success` and `error`.
 
@@ -448,12 +442,34 @@ The `loading` state accepts the options of the `add` method. The `success` and `
 
 Give `loading.id` to update or close the toast with that id. An id that the list has updates that toast in place, and the list gets no second toast.
 
-## Additional types
+### Additional types
 
-### ToastManagerAddOptions
+#### ToastObject
+
+The `toast` prop of `<Toast.Root>` and each item of `toasts` have this type.
+
+<ApiReference name="ToastObject" />
+
+#### ToastManagerAddOptions
 
 <ApiReference name="ToastManagerAddOptions" />
 
-### ToastManagerUpdateOptions
+#### ToastManagerUpdateOptions
 
 <ApiReference name="ToastManagerUpdateOptions" />
+
+#### ToastManagerPromiseOptions
+
+The options of the `promise` method.
+
+<ApiReference name="ToastManagerPromiseOptions" />
+
+#### ToastManagerPositionerProps
+
+The props of `<Toast.Positioner>` in the `positionerProps` option of a toast.
+
+<ApiReference name="ToastManagerPositionerProps" />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

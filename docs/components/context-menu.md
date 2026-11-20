@@ -5,6 +5,7 @@ description: An unstyled Vue context menu component that appears at the pointer 
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoContextMenuHero from '../demos/context-menu/hero/css-modules/index.vue';
@@ -49,8 +50,6 @@ A menu that appears at the pointer on right click or long press.
 ## Usage guidelines
 
 - **Use context menus as an enhancement**: Do not make a context menu the only way to do an action. Users may not find or open a context menu, especially on touch devices or with assistive technology. Always show visible controls for the actions of the context menu.
-- **Keyboard**: The trigger has no key handler. A key opens the menu only when the browser sends a `contextmenu` event for that key, as some browsers do for the context menu key.
-- **Touch**: A long press of 500 ms on the trigger opens the menu, also where the browser sends no `contextmenu` event for it, as Safari on iOS does.
 
 ## Anatomy
 
@@ -95,10 +94,10 @@ To make a submenu, put a `ContextMenu.SubmenuRoot` in the parent context menu. U
 
 </DemoSource>
 
-## Portal target
-
-Set `to` on `ContextMenu.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

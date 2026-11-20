@@ -32,7 +32,10 @@ defineSlots<{
 
 const { close } = useMenuRoot(props, emit, 'context');
 
-defineExpose({ close });
+defineExpose({
+  /** Closes the menu. */
+  close,
+});
 </script>
 
 <template>
