@@ -444,9 +444,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     const holder = handle && handleRoots.get(handle);
     if (!holder) return;
     holder.value = root;
-    onCleanup(() => {
-      if (holder.value === root) holder.value = null;
-    });
+    onCleanup(() => (holder.value = null));
   });
 
   return root;

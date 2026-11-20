@@ -1,9 +1,22 @@
-import { computed, inject, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue';
+import {
+  computed,
+  inject,
+  mergeProps,
+  provide,
+  shallowRef,
+  useAttrs,
+  useId,
+  type Component,
+  type InjectionKey,
+  type ShallowRef,
+} from 'vue';
+import { useAsTag, useElement } from '../common/element';
+import { givenId } from '../common/id';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { layersAbove, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
-import { useHandleRoot } from '../popup/trigger';
-import type { DialogRootChangeEventDetails, DialogRootProps } from './types';
+import { useHandleRoot, usePopupTrigger } from '../popup/trigger';
+import type { DialogRootChangeEventDetails, DialogRootProps, DialogTriggerState } from './types';
 
 /** Opens and closes a dialog from code, and connects triggers outside the root to it. */
 export class DialogHandle<Payload = unknown> extends PopupHandle<Payload> {
@@ -89,7 +102,8 @@ export function useDialogRoot<Payload>(
   });
 
   const nested = inject(dialogKey, null) !== null;
-  const modal = computed(() => (kind === 'alertdialog' ? true : (props.modal ?? true)));
+  // `AlertDialog.Root` has no `modal` prop.
+  const modal = computed(() => props.modal ?? true);
   const backdrops = shallowRef(0);
   // The stack has each open layer. A dialog counts the layers of dialog roots above its own.
   const dialogsAbove = computed(
@@ -160,25 +174,67 @@ export function injectDialog(part: string) {
 }
 
 /**
- * The dialog of a trigger: the root of its `handle`, else the root around it. A trigger with a
- * `handle` and no mounted root is closed.
+ * Does what `Dialog.Trigger` and `AlertDialog.Trigger` do. The dialog of a trigger is the root of its
+ * `handle`, else the root around it. A trigger with a `handle` and no mounted root is closed.
  */
-export function useTriggerDialog(
+export function useDialogTrigger(
   family: 'Dialog' | 'AlertDialog',
-  handle: () => DialogHandle | undefined,
+  props: {
+    readonly id?: string | undefined;
+    readonly disabled?: boolean | undefined;
+    readonly payload?: unknown;
+    readonly handle?: DialogHandle | undefined;
+    readonly as?: keyof HTMLElementTagNameMap | Component | undefined;
+  },
 ) {
   const injected = inject(dialogKey, null);
-  if (!injected && !handle()) {
+  if (!injected && !props.handle) {
     throw new Error(
       `Vase UI: <${family}.Trigger> must be inside <${family}.Root>, or it must have a \`handle\`. Without a root the trigger has no dialog to open. Put the trigger inside <${family}.Root>, or pass a \`handle\`.`,
     );
   }
-  const handleRoot = useHandleRoot(handle);
-  return computed(() => {
-    if (!handle()) return injected;
+  const handleRoot = useHandleRoot(() => props.handle);
+  const context = computed(() => {
+    if (!props.handle) return injected;
     const root = handleRoot.value;
     return root ? (contexts.get(root) ?? null) : null;
   });
+  const attrs = useAttrs();
+  const generatedId = useId();
+  const { element, setElement } = useElement<HTMLElement>();
+  const elementId = computed(() => givenId(props.id) ?? generatedId);
+
+  const trigger = usePopupTrigger(() => context.value?.root ?? null, {
+    element,
+    id: () => elementId.value,
+    payload: () => props.payload,
+    disabled: () => props.disabled ?? false,
+    tag: useAsTag(() => props.as),
+  });
+
+  const state = computed<DialogTriggerState>(() => ({
+    open: trigger.open.value,
+    disabled: trigger.button.disabled.value,
+  }));
+
+  function elementProps() {
+    const popup = context.value?.root.popup;
+    return trigger.button.mergeAttributes(
+      mergeProps({
+        id: elementId.value,
+        'aria-haspopup': 'dialog',
+        'aria-expanded': trigger.open.value ? 'true' : 'false',
+        'aria-controls': trigger.open.value && popup ? popup.id : undefined,
+        onClick: trigger.onClick,
+        onKeydown: (event: KeyboardEvent) => {
+          if (trigger.open.value) context.value?.focus.onTriggerKeydown(event);
+        },
+      }),
+      attrs,
+    );
+  }
+
+  return { element, setElement, state, elementProps };
 }
 
 /** Marks the parts in the portal of the dialog. */

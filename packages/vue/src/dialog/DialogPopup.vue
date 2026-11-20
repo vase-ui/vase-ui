@@ -42,10 +42,7 @@ watch(
   { immediate: true },
 );
 const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(() => {
-  removeLeaving();
-  if (root.popup === element.value) root.setPopup(null);
-});
+onUnmounted(removeLeaving);
 
 function elementProps() {
   const closed = !root.open;
@@ -56,7 +53,7 @@ function elementProps() {
       tabindex: -1,
       'aria-labelledby': root.titleId,
       'aria-describedby': root.descriptionId,
-      'aria-modal': context.modal === true && root.open ? 'true' : undefined,
+      'aria-modal': context.modal === true ? 'true' : undefined,
       'data-nested': context.nested ? '' : undefined,
       'data-nested-dialog-open': state.value.nestedDialogOpen ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
