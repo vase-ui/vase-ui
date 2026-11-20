@@ -273,6 +273,8 @@ const allUsers: DirectoryUser[] = [
     title: 'DevOps Engineer',
   },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -323,11 +325,7 @@ const allUsers: DirectoryUser[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
           <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
             <div :class="styles.Viewport">
               <Combobox.Status>

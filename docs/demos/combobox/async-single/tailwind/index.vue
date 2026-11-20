@@ -260,6 +260,7 @@ const allUsers: DirectoryUser[] = [
 ];
 
 const popupHiddenClass = 'scale-95 opacity-0';
+const popupInstantClass = 'transition-none';
 </script>
 
 <template>
@@ -307,7 +308,7 @@ const popupHiddenClass = 'scale-95 opacity-0';
       <Combobox.Positioner class="outline-none" :side-offset="4">
         <Transition
           :enter-from-class="popupHiddenClass"
-          leave-active-class="transition-none"
+          :leave-active-class="popupInstantClass"
           appear
         >
           <Combobox.Popup

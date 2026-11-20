@@ -1303,19 +1303,22 @@ describe('around the combobox', () => {
     },
   );
 
-  test.skipIf(inject('app') === 'vapor')('in a dialog: a pick closes only the combobox', async () => {
-    mount(ComboboxAround, { around: 'dialog' });
-    await nextTick();
-    await userEvent.click(byTestId('dialog-trigger')!);
-    await waitFor(() => expect(document.activeElement).toBe(input()));
-    await userEvent.keyboard('{ArrowDown}');
-    await opened();
-    await waitFor(() => expect(highlighted()).toBe('Apple'));
-    await userEvent.keyboard('{Enter}');
-    await closed();
-    expect(input().value).toBe('Apple');
-    expect(byTestId('dialog')).not.toBe(null);
-  });
+  test.skipIf(inject('app') === 'vapor')(
+    'in a dialog: a pick closes only the combobox',
+    async () => {
+      mount(ComboboxAround, { around: 'dialog' });
+      await nextTick();
+      await userEvent.click(byTestId('dialog-trigger')!);
+      await waitFor(() => expect(document.activeElement).toBe(input()));
+      await userEvent.keyboard('{ArrowDown}');
+      await opened();
+      await waitFor(() => expect(highlighted()).toBe('Apple'));
+      await userEvent.keyboard('{Enter}');
+      await closed();
+      expect(input().value).toBe('Apple');
+      expect(byTestId('dialog')).not.toBe(null);
+    },
+  );
 
   // Dialog is on the old popup layer, which does not know the new one, so the Escape also closes
   // the dialog. The refactor of Dialog onto the popup layer restores this case.

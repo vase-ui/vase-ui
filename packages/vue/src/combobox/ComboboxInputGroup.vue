@@ -23,7 +23,10 @@ const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 // The group is inside the layer. The group around the input that is the control is the anchor.
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
-const removals = [context.addInside(() => element.value), context.addInputGroup(() => element.value)];
+const removals = [
+  context.addInside(() => element.value),
+  context.addInputGroup(() => element.value),
+];
 onUnmounted(() => {
   for (const remove of removals) remove();
 });

@@ -50,6 +50,8 @@ const langs: ProgrammingLanguage[] = [
   { id: 'rust', value: 'Rust' },
   { id: 'swift', value: 'Swift' },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -94,11 +96,7 @@ const langs: ProgrammingLanguage[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
           <Combobox.Popup :class="styles.Popup">
             <Combobox.Empty>
               <div :class="styles.Empty">No languages found.</div>

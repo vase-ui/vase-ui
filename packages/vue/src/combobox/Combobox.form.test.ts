@@ -179,7 +179,6 @@ describe('the field', () => {
     expect(byTestId('field')).not.toHaveAttribute('data-touched');
   });
 
-
   test('the control is the control of the field; a required root is invalid after a pick, a clear and a blur', async () => {
     await mountForm({ root: { required: true }, field: { name: 'fruit', validationMode: 'blur' } });
     const input = byTestId('input');

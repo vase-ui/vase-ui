@@ -75,6 +75,8 @@ function groupProduce(items: Produce[]): ProduceGroup[] {
 }
 
 const groupedProduce: ProduceGroup[] = groupProduce(produceData);
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -96,11 +98,7 @@ const groupedProduce: ProduceGroup[] = groupProduce(produceData);
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
           <Combobox.Popup :class="styles.Popup">
             <Combobox.Empty>
               <div :class="styles.Empty">No produce found.</div>

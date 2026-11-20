@@ -1,11 +1,4 @@
-import {
-  computed,
-  inject,
-  provide,
-  shallowRef,
-  type InjectionKey,
-  type ShallowRef,
-} from 'vue';
+import { computed, inject, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';

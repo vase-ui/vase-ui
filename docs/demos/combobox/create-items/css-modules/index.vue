@@ -63,6 +63,8 @@ const items = Combobox.createItems(fruits, {
   getValue: (fruit) => fruit.id,
   getLabel: (fruit) => fruit.name,
 });
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -84,11 +86,7 @@ const items = Combobox.createItems(fruits, {
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
           <Combobox.Popup :class="styles.Popup">
             <Combobox.Empty>
               <div :class="styles.Empty">No fruits found.</div>

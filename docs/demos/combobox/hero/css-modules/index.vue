@@ -67,6 +67,8 @@ const fruits: Fruit[] = [
   { label: 'Grapefruit', value: 'grapefruit' },
   { label: 'Passionfruit', value: 'passionfruit' },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -88,11 +90,7 @@ const fruits: Fruit[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
           <Combobox.Popup :class="styles.Popup">
             <Combobox.Empty>
               <div :class="styles.Empty">No fruits found.</div>

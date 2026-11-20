@@ -237,6 +237,8 @@ const countries: Country[] = [
   { code: 'zm', value: 'zambia', label: 'Zambia', continent: 'Africa' },
   { code: 'zw', value: 'zimbabwe', label: 'Zimbabwe', continent: 'Africa' },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -252,8 +254,8 @@ const countries: Country[] = [
       <Combobox.Portal>
         <Combobox.Positioner align="start" :side-offset="4">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <Combobox.Popup :class="styles.Popup" aria-label="Select country">
