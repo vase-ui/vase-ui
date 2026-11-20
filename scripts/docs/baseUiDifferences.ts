@@ -26,18 +26,27 @@ export interface DifferencesInput {
   better: BetterRow[];
 }
 
-/** `Collapsible` from the tag `TypesCollapsible.Root` of the Base UI page, or `NumberField` from `number-field`. */
-function namespaceOf(family: FamilyFiles | undefined, name: string): string {
-  const [tag] = family?.extract?.pages.flatMap(({ referenceTags }) => referenceTags) ?? [];
+/**
+ * `Collapsible` from the tag `TypesCollapsible.Root` of the Base UI page. `null` when no tag of the
+ * page has a namespace, as `TypesMergeProps` of `mergeProps`. `NumberField` from `number-field`
+ * when the family has no Base UI page.
+ */
+function namespaceOf(family: FamilyFiles | undefined, name: string): string | null {
+  const tags = family?.extract?.pages.flatMap(({ referenceTags }) => referenceTags) ?? [];
+  if (tags.length === 0) {
+    return name.replace(/(?:^|-)(\w)/g, (_match, letter: string) => letter.toUpperCase());
+  }
   return (
-    tag?.replace(/^Types/, '').split('.')[0] ??
-    name.replace(/(?:^|-)(\w)/g, (_match, letter: string) => letter.toUpperCase())
+    tags
+      .find((tag) => tag.includes('.'))
+      ?.replace(/^Types/, '')
+      .split('.')[0] ?? null
   );
 }
 
-/** `Collapsible.Root`, or `Button` for the one part of Button. */
-function nameIn(namespace: string, entry: string): string {
-  return entry === namespace ? entry : `${namespace}.${entry}`;
+/** `Collapsible.Root`, `RadioGroup` for the part `RadioGroup` of Radio Group, or `mergeProps` of a family with no namespace. */
+function nameIn(namespace: string | null, entry: string): string {
+  return namespace === null || entry === namespace ? entry : `${namespace}.${entry}`;
 }
 
 /** The pages of a better row: the families whose `upstreamPaths` have `dueWith`, and its `families`. */

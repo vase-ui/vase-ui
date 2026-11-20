@@ -252,6 +252,34 @@ test('a family with no page of Base UI takes its namespace from its name', () =>
   ]);
 });
 
+test('a family whose Base UI page has no tag with a namespace names its parts and functions as they are', () => {
+  const utility = familyFiles(
+    'merge-sample',
+    { parts: [], functions: ['mergeSample'], tags: ['TypesMergeSample'] },
+    {
+      exceptions: [
+        {
+          upstream: typesMd('merge-sample'),
+          entry: 'mergeSample',
+          kind: 'not-applicable',
+          reason: 'A Vue merge.',
+        },
+      ],
+      returnTypeDifferences: [{ entry: 'mergeSample', returns: 'Merged', reason: 'Vue props.' }],
+    },
+  );
+  const differences = buildBaseUiDifferences('merge-sample', reference([]), {
+    ...INPUT,
+    families: [utility],
+  });
+  assert.deepEqual(differences.api, [
+    { baseUi: 'mergeSample', prop: null, vaseUi: 'A Vue merge.' },
+  ]);
+  assert.deepEqual(differences.returnTypes, [
+    { name: 'mergeSample', returns: 'Merged', why: 'Vue props.' },
+  ]);
+});
+
 test('a component of Vase UI own has the reason and the standards of its record, and the behavior that names it', () => {
   assert.deepEqual(buildBaseUiDifferences('clock', reference([]), INPUT), {
     release: null,
