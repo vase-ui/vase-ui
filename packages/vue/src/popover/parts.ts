@@ -53,6 +53,10 @@ export namespace Root {
 /**
  * A button that opens the popover.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The popover is open for this trigger.
+ * @selector `[data-pressed]` The popover is open for this trigger, and a press on the trigger opened it or kept it open.
+ * @selector `:disabled` The trigger is a native button, and the trigger or a fieldset around it is disabled.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and it is disabled.
  */
 export const Trigger: typeof PopoverTrigger = PopoverTrigger;
 export namespace Trigger {
@@ -73,6 +77,7 @@ export namespace Portal {
 /**
  * An overlay under the popup.
  * Renders a `<div>` element.
+ * @selector `[hidden]` The popover is closed, and `keepMounted` keeps the backdrop in the DOM.
  */
 export const Backdrop: typeof PopoverBackdrop = PopoverBackdrop;
 export namespace Backdrop {
@@ -83,6 +88,16 @@ export namespace Backdrop {
 /**
  * Places the popup at its anchor.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left` or `right`, or `inline-start` or `inline-end` for a logical `side` prop.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The anchor is out of view.
+ * @cssVariable `--anchor-width` The width of the anchor, in pixels.
+ * @cssVariable `--anchor-height` The height of the anchor, in pixels.
+ * @cssVariable `--available-width` The width that the popup can have before it goes over the edge of the collision boundary.
+ * @cssVariable `--available-height` The height that the popup can have before it goes over the edge of the collision boundary.
+ * @cssVariable `--transform-origin` The point of the popup that faces the anchor: at the arrow, or at the aligned edge of a popup with no arrow. Give it to `transform-origin` for an animation that scales the popup.
+ * @cssVariable `--positioner-width` The width of the popup, in pixels, with a `Popover.Viewport` in the popup. During a move to another trigger, the width of the new content.
+ * @cssVariable `--positioner-height` The height of the popup, in pixels, with a `Popover.Viewport` in the popup. During a move to another trigger, the height of the new content.
  */
 export const Positioner: typeof PopoverPositioner = PopoverPositioner;
 export namespace Positioner {
@@ -93,6 +108,12 @@ export namespace Positioner {
 /**
  * The container of the content of the popover.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
+ * @selector `[data-instant]` An animation must not run. The value says why: `click` (a key on the trigger opened or closed the popover), `dismiss` (Escape closed it), `focus` (the focus left it) or `trigger-change` (a move to another trigger ended).
+ * @selector `[hidden]` The popover is closed, and `keepMounted` keeps the popup in the DOM.
+ * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger: first the old width, then the new width.
+ * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger: first the old height, then the new height.
  */
 export const Popup: typeof PopoverPopup = PopoverPopup;
 export namespace Popup {
@@ -103,6 +124,9 @@ export namespace Popup {
 /**
  * An element that points to the anchor.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
+ * @selector `[data-uncentered]` The arrow cannot point at the center of the anchor.
  */
 export const Arrow: typeof PopoverArrow = PopoverArrow;
 export namespace Arrow {
@@ -133,6 +157,8 @@ export namespace Description {
 /**
  * A button that closes the popover.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button is a native button, and the button or a fieldset around it is disabled.
+ * @selector `[aria-disabled="true"]` The button is another element, and it is disabled.
  */
 export const Close: typeof PopoverClose = PopoverClose;
 export namespace Close {
@@ -143,6 +169,8 @@ export namespace Close {
 /**
  * The container of content that changes when the popover moves to another trigger.
  * Renders a `<div>` element.
+ * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: one or two tokens, `left` or `right` and `up` or `down`, such as `right down`.
+ * @selector `[data-instant]` An animation must not run, with the values of the popup.
  */
 export const Viewport: typeof PopoverViewport = PopoverViewport;
 export namespace Viewport {

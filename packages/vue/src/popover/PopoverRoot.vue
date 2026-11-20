@@ -25,7 +25,10 @@ defineSlots<{
 
 const { root, close } = usePopoverRoot<Payload>(props, emit);
 
-defineExpose({ close });
+defineExpose({
+  /** Closes the popover with the reason `'imperative-action'`. */
+  close,
+});
 </script>
 
 <template>

@@ -86,6 +86,10 @@ export interface TooltipRootState {}
 
 export interface TooltipTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The `triggerId` of the root and
+   * `open()` of the handle name the trigger by it.
+   */
   id?: string | undefined;
   /** Connects the trigger to a root outside it. */
   handle?: TooltipHandle<Payload> | undefined;

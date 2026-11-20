@@ -33,11 +33,20 @@ export interface PopupPortalProps {
    * `body`. While it is `null`, the portal renders nothing.
    */
   to?: PortalTarget | undefined;
-  /** Renders the content in place, also on the server. */
+  /**
+   * Renders the content in place, also on the server.
+   * @default false
+   */
   disabled?: boolean | undefined;
-  /** Moves the content after the other content of the same update mounted. */
+  /**
+   * Moves the content after the other content of the same update mounted.
+   * @default false
+   */
   defer?: boolean | undefined;
-  /** The closed popup stays in the DOM, with `hidden` and `inert`. */
+  /**
+   * The closed popup stays in the DOM, with `hidden` and `inert`.
+   * @default false
+   */
   keepMounted?: boolean | undefined;
 }
 

@@ -44,6 +44,10 @@ export interface PreviewCardRootState {}
 
 export interface PreviewCardTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<AnchorHTMLAttributes, 'as' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The `triggerId` of the root and
+   * `open()` of the handle name the trigger by it.
+   */
   id?: string | undefined;
   /** The payload that the preview card gets when this trigger opens it. */
   payload?: Payload | undefined;

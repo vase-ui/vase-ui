@@ -27,7 +27,10 @@ defineSlots<{
 
 const { root, close } = useTooltipRoot<Payload>(props, emit);
 
-defineExpose({ close });
+defineExpose({
+  /** Closes the tooltip with the reason `'imperative-action'`. */
+  close,
+});
 </script>
 
 <template>
