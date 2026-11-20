@@ -146,7 +146,7 @@ export interface ComboboxSharedRootProps<Item> {
    */
   required?: boolean | undefined;
   /**
-   * The user cannot change the value.
+   * The user cannot change the value, and the form gets no value.
    * @default false
    */
   disabled?: boolean | undefined;

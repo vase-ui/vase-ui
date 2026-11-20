@@ -5,6 +5,7 @@ description: An unstyled Vue autocomplete component that renders an input with a
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoAutocompleteAsync from '../demos/autocomplete/async/css-modules/index.vue';
@@ -27,7 +28,7 @@ import DemoAutocompleteVirtualizedTailwind from '../demos/autocomplete/virtualiz
 
 # Autocomplete
 
-An input that suggests options as you type.
+An input that suggests options for the text that the user types.
 
 <DemoFrame>
   <DemoAutocompleteHero />
@@ -60,8 +61,9 @@ An input that suggests options as you type.
 
 ## Usage guidelines
 
-- **Avoid when selection state is needed**: Use [Combobox](/components/combobox) in place of Autocomplete if the selection should be remembered and the input value cannot be custom. Unlike Combobox, the input of Autocomplete can contain free-form text, as its suggestions only _optionally_ autocomplete the text.
-- **Form controls must have an accessible name**: Create it with a `<label>` element or with [Field](/components/field). See the [forms guide](/handbook/forms).
+- **Avoid when a selection state is necessary**: Use [Combobox](/components/combobox) when the selection must stay and the text must be one of the items. The input of Autocomplete can hold free-form text, and its suggestions only complete the text when the user wants them.
+- **Form controls must have an accessible name**: Give the input a `<label>` element, or use [Field](/components/field). See the [forms guide](/handbook/forms).
+- **Closing animations**: Put a `<Transition appear>` around `<Autocomplete.Popup>`. The popup mounts at each open, and it stays in the DOM until its leave ends. See the [animation guide](/handbook/animation).
 
 ## Anatomy
 
@@ -69,33 +71,15 @@ Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
 
-Bind the text with `v-model`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:modelValue` for an action that gives the text that it has, such as a press of the item with that text.
-
-`Autocomplete.Root` renders a `<div>` (see [Forms](#forms)).
-
 ## Item values
 
-Each `Autocomplete.Item` takes a `value` prop that identifies it. Pass the item being rendered, so that props like `itemToStringValue` receive it.
-
-To render each filtered item, give `Autocomplete.List` the `item` slot. The slot gets `{ item, index }`.
-
-## Animation
-
-The popup and the backdrop are in the DOM only while the autocomplete is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. With `keepMounted` on `Autocomplete.Portal`, the closed popup stays in the DOM with `hidden` and `inert`, so animate it with CSS on `[hidden]`. See [Animation](/components/combobox#animation) of Combobox.
-
-## Styling
-
-The parts have the selectors of [Combobox](/components/combobox#styling), but an item has no `[aria-selected]`. The input is a text input: select its states with `:read-only`, `:required` and `:disabled`.
-
-## Forms
-
-The input is the form control: it has the `name`, `required` and the text. When the input is in the popup, the root renders an `<input type="hidden">` with the `name` and a visually hidden text input for `required`, after its mount. The server HTML thus has one input with the `name`.
+Each `<Autocomplete.Item>` takes a `value` prop that identifies it. Pass the item that the `item` slot of `<Autocomplete.List>` renders, so that props such as `itemToStringValue` get it. The slot gets `{ item, index }`.
 
 ## Examples
 
 ### Async search
 
-Load items asynchronously while typing and render custom status content.
+Load the items from a remote source when the text changes, and show the status of the load in `<Autocomplete.Status>`.
 
 <DemoFrame>
   <DemoAutocompleteAsync />
@@ -128,7 +112,7 @@ Load items asynchronously while typing and render custom status content.
 
 ### Inline autocomplete
 
-Autofill the input with the highlighted item while navigating with arrow keys using the `mode` prop. Accepts `aria-autocomplete` values `list`, `both`, `inline`, or `none`.
+The `mode` prop fills the input with the text of the item that the arrow keys highlight. It takes the values of `aria-autocomplete`: `list`, `both`, `inline` or `none`.
 
 <DemoFrame>
   <DemoAutocompleteInline />
@@ -161,9 +145,9 @@ Autofill the input with the highlighted item while navigating with arrow keys us
 
 ### Grouped
 
-Organize related options with `Autocomplete.Group` and `Autocomplete.GroupLabel` to add section headings inside the popup.
+Use `<Autocomplete.Group>` and `<Autocomplete.GroupLabel>` to add headings that group related items in the popup.
 
-Groups are represented by an array of objects with an `items` property, which itself is an array of individual items for each group. An extra property, such as `value`, can be provided for the heading text when rendering the group label.
+The `items` prop describes the groups as an array of objects. Each object has an `items` array with the items of its group. Another property, such as `value`, can give the text of the heading:
 
 <<< ./autocomplete/Grouped.vue{6,12,16}
 
@@ -198,7 +182,7 @@ Groups are represented by an array of objects with an `items` property, which it
 
 ### Fuzzy matching
 
-Use fuzzy matching to find relevant results even when the query doesn't exactly match the item text.
+A fuzzy match finds relevant items also when the query is not the same as the text of the item.
 
 <DemoFrame>
   <DemoAutocompleteFuzzyMatching />
@@ -231,7 +215,7 @@ Use fuzzy matching to find relevant results even when the query doesn't exactly 
 
 ### Limit results
 
-Limit the number of visible items using the `limit` prop and guide users to refine their query using `Autocomplete.Status`.
+The `limit` prop sets the largest number of visible items. `<Autocomplete.Status>` tells the user to make the query more specific.
 
 <DemoFrame>
   <DemoAutocompleteLimit />
@@ -264,9 +248,9 @@ Limit the number of visible items using the `limit` prop and guide users to refi
 
 ### Auto highlight
 
-The first matching item can be automatically highlighted as the user types by specifying the `autoHighlight` prop on `Autocomplete.Root`. Set the prop's value to `"always"` if the highlight should always be present, such as when the list is rendered inline within a dialog.
+The `autoHighlight` prop of `<Autocomplete.Root>` gives the highlight to the first item that matches the typed text. Set it to `"always"` to keep a highlight at each time, such as for a list in place in a dialog.
 
-The prop can be combined with the `keepHighlight` and `highlightItemOnHover` props to configure how the highlight behaves during mouse interactions.
+Use it with the `keepHighlight` and `highlightItemOnHover` props to set the highlight for the pointer.
 
 <DemoFrame>
   <DemoAutocompleteAutoHighlight />
@@ -299,7 +283,7 @@ The prop can be combined with the `keepHighlight` and `highlightItemOnHover` pro
 
 ### Virtualized
 
-Efficiently handle large datasets using a virtualization library like `@tanstack/vue-virtual`.
+Use a virtualization library, such as `@tanstack/vue-virtual`, to handle a large data set.
 
 <DemoFrame>
   <DemoAutocompleteVirtualized />
@@ -336,7 +320,7 @@ Efficiently handle large datasets using a virtualization library like `@tanstack
 
 #### Memoizing items
 
-A child component that takes the item as a prop is a simpler alternative to virtualization for a short list. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change, so unchanged items skip re-rendering. This speeds up typing. It does not speed up opening, because the popup still mounts each item. For a long list, use virtualization.
+A child component that takes the item as a prop is a simpler alternative to virtualization for a short list. Vue renders a child component again only when its props, its slots or the reactive values of its render change. A typed character then renders only the items that change. The open is not faster, because the popup mounts each item. For a long list, use virtualization.
 
 ::: code-group
 
@@ -346,22 +330,22 @@ A child component that takes the item as a prop is a simpler alternative to virt
 
 :::
 
-## Portal target
-
-Set `to` on `Autocomplete.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
 
-## useFilter
+### useFilter
 
-Matches items against a query using `Intl.Collator` for robust string matching. Use it when you filter the items yourself.
+Returns a filter that matches items with a query through `Intl.Collator`, for a list that you filter yourself.
 
-<ApiReference name="Autocomplete.useFilter" :heading-level="3" />
+<ApiReference name="Autocomplete.useFilter" :heading-level="4" />
 
-## useFilteredItems
+### useFilteredItems
 
-Returns the items that the filter of `Autocomplete.Root` keeps. Call it inside `Autocomplete.Root`. It returns a `ComputedRef`: read `.value` in a script, and treat the list as read-only.
+Returns the items that the filter of `Autocomplete.Root` keeps, for a component inside the root.
 
-<ApiReference name="Autocomplete.useFilteredItems" :heading-level="3" />
+<ApiReference name="Autocomplete.useFilteredItems" :heading-level="4" />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

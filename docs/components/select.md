@@ -1,10 +1,11 @@
 ---
 order: 1
-description: An unstyled Vue select component for choosing a predefined value in a dropdown menu.
+description: An unstyled Vue select component that selects a predefined value from a dropdown menu.
 ---
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSelectGrouped from '../demos/select/grouped/css-modules/index.vue';
@@ -19,7 +20,7 @@ import DemoSelectObjectValuesTailwind from '../demos/select/object-values/tailwi
 
 # Select
 
-A common form component for choosing a predefined value in a dropdown menu.
+A form control that selects a predefined value from a dropdown menu.
 
 <DemoFrame>
   <DemoSelectHero />
@@ -52,10 +53,10 @@ A common form component for choosing a predefined value in a dropdown menu.
 
 ## Usage guidelines
 
-- **Use Combobox for a long list**: Select has no filter. The keyboard typeahead only finds an item that matches the typed text. When the list is long enough to need a filter, use [Combobox](/components/combobox).
-- **Special positioning**: By default, the popup overlaps its trigger, so that the text of the selected item is over the value text of the trigger. See [Positioning](#positioning) to turn this off or to change it.
-- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when the select has no visible label. See [Labeling a select](#labeling-a-select) and the [forms guide](/handbook/forms).
-- **Animations**: Put a `<Transition>` around `<Select.Popup>`. See [Animation](#animation).
+- **Use Combobox for a long list**: Select has no filter, only the keyboard typeahead. When the list needs a filter, use [Combobox](/components/combobox).
+- **Special positioning**: By default, the popup covers its trigger, with the text of the selected item over the text of the value. See [Positioning](#positioning) to turn this off or to change it.
+- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when no label is visible. See the [forms guide](/handbook/forms).
+- **Closing animations**: Put a `<Transition>` around `<Select.Popup>`. The popup stays visible until its leave ends. See the [animation guide](/handbook/animation).
 
 ## Anatomy
 
@@ -63,57 +64,17 @@ Import the component and assemble its parts:
 
 <<< ./select/Anatomy.vue
 
-`Select.Root` renders a `<div>` that holds the form inputs after its content. For a select in a line of text, give the root `display: inline-block` or `display: contents`. Do not put `Select.Root` in a `<p>`: the HTML parser closes the paragraph at the `<div>`, and the hydration then fails.
-
-Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
-
-The popup and its items stay in the DOM, hidden, from the first focus of the trigger, the first open or the first fill of the browser. So a key on the closed trigger selects the next item whose text starts with it, as on a native select.
-
-## Forms
-
-A select with a `name` submits its value in a `type="hidden"` input. With `multiple`, it submits one value for each selected item. A hidden input keeps a line break of the value.
-
-A visually hidden text input has the constraint validation of `required`, and it takes the fill of the browser. Give `autocomplete` to the root so that the browser fills it. A native reset gives the select its first value back.
-
-## Animation
-
-Put a `<Transition>` around `<Select.Popup>`, and around `<Select.Backdrop>`. Do not write `v-show` or `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. To run code at the end of an animation, use `@after-enter` and `@after-leave`. To animate with JavaScript, give the `<Transition>` `:css="false"` and call `done` in its `@leave` hook.
-
-In the `element` slot, the part writes no `v-show`: `props` has `hidden` and `inert` while the popup is closed. Put a `<Transition appear>` in the slot, and write `v-show="state.open"` on the element. Give the `-leave-active` class a `display` rule, because `hidden` hides the element during the leave.
-
-Do not give a closed popup a size with CSS: a box with a size makes the page scroll further.
-
-## The selected mark
-
-The default slot of `<Select.Item>` gets `state.selected`. Render the mark with `v-if`:
-
-```vue
-<Select.Item value="sans" v-slot="{ state }">
-  <CheckIcon v-if="state.selected" />
-  <Select.ItemText>Sans-serif</Select.ItemText>
-</Select.Item>
-```
-
-For CSS alone, select `[aria-selected="true"]` on the item.
-
-## Style hooks
-
-- The trigger has `aria-expanded="true"` while open, `:disabled`, `aria-readonly="true"`, `aria-required="true"` and `aria-invalid="true"`. It has `data-pressed`, `data-popup-side`, `data-placeholder` and the state of its field.
-- No part has `data-focused`. Select `:focus-visible` on the trigger, and `[aria-expanded="true"]` on it while the list has the focus.
-- An item has `aria-selected="true"`, `aria-disabled="true"` and `data-highlighted`.
-- A scroll arrow is in the DOM while the list can scroll in its direction. With `keepMounted`, it stays and has `hidden`, so an arrow with a `display` rule needs `[hidden] { display: none }`.
-
 ## Positioning
 
-`<Select.Positioner>` has the prop `alignItemWithTrigger`. By default, it makes the popup overlap the trigger, so that the text of the selected item is over the value text of the trigger.
+`<Select.Positioner>` has the prop `alignItemWithTrigger`. By default, it makes the popup cover the trigger, with the text of the selected item over the text of the value.
 
 While this mode is active, `data-side` is `"none"` on `Select.Popup` and `Select.Positioner`.
 
-To stop the popup from overlapping the trigger, set `alignItemWithTrigger` to `false`. While it is `true` (the default), these rules apply:
+To stop the popup from covering the trigger, set `alignItemWithTrigger` to `false`. While it is `true` (the default), these rules apply:
 
 - **Interaction type**: The mode is off when the popup opens with a touch pointer.
-- **Viewport space**: The viewport must have enough room to put the selected item over the value text without a popup that is too short. If it has not, the popup falls back to the default positioning. Set `min-height` on `<Select.Positioner>` to change the limit. A smaller value makes the popup fall back less often. The trigger must also be at least 20px from the top and from the bottom of the viewport. If it is not, the popup falls back.
-- **Other positioning props**: Props such as `side` and `align` have no effect while the mode is active. They apply when the prop is `false`, and when the popup falls back.
+- **Viewport space**: The viewport must have enough room to put the selected item over the text of the value with a popup that is not too short. If it does not, the popup goes back to the default positioning. Set `min-height` on `<Select.Positioner>` to change the limit. A smaller value makes this happen less often. The trigger must also be at least 20px from the top and from the bottom of the viewport. If it is not, the popup goes back to the default positioning.
+- **Other positioning props**: Props such as `side` and `align` have no effect while the mode is active. They apply when the prop is `false`, and when the popup goes back to the default positioning.
 
 ## Examples
 
@@ -264,10 +225,10 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 </DemoSource>
 
-## Portal target
-
-Set `to` on `Select.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />
