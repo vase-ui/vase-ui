@@ -7,11 +7,14 @@ import type { Component } from 'vue';
  * to `HTMLAttributes` of Vue.
  */
 export interface AsProps {
+  // The SFC compiler of Vue cannot read `keyof HTMLElementTagNameMap`, and it reads the second
+  // argument of `Extract`. The runtime type of the prop then has `String`, so a tag passes the prop
+  // check of an app in development.
   /**
    * A tag or a component that the part renders in place of its own element, with the same
    * attributes and content. The `element` slot wins over it.
    */
-  as?: keyof HTMLElementTagNameMap | Component;
+  as?: Extract<keyof HTMLElementTagNameMap, string> | Component;
 }
 
 /**
