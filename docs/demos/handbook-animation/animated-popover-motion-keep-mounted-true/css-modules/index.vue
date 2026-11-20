@@ -11,9 +11,10 @@ import styles from './index.module.css';
     <Popover.Portal keep-mounted>
       <Popover.Positioner :class="styles.Positioner" :side-offset="8">
         <Popover.Popup :class="styles.Popup" aria-label="Animated popover">
-          <template #render="{ props, state }">
+          <template #element="{ props, elementRef, state }">
             <motion.div
               v-bind="props as MotionProps"
+              :ref="elementRef"
               :initial="false"
               :animate="{ opacity: state.open ? 1 : 0, scale: state.open ? 1 : 0.8 }"
             >

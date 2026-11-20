@@ -99,15 +99,15 @@ When a popup closes, `open` becomes `false` at once. The popup stays in the DOM 
 
 When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a [Select](#animate-a-select-popup), and in some cases the popup of a [Combobox or Autocomplete](#animate-a-combobox-or-autocomplete-popup). The root emits `openChangeComplete` with `false`.
 
-Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The examples of the next three sections animate `opacity`, so Vase UI ends the exit on its own.
+Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The example of a Select popup animates `opacity`, so Vase UI ends the exit on its own.
 
 ### Animate a popup with motion-v
 
-The examples of this section and the next section use [Popover](/components/popover).
+The examples of this section and the next section use [Popover](/components/popover). Its popup is in the DOM only while the popover is open.
 
-1. Give `motion.div` to the `#render` slot of `Popover.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
-2. Set `initial` to the closed style.
-3. Compute `animate` from `state.open`.
+1. Put `Popover.Popup` in a `<Transition>` with `:css="false"` and `appear`.
+2. Run the enter animation in the `enter` hook, and the exit animation in the `leave` hook, with `animate` of `motion-v`.
+3. Call `done` when the animation ends. Vue then removes the popup.
 
 <DemoFrame>
   <MotionPopup />
@@ -115,23 +115,21 @@ The examples of this section and the next section use [Popover](/components/popo
 
 ::: code-group
 
-<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.vue{14,16-18}
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.vue{6-12,20-22}
 
 <<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-false/css-modules/index.module.css
 
 :::
 
-Vase UI keeps the popup in the DOM while the exit animation plays. The popup needs no `<AnimatePresence>`, no `keepMounted` and no controlled `open`.
-
 Do not use `<AnimatePresence>` and the `exit` prop for the close of a popup. For the reasons, see [AnimatePresence](#animatepresence).
 
-You can also give `motion.div` to the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
+A popup of another family can take `motion.div` in the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
-<<< ../examples/animation/MotionAsProp.vue{10,15-17}
+<<< ../examples/animation/MotionAsProp.vue{10,14-16}
 
 ### Animate a popup that stays in the DOM
 
-A popup stays in the DOM while it is closed when its portal has `keepMounted`. The same code animates it, but `initial` is `false`. The popup mounts closed, so it starts with the closed style of `animate`. Vase UI hides the closed popup.
+A popup stays in the DOM while it is closed when its portal has `keepMounted`. Vue runs no transition for it. Give `motion.div` to the `element` slot of `Popover.Popup`, and compute `animate` from `state.open`. `initial` is `false`, because the popup mounts closed. The closed popup has `hidden` and `inert`. A rule of the style sheet keeps it shown while its exit plays.
 
 <DemoFrame>
   <MotionKeepMounted />
@@ -139,7 +137,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ::: code-group
 
-<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.vue{11,14,16-18}
+<<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.vue{13-19}
 
 <<< ../demos/handbook-animation/animated-popover-motion-keep-mounted-true/css-modules/index.module.css
 
@@ -180,7 +178,7 @@ The root then emits `openChangeComplete` with `false`. The popup then leaves the
 
 ::: code-group
 
-<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,33-35}
+<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,34}
 
 :::
 
