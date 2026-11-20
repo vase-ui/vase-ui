@@ -2,6 +2,7 @@ import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Dialog, type DialogRootChangeEventDetails } from '@vase-ui/vue/dialog';
+import DialogCases from '../../test/fixtures/DialogCases.vue';
 import DialogConfirm from '../../test/fixtures/DialogConfirm.vue';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
 import DialogInTransition from '../../test/fixtures/DialogInTransition.vue';
@@ -12,6 +13,7 @@ import DialogRadioReturn from '../../test/fixtures/DialogRadioReturn.vue';
 import DialogSiblings from '../../test/fixtures/DialogSiblings.vue';
 import DialogStack from '../../test/fixtures/DialogStack.vue';
 import DialogTitles from '../../test/fixtures/DialogTitles.vue';
+import DialogWithPopovers from '../../test/fixtures/DialogWithPopovers.vue';
 import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
@@ -134,10 +136,13 @@ describe('the parts', () => {
       inRoot: true,
       message: `Vase UI: <Dialog.${part}> must be inside <Dialog.Portal>. Without the portal the part is not above the page. Put the part inside <Dialog.Portal>.`,
     })),
-  ])('$part throws an error with no root, or with no portal: inRoot=$inRoot', ({ part, inRoot, message }) => {
-    const error = mountError(DialogPartAlone, { part, inRoot });
-    expect((error as Error).message).toBe(message);
-  });
+  ])(
+    '$part throws an error with no root, or with no portal: inRoot=$inRoot',
+    ({ part, inRoot, message }) => {
+      const error = mountError(DialogPartAlone, { part, inRoot });
+      expect((error as Error).message).toBe(message);
+    },
+  );
 });
 
 describe('the root', () => {
@@ -182,7 +187,11 @@ describe('the root', () => {
     await userEvent.click(trigger());
     await nextTick();
     expect(popup()).toBe(null);
-    expect(log).toEqual(['openChange false escape-key', 'update false', 'openChange true trigger-press']);
+    expect(log).toEqual([
+      'openChange false escape-key',
+      'update false',
+      'openChange true trigger-press',
+    ]);
   });
 
   test('one cancel() gives one openChange for one Escape, and the dialog stays', async () => {
@@ -469,6 +478,15 @@ describe('modal', () => {
     await waitFor(() => expect(isScrollLocked()).toBe(true));
   });
 
+  test('a modal dialog leaves a live region of the page and its ancestors in use', async () => {
+    const region = append('div');
+    region.innerHTML = '<p id="text">Text</p><div><div id="live" aria-live="polite"></div></div>';
+    await mountDialog({ root: { defaultOpen: true } });
+    await opened();
+    await waitFor(() => expect(inert(byId('text'))).toBe(true));
+    expect(inert(byId('live'))).toBe(false);
+  });
+
   test("`'trap-focus'` hides the rest of the page and the trigger with aria-hidden; the page stays in use, with no lock; a press on the trigger closes", async () => {
     const log: string[] = [];
     const { trigger } = await mountDialog({ root: rootEvents(log, { modal: 'trap-focus' }) });
@@ -619,7 +637,8 @@ describe('modal', () => {
       return reasons;
     }
     const point = { x: 60, y: 300 };
-    const surface = 'position: fixed; left: 0; top: 200px; width: 150px; height: 200px; touch-action: none';
+    const surface =
+      'position: fixed; left: 0; top: 200px; width: 150px; height: 200px; touch-action: none';
 
     test.each([
       { modal: true, backdrop: false },
@@ -657,7 +676,10 @@ describe('modal', () => {
       const session = cdp();
       const frame = window.frameElement!.getBoundingClientRect();
       const scale = frame.width / window.innerWidth || 1;
-      const at = (x: number, y: number) => ({ x: frame.left + x * scale, y: frame.top + y * scale });
+      const at = (x: number, y: number) => ({
+        x: frame.left + x * scale,
+        y: frame.top + y * scale,
+      });
       await session.send('Input.dispatchTouchEvent', {
         type: 'touchStart',
         touchPoints: [at(60, 250)],
@@ -680,7 +702,10 @@ describe('modal', () => {
 describe('the dismissal', () => {
   test('Escape closes the top dialog first: one Escape for each of three sibling dialogs that open at the mount', async () => {
     mount(DialogSiblings, {
-      dialogs: [0, 1, 2].map(() => ({ root: { defaultOpen: true }, popup: { initialFocus: false } })),
+      dialogs: [0, 1, 2].map(() => ({
+        root: { defaultOpen: true },
+        popup: { initialFocus: false },
+      })),
     });
     await opened('popup-2');
     for (const index of [2, 1, 0]) {
@@ -899,12 +924,53 @@ describe('the focus', () => {
       const element = await opened();
       element.querySelector('input')!.focus();
       await userEvent.keyboard('{Escape}');
-      await waitFor(() =>
-        expect(document.activeElement).toHaveAttribute('aria-label', 'Outside'),
-      );
+      await waitFor(() => expect(document.activeElement).toHaveAttribute('aria-label', 'Outside'));
       expect(element.isConnected).toBe(true);
     },
   );
+
+  test.each(['scroll-area', 'display-contents'])(
+    "Tab and Shift+Tab keep the focus in a `'trap-focus'` popup with a %s",
+    async (variant) => {
+      mount(DialogCases, { variant });
+      const element = await opened();
+      await waitFor(() => expect(element.contains(document.activeElement)).toBe(true));
+      for (const key of ['{Tab}', '{Tab}', '{Shift>}{Tab}{/Shift}', '{Shift>}{Tab}{/Shift}']) {
+        await userEvent.keyboard(key);
+        expect(element.contains(document.activeElement)).toBe(true);
+      }
+    },
+  );
+
+  async function openFrom(variant: 'menu' | 'popover') {
+    const scene = reactive({ open: false, popover: false });
+    mount(DialogCases, { variant, scene });
+    await nextTick();
+    await userEvent.click(byTestId('menu-trigger')!);
+    const item = await waitFor(() => {
+      const found = [...document.querySelectorAll<HTMLElement>('button, [role="menuitem"]')].find(
+        (element) => element.textContent?.trim() === 'Open dialog',
+      );
+      expect(found).toBeTruthy();
+      return found!;
+    });
+    await userEvent.click(item);
+    await opened();
+    await waitFor(() => expect(popup()!.querySelector('button')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await waitFor(() => expect(byTestId('menu-trigger')).toHaveFocus());
+  }
+
+  test('a dialog that a button in a popover opens gives the focus back to the trigger of the popover, which got it at the close of the popover', async () => {
+    await openFrom('popover');
+  });
+
+  // The menu is on the older popup code, which gives the focus back to its trigger after the dialog
+  // takes the focus. The Menu unit ports the case again.
+  test.skip('a dialog that an item of a menu opens gives the focus back to the trigger of the menu', async () => {
+    await openFrom('menu');
+  });
 
   test('BUG-5519: the focus goes back to the trigger at the close while the popup leaves, and the trigger is in use', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
@@ -956,7 +1022,9 @@ describe('nested dialogs', () => {
     expect(element).not.toHaveAttribute('data-nested');
     expect(element).not.toHaveAttribute('data-nested-dialog-open');
     expect(nestedCount(element)).toBe('0');
-    await userEvent.click(document.querySelector<HTMLElement>('[data-testid="popup"] [data-key="nested"]')!);
+    await userEvent.click(
+      document.querySelector<HTMLElement>('[data-testid="popup"] [data-key="nested"]')!,
+    );
     const child = await opened('nested-popup');
     expect(child).toHaveAttribute('data-nested');
     expect(byTestId('nested-viewport')).toHaveAttribute('data-nested');
@@ -979,7 +1047,10 @@ describe('nested dialogs', () => {
 
   test('counts the dialogs above it that are not in its tree, and those have no data-nested', async () => {
     const scene = reactive({ open: { 0: true } as Record<number, boolean> });
-    mount(DialogSiblings, { dialogs: [{ root: { modal: false } }, { root: { modal: false } }], scene });
+    mount(DialogSiblings, {
+      dialogs: [{ root: { modal: false } }, { root: { modal: false } }],
+      scene,
+    });
     const element = await opened('popup-0');
     scene.open[1] = true;
     const above = await opened('popup-1');
@@ -1269,5 +1340,56 @@ describe('the title, the description, the close and the trigger', () => {
     await nextTick();
     expect(trigger()).toHaveAttribute('aria-expanded', 'true');
     expect(trigger()).not.toHaveAttribute('aria-controls');
+  });
+});
+
+describe('with a popover', () => {
+  const button = (text: string) =>
+    [...document.querySelectorAll('button')].find(
+      (element) => element.textContent?.trim() === text,
+    )!;
+
+  test('Escape from a trigger that is not active closes a dialog in a popover on each open, and the popover stays', async () => {
+    mount(DialogWithPopovers, { variant: 'triggers-in-popover' });
+    await opened('popover');
+    for (let round = 0; round < 3; round += 1) {
+      await userEvent.click(button('Dialog trigger 1'));
+      await opened('dialog');
+      button('Dialog trigger 2').focus();
+      await userEvent.keyboard('{Escape}');
+      await closed('dialog');
+      expect(byTestId('popover')).not.toBe(null);
+    }
+  });
+
+  test('BUG-6037: after a nested dialog closes, Escape closes the popover that opened above the dialogs', async () => {
+    const log = new Set<string>();
+    const scene = reactive({ nested: true, popover: false });
+    mount(DialogWithPopovers, { variant: 'popover-above', scene, log });
+    await opened('nested');
+    scene.popover = true;
+    await opened('popover');
+    scene.nested = false;
+    await closed('nested');
+    await userEvent.keyboard('{Escape}');
+    await closed('popover');
+    expect(byTestId('parent')).not.toBe(null);
+    expect([...log]).toEqual(['popover false escape-key']);
+  });
+
+  test('a dialog with no trigger does not give the focus to the trigger of a popover that was open at the mount', async () => {
+    const scene = reactive({ dialog: false });
+    mount(DialogWithPopovers, { variant: 'popover-before', scene });
+    await waitFor(() => expect(button('Got it')).toBeTruthy());
+    await userEvent.click(button('Got it'));
+    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBe(null));
+    (document.activeElement as HTMLElement).blur();
+    scene.dialog = true;
+    await opened('dialog');
+    await waitFor(() => expect(button('Close')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await closed('dialog');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(button('Tip')).not.toHaveFocus();
   });
 });

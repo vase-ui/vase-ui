@@ -152,20 +152,24 @@ export function usePopupFocus(
     if (active && active !== doc.body && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
-    const trigger = root.activeTrigger;
+    // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
+    // that closes is no target, also while the popup leaves.
+    const element = [
+      target === true ? null : tabStopOf(target, popup),
+      root.activeTrigger as HTMLElement | null,
+      before as HTMLElement | null,
+    ].find((each) => each?.isConnected && !popup.contains(each));
     const keyboard = root.closeInteraction === 'keyboard';
-    // The layer removes `inert` from the page in the update of the close. A focus of an inert
+    if (!element?.closest('[inert]')) {
+      focus(element, keyboard);
+      return;
+    }
+    // The layer removes its `inert` from the page in the update of the close. A focus of an inert
     // element does nothing, and a focus in the same task after the removal works
     // (test/measurements/dialog.test.ts).
     void nextTick(() => {
-      // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
-      // that closes is no target, also while the popup leaves.
-      const element = [
-        target === true ? null : tabStopOf(target, popup),
-        trigger as HTMLElement | null,
-        before as HTMLElement | null,
-      ].find((each) => each?.isConnected && !popup.contains(each));
-      focus(element, keyboard);
+      const now = activeElement(doc);
+      if (!now || now === doc.body || popup.contains(now)) focus(element, keyboard);
     });
   }
 

@@ -9,6 +9,7 @@ import PopoverInTransition from '../../test/fixtures/PopoverInTransition.vue';
 import PopoverPartAlone from '../../test/fixtures/PopoverPartAlone.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import PopoverViewportParts from '../../test/fixtures/PopoverViewportParts.vue';
+import PopoverWithDialog from '../../test/fixtures/PopoverWithDialog.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
@@ -2023,6 +2024,91 @@ describe('in a toolbar', () => {
     await userEvent.keyboard('{ArrowRight}');
     await nextTick();
     expect(document.activeElement).toBe(button('Inside'));
+  });
+});
+
+describe('with a dialog', () => {
+  const press = async (element: Element) =>
+    userEvent.pointer({ coords: centerOf(element), keys: '[MouseLeft]' });
+  const button = (text: string) =>
+    [...document.querySelectorAll('button')].find((element) => element.textContent === text)!;
+  const popover = () => document.querySelector('[data-testid="popover"]');
+
+  test.each([true, false])(
+    'VUE-4: a press on the backdrop of a dialog with modal=%s in a popover closes only the dialog',
+    async (modal) => {
+      const log = new Set<string>();
+      mount(PopoverWithDialog, {
+        variant: 'dialog-in-popover',
+        dialog: { defaultOpen: true, modal },
+        log,
+      });
+      await waitFor(() => expect(byTestId('dialog')).toBeTruthy());
+      await press(byTestId('backdrop'));
+      await waitFor(() => expect(document.querySelector('[data-testid="dialog"]')).toBe(null));
+      expect(byTestId('popover')).toBeTruthy();
+      expect([...log]).toEqual(['dialog false outside-press']);
+    },
+  );
+
+  test('a press on the backdrop of a modal popover in a dialog closes only the popover', async () => {
+    const log = new Set<string>();
+    mount(PopoverWithDialog, { variant: 'popover-in-dialog', dialog: { modal: false }, log });
+    await waitFor(() => expect(document.querySelector('[data-testid="popover"]')).not.toBe(null));
+    await press(byTestId('backdrop'));
+    await waitFor(() => expect(document.querySelector('[data-testid="popover"]')).toBe(null));
+    expect(byTestId('dialog')).toBeTruthy();
+    expect([...log]).toEqual(['popover false outside-press']);
+  });
+
+  test('Escape closes a dialog in a popover after a press on its backdrop, and the popover stays', async () => {
+    const log = new Set<string>();
+    mount(PopoverWithDialog, {
+      variant: 'dialog-in-popover',
+      dialog: { disablePointerDismissal: true },
+      log,
+    });
+    await waitFor(() => expect(popover()).not.toBe(null));
+    await userEvent.click(button('Open dialog'));
+    await waitFor(() => expect(byTestId('input')).toHaveFocus());
+    await press(byTestId('backdrop'));
+    expect(byTestId('input')).toHaveFocus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.querySelector('[data-testid="dialog"]')).toBe(null));
+    expect(byTestId('popover')).toBeTruthy();
+    expect([...log]).toEqual(['dialog true trigger-press', 'dialog false escape-key']);
+  });
+
+  test.each([
+    { name: 'a press on a button', submits: false },
+    { name: 'Enter in a field of a form', submits: true },
+  ])(
+    'a popover stays open at $name in a modal dialog outside its tree that opened after it',
+    async ({ submits }) => {
+      const log = new Set<string>();
+      mount(PopoverWithDialog, { variant: 'dialog-after', log });
+      await waitFor(() => expect(popover()).not.toBe(null));
+      await userEvent.click(button('Open dialog'));
+      await waitFor(() => expect(byTestId('input')).toHaveFocus());
+      if (submits) await userEvent.keyboard('{Enter}');
+      else await press(button('Inside dialog'));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(byTestId('dialog')).toBeTruthy();
+      expect(byTestId('popover')).toBeTruthy();
+      expect([...log]).toEqual(submits ? ['submit'] : []);
+    },
+  );
+
+  test('a press in a modal dialog that opened before the popover closes the popover', async () => {
+    const log = new Set<string>();
+    mount(PopoverWithDialog, { variant: 'dialog-before', log });
+    await waitFor(() => expect(byTestId('dialog')).toBeTruthy());
+    await userEvent.click(button('Open popover'));
+    await waitFor(() => expect(popover()).not.toBe(null));
+    await press(button('Inside dialog'));
+    await waitFor(() => expect(popover()).toBe(null));
+    expect(byTestId('dialog')).toBeTruthy();
+    expect([...log]).toEqual(['popover true trigger-press', 'popover false outside-press']);
   });
 });
 
