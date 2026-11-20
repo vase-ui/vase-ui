@@ -270,7 +270,7 @@ Each part follows the rules of this section.
 1. A prop that mirrors a native attribute has the name of the attribute in a Vue template: `readonly`, `autocomplete`. An ARIA attribute is a plain attribute, not a prop.
 2. No prop says what element the developer renders. A part reads its element after the mount, and a tag in `as` before the mount.
 3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element. A blank `id` counts as absent: read it with `givenId` of `src/common/id.ts`.
-4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:open`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`. A defined model prop controls the part, and `undefined` lets the part own the value.
+4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:open`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`.
 5. A change event comes before the update of its model, in the same task. Its last argument is the details object, `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, with `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`.
 6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
 7. `<Transition>` animates a part that appears and goes. Content that a user or a developer would lose, such as a closed panel, stays in the DOM with `hidden` when the part has `keepMounted`.
@@ -489,7 +489,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 
 ### Component pages
 
-A component page is `docs/components/<family>.md`. A family that Base UI documents in its `utils` folder has a utility page, `docs/utils/<family>.md`, with the same rules. `docs/components/collapsible.md` is the model page.
+A component page is `docs/components/<family>.md`. A utility has a page `docs/utils/<family>.md`, with the same rules. `docs/components/collapsible.md` is the model page.
 
 A page with `<BaseUiDifferences />` has the page template, and `pnpm test:docs` checks the sequence of its `##` sections. Each part of the template holds this:
 
