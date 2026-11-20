@@ -28,8 +28,8 @@ defineProps({
   noPortal: Boolean,
   nested: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
   inTree: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
-  /** `scene.nested` set to `false` unmounts the dialog of `nested`. */
-  scene: { type: Object as PropType<{ nested?: boolean }>, default: () => ({}) },
+  /** `scene.nested` set to `false` unmounts the dialog of `nested`, and `scene.popup` the popup. */
+  scene: { type: Object as PropType<{ nested?: boolean; popup?: boolean }>, default: () => ({}) },
 });
 const POPUP_STYLE = 'position: fixed; left: 200px; top: 100px';
 const rootPart = useTemplateRef('rootPart');
@@ -54,7 +54,7 @@ defineExpose({ root: rootPart, popup: popupPart });
         <Dialog.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
         <Dialog.Viewport v-if="viewport" data-testid="viewport" v-bind="viewport">
           <Dialog.Popup
-            v-if="!noPopup"
+            v-if="!noPopup && scene.popup !== false"
             ref="popupPart"
             data-testid="popup"
             :style="POPUP_STYLE"
@@ -72,7 +72,7 @@ defineExpose({ root: rootPart, popup: popupPart });
           </Dialog.Popup>
         </Dialog.Viewport>
         <Dialog.Popup
-          v-else-if="!noPopup"
+          v-else-if="!noPopup && scene.popup !== false"
           ref="popupPart"
           data-testid="popup"
           :style="POPUP_STYLE"

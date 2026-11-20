@@ -1518,6 +1518,19 @@ describe('the title, the description, the close and the trigger', () => {
     await opened();
   });
 
+  test('VUE-73: a popup that unmounts while the dialog is open leaves no aria-controls and no sentinel', async () => {
+    const scene = reactive({ popup: true });
+    const { trigger } = await mountDialog({ root: { defaultOpen: true }, scene });
+    const element = await opened();
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-controls', element.id));
+    scene.popup = false;
+    await closed();
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger()).not.toHaveAttribute('aria-controls');
+    expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
+  });
+
   test('VUE-73: aria-controls names the popup only while it is in the document', async () => {
     const { trigger } = await mountDialog({ root: { defaultOpen: true }, noPopup: true });
     await nextTick();
