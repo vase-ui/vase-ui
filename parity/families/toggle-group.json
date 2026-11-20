@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/toggle-group/ToggleGroupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The group writes `data-orientation` and `data-disabled`, and CSS selects them as text. It writes no `data-multiple`: the developer gives `multiple` to the same element, and it never changes by itself, so a class binding with the same expression styles it (rule 8.15). The slots give `state.multiple`. The family has no namespace of constants (rule 8.10)."
+      "reason": "The group writes `data-orientation` and `data-disabled`, and CSS selects them as text. It writes no `data-multiple`: the developer gives `multiple` to the same element, and it never changes by itself, so a class binding with the same expression styles it. The slots give `state.multiple`. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toggle-group/ToggleGroup.test.tsx",
@@ -20,7 +20,7 @@
       "upstream": "docs/src/app/(docs)/react/components/toggle-group/types.md",
       "entry": "ToggleGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The group writes `data-orientation` and `data-disabled`, and CSS selects them as text. It writes no `data-multiple`, because the developer gives `multiple` to the same element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The group writes `data-orientation` and `data-disabled`, and CSS selects them as text. It writes no `data-multiple`, because the developer gives `multiple` to the same element. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

@@ -8,32 +8,32 @@
     {
       "upstream": "packages/react/src/slider/control/SliderControlDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/indicator/SliderIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumbDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/track/SliderTrackDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/value/SliderValueDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/slider/thumb/prehydrationScript.min.ts",
@@ -72,7 +72,7 @@
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range (rule 8.13), `aria-valuenow` (the native value is the value), `preventVaseUIHandler` (rule 8.7), the reason `none` of a reset (rule 8.8), the touch listeners, and each `KeepAlive` row (section 5)."
+      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range, `aria-valuenow` (the native value is the value), `preventVaseUIHandler`, the reason `none` of a reset, the touch listeners, and each `KeepAlive` row."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
@@ -120,86 +120,86 @@
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. The reason `none` is cut: a native reset emits only `update:modelValue` (rule 8.8), and each change of the user has a native event. `thumbAlignment` has no `'edge-client-only'`: `'edge'` needs no script. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`. A native reset emits only `update:modelValue`, and each change of the user has a native event, so the change reasons have no `none`. `'edge'` needs no script, so `thumbAlignment` has no `'edge-client-only'`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Thumb",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. A template ref has the input as `input`, in the place of `inputRef`. `getAriaLabel` is cut: give each thumb an `aria-label`, because the developer writes each thumb and knows its index there. `aria-valuetext` and `tabindex` are plain attributes that go to the input. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`. A template ref has the input as `input`, in the place of `inputRef`. The developer writes each thumb and knows its index, so an `aria-label` on each thumb takes the place of `getAriaLabel`. `aria-valuetext` and `tabindex` are plain attributes that go to the input."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Label",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`. The element is a `<label>` for the input of the first thumb (rule 8.3)."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`. The element is a `<label>` for the input of the first thumb."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Value",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Control",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Track",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Indicator",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the part has no `data-focused` (rule 8.15). CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderValueDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderControlDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderTrackDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderThumbDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Thumb",
       "prop": "id",
-      "reason": "The `id` of the input, which has the role `slider` and takes the focus (rule 8.4). A native `<label for>` names that input."
+      "reason": "The `id` of the input, which has the role `slider` and takes the focus. A native `<label for>` names that input."
     },
     {
       "entry": "Label",
