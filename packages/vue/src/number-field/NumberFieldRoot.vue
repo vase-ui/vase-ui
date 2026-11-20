@@ -202,7 +202,11 @@ provide(numberFieldKey, {
   },
 });
 
-defineExpose({ element, inputElement: hiddenInput });
+defineExpose({
+  element,
+  /** The hidden input that gives the number to a form. */
+  inputElement: hiddenInput,
+});
 
 function elementProps() {
   return mergeProps(stateAttributes(state.value), attrs);

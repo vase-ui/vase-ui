@@ -16,7 +16,10 @@ export interface ToggleProps<Value extends string = string>
    * @default false
    */
   disabled?: boolean;
-  /** The value of the toggle in a `ToggleGroup`. */
+  /**
+   * The value of the toggle in a `ToggleGroup`. Give it when the group has `v-model` or
+   * `defaultValue`. With none, the toggle has a value of its own.
+   */
   value?: Value;
 }
 

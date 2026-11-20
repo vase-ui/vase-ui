@@ -5,6 +5,7 @@ description: An unstyled Vue button component that can stay focusable while it i
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoButtonHero from '../demos/button/hero/css-modules/index.vue';
@@ -15,7 +16,7 @@ import DemoButtonLoadingTailwind from '../demos/button/loading/tailwind/index.vu
 
 # Button
 
-A button component that can stay focusable while it is disabled.
+A button that can render another tag and stay focusable while it is disabled.
 
 <DemoFrame>
   <DemoButtonHero />
@@ -48,8 +49,8 @@ A button component that can stay focusable while it is disabled.
 
 ## Usage guidelines
 
-- **Submit buttons**: Unlike the native `<button>`, Button renders `type="button"`, so it does not submit its form. Set `type="submit"` for a submit button. Set `type` on Button, not on the element of the `element` slot.
-- **Links**: Button has button semantics (`role="button"`, keyboard interaction, disabled state). Do not use it for a link. See [Rendering links as buttons](#rendering-links-as-buttons).
+- **Submit buttons**: Button renders `type="button"`, so it does not submit its form as a native `<button>` does. Set `type="submit"` on Button for a submit button.
+- **Links**: Button has the semantics of a button: the role, the keys and the disabled state. Do not use it for a link. See [Rendering links as buttons](#rendering-links-as-buttons).
 
 ## Anatomy
 
@@ -61,23 +62,21 @@ Import the component:
 
 ### Rendering as another tag
 
-Give `as` another tag, such as `div`. The part then gives the element `role="button"`, a tab stop, and the keys Enter and Space, so the button stays keyboard accessible.
+Give `as` another tag, such as `div`. Button then gives the element `role="button"`, a tab stop and the keys Enter and Space, so it stays accessible from the keyboard.
 
 <<< ./button/CustomTagButton.vue{6}
 
-A tag in `as` is known before the mount, so the server HTML has the `role` and the `tabindex`. The part reads the element of a component in `as` or of the `element` slot after the mount. Until then, it gives that element the attributes of a native `<button>`, such as `type="button"`. The server HTML thus has no `role` and no `tabindex` for such an element. Write the two attributes on the element when the server HTML must have them.
+The server HTML has these attributes for a tag in `as`. A component in `as` or in the `element` slot gets them at the mount. Write `role` and `tabindex` on such an element when the server HTML must have them.
 
 ### Rendering links as buttons
 
-Button has button semantics. The element of `as` or of the `element` slot must be an element that can take button semantics (`role="button"` and the keys of a button). A link (`<a>`) has its own semantics. Do not render a link as Button.
-
-To make a link look like a button, style the `<a>` element with CSS. Do not use Button for this.
+A link (`<a>`) has its own semantics. Do not render a link in `as` or in the `element` slot of Button. To make a link look like a button, style the `<a>` element with CSS.
 
 ### Loading states
 
-For a button that enters a loading state after activation, set `focusableWhenDisabled`. A button that has the focus keeps it while it is disabled.
+Set `focusableWhenDisabled` on a button that becomes disabled while it loads. The button then keeps the focus.
 
-Some browser and screen reader combinations do not reliably announce a change of the text in a focused button. Use [`aria-labelledby`](https://www.w3.org/TR/accname-1.2/#computation-steps) to make the changing text the explicit accessible name of the button.
+Some combinations of a browser and a screen reader do not announce a change of the text in a focused button. Use [`aria-labelledby`](https://www.w3.org/TR/accname-1.2/#computation-steps) to make the changing text the accessible name of the button.
 
 <DemoFrame>
   <DemoButtonLoading />
@@ -108,10 +107,10 @@ Some browser and screen reader combinations do not reliably announce a change of
 
 </DemoSource>
 
-### Styling the disabled state
-
-A native disabled button matches `:disabled`. A disabled button with `focusableWhenDisabled`, and a disabled element that is not a native button, have `aria-disabled="true"`. Select the disabled state with `:disabled` and `[aria-disabled='true']`. Select each other state with `:not(:disabled, [aria-disabled='true'])`, because `:enabled` also matches a `<button>` with `aria-disabled="true"`.
-
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

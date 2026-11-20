@@ -22,13 +22,13 @@ export interface ToggleGroupProps<Value extends string = string>
    */
   disabled?: boolean;
   /**
-   * The axis of the arrow keys.
+   * The axis of the arrow keys. A group in a toolbar uses the keys of the toolbar.
    * @default 'horizontal'
    */
   orientation?: 'horizontal' | 'vertical';
   /**
    * The arrow keys move the focus from the last toggle to the first, and from the first to the
-   * last.
+   * last. A group in a toolbar uses the `loopFocus` of the toolbar.
    * @default true
    */
   loopFocus?: boolean;

@@ -9,119 +9,86 @@ export type OTPFieldRootValidationType = 'numeric' | 'alpha' | 'alphanumeric' | 
 export interface OTPFieldRootProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id' | 'inputmode'> {
   /**
-   * The number of OTP input slots.
-   * Required so the root can clamp values, detect completion, and generate
-   * consistent validation markup before all slots hydrate.
+   * The number of slots. The root cuts the code to it and finds the completion from it. The form
+   * input then has the validation of a whole code before the slots hydrate.
    */
   length: number;
-  /**
-   * The OTP value.
-   */
+  /** The code. With no value, the field owns its code. */
   modelValue?: string;
-  /**
-   * The uncontrolled OTP value when the component is initially rendered.
-   */
+  /** The first code of a field that owns its code. */
   defaultValue?: string;
   /**
-   * The type of input validation to apply to the OTP value.
+   * The characters that a slot accepts.
    * @default 'numeric'
    */
   validationType?: OTPFieldRootValidationType;
   /**
-   * Function that normalizes the OTP value after whitespace and `validationType` filtering.
-   * It runs whenever OTP Field normalizes a value, including initial/default values, controlled
-   * values, and user edits.
-   *
-   * The returned value is filtered by `validationType` again, then clamped to `length`.
-   * It should be idempotent because OTP Field may normalize the same value more than once while
-   * handling edits, storing state, and rendering controlled or uncontrolled values. Non-idempotent
-   * normalizers can compound across those normalization passes. Characters rejected while
-   * normalizing typed or pasted text are reported through `valueInvalid`.
+   * Changes the code after the field removes whitespace and each character that `validationType`
+   * refuses. It runs for the first code, for each model value and for each edit. The filter of
+   * `validationType` then runs on its result again, and the field cuts the result to `length`.
+   * The field can run it more than one time on the same code, so give it the same result for its
+   * own result. `valueInvalid` tells when it refuses a character of typed or pasted text.
    */
   normalizeValue?: (value: string) => string;
   /**
-   * The virtual keyboard hint applied to the slot inputs and hidden validation input.
-   *
-   * Built-in validation modes provide sensible defaults, but you can override them when needed.
+   * The keyboard hint of the slots and of the form input. With none, the hint follows
+   * `validationType`.
    */
   inputmode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
   /**
-   * The input autocomplete attribute. Applied to the first slot and hidden validation input.
+   * The `autocomplete` of the first slot and of the form input.
    * @default 'one-time-code'
    */
   autocomplete?: string;
   /**
-   * Whether to submit the owning form when the OTP becomes complete.
+   * The field submits its form when the code becomes complete.
    * @default false
    */
   autoSubmit?: boolean;
-  /**
-   * The id of the first input element.
-   * Subsequent inputs derive their ids from it (`{id}-2`, `{id}-3`, and so on).
-   */
+  /** The `id` of the first slot. The other slots get `{id}-2`, `{id}-3`, and on. */
   id?: string;
   /**
-   * Identifies the field when a form is submitted.
+   * The name of the code in the form data. The form input gives the whole code, and the slots have
+   * no name. The name of a `Field.Root` wins.
    */
   name?: string;
   /** The `id` of the form that owns the inputs of the field, for a field outside that form. */
   form?: string;
   /**
-   * Whether the user must enter a value before submitting a form.
+   * The user must give a code before a submit.
    * @default false
    */
   required?: boolean;
   /**
-   * Whether the component should ignore user interaction.
+   * The user cannot change the code, and the form data has no code.
    * @default false
    */
   disabled?: boolean;
   /**
-   * Whether the user should be unable to change the field value.
+   * The user cannot change the code. The slots stay in the tab order.
    * @default false
    */
   readonly?: boolean;
 }
 
 export interface OTPFieldRootState extends FieldState {
-  /**
-   * Whether all slots are filled.
-   */
+  /** Each slot has a character. */
   complete: boolean;
-  /**
-   * Whether the component should ignore user interaction.
-   */
   disabled: boolean;
-  /**
-   * Whether the user should be unable to change the field value.
-   */
   readonly: boolean;
-  /**
-   * Whether the user must enter a value before submitting a form.
-   */
   required: boolean;
-  /**
-   * The number of OTP input slots.
-   */
+  /** The number of slots. */
   length: number;
-  /**
-   * The OTP value.
-   */
+  /** The code. */
   value: string;
 }
 
 export interface OTPFieldInputState extends OTPFieldRootState {
-  /**
-   * Whether this input contains a character.
-   */
+  /** The slot has a character. */
   filled: boolean;
-  /**
-   * The character rendered in this slot.
-   */
+  /** The character of the slot. */
   value: string;
-  /**
-   * The input index.
-   */
+  /** The place of the slot, from 0. */
   index: number;
 }
 

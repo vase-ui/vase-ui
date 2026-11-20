@@ -9,7 +9,9 @@ export interface NumberFieldRootProps
   modelValue?: number | null;
   /** The first value of a field with no `modelValue`. */
   defaultValue?: number;
+  /** The least value. The Home key sets it. */
   min?: number;
+  /** The greatest value. The End key sets it. */
   max?: number;
   /**
    * The amount of one step. A number is also the `step` of the hidden input, so the form accepts
@@ -43,22 +45,37 @@ export interface NumberFieldRootProps
    * @default false
    */
   allowWheelScrub?: boolean;
-  /** The options of `Intl.NumberFormat` for the text. */
+  /**
+   * The options of `Intl.NumberFormat` for the text. Typed text stays as the user typed it, and
+   * the blur gives it the format. A rounding option rounds the typed number at the blur.
+   */
   format?: Intl.NumberFormatOptions;
   /**
    * The locale of the text.
    * @default the locale of the nearest LocaleProvider, else 'en-US'
    */
   locale?: Intl.LocalesArgument;
-  /** The name of the value in the form data. The name of a `Field.Root` wins. */
+  /**
+   * The name of the value in the form data. The form gets the number, not the text of the input.
+   * The name of a `Field.Root` wins.
+   */
   name?: string;
   /** The `id` of the form that owns the inputs. */
   form?: string;
-  /** @default false */
+  /**
+   * The user must give a value before a submit.
+   * @default false
+   */
   required?: boolean;
-  /** @default false */
+  /**
+   * The user cannot change the value, and the form data has no value.
+   * @default false
+   */
   disabled?: boolean;
-  /** @default false */
+  /**
+   * The user cannot change the value. The input stays in the tab order.
+   * @default false
+   */
   readonly?: boolean;
 }
 
@@ -130,7 +147,10 @@ export type NumberFieldInputState = NumberFieldRootState;
 
 export interface NumberFieldIncrementProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
-  /** @default false */
+  /**
+   * The button cannot step the value.
+   * @default false
+   */
   disabled?: boolean;
 }
 /** `disabled` is also true for the `disabled` prop of the button and at the bound. */
@@ -138,7 +158,10 @@ export type NumberFieldIncrementState = NumberFieldRootState;
 
 export interface NumberFieldDecrementProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
-  /** @default false */
+  /**
+   * The button cannot step the value.
+   * @default false
+   */
   disabled?: boolean;
 }
 /** `disabled` is also true for the `disabled` prop of the button and at the bound. */
@@ -147,7 +170,8 @@ export type NumberFieldDecrementState = NumberFieldRootState;
 export interface NumberFieldScrubAreaProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
-   * The axis of the pointer that steps the value.
+   * The axis of the pointer that steps the value. A move up, or a move to the end of the line,
+   * steps up.
    * @default 'horizontal'
    */
   orientation?: 'horizontal' | 'vertical';

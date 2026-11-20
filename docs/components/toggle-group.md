@@ -5,6 +5,7 @@ description: An unstyled Vue toggle group component that provides shared state t
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoToggleGroupHero from '../demos/toggle-group/hero/css-modules/index.vue';
@@ -52,25 +53,6 @@ Import the component and use it as a single part:
 
 <<< ./toggle-group/Anatomy.vue
 
-`ToggleGroup` renders a `<div role="group">`, and each `Toggle` in it renders a `<button>`. Bind the values of the pressed toggles with `v-model`, or give `defaultValue` to an uncontrolled group. The value is always an array. A press emits `valueChange` and then `update:modelValue`. To keep the value, call `details.cancel()` in `valueChange`.
-
-Give each toggle a `value` when the group has a model. A toggle with no `value` gets a value of its own.
-
-The group is one tab stop: the toggle that had the focus last, or else the first enabled toggle. In a toolbar, the toolbar holds the tab stop and the keys.
-
-| Key                      | Action                                                                            |
-| ------------------------ | --------------------------------------------------------------------------------- |
-| ArrowRight and ArrowLeft | In a horizontal group, move the focus to the next or the previous enabled toggle. |
-| ArrowDown and ArrowUp    | In a vertical group, move the focus to the next or the previous enabled toggle.   |
-| Home and End             | Move the focus to the first or the last enabled toggle.                           |
-| Enter and Space          | Press the toggle that has the focus.                                              |
-
-With right-to-left text, ArrowLeft moves to the next toggle of a horizontal group. The arrow keys go from the last toggle to the first, unless `loopFocus` is `false`.
-
-## Styling
-
-The group has `data-orientation` with its orientation, and `data-disabled` while it is disabled. Select the states of a toggle with `[aria-pressed='true']` and `:disabled`, as on [Toggle](/components/toggle#styling).
-
 ## Examples
 
 ### Multiple
@@ -109,3 +91,7 @@ Set the `multiple` prop to let the user press more than one toggle at a time.
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />
