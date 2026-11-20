@@ -1,4 +1,4 @@
-import { onMounted, onScopeDispose, watch } from 'vue';
+import { onMounted, shallowRef, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -29,12 +29,27 @@ export function usePopupPress(
     laterPress?: boolean;
   },
 ) {
-  let stop: (() => void) | undefined;
-  const end = () => {
-    stop?.();
-    stop = undefined;
-  };
-  onScopeDispose(end);
+  // The opening press, from its `pointerdown` on the trigger to its release.
+  const opening = shallowRef<{ press: PointerEvent; trigger: Element } | null>(null);
+  const end = () => (opening.value = null);
+  watch(
+    opening,
+    (current, _, onCleanup) => {
+      if (!current) return;
+      const doc = ownerDocument(current.trigger);
+      const listener = (event: PointerEvent) => {
+        end();
+        onOpeningRelease(current.press, current.trigger, event);
+      };
+      onCleanup(
+        mergeCleanups(
+          addEventListener(doc, 'pointerup', listener, true),
+          addEventListener(doc, 'pointercancel', listener, true),
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
 
   function release(item: HTMLElement, event: PointerEvent) {
     item.focus({ preventScroll: true });
@@ -42,14 +57,12 @@ export function usePopupPress(
   }
 
   function onOpeningRelease(press: PointerEvent, trigger: Element, event: PointerEvent) {
-    end();
     if (event.type !== 'pointerup' || isReleaseAtPressPoint(press, event)) return;
     const target = event.composedPath()[0] as Element;
     const item = options.itemAt(target);
     if (item) {
       const early =
-        !!options.earlyRelease?.(item) &&
-        Math.abs(event.clientY - press.clientY) >= DRAG_DISTANCE;
+        !!options.earlyRelease?.(item) && Math.abs(event.clientY - press.clientY) >= DRAG_DISTANCE;
       if (early || event.timeStamp - press.timeStamp >= options.delay) release(item, event);
       return;
     }
@@ -99,7 +112,7 @@ export function usePopupPress(
               doc,
               'pointerup',
               (event) => {
-                if (pressed === undefined || stop) return;
+                if (pressed === undefined || opening.value) return;
                 const item = options.itemAt(event.composedPath()[0] as Element);
                 if (item && item !== pressed) release(item, event);
                 pressed = undefined;
@@ -116,13 +129,7 @@ export function usePopupPress(
   return {
     /** Starts the gesture at the `pointerdown` on the trigger that opened the popup. */
     start(press: PointerEvent, trigger: Element) {
-      end();
-      const doc = ownerDocument(trigger);
-      const listener = (event: PointerEvent) => onOpeningRelease(press, trigger, event);
-      stop = mergeCleanups(
-        addEventListener(doc, 'pointerup', listener, true),
-        addEventListener(doc, 'pointercancel', listener, true),
-      );
+      opening.value = { press, trigger };
     },
   };
 }

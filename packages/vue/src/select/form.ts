@@ -38,9 +38,10 @@ export function useSelectForm(
   });
 
   watch(
-    [() => context.root.activeTrigger, input],
+    // The trigger is the element of `Select.Trigger`, which renders an HTML element.
+    [() => context.root.activeTrigger as HTMLElement | null, input],
     ([trigger, text], _, onCleanup) => {
-      if (!(trigger instanceof HTMLElement) || !text || !field) return;
+      if (!trigger || !text || !field) return;
       onCleanup(
         field.setControl({
           element: trigger,
@@ -121,9 +122,5 @@ export function useSelectForm(
     };
   }
 
-  function hiddenProps() {
-    return { type: 'hidden', name: name.value, form: props.form, disabled: context.disabled };
-  }
-
-  return { hiddenValues, textProps, hiddenProps };
+  return { name, hiddenValues, textProps };
 }

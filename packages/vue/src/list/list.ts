@@ -58,7 +58,11 @@ export function useList(options: {
 
   function itemOf(target: EventTarget | null) {
     const container = options.container();
-    for (let node = target as Element | null; node && node !== container; node = node.parentElement) {
+    for (
+      let node = target as Element | null;
+      node && node !== container;
+      node = node.parentElement
+    ) {
       const item = added.find((each) => each.element === node);
       if (item) return item;
     }
@@ -83,7 +87,8 @@ export function useList(options: {
       item.element.focus({ preventScroll: true });
       // `focus()` alone puts the item in the middle of the list (test/measurements/select.test.ts).
       // A pointer highlight does not move the list under the pointer.
-      if (reason !== 'pointer') item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      if (reason !== 'pointer')
+        item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       return;
     }
     const doc = before?.element.ownerDocument;
@@ -103,7 +108,8 @@ export function useList(options: {
     else {
       const container = options.container();
       const vertical = options.orientation() === 'vertical';
-      const rtl = !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
+      const rtl =
+        !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
       const toEnd = vertical ? 'ArrowDown' : rtl ? 'ArrowLeft' : 'ArrowRight';
       const toStart = vertical ? 'ArrowUp' : rtl ? 'ArrowRight' : 'ArrowLeft';
       if (event.key !== toEnd && event.key !== toStart) return false;
@@ -140,19 +146,17 @@ export function useList(options: {
       return (item.label ?? item.element.textContent).trim();
     },
     highlight,
-    moved(event) {
-      return !known || known.x !== event.clientX || known.y !== event.clientY;
-    },
+    moved: (event) => !samePosition(known, event),
     onKeydown,
     listeners: {
       onPointerover(event: PointerEvent) {
         const position = { x: event.clientX, y: event.clientY };
         // Content moved under a pointer that rests.
-        if (lastOver && lastOver.x === position.x && lastOver.y === position.y) known = position;
+        if (samePosition(lastOver, event)) known = position;
         lastOver = position;
       },
       onPointermove(event: PointerEvent) {
-        const moves = !known || known.x !== event.clientX || known.y !== event.clientY;
+        const moves = !samePosition(known, event);
         known = { x: event.clientX, y: event.clientY };
         if (!moves || !hover() || event.pointerType === 'touch') return;
         const item = itemOf(event.target);
@@ -172,6 +176,10 @@ export function useList(options: {
       },
     },
   };
+}
+
+function samePosition(position: { x: number; y: number } | null, event: PointerEvent) {
+  return position?.x === event.clientX && position.y === event.clientY;
 }
 
 /** Adds the element to the list while it is mounted. Gives the attributes of the item. */
@@ -201,7 +209,9 @@ export function useListItem(
     },
     { flush: 'post', immediate: true },
   );
-  const highlighted = computed(() => !!element.value && list.highlighted?.element === element.value);
+  const highlighted = computed(
+    () => !!element.value && list.highlighted?.element === element.value,
+  );
   const attributes = computed(() => ({
     tabindex: highlighted.value ? 0 : -1,
     'data-highlighted': highlighted.value ? '' : undefined,

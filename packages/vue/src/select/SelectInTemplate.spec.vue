@@ -15,7 +15,7 @@ function onFontChange(value: string | null, details: Select.Root.ChangeEventDeta
 <template>
   <Select.Root v-model="font" @value-change="onFontChange">
     <Select.Value v-slot="{ state }">
-      {{ expectType<boolean, typeof state.placeholder>(state.placeholder) }}
+      <span v-if="expectType<boolean, typeof state.placeholder>(state.placeholder) === undefined" />
     </Select.Value>
   </Select.Root>
   <Select.Root v-model="fonts" multiple @value-change="(value: string[]) => value" />

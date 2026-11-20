@@ -28,7 +28,9 @@ it.each([true, false])(
     });
     const open = shallowRef(false);
     const width = shallowRef(160);
-    await render(() => <SelectLayout open={open.value} aligned={aligned} width={width.value} inPlace />);
+    await render(() => (
+      <SelectLayout open={open.value} aligned={aligned} width={width.value} inPlace />
+    ));
     const positioner = () => screen.getByTestId('positioner');
 
     function expectPlacement() {
@@ -54,7 +56,9 @@ it.each([true, false])(
     expect(parseFloat(positioner().dataset.width ?? '')).toBeGreaterThan(100);
     expect(positioner().dataset.width).toBe(positioner().style.getPropertyValue('--anchor-width'));
     expect(positioner().dataset.origin).toMatch(/px|%/);
-    expect(positioner().dataset.origin).toBe(positioner().style.getPropertyValue('--transform-origin'));
+    expect(positioner().dataset.origin).toBe(
+      positioner().style.getPropertyValue('--transform-origin'),
+    );
     if (aligned) {
       expect(positioner().dataset.height).toMatch(/px$/);
       expect(parseFloat(positioner().dataset.height ?? '')).toBeCloseTo(

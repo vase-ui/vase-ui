@@ -50,7 +50,11 @@ describe('the form inputs', () => {
   });
 
   test('with multiple, one hidden input for each value; a disabled select gives no entry', async () => {
-    const root = reactive<Attrs>({ name: 'letter', multiple: true, defaultValue: ['a', 'b\nline'] });
+    const root = reactive<Attrs>({
+      name: 'letter',
+      multiple: true,
+      defaultValue: ['a', 'b\nline'],
+    });
     const { form, text } = await mountField({ noField: true, root });
     expect([...new FormData(form)]).toEqual([
       ['letter', 'a'],
@@ -72,7 +76,11 @@ describe('the form inputs', () => {
   test('itemToStringValue gives the text of an object value', async () => {
     const { form } = await mountField({
       noField: true,
-      root: { name: 'letter', defaultValue: { id: 7 }, itemToStringValue: (v: { id: number }) => `#${v.id}` },
+      root: {
+        name: 'letter',
+        defaultValue: { id: 7 },
+        itemToStringValue: (v: { id: number }) => `#${v.id}`,
+      },
     });
     expect([...new FormData(form)]).toEqual([['letter', '#7']]);
   });
@@ -99,7 +107,10 @@ describe('the validation', () => {
   });
 
   test('BUG-1425: a required select with no value is invalid after the focus leaves it in blur mode', async () => {
-    const { field } = await mountField({ field: { validationMode: 'blur' }, root: { required: true } });
+    const { field } = await mountField({
+      field: { validationMode: 'blur' },
+      root: { required: true },
+    });
     trigger().focus();
     await leave(trigger());
     await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
@@ -149,7 +160,11 @@ describe('the field', () => {
   });
 
   test('VUE-112: a disabled fieldset gives the form no value', async () => {
-    const { form } = await mountField({ noField: true, fieldset: { disabled: true }, root: { name: 'l', defaultValue: 'a' } });
+    const { form } = await mountField({
+      noField: true,
+      fieldset: { disabled: true },
+      root: { name: 'l', defaultValue: 'a' },
+    });
     await settle();
     expect(trigger()).toBeDisabled();
     expect([...new FormData(form)]).toEqual([]);
@@ -161,7 +176,10 @@ describe('the fill', () => {
     const log: string[] = [];
     const { text } = await mountField({
       noField: true,
-      root: { autocomplete: 'on', onValueChange: (v: string, d: { reason: string }) => log.push(`${v} ${d.reason}`) },
+      root: {
+        autocomplete: 'on',
+        onValueChange: (v: string, d: { reason: string }) => log.push(`${v} ${d.reason}`),
+      },
     });
     fill(text, 'A');
     await waitFor(() => expect(trigger()).toHaveTextContent('a'));
@@ -172,7 +190,10 @@ describe('the fill', () => {
   });
 
   test('a fill does nothing in a read-only select', async () => {
-    const { text } = await mountField({ noField: true, root: { autocomplete: 'on', readonly: true } });
+    const { text } = await mountField({
+      noField: true,
+      root: { autocomplete: 'on', readonly: true },
+    });
     fill(text, 'a');
     await settle();
     expect(trigger()).toHaveTextContent('');
@@ -197,7 +218,10 @@ describe('the reset', () => {
   });
 
   test('VUE-21: a reset clears the error of the field', async () => {
-    const { form, field } = await mountField({ field: { validationMode: 'change' }, root: { required: true, defaultValue: 'a' } });
+    const { form, field } = await mountField({
+      field: { validationMode: 'change' },
+      root: { required: true, defaultValue: 'a' },
+    });
     await pick('b');
     form.reset();
     await waitFor(() => expect(trigger()).toHaveTextContent('a'));

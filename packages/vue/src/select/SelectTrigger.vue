@@ -123,7 +123,9 @@ function elementProps() {
       onFocus,
       onBlur,
     },
-    field ? { ...attrs, 'aria-describedby': describedByWith(field, attrs['aria-describedby']) } : attrs,
+    field
+      ? { ...attrs, 'aria-describedby': describedByWith(field, attrs['aria-describedby']) }
+      : attrs,
   );
   // A key listener of the developer that prevents the default stops the keys of the select.
   return mergeProps(merged, { onKeydown });

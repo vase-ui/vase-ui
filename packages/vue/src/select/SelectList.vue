@@ -28,8 +28,7 @@ const state: SelectListState = {};
 watch(element, (list) => (context.listElement.value = list), { flush: 'sync', immediate: true });
 
 const hidesScrollbar = computed(
-  () =>
-    (context.arrows.value > 0 && context.root.interaction !== 'touch') || context.aligned.value,
+  () => (context.arrows.value > 0 && context.root.interaction !== 'touch') || context.aligned.value,
 );
 useStyleDisableScrollbar(() => (hidesScrollbar.value ? element.value : null));
 

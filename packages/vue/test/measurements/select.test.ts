@@ -45,7 +45,9 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe('a key on a closed native select (SM1)', () => {
   test('selects the next option whose text starts with it, with `input` and `change`, and no popup', async () => {
-    html('<select id="s"><option>Apple</option><option>Banana</option><option>Cherry</option></select>');
+    html(
+      '<select id="s"><option>Apple</option><option>Banana</option><option>Cherry</option></select>',
+    );
     const select = element<HTMLSelectElement>('s');
     const log: string[] = [];
     select.addEventListener('input', () => log.push(`input ${select.value}`));
@@ -90,7 +92,10 @@ const PopupInTransition = defineComponent({
   },
 });
 
-function mountTransition(state: { open: boolean }, options: { hidden?: boolean; oneUpdateLater?: boolean; appear?: boolean }) {
+function mountTransition(
+  state: { open: boolean },
+  options: { hidden?: boolean; oneUpdateLater?: boolean; appear?: boolean },
+) {
   const log: string[] = [];
   const open = shallowRef(state.open);
   const app = defineComponent({
@@ -105,7 +110,12 @@ function mountTransition(state: { open: boolean }, options: { hidden?: boolean; 
           onBeforeLeave: () => log.push('before-leave'),
           onAfterLeave: () => log.push('after-leave'),
         },
-        () => h(PopupInTransition, { open: open.value, hidden: options.hidden, oneUpdateLater: options.oneUpdateLater }),
+        () =>
+          h(PopupInTransition, {
+            open: open.value,
+            hidden: options.hidden,
+            oneUpdateLater: options.oneUpdateLater,
+          }),
       ),
   });
   mount(app);
@@ -154,7 +164,11 @@ describe('v-show on the root element of a component in a <Transition> of the dev
 
 describe('an invisible box of a closed popup at an old place (SM4)', () => {
   test.each([
-    { name: 'a box with a size', style: 'width: 200px; height: 300px; visibility: hidden', grows: true },
+    {
+      name: 'a box with a size',
+      style: 'width: 200px; height: 300px; visibility: hidden',
+      grows: true,
+    },
     { name: 'a box with a height of 0', style: 'width: 200px; height: 0', grows: false },
   ])('makes the page scroll further only for $name', ({ style, grows }) => {
     const page = document.documentElement;
@@ -166,7 +180,9 @@ describe('an invisible box of a closed popup at an old place (SM4)', () => {
 
 describe('a click on a native label of a button (SM5)', () => {
   test('gives the button one `click` and no `pointerdown`; `detail` is 0 in WebKit only, and WebKit gives the button no focus', async () => {
-    html('<label id="l" for="b" style="display: block; height: 30px">Label</label><button id="b" type="button">B</button>');
+    html(
+      '<label id="l" for="b" style="display: block; height: 30px">Label</label><button id="b" type="button">B</button>',
+    );
     const log: string[] = [];
     element('b').addEventListener('pointerdown', () => log.push('pointerdown'));
     element('b').addEventListener('click', (event) => log.push(`click ${event.detail}`));
@@ -185,7 +201,14 @@ describe('a popup that a press shows under the pointer (SM6)', () => {
     element('t').addEventListener('pointerdown', () => (element('pop').hidden = false));
     const log: string[] = [];
     for (const type of ['pointerup', 'click']) {
-      document.addEventListener(type, (event) => log.push(`${type} ${(event.target as Element).id || (event.target as Element).localName}`), true);
+      document.addEventListener(
+        type,
+        (event) =>
+          log.push(
+            `${type} ${(event.target as Element).id || (event.target as Element).localName}`,
+          ),
+        true,
+      );
     }
     await userEvent.pointer({ coords: centerOf(element('t')), keys: '[MouseLeft]' });
     expect(log).toEqual(['pointerup item', `click ${root!.localName}`]);
@@ -221,12 +244,15 @@ describe('the list', () => {
   });
 
   test('an element that appears under a pointer that rests gets `pointerover` and no `pointermove`', async () => {
-    html('<div id="target" style="position: fixed; left: 0; top: 0; width: 100px; height: 100px"></div>');
+    html(
+      '<div id="target" style="position: fixed; left: 0; top: 0; width: 100px; height: 100px"></div>',
+    );
     await userEvent.pointer({ coords: { x: 50, y: 50 } });
     const log: string[] = [];
     const added = document.createElement('div');
     added.style.cssText = 'position: fixed; left: 0; top: 0; width: 100px; height: 100px';
-    for (const type of ['pointerover', 'pointermove']) added.addEventListener(type, () => log.push(type));
+    for (const type of ['pointerover', 'pointermove'])
+      added.addEventListener(type, () => log.push(type));
     root!.append(added);
     await wait(100);
     expect(log).not.toContain('pointermove');
@@ -237,7 +263,9 @@ describe('the list', () => {
     await userEvent.pointer({ coords: centerOf(element('a')) });
     const log: string[] = [];
     for (const type of ['pointerover', 'pointermove']) {
-      element('b').addEventListener(type, (event) => log.push(`${type} ${(event as PointerEvent).clientY}`));
+      element('b').addEventListener(type, (event) =>
+        log.push(`${type} ${(event as PointerEvent).clientY}`),
+      );
     }
     await userEvent.pointer({ coords: centerOf(element('b')) });
     const y = centerOf(element('b')).y;
@@ -287,7 +315,10 @@ describe('the parts', () => {
 
   test('a trigger in a scaled element: the rectangles have the scale, and the item text of a popup in <body> is over the value with no division (SN3)', async () => {
     mount(SelectParts, {
-      root: { defaultValue: 'banana', style: 'transform: scale(1.25); transform-origin: 0 0; margin-top: 200px' },
+      root: {
+        defaultValue: 'banana',
+        style: 'transform: scale(1.25); transform-origin: 0 0; margin-top: 200px',
+      },
       positioner: {},
     });
     await nextTick();

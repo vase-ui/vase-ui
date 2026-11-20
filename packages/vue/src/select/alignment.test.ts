@@ -165,31 +165,66 @@ describe('pinnedPlace', () => {
 describe('grownPlace', () => {
   test('a popup pinned to the bottom grows by the scroll, and the list goes back to its top', () => {
     expect(
-      grownPlace({ height: 200, room: 700, maxHeight: Infinity, pinned: 'bottom', scrollTop: 100, maxScrollTop: 200 }),
+      grownPlace({
+        height: 200,
+        room: 700,
+        maxHeight: Infinity,
+        pinned: 'bottom',
+        scrollTop: 100,
+        maxScrollTop: 200,
+      }),
     ).toEqual({ height: 300, scrollTop: 0, full: false });
   });
 
   test('takes a scroll of less than 1 px into the height', () => {
     expect(
-      grownPlace({ height: 200, room: 700, maxHeight: Infinity, pinned: 'bottom', scrollTop: 0.5, maxScrollTop: 200 }),
+      grownPlace({
+        height: 200,
+        room: 700,
+        maxHeight: Infinity,
+        pinned: 'bottom',
+        scrollTop: 0.5,
+        maxScrollTop: 200,
+      }),
     ).toEqual({ height: 200.5, scrollTop: 0, full: false });
   });
 
   test('leaves the height for a list at the pinned edge', () => {
     expect(
-      grownPlace({ height: 200, room: 700, maxHeight: Infinity, pinned: 'bottom', scrollTop: 0, maxScrollTop: 200 }),
+      grownPlace({
+        height: 200,
+        room: 700,
+        maxHeight: Infinity,
+        pinned: 'bottom',
+        scrollTop: 0,
+        maxScrollTop: 200,
+      }),
     ).toEqual({ height: undefined, scrollTop: 0, full: false });
   });
 
   test('a popup pinned to the top grows up to the room, and is then full', () => {
     expect(
-      grownPlace({ height: 300, room: 380, maxHeight: Infinity, pinned: 'top', scrollTop: 0, maxScrollTop: 100 }),
+      grownPlace({
+        height: 300,
+        room: 380,
+        maxHeight: Infinity,
+        pinned: 'top',
+        scrollTop: 0,
+        maxScrollTop: 100,
+      }),
     ).toEqual({ height: 380, scrollTop: undefined, full: true });
   });
 
   test('gives no height of 0 when the view is smaller than the margins', () => {
     expect(
-      grownPlace({ height: 200, room: 0, maxHeight: Infinity, pinned: 'bottom', scrollTop: 100, maxScrollTop: 200 }),
+      grownPlace({
+        height: 200,
+        room: 0,
+        maxHeight: Infinity,
+        pinned: 'bottom',
+        scrollTop: 100,
+        maxScrollTop: 200,
+      }),
     ).toMatchObject({ height: undefined, full: true });
   });
 });

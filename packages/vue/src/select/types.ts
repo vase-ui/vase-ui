@@ -144,7 +144,8 @@ export interface SelectFieldState {
   filled: boolean;
 }
 
-export interface SelectLabelProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface SelectLabelProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;
 }
 
@@ -200,7 +201,8 @@ export interface SelectPortalProps extends Omit<PopupPortalProps, 'keepMounted'>
 
 export interface SelectPortalState {}
 
-export interface SelectBackdropProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface SelectBackdropProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface SelectBackdropState {
   open: boolean;
@@ -225,7 +227,8 @@ export interface SelectPositionerState {
   anchorHidden: boolean;
 }
 
-export interface SelectPopupProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface SelectPopupProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
@@ -250,7 +253,8 @@ export interface SelectArrowState {
   uncentered: boolean;
 }
 
-export interface SelectListProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface SelectListProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;
 }
 
@@ -277,7 +281,8 @@ export interface SelectItemState {
   disabled: boolean;
 }
 
-export interface SelectItemTextProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface SelectItemTextProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface SelectItemTextState {}
 
@@ -292,7 +297,8 @@ export interface SelectGroupLabelProps
 
 export interface SelectGroupLabelState {}
 
-export interface SelectSeparatorProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
+export interface SelectSeparatorProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The orientation of the separator.
    * @default 'horizontal'
@@ -304,7 +310,8 @@ export interface SelectSeparatorState {
   orientation: 'horizontal' | 'vertical';
 }
 
-export interface SelectScrollArrowProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
+export interface SelectScrollArrowProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The arrow stays in the DOM, with `hidden`, while the list cannot scroll in its direction.
    * @default false

@@ -77,7 +77,12 @@ export function useScrollArrow(
       scroller.scrollTop = top;
       return;
     }
-    scroller.scrollTop = nextScrollTop(context, scroller, direction, element.value?.offsetHeight ?? 0);
+    scroller.scrollTop = nextScrollTop(
+      context,
+      scroller,
+      direction,
+      element.value?.offsetHeight ?? 0,
+    );
     timer.start(STEP, step);
   }
 

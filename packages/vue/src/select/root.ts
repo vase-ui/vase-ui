@@ -122,15 +122,20 @@ export function useSelectRoot(
 ) {
   const { field } = options;
   const multiple = computed(() => !!props.multiple);
-  const model = () =>
-    props.modelValue === null && multiple.value ? NO_VALUES : props.modelValue;
+  const model = () => (props.modelValue === null && multiple.value ? NO_VALUES : props.modelValue);
   const firstModel = model();
   /** The value of the mount, which a native reset and an item that leaves give back. */
   const firstValue =
-    firstModel === undefined ? (props.defaultValue ?? (multiple.value ? NO_VALUES : null)) : firstModel;
-  const { value, setOwn } = useModel<unknown>(model, firstValue);
-  const equal = (a: unknown, b: unknown) =>
-    compareItemEquality(a, b, props.isItemEqualToValue ?? defaultItemEquality);
+    firstModel === undefined
+      ? (props.defaultValue ?? (multiple.value ? NO_VALUES : null))
+      : firstModel;
+  const valueModel = useModel<unknown>(model, firstValue);
+  const { value } = valueModel;
+  const comparer = (itemValue: unknown, current: unknown) =>
+    props.isItemEqualToValue
+      ? props.isItemEqualToValue(itemValue, current)
+      : defaultItemEquality(itemValue, current);
+  const equal = (a: unknown, b: unknown) => compareItemEquality(a, b, comparer);
   const values = computed(() => (Array.isArray(value.value) ? value.value : NO_VALUES));
   const hasValue = computed(() =>
     multiple.value
@@ -186,7 +191,8 @@ export function useSelectRoot(
     return (
       placed.value &&
       !!element &&
-      element.offsetWidth >= element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE
+      element.offsetWidth >=
+        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE
     );
   });
   const layer = useLayer(root, () => ({
@@ -197,8 +203,7 @@ export function useSelectRoot(
     block: props.modal && !!positioner.value,
     hide: false,
     trap: false,
-    lockScroll:
-      (props.modal || aligned.value) && (root.interaction !== 'touch' || fullWidth.value),
+    lockScroll: (props.modal || aligned.value) && (root.interaction !== 'touch' || fullWidth.value),
   }));
 
   const list = useList({
@@ -269,7 +274,7 @@ export function useSelectRoot(
     const details = createChangeEventDetails(reason, event);
     emit('valueChange', next, details);
     if (details.isCanceled) return false;
-    setOwn(next);
+    valueModel.setOwn(next);
     emit('update:modelValue', next);
     // A controlled root shows the value that the parent gives in its next render.
     void nextTick(() => field?.onEdit());
@@ -313,11 +318,9 @@ export function useSelectRoot(
     { flush: 'post' },
   );
 
-  watch(
-    [value, hasValue],
-    ([current, filled]) => field?.setValue(current, filled),
-    { immediate: true },
-  );
+  watch([value, hasValue], ([current, filled]) => field?.setValue(current, filled), {
+    immediate: true,
+  });
 
   const context: SelectContext = {
     root,
@@ -404,7 +407,7 @@ export function useSelectRoot(
     value,
     firstValue,
     hasValue,
-    setOwn,
+    setOwn: (next: unknown) => valueModel.setOwn(next),
     /** Asks for a close with the reason `'imperative-action'`. */
     close() {
       root.request(false, 'imperative-action', new Event('vase-ui'));

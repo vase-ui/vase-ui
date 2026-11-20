@@ -104,7 +104,10 @@ defineExpose({ element, inputElement: input, close });
     <input
       v-for="(text, index) in inputs.hiddenValues.value"
       :key="index"
-      v-bind="inputs.hiddenProps()"
+      type="hidden"
+      :name="inputs.name.value"
+      :form="form"
+      :disabled="isDisabled"
       :value="text"
     />
   </component>
@@ -114,7 +117,10 @@ defineExpose({ element, inputElement: input, close });
     <input
       v-for="(text, index) in inputs.hiddenValues.value"
       :key="index"
-      v-bind="inputs.hiddenProps()"
+      type="hidden"
+      :name="inputs.name.value"
+      :form="form"
+      :disabled="isDisabled"
       :value="text"
     />
   </div>

@@ -4,7 +4,11 @@ import { ownerDocument, ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { computed, nextTick, shallowRef, watch, type CSSProperties } from 'vue';
-import { getMaxScrollOffset, normalizeScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../utils/scrollEdges';
+import {
+  getMaxScrollOffset,
+  normalizeScrollOffset,
+  SCROLL_EDGE_TOLERANCE_PX,
+} from '../utils/scrollEdges';
 import type { SelectContext } from './root';
 
 export interface Box {
@@ -197,7 +201,8 @@ const TRANSFORMS = [
 function readWithoutTransforms<T>(element: HTMLElement, read: () => T): T {
   const { style } = element;
   const saved = TRANSFORMS.map(
-    ([property]) => [property, style.getPropertyValue(property), style.getPropertyPriority(property)] as const,
+    ([property]) =>
+      [property, style.getPropertyValue(property), style.getPropertyPriority(property)] as const,
   );
   for (const [property, value] of TRANSFORMS) style.setProperty(property, value, 'important');
   try {
@@ -275,8 +280,12 @@ export function useItemAlignment(
       const view = ownerDocument(positioner).documentElement;
       const styles = win.getComputedStyle(positioner);
       const popupStyles = win.getComputedStyle(popup);
-      const margin = { top: pixels(styles.marginTop, MARGIN), bottom: pixels(styles.marginBottom, MARGIN) };
-      const item = context.selectedItem() ?? (context.hasValue ? undefined : context.list.items()[0]);
+      const margin = {
+        top: pixels(styles.marginTop, MARGIN),
+        bottom: pixels(styles.marginBottom, MARGIN),
+      };
+      const item =
+        context.selectedItem() ?? (context.hasValue ? undefined : context.list.items()[0]);
       const text = item && context.itemTexts.get(item.element);
       // A `zoom` of the page scales the rectangles and not the styles (test/popupLayout.test.tsx).
       const scale = floatingPlatform.getScale(positioner) as { x: number; y: number };

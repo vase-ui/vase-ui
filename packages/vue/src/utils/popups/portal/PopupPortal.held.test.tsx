@@ -7,7 +7,6 @@ import {
   isVaporApp,
   nextEvent,
   screen,
-  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';

@@ -59,7 +59,7 @@ export function useTypeahead(
     onKeydown(event: KeyboardEvent) {
       const { key } = event;
       if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
-      if (isComposing(event) || [...key].length !== 1 || (key === ' ' && !typed.value)) {
+      if (isComposing(event) || !/^.$/u.test(key) || (key === ' ' && !typed.value)) {
         return false;
       }
       if (!typed.value) {
@@ -74,7 +74,9 @@ export function useTypeahead(
       // with that letter.
       const match =
         nextMatch(list, text, from, options) ??
-        ([...text].every((each) => each === key) ? nextMatch(list, key, last, options) : undefined);
+        (text === key.repeat(text.length / key.length)
+          ? nextMatch(list, key, last, options)
+          : undefined);
       if (!match) return true;
       last = match;
       if (options.onMatch) options.onMatch(match, event);

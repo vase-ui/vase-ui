@@ -193,7 +193,10 @@ describe('animation', () => {
 
   test('defaultOpen has the enter', async () => {
     const log: string[] = [];
-    mount(SelectInTransition, { root: { defaultOpen: true }, log: { add: (entry: string) => log.push(entry) } });
+    mount(SelectInTransition, {
+      root: { defaultOpen: true },
+      log: { add: (entry: string) => log.push(entry) },
+    });
     await waitFor(() => expect(log).toEqual(['before-enter', 'after-enter']));
   });
 
@@ -235,7 +238,10 @@ describe('the value', () => {
 
   test('a cancelled change keeps the value, and the popup still closes', async () => {
     await mountSelect({
-      root: { defaultOpen: true, onValueChange: (_: unknown, d: SelectRootChangeEventDetails) => d.cancel() },
+      root: {
+        defaultOpen: true,
+        onValueChange: (_: unknown, d: SelectRootChangeEventDetails) => d.cancel(),
+      },
     });
     await opened();
     await userEvent.click(item('apple'));
@@ -272,7 +278,9 @@ describe('the value', () => {
 
   test('VUE-115: with multiple, a null model is the empty array, and the root stays controlled', async () => {
     const log: string[] = [];
-    await mountSelect({ root: rootEvents(log, { multiple: true, modelValue: null, defaultOpen: true }) });
+    await mountSelect({
+      root: rootEvents(log, { multiple: true, modelValue: null, defaultOpen: true }),
+    });
     await opened();
     await userEvent.click(item('apple'));
     expect(log).toEqual(['valueChange ["apple"] item-press', 'update ["apple"]']);
@@ -324,12 +332,23 @@ describe('Select.Value', () => {
     },
     {
       name: 'groups of items',
-      root: { defaultValue: 'apple', items: [{ items: [{ value: 'apple', label: 'In a group' }] }] },
+      root: {
+        defaultValue: 'apple',
+        items: [{ items: [{ value: 'apple', label: 'In a group' }] }],
+      },
       text: 'In a group',
     },
-    { name: 'the label of an object', root: { defaultValue: { value: 1, label: 'One' } }, text: 'One' },
+    {
+      name: 'the label of an object',
+      root: { defaultValue: { value: 1, label: 'One' } },
+      text: 'One',
+    },
     { name: 'the value as text', root: { defaultValue: 'plain' }, text: 'plain' },
-    { name: 'labels of multiple', root: { multiple: true, defaultValue: ['a', 'b'] }, text: 'a, b' },
+    {
+      name: 'labels of multiple',
+      root: { multiple: true, defaultValue: ['a', 'b'] },
+      text: 'a, b',
+    },
     { name: 'the placeholder', root: {}, value: { placeholder: 'Pick' }, text: 'Pick' },
     {
       name: 'the label of null over the placeholder',
@@ -532,12 +551,15 @@ describe('press, drag, release', () => {
     expect(valueText()).toBe('apricot');
   });
 
-  test.skipIf(server.browser !== 'chromium')('a touch release on an item selects nothing', async () => {
-    await mountSelect({ root: { defaultOpen: true } });
-    await opened();
-    await touchDrag(centerOf(item('apple')), centerOf(item('banana')), 4);
-    expect(valueText()).toBe('');
-  });
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch release on an item selects nothing',
+    async () => {
+      await mountSelect({ root: { defaultOpen: true } });
+      await opened();
+      await touchDrag(centerOf(item('apple')), centerOf(item('banana')), 4);
+      expect(valueText()).toBe('');
+    },
+  );
 });
 
 describe('the open list', () => {
@@ -576,7 +598,12 @@ describe('the open list', () => {
   });
 
   test('Enter and Space select the highlighted item; a disabled item keeps the focus and selects nothing', async () => {
-    await mountSelect({ items: [{ value: 'a', text: 'A', disabled: true }, { value: 'b', text: 'B' }] });
+    await mountSelect({
+      items: [
+        { value: 'a', text: 'A', disabled: true },
+        { value: 'b', text: 'B' },
+      ],
+    });
     trigger().focus();
     await userEvent.keyboard('{ArrowDown}');
     await focused(() => item('a'));
@@ -761,7 +788,9 @@ describe('the layer', () => {
     await userEvent.click(trigger());
     await opened();
     expect(isScrollLocked()).toBe(true);
-    expect(document.querySelector('body > div[role="presentation"]:not([data-testid])')).not.toBe(null);
+    expect(document.querySelector('body > div[role="presentation"]:not([data-testid])')).not.toBe(
+      null,
+    );
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(isScrollLocked()).toBe(false);
@@ -845,7 +874,10 @@ describe('item alignment', () => {
   });
 
   test('grows toward the free edge when the user scrolls the list', async () => {
-    const items = Array.from({ length: 40 }, (_, index) => ({ value: `i${index}`, text: `Item ${index}` }));
+    const items = Array.from({ length: 40 }, (_, index) => ({
+      value: `i${index}`,
+      text: `Item ${index}`,
+    }));
     await mountSelect({
       ...aligned,
       items,
@@ -885,8 +917,15 @@ describe('item alignment', () => {
 
 describe('scroll arrows', () => {
   test('show while the list can scroll in their direction; a pointer move on one scrolls the list', async () => {
-    const items = Array.from({ length: 30 }, (_, index) => ({ value: `i${index}`, text: `Item ${index}` }));
-    await mountSelect({ items, popup: { style: 'max-height: 120px; overflow-y: auto' }, arrows: {} });
+    const items = Array.from({ length: 30 }, (_, index) => ({
+      value: `i${index}`,
+      text: `Item ${index}`,
+    }));
+    await mountSelect({
+      items,
+      popup: { style: 'max-height: 120px; overflow-y: auto' },
+      arrows: {},
+    });
     await userEvent.click(trigger());
     await opened();
     expect(byTestId('up')).toBe(null);
@@ -907,4 +946,3 @@ describe('scroll arrows', () => {
     expect(byTestId('up')).toHaveAttribute('hidden');
   });
 });
-

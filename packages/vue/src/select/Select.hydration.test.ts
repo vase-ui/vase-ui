@@ -38,7 +38,7 @@ describe('server render and hydration', () => {
     const trigger = root.querySelector('button')!;
     const label = root.querySelector('[data-testid="label"]')!;
     expect(trigger).toHaveAttribute('aria-labelledby', label.id);
-    await hydrate(SelectParts, props, root);
+    hydrate(SelectParts, props, root);
     await nextTick();
     expect(root.querySelector('button')).toBe(trigger);
     await userEvent.click(trigger);
@@ -52,7 +52,7 @@ describe('server render and hydration', () => {
     expect(popup).not.toBe(null);
     const positioner = popup.parentElement!;
     expect(positioner.style.visibility).toBe('hidden');
-    await hydrate(SelectParts, props, root);
+    hydrate(SelectParts, props, root);
     await nextTick();
     expect(listboxOf(root)).toBe(popup);
     await waitFor(() => expect(positioner.style.visibility).toBe(''));
