@@ -25,8 +25,11 @@ export interface Layer {
   readonly outsidePress: boolean;
   /** A move of the focus to an element outside closes the popup. */
   readonly focusOut: boolean;
-  /** An outside press of a mouse or a pen closes the popup at `pointerdown`. */
-  readonly pressStart: boolean;
+  /**
+   * An outside press of a mouse or a pen closes the popup at `pointerdown`: of the main button, or
+   * of each button with `'each-button'`, as a native menu does.
+   */
+  readonly pressStart: boolean | 'each-button';
   /** The portal renders a fixed element that takes each pointer from the page. */
   readonly block: boolean;
   /** The attribute that the layer writes on the rest of the page. */
@@ -34,6 +37,10 @@ export interface Layer {
   /** Tab keeps the focus in the popup. */
   readonly trap: boolean;
   readonly lockScroll: boolean;
+  /** The element that the block leaves free: the active trigger by default, or `null` for none. */
+  readonly hole?: Element | null | undefined;
+  /** More elements inside the layer, such as the triggers of a menubar. */
+  readonly inside?: readonly Element[] | undefined;
 }
 
 export type LayerRules = Omit<Layer, 'root'>;
@@ -107,6 +114,12 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     },
     get lockScroll() {
       return current.value.lockScroll;
+    },
+    get hole() {
+      return current.value.hole;
+    },
+    get inside() {
+      return current.value.inside;
     },
   };
   layersOfRoots.set(root, layer);
@@ -212,6 +225,7 @@ function insideElements(entry: Entry) {
     root.popup,
     ...root.portalElements.filter((element) => !(entry.layer.block && isFixed(element))),
     ...root.triggers.map((trigger) => trigger.element),
+    ...(entry.layer.inside ?? []),
   ].filter((element): element is Element => !!element?.isConnected);
   return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
 }
@@ -296,16 +310,19 @@ function onPointerdown(event: PointerEvent) {
     };
     return;
   }
-  if (event.button !== 0) return;
-  pressing = true;
   const outside = isScrollbarPress(event) ? [] : outsideEntries(event);
-  for (const entry of stack) {
-    entry.pressOutside = outside.includes(entry);
-    entry.releaseOutside = undefined;
+  if (event.button === 0) {
+    pressing = true;
+    for (const entry of stack) {
+      entry.pressOutside = outside.includes(entry);
+      entry.releaseOutside = undefined;
+    }
   }
   closeOutside(
     event,
-    outside.filter((entry) => entry.layer.pressStart),
+    outside.filter(
+      ({ layer }) => layer.pressStart === 'each-button' || (layer.pressStart && event.button === 0),
+    ),
   );
 }
 

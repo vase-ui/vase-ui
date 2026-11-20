@@ -1,4 +1,4 @@
-import { onScopeDispose, watch, type Ref } from 'vue';
+import { onScopeDispose, shallowRef, watch, type Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
@@ -26,6 +26,15 @@ export function usePopupHover(
     closeDelay: () => number;
     /** The element is in the popup or in a popup above it. */
     inside: (element: Element) => boolean;
+    /**
+     * The delay starts at the first `pointermove` that the check accepts, and the open comes at its
+     * end, also while the pointer moves.
+     */
+    startOnMove?: (event: PointerEvent) => boolean;
+    /** The caller closes the popup for a pointer on this element outside the triangle. */
+    passOn?: (element: Element) => boolean;
+    /** After the pointer was in the popup, a pointer that leaves closes nothing. */
+    stayAfterEnter?: boolean;
   },
 ) {
   const openTimer = useTimeout();
@@ -36,6 +45,7 @@ export function usePopupHover(
   const hoverOpen = () => {
     const current = root();
     return (
+      options.enabled() &&
       !!current?.open &&
       current.reason === 'trigger-hover' &&
       current.activeTrigger === options.trigger.value
@@ -67,6 +77,7 @@ export function usePopupHover(
   function onPointerenter(event: PointerEvent) {
     const current = root();
     if (
+      options.startOnMove ||
       !options.enabled() ||
       event.pointerType === 'touch' ||
       (current?.open && current.activeTrigger === options.trigger.value)
@@ -78,7 +89,14 @@ export function usePopupHover(
 
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
   function onPointermove(event: PointerEvent) {
-    if (openTimer.isStarted()) startOpen(event);
+    if (!options.startOnMove) {
+      if (openTimer.isStarted()) startOpen(event);
+      return;
+    }
+    const current = root();
+    if (openTimer.isStarted() || !options.enabled() || event.pointerType === 'touch') return;
+    if (current?.open && current.activeTrigger === options.trigger.value) return;
+    if (options.startOnMove(event)) startOpen(event);
   }
 
   function onPointerleave() {
@@ -88,6 +106,8 @@ export function usePopupHover(
   // While the hover keeps the popup open, one listener of the document follows the pointer.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
+  let entered = false;
+  const inTriangle = shallowRef(false);
   watch(
     hoverOpen,
     (open, _, onCleanup) => {
@@ -95,12 +115,16 @@ export function usePopupHover(
       const doc = ownerDocument(options.trigger.value);
       over = 'trigger';
       from = null;
+      entered = false;
       onCleanup(
         mergeCleanups(
           addEventListener(doc, 'pointermove', follow, true),
-          addEventListener(doc.documentElement, 'pointerleave', close),
+          addEventListener(doc.documentElement, 'pointerleave', () => {
+            if (!entered || !options.stayAfterEnter) close();
+          }),
           closeTimer.clear,
           restTimer.clear,
+          () => (inTriangle.value = false),
         ),
       );
     },
@@ -112,6 +136,7 @@ export function usePopupHover(
     const target = event.target as Element;
     const point = { x: event.clientX, y: event.clientY };
     restTimer.clear();
+    inTriangle.value = false;
     if (trigger?.contains(target)) {
       over = 'trigger';
       closeTimer.clear();
@@ -119,18 +144,24 @@ export function usePopupHover(
     }
     if (options.inside(target)) {
       over = 'popup';
+      entered = true;
       closeTimer.clear();
       return;
     }
     if (over === 'trigger') from = point;
     over = 'outside';
+    if (entered && options.stayAfterEnter) return;
     const popup = root()?.popup;
-    if (from && trigger && popup && inTriangle(point, from, trigger, popup)) {
-      restTimer.start(REST_IN_TRIANGLE, close);
+    if (from && trigger && popup && isInTriangle(point, from, trigger, popup)) {
+      inTriangle.value = true;
+      restTimer.start(REST_IN_TRIANGLE, () => {
+        inTriangle.value = false;
+        if (!options.passOn?.(target)) close();
+      });
       return;
     }
     from = null;
-    close();
+    if (!options.passOn?.(target)) close();
   }
 
   function close() {
@@ -149,6 +180,10 @@ export function usePopupHover(
 
   return {
     listeners: { onPointerenter, onPointermove, onPointerleave },
+    /** The pointer moves in the triangle toward the popup that a hover opened. */
+    get inTriangle() {
+      return inTriangle.value;
+    },
     /** A press closes the open popup: it came more than 500 ms after the hover open. */
     closesAtPress(event: Event) {
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);
@@ -157,7 +192,7 @@ export function usePopupHover(
 }
 
 // The triangle from the point where the pointer left the trigger to the near edge of the popup.
-function inTriangle(point: Point, from: Point, trigger: Element, popup: Element) {
+function isInTriangle(point: Point, from: Point, trigger: Element, popup: Element) {
   const anchor = trigger.getBoundingClientRect();
   const box = popup.getBoundingClientRect();
   let edge: [Point, Point];

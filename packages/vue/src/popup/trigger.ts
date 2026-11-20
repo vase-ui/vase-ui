@@ -17,6 +17,11 @@ export function usePopupTrigger(
     tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;
+    /**
+     * A press of the main mouse button acts at `pointerdown`, and its `click` does nothing. A
+     * touch, a pen, a key and a script act at `click`.
+     */
+    pressStart?: () => boolean;
   },
 ) {
   const button = useButton({
@@ -61,7 +66,7 @@ export function usePopupTrigger(
   });
   const open = computed(() => active.value && !!root()?.open);
 
-  function onClick(event: MouseEvent) {
+  function toggle(event: MouseEvent) {
     const current = root();
     if (!current) return;
     if (open.value && (options.closesAtPress?.(event) ?? true)) {
@@ -71,5 +76,20 @@ export function usePopupTrigger(
     }
   }
 
-  return { button, active, open, onClick };
+  let pressed = false;
+  function onPointerdown(event: PointerEvent) {
+    pressed = !!options.pressStart?.() && event.pointerType === 'mouse' && event.button === 0;
+    if (pressed && !button.disabled.value) toggle(event);
+  }
+
+  function onClick(event: MouseEvent) {
+    // A key and a script give a click with no press.
+    if (pressed && event.detail !== 0) {
+      pressed = false;
+      return;
+    }
+    toggle(event);
+  }
+
+  return { button, active, open, onClick, onPointerdown };
 }

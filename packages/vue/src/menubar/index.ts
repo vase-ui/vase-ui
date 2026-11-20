@@ -1,15 +1,14 @@
 import MenubarComponent from './Menubar.vue';
-import type { MenubarProps, MenubarState } from './Menubar.vue';
+import type { MenubarProps, MenubarState } from './types';
 
 /**
- * The container for menus.
+ * A bar of menu triggers, with one tab stop.
+ * Renders a `<div>` element.
  */
 export const Menubar: typeof MenubarComponent = MenubarComponent;
 export namespace Menubar {
-  export type State = MenubarState;
   export type Props = MenubarProps;
+  export type State = MenubarState;
 }
 
-export type * from './Menubar.vue';
-
-export * as MenubarDataAttributes from './MenubarDataAttributes';
+export type { MenubarProps, MenubarState };

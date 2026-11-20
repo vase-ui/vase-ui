@@ -1,167 +1,137 @@
-<script lang="ts">
-import type { HTMLAttributes } from 'vue';
-import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
-
-export interface MenubarState {
-  /**
-   * The orientation of the menubar.
-   */
-  orientation: Orientation;
-  /**
-   * Whether the menubar is modal.
-   */
-  modal: boolean;
-  /**
-   * Whether any submenu within the menubar is open.
-   */
-  hasSubmenuOpen: boolean;
-}
-
-export interface MenubarProps
-  extends
-    VaseUIComponentProps<MenubarState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
-  /**
-   * Whether the menubar is modal.
-   * @default true
-   */
-  modal?: boolean | undefined;
-  /**
-   * Whether the whole menubar is disabled.
-   * @default false
-   */
-  disabled?: boolean | undefined;
-  /**
-   * The orientation of the menubar.
-   * @default 'horizontal'
-   */
-  orientation?: Orientation | undefined;
-  /**
-   * Whether to loop keyboard focus back to the first item
-   * when the end of the list is reached while using the arrow keys.
-   * @default true
-   */
-  loopFocus?: boolean | undefined;
-  /**
-   * The id of the menubar. The menus of the menubar use it as the id of their root.
-   */
-  id?: string | undefined;
-}
-</script>
-
 <script setup lang="ts">
-import { computed, provide, shallowRef } from 'vue';
-import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
-import type { StateAttributesMapping } from '../internals/getStateAttributesProps';
-import { MenubarContext } from '../internals/menubar-context/MenubarContext';
-import { REASONS } from '../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useVaseUiId } from '../internals/useVaseUiId';
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
-import { useRenderElement } from '../internals/useRenderElement';
-import type { MenuOpenEventDetails } from '../menu/utils/types';
-import {
-  provideFloatingNode,
-  provideFloatingTree,
-  useFloatingNodeId,
-} from '../utils/popups/tree/FloatingTree';
-import * as MenubarDataAttributes from './MenubarDataAttributes';
-
-const menubarStateAttributesMapping: StateAttributesMapping<MenubarState> = {
-  hasSubmenuOpen(value) {
-    return value ? { [MenubarDataAttributes.hasSubmenuOpen]: '' } : null;
-  },
-};
+import { computed, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
+import { arrowKeyTarget } from '../common/arrowKeyTarget';
+import { byDocumentOrder, useElement } from '../common/element';
+import { ownerWindow } from '../common/owner';
+import { useList } from '../list/list';
+import type { MenuContext } from '../menu/root';
+import { menubarKey, type MenubarForMenu } from './menu';
+import type { MenubarProps, MenubarState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<MenubarProps>(), {
-  as: 'div',
-  modal: true,
-  disabled: false,
   orientation: 'horizontal',
   loopFocus: true,
+  modal: true,
+  disabled: false,
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  useCastBooleanWarning('Menubar');
-}
-
 defineSlots<{
-  default(props: { state: MenubarState }): unknown;
-  render: ComponentRenderFn<HTMLProps, MenubarState>;
+  default?(scope: { state: MenubarState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: MenubarState;
+  }): unknown;
 }>();
 
-const contentElement = shallowRef<HTMLElement | null>(null);
-const hasSubmenuOpen = shallowRef(false);
-const allowMouseUpTriggerRef = shallowRef(false);
-
-const rootId = useVaseUiId(() => props.id);
-
-function setHasSubmenuOpen(open: boolean) {
-  hasSubmenuOpen.value = open;
-}
-
-provide(MenubarContext, {
-  contentElement,
-  hasSubmenuOpen,
-  setHasSubmenuOpen,
-  modal: computed(() => props.modal),
-  disabled: computed(() => props.disabled),
-  orientation: computed(() => props.orientation),
-  allowMouseUpTriggerRef,
-  rootId,
+const attrs = useAttrs();
+const { element, setElement } = useElement<HTMLElement>();
+const triggers = shallowReactive(
+  new Map<Element, { menu: () => MenuContext | null; disabled: () => boolean }>(),
+);
+const openMenu = shallowRef<MenuContext | null>(null);
+const list = useList({
+  orientation: () => props.orientation,
+  loop: () => props.loopFocus,
+  container: () => element.value,
+  hover: () => false,
 });
-
-const tree = provideFloatingTree();
-const nodeId = useFloatingNodeId(tree);
-provideFloatingNode(nodeId);
-
-// The part gives no external tree, so `tree.value` is always its own store. `setup` runs one time.
-// The listener thus needs no removal and no new subscription.
-tree.value.events.on('menuopenchange', (details: MenuOpenEventDetails) => {
-  if (!details.nodeId || details.parentNodeId !== nodeId) {
-    return;
-  }
-
-  if (details.open) {
-    setHasSubmenuOpen(true);
-  } else if (details.reason !== REASONS.siblingOpen && details.reason !== REASONS.listNavigation) {
-    setHasSubmenuOpen(false);
-  }
+// The trigger that had the focus last, else the first enabled one.
+const tabStop = computed(() => {
+  const last = list.highlighted?.element;
+  const enabled = [...triggers]
+    .filter(([, trigger]) => !trigger.disabled())
+    .map(([trigger]) => trigger)
+    .sort(byDocumentOrder);
+  return last && enabled.includes(last) ? last : (enabled[0] ?? null);
 });
-
 const state = computed<MenubarState>(() => ({
   orientation: props.orientation,
   modal: props.modal,
-  hasSubmenuOpen: hasSubmenuOpen.value,
+  hasSubmenuOpen: !!openMenu.value,
 }));
 
-const { onFocusin, onFocusout, onKeydown, registerRoot } = useCompositeRoot({
-  orientation: () => props.orientation,
-  loopFocus: () => props.loopFocus,
-  enableHomeAndEndKeys: true,
-  highlightItemOnHover: hasSubmenuOpen,
-});
+const bar: MenubarForMenu = {
+  get element() {
+    return element.value;
+  },
+  get orientation() {
+    return props.orientation;
+  },
+  get modal() {
+    return props.modal;
+  },
+  get disabled() {
+    return props.disabled;
+  },
+  list,
+  get openMenu() {
+    return openMenu.value;
+  },
+  get triggers() {
+    return [...triggers.keys()];
+  },
+  isTabStop: (trigger) => !!trigger && trigger === tabStop.value,
+  addTrigger(trigger, menu, disabled) {
+    triggers.set(trigger, { menu, disabled });
+    return () => triggers.delete(trigger);
+  },
+  setOpen(menu, open) {
+    if (open) openMenu.value = menu;
+    else if (openMenu.value === menu) openMenu.value = null;
+  },
+  onMenuKey(event, menu) {
+    const current = menu.root.activeTrigger as HTMLElement | null;
+    const bar = element.value;
+    if (!current || !bar) return false;
+    const items = list.items();
+    const next = arrowKeyTarget(
+      event.key,
+      current,
+      items.map((item) => item.element),
+      {
+        orientation: props.orientation,
+        rtl: ownerWindow(bar).getComputedStyle(bar).direction === 'rtl',
+        loop: props.loopFocus,
+      },
+    );
+    if (!next || next === current) return false;
+    event.preventDefault();
+    menu.root.request(false, 'list-navigation', event);
+    list.highlight(items.find((item) => item.element === next) ?? null, 'keyboard', event);
+    triggers.get(next)?.menu()?.root.request(true, 'list-navigation', event, next);
+    return true;
+  },
+};
+provide(menubarKey, bar);
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  elementRef: contentElement,
-  state,
-  stateAttributesMapping: menubarStateAttributesMapping,
-  ref: registerRoot,
-  props: (attrs) => [
-    { onFocusin, onFocusout, onKeydown },
-    { role: 'menubar', id: rootId.value, 'aria-orientation': props.orientation },
+function onKeydown(event: KeyboardEvent) {
+  if (triggers.has(event.target as Element)) list.onKeydown(event);
+}
+
+function elementProps() {
+  return mergeProps(
+    { id: props.id, role: 'menubar', 'aria-orientation': props.orientation, onKeydown },
     attrs,
-  ],
-});
+  );
+}
 
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </component>
+  <div v-else v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </div>
 </template>

@@ -168,6 +168,10 @@ export function usePlacement(
     positioner: Readonly<Ref<HTMLElement | null>>;
     /** Places the positioner with insets from the edge that faces the anchor. */
     insets: () => boolean;
+    /** After the first place of an open, the popup keeps its side and its alignment. */
+    lazyFlip?: () => boolean;
+    /** The popup moves across the side axis into the layout viewport. */
+    shiftAcross?: () => boolean;
   },
 ) {
   const rtl = shallowRef(false);
@@ -208,7 +212,10 @@ export function usePlacement(
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
+  // A list that filters its items shrinks, and the popup would flip back at each change.
+  const kept = shallowRef<Placement>();
   const placement = computed<Placement>(() => {
+    if (kept.value) return kept.value;
     const side = physicalSide(props.side, rtl.value);
     return props.align === 'center' ? side : `${side}-${props.align}`;
   });
@@ -241,7 +248,8 @@ export function usePlacement(
         : shift({
             ...common,
             mainAxis: alignMode.value !== 'none',
-            crossAxis: props.sticky || shiftsSide,
+            crossAxis: props.sticky || shiftsSide || !!options.shiftAcross?.(),
+            rootBoundary: options.shiftAcross?.() ? 'layoutViewport' : undefined,
             limiter: props.sticky
               ? undefined
               : limitShift((state) => {
@@ -325,6 +333,14 @@ export function usePlacement(
   // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
   // so only the first placement hides the popup: the server HTML and the first render have no place.
   const placed = floating.isPositioned;
+  watch(
+    [placed, () => root.open],
+    ([isPlaced, open]) => {
+      if (!open) kept.value = undefined;
+      else if (isPlaced && options.lazyFlip?.()) kept.value = floating.placement.value;
+    },
+    { flush: 'sync' },
+  );
 
   const placedSide = computed(() => getSide(floating.placement.value));
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));
