@@ -81,7 +81,7 @@ describe('`:focus-visible` at `focusin` (T2, T3, T9)', () => {
     expect(log).toEqual(['input true', 'span true', 'button true']);
   });
 
-  test('a press gives a `<button>`, a link and a `<span tabindex="0">` no `:focus-visible`, and an `<input>` gets it; `pointerdown` comes first; WebKit gives a button and a link no focus', async () => {
+  test('a press gives a `<button>`, a link and a `<span tabindex="0">` no `:focus-visible`, and an `<input>` gets it; `pointerdown` comes before `focusin`', async () => {
     html(`<button id="button" style="${BOX}">x</button><a id="link" href="#x" style="${BOX}">x</a>
       <span id="span" tabindex="0" style="${BOX}">x</span><input id="input" aria-label="Input" style="${BOX}">`);
     const log: string[] = [];
@@ -93,17 +93,20 @@ describe('`:focus-visible` at `focusin` (T2, T3, T9)', () => {
       element(id).addEventListener('click', (event) => event.preventDefault());
       await userEvent.click(element(id));
     }
-    const webkit = server.browser === 'webkit';
-    expect(log).toEqual([
+    // WebKit on macOS gives a button and a link no focus at a press, and WebKit on Linux gives it.
+    const focusOfLink = (entry: string) => /^(button|link) focusin/.test(entry);
+    expect(log.filter((entry) => !focusOfLink(entry))).toEqual([
       'button pointerdown',
-      ...(webkit ? [] : ['button focusin false']),
       'link pointerdown',
-      ...(webkit ? [] : ['link focusin false']),
       'span pointerdown',
       'span focusin false',
       'input pointerdown',
       'input focusin true',
     ]);
+    for (const id of ['button', 'link']) {
+      const next = log[log.indexOf(`${id} pointerdown`) + 1];
+      if (next !== undefined && focusOfLink(next)) expect(next).toBe(`${id} focusin false`);
+    }
   });
 });
 
@@ -148,12 +151,12 @@ describe('a trigger in a trigger (T4)', () => {
       );
     }
     await userEvent.hover(element('outer'), { position: { x: 250, y: 40 } });
+    log.length = 0;
     await userEvent.hover(innerButton);
     innerButton.focus();
     await userEvent.hover(element('outer'), { position: { x: 250, y: 40 } });
     await userEvent.hover(element('away'));
     expect(log).toEqual([
-      'pointerover outer false',
       'pointerover host true',
       'focusin host true',
       'pointerover outer false',

@@ -195,12 +195,13 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`. A popup of the popup layer with no role is the
-// element with a side in its positioner.
-function openPopups() {
+// A closed popup that stays in the DOM is `hidden`. A tooltip popup has no role: it is the element
+// with a side in its positioner.
+function openPopups(family: string | undefined) {
+  const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden]), [data-side] > [data-side]:not([hidden])',
+      `[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])${tooltip}`,
     ),
   ]);
 }
@@ -310,6 +311,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
     const { render } = createRenderer();
 
     it('opens each popup with no Vue warning, no axe violation and no cut option', async () => {
+      const family = name.split('/')[0];
       mockToday('2026-11-14');
       // A path is the index of the trigger at each depth. The case opens each path in a new mount,
       // and it adds the triggers of the popup at the end of a path as new paths.
@@ -334,13 +336,15 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
           portalElementsBeforeOpen = new Set(
             portals().flatMap((portal) => [...portal.querySelectorAll('*')]),
           );
-          const openBefore = new Set(openPopups());
+          const openBefore = new Set(openPopups(family));
           // The next open can click a trigger of this popup. Vue skips a listener for an event in
           // the millisecond in which Vue attached the listener.
           await waitForLaterMillisecond(async () => {
             await trigger.open(view.user);
             await waitFor(() => {
-              expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
+              expect(openPopups(family).filter((popup) => !openBefore.has(popup))).not.toHaveLength(
+                0,
+              );
             });
             // A popup has its starting style until the frame after its mount. A style sheet gives
             // that style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.
