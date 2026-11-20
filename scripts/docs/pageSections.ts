@@ -98,6 +98,11 @@ export function checkPageSections(
       );
     }
   }
+  if (!sections.some(({ title }) => title === API_REFERENCE)) {
+    problems.push(
+      `${path}: the page has no "## ${API_REFERENCE}". Write it before "## ${DIFFERENCES}", with <ApiReference /> in it.`,
+    );
+  }
   const last = sections.at(-1);
   if (last?.title !== DIFFERENCES || last.body.trim() !== DIFFERENCES_TAG) {
     problems.push(

@@ -82,7 +82,7 @@ test('Keyboard is a section only of a component of Vase UI own', () => {
   );
 });
 
-test('API reference has one ApiReference with no name, and Differences from Base UI is last with only its tag', () => {
+test('the page has API reference with one ApiReference with no name, and Differences from Base UI is last with only its tag', () => {
   const [anatomy, examples, , differences] = MODEL;
   assert.match(
     checkPageSections(
@@ -111,6 +111,9 @@ test('API reference has one ApiReference with no name, and Differences from Base
     checkPageSections(PATH, 'sample', false, page(anatomy, examples)).join(),
     /the last section must be/,
   );
+  assert.deepEqual(checkPageSections(PATH, 'sample', false, page(anatomy, examples, differences)), [
+    `${PATH}: the page has no "## API reference". Write it before "## Differences from Base UI", with <ApiReference /> in it.`,
+  ]);
 });
 
 test('a heading in a code block is no section', () => {
