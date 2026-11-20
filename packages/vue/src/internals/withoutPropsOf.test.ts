@@ -9,7 +9,7 @@ describe('withoutPropsOf', () => {
     { name: 'disabled' },
     { name: 'portalOwnerRole' },
     { name: 'portal-owner-role' },
-  ])('drops the declared prop $name', ({ name }) => {
+  ])('VUE-135: drops the declared prop $name', ({ name }) => {
     expect(withoutPropsOf({ [name]: '' }, PopupPortal)).toEqual({});
   });
 

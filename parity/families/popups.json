@@ -35,6 +35,11 @@
       "kind": "replaced",
       "test": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "reason": "The case asserts the default popup id while no popup element exists. Vase UI gives no id then (`VUE-73`). The block `VUE-73: the popup id is the id of the popup element` tests the popup id and the lone trigger with a popup element."
+    },
+    {
+      "upstream": "packages/react/test/dialogRootSharedTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the roots of Dialog and Alert Dialog share. `Dialog.test.ts` tests the trigger and the reason in `openChange`, the `close` action and `openWithPayload()` with no shared suite. The `unmount` action is cut (rule 8.9)."
     }
   ],
   "surfaceAdditions": [],

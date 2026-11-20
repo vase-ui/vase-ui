@@ -33,6 +33,13 @@
       "title": "registers the swipe area once a generated id becomes available",
       "kind": "not-applicable",
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
+    },
+    {
+      "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
+      "describe": ["<Drawer.Popup />"],
+      "title": "does not treat dialogs inside nested drawers as nested drawers",
+      "kind": "not-applicable",
+      "reason": "The case nests a Dialog and a Drawer of the older popup code. Dialog moved to the popup layer, and the two do not share a stack until Drawer moves to it. The change that moves Drawer to the popup layer ports the case again."
     }
   ],
   "surfaceAdditions": [

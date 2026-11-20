@@ -6,74 +6,206 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
-      "title": "respects finalFocus when initialFocus points outside the popup",
+      "upstream": "packages/react/src/dialog/backdrop/DialogBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/close/DialogCloseDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/popup/DialogPopupCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/popup/DialogPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/trigger/DialogTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/viewport/DialogViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/utils/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write `data-nested` and `data-nested-dialog-open` in their own attributes. They map no state object to attributes."
+    },
+    {
+      "upstream": "packages/react/src/dialog/backdrop/DialogBackdrop.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
-      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: keeps the initial focus off an inert element, and returns the focus to $name` tests this, and the return of the focus."
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the backdrop: its element and role, `hidden` and `inert` with `keepMounted`, `forceRender` for a nested dialog, a press on it that closes the dialog and keeps the focus, and its leave in a `<Transition>`."
+    },
+    {
+      "upstream": "packages/react/src/dialog/close/DialogClose.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the close button: a press closes with `close-press`, a disabled button closes nothing, and a press on the button of a closed dialog emits nothing. A listener cancels a close with `details.cancel()` (rule 8.7)."
+    },
+    {
+      "upstream": "packages/react/src/dialog/description/DialogDescription.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the description: the popup names it in `aria-describedby`, the last mounted one wins (VUE-45), and an attribute of the developer wins."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
-      "title": "moves final focus to trigger if initialFocus points outside the popup and finalFocus is not specified",
       "kind": "replaced",
-      "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
-      "reason": "With `modal` set to `true`, the elements outside the popup are inert (BUG-4678), so `initialFocus` cannot focus an element outside the popup. The case `BUG-4678: keeps the initial focus off an inert element, and returns the focus to $name` tests this, and the return of the focus."
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the popup: its element and attributes, the first focus, `initialFocus` and `finalFocus`, the return of the focus (BUG-5519, BUG-6037), the Tab order, the nested state and the error with no root. The arrow keys need no code (test/measurements/dialog.test.ts, D10)."
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
-      "describe": ["<Dialog.Portal />", "Suspense integration"],
-      "title": "should not throw \"Maximum update depth exceeded\" when Suspense boundary is outside Portal",
-      "kind": "not-applicable",
-      "reason": "The case guards a render loop of React (issue 3695) while a `Suspense` boundary outside the portal waits for a lazy component in the popup. The portal of Vase UI renders its content after the mount, so a Vue `<Suspense>` around it does not wait for that content and shows no fallback."
-    },
-    {
-      "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
-      "describe": ["<Dialog.Root />", "handle-backed root ownership"],
-      "title": "does not warn for a detached payload open in production",
       "kind": "replaced",
-      "test": "packages/vue/src/dialog/root/DialogRoot.node.test.tsx",
-      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it. The case `ignores openWithPayload() with no root and gives no warning in a production build` tests the same."
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the portal: `keepMounted`, `to`, a `null` target and `disabled` (VUE-128). The portal renders no element of its own, so its `render` and `className` have no element."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
-      "describe": [
-        "<Dialog.Root />",
-        "handle-backed root ownership",
-        "multiple roots sharing one handle"
-      ],
-      "title": "keeps the root attached through Strict Mode effect replay",
-      "kind": "not-applicable",
-      "reason": "The case tests React Strict Mode. Vue has no Strict Mode."
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the handle: triggers outside the root, `open(id)`, `open(null)`, an unknown id, `openWithPayload()`, `close()`, `isOpen`, a handle with no root, a root that gets or loses its handle, and a `<Suspense>` that replaces a page."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
-      "describe": ["<Dialog.Root />"],
-      "title": "closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes",
       "kind": "replaced",
-      "test": "packages/vue/src/dialog/root/DialogRoot.test.tsx",
-      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037), so Escape there closes the parent. The case `BUG-6037: on Escape after a nested dialog closes, closes $name` tests Escape with that focus, and with no focus in a popup, where the popover closes as in Base UI."
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the close action, each value of `modal`, the dismissal, the focus, nested dialogs and the stack. `Dialog.hydration.test.ts` tests the server render."
     },
     {
-      "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
-      "describe": ["<Dialog.Root />"],
-      "title": "closes a nonmodal dialog on Escape from an inactive trigger inside a popover on every open",
-      "kind": "not-applicable",
-      "reason": "The case nests a Popover and a Dialog of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Dialog moves to it. The change that moves Dialog to the popup layer ports the case again."
+      "upstream": "packages/react/src/dialog/title/DialogTitle.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the title: the popup names it in `aria-labelledby`, the last mounted one wins (VUE-45), and an attribute of the developer wins."
     },
     {
-      "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
-      "describe": ["<Dialog.Root />", "external scroll lock handoff"],
+      "upstream": "packages/react/src/dialog/trigger/DialogTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the trigger: its element and attributes, `aria-expanded`, `aria-controls` while the popup is in the document (VUE-73), a disabled trigger, Enter and Space on an element that is not a button, and the error with no root."
+    },
+    {
+      "upstream": "packages/react/src/dialog/viewport/DialogViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "`Dialog.test.ts` tests the viewport: its role, `hidden` and `inert` with `keepMounted`, `inert` while its popup leaves, the nested states, and a press on it that closes the dialog."
+    },
+    {
+      "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.spec.ts",
+      "reason": "`Dialog.spec.ts` tests the types of the handle and its payload, the slot of the root, the details and the element of a template ref."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
       "kind": "not-applicable",
-      "reason": "The scroll lock waits for no lock of another library: it has one count for each document, and the last unlock restores the page. A lock of another library and the lock of Vase UI each restore their own styles."
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Trigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Close",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogCloseDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogPopupCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "DialogViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the backdrop animates it, and a kept backdrop has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the popup animates it, and a kept popup has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
+      "entry": "Viewport",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the viewport has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`. The viewport is new in the DOM at each open, so a CSS animation is its enter; `:has(> .x-leave-active)` selects it while its popup leaves, and a kept viewport has `[hidden]` (rules 8.9 and 8.15)."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "With `disabled`, the portal element and its parts render in the place of the part, also on a server (`VUE-128`). Base UI has no such prop."
+      "reason": "A disabled portal renders its content in place, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
     },
     {
       "entry": "Trigger",
@@ -83,17 +215,27 @@
     {
       "entry": "Title",
       "prop": "id",
-      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby`. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` in `aria-labelledby`. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby`. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` in `aria-describedby`. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
       "prop": "disabled",
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:triggerId",
+      "reason": "`v-model:trigger-id` binds the active trigger, as a second state that a developer binds is a named model (rule 8.5)."
+    },
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     }
   ],
   "returnTypeDifferences": [
@@ -106,11 +248,116 @@
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/dialog/root/DialogRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogRoot.vue",
+      "behavior": "The root holds the open state, the active trigger and the layer of the dialog.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/root/DialogRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "What a dialog root gives to its parts.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/root/useDialogRoot.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "The layer of a dialog for each value of `modal`, the count of the dialogs above and the nested state.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
       "upstream": "packages/react/src/dialog/root/useRenderDialogRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/dialog/root/useDialogRoot.ts",
-      "member": "useDialogRoot",
-      "witness": "packages/vue/src/dialog/root/DialogRoot.test.tsx"
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "The root of Dialog and of Alert Dialog.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/store/DialogHandle.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "The handle of the dialog.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/store/DialogStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/popup/root.ts",
+      "behavior": "The state of the root: the open state, the active trigger, the payload and the reason.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogTrigger.vue",
+      "behavior": "The trigger opens, closes or moves the dialog at a press.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/portal/DialogPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogPortal.vue",
+      "behavior": "The portal renders its content in a `<Teleport>` after its mount, with the fixed element and the sentinels.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/portal/DialogPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "The portal marks the parts in it.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/backdrop/DialogBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogBackdrop.vue",
+      "behavior": "The backdrop is an overlay under the popup.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/viewport/DialogViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogViewport.vue",
+      "behavior": "The viewport places the popup and scrolls it.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/popup/DialogPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogPopup.vue",
+      "behavior": "The popup is the dialog element, with the focus props.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/title/DialogTitle.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogTitle.vue",
+      "behavior": "The title names the popup.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/description/DialogDescription.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogDescription.vue",
+      "behavior": "The description describes the popup.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/close/DialogClose.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/DialogClose.vue",
+      "behavior": "The close button closes the dialog.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/dialog/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/parts.ts",
+      "behavior": "The parts of the namespace `Dialog`.",
+      "witness": "packages/vue/src/dialog/Dialog.test.ts"
     }
   ]
 }

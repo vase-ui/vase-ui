@@ -4457,31 +4457,6 @@ describe('<NavigationMenu.Root />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
 
-    // The navigation menu is on the older popup code and the dialog is on the popup layer, so the
-    // two do not share a stack. The NavigationMenu unit ports the case again.
-    it.skip('keeps the menu open when interacting with a nested dialog', async () => {
-      const { user } = await render(<TestNavigationMenuWithDialog />);
-      const trigger = screen.getByTestId('trigger-1');
-
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup-1')).not.toBe(null);
-      });
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      const dialogTrigger = screen.getByTestId('dialog-trigger');
-      await user.click(dialogTrigger);
-
-      expect(await screen.findByTestId('dialog-popup')).not.toBe(null);
-
-      await user.click(screen.getByTestId('dialog-button'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup-1')).not.toBe(null);
-      });
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    });
   });
 
   describe('tag', () => {
