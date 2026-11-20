@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue time picker component with a field and a popup that has a list, columns or a clock face, and one Temporal value.
+description: An unstyled Vue time picker component that shares one Temporal value between a field and a list, columns or a clock face in a popup.
 ---
 
 <script setup lang="ts">

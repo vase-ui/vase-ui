@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue date picker component with a field and a calendar in a popup that share one Temporal value.
+description: An unstyled Vue date picker component that shares one Temporal value between a field and a calendar in a popup.
 ---
 
 <script setup lang="ts">

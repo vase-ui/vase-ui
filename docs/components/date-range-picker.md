@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue date range picker component with two fields and a calendar in a popup that share one range of Temporal values.
+description: An unstyled Vue date range picker component that shares one range of Temporal values between two fields and a calendar in a popup.
 ---
 
 <script setup lang="ts">
