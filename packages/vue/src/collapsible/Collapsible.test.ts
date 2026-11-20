@@ -412,6 +412,15 @@ describe('animation', () => {
   });
 });
 
+/**
+ * Expects a length of the variable to be `pixels`. WebKit snaps a scroll size to the pixel grid at
+ * the place of the box, so it can give 1 px more.
+ */
+function expectLength(value: string | undefined, pixels: number) {
+  expect(value).toMatch(/^\d+px$/);
+  expect(parseInt(value!, 10) - pixels).toBeOneOf([0, 1]);
+}
+
 describe('size variables', () => {
   test('in a <Transition>, the variables are on the element before v-enter-to and at v-leave-from, and they follow the content', async () => {
     const scene = reactive({ lines: 2 });
@@ -429,13 +438,14 @@ describe('size variables', () => {
     observer.observe(root, { attributeFilter: ['class'], subtree: true });
     await press();
     await waitFor(() => expect(log).toContain('after-enter Panel'));
-    expect(enterTo[0]).toBe('40px');
+    expectLength(enterTo[0], 40);
     expect(panel()!.style.getPropertyValue('--collapsible-panel-width')).toMatch(/^\d+px$/);
     scene.lines = 4;
     await nextTick();
     await press();
-    expect(panel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('80px');
-    expect(panel()!.getBoundingClientRect().height).toBe(80);
+    const height = panel()!.style.getPropertyValue('--collapsible-panel-height');
+    expectLength(height, 80);
+    expect(`${panel()!.getBoundingClientRect().height}px`).toBe(height);
     observer.disconnect();
   });
 
@@ -461,7 +471,7 @@ describe('size variables', () => {
       expect(log.filter((entry) => entry.startsWith('after-enter'))).toHaveLength(2),
     );
     observer.disconnect();
-    expect(heights[0]).toBe('60px');
+    expectLength(heights[0], 60);
   });
 
   test('a kept panel with the height of the variable has a transition at its first open and at a close', async () => {
@@ -504,7 +514,7 @@ describe('size variables', () => {
       });
       await press();
       const element = panel()!;
-      expect(element.style.getPropertyValue('--collapsible-panel-height')).toBe('20px');
+      expectLength(element.style.getPropertyValue('--collapsible-panel-height'), 20);
       expect(element.style.getPropertyValue('align-content')).toBe('end');
       expect(element.style.getPropertyPriority('align-content')).toBe('important');
       expect(element.style.getPropertyPriority('justify-content')).toBe('');

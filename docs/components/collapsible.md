@@ -77,7 +77,7 @@ The `hiddenUntilFound` prop hides the closed panel with [`hidden="until-found"`]
 - The feature is new in browsers. A browser that does not support `hidden="until-found"` keeps the panel hidden until its trigger opens it, and find-in-page skips the contents.
 - The box of a closed panel keeps its padding and its border. Put them on a child element.
 - Such a panel has no animation. A size transition at the open puts the found text out of the view, and the browser hides the content at once at a close. Do not give such a panel a `display` or a size transition.
-- The server HTML has `hidden="until-found"` with Vue 3.5.41 or later, or 3.6.0-rc.3 or later. An earlier Vue writes `hidden`, and find-in-page then finds the panel only after its first close.
+- The server HTML has `hidden="until-found"` with Vue 3.5.41 or later, or 3.6.0-rc.3 or later. With an earlier Vue, the panel writes the value at the mount.
 
 See the [Accordion example](/components/accordion#hidden-until-found) for an interactive demo.
 
