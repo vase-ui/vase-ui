@@ -6,6 +6,10 @@ import type {
   InputState,
 } from './types';
 
+/**
+ * A native input element that automatically works with Field.
+ * Renders an `<input>` element.
+ */
 export const Input: typeof InputComponent = InputComponent;
 export namespace Input {
   export type Props = InputProps;

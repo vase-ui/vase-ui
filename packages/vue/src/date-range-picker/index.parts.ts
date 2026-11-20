@@ -61,10 +61,7 @@ export namespace Root {
 
 /**
  * The field that shows the first day of the range in segments.
- * Renders a `DateField.Root`, so it has a `<div>` element and a hidden `<input>` beside it.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `DateField.Root`: a `<div>` element with a hidden form `<input>` element in it.
  */
 export const StartField: typeof DateRangePickerStartField = DateRangePickerStartField;
 export namespace StartField {
@@ -74,10 +71,7 @@ export namespace StartField {
 
 /**
  * The field that shows the last day of the range in segments.
- * Renders a `DateField.Root`, so it has a `<div>` element and a hidden `<input>` beside it.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `DateField.Root`: a `<div>` element with a hidden form `<input>` element in it.
  */
 export const EndField: typeof DateRangePickerEndField = DateRangePickerEndField;
 export namespace EndField {
