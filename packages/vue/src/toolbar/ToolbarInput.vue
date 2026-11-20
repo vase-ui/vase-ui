@@ -30,13 +30,13 @@ defineSlots<{
 const toolbar = injectToolbar();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const disabled = computed(() => toolbar.disabled || props.disabled);
+const isDisabled = computed(() => toolbar.disabled || props.disabled);
 const tabindex = useToolbarItem(toolbar, element, {
-  disabled: () => disabled.value,
-  focusable: () => !disabled.value || props.focusableWhenDisabled,
+  disabled: () => isDisabled.value,
+  focusable: () => !isDisabled.value || props.focusableWhenDisabled,
 });
 const state = computed<ToolbarInputState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   focusable: props.focusableWhenDisabled,
   orientation: toolbar.orientation,
 }));
@@ -46,15 +46,17 @@ defineExpose({ element });
 // A disabled input that keeps the focus is read-only, so the browser refuses each edit, also a paste
 // and a drop.
 function itemProps() {
-  const keepsFocus = disabled.value && props.focusableWhenDisabled;
-  const own: Record<string, unknown> = {
-    'data-orientation': toolbar.orientation,
-    'aria-disabled': keepsFocus ? 'true' : undefined,
-    readonly: props.readonly || keepsFocus ? '' : undefined,
-    disabled: disabled.value && !keepsFocus ? '' : undefined,
-  };
-  if (tabindex.value !== undefined) own.tabindex = tabindex.value;
-  return mergeProps(own, attrs);
+  const keepsFocus = isDisabled.value && props.focusableWhenDisabled;
+  return mergeProps(
+    {
+      tabindex: tabindex.value,
+      'data-orientation': toolbar.orientation,
+      'aria-disabled': keepsFocus ? 'true' : undefined,
+      readonly: props.readonly || keepsFocus ? '' : undefined,
+      disabled: isDisabled.value && !keepsFocus ? '' : undefined,
+    },
+    attrs,
+  );
 }
 
 function inputProps() {

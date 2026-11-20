@@ -23,7 +23,7 @@ const slots = defineSlots<{
 const toolbar = injectToolbar();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const { disabled, mergeAttributes } = useButton({
+const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => toolbar.disabled || props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
@@ -31,11 +31,11 @@ const { disabled, mergeAttributes } = useButton({
   tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
 });
 const tabindex = useToolbarItem(toolbar, element, {
-  disabled: () => disabled.value,
-  focusable: () => !disabled.value || props.focusableWhenDisabled,
+  disabled: () => isDisabled.value,
+  focusable: () => !isDisabled.value || props.focusableWhenDisabled,
 });
 const state = computed<ToolbarButtonState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   focusable: props.focusableWhenDisabled,
   orientation: toolbar.orientation,
 }));

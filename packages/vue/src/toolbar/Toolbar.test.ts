@@ -79,6 +79,16 @@ describe('the elements', () => {
     expect(app.querySelector('.State')).toHaveTextContent('false vertical');
   });
 
+  test('an attribute of the developer with the value undefined removes the attribute of the part', async () => {
+    const { app } = await mountToolbar({ role: undefined, 'aria-orientation': undefined }, [
+      { key: 'a', attrs: { type: undefined } },
+    ]);
+    const element = app.querySelector('.State')!.parentElement!;
+    expect(element).not.toHaveAttribute('role');
+    expect(element).not.toHaveAttribute('aria-orientation');
+    expect(app.querySelector('#a')).not.toHaveAttribute('type');
+  });
+
   test('a disabled root has data-disabled and no aria-disabled; a group has role group, data-orientation, and the disabled state of the toolbar', async () => {
     const { element, item, app } = await mountToolbar({ disabled: true }, [
       { key: 'g', group: buttons('a') },
@@ -151,6 +161,27 @@ describe('the elements', () => {
     expect(slots.querySelector('.Root')).toHaveAttribute('role', 'toolbar');
     expect(slots.querySelector('.Input')).toHaveAttribute('disabled');
   });
+});
+
+describe('Toolbar.Separator', () => {
+  test.each([
+    { orientation: 'horizontal', across: 'vertical' },
+    { orientation: 'vertical', across: 'horizontal' },
+  ])(
+    'is a separator across a $orientation toolbar, with the attributes of the developer; an orientation of the developer wins',
+    async ({ orientation, across }) => {
+      const { item } = await mountToolbar({ orientation }, [
+        { key: 'a' },
+        { key: 'across', kind: 'separator', attrs: { class: 'Line' } },
+        { key: 'given', kind: 'separator', attrs: { orientation } },
+      ]);
+      expect(item('across')).toHaveAttribute('role', 'separator');
+      expect(item('across')).toHaveAttribute('aria-orientation', across);
+      expect(item('across')).toHaveClass('Line');
+      expect(item('given')).toHaveAttribute('aria-orientation', orientation);
+      expect(item('across')).not.toHaveAttribute('tabindex');
+    },
+  );
 });
 
 describe('Toolbar.Input', () => {
@@ -270,7 +301,7 @@ describe('the keys', () => {
     const { item } = await mountToolbar({}, [
       { key: 'a' },
       { key: 'b', attrs: { style: 'display: none' } },
-      { key: 'c', kind: 'checkbox', attrs: { disabled: true, focusableWhenDisabled: false } },
+      { key: 'c', kind: 'disabled-button' },
       { key: 'd' },
     ]);
     item('a').focus();
@@ -338,6 +369,37 @@ describe('a text input', () => {
     area.focus();
     area.setSelectionRange(4, 4);
     expect(await press('{ArrowUp}', '{ArrowUp}')).toEqual(['area', 'text']);
+  });
+
+  test('a disabled input keeps no key, and is read-only; readonly of the developer makes an enabled input read-only', async () => {
+    const { item } = await mountInputs({}, { disabled: true });
+    const input = item<HTMLInputElement>('text');
+    input.focus();
+    input.setSelectionRange(1, 1);
+    expect(await press('{ArrowRight}')).toEqual(['b']);
+    const readonly = await mountInputs({}, { readonly: true });
+    expect(readonly.item('text')).toHaveAttribute('readonly');
+    expect(readonly.item('text')).not.toHaveAttribute('aria-disabled');
+  });
+
+  test('a key with isComposing, or with the key code 229 that WebKit sends while a text input method composes, does not move the focus', async () => {
+    const { item } = await mountInputs({});
+    const input = item<HTMLInputElement>('text');
+    input.focus();
+    input.setSelectionRange(3, 3);
+    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+    // The init dictionary has no key code, so the case gives the key code of WebKit to the event.
+    Object.defineProperty(event, 'keyCode', { value: 229 });
+    input.dispatchEvent(event);
+    const composing = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      isComposing: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    input.dispatchEvent(composing);
+    expect(focused()).toBe('text');
+    expect([event.defaultPrevented, composing.defaultPrevented]).toEqual([false, false]);
   });
 
   test('an input of the type email keeps no key, and an input with dir="ltr" in a right-to-left toolbar gives ArrowLeft to the toolbar at its start', async () => {
@@ -521,6 +583,23 @@ describe('disabled items', () => {
       }
     },
   );
+
+  test('a press that a capture listener stops before it reaches a disabled item leaves no stop on the item', async () => {
+    const log: string[] = [];
+    let stops = 1;
+    const group = {
+      onClickCapture: (event: Event) => {
+        if (stops-- > 0) event.stopPropagation();
+      },
+    };
+    const attrs = reactive({ disabled: true, ...recordEvents(log, 'item', ['click']) });
+    const { item } = await mountToolbar({}, [{ key: 'g', group: [{ key: 'b', attrs }], attrs: group }]);
+    await userEvent.click(item('b'), { force: true });
+    attrs.disabled = false;
+    await nextTick();
+    await userEvent.click(item('b'));
+    expect(log).toEqual(['item click']);
+  });
 
   test('Escape, F1, Tab and a key with Ctrl, Alt or Meta reach the listeners of a disabled item', async () => {
     const log: string[] = [];

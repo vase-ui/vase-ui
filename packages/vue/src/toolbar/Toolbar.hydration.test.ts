@@ -64,6 +64,11 @@ describe('server render and hydration', () => {
     const separator = root.querySelector('[role=separator]')!;
     expect(separator).toHaveAttribute('aria-orientation', 'vertical');
     expect(root.querySelector('[role=toolbar]')!.localName).toBe('section');
+    // A tag in `as` is known before the mount, so the server HTML has the attributes of a span.
+    const button = root.querySelector('.Button')!;
+    expect(button).toHaveAttribute('role', 'button');
+    expect(button).toHaveAttribute('tabindex', '0');
+    expect(button).not.toHaveAttribute('type');
     hydrate(ToolbarElements, { scene: {} }, root);
     await settle();
     expect(root.querySelector('[role=separator]')).toBe(separator);

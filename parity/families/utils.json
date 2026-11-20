@@ -66,7 +66,7 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/use-button/useButton.ts",
       "member": "useFocusableWhenDisabled",
-      "witness": "packages/vue/src/toolbar/input/ToolbarInput.test.tsx"
+      "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/arrow.ts",

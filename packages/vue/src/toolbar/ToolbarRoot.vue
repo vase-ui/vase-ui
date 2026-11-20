@@ -50,10 +50,7 @@ provide(toolbarKey, {
   },
   addItem(item) {
     items.push(item);
-    return () => {
-      items.splice(items.indexOf(item), 1);
-      if (focused.value === item.element && !isItem(item.element)) focused.value = undefined;
-    };
+    return () => items.splice(items.indexOf(item), 1);
   },
 });
 
@@ -86,8 +83,8 @@ function canTakeFocus(element: HTMLElement) {
   return items.every((item) => item.element !== element || item.focusable);
 }
 
-function keepsFocusWhileDisabled(element: HTMLElement) {
-  return canTakeFocus(element) && items.some((item) => item.element === element && item.disabled);
+function isDisabled(element: HTMLElement) {
+  return items.some((item) => item.element === element && item.disabled);
 }
 
 /**
@@ -113,8 +110,8 @@ function moveFocus(event: KeyboardEvent) {
   const root = element.value;
   const target = event.target as HTMLElement;
   if (!root || !isItem(target) || hasModifier(event) || isComposing(event)) return false;
-  if (!keepsFocusWhileDisabled(target) && keepsKey(target, event.key)) return false;
-  const candidates = sequence().filter((candidate) => !candidate.matches(':disabled'));
+  if (!isDisabled(target) && keepsKey(target, event.key)) return false;
+  const candidates = sequence();
   const options = {
     orientation: props.orientation,
     rtl: ownerWindow(root).getComputedStyle(root).direction === 'rtl',
@@ -125,14 +122,13 @@ function moveFocus(event: KeyboardEvent) {
   // The key never reaches the control, also at an end of the toolbar.
   event.preventDefault();
   event.stopPropagation();
-  // The browser refuses the focus to an element that CSS hides. The next item then gets it.
+  // The browser refuses the focus to an element that CSS hides or that is disabled, such as a
+  // button in a disabled fieldset. The next item then gets it.
   for (let next = first; next !== target;) {
     next.focus();
     if ((next.getRootNode() as Document | ShadowRoot).activeElement === next) {
       // Tab selects the text of an input, and `focus()` does not in Chromium and Firefox.
-      if (next instanceof ownerWindow(next).HTMLInputElement && next.selectionStart !== null) {
-        next.select();
-      }
+      if (next instanceof ownerWindow(next).HTMLInputElement) next.select();
       break;
     }
     const following: HTMLElement = arrowKeyTarget(event.key, next, candidates, options) ?? next;
@@ -145,17 +141,16 @@ function moveFocus(event: KeyboardEvent) {
 // The keys that a disabled item gives to the browser and to a popup around the toolbar.
 const PASSING_KEYS = /^(Tab|Escape|F[1-9]|F1[0-2])$/;
 
-// A disabled item that keeps the focus gets no press and no key, as a native disabled control. The
-// stop is at the target, so the capture listeners of the path still get each event: the dismiss
-// layer of a popup decides a press outside in a listener that it adds to the target.
+// A disabled item gets no press and no key, as a native disabled control. The stop is at the
+// target, so the capture listeners of the path still get each event: the dismiss layer of a popup
+// decides a press outside in a listener that it adds to the target.
 function stopAtDisabledItem(event: Event) {
   const { key } = event as Partial<KeyboardEvent>;
   if (key !== undefined && (hasModifier(event as KeyboardEvent, false) || PASSING_KEYS.test(key))) {
     return;
   }
   const target = event.target as Node;
-  const item = items.find((candidate) => candidate.element.contains(target));
-  if (!item || !keepsFocusWhileDisabled(item.element)) return;
+  if (!items.some((item) => item.disabled && item.element.contains(target))) return;
   event.preventDefault();
   target.addEventListener(
     event.type,

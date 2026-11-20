@@ -34,9 +34,7 @@ async function focusTrigger(trigger: HTMLElement, next = '{ArrowRight}') {
 
 // In a Vapor app with Vapor parts, Vue 3.6 runs no portal of the popup families: the portal returns a
 // render function, and a Vapor component must return a block.
-const popups = describe.skipIf(inject('app') === 'vapor');
-
-popups.each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
+describe.skipIf(inject('app') === 'vapor').each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
   const popupRole = {
     menu: 'menu',
     popover: 'dialog',
@@ -73,7 +71,7 @@ popups.each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: 
   });
 });
 
-popups('a menu trigger', () => {
+describe.skipIf(inject('app') === 'vapor')('a menu trigger', () => {
   test('the arrow keys of the menu move the highlight, and the keys of the toolbar do not reach the menu', async () => {
     const { find, trigger } = await mountCompose({ kind: 'menu' });
     await focusTrigger(trigger);
@@ -110,7 +108,7 @@ popups('a menu trigger', () => {
   });
 });
 
-popups('a select trigger', () => {
+describe.skipIf(inject('app') === 'vapor')('a select trigger', () => {
   test('ArrowDown of the other axis opens the list; a choice closes it and gives the focus back', async () => {
     const { entries, trigger } = await mountCompose({ kind: 'select' });
     await focusTrigger(trigger);
@@ -134,7 +132,7 @@ popups('a select trigger', () => {
   });
 });
 
-popups('a popover', () => {
+describe.skipIf(inject('app') === 'vapor')('a popover', () => {
   test('a press on a disabled Toolbar.Button closes the open popover', async () => {
     const { entries, trigger, find } = await mountCompose({ kind: 'popover' });
     await waitForLaterMillisecond(() => userEvent.click(trigger));
@@ -144,7 +142,7 @@ popups('a popover', () => {
   });
 });
 
-popups('a tooltip trigger', () => {
+describe.skipIf(inject('app') === 'vapor')('a tooltip trigger', () => {
   test('in a disabled Toolbar.Button, opens at a hover', async () => {
     const { trigger, find } = await mountCompose({ kind: 'tooltip', disabled: true });
     expect(trigger).toHaveAttribute('aria-disabled', 'true');

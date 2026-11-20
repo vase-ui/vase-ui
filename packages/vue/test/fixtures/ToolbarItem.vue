@@ -1,7 +1,15 @@
 <script lang="ts">
 export interface ToolbarFixtureItem {
   key: string;
-  kind?: 'button' | 'span' | 'link' | 'input' | 'textarea' | 'checkbox';
+  kind?:
+    | 'button'
+    | 'span'
+    | 'disabled-button'
+    | 'link'
+    | 'input'
+    | 'textarea'
+    | 'checkbox'
+    | 'separator';
   attrs?: Record<string, unknown>;
 }
 </script>
@@ -15,7 +23,8 @@ defineProps({ item: { type: Object as PropType<ToolbarFixtureItem>, required: tr
 </script>
 
 <template>
-  <Toolbar.Link v-if="item.kind === 'link'" :id="item.key" href="#link" v-bind="item.attrs">
+  <Toolbar.Separator v-if="item.kind === 'separator'" :id="item.key" v-bind="item.attrs" />
+  <Toolbar.Link v-else-if="item.kind === 'link'" :id="item.key" href="#link" v-bind="item.attrs">
     {{ item.key }}
   </Toolbar.Link>
   <Toolbar.Input
@@ -34,6 +43,12 @@ defineProps({ item: { type: Object as PropType<ToolbarFixtureItem>, required: tr
       <Checkbox :id="item.key" :aria-label="item.key" v-bind="props" :ref="elementRef" />
     </template>
   </Toolbar.Input>
+  <!-- The developer disables the button in the slot, and the part does not know it. -->
+  <Toolbar.Button v-else-if="item.kind === 'disabled-button'" v-bind="item.attrs">
+    <template #element="{ props, elementRef }">
+      <button :id="item.key" v-bind="props" :ref="elementRef" disabled>{{ item.key }}</button>
+    </template>
+  </Toolbar.Button>
   <Toolbar.Button v-else-if="item.kind === 'span'" v-bind="item.attrs">
     <template #element="{ props, elementRef }">
       <span :id="item.key" v-bind="props" :ref="elementRef">{{ item.key }}</span>

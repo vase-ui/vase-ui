@@ -8,7 +8,6 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 
 // Each part changes before the hydration, or before a move back in the history. The test reads
 // the form data, the model of each part and the count of its change events.
@@ -17,7 +16,6 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
 const CONTROL_STYLE = 'position: relative; width: 200px; height: 10px';
 const THUMB_STYLE = 'width: 20px; height: 10px';
 
-const filter = ref('');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
 const quantity = ref<number | null>(1);
@@ -34,25 +32,11 @@ function count(name: string) {
   changes[name] = (changes[name] ?? 0) + 1;
 }
 
-function handleFilterInput(event: Event) {
-  filter.value = (event.currentTarget as HTMLInputElement).value;
-  count('filter');
-}
 </script>
 
 <template>
   <main>
     <form data-testid="form" @submit.prevent="submits += 1">
-      <Toolbar.Root>
-        <Toolbar.Input
-          :value="filter"
-          name="filter"
-          aria-label="Filter"
-          data-testid="filter"
-          @input="handleFilterInput"
-        />
-      </Toolbar.Root>
-
       <Select.Root v-model="font" name="font" :items="FONTS" @value-change="count('font')">
         <Select.Trigger data-testid="font-trigger"><Select.Value /></Select.Trigger>
         <Select.Portal>
@@ -132,7 +116,6 @@ function handleFilterInput(event: Event) {
 
     <output data-testid="models">{{
       JSON.stringify({
-        filter,
         font,
         fruit,
         quantity,

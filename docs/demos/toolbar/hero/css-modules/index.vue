@@ -28,21 +28,15 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
 <template>
   <Toolbar.Root :class="styles.Toolbar">
     <ToggleGroup :class="styles.Group" aria-label="Alignment">
-      <Toolbar.Button
-        :as="Toggle"
-        aria-label="Align left"
-        value="align-left"
-        :class="styles.Button"
-      >
-        Align Left
+      <Toolbar.Button aria-label="Align left" :class="styles.Button">
+        <template #element="{ props, elementRef }">
+          <Toggle v-bind="props" :ref="elementRef" value="align-left">Align Left</Toggle>
+        </template>
       </Toolbar.Button>
-      <Toolbar.Button
-        :as="Toggle"
-        aria-label="Align right"
-        value="align-right"
-        :class="styles.Button"
-      >
-        Align Right
+      <Toolbar.Button aria-label="Align right" :class="styles.Button">
+        <template #element="{ props, elementRef }">
+          <Toggle v-bind="props" :ref="elementRef" value="align-right">Align Right</Toggle>
+        </template>
       </Toolbar.Button>
     </ToggleGroup>
     <Toolbar.Separator :class="styles.Separator" />
@@ -52,11 +46,15 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
     </Toolbar.Group>
     <Toolbar.Separator :class="styles.Separator" />
     <Select.Root default-value="Helvetica">
-      <Toolbar.Button :as="Select.Trigger" :class="styles.Button" aria-label="Font">
-        <Select.Value />
-        <Select.Icon>
-          <CaretUpDownIcon />
-        </Select.Icon>
+      <Toolbar.Button :class="styles.Button" aria-label="Font">
+        <template #element="{ props, elementRef }">
+          <Select.Trigger v-bind="props" :ref="elementRef">
+            <Select.Value />
+            <Select.Icon>
+              <CaretUpDownIcon />
+            </Select.Icon>
+          </Select.Trigger>
+        </template>
       </Toolbar.Button>
       <Select.Portal>
         <Select.Positioner

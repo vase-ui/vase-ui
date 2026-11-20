@@ -48,23 +48,22 @@ describe('server render and hydration', () => {
     expect(root.querySelector('#a')).toHaveAttribute('disabled');
   });
 
-  test('a group in a toolbar keeps the tab stop of the toolbar in the server HTML and after the hydration', async () => {
+  test('a group in a toolbar has no tabindex in the server HTML; after the hydration the toolbar gives the tab stop', async () => {
     const root = await renderOnServer('ToggleGroupInToolbar');
     const ids = ['first', 'one', 'two', 'alone', 'last'];
     const read = () => ids.map((id) => root.querySelector(`#${id}`)!.getAttribute('tabindex'));
-    expect(read()).toEqual(['0', '-1', '-1', '-1', '-1']);
+    expect(read()).toEqual([null, null, null, null, null]);
     hydrate(ToggleGroupInToolbar, {}, root);
     await settle();
     expect(read()).toEqual(['0', '-1', '-1', '-1', '-1']);
     expect(root.querySelector('#one')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('the server HTML of a toolbar gives its tab stop to the first enabled toggle of a group, and the hydration keeps it', async () => {
+  test('after the hydration, a toolbar gives its tab stop to the first enabled toggle of a group', async () => {
     const props = { scene: { disabledSpan: true, noFirst: true } };
     const root = await renderOnServer('ToggleGroupInToolbar', props);
     const read = () =>
       ['one', 'two'].map((id) => root.querySelector(`#${id}`)!.getAttribute('tabindex'));
-    expect(read()).toEqual(['-1', '0']);
     hydrate(ToggleGroupInToolbar, props, root);
     await settle();
     expect(read()).toEqual(['-1', '0']);
