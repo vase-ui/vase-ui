@@ -4,15 +4,12 @@ import type {
   ToggleGroupChangeEventReason,
   ToggleGroupProps,
   ToggleGroupState,
-} from './ToggleGroup.vue';
+} from './types';
 
-/**
- * Provides a shared state to a series of toggle buttons.
- */
 export const ToggleGroup: typeof ToggleGroupComponent = ToggleGroupComponent;
 export namespace ToggleGroup {
-  export type State = ToggleGroupState;
   export type Props<Value extends string = string> = ToggleGroupProps<Value>;
+  export type State = ToggleGroupState;
   export type ChangeEventReason = ToggleGroupChangeEventReason;
   export type ChangeEventDetails = ToggleGroupChangeEventDetails;
 }
@@ -23,5 +20,3 @@ export type {
   ToggleGroupProps,
   ToggleGroupState,
 };
-
-export * as ToggleGroupDataAttributes from './ToggleGroupDataAttributes';
