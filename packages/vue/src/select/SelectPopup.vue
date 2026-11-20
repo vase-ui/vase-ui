@@ -2,6 +2,7 @@
 import {
   computed,
   mergeProps,
+  onBeforeUnmount,
   onMounted,
   onUnmounted,
   shallowRef,
@@ -66,10 +67,12 @@ watch(
   (target) => (context.finalFocus.value = target),
   { immediate: true },
 );
-onUnmounted(() => {
+// Vue stops the watcher before it removes the element of the part, so the part clears the popup of
+// the root. The popup of a part that mounted first stays.
+onBeforeUnmount(() => {
   if (root.popup === element.value) root.setPopup(null);
-  context.popupShown.value = false;
 });
+onUnmounted(() => (context.popupShown.value = false));
 
 // The scroll arrows of a list that scrolls, at each open.
 watch(
