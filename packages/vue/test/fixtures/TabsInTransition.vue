@@ -3,7 +3,8 @@ import type { PropType } from 'vue';
 import { Tabs } from '../../src/tabs';
 
 // Each panel and the tab "a" are in a `<Transition>`. The hooks of each panel write its key, its
-// `data-activation-direction` and its classes when its enter or its leave starts.
+// `data-activation-direction` and its classes when its enter or its leave starts. The enter and the
+// leave of a panel take 200 ms.
 const props = defineProps({
   root: Object as PropType<Record<string, unknown>>,
   scene: { type: Object as PropType<{ shown: boolean }>, default: () => ({ shown: true }) },
@@ -41,3 +42,14 @@ function record(phase: string, element: Element) {
     </Transition>
   </Tabs.Root>
 </template>
+
+<style>
+.panel-enter-active,
+.panel-leave-active {
+  transition: opacity 200ms linear;
+}
+.panel-enter-from,
+.panel-leave-to {
+  opacity: 0;
+}
+</style>

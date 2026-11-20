@@ -1,14 +1,6 @@
-import {
-  computed,
-  mergeProps,
-  onMounted,
-  onUnmounted,
-  shallowRef,
-  useId,
-  watch,
-  type Ref,
-} from 'vue';
+import { computed, mergeProps, onMounted, onUnmounted, useId, watch, type Ref } from 'vue';
 import { givenId } from '../common/id';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import type { CollapsiblePart } from './part';
 
 // With `normal`, no alignment moves the content out of a box of height 0, so the scroll size is the
@@ -38,34 +30,8 @@ export function useCollapsiblePanel(
   });
   onUnmounted(unregister);
 
-  // An element that leaves in a `<Transition>` is in the document until its leave ends. Vue gives
-  // a new element that enters during that leave no enter (test/measurements/collapsible.test.ts),
-  // so the new element waits for the old one to go.
-  const waiting = shallowRef(false);
-  // A weak reference lets the browser free the removed element of a closed panel.
-  let leaving: WeakRef<Element> | undefined;
-  watch(
-    () => part.open,
-    (open) => {
-      writeSize();
-      if (!open) {
-        const element = options.element.value;
-        leaving = element ? new WeakRef(element) : undefined;
-        return;
-      }
-      const gone = leaving?.deref();
-      const parent = gone?.parentNode;
-      // A kept element stays in the DOM, so it does not leave.
-      if (!gone || !parent || gone === options.element.value) return;
-      waiting.value = true;
-      const observer = new MutationObserver(() => {
-        if (gone.isConnected) return;
-        observer.disconnect();
-        waiting.value = false;
-      });
-      observer.observe(parent, { childList: true });
-    },
-  );
+  watch(() => part.open, writeSize);
+  const { waiting } = useEnterAfterLeave(() => part.open, options.element);
   // A new element, and a kept element that shows, get the size that they have at their closed style.
   watch(
     [options.element, () => part.open],

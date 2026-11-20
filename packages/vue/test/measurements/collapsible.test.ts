@@ -41,14 +41,16 @@ function countTransitions(target: Element) {
 /** The patch of Vue 3.5, or `Infinity` for a later Vue. */
 const patchOf35 = version.startsWith('3.5.') ? Number(version.split('.')[2]) : Infinity;
 
+// The panels of Collapsible and Accordion, `Field.Error` and `Tabs.Panel` render their element in
+// this way.
 describe('a <Transition> around a component that renders its root element by injected state', () => {
-  // In a Vapor component, `<Transition>` takes the old element back. Vue 3.5.17 and earlier give
-  // the second element its enter, and Vue 3.5.43 and later keep its enter classes. The versions
-  // between are not measured.
+  // In a Vapor component, `<Transition>` takes the old element back. Vue 3.5.28 and earlier give
+  // the second element its enter, and Vue 3.5.29 and later keep its enter classes
+  // (https://github.com/vuejs/core/issues/16359).
   const vapor = inject('app').startsWith('vapor');
-  const keepsEnterClasses = !vapor && patchOf35 >= 43;
+  const keepsEnterClasses = !vapor && patchOf35 >= 29;
 
-  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends with Vue 3.5.43 or later; Vapor gives one element', async () => {
+  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends with Vue 3.5.29 or later; Vapor gives one element', async () => {
     const scene = reactive({ open: false });
     const { root: host } = mount(MeasureInjectedPanel, { scene });
     const panels = () => [...host.querySelectorAll('.MeasurePanel')];
