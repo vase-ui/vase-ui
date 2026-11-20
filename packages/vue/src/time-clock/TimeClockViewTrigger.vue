@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, useAttrs, useSlots } from 'vue';
+import { computed, onMounted, useAttrs, useSlots } from 'vue';
 import { useButton } from '../button/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
+import { writeAttributes } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockViewTriggerProps, TimeClockViewTriggerState } from './types';
 import { faceNumberOf } from './views';
@@ -45,6 +46,11 @@ const text = computed(() =>
       }),
 );
 
+// A server with other `Intl` data has another name.
+onMounted(() => {
+  if (element.value) writeAttributes(element.value, elementProps());
+});
+
 defineExpose({ element });
 
 function elementProps() {
@@ -57,8 +63,6 @@ function elementProps() {
       ...clockAttributes(clock.state),
       // CSS has `:disabled`.
       'data-disabled': undefined,
-      // A server with other `Intl` data has other digits.
-      'data-allow-mismatch': 'text',
       onClick: (event: MouseEvent) =>
         clock.setView(props.view, createChangeEventDetails('trigger-press', event)),
     },

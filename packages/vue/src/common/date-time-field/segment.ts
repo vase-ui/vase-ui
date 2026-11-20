@@ -27,22 +27,6 @@ export interface DateTimeFieldSegmentState extends DateTimeFieldState {
   placeholder: boolean;
 }
 
-/**
- * Writes the attributes again after the mount. Vue keeps the attributes of an element that it
- * hydrates, and a server with other `Intl` data puts another segment or literal in its place
- * (test/measurements/date-time-field.test.ts).
- */
-export function writeAttributes(element: Element, attributes: Record<string, unknown>) {
-  for (const [name, value] of Object.entries(attributes)) {
-    if (/^on[A-Z]/.test(name) || name === 'value') continue;
-    if (value == null || value === false) element.removeAttribute(name);
-    else if (value === true) element.setAttribute(name, '');
-    else if (typeof value === 'string' || typeof value === 'number') {
-      element.setAttribute(name, String(value));
-    }
-  }
-}
-
 /** The keys, the text and the focus of one editable segment. */
 export function useDateTimeFieldSegment(
   segment: () => EditableSegment,

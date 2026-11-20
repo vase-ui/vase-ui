@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import { computed, mergeProps, nextTick, onBeforeUnmount, shallowRef, useAttrs } from 'vue';
+import {
+  computed,
+  mergeProps,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  shallowRef,
+  useAttrs,
+} from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
+import { writeAttributes } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockFaceProps, TimeClockFaceState } from './types';
 import {
@@ -88,6 +97,8 @@ function inputProps() {
         : new Intl.DisplayNames(clock.locale, { type: 'dateTimeField' }).of(view),
       'aria-valuetext': valueText(),
       'aria-readonly': current.readonly ? 'true' : undefined,
+      // A server with other `Intl` data has another hour cycle and other names.
+      'data-allow-mismatch': 'attribute',
       style: INPUT_STYLE,
       onInput,
     },
@@ -213,6 +224,10 @@ function onKeydown(event: KeyboardEvent) {
 
 // No event of the pointer reaches a face that goes away.
 onBeforeUnmount(endPress);
+
+onMounted(() => {
+  if (inputElement.value) writeAttributes(inputElement.value, inputProps());
+});
 
 defineExpose({ element, inputElement });
 

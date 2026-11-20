@@ -8,6 +8,8 @@ const props = defineProps<{
   hourCycle?: 12 | 24 | undefined;
   /** The parts with text render content of the developer. */
   content?: boolean | undefined;
+  /** The face shows no numbers. */
+  withoutNumbers?: boolean | undefined;
 }>();
 
 const value = props.value === undefined ? undefined : Temporal.PlainTime.from(props.value);
@@ -25,7 +27,7 @@ const value = props.value === undefined ? undefined : Temporal.PlainTime.from(pr
     </template>
     <TimeClock.Face>
       <TimeClock.Hand />
-      <template #number="{ number }">
+      <template v-if="!withoutNumbers" #number="{ number }">
         <TimeClock.Number v-if="content" :number="number">{{ number.value }}</TimeClock.Number>
         <TimeClock.Number v-else :number="number" />
       </template>

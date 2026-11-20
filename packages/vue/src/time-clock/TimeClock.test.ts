@@ -58,7 +58,7 @@ describe('the parts', () => {
     const { group, face, range, numbers, hand } = await mountClock({
       clock: { defaultValue: time('15:30') },
     });
-    expect(dataAttributes(group)).toEqual(['data-view']);
+    expect(dataAttributes(group)).toEqual(['data-allow-mismatch', 'data-view']);
     expect(group).toHaveAttribute('data-view', 'hour');
     expect(face().lastElementChild).toBe(range());
     expect(face().style.touchAction).toBe('none');

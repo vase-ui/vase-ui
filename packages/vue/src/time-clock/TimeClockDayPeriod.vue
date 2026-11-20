@@ -43,8 +43,6 @@ function elementProps() {
       ...clockAttributes(clock.state),
       // CSS has `:disabled`.
       'data-disabled': undefined,
-      // A server with other `Intl` data has another text.
-      'data-allow-mismatch': 'text',
       onClick: (event: MouseEvent) =>
         clock.selectDayPeriod(props.value, createChangeEventDetails('item-press', event)),
     },

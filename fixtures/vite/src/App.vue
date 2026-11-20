@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref, shallowRef } from 'vue';
-import { DateField } from '@vase-ui/vue/date-field';
+import { reactive, ref } from 'vue';
 import { Slider } from '@vase-ui/vue/slider';
 
 const range = ref([20, 80]);
-const when = shallowRef<Temporal.PlainDate | null>(null);
 // For each part, the value and the type of the event of each change.
 const changes = reactive<Record<string, string[]>>({});
 
@@ -25,18 +23,8 @@ function record(name: string, value: unknown, details: { event: Event }) {
         <Slider.Thumb aria-label="Maximum" style="width: 20px; height: 10px" />
       </Slider.Control>
     </Slider.Root>
-    <DateField.Root
-      v-model="when"
-      name="when"
-      locale="en-US"
-      @value-change="(value, details) => record('when', value, details)"
-    >
-      <DateField.Input data-testid="when" />
-    </DateField.Root>
   </form>
-  <output data-testid="models">{{
-    JSON.stringify({ range, when: when?.toString() ?? null })
-  }}</output>
+  <output data-testid="models">{{ JSON.stringify({ range }) }}</output>
   <output data-testid="changes">{{ JSON.stringify(changes) }}</output>
   <a href="./away.html" data-testid="away">Away</a>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, mergeProps, useAttrs } from 'vue';
+import { computed, mergeProps, onMounted, useAttrs } from 'vue';
 import { useElement } from '../common/element';
+import { writeAttributes } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockHandProps, TimeClockHandState } from './types';
 import { angleOfFaceNumber, radiusOfFaceNumber } from './views';
@@ -27,6 +28,10 @@ const state = computed<TimeClockHandState>(() => ({
   betweenNumbers: clock.view !== 'hour' && clock.selectedNumber.value % 5 !== 0,
 }));
 
+onMounted(() => {
+  if (element.value) writeAttributes(element.value, elementProps());
+});
+
 defineExpose({ element });
 
 function elementProps() {
@@ -37,6 +42,8 @@ function elementProps() {
       ...clockAttributes(state.value),
       'data-inner': state.value.inner ? '' : undefined,
       'data-between-numbers': state.value.betweenNumbers ? '' : undefined,
+      // A server with another hour cycle puts the hand on another ring.
+      'data-allow-mismatch': 'style',
       style: {
         '--time-clock-hand-angle': `${angleOfFaceNumber(view, selectedNumber)}deg`,
         '--time-clock-hand-length': radiusOfFaceNumber(selectedNumber),

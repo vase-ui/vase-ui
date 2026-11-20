@@ -268,7 +268,16 @@ provide(clockKey, {
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps({ role: 'group', ...clockAttributes(state.value) }, attrs);
+  return mergeProps(
+    {
+      role: 'group',
+      ...clockAttributes(state.value),
+      // A server with other `Intl` data has other texts, and one with another hour cycle has
+      // another count of numbers and no day period. The category covers each part in the root.
+      'data-allow-mismatch': 'children',
+    },
+    attrs,
+  );
 }
 </script>
 

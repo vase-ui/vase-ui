@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { mergeProps, onMounted, useAttrs } from 'vue';
-import { useDateTimeFieldSegment, writeAttributes } from '../common/date-time-field/segment';
+import { useDateTimeFieldSegment } from '../common/date-time-field/segment';
+import { writeAttributes } from '../common/writeAttributes';
 import { useElement } from '../common/element';
 import type { DateFieldSegmentProps, DateFieldSegmentState } from './types';
 

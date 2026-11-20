@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, mergeProps, useAttrs, watch } from 'vue';
+import { computed, mergeProps, onMounted, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
+import { writeAttributes } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockNumberProps, TimeClockNumberState } from './types';
 import { angleOfFaceNumber, radiusOfFaceNumber } from './views';
@@ -48,6 +49,10 @@ watch(
   { flush: 'sync' },
 );
 
+onMounted(() => {
+  if (element.value) writeAttributes(element.value, elementProps());
+});
+
 defineExpose({ element });
 
 function elementProps() {
@@ -57,8 +62,6 @@ function elementProps() {
       ...clockAttributes(state.value),
       'data-selected': state.value.selected ? '' : undefined,
       'data-inner': state.value.inner ? '' : undefined,
-      // A server with other `Intl` data has other digits.
-      'data-allow-mismatch': 'text',
       style: {
         '--time-clock-number-angle': `${angleOfFaceNumber(clock.view, props.number)}deg`,
         '--time-clock-number-radius': radiusOfFaceNumber(props.number),

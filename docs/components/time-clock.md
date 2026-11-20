@@ -206,7 +206,7 @@ Set `minuteStep` for a step of the minutes, and `min` and `max` for the limits.
 
 The server HTML has the angle variables of the hand and of each number, the texts and the values of the range input. The face is thus exact before the page hydrates.
 
-The locale of the clock is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The clock never reads the locale of the visitor. A server and a browser can still have other `Intl` data, such as other digits. A number, a day period and a view trigger then show the text of the browser after the hydration, with no message.
+The locale of the clock is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The clock never reads the locale of the visitor. A server and a browser can still have other `Intl` data, such as other digits, or another hour cycle for a locale that the browser lacks. After the hydration, the clock shows the texts, the numbers and the attributes of the browser. Only a face with another count of numbers logs one message of Vue, which says that the hydration found mismatches.
 
 ## Keyboard
 
