@@ -54,7 +54,7 @@ Form works together with [Field](/components/field). Import the components and p
 
 <<< ./form/Anatomy.vue
 
-`Form` renders a `<form>` with `novalidate`. A submit validates each field of the form. A submit that a field blocks is prevented, and the first invalid control gets the focus. A submit that passes emits `submit` with the native `SubmitEvent` and the values of the form. While `Form` has a `submit` listener, it prevents the native submit, so the page stays. To keep the native submit to the `action` URL, give `Form` no `submit` listener.
+`Form` renders a `<form>` with `novalidate`. A submit validates each field of the form. A submit that a field blocks is prevented, and the first invalid control gets the focus. A submit that passes emits `submit` with the native `SubmitEvent` and the values of the form. While `Form` has a `submit` listener, it prevents the native submit, so the page stays. Give `@submit` a function, because `Form` can miss a listener that you add or remove after the mount. To keep the native submit to the `action` URL, give `Form` no `submit` listener.
 
 `errors` makes a field invalid by its `name`. Bind it with `v-model:errors`: an edit of a field asks to remove its key. After a submit that passed, the first change of `errors` moves the focus to the first invalid control.
 
