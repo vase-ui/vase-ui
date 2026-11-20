@@ -13,6 +13,8 @@ defineProps({
   field: Object as PropType<Props>,
   disabledFieldset: Boolean,
   inputInPopup: Boolean,
+  /** A button in the popup. */
+  button: Boolean,
 });
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 </script>
@@ -37,6 +39,7 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
                     </Combobox.Item>
                   </template>
                 </Combobox.List>
+                <button v-if="button" type="button" data-testid="popup-button">In the popup</button>
               </Combobox.Popup>
             </Combobox.Positioner>
           </Combobox.Portal>

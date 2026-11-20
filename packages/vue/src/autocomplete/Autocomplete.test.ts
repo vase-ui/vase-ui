@@ -75,6 +75,17 @@ describe('the text', () => {
     await waitFor(() => expect(highlighted()).toBe('feature'));
   });
 
+  test("with `autoHighlight: 'always'`, a press open highlights the first item, and so does an emptied text", async () => {
+    await mountAutocomplete({ root: { autoHighlight: 'always', openOnInputClick: true } });
+    await userEvent.click(input());
+    await opened();
+    await waitFor(() => expect(highlighted()).toBe('feature'));
+    await userEvent.keyboard('d');
+    await waitFor(() => expect(highlighted()).toBe('docs'));
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(highlighted()).toBe('feature'));
+  });
+
   test('with `keepHighlight`, a pointer that leaves the list keeps the highlight', async () => {
     await mountAutocomplete({ root: { keepHighlight: true, openOnInputClick: true } });
     await userEvent.click(input());

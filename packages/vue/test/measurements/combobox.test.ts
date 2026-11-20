@@ -93,6 +93,49 @@ describe('a list that scrolls under a pointer at rest (C2, C7)', () => {
   });
 });
 
+describe('content that comes under a pointer at rest (C2, C7)', () => {
+  test('a browser can send `pointerover` at the point of the rest, and sends no `pointermove`', async () => {
+    await userEvent.pointer({ coords: { x: 60, y: 25 } });
+    const log: string[] = [];
+    const listen = new AbortController();
+    for (const type of ['pointerover', 'pointermove']) {
+      document.addEventListener(
+        type,
+        (event) => {
+          const { clientX, clientY } = event as PointerEvent;
+          log.push(`${type} ${(event.target as Element).id} ${clientX},${clientY}`);
+        },
+        { signal: listen.signal },
+      );
+    }
+    html(
+      `<div id="box" style="position: fixed; left: 0; top: 0; width: 200px; height: 100px">${Array.from(
+        { length: 3 },
+        (_, index) => `<div id="item${index}" style="height: 30px">Item ${index}</div>`,
+      ).join('')}</div>`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    listen.abort();
+    expect(log.every((entry) => entry === 'pointerover item0 60,25')).toBe(true);
+  });
+
+  test('a move in one step sends `pointerover` and `pointermove` at one position', async () => {
+    html(
+      `<div id="box" style="position: fixed; left: 0; top: 0; width: 200px; height: 100px">Box</div>`,
+    );
+    await userEvent.pointer({ coords: { x: 300, y: 300 } });
+    const log: string[] = [];
+    for (const type of ['pointerover', 'pointermove']) {
+      element('box').addEventListener(type, (event) => {
+        const { clientX, clientY } = event as PointerEvent;
+        log.push(`${type} ${clientX},${clientY}`);
+      });
+    }
+    await userEvent.pointer({ coords: { x: 60, y: 25 } });
+    expect(log).toEqual(['pointerover 60,25', 'pointermove 60,25']);
+  });
+});
+
 describe('Home and End in a text input (C3, N7)', () => {
   test('Chromium moves the caret; Firefox and WebKit move it only off macOS', async () => {
     html(`<input id="input" aria-label="Input" value="hello world">`);

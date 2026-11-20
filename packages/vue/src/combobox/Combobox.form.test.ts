@@ -142,7 +142,44 @@ describe('the autofill', () => {
   });
 });
 
+describe('the autofill of a multiple root', () => {
+  test('changes no value', async () => {
+    const values: unknown[] = [];
+    await mountForm({
+      root: {
+        name: 'a',
+        multiple: true,
+        autocomplete: 'fruit',
+        'onUpdate:modelValue': (value: unknown) => values.push(value),
+      },
+    });
+    textInput().value = 'banana';
+    textInput().dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+    expect(values).toEqual([]);
+    expect(entries()).toEqual([]);
+  });
+});
+
 describe('the field', () => {
+  test('a focus that moves from the input into the popup leaves the field untouched', async () => {
+    await mountForm({ button: true, field: { 'data-testid': 'field' } });
+    await userEvent.click(byTestId('input'));
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(byTestId('popup-button'));
+    expect(byTestId('field')).not.toHaveAttribute('data-touched');
+  });
+
+  test('a focus that moves from the trigger into the popup leaves the field untouched', async () => {
+    await mountForm({ inputInPopup: true, field: { 'data-testid': 'field' } });
+    byTestId('trigger').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('input')));
+    expect(byTestId('field')).not.toHaveAttribute('data-touched');
+  });
+
+
   test('the control is the control of the field; a required root is invalid after a pick, a clear and a blur', async () => {
     await mountForm({ root: { required: true }, field: { name: 'fruit', validationMode: 'blur' } });
     const input = byTestId('input');

@@ -5,8 +5,8 @@ import { Combobox } from '../../src/combobox';
 type Props = Record<string, unknown>;
 
 // A combobox of fruits. The input is in a group with a clear button and a trigger, or the trigger
-// is the control and the input is in the popup. A text input stands before the root, and a button
-// at the bottom right of the view after it.
+// is the control and the input is in a group in the popup. A text input stands before the root,
+// and a button at the bottom right of the view after it.
 defineProps({
   root: Object as PropType<Props>,
   items: { type: Array as PropType<unknown[]>, default: () => FRUITS },
@@ -69,7 +69,9 @@ export const FRUITS = [
     <Combobox.Portal v-bind="portal">
       <Combobox.Positioner data-testid="positioner" v-bind="positioner">
         <Combobox.Popup data-testid="popup" v-bind="popup">
-          <Combobox.Input v-if="inputInPopup" data-testid="input" v-bind="input" />
+          <Combobox.InputGroup v-if="inputInPopup" data-testid="popup-group">
+            <Combobox.Input data-testid="input" v-bind="input" />
+          </Combobox.InputGroup>
           <Combobox.Status v-if="status" data-testid="status">Ten fruits.</Combobox.Status>
           <Combobox.Empty v-if="empty" data-testid="empty">No fruit.</Combobox.Empty>
           <Combobox.List data-testid="list" v-bind="list">

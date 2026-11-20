@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
+import { Dialog } from '../../src/dialog';
 import { Popover } from '../../src/popover';
 import { Toolbar } from '../../src/toolbar';
 
-// A combobox of fruits in an open popover, or in `Toolbar.Input` between two buttons.
+// A combobox of fruits in an open popover, in a dialog, or in `Toolbar.Input` between two buttons.
 defineProps({
-  around: { type: String as PropType<'popover' | 'toolbar'>, required: true },
+  around: { type: String as PropType<'popover' | 'dialog' | 'toolbar'>, required: true },
 });
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 </script>
@@ -37,6 +38,29 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
       </Popover.Positioner>
     </Popover.Portal>
   </Popover.Root>
+  <Dialog.Root v-else-if="around === 'dialog'">
+    <Dialog.Trigger data-testid="dialog-trigger">Open</Dialog.Trigger>
+    <Dialog.Portal>
+      <Dialog.Popup data-testid="dialog" aria-label="Fruit">
+        <Combobox.Root :items="FRUITS">
+          <Combobox.Input data-testid="input" aria-label="Fruit" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup">
+                <Combobox.List>
+                  <template #item="{ item }">
+                    <Combobox.Item :value="item" :data-testid="`item-${item}`">
+                      {{ item }}
+                    </Combobox.Item>
+                  </template>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </Dialog.Popup>
+    </Dialog.Portal>
+  </Dialog.Root>
   <Toolbar.Root v-else>
     <Toolbar.Button data-testid="first">First</Toolbar.Button>
     <Combobox.Root :items="FRUITS">
