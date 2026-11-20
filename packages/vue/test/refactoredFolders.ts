@@ -9,6 +9,7 @@ export const REFACTORED_FOLDERS = [
   'button',
   'checkbox',
   'checkbox-group',
+  'date-field',
   'field',
   'fieldset',
   'form',
@@ -22,4 +23,6 @@ export const REFACTORED_FOLDERS = [
   'separator',
   'switch',
   'tabs',
+  'time-clock',
+  'time-field',
 ];

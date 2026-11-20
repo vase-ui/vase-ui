@@ -1,9 +1,10 @@
 <script lang="ts">
+import type { VaseUIComponentProps } from '../../internals/types';
 import type {
   TimeClockRootProps,
   TimeClockRootState,
-} from '../../time-clock/root/TimeClockRoot.vue';
-import type { TimeClockView } from '../../time-clock/utils/clockViews';
+  TimeClockView,
+} from '../../time-clock/types';
 
 export interface TimePickerClockState extends TimeClockRootState {}
 
@@ -12,19 +13,22 @@ export interface TimePickerClockState extends TimeClockRootState {}
  * value, the granularity, the hour cycle, the limits, the locale and the states `disabled` and
  * `readOnly`.
  */
-export interface TimePickerClockProps extends Omit<
+export interface TimePickerClockProps
+  extends
+    VaseUIComponentProps<TimePickerClockState>,
+    Omit<
   TimeClockRootProps,
   | 'modelValue'
   | 'defaultValue'
   | 'defaultView'
   | 'granularity'
   | 'hourCycle'
-  | 'minTime'
-  | 'maxTime'
+  | 'min'
+  | 'max'
   | 'referenceDate'
   | 'locale'
   | 'disabled'
-  | 'readOnly'
+  | 'readonly'
 > {
   /**
    * The unit that an uncontrolled clock shows each time that the popup opens.
@@ -46,13 +50,13 @@ import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup'
 import { withTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import TimeClockRoot from '../../time-clock/root/TimeClockRoot.vue';
+import TimeClockRoot from '../../time-clock/TimeClockRoot.vue';
 import type {
   TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
   TimeClockRootViewChangeEventDetails,
-} from '../../time-clock/root/TimeClockRoot.vue';
-import { nextView } from '../../time-clock/utils/clockViews';
+} from '../../time-clock/types';
+import { nextView } from '../../time-clock/views';
 import { useControlled } from '../../common/useControlled';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
@@ -102,8 +106,8 @@ const picker = useTimePickerRootContext();
 const popup = usePickerPopup();
 
 // This part renders `TimeClock.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeClock.Root` dynamic. Vue then renders `TimeClock.Root` again each time this part renders.
+// the `element` slot of the root and one for the content. A `v-if` on a slot template makes the
+// slots of `TimeClock.Root` dynamic. Vue then renders `TimeClock.Root` again at each render.
 const clock = useTemplateRef<{ element: HTMLElement | null }>('clock');
 const element = computed(() => clock.value?.element ?? null);
 
@@ -166,17 +170,19 @@ function clockProps() {
     modelValue: picker.value.value,
     referenceDate: withTime(picker.template.value, picker.referenceTime.value),
   };
+  // `as` is the element of this part.
+  const { as: _as, ...clockOwnProps } = props;
   return {
-    ...props,
+    ...clockOwnProps,
     ...valueProps,
     view: currentView.value,
     granularity: root.granularity,
     hourCycle: root.hourCycle,
-    minTime: root.minTime,
-    maxTime: root.maxTime,
+    min: root.minTime,
+    max: root.maxTime,
     locale: root.locale,
     disabled: picker.disabled.value,
-    readOnly: picker.readOnly.value,
+    readonly: picker.readOnly.value,
   };
 }
 
@@ -185,7 +191,7 @@ defineExpose({ element });
 
 <template>
   <TimeClockRoot
-    v-if="$slots.render"
+    v-if="$slots.render || as !== 'div'"
     ref="clock"
     v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
     @value-change="handleValueChange"
@@ -193,8 +199,11 @@ defineExpose({ element });
     @view-change="handleViewChange"
     @update:view="handleViewUpdate"
   >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+    <template #element="{ props: rootProps, elementRef, state }">
+      <slot v-if="$slots.render" name="render" :props="{ ...rootProps, ref: elementRef }" :state="state" />
+      <component :is="as" v-else v-bind="rootProps" :ref="elementRef">
+        <slot :state="state" />
+      </component>
     </template>
   </TimeClockRoot>
   <TimeClockRoot

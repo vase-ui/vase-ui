@@ -2,7 +2,7 @@
 import type {
   DateFieldRootProps,
   DateFieldRootState,
-} from '../../date-field/root/DateFieldRoot.vue';
+} from '../../date-field/types';
 
 export interface DatePickerFieldState extends DateFieldRootState {}
 
@@ -19,14 +19,14 @@ export interface DatePickerFieldProps extends Omit<
   | 'hourCycle'
   | 'forceLeadingZeros'
   | 'hideTimeZone'
-  | 'minDate'
-  | 'maxDate'
+  | 'min'
+  | 'max'
   | 'unavailableDates'
   | 'locale'
   | 'calendar'
   | 'timeZone'
   | 'disabled'
-  | 'readOnly'
+  | 'readonly'
   | 'required'
   | 'name'
   | 'form'
@@ -35,13 +35,12 @@ export interface DatePickerFieldProps extends Omit<
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
+import DateFieldRoot from '../../date-field/DateFieldRoot.vue';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
@@ -53,11 +52,10 @@ import type {
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<DatePickerFieldProps>(), { as: 'div' });
+const props = defineProps<DatePickerFieldProps>();
 
 defineSlots<{
   default(props: { state: DatePickerFieldState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DatePickerFieldState>;
 }>();
 
 const picker = useDatePickerRootContext();
@@ -69,9 +67,7 @@ interface DateFieldActions {
   clear: () => void;
 }
 
-// This part renders `DateField.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `DateField.Root` dynamic. Vue then renders `DateField.Root` again each time this part renders.
+// This part renders `DateField.Root` and makes no element of its own.
 const field = useTemplateRef<DateFieldActions>('field');
 const element = computed(() => field.value?.element ?? null);
 const inputElement = computed(() => field.value?.inputElement ?? null);
@@ -118,14 +114,14 @@ function fieldProps(attributes: Record<string, unknown>) {
     hourCycle: root.hourCycle,
     forceLeadingZeros: root.forceLeadingZeros,
     hideTimeZone: root.hideTimeZone,
-    minDate: root.minDate,
-    maxDate: root.maxDate,
+    min: root.minDate,
+    max: root.maxDate,
     unavailableDates: root.unavailableDates,
     locale: root.locale,
     calendar: root.calendar,
     timeZone: root.timeZone,
     disabled: root.disabled,
-    readOnly: root.readOnly,
+    readonly: root.readOnly,
     required: root.required,
     name: root.name,
     form: root.form,
@@ -142,17 +138,6 @@ defineExpose({
 
 <template>
   <DateFieldRoot
-    v-if="$slots.render"
-    ref="field"
-    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
-    @value-change="handleValueChange"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </DateFieldRoot>
-  <DateFieldRoot
-    v-else
     ref="field"
     v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
     @value-change="handleValueChange"

@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { ChangeEventDetails } from '../../common/changeEventDetails';
 import type { TimeValue } from '../../internals/date-time/temporal';
 import type {
   PopoverRootActions,
@@ -7,11 +7,11 @@ import type {
   PopoverRootChangeEventReason,
   PopoverRootProps,
 } from '../../popover/root/PopoverRoot.vue';
-import type { TimeClockRootChangeEventReason } from '../../time-clock/root/TimeClockRoot.vue';
+import type { TimeClockRootChangeEventReason } from '../../time-clock/types';
 import type {
   TimeFieldRootChangeEventReason,
   TimeFieldRootGranularity,
-} from '../../time-field/root/TimeFieldRoot.vue';
+} from '../../time-field/types';
 
 export interface TimePickerRootState {}
 
@@ -20,10 +20,12 @@ export type TimePickerRootValue = TimeValue;
 
 export type TimePickerRootGranularity = TimeFieldRootGranularity;
 
+// `none` is the reason of a native reset of the form of the picker.
 export type TimePickerRootChangeEventReason =
-  TimeFieldRootChangeEventReason | TimeClockRootChangeEventReason;
-export type TimePickerRootChangeEventDetails =
-  VaseUIChangeEventDetails<TimePickerRootChangeEventReason>;
+  | TimeFieldRootChangeEventReason
+  | TimeClockRootChangeEventReason
+  | 'none';
+export type TimePickerRootChangeEventDetails = ChangeEventDetails<TimePickerRootChangeEventReason>;
 
 export type TimePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type TimePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;

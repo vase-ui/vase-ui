@@ -39,6 +39,16 @@ export interface FieldControl {
    * such a control, so the control cannot become dirty before it has a value.
    */
   readonly countsMissingAtLeave?: boolean;
+  /**
+   * A failure that the control finds itself and sets as the custom validity of its first input. A
+   * script can set no flag but `customError`, so the field shows `flag` in its place.
+   */
+  readonly customError?:
+    | {
+        readonly flag: 'badInput' | 'rangeUnderflow' | 'rangeOverflow' | 'stepMismatch' | 'customError';
+        readonly message: string;
+      }
+    | undefined;
 }
 
 /**

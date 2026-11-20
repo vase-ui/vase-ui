@@ -1,9 +1,8 @@
-import { computed, inject, provide, shallowRef, toValue, watch } from 'vue';
+import { computed, inject, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useControlled } from '../../../common/useControlled';
 import { useInDisabledFieldset } from '../../../fieldset/part';
 import { fieldKey } from '../../../field/control';
-import { PickerResetCountContext } from '../field/PickerResetCountContext';
 import { createPickerPartElements } from './usePickerPartElement';
 import type { PickerPartElements } from './usePickerPartElement';
 
@@ -69,7 +68,7 @@ export interface UseDateTimePickerRootParameters<Value, Details extends { isCanc
 /**
  * Gives each picker its value, its disabled state, its rule for a selection and its field and
  * trigger registries. The root calls it in `setup` after `assertTemporal`. Its parts read the
- * open state from the popover store. Its field roots get the reset count from `PickerResetCountContext`.
+ * open state from the popover store.
  */
 export function useDateTimePickerRoot<Value, Details extends { isCanceled: boolean }>(
   parameters: UseDateTimePickerRootParameters<Value, Details>,
@@ -113,15 +112,10 @@ export function useDateTimePickerRoot<Value, Details extends { isCanceled: boole
     value.value = next;
   }
 
-  // The field roots get the value of a reset with the next render, so the count comes first.
-  const resetCount = shallowRef(0);
-  provide(PickerResetCountContext, resetCount);
-
   // A controlled picker does not change. The field of a controlled picker also does not change for
   // a reset, so the parent decides.
   function reset(details: Details) {
     if (toValue(parameters.value) === undefined) {
-      resetCount.value += 1;
       commit(toValue(parameters.defaultValue) ?? null, details);
     }
   }

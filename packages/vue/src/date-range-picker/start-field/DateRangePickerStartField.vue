@@ -2,7 +2,7 @@
 import type {
   DateFieldRootProps,
   DateFieldRootState,
-} from '../../date-field/root/DateFieldRoot.vue';
+} from '../../date-field/types';
 
 export interface DateRangePickerStartFieldState extends DateFieldRootState {}
 
@@ -20,14 +20,14 @@ export interface DateRangePickerStartFieldProps extends Omit<
   | 'hourCycle'
   | 'forceLeadingZeros'
   | 'hideTimeZone'
-  | 'minDate'
-  | 'maxDate'
+  | 'min'
+  | 'max'
   | 'unavailableDates'
   | 'locale'
   | 'calendar'
   | 'timeZone'
   | 'disabled'
-  | 'readOnly'
+  | 'readonly'
   | 'required'
   | 'name'
   | 'form'
@@ -36,24 +36,20 @@ export interface DateRangePickerStartFieldProps extends Omit<
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import DateFieldRoot from '../../date-field/root/DateFieldRoot.vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import DateFieldRoot from '../../date-field/DateFieldRoot.vue';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { useDateRangePickerField } from '../utils/useDateRangePickerField';
 import type { DateFieldActions } from '../utils/useDateRangePickerField';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<DateRangePickerStartFieldProps>(), { as: 'div' });
+const props = defineProps<DateRangePickerStartFieldProps>();
 
 defineSlots<{
   default(props: { state: DateRangePickerStartFieldState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DateRangePickerStartFieldState>;
 }>();
 
-// This part renders `DateField.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `DateField.Root` dynamic. Vue then renders `DateField.Root` again each time this part renders.
+// This part renders `DateField.Root` and makes no element of its own.
 const field = useTemplateRef<DateFieldActions>('field');
 const { element, inputElement, handleValueChange, fieldProps } = useDateRangePickerField(
   'start',
@@ -72,17 +68,6 @@ defineExpose({
 
 <template>
   <DateFieldRoot
-    v-if="$slots.render"
-    ref="field"
-    v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
-    @value-change="handleValueChange"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </DateFieldRoot>
-  <DateFieldRoot
-    v-else
     ref="field"
     v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))"
     @value-change="handleValueChange"
