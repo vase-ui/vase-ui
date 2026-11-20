@@ -1,7 +1,7 @@
 import type * as vaseUi from '@vase-ui/vue';
-import type { MultiPart, MultiPartItem, MultiPartRoot } from '@vase-ui/vue/multi-part';
+import type { MultiPart } from '@vase-ui/vue/multi-part';
 import type { MultiPartRootProps } from '@vase-ui/vue/multi-part';
-import type { SinglePart, SinglePartDataAttributes } from '@vase-ui/vue/single-part';
+import type { SinglePart } from '@vase-ui/vue/single-part';
 import type { SinglePartProps } from '@vase-ui/vue/single-part';
 import type { ChangeEventDetails, ElementSlotProps, GenericEventDetails } from '@vase-ui/vue/types';
 
@@ -23,7 +23,7 @@ export const flatSinglePartProps: SinglePartProps = singlePartProps;
 export const flatMultiPartRootProps: MultiPartRootProps<number> = multiPartRootProps;
 
 // This project sets `exactOptionalPropertyTypes`. An optional prop and a listener accept `undefined`.
-export const absentItemProps: PropsOf<typeof MultiPartItem> = {
+export const absentItemProps: PropsOf<typeof MultiPart.Item> = {
   value: undefined,
   onSelect: undefined,
 };
@@ -40,8 +40,6 @@ export const elementScope: ElementSlotProps<{ open: boolean }> = {
 };
 
 export type Checks = [
-  Expect<Equal<typeof SinglePartDataAttributes.orientation, 'data-orientation'>>,
-  Expect<Equal<typeof MultiPart.Root, typeof MultiPartRoot>>,
   Expect<Equal<typeof vaseUi.SinglePart, typeof SinglePart>>,
   Expect<Equal<typeof vaseUi.MultiPart, typeof MultiPart>>,
   Expect<Equal<typeof keyDetails.event, KeyboardEvent>>,
