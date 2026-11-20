@@ -15,6 +15,7 @@ import {
   buildApiTypes,
   buildOwnApiReference,
   createApiReferenceReader,
+  findHomeOfPart,
   readPartBadges,
 } from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
@@ -245,6 +246,20 @@ test('the description of a part is the JSDoc of its export', () => {
   );
   assert.equal(described.description, 'A container for the content of the sample.');
   assert.equal(part('Sample.Popup').description, '');
+});
+
+test('a part is at home in the family of the page when its entry file exports it, else in the family whose types.md repeats it', () => {
+  const [root] = types.parts;
+  const ghost = { ...root, name: 'Ghost' };
+  const page = { family: 'sample', entryFile: ENTRY, file: types };
+  const other = {
+    family: 'other',
+    entryFile: join(SAMPLE, 'other.ts'),
+    file: { ...types, parts: [root, ghost] },
+  };
+  assert.equal(findHomeOfPart(project, page, root, [page, other]), page);
+  assert.equal(findHomeOfPart(project, page, ghost, [page, other]), other);
+  assert.equal(findHomeOfPart(project, page, ghost, [page]), page);
 });
 
 test('the parts keep the sequence of the file, and a part with no export or no component is left out', () => {

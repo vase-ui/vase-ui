@@ -224,7 +224,7 @@ export function buildApiParts(
 }
 
 /** A `types.md` with the entry file of the family that its folder names. */
-interface EntryTypesFile {
+export interface EntryTypesFile {
   family: string;
   entryFile: string;
   file: SurfaceFile;
@@ -236,7 +236,7 @@ interface EntryTypesFile {
  * has `Root` and `Indicator` of Radio. The `types.md` of another family that has the same part, with
  * the same text, then ports it. The result is `page` when no other `types.md` has the part.
  */
-function findHomeOfPart(
+export function findHomeOfPart(
   project: VaseProject,
   page: EntryTypesFile,
   part: SurfacePart,
