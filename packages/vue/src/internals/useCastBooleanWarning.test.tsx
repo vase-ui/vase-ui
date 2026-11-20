@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { Accordion } from '../accordion';
 import { AlertDialog } from '../alert-dialog';
-import { Button } from '../button';
 import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
+import { Toggle } from '../toggle';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
@@ -220,20 +220,20 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([message('MyDialog', 'Dialog.Root', 'modal')]);
   });
 
-  it('warns for Button nativeButton', async () => {
+  it('warns for Toggle nativeButton', async () => {
     const Wrapper = defineComponent({
-      name: 'MyButton',
+      name: 'MyToggle',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Button as="span" nativeButton={props.nativeButton}>
+          <Toggle as="span" nativeButton={props.nativeButton}>
             Action
-          </Button>
+          </Toggle>
         );
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyButton', 'Button', 'nativeButton')]);
+    expect(takeReportedMessages()).toEqual([message('MyToggle', 'Toggle', 'nativeButton')]);
   });
 
   it('warns for the Boolean union of Dialog.Popup initialFocus', async () => {

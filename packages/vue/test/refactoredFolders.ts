@@ -6,6 +6,7 @@
  */
 export const REFACTORED_FOLDERS = [
   'avatar',
+  'button',
   'checkbox',
   'checkbox-group',
   'field',

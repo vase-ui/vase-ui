@@ -4,12 +4,37 @@
     "docs/src/app/(docs)/react/components/button/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/button/ButtonDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes no `data-disabled`. CSS selects the disabled state on the same element: `:disabled` on a native disabled button, and `[aria-disabled='true']` on a disabled button that keeps the focus and on each other element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/button/Button.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/button/Button.test.ts",
+      "reason": "`Button.test.ts` tests the element, the `element` slot, the form, the disabled states, the keys of an element that is not a native button and the fieldset. The part reads its element, so the cases of `nativeButton` render the element in the `element` slot. A native disabled button gets `pointerdown` and `pointerup`, and no `mousedown`, `mouseup` or `click` (`test/measurements/button.test.ts`). A disabled button that keeps the focus, and each other element, stops the same events, so the `pointerdown` listener of the developer runs. Its `keydown` listener runs too: a key activates a button only through `click`, and a part that holds the button needs Escape."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/button/types.md",
+      "entry": "Button",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and the `element` slot renders another element."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/button/types.md",
+      "entry": "ButtonDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes no `data-disabled`: `:disabled` and `[aria-disabled='true']` select the disabled state on the same element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Button",
       "prop": "disabled",
-      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `disabled` for its state and for the attributes of its element, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],

@@ -24,11 +24,11 @@ import { Button } from '@vase-ui/vue/button';
   font-size: 0.875rem;
 }
 
-.button:hover:not([data-disabled]) {
+.button:hover:not(:disabled, [aria-disabled='true']) {
   background-color: color-mix(in srgb, currentColor 10%, transparent);
 }
 
-.button[data-disabled] {
+.button:is(:disabled, [aria-disabled='true']) {
   opacity: 0.5;
 }
 
