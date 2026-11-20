@@ -1,17 +1,9 @@
-import {
-  computed,
-  inject,
-  provide,
-  shallowRef,
-  watch,
-  type InjectionKey,
-  type ShallowRef,
-} from 'vue';
+import { computed, inject, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, usePopupRoot, type PopupRoot } from '../popup/root';
 import { useHandleRoot } from '../popup/trigger';
-import type { usePlacement } from '../popup/placement';
+import { useFullWidth, type usePlacement } from '../popup/placement';
 import type { ViewportSizes } from '../popup/viewport';
 import type {
   PopoverRootChangeEventDetails,
@@ -55,9 +47,6 @@ export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
 const portalKey: InjectionKey<true> = Symbol('popover portal');
 const contexts = new WeakMap<PopupRoot, PopoverRootContext>();
 
-// A popup that covers the view leaves no room for a swipe outside, so a touch open locks the page.
-const FULL_WIDTH_TOLERANCE = 20;
-
 export function usePopoverRoot<Payload>(
   props: Required<Pick<PopoverRootProps<Payload>, 'defaultOpen' | 'defaultTriggerId' | 'modal'>> &
     PopoverRootProps<Payload>,
@@ -89,15 +78,7 @@ export function usePopoverRoot<Payload>(
   const closes = shallowRef(0);
   const positioner = shallowRef<HTMLElement | null>(null);
   const placed = shallowRef(false);
-  const fullWidth = shallowRef(false);
-  watch(placed, (isPlaced) => {
-    const element = positioner.value;
-    fullWidth.value =
-      isPlaced &&
-      !!element &&
-      element.offsetWidth >=
-        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
-  });
+  const fullWidth = useFullWidth(positioner, placed);
 
   const hoverOpen = computed(() => root.reason === 'trigger-hover');
   // A touch screen reader needs a way out of a popup that keeps the focus.

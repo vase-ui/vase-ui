@@ -63,7 +63,7 @@ In a popup, the <kbd>Esc</kbd> key stops the propagation of the event, so that p
 
 To stop the handler of Vase UI for an event such as `keydown`, call `event.preventVaseUIHandler()` in your listener on the part:
 
-<<< ../examples/customization/PreventHandler.vue{7}
+<<< ../examples/customization/PreventHandler.vue{9}
 
 Your listener then takes over the interaction. Use the method with [controlled state](#controlling-components-with-state) to fit the behavior of a part to your app. When the interaction causes a change event, it is more explicit to [cancel that event](#canceling-a-vase-ui-event) for a specific `reason`.
 
@@ -71,7 +71,7 @@ The method has no effect in these cases:
 
 - A native event that the part declares as an emit, such as `submit` of `Form`. The part emits the event after its own work.
 - A listener that the part adds with `addEventListener`, such as a listener on the document or the window. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
-- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. `Combobox.Chips` and `Combobox.InputGroup` are the exceptions: they do not handle a press that a listener of a child part stopped. In `Select`, a key listener that calls `preventDefault()` stops the keys of the list.
+- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. In `Select`, a key listener that calls `preventDefault()` stops the keys of the list.
 
 To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](/utils/merge-props#preventing-vase-ui-s-default-behavior).
 

@@ -137,8 +137,7 @@ function jsDocText(node: ts.Node): string {
 /**
  * The events that the type literal of `defineEmits` declares, with the arguments as the source writes
  * them and the JSDoc. vue-component-meta gives an empty description. Its type text can lose the name
- * of an alias, such as `RadioGroupChangeEventDetails`, or give the name of another alias of the same
- * type, such as `AriaCombobox.ChangeEventDetails`.
+ * of an alias, such as `RadioGroupChangeEventDetails`.
  */
 export function readEmits(source: string, file: string): Map<string, MemberSurface> {
   const setup = parse(source, { filename: file }).descriptor.scriptSetup;

@@ -221,7 +221,7 @@ function openPopups(family: string | undefined) {
         ),
       ),
       ...document.querySelectorAll<HTMLElement>(
-        `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden]), [role="listbox"]:not([inert], [inert] *)${tooltip}`,
+        `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden]), [role="listbox"]:not([inert], [inert] *, [hidden] *)${tooltip}`,
       ),
       ...[...document.querySelectorAll('nav [aria-expanded="true"][aria-controls]')].flatMap(
         (trigger) => document.getElementById(trigger.getAttribute('aria-controls')!) ?? [],

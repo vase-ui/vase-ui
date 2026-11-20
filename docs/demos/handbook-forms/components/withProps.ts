@@ -9,12 +9,7 @@ import type { Component, FunctionalComponent } from 'vue';
  *
  * The vnode that `h()` makes is outside a block of Vue. The part and each component in its slots
  * thus render again each time the wrapper renders. Vue patches the same nodes and mounts none
- * again. A Combobox of five items rendered the content of its items this many times, with the
- * count for no wrapper in brackets:
- * - at the open: 20 (5)
- * - at a change of `invalid` in the field around it: 5 (0)
- * - at a key that highlights an item: 10 (5)
- * - at a letter that filters the list to one item: 2 (2)
+ * again.
  *
  * The compiler of Vue avoids these renders with `openBlock`, `createBlock` and patch flags. Do not
  * copy that form: a wrong flag drops a slot.

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
@@ -102,30 +101,6 @@ const popoverParts = (part: string) => (k: string, blankId: BlankId) => (
   </Popover.Root>
 );
 
-const comboboxParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Field.Root>
-    <Field.Label>Fruit {k}</Field.Label>
-    <Combobox.Root defaultOpen items={['a', 'b']} {...blankIdIf(part === 'Root', blankId)}>
-      <Combobox.Input {...blankIdIf(part === 'Input', blankId)} data-testid={`input${k}`} />
-      <Combobox.Trigger {...blankIdIf(part === 'Trigger', blankId)} />
-      <Combobox.Portal>
-        <Combobox.Positioner>
-          <Combobox.Popup {...blankIdIf(part === 'Popup', blankId)}>
-            <Combobox.List {...blankIdIf(part === 'List', blankId)}>
-              <Combobox.Group data-testid={`group${k}`}>
-                <Combobox.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
-                  Group {k}
-                </Combobox.GroupLabel>
-                <Combobox.Item value="a">A</Combobox.Item>
-              </Combobox.Group>
-            </Combobox.List>
-          </Combobox.Popup>
-        </Combobox.Positioner>
-      </Combobox.Portal>
-    </Combobox.Root>
-  </Field.Root>
-);
-
 const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root invalid>
     <Field.Label {...blankIdIf(part === 'Label', blankId)}>Name {k}</Field.Label>
@@ -148,12 +123,6 @@ const toastParts = (part: string) => (k: string, blankId: BlankId) => (
     </Toast.Viewport>
   </Toast.Provider>
 );
-
-// An element and the text of its label. The label names the element with `for` or `aria-labelledby`.
-const labelled = (testId: string, label: string) => (k: string) => ({
-  testId: `${testId}${k}`,
-  name: `${label} ${k}`,
-});
 
 const rows: Row[] = [
   ...(['Title', 'Description', 'Trigger', 'Popup'] as const).map((part): Row => ({
@@ -194,17 +163,6 @@ const rows: Row[] = [
         </PreviewCard.Portal>
       </PreviewCard.Root>
     ),
-  },
-  ...(['Root', 'Trigger', 'Input', 'Popup', 'List'] as const).map((part): Row => ({
-    name: `Combobox.${part}`,
-    tree: comboboxParts(part),
-    twice: part === 'Root' || part === 'Input',
-    named: labelled('input', 'Fruit'),
-  })),
-  {
-    name: 'Combobox.GroupLabel',
-    tree: comboboxParts('GroupLabel'),
-    named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
   },
   ...(['Input', 'Label', 'Description', 'Error'] as const).map((part): Row => ({
     name: part === 'Input' ? part : `Field.${part}`,

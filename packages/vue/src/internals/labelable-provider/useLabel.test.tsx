@@ -9,7 +9,6 @@ import {
   screen,
   within,
 } from '#test-utils';
-import * as Combobox from '../../combobox/index.parts';
 import LabelPosition from './LabelPosition.test.vue';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
 import type { RegisterId } from './createIdRegistry';
@@ -71,87 +70,6 @@ function Control(props: { id: string; testid?: string }) {
 describe('useLabel', () => {
   const { render } = createRenderer();
 
-  describe.each(['Combobox.Label'])('%s', () => {
-    const TestControl = defineComponent(() => () => (
-      <Combobox.Root>
-        <Combobox.Label>Country</Combobox.Label>
-        <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.Input aria-label="Search countries" />
-              <Combobox.List>
-                <Combobox.Item value="fr">France</Combobox.Item>
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-    ));
-
-    it('focuses the trigger without opening the popup in the document', async () => {
-      const { user } = await render(<TestControl />);
-      const trigger = screen.getByRole('combobox', { name: 'Country' });
-
-      await user.click(screen.getByText('Country'));
-
-      expect(trigger).toHaveFocus();
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it.each([false, true])(
-      'focuses the trigger in its shadow root without opening the popup (outer matching ID: %s)',
-      async (outerMatchingId) => {
-        const { host, shadowRoot, container } = createShadowContainer();
-        const { user } = await render(
-          <>
-            {outerMatchingId && <input id="country" aria-label="Unrelated control" />}
-            <Teleport to={container}>
-              <TestControl />
-            </Teleport>
-          </>,
-        );
-        const trigger = within(container).getByRole('combobox', { name: 'Country' });
-
-        await user.click(within(container).getByText('Country'));
-
-        expect(shadowRoot.activeElement).toBe(trigger);
-        expect(document.activeElement).toBe(host);
-        expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      },
-    );
-  });
-
-  it('does not throw when a label is clicked in a detached root', async () => {
-    const container = document.createElement('div');
-
-    const { unmount } = await render(
-      <Teleport to={container}>
-        <Combobox.Root>
-          <Combobox.Label>Country</Combobox.Label>
-          <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-        </Combobox.Root>
-      </Teleport>,
-    );
-
-    const errors: ErrorEvent[] = [];
-    function handleError(event: ErrorEvent) {
-      event.preventDefault();
-      errors.push(event);
-    }
-    window.addEventListener('error', handleError);
-
-    try {
-      within(container).getByText('Country').click();
-      await flushMicrotasks();
-
-      expect(errors).toHaveLength(0);
-    } finally {
-      window.removeEventListener('error', handleError);
-      unmount();
-    }
-  });
-
   it('does not focus the control when a composed click originates inside a nested button', async () => {
     const Test = defineComponent(() => {
       const element = shallowRef<HTMLElement | null>(null);
@@ -192,41 +110,6 @@ describe('useLabel', () => {
     await flushMicrotasks();
 
     expect(control).not.toHaveFocus();
-  });
-
-  it('focuses a control in the light DOM from a label in a shadow root', async () => {
-    const { container } = createShadowContainer();
-    const { user } = await render(
-      <Combobox.Root>
-        <Teleport to={container}>
-          <Combobox.Label>Country</Combobox.Label>
-        </Teleport>
-        <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-      </Combobox.Root>,
-    );
-
-    await user.click(within(container).getByText('Country'));
-
-    expect(screen.getByRole('combobox')).toHaveFocus();
-  });
-
-  it('focuses a control in an ancestor shadow root from a label in a nested shadow root', async () => {
-    const outer = createShadowContainer();
-    const inner = createShadowContainer(outer.shadowRoot);
-    const { user } = await render(
-      <Combobox.Root>
-        <Teleport to={inner.container}>
-          <Combobox.Label>Country</Combobox.Label>
-        </Teleport>
-        <Teleport to={outer.container}>
-          <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-        </Teleport>
-      </Combobox.Root>,
-    );
-
-    await user.click(within(inner.container).getByText('Country'));
-
-    expect(outer.shadowRoot.activeElement).toBe(within(outer.container).getByRole('combobox'));
   });
 
   describe('with a label and a control', () => {

@@ -115,6 +115,11 @@ export function usePopupFocus(
     closeBefore?: boolean;
     /** The root that the last sentinel closes, and after whose trigger the focus goes. */
     exit?: () => PopupRoot;
+    /**
+     * Tab on the trigger goes to the first tab stop of the popup also when the popup took no
+     * focus. With no tab stop, the Tab is native.
+     */
+    tabIntoPopup?: () => boolean;
   },
 ) {
   let before: Element | null = null;
@@ -228,9 +233,11 @@ export function usePopupFocus(
     /** Tab on the trigger of an open popup goes into the popup. */
     onTriggerKeydown(event: KeyboardEvent) {
       const popup = root.popup;
-      if (event.key !== 'Tab' || event.shiftKey || !popup || !took) return;
+      if (event.key !== 'Tab' || event.shiftKey || !popup) return;
+      const first = tabbables(popup)[0];
+      if (!took && !(options.tabIntoPopup?.() && first)) return;
       event.preventDefault();
-      focus(tabbables(popup)[0] ?? popup);
+      focus(first ?? popup);
     },
     /** The focus of a sentinel of the portal: before the content, or after it. */
     onSentinelFocus(place: 'before' | 'after', event: FocusEvent) {

@@ -62,7 +62,6 @@ An input that suggests options as you type.
 
 - **Avoid when selection state is needed**: Use [Combobox](/components/combobox) in place of Autocomplete if the selection should be remembered and the input value cannot be custom. Unlike Combobox, the input of Autocomplete can contain free-form text, as its suggestions only _optionally_ autocomplete the text.
 - **Form controls must have an accessible name**: Create it with a `<label>` element or with [Field](/components/field). See the [forms guide](/handbook/forms).
-- **Closing animations**: The popup stays rendered until its closing animation finishes. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself.
 
 ## Anatomy
 
@@ -72,15 +71,25 @@ Import the component and assemble its parts:
 
 Bind the text with `v-model`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:modelValue` for an action that gives the text that it has, such as a press of the item with that text.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Autocomplete.Input`. After the hydration, the root emits `valueChange` and `update:modelValue` with that text, and the popup stays closed. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
-
-The root also takes a value that a program or the browser writes into its hidden input before the page hydrates. It takes a value that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor. A root with no `name`, no field and no `required` keeps its value, because its hidden input is `type="hidden"`.
+`Autocomplete.Root` renders a `<div>` (see [Forms](#forms)).
 
 ## Item values
 
 Each `Autocomplete.Item` takes a `value` prop that identifies it. Pass the item being rendered, so that props like `itemToStringValue` receive it.
 
 To render each filtered item, give `Autocomplete.List` the `item` slot. The slot gets `{ item, index }`.
+
+## Animation
+
+The popup and the backdrop are in the DOM only while the autocomplete is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. With `keepMounted` on `Autocomplete.Portal`, the closed popup stays in the DOM with `hidden` and `inert`, so animate it with CSS on `[hidden]`. See [Animation](/components/combobox#animation) of Combobox.
+
+## Styling
+
+The parts have the selectors of [Combobox](/components/combobox#styling), but an item has no `[aria-selected]`. The input is a text input: select its states with `:read-only`, `:required` and `:disabled`.
+
+## Forms
+
+The input is the form control: it has the `name`, `required` and the text. When the input is in the popup, the root renders an `<input type="hidden">` with the `name` and a visually hidden text input for `required`, after its mount. The server HTML thus has one input with the `name`.
 
 ## Examples
 

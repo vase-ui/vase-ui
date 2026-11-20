@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import * as Combobox from '../../../combobox/index.parts';
 import * as Toast from '../../../toast/index.parts';
 import PortalPartContent from './PortalPartContent.test.vue';
 import PropReadsSlotVariable from './PropReadsSlotVariable.test.vue';
@@ -22,12 +21,7 @@ async function rendersInnerPartAgain() {
 
 const keepsSlotsStable = !(await rendersInnerPartAgain());
 
-const open = { defaultOpen: true };
-
-const portalParts = [
-  { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
-  { name: 'Toast.Portal', root: Toast.Provider, portal: Toast.Portal },
-];
+const portalParts = [{ name: 'Toast.Portal', root: Toast.Provider, portal: Toast.Portal }];
 
 describe('portal part of each family', () => {
   const { render } = createRenderer();
@@ -39,7 +33,6 @@ describe('portal part of each family', () => {
       <PortalPartContent
         root={part.root}
         portal={part.portal}
-        rootProps={part.rootProps}
         hasRenderSlot={hasRenderSlot}
         active={false}
         onOuterRender={onOuterRender}

@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, render as renderVNode, Teleport, Transition } from 'vue';
-import type { Component } from 'vue';
 import { createRenderer, screen } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
-import * as Combobox from '../../../combobox/index.parts';
 import { createAttribute } from '../createAttribute';
 import { usePortalFocus } from './usePortalFocus';
 import PopupPortal from './PopupPortal.vue';
@@ -32,23 +30,6 @@ function givesTransitionToTeleportChild() {
 
 const transitionReachesTeleportChild = givesTransitionToTeleportChild();
 
-const open = { defaultOpen: true };
-
-// A generic part, such as `Combobox.Root`, is a function that `Component` does not accept.
-type PartComponent = Component | ((...args: any[]) => any);
-
-interface PortalPart {
-  name: string;
-  root: PartComponent;
-  portal: PartComponent;
-  rootProps?: Record<string, unknown>;
-  portalProps?: Record<string, unknown>;
-}
-
-const portalParts: PortalPart[] = [
-  { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
-];
-
 describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root node', () => {
   const { render } = createRenderer();
 
@@ -71,26 +52,4 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     expect(host.querySelectorAll(`span:not([${createAttribute('focus-guard')}])`)).toHaveLength(1);
     expect(entered).toEqual([screen.getByTestId('portal')]);
   });
-
-  it.each(portalParts)(
-    '$name gives a Transition of the consumer to its portal element',
-    async (part) => {
-      const entered: Element[] = [];
-      await render(
-        h(part.root, part.rootProps, () =>
-          h(
-            Transition,
-            { appear: true, onEnter: (element: Element) => entered.push(element) },
-            () =>
-              h(part.portal, { 'data-testid': 'portal', ...part.portalProps }, () =>
-                h('span', 'content'),
-              ),
-          ),
-        ),
-      );
-
-      const portal = await screen.findByTestId('portal');
-      expect(entered).toEqual([portal]);
-    },
-  );
 });

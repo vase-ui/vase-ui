@@ -142,15 +142,17 @@
     border: 1px solid white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style] {
-    opacity: 0;
-    transform: scale(0.95);
-  }
+/* The enter-from class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.95);
+}
 
-  &[data-ending-style] {
-    transition: none;
-  }
+/* The leave class of the `<Transition>`: the popup closes with no animation. */
+.PopupInstant {
+  transition: none;
 }
 
 .Viewport {

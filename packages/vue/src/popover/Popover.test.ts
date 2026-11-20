@@ -1925,7 +1925,7 @@ describe('more behaviors of the parts', () => {
     expect(log).toEqual(['child']);
   });
 
-  test('a modal popover renders no fixed element and locks nothing while it has no positioner', async () => {
+  test('VUE-61: a modal popover renders no fixed element and locks nothing while it has no positioner', async () => {
     await mountPopover({ root: { defaultOpen: true, modal: true }, noPortal: true });
     await nextTick();
     await new Promise((resolve) => setTimeout(resolve));

@@ -44,6 +44,11 @@ export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigge
   });
 }
 
+/** The `click` of a press of a mouse, which a trigger with `pressStart` handled at `pointerdown`. */
+export function isMouseClick(event: MouseEvent) {
+  return event.detail !== 0 && interactionOf(event) === 'mouse';
+}
+
 /**
  * A trigger of a popup: a button that registers with its root while it is mounted, and that
  * opens, closes, or moves the popup to itself at a press.

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 
-// In `en-US`, "ö" is a variant of "o". In `sv`, it is another letter. The filter of the root uses
-// `en-US` on the server, and the locale of the visitor after the mount.
+// In `en-US`, "ö" is a variant of "o". The filter of the root uses `en-US` on the server and in the
+// browser.
 const CITIES = ['Malmö', 'Malta', 'Oslo'];
 </script>
 

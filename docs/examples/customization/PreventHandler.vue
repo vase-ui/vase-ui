@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { Combobox } from '@vase-ui/vue/combobox';
+import { TimePicker } from '@vase-ui/vue/time-picker';
 </script>
 
 <template>
-  <Combobox.Root>
-    <Combobox.Input aria-label="Fruit" @keydown="(event) => event.preventVaseUIHandler()" />
-  </Combobox.Root>
+  <TimePicker.Root>
+    <TimePicker.List>
+      <template #item="{ time }">
+        <TimePicker.Item :time="time" @keydown="(event) => event.preventVaseUIHandler()" />
+      </template>
+    </TimePicker.List>
+  </TimePicker.Root>
 </template>

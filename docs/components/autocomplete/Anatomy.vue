@@ -31,8 +31,6 @@ import { Autocomplete } from '@vase-ui/vue/autocomplete';
             <Autocomplete.Group>
               <Autocomplete.GroupLabel />
             </Autocomplete.Group>
-
-            <Autocomplete.Collection />
           </Autocomplete.List>
         </Autocomplete.Popup>
       </Autocomplete.Positioner>

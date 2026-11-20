@@ -12,8 +12,8 @@ defineProps<{ item: Fruit }>();
 </script>
 
 <template>
-  <Combobox.Item :value="item">
-    <Combobox.ItemIndicator />
+  <Combobox.Item v-slot="{ state }" :value="item">
+    <span v-if="state.selected">✓</span>
     <span>{{ item.label }}</span>
   </Combobox.Item>
 </template>

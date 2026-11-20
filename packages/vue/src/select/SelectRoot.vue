@@ -102,7 +102,7 @@ defineExpose({ element, inputElement: input, close });
     <slot />
     <input v-bind="inputs.textProps()" :ref="setInput" />
     <input
-      v-for="(text, index) in inputs.hiddenValues.value"
+      v-for="(text, index) in inputs.values.value"
       :key="index"
       type="hidden"
       :name="inputs.name.value"
@@ -115,7 +115,7 @@ defineExpose({ element, inputElement: input, close });
     <slot />
     <input v-bind="inputs.textProps()" :ref="setInput" />
     <input
-      v-for="(text, index) in inputs.hiddenValues.value"
+      v-for="(text, index) in inputs.values.value"
       :key="index"
       type="hidden"
       :name="inputs.name.value"

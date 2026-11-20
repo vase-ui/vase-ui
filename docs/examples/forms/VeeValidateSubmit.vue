@@ -21,7 +21,9 @@ const onSubmit = handleSubmit(submitForm, ({ errors }) => {
   const named = formElement.value?.querySelector<HTMLInputElement>(`[name="${name}"]`);
   const target =
     named?.type === 'hidden'
-      ? named.parentElement?.querySelector<HTMLElement>('[role="combobox"]')
+      ? named.parentElement?.querySelector<HTMLElement>(
+          'input:not([type="hidden"]), [role="combobox"]',
+        )
       : named;
   target?.focus();
 });

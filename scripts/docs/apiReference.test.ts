@@ -430,12 +430,12 @@ for (const tag of ['TypesSample.createHandle', 'TypesSample']) {
 
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
-const ROOT_MEMBERS = ['unmount', 'close', 'inputElement'];
+const COMBOBOX_ROOT_MEMBERS = ['close', 'element', 'inputElement'];
 
 for (const { family, part, members } of [
   { family: 'select', part: 'Select.Root', members: ['element', 'inputElement', 'close'] },
-  { family: 'combobox', part: 'Combobox.Root', members: ROOT_MEMBERS },
-  { family: 'autocomplete', part: 'Autocomplete.Root', members: ROOT_MEMBERS },
+  { family: 'combobox', part: 'Combobox.Root', members: COMBOBOX_ROOT_MEMBERS },
+  { family: 'autocomplete', part: 'Autocomplete.Root', members: COMBOBOX_ROOT_MEMBERS },
   {
     family: 'resizable',
     part: 'Resizable.Panel',
@@ -589,17 +589,6 @@ test('the reference of a part that other families export again has the descripti
       'A separator element accessible to screen readers.\nRenders a `<div>` element.',
     ]),
   );
-});
-
-test('the reference of Combobox.Separator has data-orientation with its type', () => {
-  const separator = read('combobox').parts.find(({ name }) => name === 'Combobox.Separator');
-  assert.deepEqual(separator?.dataAttributes, [
-    {
-      name: 'data-orientation',
-      type: "'horizontal' | 'vertical'",
-      description: 'Indicates the orientation of the separator.',
-    },
-  ]);
 });
 
 test('the reader throws and says what to do for a family with no family file and no record', () => {

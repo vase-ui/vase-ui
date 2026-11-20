@@ -18,8 +18,8 @@ export interface PressDelays {
 /**
  * The press, drag and release of a popup that a mouse press opens. The browser sends the `click` of
  * a press that starts on one element and ends on another to their common ancestor
- * (test/measurements/select.test.ts), so a release on an item gives the item the focus and one
- * `click` itself.
+ * (test/measurements/select.test.ts), so a release on an item gives the item one `click` itself,
+ * and the focus in a list that is not virtual.
  */
 export function usePopupPress(
   root: PopupRoot,
@@ -34,6 +34,8 @@ export function usePopupPress(
     triggerMargin?: number;
     /** Each later mouse press in the popup that ends on another item gives that item a `click`. */
     laterPress?: boolean;
+    /** The control keeps the focus at a release on an item, and names the highlighted item. */
+    virtual?: boolean;
   },
 ) {
   // The opening press, from the event that opened the popup to its release.
@@ -61,7 +63,7 @@ export function usePopupPress(
   );
 
   function release(item: HTMLElement, event: PointerEvent) {
-    item.focus({ preventScroll: true });
+    if (!options.virtual) item.focus({ preventScroll: true });
     dispatchClickWithModifiers(item, event, { detail: 1, pointerType: 'mouse' });
   }
 

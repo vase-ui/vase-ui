@@ -1,8 +1,6 @@
 import type { Component, HTMLAttributes } from 'vue';
 import type { AsTag } from 'motion-v';
 import { expectType } from '#test-utils';
-import type { ComboboxChipProps } from '../combobox/chip/ComboboxChip.vue';
-import type { ComboboxInputProps } from '../combobox/input/ComboboxInput.vue';
 import type { GenericComponent, VaseUIComponentProps, WithVaseUIEvent } from './types';
 
 // The import of `motion-v` adds the options of `motion-v` to `HTMLAttributes`, `as` among them.
@@ -31,14 +29,3 @@ expectType<
   string | undefined,
   WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>['aria-labelledby']
 >(undefined);
-
-// A props object gets the check that vue-tsc makes for a template under `strictTemplates`.
-export const describedChip: ComboboxChipProps = {
-  'aria-description': 'Press Backspace or Delete to remove',
-};
-// The attributes type of `Combobox.Input` is an `Omit` of the shared type.
-export const describedInput: ComboboxInputProps = { 'aria-description': 'Press Backspace' };
-// @ts-expect-error A key with a spelling error is not an attribute.
-export const misspelledChip: ComboboxChipProps = { 'aria-descripton': 'Press Backspace' };
-// @ts-expect-error `aria-description` is a string.
-export const numberChip: ComboboxChipProps = { 'aria-description': 5 };
