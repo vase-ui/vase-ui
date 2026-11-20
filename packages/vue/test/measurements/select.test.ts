@@ -1,7 +1,7 @@
-// Measurements for Select and its list, with native elements and plain Vue (SM1 to SM8, and the
-// pointer rule, the focus and the scroll of the list), and through the parts where the plan names
-// them (SN1 to SN4). Each one states what the browser or Vue does, so that the parts have code only
-// where they do not do it. SN5 is `Select.test.ts` "animation" in the Vapor setups.
+// Measurements for Select and its list: with native elements and plain Vue (SM1 to SM8, and the
+// pointer rule, the focus and the scroll of the list), and through the parts (SN1 to SN4). Each one
+// states what the browser or Vue does, so that the parts have code only where they do not do it.
+// SN5 is `Select.test.ts` "animation" in the Vapor setups.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import {

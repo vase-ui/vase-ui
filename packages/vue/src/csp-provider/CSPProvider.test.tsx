@@ -103,6 +103,8 @@ describe('<CSPProvider />', () => {
           <Select.Portal>
             <Select.Positioner>
               <Select.Popup>
+                {/* A popup with a scroll arrow hides its scrollbar with the style element. */}
+                <Select.ScrollUpArrow />
                 <Select.Item value="a">a</Select.Item>
               </Select.Popup>
             </Select.Positioner>

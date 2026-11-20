@@ -551,7 +551,7 @@ describe('<Dialog.Portal />', () => {
       expect(document.querySelector('[inert]')).toBe(null);
     });
 
-    // Select is on the popup layer and Dialog is not, so the two do not know each other. The unit
+    // Select is on the popup layer and Dialog is not, so the two do not know each other. The change
     // that moves Dialog to the popup layer restores the case.
     it.skip('keeps a nested Select portal inside the dialog portal and free of inert', async () => {
       await render(
