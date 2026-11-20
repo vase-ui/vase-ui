@@ -18,6 +18,11 @@ const REST_IN_TRIANGLE = 40;
 // by hover in this time.
 const crossings = new WeakMap<PopupRoot, ShallowRef<boolean>>();
 
+// For each root, the test of the trigger whose popup is open: the point is in the triangle to the
+// popup. Another trigger gets its `pointerenter` before the `pointermove` of the same input, so it
+// asks with the point of that event.
+const approaches = new WeakMap<PopupRoot, (point: Point) => boolean>();
+
 function crossingOf(root: PopupRoot) {
   let crossing = crossings.get(root);
   if (!crossing) {
@@ -67,6 +72,11 @@ export function usePopupHover(
   let onInner = false;
   // The `pointerenter` of the pointer that is on the trigger.
   let entered: PointerEvent | null = null;
+  // The last point of the pointer on this trigger, from its own events: a `pointerleave` can come
+  // with the point of a new layout.
+  let last: Point | null = null;
+  // The crossing watcher opens the trigger after the crossing, with no new test of the triangle.
+  let afterCrossing = false;
 
   // The pointer closes a popup that is open for this trigger, unless a press opened or kept it.
   const closedBy = () => {
@@ -101,8 +111,16 @@ export function usePopupHover(
     ) {
       return;
     }
-    // The watcher of the crossing opens it when the pointer leaves the triangle on the trigger.
-    if (crossingOf(current).value && current.activeTrigger !== element) return;
+    // A pointer that moves to the popup of another trigger in the triangle opens nothing. The
+    // watcher of the crossing opens this trigger when the pointer leaves the triangle on it, or
+    // rests there.
+    if (
+      current.activeTrigger !== element &&
+      (crossingOf(current).value ||
+        (!afterCrossing && approaches.get(current)?.({ x: event.clientX, y: event.clientY })))
+    ) {
+      return;
+    }
     current.request(true, 'trigger-hover', event, element);
     if (current.open && current.reason === 'trigger-hover') {
       openedAt = ownerWindow(element).performance.now();
@@ -124,6 +142,7 @@ export function usePopupHover(
   function onPointerenter(event: PointerEvent) {
     const current = root();
     entered = event;
+    if (!afterCrossing) last = { x: event.clientX, y: event.clientY };
     if (
       !current ||
       !options.enabled() ||
@@ -139,6 +158,7 @@ export function usePopupHover(
 
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
   function onPointermove(event: PointerEvent) {
+    last = { x: event.clientX, y: event.clientY };
     const current = root();
     if (current && openTimer.isStarted()) startOpen(event, current);
   }
@@ -154,7 +174,10 @@ export function usePopupHover(
       return !!current && crossingOf(current).value;
     },
     (crossing) => {
-      if (!crossing && entered) onPointerenter(entered);
+      if (crossing || !entered) return;
+      afterCrossing = true;
+      onPointerenter(entered);
+      afterCrossing = false;
     },
     { flush: 'sync' },
   );
@@ -186,6 +209,8 @@ export function usePopupHover(
       // The pointer of a popup that no hover opened can be anywhere.
       over = byHover ? 'trigger' : 'outside';
       from = null;
+      const current = root();
+      if (current) approaches.set(current, approach);
       onCleanup(
         mergeCleanups(
           addEventListener(doc, 'pointermove', (event) => follow(event, byHover), true),
@@ -193,11 +218,36 @@ export function usePopupHover(
           closeTimer.clear,
           restTimer.clear,
           () => setCrossing(false),
+          () => {
+            if (current && approaches.get(current) === approach) approaches.delete(current);
+          },
         ),
       );
     },
     { flush: 'post' },
   );
+
+  // The point of another trigger is in the triangle from the last point on this trigger, or from
+  // the point where the pointer left it, to the popup. This trigger then follows a crossing, as at a
+  // `pointermove` in the triangle: the next move or a rest of 40 ms ends it. A point equal to the
+  // apex, such as after a layout change under a still pointer, is in the triangle.
+  function approach(point: Point) {
+    const trigger = options.trigger.value;
+    const popup = root()?.popup;
+    if (!(options.hoverablePopup?.() ?? true) || !trigger || !popup || over === 'popup') {
+      return false;
+    }
+    const apex = over === 'trigger' ? last : from;
+    if (!apex || !inTriangle(point, apex, trigger, popup)) return false;
+    from = apex;
+    over = 'outside';
+    setCrossing(true);
+    restTimer.start(REST_IN_TRIANGLE, () => {
+      setCrossing(false);
+      close();
+    });
+    return true;
+  }
 
   function setCrossing(crossing: boolean) {
     const current = root();

@@ -8,6 +8,7 @@ import NavigationMenuRouterLinks from '../../test/fixtures/NavigationMenuRouterL
 import NavigationMenuScoped from '../../test/fixtures/NavigationMenuScoped.vue';
 import NavigationMenuWithDialog from '../../test/fixtures/NavigationMenuWithDialog.vue';
 import TabsInNavigationMenu from '../../test/fixtures/TabsInNavigationMenu.vue';
+import { movePointerThrough } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -61,40 +62,6 @@ async function placed() {
 function centerOf(element: Element) {
   const rect = element.getBoundingClientRect();
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-}
-
-function pathOf(element: Element | null) {
-  const path: Element[] = [];
-  for (let node = element; node; node = node.parentElement) path.push(node);
-  return path;
-}
-
-/**
- * Moves a mouse pointer from `from` through the points, as a browser does: the boundary events of
- * each element that the pointer leaves or enters, then `pointermove`.
- */
-async function movePointer(from: { x: number; y: number }, points: { x: number; y: number }[]) {
-  let under = document.elementFromPoint(from.x, from.y);
-  for (const point of points) {
-    const target = document.elementFromPoint(point.x, point.y) ?? document.documentElement;
-    const init = { pointerType: 'mouse', clientX: point.x, clientY: point.y };
-    if (target !== under) {
-      const left = pathOf(under);
-      const entered = pathOf(target);
-      for (const element of left) {
-        if (!entered.includes(element))
-          element.dispatchEvent(new PointerEvent('pointerleave', init));
-      }
-      for (const element of entered.reverse()) {
-        if (!left.includes(element)) element.dispatchEvent(new PointerEvent('pointerenter', init));
-      }
-      under = target;
-    }
-    target.dispatchEvent(
-      new PointerEvent('pointermove', { ...init, bubbles: true, composed: true }),
-    );
-    await wait(10);
-  }
 }
 
 /** Tab, with Option in WebKit, where Tab reaches a link only by a setting of the system. */
@@ -468,6 +435,19 @@ describe('the hover', () => {
     await shows('two');
   });
 
+  test('a pointer that goes from the trigger of an item that a hover opened to the next trigger changes the item at once', async () => {
+    await mountMenu({
+      root: { delay: 300 },
+      list: { style: 'display: flex; gap: 0; margin: 0 0 40px 0; padding: 0; list-style: none' },
+      contents: { one: { style: 'width: 400px; height: 100px' } },
+    });
+    await userEvent.hover(get('trigger-one'));
+    await shows('one');
+    await userEvent.hover(get('trigger-two'));
+    // The level neighbor is outside the triangle to the content, so the hover waits for no delay.
+    expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('a pointer that goes from a trigger to a link of the list closes the menu after `closeDelay`', async () => {
     await mountMenu({ root: { delay: 0 } });
     await userEvent.hover(get('trigger-two'));
@@ -529,10 +509,10 @@ describe('the hover', () => {
         get('trigger-two').contains(document.elementFromPoint(point.x, point.y)),
       );
       expect(crossed).toBeDefined();
-      await movePointer(start, points);
+      await movePointerThrough(start, points);
       expect(get('trigger-one')).toHaveAttribute('aria-expanded', 'true');
       expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'false');
-      await movePointer(to, [crossed!]);
+      await movePointerThrough(to, [crossed!]);
       await waitFor(() => expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'true'));
     },
   );
