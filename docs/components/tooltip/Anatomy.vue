@@ -8,12 +8,10 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
       <Tooltip.Trigger />
       <Tooltip.Portal>
         <Tooltip.Positioner>
-          <Transition name="tip" appear>
-            <Tooltip.Popup>
-              <Tooltip.Arrow />
-              <Tooltip.Viewport />
-            </Tooltip.Popup>
-          </Transition>
+          <Tooltip.Popup>
+            <Tooltip.Arrow />
+            <Tooltip.Viewport />
+          </Tooltip.Popup>
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>

@@ -48,10 +48,14 @@ export interface PopoverRootProps<Payload = unknown> {
   /**
    * The modal state of the open popover:
    * - `false`: the page stays in use.
-   * - `true`: the page does not scroll and gets no pointer. With a `Popover.Close` in the popup,
-   *   the focus stays in the popup and the rest of the page is inert.
-   * - `'trap-focus'`: with a `Popover.Close` in the popup, the focus stays in the popup, and the
-   *   page stays in use.
+   * - `true`: the page does not scroll, and only the popup and the active trigger get a pointer.
+   *   After a touch open, the page scrolls, unless the popup is about as wide as the view. With a
+   *   `Popover.Close` in the popup, the focus stays in the popup, and the rest of the page is inert.
+   * - `'trap-focus'`: with a `Popover.Close` in the popup, the focus stays in the popup, and screen
+   *   readers do not read the rest of the page. The page stays in use.
+   *
+   * The focus stays in the popup only with a `Popover.Close`, so a user of a touch screen reader has
+   * a way out. A popover that a hover opened is not modal until a press on its trigger.
    * @default false
    */
   modal?: boolean | 'trap-focus' | undefined;
@@ -63,6 +67,10 @@ export interface PopoverRootState {}
 
 export interface PopoverTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The `triggerId` of the root and
+   * `open()` of the handle name the trigger by it.
+   */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -124,6 +132,10 @@ export interface PopoverPositionerState {
 
 export interface PopoverPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The open trigger names it in
+   * `aria-controls`.
+   */
   id?: string | undefined;
   /**
    * The element that gets the focus at the open. By default: the element with `autofocus`, else the
@@ -161,6 +173,10 @@ export interface PopoverArrowState {
 
 export interface PopoverTitleProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The popup names it in
+   * `aria-labelledby`.
+   */
   id?: string | undefined;
 }
 
@@ -168,6 +184,10 @@ export interface PopoverTitleState {}
 
 export interface PopoverDescriptionProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The popup names it in
+   * `aria-describedby`.
+   */
   id?: string | undefined;
 }
 

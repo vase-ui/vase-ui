@@ -28,8 +28,10 @@ export type TooltipRootChangeEventReason =
 export type TooltipRootChangeEventDetails = PopupChangeEventDetails<TooltipRootChangeEventReason>;
 
 /**
- * Why a style should skip its animation: `'delay'` (another tooltip of the group was open),
- * `'focus'` (the focus opened the tooltip), `'dismiss'` (Escape or a press closed it).
+ * Why a style should skip its animation: `'delay'` (the tooltip opened while another tooltip of its
+ * group was open or in the `timeout` after its close, or it closed because another tooltip of the
+ * group opened or its active trigger left the DOM), `'focus'` (the focus opened the tooltip),
+ * `'dismiss'` (Escape or a press on the trigger closed it).
  */
 export type TooltipInstant = 'delay' | 'focus' | 'dismiss' | undefined;
 
@@ -86,6 +88,10 @@ export interface TooltipRootState {}
 
 export interface TooltipTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /**
+   * The `id` of the element, with a generated `id` as the default. The `triggerId` of the root and
+   * `open()` of the handle name the trigger by it.
+   */
   id?: string | undefined;
   /** Connects the trigger to a root outside it. */
   handle?: TooltipHandle<Payload> | undefined;

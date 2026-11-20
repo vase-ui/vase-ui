@@ -230,8 +230,8 @@ export class PopupHandle<Payload = unknown> {
   }
 
   /**
-   * Opens the popup for the trigger with this `id`. Throws an error when the root has no trigger
-   * with this `id`.
+   * Opens the popup for the trigger with this `id`. With no mounted root, it does nothing. Throws an
+   * error when the root has no trigger with this `id`.
    */
   open(triggerId: string) {
     const root = rootOfHandle<Payload>(this);
@@ -245,7 +245,7 @@ export class PopupHandle<Payload = unknown> {
     root.request(true, 'imperative-action', new Event('vase-ui'), trigger.element);
   }
 
-  /** Closes the popup. */
+  /** Closes the popup. With no mounted root, it does nothing. */
   close() {
     rootOfHandle(this)?.request(false, 'imperative-action', new Event('vase-ui'));
   }

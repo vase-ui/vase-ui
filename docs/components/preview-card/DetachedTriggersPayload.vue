@@ -12,15 +12,13 @@ const demoPreviewCard = PreviewCard.createHandle<{ title: string }>();
     Trigger 2
   </PreviewCard.Trigger>
 
-  <PreviewCard.Root :handle="demoPreviewCard">
-    <template #default="{ payload }">
-      <PreviewCard.Portal>
-        <PreviewCard.Positioner :side-offset="8">
-          <PreviewCard.Popup>
-            <span v-if="payload !== undefined">Preview card opened by {{ payload.title }}</span>
-          </PreviewCard.Popup>
-        </PreviewCard.Positioner>
-      </PreviewCard.Portal>
-    </template>
+  <PreviewCard.Root v-slot="{ payload }" :handle="demoPreviewCard">
+    <PreviewCard.Portal>
+      <PreviewCard.Positioner :side-offset="8">
+        <PreviewCard.Popup>
+          <span v-if="payload !== undefined">Preview card opened by {{ payload.title }}</span>
+        </PreviewCard.Popup>
+      </PreviewCard.Positioner>
+    </PreviewCard.Portal>
   </PreviewCard.Root>
 </template>
