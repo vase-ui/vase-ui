@@ -1,18 +1,11 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, Component, HTMLAttributes } from 'vue';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 import type { InputProps } from '../input';
 import type { SeparatorProps, SeparatorState } from '../separator';
 
 export type ToolbarOrientation = 'horizontal' | 'vertical';
 
-interface ToolbarAs {
-  /**
-   * A tag or a component that the part renders in place of its element, with the same attributes
-   * and content. The `element` slot wins over it.
-   */
-  as?: keyof HTMLElementTagNameMap | Component;
-}
-
-export interface ToolbarRootProps extends ToolbarAs, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
+export interface ToolbarRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The axis of the arrow keys.
    * @default 'horizontal'
@@ -37,7 +30,7 @@ export interface ToolbarRootState {
   orientation: ToolbarOrientation;
 }
 
-export interface ToolbarGroupProps extends ToolbarAs, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
+export interface ToolbarGroupProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The user cannot use an item of the group. A link stays enabled.
    * @default false
@@ -53,7 +46,7 @@ export interface ToolbarGroupState {
 }
 
 export interface ToolbarButtonProps
-  extends ToolbarAs, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /**
    * The user cannot press the button.
    * @default false
@@ -108,7 +101,7 @@ export interface ToolbarInputState {
 }
 
 export interface ToolbarLinkProps
-  extends ToolbarAs, /* @vue-ignore */ Omit<AnchorHTMLAttributes, 'as'> {}
+  extends AsProps, /* @vue-ignore */ Omit<AnchorHTMLAttributes, 'as'> {}
 
 export interface ToolbarLinkState {
   /** The orientation of the toolbar. */
