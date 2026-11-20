@@ -177,12 +177,12 @@
     {
       "entry": "Input",
       "prop": "id",
-      "reason": "`Toolbar.Input` gives `id` to the `Input` that it renders. The `id` names the element that takes the focus (rule 8.4)."
+      "reason": "`Toolbar.Input` gives `id` to the `Input` that it renders, or to the element of its `element` slot. The `id` names the element that takes the focus (rule 8.4)."
     },
     {
       "entry": "Input",
       "prop": "name",
-      "reason": "`Toolbar.Input` gives `name` to the `Input` that it renders, for the form data."
+      "reason": "`Toolbar.Input` gives `name` to the `Input` that it renders, or to the element of its `element` slot, for the form data."
     },
     {
       "entry": "Input",

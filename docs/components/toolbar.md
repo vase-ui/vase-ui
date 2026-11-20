@@ -100,7 +100,7 @@ Render a part of another component in the `element` slot of a toolbar part. Bind
 
 - **Popups with a trigger**: render the trigger in the slot of `<Toolbar.Button>`. This works for Alert Dialog, Dialog, Drawer, Menu, Popover, Select and Tooltip. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The trigger then keeps the focus and opens nothing. A tooltip still opens at a hover.
 - **Toggle**: render a `Toggle` in the slot of `<Toolbar.Button>`. Each toggle of a `ToggleGroup` in the toolbar is an item with no wrapper.
-- **Inputs**: render a `Switch`, a `Checkbox`, a `Radio` or a `NumberField.Input` in the slot of `<Toolbar.Input>`. Give `v-model`, `name` and `id` to the part in the slot: `Toolbar.Input` then renders no `Input` and owns no text.
+- **Inputs**: render a `Switch`, a `Checkbox`, a `Radio` or a `NumberField.Input` in the slot of `<Toolbar.Input>`. `Toolbar.Input` then renders no `Input` and owns no text, so give `v-model` to the part in the slot.
 
 See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
 

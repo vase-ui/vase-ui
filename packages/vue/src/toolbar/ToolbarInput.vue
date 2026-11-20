@@ -47,16 +47,17 @@ defineExpose({ element });
 // and a drop.
 function itemProps() {
   const keepsFocus = isDisabled.value && props.focusableWhenDisabled;
-  return mergeProps(
-    {
-      tabindex: tabindex.value,
-      'data-orientation': toolbar.orientation,
-      'aria-disabled': keepsFocus ? 'true' : undefined,
-      readonly: props.readonly || keepsFocus ? '' : undefined,
-      disabled: isDisabled.value && !keepsFocus ? '' : undefined,
-    },
-    attrs,
-  );
+  const own: Record<string, unknown> = {
+    tabindex: tabindex.value,
+    'data-orientation': toolbar.orientation,
+    'aria-disabled': keepsFocus ? 'true' : undefined,
+    readonly: props.readonly || keepsFocus ? '' : undefined,
+    disabled: isDisabled.value && !keepsFocus ? '' : undefined,
+  };
+  // With no `id` or `name` on the part, an element in the slot keeps its own.
+  if (props.id !== undefined) own.id = props.id;
+  if (props.name !== undefined) own.name = props.name;
+  return mergeProps(own, attrs);
 }
 
 function inputProps() {
@@ -64,8 +65,6 @@ function inputProps() {
     ...itemProps(),
     modelValue: props.modelValue,
     defaultValue: props.defaultValue,
-    id: props.id,
-    name: props.name,
     onValueChange: (value: string, details: InputChangeEventDetails) =>
       emit('valueChange', value, details),
     'onUpdate:modelValue': (value: string) => emit('update:modelValue', value),
