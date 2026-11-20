@@ -667,6 +667,15 @@ describe('the open list', () => {
     expect(popup().scrollTop).toBeGreaterThan(0);
   });
 
+  test('a key on the trigger of an open popup is a key of the list', async () => {
+    await mountSelect();
+    await userEvent.click(trigger());
+    await opened();
+    trigger().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await focused(() => item('apple'));
+  });
+
   test('Tab closes the popup, and the focus goes to the next tab stop after the trigger', async () => {
     const log: string[] = [];
     await mountSelect({ root: rootEvents(log) });

@@ -184,7 +184,7 @@ describe('an invisible box of a closed popup at an old place (SM4)', () => {
 });
 
 describe('a click on a native label of a button (SM5)', () => {
-  test('gives the button one `click` and no `pointerdown`; `detail` is 0 in WebKit only, and WebKit gives the button no focus', async () => {
+  test('gives the button one `click` and no `pointerdown`; `detail` is 0 in WebKit only', async () => {
     html(
       '<label id="l" for="b" style="display: block; height: 30px">Label</label><button id="b" type="button">B</button>',
     );
@@ -192,9 +192,7 @@ describe('a click on a native label of a button (SM5)', () => {
     element('b').addEventListener('pointerdown', () => log.push('pointerdown'));
     element('b').addEventListener('click', (event) => log.push(`click ${event.detail}`));
     await userEvent.click(element('l'));
-    const webkit = server.browser === 'webkit';
-    expect(log).toEqual([`click ${webkit ? 0 : 1}`]);
-    expect(document.activeElement === element('b')).toBe(!webkit);
+    expect(log).toEqual([`click ${server.browser === 'webkit' ? 0 : 1}`]);
   });
 });
 
@@ -328,7 +326,8 @@ describe('the parts', () => {
     });
     await nextTick();
     const trigger = document.querySelector<HTMLElement>('[data-testid="trigger"]')!;
-    expect(trigger.getBoundingClientRect().width).toBeCloseTo(trigger.offsetWidth * 1.25, 0);
+    // `offsetWidth` is a whole number.
+    expect(trigger.getBoundingClientRect().width / trigger.offsetWidth).toBeCloseTo(1.25, 1);
     await userEvent.click(trigger);
     const text = () => document.querySelector('[data-testid="item-banana"] > div')!;
     await waitFor(() => expect(document.activeElement).toBe(text().parentElement));

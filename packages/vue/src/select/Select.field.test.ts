@@ -162,7 +162,10 @@ describe('the field', () => {
     expect(trigger()).toHaveAttribute('aria-describedby', 'description');
     await userEvent.click(label);
     await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
-    await waitFor(() => expect(document.activeElement).toBe(byTestId('popup')));
+    // A pointer open highlights no item. A key goes to the list, from the trigger or the popup.
+    expect(byTestId('popup').querySelector('[data-highlighted]')).toBe(null);
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('item-a')));
   });
 
   test('a disabled field, a disabled fieldset and the root disable the trigger', async () => {

@@ -61,9 +61,8 @@ function onPointerdown(event: PointerEvent) {
   if (!wasOpen && root.open && element.value) context.press.start(event, element.value);
 }
 
-// The popup that a press opened takes the focus before the `mousedown` of the press, and the
-// button of WebKit takes no focus at a press (test/measurements/select.test.ts). So no button
-// takes it.
+// The popup that a press opened takes the focus before the `mousedown` of the press. So the
+// button does not take it.
 function onMousedown(event: MouseEvent) {
   if (toggled) event.preventDefault();
   toggled = false;
@@ -72,7 +71,9 @@ function onMousedown(event: MouseEvent) {
 function onKeydown(event: KeyboardEvent) {
   if (event.defaultPrevented) return;
   if (root.open) {
+    // The trigger can keep the focus of a native label after the open. Its keys go to the list.
     context.focus.onTriggerKeydown(event);
+    if (!context.list.onKeydown(event)) context.typeahead.onKeydown(event);
     return;
   }
   if (trigger.button.disabled.value) return;
