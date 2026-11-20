@@ -176,11 +176,23 @@ function getPointOnLine(from: ClientPoint, to: ClientPoint, step: number, steps:
 }
 
 /**
- * Drags a real touch from one client point of the test page to another, in `steps` moves, and lifts
- * it at the last point after `rest` milliseconds. With no moves, it taps. Only Chromium has the
- * protocol that the helper uses: guard a case that calls it with `it.skipIf(!platform.engine.blink)`.
+ * The time that a drag holds the pointer at its last point: a number of milliseconds, or a function
+ * that runs while the pointer is down. A case with fake timers gives a function that moves the fake
+ * clock.
  */
-export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, rest = 0) {
+type Rest = number | (() => unknown);
+
+async function holdFor(rest: Rest) {
+  if (typeof rest === 'function') await rest();
+  else if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
+}
+
+/**
+ * Drags a real touch from one client point of the test page to another, in `steps` moves, and lifts
+ * it at the last point after `rest`. With no moves, it taps. Only Chromium has the protocol that the
+ * helper uses: guard a case that calls it with `it.skipIf(!platform.engine.blink)`.
+ */
+export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, rest: Rest = 0) {
   // Each engine loads this file, and only Chromium has a session. The import is lazy, as in the
   // other cases that call `cdp()`.
   const { cdp } = await import('vitest/browser');
@@ -195,7 +207,7 @@ export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, r
     for (let step = 1; step <= steps; step += 1) {
       await send('touchMove', getPointOnLine(from, to, step, steps));
     }
-    if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
+    await holdFor(rest);
   } finally {
     await send('touchEnd');
   }
@@ -217,12 +229,22 @@ export async function sendTouch(
 }
 
 /**
- * Drags a real pen from one client point of the test page to another, in `steps` moves, and lifts it
- * at the last point after `rest` milliseconds. The pen then moves out of the test page, so it hovers over no element that a
- * later test renders. Only Chromium has the protocol that the helper uses: guard a case that calls
- * it with `it.skipIf(!platform.engine.blink)`.
+ * Stops the fling that a real touch drag can start in Chromium. The touch starts at the top left of
+ * the test page, and it ends with `touchCancel`, so it gives no `click`. Only Chromium has the
+ * protocol that the helper uses.
  */
-export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4, rest = 0) {
+export async function stopFling() {
+  await sendTouch('touchStart', [{ x: 0, y: 0 }]);
+  await sendTouch('touchCancel', []);
+}
+
+/**
+ * Drags a real pen from one client point of the test page to another, in `steps` moves, and lifts it
+ * at the last point after `rest`. The pen then moves out of the test page, so it hovers over no
+ * element that a later test renders. Only Chromium has the protocol that the helper uses: guard a
+ * case that calls it with `it.skipIf(!platform.engine.blink)`.
+ */
+export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4, rest: Rest = 0) {
   const { cdp } = await import('vitest/browser');
   const session = cdp() as CDPSession;
   const send = (
@@ -244,7 +266,7 @@ export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4, res
     for (let step = 1; step <= steps; step += 1) {
       await send('mouseMoved', getPointOnLine(from, to, step, steps), 1);
     }
-    if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
+    await holdFor(rest);
   } finally {
     await send('mouseReleased', to, 0);
     await send('mouseMoved', { x: -10, y: -10 }, 0);

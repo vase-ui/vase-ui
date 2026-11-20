@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { ContextMenuRootChangeEventDetails } from '@vase-ui/vue/context-menu';
@@ -45,25 +45,24 @@ async function rightRelease(point?: { x: number; y: number }) {
 const LONG_PRESS = 600;
 const POINT = { x: 100, y: 80 };
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+function fakeTimers() {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+}
+
 /**
- * The time in milliseconds from the first `pointerdown` of the steps to the next `pointerdown`,
- * `pointerup` or `pointercancel`, which stops a long press.
+ * Moves the fake clock past a long press while the pointer is down. A busy runner can take more
+ * time for its protocol calls than a long press, so a case that checks the end of a press uses a
+ * fake clock. The helper first waits for a frame: Chromium can dispatch the `pointermove` of a touch
+ * at the next frame after its protocol call returned. `during` runs after the frame.
  */
-async function stopTime(steps: () => Promise<unknown>) {
-  let down: number | undefined;
-  let stop = Infinity;
-  const record = () => {
-    if (down === undefined) down = performance.now();
-    else stop = Math.min(stop, performance.now() - down);
-  };
-  const types = ['pointerdown', 'pointerup', 'pointercancel'];
-  for (const type of types) window.addEventListener(type, record, true);
-  try {
-    await steps();
-  } finally {
-    for (const type of types) window.removeEventListener(type, record, true);
-  }
-  return stop;
+async function holdLongPress(during = () => {}) {
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  during();
+  vi.advanceTimersByTime(LONG_PRESS);
 }
 
 describe('the open', () => {
@@ -309,11 +308,12 @@ describe('a long press', () => {
     async () => {
       const log: string[] = [];
       await mountContextMenu({ root: rootEvents(log) });
-      await touchDrag({ x: 100, y: 80 }, { x: 130, y: 80 }, 3, LONG_PRESS);
+      fakeTimers();
+      await touchDrag(POINT, { x: 130, y: 80 }, 3, holdLongPress);
       expect(popup()).toBe(null);
-      await touchDrag({ x: 100, y: 80 }, { x: 100, y: 80 }, 0, LONG_PRESS);
+      await touchDrag(POINT, POINT, 0, holdLongPress);
       await waitFor(() => expect(popup()).not.toBe(null));
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      vi.advanceTimersByTime(LONG_PRESS);
       expect(popup()).not.toBe(null);
       expect(popup()).not.toHaveAttribute('data-instant');
       expect(log).toHaveLength(1);
@@ -356,13 +356,12 @@ describe('a long press', () => {
       },
       lift: false,
     },
-  ])('$name opens nothing', async ({ touch, lift }, { skip }) => {
+  ])('$name opens nothing', async ({ touch, lift }) => {
     await mountContextMenu();
-    const stopped = await stopTime(touch);
-    await new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
+    fakeTimers();
+    await touch();
+    await holdLongPress();
     if (lift) await sendTouch('touchEnd', []);
-    // A busy runner can send the event that stops the press after the time of a long press.
-    skip(stopped >= 500, 'The event that stops the press came after the long press.');
     expect(popup()).toBe(null);
   });
 
@@ -384,9 +383,9 @@ describe('a long press', () => {
     async () => {
       const log: string[] = [];
       const { trigger } = await mountContextMenu({ root: rootEvents(log) });
-      const point = { x: 100, y: 80 };
+      fakeTimers();
       // Chrome on Android sends `contextmenu` for a long press.
-      setTimeout(() => {
+      const contextmenu = () =>
         trigger.dispatchEvent(
           new MouseEvent('contextmenu', {
             bubbles: true,
@@ -395,8 +394,7 @@ describe('a long press', () => {
             clientY: 80,
           }),
         );
-      }, 100);
-      await touchDrag(point, point, 0, LONG_PRESS);
+      await touchDrag(POINT, POINT, 0, () => holdLongPress(contextmenu));
       await placed();
       const box = popup()!.getBoundingClientRect();
       expect(Math.round(box.left)).toBe(102);
@@ -433,7 +431,8 @@ describe('a long press', () => {
     'of a pen that moves more than 10 px opens nothing',
     async () => {
       await mountContextMenu();
-      await penDrag({ x: 100, y: 80 }, { x: 130, y: 80 }, 3, LONG_PRESS);
+      fakeTimers();
+      await penDrag(POINT, { x: 130, y: 80 }, 3, holdLongPress);
       expect(popup()).toBe(null);
     },
   );
@@ -448,7 +447,8 @@ describe('a long press', () => {
     'of a pen that leaves the trigger within 10 px opens nothing',
     async () => {
       await mountContextMenu();
-      await penDrag({ x: 295, y: 100 }, { x: 304, y: 100 }, 2, LONG_PRESS);
+      fakeTimers();
+      await penDrag({ x: 295, y: 100 }, { x: 304, y: 100 }, 2, holdLongPress);
       expect(popup()).toBe(null);
     },
   );
