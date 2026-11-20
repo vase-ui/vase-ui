@@ -3,29 +3,29 @@ import { watch, type Ref } from 'vue';
 type FormControl = HTMLInputElement | HTMLTextAreaElement;
 
 /**
- * Listens to an event of the form that owns the element, while the element is mounted. The form
- * of an element is a property of the element and gives no event when it changes, so the listener
- * stays on the form of the mount, or of the last change of `formAttribute`.
- * @param formAttribute The `form` attribute that the part gives the element.
+ * Listens to an event of the form that owns the element, while the element is mounted. `reset`
+ * and `formdata` bubble from the form, so the listener is on the root node of the element, and it
+ * follows the form that owns the element at the event, also one that a `form` attribute names.
  */
 export function useFormListener<Type extends keyof HTMLElementEventMap>(
   element: Readonly<Ref<FormControl | null>>,
   type: Type,
   listener: (event: HTMLElementEventMap[Type], form: HTMLFormElement) => void,
-  formAttribute?: () => string | undefined,
 ) {
   watch(
-    [element, () => formAttribute?.()] as const,
-    ([el], _, onCleanup) => {
-      const form = el?.form;
-      if (!el || !form) return;
-      const onEvent = (event: HTMLElementEventMap[Type]) => {
+    element,
+    (el, _, onCleanup) => {
+      if (!el) return;
+      // eslint-disable-next-line no-restricted-syntax -- The form of the element is read at each event. Only a move by `Teleport` into another root node goes unseen, and then the element leaves its form too.
+      const root = el.getRootNode();
+      const onEvent = (event: Event) => {
         // A form acts only on the controls that it owns at that moment: an element that
         // `KeepAlive` holds has no form.
-        if (el.form === form) listener(event, form);
+        const { form } = el;
+        if (form && event.target === form) listener(event as HTMLElementEventMap[Type], form);
       };
-      form.addEventListener(type, onEvent);
-      onCleanup(() => form.removeEventListener(type, onEvent));
+      root.addEventListener(type, onEvent, true);
+      onCleanup(() => root.removeEventListener(type, onEvent, true));
     },
     { flush: 'post' },
   );
@@ -35,22 +35,15 @@ export function useFormListener<Type extends keyof HTMLElementEventMap>(
  * Calls `onReset` after each native reset of the form that owns the element, when no listener
  * prevented the reset. Vue writes the `value` and `checked` attributes at each value, so the form
  * resets a control to its last value, and the part gives its first value itself.
- * @param formAttribute As for {@link useFormListener}.
  */
 export function useFormReset(
   element: Readonly<Ref<FormControl | null>>,
   onReset: (event: Event) => void,
-  formAttribute?: () => string | undefined,
 ) {
-  useFormListener(
-    element,
-    'reset',
-    (event) => {
-      // A later listener can still prevent the reset, so the part waits for the end of the event.
-      setTimeout(() => {
-        if (!event.defaultPrevented) onReset(event);
-      });
-    },
-    formAttribute,
-  );
+  useFormListener(element, 'reset', (event) => {
+    // A later listener can still prevent the reset, so the part waits for the end of the event.
+    setTimeout(() => {
+      if (!event.defaultPrevented) onReset(event);
+    });
+  });
 }

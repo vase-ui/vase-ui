@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NumberField } from '@vase-ui/vue/number-field';
+import { Combobox } from '@vase-ui/vue/combobox';
 </script>
 
 <template>
-  <NumberField.Root>
-    <NumberField.Input @paste="(event) => event.preventVaseUIHandler()" />
-  </NumberField.Root>
+  <Combobox.Root>
+    <Combobox.Input aria-label="Fruit" @keydown="(event) => event.preventVaseUIHandler()" />
+  </Combobox.Root>
 </template>

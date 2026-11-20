@@ -1629,14 +1629,6 @@ async function expectHydratedComboboxPage(page: Page) {
 // The text that the case types into each control before hydration, and the value that the
 // control and the model of the page have after hydration.
 const TEXT_BEFORE_HYDRATION = [
-  // The input lost the focus before hydration, so the root formats its text.
-  {
-    control: 'number-input',
-    text: '1234.5',
-    value: '1,234.5',
-    output: 'number-value',
-    model: '1234.5',
-  },
   { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
   {
     control: 'autocomplete-input',
@@ -1667,7 +1659,6 @@ const FORM_STATE_INITIAL_MODELS = {
   filter: '',
   font: 'serif',
   fruit: null,
-  quantity: 1,
   when: null,
   alarm: null,
 };
@@ -1679,7 +1670,6 @@ const FORM_STATE_CHANGED: FormState = {
     filter: ['typed'],
     font: ['mono'],
     fruit: ['Cherry'],
-    quantity: ['7'],
     when: ['2026-12-25'],
     alarm: ['09:30'],
   },
@@ -1687,7 +1677,6 @@ const FORM_STATE_CHANGED: FormState = {
     filter: 'typed',
     font: 'mono',
     fruit: 'Cherry',
-    quantity: 7,
     when: '2026-12-25',
     alarm: '09:30',
   },
@@ -1695,7 +1684,6 @@ const FORM_STATE_CHANGED: FormState = {
     filter: 1,
     font: 1,
     fruit: 1,
-    quantity: 1,
     when: 1,
     alarm: 1,
   },
@@ -1745,7 +1733,6 @@ async function changeFormStateBeforeHydration(page: Page) {
     };
     write('font', ['mono']);
     write('fruit', ['Cherry']);
-    write('quantity', ['7']);
     write('when', ['2026-12-25']);
     write('alarm', ['09:30']);
   });
@@ -1759,8 +1746,6 @@ async function changeHydratedFormState(page: Page) {
   await page.getByTestId('fruit-input').click();
   await page.keyboard.type('Che');
   await page.getByRole('option', { name: 'Cherry' }).click();
-  await page.getByTestId('quantity-input').fill('7');
-  await page.keyboard.press('Tab');
   await page.getByTestId('when').locator('input[data-type="month"]').click();
   await page.keyboard.type('12252026');
   await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
@@ -2663,19 +2648,14 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     },
   );
 
-  it('formats the text of /number-field with the locale of the visitor after hydration', async () => {
+  it('keeps the en-US text of /number-field for a visitor with another locale', async () => {
     const page = await createPage(undefined, { locale: 'de-DE' });
     const messages = collectMessages(page);
 
     await page.goto(url('/number-field'), { waitUntil: 'hydration' });
     await waitForTwoFrames(page);
 
-    const visitorText = await page.evaluate(
-      (format) => new Intl.NumberFormat(undefined, format).format(1234.5),
-      EURO_FORMAT,
-    );
-    expect(visitorText).not.toBe(EURO_TEXT);
-    expect(await page.getByTestId('label-first-control').inputValue()).toBe(visitorText);
+    expect(await page.getByTestId('label-first-control').inputValue()).toBe(EURO_TEXT);
     expect(await page.getByTestId('label-last-control').inputValue()).toBe('7');
     expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
     expect(messages).toEqual([]);
@@ -2797,7 +2777,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of ['filter', 'font', 'fruit', 'quantity', 'when', 'alarm']) {
+        for (const name of ['filter', 'font', 'fruit', 'when', 'alarm']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

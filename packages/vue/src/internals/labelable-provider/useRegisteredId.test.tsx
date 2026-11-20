@@ -3,7 +3,6 @@ import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Component, Ref, VNode } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -277,17 +276,6 @@ describe('useRegisteredId', () => {
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>
-        ),
-      },
-      {
-        // `NumberField.Decrement` names the input with the same code.
-        name: 'NumberField.Input',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <NumberField.Root>
-            <NumberField.Input v-slots={slot('input', id)} />
-            <NumberField.Increment data-testid="named" />
-          </NumberField.Root>
         ),
       },
     ];

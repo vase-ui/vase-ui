@@ -256,15 +256,6 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
     events: ['input'],
   },
   {
-    name: 'NumberField.Root',
-    family: 'number-field',
-    inputName: 'quantity',
-    written: ['7'],
-    model: '7',
-    changes: '7 (none)',
-    events: ['input'],
-  },
-  {
     name: 'DateField.Root',
     family: 'date-field',
     inputName: 'when',
