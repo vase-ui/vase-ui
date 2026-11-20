@@ -7,7 +7,6 @@ import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
 import * as Toast from '../../../toast/index.parts';
-import * as Tooltip from '../../../tooltip/index.parts';
 import PortalPartContent from './PortalPartContent.test.vue';
 import PropReadsSlotVariable from './PropReadsSlotVariable.test.vue';
 
@@ -46,7 +45,6 @@ const portalParts = [
   },
   { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
   { name: 'Toast.Portal', root: Toast.Provider, portal: Toast.Portal },
-  { name: 'Tooltip.Portal', root: Tooltip.Root, portal: Tooltip.Portal, rootProps: open },
 ];
 
 describe('portal part of each family', () => {

@@ -62,7 +62,7 @@
       "describe": ["<Toolbar.Button />", "rendering other Base UI components"],
       "kind": "replaced",
       "test": "packages/vue/src/toolbar/Toolbar.compose.test.ts",
-      "reason": "`Toolbar.compose.test.ts` renders each part in the `element` slot of a toolbar part: the triggers of Menu, Select, Dialog, AlertDialog, Popover and Tooltip, Toggle, and a toggle of a ToggleGroup. A Switch is an `<input>`, so it is in the slot of `Toolbar.Input`. `ToggleGroup.test.ts` tests the toggles of a group in a `Toolbar.Group`."
+      "reason": "`Toolbar.compose.test.ts` renders each part in the `element` slot of a toolbar part: the triggers of Menu, Select, Dialog, AlertDialog and Popover, Toggle, and a toggle of a ToggleGroup. A `Toolbar.Button` is in the `element` slot of `Tooltip.Trigger`. A Switch is an `<input>`, so it is in the slot of `Toolbar.Input`. `ToggleGroup.test.ts` tests the toggles of a group in a `Toolbar.Group`."
     },
     {
       "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",

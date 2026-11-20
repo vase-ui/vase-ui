@@ -96,6 +96,8 @@ export interface PopupRoot<Payload = unknown> {
   addLeaving(element: () => Element | null): () => void;
   addPortalElement(element: () => Element | null): () => void;
   addLabel(kind: 'title' | 'description', label: { readonly id: string }): () => void;
+  /** Ends `leaving` at once, so that the portal removes the popup that leaves. */
+  endLeaving(): void;
 }
 
 export interface PopupRootOptions {
@@ -112,6 +114,11 @@ export interface PopupRootOptions {
   emitTriggerId: (id: string | null) => void;
   /** The `instant` state of a change. */
   instantOf?: (open: boolean, reason: string, event: Event) => string | undefined;
+  /**
+   * The root is closed for its parts while it is `true`, and the model keeps its value. After the
+   * mount, a disabled root with an open model asks for a close with the reason `'disabled'`.
+   */
+  disabled?: () => boolean;
 }
 
 export function createPopupChangeEventDetails<Reason extends string>(
@@ -228,7 +235,8 @@ export class PopupHandle<Payload = unknown> {
 
 export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
   const openModel = useModel(() => options.open(), options.open() ?? options.defaultOpen);
-  const open = openModel.value;
+  const modelOpen = openModel.value;
+  const open = computed(() => modelOpen.value && !options.disabled?.());
   const triggerIdModel = useModel(
     () => options.triggerId(),
     options.triggerId() ?? options.defaultTriggerId,
@@ -289,7 +297,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     const element = entry === null ? null : (entry?.element ?? activeTrigger.value);
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = !next || entry === undefined ? activeTriggerId.value : (entry?.id ?? null);
-    if (next === open.value && nextId === activeTriggerId.value) {
+    if (next === modelOpen.value && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
       if (payload) givenPayload.value = payload;
       // A press keeps a popup open that a hover opened.
@@ -311,7 +319,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       triggerIdModel.setOwn(nextId);
       options.emitTriggerId(nextId);
     }
-    if (next !== open.value) {
+    if (next !== modelOpen.value) {
       openModel.setOwn(next);
       options.emitOpen(next);
     }
@@ -330,6 +338,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     observer = undefined;
     leaving.value = false;
     return true;
+  }
+  function endLeaving() {
+    leavingNow = [];
+    settle();
   }
   watch(
     open,
@@ -432,9 +444,19 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     addLeaving: (element) => add(leavingElements, element),
     addPortalElement: (element) => add(portalElements, element),
     addLabel: (kind, label) => add(labels[kind], label),
+    endLeaving,
   };
 
-  onMounted(() => onScopeDispose(trackPointerType(ownerDocument(null))));
+  onMounted(() => {
+    onScopeDispose(trackPointerType(ownerDocument(null)));
+    watch(
+      () => modelOpen.value && !!options.disabled?.(),
+      (closes) => {
+        if (closes) change(false, 'disabled', new Event('vase-ui'), undefined);
+      },
+      { immediate: true },
+    );
+  });
   // A post-flush effect runs only on the client, so a handle in a module of a server holds no root
   // of a request. It runs before `onMounted` of the children, and not while a `<Suspense>` waits
   // for the page of the root. When a `<Suspense>` replaces a page, the old root releases its handle

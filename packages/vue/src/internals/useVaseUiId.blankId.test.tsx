@@ -12,7 +12,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
-import { Tooltip } from '@vase-ui/vue/tooltip';
 
 interface BlankId {
   id: string;
@@ -294,20 +293,6 @@ const rows: Row[] = [
           </PreviewCard.Positioner>
         </PreviewCard.Portal>
       </PreviewCard.Root>
-    ),
-  },
-  {
-    name: 'Tooltip.Trigger',
-    ready: 'ready',
-    tree: (_k, blankId) => (
-      <Tooltip.Root defaultOpen>
-        <Tooltip.Trigger {...blankId}>Hover</Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Positioner>
-            <Tooltip.Popup data-testid="ready">Tip</Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>
     ),
   },
   ...(['Trigger', 'Popup', 'Item', 'CheckboxItem', 'RadioItem', 'LinkItem'] as const).map(

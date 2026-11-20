@@ -32,11 +32,12 @@ async function focusTrigger(trigger: HTMLElement, next = '{ArrowRight}') {
   expect(document.activeElement).toBe(trigger);
 }
 
-// In a Vapor app with Vapor parts, Vue 3.6 runs no portal of the popup families: the portal returns a
-// render function, and a Vapor component must return a block.
-describe
-  .skipIf(inject('app') === 'vapor')
-  .each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
+// In a Vapor app with Vapor parts, Vue 3.6 runs no portal of the older popup families: the portal
+// returns a render function, and a Vapor component must return a block.
+const olderPortal = inject('app') === 'vapor';
+
+describe.each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
+  const skipped = olderPortal && kind === 'menu';
   const popupRole = {
     menu: 'menu',
     popover: 'dialog',
@@ -44,36 +45,42 @@ describe
     'alert-dialog': 'alertdialog',
   }[kind];
 
-  test('is an item of the toolbar; Enter opens its popup, and Escape closes it and gives the focus back', async () => {
-    const { entries, trigger } = await mountCompose({ kind });
-    expect(trigger).toHaveAttribute('tabindex', '-1');
-    expect(trigger).toHaveAttribute('data-orientation', 'horizontal');
-    await focusTrigger(trigger);
-    await waitForLaterMillisecond(() => userEvent.keyboard('{Enter}'));
-    await waitFor(() => expect(role(popupRole)).not.toBeNull());
-    await waitFor(() => expect(role(popupRole)!.contains(document.activeElement)).toBe(true));
-    await userEvent.keyboard('{ArrowRight}');
-    expect(role(popupRole)!.contains(document.activeElement)).toBe(true);
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(focused()).toBe('trigger'));
-    expect(entries).toEqual(['open true', 'open false']);
-  });
+  test.skipIf(skipped)(
+    'is an item of the toolbar; Enter opens its popup, and Escape closes it and gives the focus back',
+    async () => {
+      const { entries, trigger } = await mountCompose({ kind });
+      expect(trigger).toHaveAttribute('tabindex', '-1');
+      expect(trigger).toHaveAttribute('data-orientation', 'horizontal');
+      await focusTrigger(trigger);
+      await waitForLaterMillisecond(() => userEvent.keyboard('{Enter}'));
+      await waitFor(() => expect(role(popupRole)).not.toBeNull());
+      await waitFor(() => expect(role(popupRole)!.contains(document.activeElement)).toBe(true));
+      await userEvent.keyboard('{ArrowRight}');
+      expect(role(popupRole)!.contains(document.activeElement)).toBe(true);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(focused()).toBe('trigger'));
+      expect(entries).toEqual(['open true', 'open false']);
+    },
+  );
 
-  test('disabled: has aria-disabled and no disabled, keeps the focus, and a click, Enter and Space do not open it', async () => {
-    const { entries, trigger } = await mountCompose({ kind, disabled: true });
-    expect(trigger).toHaveAttribute('aria-disabled', 'true');
-    expect(trigger).not.toHaveAttribute('disabled');
-    await userEvent.click(trigger, { force: true });
-    await focusTrigger(trigger);
-    await userEvent.keyboard('{Enter} {ArrowDown}');
-    await settle();
-    expect(focused()).toBe('trigger');
-    expect(entries).toEqual([]);
-    expect(role(popupRole)).toBeNull();
-  });
+  test.skipIf(skipped)(
+    'disabled: has aria-disabled and no disabled, keeps the focus, and a click, Enter and Space do not open it',
+    async () => {
+      const { entries, trigger } = await mountCompose({ kind, disabled: true });
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+      expect(trigger).not.toHaveAttribute('disabled');
+      await userEvent.click(trigger, { force: true });
+      await focusTrigger(trigger);
+      await userEvent.keyboard('{Enter} {ArrowDown}');
+      await settle();
+      expect(focused()).toBe('trigger');
+      expect(entries).toEqual([]);
+      expect(role(popupRole)).toBeNull();
+    },
+  );
 });
 
-describe.skipIf(inject('app') === 'vapor')('a menu trigger', () => {
+describe.skipIf(olderPortal)('a menu trigger', () => {
   test('the arrow keys of the menu move the highlight, and the keys of the toolbar do not reach the menu', async () => {
     const { find, trigger } = await mountCompose({ kind: 'menu' });
     await focusTrigger(trigger);
@@ -110,7 +117,7 @@ describe.skipIf(inject('app') === 'vapor')('a menu trigger', () => {
   });
 });
 
-describe.skipIf(inject('app') === 'vapor')('a select trigger', () => {
+describe.skipIf(olderPortal)('a select trigger', () => {
   test('ArrowDown of the other axis opens the list; a choice closes it and gives the focus back', async () => {
     const { entries, trigger } = await mountCompose({ kind: 'select' });
     await focusTrigger(trigger);
@@ -134,7 +141,7 @@ describe.skipIf(inject('app') === 'vapor')('a select trigger', () => {
   });
 });
 
-describe.skipIf(inject('app') === 'vapor')('a popover', () => {
+describe('a popover', () => {
   test('a press on a disabled Toolbar.Button closes the open popover', async () => {
     const { entries, trigger, find } = await mountCompose({ kind: 'popover' });
     await waitForLaterMillisecond(() => userEvent.click(trigger));
@@ -144,7 +151,7 @@ describe.skipIf(inject('app') === 'vapor')('a popover', () => {
   });
 });
 
-describe.skipIf(inject('app') === 'vapor')('a tooltip trigger', () => {
+describe('a tooltip trigger', () => {
   test('in a disabled Toolbar.Button, opens at a hover', async () => {
     const { trigger, find } = await mountCompose({ kind: 'tooltip', disabled: true });
     expect(trigger).toHaveAttribute('aria-disabled', 'true');

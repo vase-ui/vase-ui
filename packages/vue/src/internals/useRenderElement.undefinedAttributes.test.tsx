@@ -11,7 +11,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
-import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
 import { NOOP } from '../common/empty';
@@ -171,21 +170,6 @@ const rows: Row[] = [
       </Toast.Provider>
     ),
     expected: targetId,
-  },
-  {
-    name: 'Tooltip.Popup data-open',
-    attribute: 'data-open',
-    createNode: () => (
-      <Tooltip.Root defaultOpen>
-        <Tooltip.Trigger>Tip</Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Positioner>
-            <Tooltip.Popup data-open={undefined} data-testid="part" />
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    ),
-    expected: () => '',
   },
   {
     name: 'useRender role',

@@ -98,7 +98,8 @@ Render a part of another component in the `element` slot of a toolbar part. Bind
 
 <<< ./toolbar/MenuInToolbar.vue{8-10}
 
-- **Popups with a trigger**: render the trigger in the slot of `<Toolbar.Button>`. This works for Alert Dialog, Dialog, Drawer, Menu, Popover, Select and Tooltip. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The trigger then keeps the focus and opens nothing. A tooltip still opens at a hover.
+- **Popups with a trigger**: render the trigger in the slot of `<Toolbar.Button>`. This works for Alert Dialog, Dialog, Drawer, Menu, Popover and Select. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The trigger then keeps the focus and opens nothing.
+- **Tooltips**: render `<Toolbar.Button>` in the `element` slot of `<Tooltip.Trigger>`. Set `disabled` on `<Toolbar.Button>`. The button then keeps the focus, and its tooltip still opens at a hover.
 - **Toggle**: render a `Toggle` in the slot of `<Toolbar.Button>`. Each toggle of a `ToggleGroup` in the toolbar is an item with no wrapper.
 - **Inputs**: render a `Switch`, a `Checkbox`, a `Radio` or a `NumberField.Input` in the slot of `<Toolbar.Input>`. `Toolbar.Input` then renders no `Input` and owns no text, so give `v-model` to the part in the slot.
 

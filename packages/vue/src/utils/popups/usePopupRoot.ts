@@ -309,8 +309,7 @@ export type PopupStoreState<Payload> = {
    */
   positionerElement: HTMLElement | null;
   /**
-   * A virtual anchor that replaces the active trigger, such as the cursor position of a tooltip
-   * that follows the cursor.
+   * A virtual anchor that replaces the active trigger.
    */
   anchorOverride: ReferenceType | null;
 
@@ -789,7 +788,7 @@ export abstract class BasePopupStore<
 }
 
 /**
- * Gives the `instantType` of a popup that opens on hover, such as a tooltip or a preview card. An
+ * Gives the `instantType` of a popup that opens on hover, such as a preview card. An
  * open on focus, and a close with the trigger or Escape, skip the transition. A hover change plays
  * it.
  */

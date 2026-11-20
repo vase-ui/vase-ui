@@ -76,6 +76,11 @@ const TrashIcon: FunctionalComponent = (_, { attrs }) =>
       }),
     ],
   );
+
+const popupHiddenClass = styles.PopupHidden;
+const contentEnterFromClass = styles.ContentEnterFrom;
+const contentLeavingClass = styles.ContentLeaving;
+const contentLeaveToClass = styles.ContentLeaveTo;
 </script>
 
 <template>
@@ -112,11 +117,25 @@ const TrashIcon: FunctionalComponent = (_, { attrs }) =>
     <Tooltip.Root v-slot="{ payload }" :handle="demoTooltip">
       <Tooltip.Portal>
         <Tooltip.Positioner :side-offset="11" :class="styles.Positioner">
-          <Tooltip.Popup :class="styles.Popup">
-            <Tooltip.Arrow :class="styles.Arrow" />
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <Tooltip.Popup :class="styles.Popup">
+              <Tooltip.Arrow :class="styles.Arrow" />
 
-            <Tooltip.Viewport :class="styles.Viewport">{{ payload }}</Tooltip.Viewport>
-          </Tooltip.Popup>
+              <Tooltip.Viewport v-slot="{ triggerId }" :class="styles.Viewport">
+                <Transition
+                  :enter-from-class="contentEnterFromClass"
+                  :leave-active-class="contentLeavingClass"
+                  :leave-to-class="contentLeaveToClass"
+                >
+                  <div :key="triggerId ?? ''" :class="styles.Content">{{ payload }}</div>
+                </Transition>
+              </Tooltip.Viewport>
+            </Tooltip.Popup>
+          </Transition>
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>
