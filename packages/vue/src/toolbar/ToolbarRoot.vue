@@ -123,8 +123,9 @@ function moveFocus(event: KeyboardEvent) {
   event.preventDefault();
   event.stopPropagation();
   // The browser refuses the focus to an element that CSS hides or that is disabled, such as a
-  // button in a disabled fieldset. The next item then gets it.
-  for (let next = first; next !== target;) {
+  // button in a disabled fieldset. The next item then gets it. Each item gets one try: the focused
+  // element can be out of the sequence, and the loop then does not come back to it.
+  for (let next = first, tries = candidates.length; next !== target && tries > 0; tries -= 1) {
     next.focus();
     if ((next.getRootNode() as Document | ShadowRoot).activeElement === next) {
       // Tab selects the text of an input, and `focus()` does not in Chromium and Firefox.
