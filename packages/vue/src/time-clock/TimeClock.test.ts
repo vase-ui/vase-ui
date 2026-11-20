@@ -1,0 +1,303 @@
+import { describe, expect, test } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { nextTick, reactive } from 'vue';
+import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
+import { dataAttributes } from '../../test/field';
+import TimeClockParts from '../../test/fixtures/TimeClockParts.vue';
+import { mount, settle } from '../../test/render';
+import { pointOnFace } from '../../test/time-clockTestUtils';
+
+const time = (text: string) => Temporal.PlainTime.from(text);
+
+/** Props of a clock that write each event in `log`. */
+function record(log: string[], attrs: Record<string, unknown> = {}) {
+  return reactive<Record<string, unknown>>({
+    onValueChange: (value: unknown, details: TimeClockRootChangeEventDetails) =>
+      log.push(`valueChange ${String(value)} ${details.reason}`),
+    onValueCommitted: (value: unknown, details: { reason: string }) =>
+      log.push(`valueCommitted ${String(value)} ${details.reason}`),
+    onViewChange: (view: string, details: { reason: string }) =>
+      log.push(`viewChange ${view} ${details.reason}`),
+    ...attrs,
+  });
+}
+
+async function mountClock(props: Record<string, unknown> = {}) {
+  const { root, exposed } = mount(TimeClockParts, props);
+  await nextTick();
+  const byTestId = (id: string) => root.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+  return {
+    root,
+    exposed,
+    group: root.querySelector<HTMLElement>('[role="group"]')!,
+    face: () => byTestId('face')!,
+    range: () => root.querySelector<HTMLInputElement>('input[type="range"]')!,
+    hand: () => byTestId('hand'),
+    byTestId,
+    numbers: () => [...root.querySelectorAll<HTMLElement>('[data-testid="face"] span')],
+  };
+}
+
+const at = (face: HTMLElement, angle: number, ratio?: number) => {
+  const { clientX: x, clientY: y } = pointOnFace(face, angle, ratio);
+  return { x, y };
+};
+
+async function pressAt(face: HTMLElement, angle: number, ratio?: number) {
+  await userEvent.pointer({ coords: at(face, angle, ratio), keys: '[MouseLeft>]' });
+}
+
+async function releaseAt(face: HTMLElement, angle: number, ratio?: number) {
+  await userEvent.pointer({ coords: at(face, angle, ratio), keys: '[/MouseLeft]' });
+}
+
+describe('the parts', () => {
+  test('the root is a group with the state of the clock; the face holds its numbers, the hand and a range input', async () => {
+    const { group, face, range, numbers, hand } = await mountClock({
+      clock: { defaultValue: time('15:30') },
+    });
+    expect(dataAttributes(group)).toEqual(['data-view']);
+    expect(group).toHaveAttribute('data-view', 'hour');
+    expect(face().lastElementChild).toBe(range());
+    expect(face().style.touchAction).toBe('none');
+    expect(numbers()).toHaveLength(12);
+    expect(numbers()[0]).toHaveTextContent('12');
+    expect(numbers()[0]).toHaveAttribute('aria-hidden', 'true');
+    expect(numbers()[3]).toHaveAttribute('data-selected');
+    expect(numbers()[3]!.style.getPropertyValue('--time-clock-number-angle')).toBe('90deg');
+    expect(hand()).toHaveAttribute('aria-hidden', 'true');
+    expect(hand()!.style.getPropertyValue('--time-clock-hand-angle')).toBe('90deg');
+    expect(range()).toHaveAttribute('aria-label', 'hour');
+    expect(range()).toHaveAttribute('aria-valuetext', '3 hours');
+    expect(range()).not.toHaveAttribute('aria-valuenow');
+    expect([range().min, range().max, range().step, range().value]).toEqual(['1', '12', '1', '3']);
+    expect(range().name).toBe('');
+  });
+
+  test('with no value, the face shows the time of `referenceDate`, no number is selected, and there is no hand', async () => {
+    const { range, numbers, hand, byTestId } = await mountClock({
+      clock: { referenceDate: time('09:00') },
+    });
+    expect(range().value).toBe('9');
+    expect(numbers().some((number) => number.hasAttribute('data-selected'))).toBe(false);
+    expect(hand()).toBe(null);
+    expect(byTestId('hour-trigger')).toHaveTextContent('--');
+    expect(byTestId('hour-trigger')).toHaveAttribute('aria-label', 'hour');
+  });
+
+  test('a 24-hour face has an inner ring and no day period', async () => {
+    const { numbers, byTestId } = await mountClock({ clock: { hourCycle: 24 } });
+    expect(numbers()).toHaveLength(24);
+    expect(numbers().filter((number) => number.hasAttribute('data-inner'))).toHaveLength(12);
+    expect(byTestId('am')).toBe(null);
+  });
+
+  test('`aria-valuetext`: the attribute of the developer, else `getAriaValueText`, also with no value', async () => {
+    const face = reactive<Record<string, unknown>>({
+      getAriaValueText: (value: number, view: string) => `${view} ${value}`,
+    });
+    const { range } = await mountClock({ face });
+    expect(range()).toHaveAttribute('aria-valuetext', 'hour 12');
+    Object.assign(face, { 'aria-valuetext': 'noon', 'aria-label': 'Hour', id: 'clock-hour' });
+    await nextTick();
+    expect(range()).toHaveAttribute('aria-valuetext', 'noon');
+    expect(range()).toHaveAttribute('aria-label', 'Hour');
+    expect(range().id).toBe('clock-hour');
+  });
+
+  test('the triggers and the day periods are buttons with `aria-pressed`, and the developer `type` wins', async () => {
+    const { byTestId } = await mountClock({ clock: { defaultValue: time('15:30') } });
+    const pm = byTestId('pm') as HTMLButtonElement;
+    expect(pm.type).toBe('button');
+    expect(pm).toHaveTextContent('PM');
+    expect(pm).toHaveAttribute('aria-pressed', 'true');
+    expect(byTestId('am')).toHaveAttribute('aria-pressed', 'false');
+    expect(byTestId('hour-trigger')).toHaveTextContent('03');
+    expect(byTestId('hour-trigger')).toHaveAttribute('aria-label', 'hour 03');
+    expect(byTestId('hour-trigger')).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('press and drag', () => {
+  test('a press selects the nearest number, a drag gives one change for each number, and the release commits and shows the next view', async () => {
+    const log: string[] = [];
+    const { face, range, group } = await mountClock({ clock: record(log) });
+    await pressAt(face(), 90);
+    expect(document.activeElement).toBe(range());
+    expect(group).toHaveAttribute('data-dragging');
+    await userEvent.pointer({ coords: at(face(), 95) });
+    await userEvent.pointer({ coords: at(face(), 120) });
+    await releaseAt(face(), 120);
+    await nextTick();
+    expect(log).toEqual([
+      'valueChange 03:00:00 drag',
+      'valueChange 04:00:00 drag',
+      'valueCommitted 04:00:00 drag',
+      'viewChange minute drag',
+    ]);
+    expect(group).not.toHaveAttribute('data-dragging');
+    expect(group).toHaveAttribute('data-view', 'minute');
+  });
+
+  test('the distance from the center selects the ring of a 24-hour face', async () => {
+    const log: string[] = [];
+    const { face } = await mountClock({
+      clock: record(log, { hourCycle: 24, granularity: 'hour' }),
+    });
+    await pressAt(face(), 90, 0.5);
+    await releaseAt(face(), 90, 0.5);
+    await pressAt(face(), 90, 0.9);
+    await releaseAt(face(), 90, 0.9);
+    expect(log.filter((line) => line.startsWith('valueChange 1'))).toEqual([
+      'valueChange 15:00:00 drag',
+    ]);
+    expect(log).toContain('valueChange 03:00:00 drag');
+  });
+
+  test('a press of an event that a script made selects, with no pointer capture and no error', async () => {
+    const log: string[] = [];
+    const { face } = await mountClock({ clock: record(log) });
+    const point = pointOnFace(face(), 180);
+    const init = { ...point, button: 0, pointerId: 7, bubbles: true, cancelable: true };
+    face().dispatchEvent(new PointerEvent('pointerdown', init));
+    face().dispatchEvent(new PointerEvent('pointerup', init));
+    expect(log).toEqual(['valueChange 06:00:00 drag', 'valueCommitted 06:00:00 drag', 'viewChange minute drag']);
+  });
+
+  test('a press that selects a disabled number commits nothing, and a selection goes into the limits', async () => {
+    const log: string[] = [];
+    const { face } = await mountClock({
+      clock: record(log, { min: time('08:30'), max: time('10:00') }),
+    });
+    await pressAt(face(), 180);
+    await releaseAt(face(), 180);
+    expect(log).toEqual([]);
+    await pressAt(face(), 240);
+    await releaseAt(face(), 240);
+    expect(log[0]).toBe('valueChange 08:30:00 drag');
+  });
+
+  test('`pointercancel` ends the press with no commit, and a face that goes away ends the drag', async () => {
+    const log: string[] = [];
+    const scene = reactive({ showFace: true });
+    const { face, group } = await mountClock({ clock: record(log), scene });
+    await pressAt(face(), 90);
+    face().dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1, bubbles: true }));
+    await releaseAt(face(), 90);
+    expect(log).toEqual(['valueChange 03:00:00 drag']);
+    await pressAt(face(), 120);
+    expect(group).toHaveAttribute('data-dragging');
+    scene.showFace = false;
+    await nextTick();
+    expect(group).not.toHaveAttribute('data-dragging');
+    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+  });
+});
+
+describe('keys', () => {
+  test('arrows step, Page keys move 2 hours, Home and End go to the ends, and each key goes over a disabled hour', async () => {
+    const log: string[] = [];
+    const { range } = await mountClock({
+      clock: record(log, {
+        defaultValue: time('11:00'),
+        hourCycle: 24,
+        disabledTimes: (candidate: Temporal.PlainTime, view: string) =>
+          view === 'hour' && candidate.hour === 12,
+      }),
+    });
+    range().focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.keyboard('{ArrowLeft}{PageUp}{End}{Home}');
+    expect(log).toEqual([
+      'valueChange 13:00:00 keyboard',
+      'valueChange 11:00:00 keyboard',
+      'valueChange 13:00:00 keyboard',
+      'valueChange 23:00:00 keyboard',
+      'valueChange 00:00:00 keyboard',
+    ]);
+  });
+
+  test('Enter and Space commit, Enter first gives the time that the face shows, and the arrows keep their direction right to left', async () => {
+    const log: string[] = [];
+    const { range, root } = await mountClock({ clock: record(log, { granularity: 'second' }) });
+    root.dir = 'rtl';
+    range().focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.keyboard(' ');
+    expect(log).toEqual([
+      'valueChange 00:00:00 keyboard',
+      'valueCommitted 00:00:00 keyboard',
+      'viewChange minute keyboard',
+      'valueChange 00:01:00 keyboard',
+      'valueCommitted 00:01:00 keyboard',
+      'viewChange second keyboard',
+    ]);
+  });
+
+  test('a key with Alt, Ctrl or Meta stays native', async () => {
+    const { range } = await mountClock();
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowUp',
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    range().dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  test('an `input` event of the range input selects its value; the input shows the time of the clock again after a cancel', async () => {
+    const log: string[] = [];
+    const clock = record(log, {
+      defaultValue: time('03:00'),
+      onValueChange: (value: unknown, details: TimeClockRootChangeEventDetails) => {
+        log.push(`valueChange ${String(value)} ${details.reason}`);
+        if (log.length > 1) details.cancel();
+      },
+    });
+    const { range } = await mountClock({ clock });
+    range().value = '5';
+    range().dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    range().value = '7';
+    range().dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    expect(log).toEqual(['valueChange 05:00:00 input-change', 'valueChange 07:00:00 input-change']);
+    expect(range().value).toBe('5');
+  });
+});
+
+describe('buttons', () => {
+  test('a day period moves the time to the other half of the day, and is disabled when no hour of it is enabled', async () => {
+    const log: string[] = [];
+    const clock = record(log, { defaultValue: time('09:15') });
+    const { byTestId } = await mountClock({ clock });
+    await userEvent.click(byTestId('pm')!);
+    expect(log).toEqual(['valueChange 21:15:00 item-press']);
+    clock.max = time('11:00');
+    await nextTick();
+    expect((byTestId('pm') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  test('a trigger shows its view, also in a read-only clock; `details.cancel()` keeps the view', async () => {
+    const log: string[] = [];
+    const clock = record(log, { readonly: true, defaultValue: time('09:15') });
+    const { byTestId, group } = await mountClock({ clock });
+    await userEvent.click(byTestId('minute-trigger')!);
+    expect(group).toHaveAttribute('data-view', 'minute');
+    expect(group).toHaveAttribute('data-readonly');
+    clock.onViewChange = (_view: string, details: { cancel(): void }) => details.cancel();
+    await userEvent.click(byTestId('hour-trigger')!);
+    expect(group).toHaveAttribute('data-view', 'minute');
+    expect(log).toEqual(['viewChange minute trigger-press']);
+  });
+
+  test('a disabled clock disables the buttons and the range input', async () => {
+    const { byTestId, range, group } = await mountClock({ clock: { disabled: true } });
+    expect((byTestId('hour-trigger') as HTMLButtonElement).disabled).toBe(true);
+    expect((byTestId('am') as HTMLButtonElement).disabled).toBe(true);
+    expect(range().disabled).toBe(true);
+    expect(group).toHaveAttribute('data-disabled');
+  });
+});

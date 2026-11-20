@@ -79,10 +79,13 @@ export function nativeFailure(
   document: Document,
   attributes: Record<string, string | undefined>,
 ): DateTimeFieldError | null {
+  const { value = '', ...rest } = attributes;
   const input = document.createElement('input');
-  for (const [name, value] of Object.entries(attributes)) {
-    if (value !== undefined) input.setAttribute(name, value);
+  for (const [name, attribute] of Object.entries(rest)) {
+    if (attribute !== undefined) input.setAttribute(name, attribute);
   }
+  // A `value` attribute would be the step base of an input with no `min`.
+  input.value = value;
   const { validity } = input;
   if (validity.valid) return null;
   const flags = ['rangeUnderflow', 'rangeOverflow', 'stepMismatch'] as const;

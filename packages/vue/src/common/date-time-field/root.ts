@@ -726,7 +726,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
         form: props.form,
         autocomplete: props.autocomplete,
         value: value.value === null ? '' : toInputText(value.value, showSeconds.value),
-        min: limits?.min,
+        // Vue writes the `value` attribute, and the browser takes it as the step base of an input
+        // with no `min` (test/measurements/date-time-field.test.ts). The step of a time goes from
+        // midnight.
+        min: limits?.min ?? (type === 'time' && step !== undefined ? '00:00' : undefined),
         max: limits?.max,
         step,
         required: !!props.required,
