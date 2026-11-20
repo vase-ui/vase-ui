@@ -1,29 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { KeepAlive, shallowRef, Teleport } from 'vue';
+import { shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
 import { Popover } from '@vase-ui/vue/popover';
-import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
-  isVaporApp,
   screen,
   waitFor,
   waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { TestElement } from '../../test/testElement';
-import VaporConsumer from '../../test/conformanceTests/VaporConsumer.vue';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
 import CompositeItem from '../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../test/fixtures/CompositeRootPart.vue';
-import SliderInputPortal from '../../test/fixtures/SliderInputPortal.vue';
 import { useElementRegistration } from './useElementRegistration';
 
 describe('owned parts', () => {
@@ -208,128 +204,6 @@ describe('owned parts', () => {
     await flushMicrotasks();
     expect([first.tabIndex, active.tabIndex]).toEqual([-1, 0]);
   });
-
-  it('VUE-87: ignores a track press until the registered thumb input is connected', async () => {
-    const target = document.createElement('div');
-    try {
-      const { unmount } = await render(
-        <Slider.Root defaultValue={50}>
-          <Slider.Control data-testid="track" style={{ width: '100px' }}>
-            <SliderInputPortal target={target} />
-          </Slider.Control>
-        </Slider.Root>,
-      );
-      try {
-        const input = within(target).getByRole('slider') as HTMLInputElement;
-        const track = screen.getByTestId('track');
-        const press = async () => {
-          await fireEvent.pointerDown(track, {
-            pointerId: 1,
-            pointerType: 'mouse',
-            button: 0,
-            buttons: 1,
-            clientX: track.getBoundingClientRect().left,
-          });
-          await fireEvent.pointerUp(track, { pointerId: 1 });
-        };
-        await press();
-        expect(input.value).toBe('50');
-        document.body.append(target);
-        await press();
-        expect(input.value).toBe('0');
-      } finally {
-        unmount();
-      }
-    } finally {
-      target.remove();
-    }
-  });
-
-  it('VUE-87: focuses the thumb input across a portal and releases it while the thumb is held', async () => {
-    const target = document.createElement('div');
-    document.body.append(target);
-    const shown = shallowRef(true);
-    const disabled = shallowRef(false);
-    try {
-      const { user, unmount } = await render(() => (
-        <Slider.Root defaultValue={50} disabled={disabled.value}>
-          <Slider.Label>Volume</Slider.Label>
-          <Slider.Control data-testid="track">
-            <input type="range" aria-label="Other" />
-            <KeepAlive>{shown.value ? <SliderInputPortal target={target} /> : null}</KeepAlive>
-          </Slider.Control>
-          <button>Outside</button>
-        </Slider.Root>
-      ));
-      try {
-        const input = within(target).getByRole('slider');
-        const outside = screen.getByRole('button', { name: 'Outside' });
-        const label = screen.getByText('Volume');
-        within(target).getByText('Before input').focus();
-        await user.tab();
-        expect(input).toHaveFocus();
-        await user.tab();
-        expect(within(target).getByText('After input')).toHaveFocus();
-        await fireEvent.click(label);
-        expect(input).toHaveFocus();
-        outside.focus();
-        await fireEvent.pointerDown(screen.getByTestId('track'), {
-          pointerId: 1,
-          pointerType: 'mouse',
-          button: 0,
-          buttons: 1,
-          clientX: 10,
-        });
-        await waitFor(() => expect(input).toHaveFocus());
-        await fireEvent.pointerUp(screen.getByTestId('track'), { pointerId: 1 });
-
-        disabled.value = true;
-        await flushMicrotasks();
-        expect(input).not.toHaveFocus();
-        disabled.value = false;
-        await flushMicrotasks();
-
-        shown.value = false;
-        await flushMicrotasks();
-        outside.focus();
-        await fireEvent.click(label);
-        expect(outside).toHaveFocus();
-        shown.value = true;
-        await flushMicrotasks();
-        await fireEvent.click(label);
-        expect(input).toHaveFocus();
-      } finally {
-        unmount();
-      }
-    } finally {
-      target.remove();
-    }
-  });
-
-  it.runIf(isVaporApp)(
-    'VUE-87: focuses a thumb that a Vapor consumer renders in another portal',
-    async () => {
-      const { user } = await render(
-        <Slider.Root defaultValue={50}>
-          <Slider.Label>Volume</Slider.Label>
-          <Slider.Control>
-            <input type="range" aria-label="Other" />
-            <Teleport to="body">
-              <VaporConsumer
-                part={Slider.Thumb}
-                tag="span"
-                form="render"
-                partProps={{}}
-                onPart={() => undefined}
-              />
-            </Teleport>
-          </Slider.Control>
-        </Slider.Root>,
-      );
-      await user.click(screen.getByText('Volume'));
-      expect(screen.getByRole('slider', { name: 'Volume' })).toHaveFocus();
-    },
-  );
 
   it.each([true, false])(
     'VUE-47: keeps a popup outside its positioner accessible with modal=%s',

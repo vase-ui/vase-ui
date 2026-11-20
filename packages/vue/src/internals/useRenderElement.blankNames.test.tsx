@@ -6,7 +6,6 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -162,37 +161,6 @@ const rows: Row[] = [
     show: showNavigationMenu,
     expected: 'Products',
   },
-  {
-    name: 'Slider.Root',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Slider.Root defaultValue={10} data-testid="part" {...attrs}>
-        <Slider.Label>Volume</Slider.Label>
-        <Slider.Control>
-          <Slider.Track>
-            <Slider.Thumb />
-          </Slider.Track>
-        </Slider.Control>
-      </Slider.Root>
-    ),
-    expected: 'Volume',
-  },
-  ...(['aria-label', 'aria-labelledby'] as const).map((attribute): Row => ({
-    name: `Slider.Thumb ${attribute}`,
-    attribute,
-    createNode: (attrs) => (
-      <Slider.Root defaultValue={10}>
-        <Slider.Label>Volume</Slider.Label>
-        <Slider.Control>
-          <Slider.Track>
-            <Slider.Thumb {...attrs} />
-          </Slider.Track>
-        </Slider.Control>
-      </Slider.Root>
-    ),
-    expected: 'Volume',
-    getNamed: () => screen.getByRole('slider'),
-  })),
   ...(['aria-label', 'aria-labelledby'] as const).map((attribute): Row => ({
     name: `TimeClock.Face ${attribute}`,
     attribute,

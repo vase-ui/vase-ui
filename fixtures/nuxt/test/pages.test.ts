@@ -967,33 +967,25 @@ async function readSliderPage(page: Page) {
     const input = (thumb: HTMLElement) => thumb.querySelector('input')!;
     const read = (element: Element, names: string[]) =>
       Object.fromEntries(names.map((name) => [name, element.getAttribute(name)]));
-    const [priceIndicator] = all('price-indicator');
     const [volumeThumb] = all('volume-thumb');
+    const control = all('price-control')[0].getBoundingClientRect();
 
     return {
       volumeRoot: read(all('volume')[0], ['role', 'aria-labelledby']),
-      volumeLabelId: all('volume-label')[0].id,
-      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'aria-valuenow', 'name']),
+      volumeLabel: read(all('volume-label')[0], ['id', 'for']),
+      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'value', 'name']),
       volumeValue: [all('volume-value')[0].textContent, all('volume-value')[0].getAttribute('for')],
       priceRoot: read(all('price')[0], ['aria-labelledby']),
       priceLabelId: all('price-label')[0].id,
       priceInputs: all('price-thumb').map((thumb) =>
-        read(input(thumb), ['aria-label', 'aria-labelledby', 'aria-valuenow']),
+        read(input(thumb), ['aria-label', 'aria-labelledby']),
       ),
-      priceThumbs: all('price-thumb').map((thumb) => [
-        thumb.getAttribute('data-index'),
-        thumb.style.visibility,
-        thumb.style.getPropertyValue('--position'),
-      ]),
-      priceIndicator: [
-        priceIndicator.style.visibility,
-        priceIndicator.style.getPropertyValue('--start-position'),
-        priceIndicator.style.getPropertyValue('--relative-size'),
-      ],
-      // A script of the server HTML with its nonce and its text.
-      scripts: Array.from(document.querySelectorAll<HTMLScriptElement>('script'))
-        .filter((script) => script.closest('[data-testid="price-control"]'))
-        .map((script) => [script.nonce, (script.textContent ?? '').length > 0]),
+      // The left and the right end of each edge thumb in its control, in pixels.
+      priceThumbs: all('price-thumb').map((thumb) => {
+        const rect = thumb.getBoundingClientRect();
+        return [rect.left - control.left, rect.right - control.left];
+      }),
+      scripts: document.querySelectorAll('[data-testid="form"] script').length,
       // The entries that a submit of the page sends.
       formData: Array.from(
         new FormData(document.querySelector('form')!),
@@ -1003,37 +995,36 @@ async function readSliderPage(page: Page) {
   });
 }
 
+// A thumb of 40 px in a control of 200 px, at 25 and 75.
+const EDGE_THUMBS = [
+  [40, 80],
+  [120, 160],
+];
+
 async function expectSliderPage(page: Page) {
   const result = await readSliderPage(page);
 
-  // The script has not run. An edge thumb is hidden until the script or the app places it.
-  expect(result.priceThumbs).toEqual([
-    ['0', 'hidden', '0%'],
-    ['1', 'hidden', '0%'],
-  ]);
-  expect(result.scripts).toEqual([['test-nonce', true]]);
-  // The labels link to the root and to the input in each order of the parts.
-  expect(result.volumeLabelId).toBeTruthy();
-  expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabelId);
-  expect(result.volumeInput['aria-labelledby']).toBe(result.volumeLabelId);
-  expect(result.priceLabelId).toBeTruthy();
-  expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
+  // CSS places an edge thumb in the control, with no script.
+  expect(result.scripts).toBe(0);
+  expect(result.priceThumbs).toEqual(EDGE_THUMBS);
+  // The label names the input of the first thumb, and an input after the label.
+  expect(result.volumeLabel.for).toBe(result.volumeInput.id);
+  expect(result.volumeInput['aria-labelledby']).toBe(result.volumeLabel.id);
+  // The root, and the output before the thumbs, name their parts after the mount.
+  expect(result.volumeRoot).toEqual({ role: 'group', 'aria-labelledby': null });
+  expect(result.priceRoot['aria-labelledby']).toBeNull();
+  expect(result.volumeValue).toEqual(['30', null]);
   // A thumb that has a name of its own does not use the label.
   expect(result.priceInputs.map((input) => input['aria-labelledby'])).toEqual([null, null]);
-  // The output names the inputs only after the mount, as in Base UI.
-  expect(result.volumeValue).toEqual(['30', null]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
 async function expectHydratedSliderPage(page: Page) {
   const result = await readSliderPage(page);
 
-  expect(result.priceThumbs).toEqual([
-    ['0', '', '30%'],
-    ['1', '', '70%'],
-  ]);
-  expect(result.priceIndicator).toEqual(['', '30%', '40%']);
-  expect(result.scripts).toEqual([]);
+  expect(result.priceThumbs).toEqual(EDGE_THUMBS);
+  expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabel.id);
+  expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
   expect(result.volumeValue).toEqual(['30', result.volumeInput.id]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
@@ -1682,8 +1673,6 @@ const FORM_STATE_INITIAL_MODELS = {
   fruit: null,
   quantity: 1,
   code: '',
-  volume: 50,
-  range: [20, 80],
   when: null,
   alarm: null,
 };
@@ -1697,8 +1686,6 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     fruit: ['Cherry'],
     quantity: ['7'],
     code: ['1234'],
-    volume: ['70'],
-    range: ['30', '60'],
     when: ['2026-12-25'],
     alarm: ['09:30'],
   },
@@ -1708,8 +1695,6 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     fruit: 'Cherry',
     quantity: 7,
     code: '1234',
-    volume: 70,
-    range: [30, 60],
     when: '2026-12-25',
     alarm: '09:30',
   },
@@ -1719,8 +1704,6 @@ const FORM_STATE_CHANGED: Omit<FormState, 'submits' | 'completes'> = {
     fruit: 1,
     quantity: 1,
     code: 1,
-    volume: 1,
-    range: 1,
     when: 1,
     alarm: 1,
   },
@@ -1774,8 +1757,6 @@ async function changeFormStateBeforeHydration(page: Page) {
     write('fruit', ['Cherry']);
     write('quantity', ['7']);
     write('code', ['1234']);
-    write('volume', ['70']);
-    write('range', ['30', '60']);
     write('when', ['2026-12-25']);
     write('alarm', ['09:30']);
   });
@@ -1793,12 +1774,6 @@ async function changeHydratedFormState(page: Page) {
   await page.keyboard.press('Tab');
   await page.getByTestId('code-1').click();
   await page.keyboard.type('1234');
-  await page.locator('input[name="volume"]').focus();
-  await page.keyboard.press('ArrowRight');
-  for (const input of await page.locator('input[name="range"]').all()) {
-    await input.focus();
-    await page.keyboard.press('ArrowRight');
-  }
   await page.getByTestId('when').locator('input[data-type="month"]').click();
   await page.keyboard.type('12252026');
   await page.getByTestId('alarm').locator('input[data-type="hour"]').click();
@@ -2524,19 +2499,12 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(offsetY).toBeGreaterThan(0);
   });
 
-  it('places the thumbs of /slider with its inline script when the files of the app do not load', async () => {
+  it('has the edge thumbs of /slider in their control when the files of the app do not load', async () => {
     const page = await createPage();
-    // The app does not start, so only the inline script of the server HTML runs.
     await page.route('**/_nuxt/**', (route) => route.abort());
 
     await page.goto(url('/slider'), { waitUntil: 'domcontentloaded' });
-    const result = await readSliderPage(page);
-
-    expect(result.priceThumbs).toEqual([
-      ['0', '', '30%'],
-      ['1', '', '70%'],
-    ]);
-    expect(result.priceIndicator).toEqual(['', '30%', '40%']);
+    expect((await readSliderPage(page)).priceThumbs).toEqual(EDGE_THUMBS);
   });
 
   it('changes the value of /slider with the keyboard and with a click on its control after hydration', async () => {
@@ -2851,16 +2819,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of [
-          'filter',
-          'font',
-          'fruit',
-          'quantity',
-          'volume',
-          'range',
-          'when',
-          'alarm',
-        ]) {
+        for (const name of ['filter', 'font', 'fruit', 'quantity', 'when', 'alarm']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

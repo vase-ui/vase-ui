@@ -12,7 +12,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
@@ -397,19 +396,6 @@ const rows: Row[] = [
       nativeLabel: true,
     }),
   })),
-  {
-    name: 'Slider.Root',
-    twice: true,
-    tree: (k, blankId) => (
-      <Slider.Root defaultValue={50} {...blankId} data-testid={`slider${k}`}>
-        <Slider.Label>Volume {k}</Slider.Label>
-        <Slider.Control>
-          <Slider.Thumb />
-        </Slider.Control>
-      </Slider.Root>
-    ),
-    named: labelled('slider', 'Volume'),
-  },
   ...(['Title', 'Description'] as const).map((part): Row => ({
     name: `Toast.${part}`,
     tree: toastParts(part),

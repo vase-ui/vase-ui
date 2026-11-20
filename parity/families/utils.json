@@ -67,6 +67,23 @@
       ]
     },
     {
+      "upstream": "packages/react/src/utils/valueToPercent.ts",
+      "relation": "inlined-into",
+      "destination": "packages/vue/src/slider/values.ts",
+      "member": "percent",
+      "witness": "packages/vue/src/slider/values.test.ts",
+      "additional": [
+        {
+          "destination": "packages/vue/src/meter/MeterRoot.vue",
+          "member": "percent"
+        },
+        {
+          "destination": "packages/vue/src/progress/ProgressRoot.vue",
+          "member": "percentOf"
+        }
+      ]
+    },
+    {
       "upstream": "packages/react/src/utils/useFocusableWhenDisabled.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/use-button/useButton.ts",

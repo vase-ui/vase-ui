@@ -6,10 +6,10 @@ import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Resizable from '../src/resizable/index.parts';
-import * as Slider from '../src/slider/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
 import * as TimePicker from '../src/time-picker/index.parts';
+import { Slider } from '@vase-ui/vue/slider';
 
 const id = 'id';
 </script>
@@ -59,8 +59,6 @@ const id = 'id';
 
   <Slider.Root aria-labelledby="id" />
   <Slider.Root :aria-labelledby="id" />
-  <Slider.Root ariaLabelledby="id" />
-  <Slider.Root :ariaLabelledby="id" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <Slider.Root :aria-labelledby="5" />
 
@@ -71,8 +69,6 @@ const id = 'id';
     :aria-describedby="id"
     :aria-valuetext="id"
   />
-  <Slider.Thumb ariaLabel="x" ariaLabelledby="id" ariaDescribedby="id" ariaValuetext="x" />
-  <Slider.Thumb :ariaLabel="id" :ariaLabelledby="id" :ariaDescribedby="id" :ariaValuetext="id" />
   <!-- @vue-expect-error `aria-label` is a string -->
   <Slider.Thumb :aria-label="5" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->

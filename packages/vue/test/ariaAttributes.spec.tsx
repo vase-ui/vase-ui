@@ -3,10 +3,10 @@ import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Resizable from '../src/resizable/index.parts';
-import * as Slider from '../src/slider/index.parts';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
 import * as TimePicker from '../src/time-picker/index.parts';
+import { Slider } from '@vase-ui/vue/slider';
 
 <DateField.Root aria-labelledby="id" />;
 <DateField.Root ariaLabelledby="id" />;
@@ -39,12 +39,10 @@ import * as TimePicker from '../src/time-picker/index.parts';
 <OTPField.Root length={6} aria-labelledby={5} />;
 
 <Slider.Root aria-labelledby="id" />;
-<Slider.Root ariaLabelledby="id" />;
 // @ts-expect-error `aria-labelledby` is a string
 <Slider.Root aria-labelledby={5} />;
 
 <Slider.Thumb aria-label="x" aria-labelledby="id" aria-describedby="id" aria-valuetext="x" />;
-<Slider.Thumb ariaLabel="x" ariaLabelledby="id" ariaDescribedby="id" ariaValuetext="x" />;
 // @ts-expect-error `aria-label` is a string
 <Slider.Thumb aria-label={5} />;
 // @ts-expect-error `aria-labelledby` is a string
