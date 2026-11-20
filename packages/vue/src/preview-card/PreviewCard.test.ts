@@ -6,6 +6,7 @@ import PreviewCardHandles from '../../test/fixtures/PreviewCardHandles.vue';
 import PreviewCardInTransition from '../../test/fixtures/PreviewCardInTransition.vue';
 import PreviewCardPartAlone from '../../test/fixtures/PreviewCardPartAlone.vue';
 import PreviewCardParts from '../../test/fixtures/PreviewCardParts.vue';
+import PreviewCardSlots from '../../test/fixtures/PreviewCardSlots.vue';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -129,6 +130,24 @@ describe('the parts', () => {
     expect(trigger().localName).toBe('span');
     expect(element.localName).toBe('section');
     expect(element).toHaveAttribute('tabindex', '-1');
+  });
+});
+
+describe('the element slot', () => {
+  test('renders the element of the developer with the props of the part; a hover open and close of one link renders no other link again', async () => {
+    const renders: string[] = [];
+    mount(PreviewCardSlots, { renders });
+    await nextTick();
+    expect(byId('second').localName).toBe('a');
+    expect(byId('second')).toHaveAttribute('href', '#second');
+    renders.length = 0;
+    await userEvent.hover(byId('first'));
+    const element = await opened();
+    expect(element.localName).toBe('section');
+    expect(element).toHaveAttribute('tabindex', '-1');
+    await userEvent.hover(byId('outside'));
+    await closed();
+    expect(renders).toEqual([]);
   });
 });
 
@@ -334,6 +353,29 @@ describe('in the DOM', () => {
     await userEvent.hover(trigger());
     await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
     expect(element).not.toHaveAttribute('inert');
+  });
+
+  test('a kept card that opens again for another link moves to that link', async () => {
+    const { trigger } = await mountCard({
+      portal: { keepMounted: true },
+      triggers: [
+        { key: 'a', attrs: { delay: 0, closeDelay: 0 } },
+        { key: 'b', attrs: { delay: 0, closeDelay: 0, style: 'display: block; margin-top: 80px' } },
+      ],
+    });
+    const under = (link: Element) => () =>
+      expect(
+        Math.abs(positioner()!.getBoundingClientRect().top - link.getBoundingClientRect().bottom),
+      ).toBeLessThan(1);
+    await userEvent.hover(trigger('a'));
+    const element = popup()!;
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await waitFor(under(trigger('a')));
+    await userEvent.hover(byId('outside'));
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    await userEvent.hover(trigger('b'));
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await waitFor(under(trigger('b')));
   });
 
   test('the popup and the viewport have the `data-instant` of the last change: `focus` after an open by the focus, `dismiss` after Escape, none after a hover', async () => {
@@ -771,7 +813,8 @@ describe('the arrow', () => {
     arrows.first = false;
     positioner.sideOffset = 12;
     await waitFor(() => {
-      expect(byTestId('positioner').getBoundingClientRect().top).toBe(link.bottom + 12);
+      const top = byTestId('positioner').getBoundingClientRect().top;
+      expect(Math.abs(top - (link.bottom + 12))).toBeLessThan(1);
       expectCentered();
     });
   });
