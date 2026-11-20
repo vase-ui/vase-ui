@@ -127,7 +127,7 @@
     {
       "upstream": "packages/react/src/utils/popups/popupPositioner.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",

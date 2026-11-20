@@ -97,47 +97,47 @@
     {
       "upstream": "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/arrow.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/useFloating.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/usePositioner.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/resolveAriaLabelledBy.ts",
