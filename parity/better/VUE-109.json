@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolvePopupLabel.ts#L22-L27",
     "https://www.w3.org/TR/wai-aria-1.2/#aria-labelledby"
   ],
-  "behavior": "A popup that takes its name from its trigger follows the `id` of the trigger element while it is open. When the `id` prop of the trigger, an `id` attribute or the `#render` slot gives the element a new id, the `aria-labelledby` of the Navigation Menu popup gets that id. Base UI reads the `id` of the trigger element when a part of the menu renders. A change of the attribute that changes no state of the menu, such as a new id from the `render` element of the trigger, thus can leave an `aria-labelledby` that names no element.",
+  "behavior": "The Navigation Menu popup names the trigger of the open item in `aria-labelledby` with the `id` of the trigger part, so a new `id` prop of the trigger changes the name of the open popup. Base UI reads the `id` of the trigger element when a part of the menu renders. A new id of the `render` element that changes no state of the menu can thus leave an `aria-labelledby` that names no element.",
   "dueWith": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx"
 }

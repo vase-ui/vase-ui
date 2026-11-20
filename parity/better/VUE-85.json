@@ -7,6 +7,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/trigger/MenuTrigger.tsx#L204-L206",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menubar/Menubar.tsx#L112-L117"
   ],
-  "behavior": "A menu of a menubar that closes because another menu of the menubar opened gives the focus to the trigger of the open menu. Base UI gives the focus to the trigger of the menu that closed. While the menubar has an open menu, that focus can open the closed menu again, and the menu that opened then closes. An open of a menu by its `open` prop or by its handle is then lost. The focus returns only when the closed popup unmounts before another element takes the focus, as when `VASE_UI_ANIMATIONS_DISABLED` is `true`.",
+  "behavior": "A menu of a menubar that closes because another menu of the menubar opened gives the focus to the trigger of the open menu. Base UI gives the focus to the trigger of the menu that closed, when the closed popup unmounts before another element takes the focus, as with no exit animation. While the menubar has an open menu, that focus can open the closed menu again, and the menu that opened then closes. An open of a menu by its `open` prop or by its handle is then lost.",
   "dueWith": "packages/react/src/menu/popup/MenuPopup.tsx"
 }

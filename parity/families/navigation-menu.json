@@ -8,52 +8,52 @@
     {
       "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdropDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContentDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/icon/NavigationMenuIconDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLinkDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopupCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/navigation-menu/utils/setSharedFixedSize.ts",
@@ -84,7 +84,7 @@
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
-      "reason": "`NavigationMenu.test.ts` tests the root through the parts: the value with each reason, `v-model`, `cancel()`, the falsy values, `close()`, the hover with `delay` and `closeDelay`, the triangle to the popup, the patient press, the keys, the Tab order, the return of the focus, the nested roots, the content, the size steps and the placement. The parts render no transition status and no unmount action: `<Transition>` animates the popup and the backdrop, `transition` animates a content, and the hooks of `<Transition>` replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete` (rule 8.9). A triangle flag of the hover replaces the `pointer-events` styles of the safe polygon."
+      "reason": "`NavigationMenu.test.ts` tests the root through the parts: the value with each reason, `v-model`, `cancel()`, the falsy values, `close()`, the hover with `delay` and `closeDelay`, the triangle to the popup, the patient press, the keys, the Tab order, the return of the focus, the nested roots, the content, the size steps and the placement. `<Transition>` animates the popup and the backdrop, `transition` animates a content, and the hooks of `<Transition>` do the work of `unmount()`, `preventUnmountOnClose()` and `openChangeComplete`, so the parts render no transition status and no unmount action. A triangle flag of the hover does the work of the `pointer-events` styles of the safe polygon."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
@@ -96,7 +96,7 @@
       "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
-      "reason": "`NavigationMenu.test.ts` tests the trigger: its element and attributes, `aria-expanded` and `aria-controls` of the content, the press, the open key of each orientation and direction, a nested trigger, `disabled` with `aria-disabled`, the hover, the activation direction, the Tab order and the size of the new content. The focus guards beside the trigger and the owner element with `aria-owns` are gone."
+      "reason": "`NavigationMenu.test.ts` tests the trigger: its element and attributes, `aria-expanded` and `aria-controls` of the content, the press, the open key of each orientation and direction, a nested trigger, `disabled` with `aria-disabled`, the hover, the activation direction, the Tab order and the size of the new content. The trigger has no focus guards beside it and no owner element with `aria-owns`."
     },
     {
       "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
@@ -114,7 +114,7 @@
       "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
-      "reason": "`NavigationMenu.test.ts` tests the link: `closeOnClick` with the reason `link-press` through each level, a link with no `closeOnClick`, no `tabindex`, a link that loses the focus with no related target, and a router link in the `element` slot with `aria-current`. `active` is cut: the developer writes `aria-current=\"page\"`."
+      "reason": "`NavigationMenu.test.ts` tests the link: `closeOnClick` with the reason `link-press` through each level, a link with no `closeOnClick`, no `tabindex`, a link that loses the focus with no related target, and a router link in the `element` slot with `aria-current`. The developer writes `aria-current=\"page\"`, so the link has no `active`."
     },
     {
       "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx",
@@ -181,21 +181,21 @@
       "entry": "Root",
       "prop": "onOpenChangeComplete",
       "kind": "not-applicable",
-      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Root",
       "prop": "actionsRef",
       "kind": "not-applicable",
-      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the JavaScript hooks of the `<Transition>` of the popup keep it in the DOM until `done` (rule 8.9)."
+      "reason": "A template ref of the root has `close()`. With `:css=\"false\"`, the JavaScript hooks of the `<Transition>` of the popup keep it in the DOM until `done`, so the root has no `unmount` action."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Trigger",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
@@ -208,85 +208,85 @@
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Backdrop",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`: the classes of `<Transition>` animate it (rule 8.9)."
+      "reason": "The classes of `<Transition>` animate the backdrop, so the state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`: the classes of `<Transition>` animate it (rule 8.9)."
+      "reason": "The classes of `<Transition>` animate the popup, so the state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Content",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the content has no `data-starting-style` and `data-ending-style`: the classes of its `transition` animate it (rule 8.9)."
+      "reason": "The classes of its `transition` animate the content, so the state has no `transitionStatus`, and the content has no `data-starting-style` and `data-ending-style`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Link",
       "kind": "not-applicable",
-      "reason": "`active` and its state are cut. The developer gives the link `aria-current=\"page\"` (rule 8.2), and CSS selects `[aria-current=\"page\"]` (rule 8.15). With a router, `isExactActive` of `<RouterLink custom>` gives it."
+      "reason": "The developer gives the link `aria-current=\"page\"`, and CSS selects `[aria-current=\"page\"]`. With a router, `isExactActive` of `<RouterLink custom>` gives it. The link thus has no `active` prop and no state."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuBackdropDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuContentDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuIconDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuLinkDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuPopupCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuPopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuPositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuPositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "NavigationMenuTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [
@@ -304,13 +304,13 @@
       "entry": "Trigger",
       "prop": "id",
       "nativeAttribute": true,
-      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names it in `aria-labelledby` (rule 8.4)."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names it in `aria-labelledby`."
     },
     {
       "entry": "Content",
       "prop": "id",
       "nativeAttribute": true,
-      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The trigger names it in `aria-controls` (rule 8.4)."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The trigger names it in `aria-controls`."
     },
     {
       "entry": "Content",
