@@ -7,5 +7,6 @@
     "https://vuejs.org/api/composition-api-lifecycle.html#onserverprefetch"
   ],
   "behavior": "The server HTML of a control in a field has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`, in each order of the parts. A control with no label has no `aria-labelledby`. Base UI adds these attributes after the page hydrates.",
-  "dueWith": "packages/react/src/internals/labelable-provider/LabelableProvider.tsx"
+  "dueWith": "packages/react/src/internals/labelable-provider/LabelableProvider.tsx",
+  "families": ["field"]
 }

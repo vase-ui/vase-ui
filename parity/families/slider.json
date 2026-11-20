@@ -204,6 +204,7 @@
     {
       "entry": "Label",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The `id` of the label. The root and each input with no name of their own name the label by it."
     }
   ],

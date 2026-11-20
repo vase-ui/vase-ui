@@ -39,11 +39,13 @@
     {
       "entry": "Root",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for the state and the context, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Legend",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the legend, and `types.md` has no row for a native attribute."
     }
   ],

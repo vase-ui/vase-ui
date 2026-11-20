@@ -609,56 +609,67 @@
     {
       "entry": "Trigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to register the trigger in the store of the menu, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Input",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and renders it on the input, so it is a declared prop. Base UI reads it from the native attributes of the input, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Input",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for the attribute of the input, so it is a declared prop. Base UI reads it from the native attributes of the input, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "List",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id, which the trigger or `Menu.Input` names in `aria-controls`. It is thus a declared prop. Base UI reads it from the native attributes of the list, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Popup",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives its element the `id` prop, or the default id of the popup when the prop is absent. A trigger that names the popup in `aria-controls` names the `id` that the element has. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "Item",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "LinkItem",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and renders it on the link. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "SubmenuTrigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and registers the trigger in the store of the submenu with it. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "GroupLabel",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and gives it to the group for `aria-labelledby`. It is thus a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "RadioItem",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {
       "entry": "CheckboxItem",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
     },
     {

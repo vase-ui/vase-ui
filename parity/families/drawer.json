@@ -239,31 +239,37 @@
     {
       "entry": "Trigger",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "SwipeArea",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to its element, or a generated id, and the root names the area by it as a trigger, so it is a declared prop. Base UI reads it from the native attributes of the area, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Popup",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to its element, or a generated id, and the trigger names it in `aria-controls`, so it is a declared prop (rule 8.4). Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Title",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to its element, or a generated id, and the popup names it in `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to its element, or a generated id, and the popup names it in `aria-describedby`, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "`Drawer.Close` is `Dialog.Close`. The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     }
   ],

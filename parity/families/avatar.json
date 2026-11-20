@@ -102,26 +102,31 @@
     {
       "entry": "Image",
       "prop": "src",
+      "nativeAttribute": true,
       "reason": "The part reads `src` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Image",
       "prop": "srcset",
+      "nativeAttribute": true,
       "reason": "The part reads `srcset` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Image",
       "prop": "sizes",
+      "nativeAttribute": true,
       "reason": "The part reads `sizes` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Image",
       "prop": "crossorigin",
+      "nativeAttribute": true,
       "reason": "The part reads `crossorigin` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Image",
       "prop": "referrerpolicy",
+      "nativeAttribute": true,
       "reason": "The part reads `referrerpolicy` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
     }
   ],

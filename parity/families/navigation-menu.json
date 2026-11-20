@@ -303,11 +303,13 @@
     {
       "entry": "Trigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names it in `aria-labelledby` (rule 8.4)."
     },
     {
       "entry": "Content",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The trigger names it in `aria-controls` (rule 8.4)."
     },
     {

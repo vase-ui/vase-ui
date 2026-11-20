@@ -169,16 +169,19 @@
     {
       "entry": "Trigger",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Trigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to replace an absent or empty `id` with the generated id, and to give it to the item for `aria-labelledby` of the panel. It is thus a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Panel",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the item for `aria-controls` of the trigger, so it is a declared prop. Base UI reads it from the native attributes of the panel, and `types.md` has no row for a native attribute."
     }
   ],

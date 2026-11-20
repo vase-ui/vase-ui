@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, postcssIsolateStyles } from 'vitepress';
 import type { HeadConfig, MarkdownRenderer } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
+import { createBaseUiDifferencesReader } from '../../scripts/docs/baseUiDifferences.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
 import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
@@ -26,6 +27,13 @@ const isBuild = process.env.NODE_ENV === 'production';
 // reference in a build. The development server has one reader for its life, so a cache there keeps
 // a reference until the server restarts.
 const readApiReference = createApiReferenceReader(REPOSITORY_ROOT, { cache: isBuild });
+const readBaseUiDifferences = createBaseUiDifferencesReader(REPOSITORY_ROOT);
+
+/** The data that a family page shows from the source and from `parity`. */
+function readFamilyData(family: string) {
+  const apiReference = readApiReference(family);
+  return { apiReference, baseUiDifferences: readBaseUiDifferences(family, apiReference) };
+}
 
 // These colors of the GitHub themes of Shiki become the syntax colors that the Base UI docs give to
 // the same tokens. `docs/.vitepress/theme/tokens.css` sets these colors for light and dark.
@@ -145,7 +153,7 @@ export default defineConfig({
     const family = familyOfPage(pageData.relativePath);
     return {
       frontmatter: { ...pageData.frontmatter, head: [...pageHead, ...frontmatterHead] },
-      ...(family === undefined ? {} : { apiReference: readApiReference(family) }),
+      ...(family === undefined ? {} : readFamilyData(family)),
     };
   },
   themeConfig: {
@@ -161,16 +169,16 @@ export default defineConfig({
         // page, so `ApiReference` throws on a page that has no reference.
         detailedView: false,
         // The index reads the Markdown of a page before Vue renders its components, so
-        // `searchIndexHtml` adds the text of `<ApiReference />`. With `_render`, VitePress does not
-        // read `search: false` of the front matter. This function reads it after the render,
-        // because the render fills `env.frontmatter`.
+        // `searchIndexHtml` adds the text of `<ApiReference />` and `<BaseUiDifferences />`. With
+        // `_render`, VitePress does not read `search: false` of the front matter. This function
+        // reads it after the render, because the render fills `env.frontmatter`.
         async _render(source, env, md) {
           const html = await md.renderAsync(source, env);
           if (env.frontmatter?.search === false) {
             return '';
           }
           const family = familyOfPage(env.relativePath);
-          return searchIndexHtml(html, family === undefined ? undefined : readApiReference(family));
+          return searchIndexHtml(html, family === undefined ? undefined : readFamilyData(family));
         },
         miniSearch: {
           searchOptions: {

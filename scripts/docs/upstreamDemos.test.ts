@@ -548,6 +548,13 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
     problem: `docs/demos/sample/hero/tailwind is not in docs/demos/sample/upstream.json. ${RERUN} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
   },
   {
+    name: 'a CSS-module folder of a demo that the record lacks',
+    family: makeDemoFamily({
+      files: new Map([...CSS_MODULES_FILES, ['extra/css-modules/index.vue', sha256('extra vue')]]),
+    }),
+    problem: `docs/demos/sample/extra/css-modules is not in docs/demos/sample/upstream.json. ${RERUN} When the record still lacks the folder, Base UI has no such demo. Delete the folder.`,
+  },
+  {
     name: 'a family with no family file',
     family: makeDemoFamily({ matchedCommit: undefined }),
     problem: NO_FAMILY_FILE,
@@ -588,7 +595,8 @@ test('the entry points are the folders of the source that have an index.ts', () 
   assert.deepEqual(loadEntryPoints(root), new Set(['button', 'unstable-use-media-query']));
 });
 
-function makeRoot(files: Record<string, string>): string {
+/** A repository with the files of a family with a page and a demo. A `null` text leaves out that file. */
+function makeRoot(files: Record<string, string | null>): string {
   const root = mkdtempSync(join(tmpdir(), 'demo-families-'));
   roots.push(root);
   const upstream = {
@@ -604,6 +612,9 @@ function makeRoot(files: Record<string, string>): string {
     'docs/demos/sample/hero/css-modules/index.vue': '<template></template>\n',
     ...files,
   })) {
+    if (text === null) {
+      continue;
+    }
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), text);
   }
@@ -640,6 +651,7 @@ test('the demo record keeps upstream paths and both Vue variants use the Vase UI
   const root = makeRoot({
     ...Object.fromEntries(copies),
     'parity/families/sample.json': JSON.stringify(BUTTON),
+    'docs/demos/sample/hero/css-modules/index.vue': null,
     [`${folder}/css-modules/index.vue`]: '<template><div>Save</div></template>',
     [`${folder}/tailwind/index.vue`]: '<template><span class="px-2">Save</span></template>',
   });

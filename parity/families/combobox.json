@@ -512,6 +512,7 @@
     {
       "entry": "List",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-controls` of the input, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
@@ -532,21 +533,25 @@
     {
       "entry": "Popup",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "Item",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-activedescendant` of the input, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "GroupLabel",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the group for `aria-labelledby`, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "ChipRemove",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` and disables its button when the prop or the root says so, so it is a declared prop."
     },
     {

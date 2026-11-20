@@ -6,5 +6,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L876-L888"
   ],
   "behavior": "When a popup returns focus, it checks `finalFocus`, the trigger, the element that had focus before the popup opened, the parent popup and the focus history, in that order. When the open interaction type is `null`, the element that had focus before the popup opened comes before the trigger. The return skips detached targets and targets with the `hidden` attribute on themselves or an ancestor. It skips targets in the popup that closes and each closed popup below it, even while those popups stay mounted. This includes controls that a slot in an open shadow root projects into those popups. For a non-tabbable target, the return tries its first eligible tabbable descendant, or the target itself if it has none. When a target is in a closed popup above with a disabled focus manager, the return element of that popup replaces it, at any depth. Without this replacement, focus would stay in a popup that unmounts (`BUG-5519`). After a press on the backdrop in a browser without `preventScroll`, an eligible explicit `finalFocus` target still gets focus.",
-  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx"
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+  "families": []
 }

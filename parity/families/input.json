@@ -30,21 +30,25 @@
     {
       "entry": "Input",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The native attribute type `Booleanish` does not match the Boolean prop of `Field.Control`. `Input` declares `disabled` with the same type as `Field.Control`. `types.md` has no row for a native attribute."
     },
     {
       "entry": "Input",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "`Input` declares `id` to pass it to the `id` prop of `Field.Control`. `types.md` has no row for a native attribute."
     },
     {
       "entry": "Input",
       "prop": "name",
+      "nativeAttribute": true,
       "reason": "`Input` declares `name` to pass it to the `name` prop of `Field.Control`. `types.md` has no row for a native attribute."
     },
     {
       "entry": "Input",
       "prop": "readonly",
+      "nativeAttribute": true,
       "reason": "A read-only input stays in the tab order and in the form data, and its field does not validate it. Base UI reads the native attribute and has no row for it."
     }
   ],

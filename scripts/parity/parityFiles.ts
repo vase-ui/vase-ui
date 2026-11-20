@@ -51,6 +51,11 @@ export interface SurfaceAddition {
   stateField?: string;
   /** A constant that the export `entry` has and Base UI lacks. */
   constant?: string;
+  /**
+   * The `prop` is a native attribute of the element, such as `id` or `disabled`. A developer gives
+   * it to the Base UI part in the same way, so the docs page does not list the row.
+   */
+  nativeAttribute?: true;
   reason: string;
 }
 
@@ -135,6 +140,11 @@ export interface BetterRow {
   evidence: string[];
   behavior: string;
   dueWith: string;
+  /**
+   * The families whose docs page shows the row, beside the page of the family that `dueWith` is in.
+   * An empty list names no page. A row whose `dueWith` is in no family with a page needs the key.
+   */
+  families?: string[];
 }
 
 export type Target =
@@ -347,6 +357,12 @@ const exceptionRow = withRule<ExceptionRow>(
   checkExceptionRow,
 );
 
+const onlyTrue: Check = (value, place, report) => {
+  if (value !== true) {
+    report(place, 'must be true. Leave the key out for a prop that is not a native attribute.');
+  }
+};
+
 const surfaceAddition = withRule<SurfaceAddition>(
   object(
     {
@@ -358,9 +374,10 @@ const surfaceAddition = withRule<SurfaceAddition>(
       changeEventReason: nonEmptyString,
       stateField: nonEmptyString,
       constant: nonEmptyString,
+      nativeAttribute: onlyTrue,
       reason: nonEmptyString,
     },
-    MEMBER_KINDS,
+    [...MEMBER_KINDS, 'nativeAttribute'],
   ),
   (row, place, report) => {
     if (memberKeysOf(row).length !== 1) {
@@ -368,6 +385,9 @@ const surfaceAddition = withRule<SurfaceAddition>(
         place,
         'names one member. Give exactly one of "prop", "emit", "slot", "exposed", "changeEventReason", "stateField" and "constant".',
       );
+    }
+    if (row.nativeAttribute && row.prop === undefined) {
+      report(place, 'only a row with "prop" has "nativeAttribute".');
     }
   },
 );
@@ -561,12 +581,19 @@ const extract = object({
   ),
 });
 
-const betterRow = object({
-  id: pattern(/^(?:VUE|BUG)-[0-9]+$/, 'VUE- or BUG- and a number'),
-  evidence: array(link, { nonEmpty: true }),
-  behavior: nonEmptyString,
-  dueWith: upstreamRootPath,
-});
+const betterRow = withRule<BetterRow>(
+  object(
+    {
+      id: pattern(/^(?:VUE|BUG)-[0-9]+$/, 'VUE- or BUG- and a number'),
+      evidence: array(link, { nonEmpty: true }),
+      behavior: nonEmptyString,
+      dueWith: upstreamRootPath,
+      families: array(pattern(FAMILY_NAME, `a name that matches ${FAMILY_NAME}`)),
+    },
+    ['families'],
+  ),
+  (row, _place, report) => checkDuplicates(row.families ?? [], (name) => name, 'families', report),
+);
 
 export function validateFamilyFile(file: string, value: unknown): string[] {
   return problemsOf(file, familyFile, value);

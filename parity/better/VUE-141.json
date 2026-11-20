@@ -5,5 +5,6 @@
     "https://vuejs.org/guide/components/v-model.html#under-the-hood"
   ],
   "behavior": "For parts that use the shared model helper, a defined prop gives the parent control, even without an update listener. When the parent sets the prop to undefined, the part keeps the last parent value and accepts local writes. Neither transfer produces a mode-change warning.",
-  "dueWith": "packages/utils/src/useControlled.ts"
+  "dueWith": "packages/utils/src/useControlled.ts",
+  "families": []
 }

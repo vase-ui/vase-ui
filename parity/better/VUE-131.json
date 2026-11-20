@@ -7,5 +7,6 @@
     "https://dom.spec.whatwg.org/#dom-node-comparedocumentposition"
   ],
   "behavior": "`Fieldset.Root` names its first legend, and the next legend when that legend unmounts. Base UI names the label whose effect ran last, and it removes `aria-labelledby` after that label unmounts while another label stays in the document.",
-  "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts"
+  "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts",
+  "families": ["fieldset"]
 }

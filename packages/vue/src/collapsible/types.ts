@@ -46,7 +46,9 @@ export interface CollapsibleTriggerState extends CollapsibleRootState {
 export interface CollapsiblePanelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /**
-   * A closed panel stays in the DOM, with `hidden` and `inert`.
+   * A closed panel stays in the DOM, with `hidden` and `inert`, so its content keeps its state, and
+   * the server HTML has it. `<Transition>` does not animate such a panel: animate it with CSS on
+   * `[hidden]`.
    * @default false
    */
   keepMounted?: boolean;

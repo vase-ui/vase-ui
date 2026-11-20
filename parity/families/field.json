@@ -187,16 +187,19 @@
     {
       "entry": "Error",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the labelable provider as the id of a message and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the div."
     },
     {
       "entry": "Label",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the labelable provider as the id of a label and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the label."
     },
     {
       "entry": "Description",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the labelable provider as the id of a message and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the p."
     },
     {

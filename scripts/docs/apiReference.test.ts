@@ -15,17 +15,17 @@ import {
   buildApiTypes,
   buildOwnApiReference,
   createApiReferenceReader,
+  findHomeOfPart,
   readPartBadges,
 } from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
+import { hasPageTemplate } from './pageSections.ts';
 
 const FIXTURES = join(import.meta.dirname, '..', 'parity', 'fixtures');
 const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
 const ENTRY = join(SAMPLE, 'index.ts');
 const PARTS = join(SAMPLE, 'index.parts.ts');
 const POPUP = join(SAMPLE, 'popup/SamplePopup.vue');
-const DATA_ATTRIBUTES = join(SAMPLE, 'popup/SamplePopupDataAttributes.ts');
-const CSS_VARIABLES = join(SAMPLE, 'popup/SamplePopupCssVariables.ts');
 
 const project = createVaseProject(join(FIXTURES, 'tsconfig.json'));
 const types = readTypesMd(
@@ -141,9 +141,13 @@ test('an event has its arguments and the text of its JSDoc', () => {
   ]);
 });
 
-test('a slot has its slot props', () => {
+test('a slot has its slot props, and the default slot has the shared description', () => {
   assert.deepEqual(part('Sample.Popup').slots, [
-    { name: 'default', description: '', props: [{ name: 'state', type: 'SamplePopupState' }] },
+    {
+      name: 'default',
+      description: 'The content of the part.',
+      props: [{ name: 'state', type: 'SamplePopupState' }],
+    },
     {
       name: 'render',
       description: '',
@@ -156,69 +160,61 @@ test('a slot has its slot props', () => {
   assert.deepEqual(part('Sample.Root').slots, [
     {
       name: 'default',
-      description: '',
+      description: 'The content of the part.',
       props: [{ name: 'payload', type: 'Payload | undefined' }],
     },
   ]);
 });
 
-test('an exposed member has its type', () => {
+test('an exposed member has its type, and the exposed element has the shared description', () => {
   assert.deepEqual(part('Sample.Root').exposed, [
     { name: 'close', type: '() => void', description: '' },
     { name: 'unmount', type: '() => void', description: '' },
   ]);
   assert.deepEqual(part('Sample.Popup').exposed, [
-    { name: 'element', type: 'Element | null', description: '' },
+    {
+      name: 'element',
+      type: 'Element | null',
+      description: 'The element of the part, or `null` while it is not mounted.',
+    },
   ]);
 });
 
-test('a data attribute and a CSS variable have the value of the constant as name, with type and description', () => {
-  const { dataAttributes, cssVariables } = part('Sample.Popup');
-  assert.deepEqual(dataAttributes, [
-    { name: 'data-open', type: null, description: '' },
-    { name: 'data-closed', type: null, description: '' },
-  ]);
-  assert.deepEqual(cssVariables, [{ name: '--popup-width', type: null, description: '' }]);
-
-  const documented = withTexts(
+test('the selectors and the CSS variables of a part are the @selector and @cssVariable tags of its export, in their sequence', () => {
+  assert.deepEqual(part('Sample.Popup').selectors, []);
+  const tagged = withTexts(
     [
       [
-        DATA_ATTRIBUTES,
-        "export const open = 'data-open';",
-        "/**\n * Present when the sample is open.\n * @type {'true' | 'false'}\n */\nexport const open = 'data-open';",
-      ],
-      [
-        CSS_VARIABLES,
-        "export const popupWidth = '--popup-width';",
-        "/**\n * The width of the popup.\n * @type {number}\n */\nexport const popupWidth = '--popup-width';",
+        PARTS,
+        'export const Popup: typeof SamplePopup = SamplePopup;',
+        [
+          '/**',
+          ' * A container for the content of the sample.',
+          ' * @selector `[data-side]` The side of the anchor: `top`, `bottom`, `left` or `right`.',
+          ' * @cssVariable `--popup-width` The width of the popup,',
+          ' * in pixels.',
+          ' * @default none',
+          ' * @selector `[hidden]` The popup is closed.',
+          ' * @selector The popup has no name.',
+          ' */',
+          'export const Popup: typeof SamplePopup = SamplePopup;',
+        ].join('\n'),
       ],
     ],
     () => part('Sample.Popup'),
   );
-  assert.deepEqual(documented.dataAttributes[0], {
-    name: 'data-open',
-    type: "'true' | 'false'",
-    description: 'Present when the sample is open.',
-  });
-  assert.deepEqual(documented.cssVariables, [
-    { name: '--popup-width', type: 'number', description: 'The width of the popup.' },
+  assert.equal(tagged.description, 'A container for the content of the sample.');
+  assert.deepEqual(tagged.selectors, [
+    {
+      name: '[data-side]',
+      description: 'The side of the anchor: `top`, `bottom`, `left` or `right`.',
+    },
+    { name: '[hidden]', description: 'The popup is closed.' },
+    { name: '', description: 'The popup has no name.' },
   ]);
-});
-
-test('a part with the children slot prop of its render slot has children', () => {
-  assert.equal(part('Sample.Popup').hasChildren, false);
-  assert.equal(part('Sample.Root').hasChildren, false);
-  const withChildren = withTexts(
-    [
-      [
-        POPUP,
-        'render(props: { props: Record<string, unknown>; state: SamplePopupState }): unknown;',
-        'render(props: {\n    props: Record<string, unknown>;\n    state: SamplePopupState;\n    children: Component;\n  }): unknown;',
-      ],
-    ],
-    () => part('Sample.Popup'),
-  );
-  assert.equal(withChildren.hasChildren, true);
+  assert.deepEqual(tagged.cssVariables, [
+    { name: '--popup-width', description: 'The width of the popup, in pixels.' },
+  ]);
 });
 
 test('the description of a part is the JSDoc of its export', () => {
@@ -234,6 +230,20 @@ test('the description of a part is the JSDoc of its export', () => {
   );
   assert.equal(described.description, 'A container for the content of the sample.');
   assert.equal(part('Sample.Popup').description, '');
+});
+
+test('a part is at home in the family of the page when its entry file exports it, else in the family whose types.md repeats it', () => {
+  const [root] = types.parts;
+  const ghost = { ...root, name: 'Ghost' };
+  const page = { family: 'sample', entryFile: ENTRY, file: types };
+  const other = {
+    family: 'other',
+    entryFile: join(SAMPLE, 'other.ts'),
+    file: { ...types, parts: [root, ghost] },
+  };
+  assert.equal(findHomeOfPart(project, page, root, [page, other]), page);
+  assert.equal(findHomeOfPart(project, page, ghost, [page, other]), other);
+  assert.equal(findHomeOfPart(project, page, ghost, [page]), page);
 });
 
 test('the parts keep the sequence of the file, and a part with no export or no component is left out', () => {
@@ -489,6 +499,45 @@ test('each part of each family page has a description with a line that says what
   assert.deepEqual(missing, []);
 });
 
+test('each @selector and @cssVariable tag of each family page has a name in backticks and a sentence, and a part names each one time', () => {
+  const problems = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).flatMap(({ family }) =>
+    read(family).parts.flatMap((apiPart) =>
+      (['selectors', 'cssVariables'] as const).flatMap((key) =>
+        apiPart[key].flatMap(({ name, description }, index, hooks) => [
+          ...(name === ''
+            ? [`${apiPart.name} ${key}[${String(index)}]: no name in backticks`]
+            : []),
+          ...(/^\S.*\.$/.test(description) ? [] : [`${apiPart.name} ${key} ${name}: no sentence`]),
+          ...(hooks.findIndex((hook) => hook.name === name) === index
+            ? []
+            : [`${apiPart.name} ${key} ${name}: named two times`]),
+        ]),
+      ),
+    ),
+  );
+  assert.deepEqual(problems, []);
+});
+
+test('each prop, exposed member and named slot of a page with the differences section has a description', () => {
+  const docs = join(REPOSITORY_ROOT, 'docs');
+  const pages = listFamilyPages(docs).filter(({ path }) =>
+    hasPageTemplate(readFileSync(join(docs, path), 'utf8')),
+  );
+  assert.notEqual(pages.length, 0);
+  const missing = pages.flatMap(({ family }) =>
+    read(family).parts.flatMap((apiPart) =>
+      [
+        ...apiPart.props.map(({ name, description }) => ({ kind: 'prop', name, description })),
+        ...apiPart.exposed.map(({ name, description }) => ({ kind: 'exposed', name, description })),
+        ...apiPart.slots.map(({ name, description }) => ({ kind: 'slot', name, description })),
+      ].flatMap(({ kind, name, description }) =>
+        description ? [] : [`${apiPart.name} ${kind} ${name}`],
+      ),
+    ),
+  );
+  assert.deepEqual(missing, []);
+});
+
 test('the reference of a family page does not change with the families that the reader read before', () => {
   const families = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).map(({ family }) => family);
   const readBackward = createApiReferenceReader(REPOSITORY_ROOT);
@@ -508,11 +557,10 @@ test('the reference of use-element has useElement with no parameter and the desc
   assert.match(useElement?.description ?? '', /^The native element of a component/);
 });
 
-test('the reference of button has the prop disabled with the default false, and no data attribute', () => {
+test('the reference of button has the prop disabled with the default false', () => {
   const [button] = read('button').parts;
   assert.equal(button.name, 'Button');
   assert.equal(button.props.find(({ name }) => name === 'disabled')?.default, 'false');
-  assert.deepEqual(button.dataAttributes, []);
 });
 
 test('the reference lists the default model, the named models and the item value', () => {
@@ -546,11 +594,16 @@ test('the reference of progress has its parts in the sequence of the Base UI pag
 });
 
 test('the reference of radio-group has the part that its types.md repeats from radio, in the sequence of the Base UI page', () => {
-  const { parts } = read('radio-group');
+  const { parts, homes } = read('radio-group');
   assert.deepEqual(
     parts.map(({ name }) => name),
     ['RadioGroup', 'Radio'],
   );
+  assert.deepEqual(homes, [
+    { part: 'RadioGroup', family: 'radio-group' },
+    { part: 'Root', family: 'radio' },
+    { part: 'Indicator', family: 'radio' },
+  ]);
   const [, radio] = parts;
   assert.equal(radio.props.find(({ name }) => name === 'value')?.required, true);
 });

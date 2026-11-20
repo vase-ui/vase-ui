@@ -41,7 +41,7 @@ A part exposes CSS variables to help you style it. They often hold dynamic numer
 }
 ```
 
-See the API reference of each component for a complete list of its data attributes and CSS variables.
+The API reference of each component lists the selectors and the CSS variables of each part.
 
 ### Inline styles
 
