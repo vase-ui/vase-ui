@@ -191,12 +191,17 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`. The popup of a combobox has its list.
+// A closed popup that stays in the DOM is `hidden`. A popup of the popup layer has no `data-open`:
+// the open popup of a combobox has its list. A popup of `utils/popups` mounts its list before its
+// animation starts, so its list does not count.
 function openPopups() {
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden]), :not([hidden]) > [role="listbox"]',
+      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
     ),
+    ...(portal.matches('[data-vase-ui-portal]')
+      ? []
+      : portal.querySelectorAll<HTMLElement>(':not([hidden]) > [role="listbox"]')),
   ]);
 }
 
