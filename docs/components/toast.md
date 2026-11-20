@@ -156,8 +156,7 @@ The `--toast-swipe-movement-x` and `--toast-swipe-movement-y` CSS variables give
   &[data-swipe-direction='down'] {
     transform: translateY(calc(var(--toast-swipe-movement-y) + 150%));
   }
-  /* Note: --offset-y is defined locally in these examples and derives from
-   --toast-offset-y, --toast-index, and swipe movement values */
+  /* The examples calculate --offset-y from --toast-offset-y, --toast-index and the swipe movement. */
   &[data-swipe-direction='left'] {
     transform: translateX(calc(var(--toast-swipe-movement-x) - 150%)) translateY(var(--offset-y));
   }

@@ -152,7 +152,7 @@ export namespace Close {
 /**
  * Places an anchored toast at its anchor.
  * Renders a `<div>` element.
- * @selector `[data-side]` The side of the anchor that the toast is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows only when the `side` prop is logical.
+ * @selector `[data-side]` The side of the anchor that the toast is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows only when the `side` prop or the `side` of `positionerProps` is logical.
  * @selector `[data-align]` The alignment of the toast on its side: `start`, `center` or `end`.
  * @selector `[data-anchor-hidden]` The anchor is out of view.
  * @cssVariable `--anchor-width` The width of the anchor, in pixels.

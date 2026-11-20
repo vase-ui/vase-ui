@@ -62,7 +62,7 @@ export namespace Trigger {
 /**
  * Places the popup at the pointer.
  * Renders a `<div>` element.
- * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows only when the `side` prop is logical.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows with a logical `side` prop, and for a submenu with no `side` prop.
  * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
  * @selector `[data-anchor-hidden]` The anchor is out of view.
  * @cssVariable `--anchor-width` The width of the anchor, in pixels.
