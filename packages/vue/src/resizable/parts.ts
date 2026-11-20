@@ -16,6 +16,13 @@ import type {
 
 export type { ResizableLayout as Layout } from './types';
 
+/**
+ * Groups the panels and the handles of the layout.
+ * Each panel and each handle must be a flex item of the root element. A wrapper element between
+ * them needs `display: contents`.
+ * F6 and Shift+F6 move the focus to the first control of the next or the previous panel.
+ * Renders a `<div>` element.
+ */
 export const Root: typeof ResizableRoot = ResizableRoot;
 export namespace Root {
   export type Props = ResizableRootProps;
@@ -26,12 +33,21 @@ export namespace Root {
   export type CommitEventDetails = ResizableRootCommitEventDetails;
 }
 
+/**
+ * A part of the layout that a handle resizes. A collapsible panel can collapse to a small size.
+ * Renders a `<div>` element.
+ */
 export const Panel: typeof ResizablePanel = ResizablePanel;
 export namespace Panel {
   export type Props = ResizablePanelProps;
   export type State = ResizablePanelState;
 }
 
+/**
+ * The separator between two panels. The user drags it or presses a key on it to resize the panels.
+ * Enter collapses or expands the primary panel, and a double click gives it its first size.
+ * Renders a `<div>` element with the role `separator`.
+ */
 export const Handle: typeof ResizableHandle = ResizableHandle;
 export namespace Handle {
   export type Props = ResizableHandleProps;
