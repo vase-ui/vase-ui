@@ -14,8 +14,8 @@ const maxTime = Temporal.PlainTime.from('17:00');
     locale="en-US"
     default-view="minute"
     :minute-step="15"
-    :min-time="minTime"
-    :max-time="maxTime"
+    :min="minTime"
+    :max="maxTime"
     :default-value="time"
   >
     <div :class="styles.Header">

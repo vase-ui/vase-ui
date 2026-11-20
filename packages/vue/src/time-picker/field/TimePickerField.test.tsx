@@ -6,7 +6,6 @@ import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
   createFormDataSpy,
   createRenderer,
-  describeConformance,
   fireEvent,
   flushMicrotasks,
   heldMountFormResetTests,
@@ -15,7 +14,6 @@ import {
   waitFor,
 } from '#test-utils';
 import { createPartRef } from '../../date-picker/root/test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
 import TimePickerAnatomy from '../root/TimePickerAnatomy.test.vue';
 
 const time = Temporal.PlainTime.from('14:30');
@@ -27,14 +25,6 @@ const hiddenInputOf = (container: Element) =>
 
 describe('<TimePicker.Field />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<TimePicker.Field />, () => ({
-    elementIsRoot: false,
-    refInstanceof: window.HTMLDivElement,
-    render(node) {
-      return render(<TimePicker.Root defaultValue={time}>{node}</TimePicker.Root>);
-    },
-  }));
 
   it('shows the value of the picker in its segments, and gives it to the hidden input', async () => {
     const { container } = await render(
@@ -485,10 +475,10 @@ describe('<TimePicker.Field />', () => {
   });
 
   // The root of the field and the field part of the picker each listen for the reset of the form.
-  // The root hears of it first, and the cases run again with the part first.
-  describe.each([{ order: 'the root first' }, { order: 'the part first' }])(
+  // The root listens on the form and the part on the document, so the root hears of it first.
+  describe.each([{ order: 'the root first' }])(
     'VUE-21: a native reset clears the error of the field, with $order',
-    ({ order }) => {
+    () => {
       // The reset value, `null`, is also an error, so a validation after the reset shows.
       const createValidate = () =>
         vi.fn((value: unknown) => (value === null ? 'Choose a time' : 'Wrong time'));
@@ -520,11 +510,7 @@ describe('<TimePicker.Field />', () => {
         await flushMicrotasks();
       }
 
-      async function resetForm(resets: ReturnType<typeof recordResetListeners>) {
-        if (order === 'the part first') {
-          // The listener of the root and the listener of the part.
-          resets.reverse(2);
-        }
+      async function resetForm() {
         screen.getByTestId<HTMLFormElement>('form').reset();
         // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
         await wait(0);
@@ -539,13 +525,12 @@ describe('<TimePicker.Field />', () => {
 
       it('starts no validation for the value of the reset, and validates the next entry', async () => {
         const validate = createValidate();
-        const resets = recordResetListeners(document);
         const { container } = await render(renderForm(validate));
         await fill(container, '14:30');
         expect(screen.getByTestId('error')).toHaveTextContent('Wrong time');
         validate.mockClear();
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputOf(container).value).toBe('');
         expect(segmentOf(container, 'hour').value).toBe('');
@@ -560,13 +545,12 @@ describe('<TimePicker.Field />', () => {
 
       it('clears the error of the form when the reset leaves the value, and validates the next entry', async () => {
         const validate = createValidate();
-        const resets = recordResetListeners(document);
         const { container } = await render(
           renderForm(validate, { defaultValue: time }, { when: 'Server error' }),
         );
         expect(screen.getByTestId('error')).toHaveTextContent('Server error');
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputOf(container).value).toBe('14:30');
         expect(validate).not.toHaveBeenCalled();

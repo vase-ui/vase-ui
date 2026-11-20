@@ -1,18 +1,16 @@
 <script lang="ts">
-import type {
-  TimeFieldRootProps,
-  TimeFieldRootState,
-} from '../../time-field/root/TimeFieldRoot.vue';
+import type { TimeFieldRootProps, TimeFieldRootState } from '../../time-field/types';
 
 export interface DatePickerTimeFieldState extends TimeFieldRootState {}
 
 /**
  * The props of `TimeField.Root` that the picker does not own. The root of the picker owns the
- * value, the locale, the hour cycle and the states `disabled` and `readOnly`. The time field gives
+ * value, the locale, the hour cycle and the states `disabled` and `readonly`. The time field gives
  * no value to a form, because the field of the picker does.
  */
 export interface DatePickerTimeFieldProps extends Omit<
   TimeFieldRootProps,
+  | 'as'
   | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
@@ -22,21 +20,22 @@ export interface DatePickerTimeFieldProps extends Omit<
   | 'hideTimeZone'
   | 'locale'
   | 'disabled'
-  | 'readOnly'
+  | 'readonly'
   | 'required'
   | 'name'
   | 'form'
-  | 'autoComplete'
+  | 'autocomplete'
 > {}
 </script>
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import { fieldKey } from '../../field/control';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { isKind } from '../../internals/date-time/temporal';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { REASONS } from '../../internals/reasons';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
+import TimeFieldRoot from '../../time-field/TimeFieldRoot.vue';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
 import { hasTime } from '../root/pickerTemplate';
 import type {
@@ -46,11 +45,10 @@ import type {
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<DatePickerTimeFieldProps>(), { as: 'div' });
+const props = defineProps<DatePickerTimeFieldProps>();
 
 defineSlots<{
   default(props: { state: DatePickerTimeFieldState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DatePickerTimeFieldState>;
 }>();
 
 const picker = useDatePickerRootContext();
@@ -81,9 +79,7 @@ function handleValueChange(
   picker.commit(next, details);
 }
 
-// This part renders `TimeField.Root` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeField.Root` dynamic. Vue then renders `TimeField.Root` again each time this part renders.
+// This part renders `TimeField.Root` and makes no element of its own.
 const field = useTemplateRef<{
   element: HTMLElement | null;
   inputElement: HTMLInputElement | null;
@@ -108,30 +104,25 @@ function timeFieldProps() {
     hideTimeZone: root.hideTimeZone,
     locale: root.locale,
     disabled: picker.disabled.value,
-    readOnly: root.readOnly,
+    readonly: root.readOnly,
   };
+}
+
+// `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+function clear() {
+  field.value?.clear();
+  if (value.value !== null) handleValueChange(null, createChangeEventDetails(REASONS.none));
 }
 
 defineExpose({
   element,
   /** Sets the value to `null` and empties each segment. The reason of the change is `none`. */
-  clear: () => field.value?.clear(),
+  clear,
 });
 </script>
 
 <template>
   <TimeFieldRoot
-    v-if="$slots.render"
-    ref="field"
-    v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
-    @value-change="handleValueChange"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </TimeFieldRoot>
-  <TimeFieldRoot
-    v-else
     ref="field"
     v-bind="{ ...withoutPropsOf($attrs, TimeFieldRoot), ...timeFieldProps() }"
     @value-change="handleValueChange"

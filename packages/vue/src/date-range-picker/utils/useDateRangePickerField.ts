@@ -4,16 +4,19 @@ import { fieldKey } from '../../field/control';
 import type { Ref } from 'vue';
 import { given, givenAttributes } from '../../internals/givenAttributes';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import type { DateTimeFieldChangeEventDetails } from '../../internals/date-time/field/DateTimeFieldContext';
-import { DateTimeFieldHostContext } from '../../internals/date-time/field/dateTimeFieldHost';
+import {
+  dateTimeFieldHostKey,
+  type DateTimeFieldChangeEventDetails,
+} from '../../common/date-time-field/field';
+import { laterMinimum } from '../../common/date-time-field/limits';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
-import { laterMinimum } from '../../internals/date-time/field/customValidity';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
+import type { DateRangePickerRootChangeEventDetails } from '../root/DateRangePickerRoot.vue';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
 /** The members that `DateField.Root` exposes. */
@@ -28,14 +31,13 @@ export interface DateFieldActions {
  * `setup`. Its template gives the filtered attributes to `fieldProps` for its end of the range.
  * @param end The end that the field shows.
  * @param field The ref of the `DateField.Root` that the part renders.
- * @param props The declared props of the part. The prop `ariaLabelledby` names the elements that
- * label the group.
+ * @param props The declared props of the part.
  * @param defaultLabel The name of the field when the consumer gives none.
  */
 export function useDateRangePickerField(
   end: 'start' | 'end',
   field: Readonly<Ref<DateFieldActions | null>>,
-  props: { ariaLabelledby?: string | undefined },
+  props: object,
   defaultLabel: string,
 ) {
   const attrs = useAttrs();
@@ -51,7 +53,7 @@ export function useDateRangePickerField(
   if (outerField) useDeferredServerRender();
   const fieldLabelId = computed(() => outerField?.labelId);
   const groupId = useVaseUiId().value;
-  provide(DateTimeFieldHostContext, {
+  provide(dateTimeFieldHostKey, {
     groupId,
     ...(end === 'start' && {
       endInput: () => picker.endInputs.first.value as HTMLInputElement | null,
@@ -84,9 +86,20 @@ export function useDateRangePickerField(
 
   const fieldHandlers = { onKeydown: handleKeydown };
 
-  function handleValueChange(value: DateValue | null, details: DateTimeFieldChangeEventDetails) {
+  function handleValueChange(
+    value: DateValue | null,
+    details: DateTimeFieldChangeEventDetails | DateRangePickerRootChangeEventDetails,
+  ) {
     const [start, last] = picker.range.value;
     picker.commit(end === 'start' ? [value, last] : [start, value], details);
+  }
+
+  // `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+  function clear() {
+    field.value?.clear();
+    if (picker.range.value[index] !== null) {
+      handleValueChange(null, createChangeEventDetails(REASONS.none));
+    }
   }
 
   // The name says which end the field shows. A name that the consumer gives replaces it, and `null`
@@ -103,7 +116,7 @@ export function useDateRangePickerField(
   // the consumer gives with `aria-labelledby` replaces both.
   function ariaLabelledby() {
     const labelId = fieldLabelId.value;
-    if (labelId === undefined || given('aria-labelledby', props.ariaLabelledby) !== undefined) {
+    if (labelId === undefined || given('aria-labelledby', attrs['aria-labelledby']) !== undefined) {
       return undefined;
     }
     return typeof ariaLabel() === 'string' ? `${groupId} ${labelId}` : labelId;
@@ -112,12 +125,15 @@ export function useDateRangePickerField(
   function fieldProps(attributes: Record<string, unknown>) {
     const root = picker.props;
     const [start] = picker.range.value;
-    const labelledby = ariaLabelledby();
     return {
       ...mergeProps(fieldHandlers, givenAttributes(attributes)),
       ...props,
-      'aria-label': ariaLabel(),
-      ariaLabelledby: labelledby ?? props.ariaLabelledby,
+      // The part renders the root with no `as`. The type of the attributes of an element has the
+      // `as` of motion-v, which the root does not take.
+      as: undefined,
+      // `null` removes the name, and Vue writes no attribute for it.
+      'aria-label': ariaLabel() as string | undefined,
+      'aria-labelledby': (ariaLabelledby() ?? attributes['aria-labelledby']) as string | undefined,
       modelValue: picker.range.value[index],
       // The end that gives the kind of a new end is the same kind for both fields.
       defaultValue: picker.template.value,
@@ -128,19 +144,19 @@ export function useDateRangePickerField(
       hideTimeZone: root.hideTimeZone,
       // An end that is before the start makes the end field invalid. A start with a time limits the
       // time of the end too.
-      minDate: end === 'end' ? laterMinimum(root.minDate, start) : root.minDate,
-      maxDate: root.maxDate,
+      min: end === 'end' ? laterMinimum(root.minDate, start) : root.minDate,
+      max: root.maxDate,
       unavailableDates: root.unavailableDates,
       locale: root.locale,
       calendar: root.calendar,
       timeZone: root.timeZone,
       disabled: root.disabled,
-      readOnly: root.readOnly,
+      readonly: root.readOnly,
       required: root.required,
       name: end === 'start' ? root.startName : root.endName,
       form: root.form,
     };
   }
 
-  return { element, inputElement, handleValueChange, fieldProps };
+  return { element, inputElement, handleValueChange, fieldProps, clear };
 }

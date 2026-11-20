@@ -54,7 +54,6 @@ export type {
   PopoverDescriptionState as TimePickerDescriptionState,
 } from '../popover/description/PopoverDescription.vue';
 
-export * as TimePickerFieldDataAttributes from '../time-field/root/TimeFieldRootDataAttributes';
 export * as TimePickerTriggerDataAttributes from '../popover/trigger/PopoverTriggerDataAttributes';
 export * as TimePickerPositionerCssVariables from '../popover/positioner/PopoverPositionerCssVars';
 export * as TimePickerPositionerDataAttributes from '../popover/positioner/PopoverPositionerDataAttributes';
@@ -62,7 +61,6 @@ export * as TimePickerListDataAttributes from './list/TimePickerListDataAttribut
 export * as TimePickerItemDataAttributes from './item/TimePickerItemDataAttributes';
 export * as TimePickerColumnDataAttributes from './column/TimePickerColumnDataAttributes';
 export * as TimePickerColumnItemDataAttributes from './column-item/TimePickerColumnItemDataAttributes';
-export * as TimePickerClockDataAttributes from '../time-clock/root/TimeClockRootDataAttributes';
 export * as TimePickerPopupCssVariables from '../popover/popup/PopoverPopupCssVars';
 export * as TimePickerPopupDataAttributes from '../popover/popup/PopoverPopupDataAttributes';
 export * as TimePickerArrowDataAttributes from '../popover/arrow/PopoverArrowDataAttributes';

@@ -10,6 +10,6 @@ import { TimeField } from '@vase-ui/vue/time-field';
         <TimeField.Literal v-else :segment="segment" />
       </template>
     </TimeField.Input>
-    <TimeField.Clear />
+    <TimeField.Clear aria-label="Clear the time">×</TimeField.Clear>
   </TimeField.Root>
 </template>

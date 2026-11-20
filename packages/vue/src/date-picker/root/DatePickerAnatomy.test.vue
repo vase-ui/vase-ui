@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import * as Calendar from '../../calendar/index.parts';
-import * as DateField from '../../date-field/index.parts';
-import * as TimeField from '../../time-field/index.parts';
+import * as DateField from '../../date-field/parts';
+import * as TimeField from '../../time-field/parts';
 import * as DatePicker from '../index.parts';
 
 defineOptions({ inheritAttrs: false });

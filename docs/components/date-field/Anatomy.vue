@@ -10,6 +10,6 @@ import { DateField } from '@vase-ui/vue/date-field';
         <DateField.Literal v-else :segment="segment" />
       </template>
     </DateField.Input>
-    <DateField.Clear />
+    <DateField.Clear aria-label="Clear the date">×</DateField.Clear>
   </DateField.Root>
 </template>

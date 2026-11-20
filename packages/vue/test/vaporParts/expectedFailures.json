@@ -97,9 +97,6 @@
     "src/internals/composite/root/useCompositeRoot.test.tsx": {
       "fails": {}
     },
-    "src/internals/date-time/field/useDateTimeFieldRoot.registration.test.tsx": {
-      "fails": {}
-    },
     "src/internals/ownedElements.test.tsx": {
       "fails": {}
     },

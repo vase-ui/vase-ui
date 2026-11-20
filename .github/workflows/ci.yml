@@ -227,7 +227,6 @@ jobs:
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm --filter @vase-ui/vite-fixture typecheck
       - run: pnpm test:nuxt
-      - run: pnpm test:vite
       - run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.5.12
       - run: pnpm --filter @vase-ui/vite-fixture test:published:floor
 

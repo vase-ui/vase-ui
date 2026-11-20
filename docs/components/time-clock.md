@@ -58,6 +58,8 @@ Import the component and assemble its parts:
 
 <<< ./time-clock/Anatomy.vue
 
+To render another element for a part, give its `as` prop a tag or a component, or use its `element` slot, which wins over `as`. `TimeClock.Face` has no `element` slot, because its element holds the range input.
+
 `TimeClock.Face` is the part that the user presses or drags. The `number` slot of the face gives each number of the face to `TimeClock.Number`. The face has no numbers without that slot. It also keeps a range input that is hidden from sight. The input is the one slider that assistive technology sees.
 
 Bind the time with `v-model`. The value is a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A pick keeps the kind of the value, and its date, its time zone and each unit that the user did not pick.
@@ -74,7 +76,7 @@ The root emits `valueCommitted` when a press or a drag that selects a number end
 
 ## Hour cycle
 
-A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press nearer to the center than the middle between the two rings selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face. When the face changes to 24 hours while a day period has the focus, the range input of the face takes the focus.
+A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press nearer to the center than the middle between the two rings selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
 
 The `hourCycle` prop sets the hour cycle. With no prop, the hour cycle of the locale applies.
 
@@ -82,7 +84,7 @@ The `hourCycle` prop sets the hour cycle. With no prop, the hour cycle of the lo
 
 The `minuteStep` and `secondStep` props set the step of the minutes and of the seconds. The user selects a minute for each step, and a number that is not on a step is disabled.
 
-The `minTime` and `maxTime` props limit the time. The `disabledTimes` function disables a time. A disabled number has `data-disabled`, and a press or a key does not select it. An hour is in the limits when one of its minutes is. A minute is in the limits when one of its seconds is.
+The `min` and `max` props limit the time. The `disabledTimes` function disables a time. A disabled number has `data-disabled`, and a press or a key does not select it. A selection puts the time into the limits. An hour is in the limits when one of its minutes is. A minute is in the limits when one of its seconds is.
 
 ## Style the face
 
@@ -171,7 +173,7 @@ Set `granularity="second"` to go on to the seconds after the minutes.
 
 ### Step and limits
 
-Set `minuteStep` for a step of the minutes, and `minTime` and `maxTime` for the limits.
+Set `minuteStep` for a step of the minutes, and `min` and `max` for the limits.
 
 <DemoFrame>
   <DemoTimeClockStep />
@@ -204,11 +206,9 @@ Set `minuteStep` for a step of the minutes, and `minTime` and `maxTime` for the 
 
 ## Server render
 
-The server HTML has the angle variables of the hand and of each number, and the values of the range input. The face is thus exact before the page hydrates.
+The server HTML has the angle variables of the hand and of each number, the texts and the values of the range input. The face is thus exact before the page hydrates.
 
-A server does not know the locale of the visitor. With no `locale`, the texts and the hour cycle are those of `en-US` until the app mounts. Then the locale of the browser applies. Give `locale` to make the server HTML equal to the final page.
-
-A server and a browser can still have other `Intl` data for one locale, such as another hour cycle. The clock then hydrates with the face of the server, and it shows the hour cycle of the browser after the mount. Give `hourCycle` too, and the face of the server HTML is the final face.
+The locale of the clock is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The clock never reads the locale of the visitor. A server and a browser can still have other `Intl` data, such as other digits, or another hour cycle for a locale that the browser lacks. After the hydration, the clock shows the texts, the numbers and the attributes of the browser. An element that you render in an `element` slot, or a component in `as`, keeps the attributes of the server, because your attributes on it win over those of the part. Only a face with another count of numbers logs one message of Vue, which says that the hydration found mismatches. `TimeClock.Root` has `data-allow-mismatch="children"`, so Vue gives no warning either for your own content in the clock when it differs from the server HTML.
 
 ## Keyboard
 
@@ -228,11 +228,11 @@ A key goes over a disabled number. The Left Arrow and the Right Arrow do not cha
 ## Accessibility
 
 - The root is a `group`. Give it a name with `aria-label` or `aria-labelledby`.
-- The range input has the name of the unit of the view, such as "hour", in the locale. Its `aria-valuetext` is the number and the unit, such as "10 hours". Set `aria-label` or `aria-labelledby` on `TimeClock.Face` to replace the name, `aria-describedby` to add a description, and `getAriaValueText` to replace the value text. The face gives all four to the range input.
+- The range input has the name of the unit of the view, such as "hour", in the locale. Its `aria-valuetext` is the number and the unit, such as "10 hours". The `id` and each `aria-*` attribute on `TimeClock.Face` go to the range input: `aria-label` or `aria-labelledby` replaces the name, and `aria-describedby` adds a description. An `aria-valuetext` attribute replaces the value text, else the result of `getAriaValueText`. That function also gets the number of a clock with no value.
 - The numbers and the hand have `aria-hidden`, because the range input has the same information.
 - A touch screen reader changes the range input with its own gestures. A change that comes from the input selects the number like a key.
-- `TimeClock.DayPeriod` and `TimeClock.ViewTrigger` are buttons with `aria-pressed`. `TimeClock.ViewTrigger` has the name of its unit and the number, such as "hour 10", unless it has content of your own.
-- A read only clock keeps the keys and the presses from a change. The range input has `aria-readonly`.
+- `TimeClock.DayPeriod` and `TimeClock.ViewTrigger` are buttons with `aria-pressed`. Style them with `[aria-pressed="true"]` and `:disabled`. `TimeClock.ViewTrigger` has the name of its unit and the number, such as "hour 10", unless it has content of your own. A trigger works in a read-only clock.
+- A read-only clock keeps the keys and the presses from a change. The range input has `aria-readonly`.
 - The face has `touch-action: none`, so that a drag on a touch screen does not scroll the page.
 
 ## API reference

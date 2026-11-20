@@ -82,7 +82,7 @@ const rows: { name: string; changes: Change[]; selection: Selection; files?: str
   },
   {
     name: 'a configuration file of a fixture runs `test-nuxt` only',
-    changes: modified('fixtures/vite/vite.config.ts'),
+    changes: modified('fixtures/vite/published/vite.config.ts'),
     selection: { tests: 'none', related: [], fixtures: true },
   },
   {

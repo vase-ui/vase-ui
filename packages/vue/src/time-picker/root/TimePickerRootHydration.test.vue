@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import * as TimeClock from '../../time-clock/index.parts';
-import * as TimeField from '../../time-field/index.parts';
+import * as TimeClock from '../../time-clock/parts';
+import * as TimeField from '../../time-field/parts';
 import * as TimePicker from '../index.parts';
 
 // The props of a server render go to Node as JSON, so a value is a text. The form of the text gives
@@ -15,14 +15,15 @@ const props = withDefaults(
     disabled?: boolean | undefined;
     readOnly?: boolean | undefined;
     minTime?: string | undefined;
-    // A list, a column and a clock follow the hour cycle and the digits of the locale, which an
-    // engine can resolve in another way than Node. A case that hydrates such a layout leaves some
-    // of them out.
+    // A field, a list, a column and a clock follow the hour cycle and the digits of the locale,
+    // which an engine can resolve in another way than Node. A case that hydrates such a layout
+    // leaves some of them out.
+    field?: boolean | undefined;
     list?: boolean | undefined;
     columns?: boolean | undefined;
     clock?: boolean | undefined;
   }>(),
-  { list: true, columns: true, clock: true },
+  { field: true, list: true, columns: true, clock: true },
 );
 
 function toValue(text: string | undefined) {
@@ -49,7 +50,7 @@ const minTime = props.minTime === undefined ? undefined : Temporal.PlainTime.fro
     :read-only="props.readOnly"
     :min-time="minTime"
   >
-    <TimePicker.Field data-testid="field">
+    <TimePicker.Field v-if="props.field" data-testid="field">
       <TimeField.Input />
     </TimePicker.Field>
     <TimePicker.Trigger data-testid="trigger">Open</TimePicker.Trigger>

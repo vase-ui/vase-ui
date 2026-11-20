@@ -18,7 +18,6 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
 import DateRangePickerAnatomy from './DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -1065,12 +1064,12 @@ describe('<DateRangePicker.Root />', () => {
       changedState: ['11', '10', '2026', '11', '20', '2026'],
     });
 
-    // The two fields get the range of a reset with the next render. The picker counts the reset
-    // first, so each field takes that range as the range of the reset, whichever of the four
-    // listeners hears of the reset first: the root or the part, of the start or of the end.
-    describe.each([{ order: 'the roots first' }, { order: 'the parts first' }])(
+    // Each root of a field listens on the form and each part of the picker on the document, so the
+    // roots hear of the reset first. A root tells its field the reset, so the range that the picker
+    // gives with the next render starts no validation.
+    describe.each([{ order: 'the roots first' }])(
       'VUE-21: a native reset clears the error of the field, with $order',
-      ({ order }) => {
+      () => {
         // The reset value, `null`, is also an error, so a validation after the reset shows.
         const validate = vi.fn((value: unknown) =>
           value === null ? 'Choose a date' : 'Wrong date',
@@ -1113,11 +1112,7 @@ describe('<DateRangePicker.Root />', () => {
           await flushMicrotasks();
         }
 
-        async function resetForm(resets: ReturnType<typeof recordResetListeners>) {
-          if (order === 'the parts first') {
-            // The listener of the root and the listener of the part, for each of the two fields.
-            resets.reverse(4);
-          }
+        async function resetForm() {
           screen.getByTestId<HTMLFormElement>('form').reset();
           // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
           await wait(0);
@@ -1132,7 +1127,6 @@ describe('<DateRangePicker.Root />', () => {
 
         it('starts no validation for the range of the reset, and validates the next entry', async () => {
           validate.mockClear();
-          const resets = recordResetListeners(document);
           const { container } = await render(renderForm());
           const [start, end] = hiddenInputElements(container);
           await fill(start!, '2026-11-14');
@@ -1141,7 +1135,7 @@ describe('<DateRangePicker.Root />', () => {
           expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
           validate.mockClear();
 
-          await resetForm(resets);
+          await resetForm();
 
           expect(hiddenInputsOf(container)).toEqual(['', '']);
           expect(validate).not.toHaveBeenCalled();
@@ -1157,7 +1151,6 @@ describe('<DateRangePicker.Root />', () => {
 
         it('clears the error of the form when the reset leaves the range, and validates the next entry', async () => {
           validate.mockClear();
-          const resets = recordResetListeners(document);
           const { container } = await render(
             renderForm(
               { defaultValue: range('2026-11-18', '2026-11-20') },
@@ -1166,7 +1159,7 @@ describe('<DateRangePicker.Root />', () => {
           );
           expect(screen.getByTestId('error')).toHaveTextContent('Server error');
 
-          await resetForm(resets);
+          await resetForm();
 
           expect(hiddenInputsOf(container)).toEqual(['2026-11-18', '2026-11-20']);
           expect(validate).not.toHaveBeenCalled();
