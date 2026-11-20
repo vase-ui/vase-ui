@@ -11,7 +11,7 @@ function readEmail(event: SubmitEvent) {
 
 <template>
   <main>
-    <Form data-testid="form" @submit.prevent="readEmail">
+    <Form data-testid="form" @submit="readEmail">
       <input name="email" value="a@b.c" data-testid="email" />
       <button type="submit" data-testid="submit">Send</button>
     </Form>

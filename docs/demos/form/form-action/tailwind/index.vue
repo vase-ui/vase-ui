@@ -18,8 +18,7 @@ function updateErrors(serverErrors: FormErrors) {
   state.value = { ...state.value, serverErrors };
 }
 
-async function formAction(event: SubmitEvent) {
-  event.preventDefault();
+async function formAction() {
   const formData = new FormData(form.value?.element ?? undefined);
 
   loading.value = true;
