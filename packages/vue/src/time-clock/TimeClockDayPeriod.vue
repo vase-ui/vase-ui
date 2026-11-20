@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
+import { computed, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
@@ -22,9 +22,13 @@ defineSlots<{
 const attrs = useAttrs();
 const clock = injectClock();
 const { element, setElement } = useElement<HTMLElement>();
+const slots = useSlots();
 const { disabled, mergeAttributes } = useButton({
   element,
   disabled: () => clock.state.disabled || clock.isDayPeriodDisabled(props.value),
+  // A tag in `as` is known at the render. The element of a component or of the `element` slot,
+  // which wins over `as`, is known after the mount.
+  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
   type: 'button',
 });
 const state = computed<TimeClockDayPeriodState>(() => ({
@@ -61,6 +65,14 @@ child is the text, so the text has a branch with no slot. -->
     :elementRef="setElement"
     :state="state"
   />
+  <component
+    :is="as"
+    v-else-if="clock.hourCycle === 12 && as"
+    v-bind="elementProps()"
+    :ref="setElement"
+  >
+    <slot :state="state">{{ text }}</slot>
+  </component>
   <button
     v-else-if="clock.hourCycle === 12 && $slots.default"
     v-bind="elementProps()"

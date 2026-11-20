@@ -52,7 +52,11 @@ defineExpose({
 </script>
 
 <template>
-  <div v-bind="root.groupProps(attrs)" :ref="setElement">
+  <component :is="as" v-if="as" v-bind="root.groupProps(attrs)" :ref="setElement">
+    <slot :state="root.state.value" />
+    <input v-bind="root.inputProps()" :ref="setInput" />
+  </component>
+  <div v-else v-bind="root.groupProps(attrs)" :ref="setElement">
     <slot :state="root.state.value" />
     <input v-bind="root.inputProps()" :ref="setInput" />
   </div>

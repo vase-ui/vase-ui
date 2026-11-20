@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import type { DateFieldRootChangeEventDetails } from '@vase-ui/vue/date-field';
 import { dataAttributes } from '../../test/field';
 import DateFields from '../../test/fixtures/DateFields.vue';
+import DateTimeFieldParts from '../../test/fixtures/DateTimeFieldParts.vue';
 import DateFieldSlots from '../../test/fixtures/DateFieldSlots.vue';
 import { mockToday } from '../../test/mockBrowserToday';
 import { mount, settle } from '../../test/render';
@@ -144,6 +145,27 @@ describe('the parts', () => {
     expect(clear!.type).toBe('button');
     expect(clear).toHaveTextContent('×');
     expect(clear!.disabled).toBe(false);
+  });
+
+  test('`as` renders a tag in place of the element of the root, Input, Literal and Clear', async () => {
+    const { root } = mount(DateTimeFieldParts, {
+      family: 'date',
+      root: { as: 'section', defaultValue: day('2026-11-14') },
+      input: { as: 'p' },
+      literal: { as: 'em' },
+      clear: { as: 'span' },
+    });
+    await nextTick();
+    const group = root.querySelector('section')!;
+    expect(group).toHaveAttribute('role', 'group');
+    expect(group.lastElementChild).toHaveAttribute('aria-hidden', 'true');
+    expect(group.querySelector('p')).toHaveAttribute('data-allow-mismatch', 'children');
+    const literals = [...group.querySelectorAll('em')];
+    expect(literals.map((literal) => literal.textContent)).toEqual(['/', '/']);
+    expect(literals[0]).toHaveAttribute('aria-hidden', 'true');
+    const clear = group.querySelector('span[aria-label="Clear"]')!;
+    expect(clear).toHaveAttribute('role', 'button');
+    expect(clear).not.toHaveAttribute('type');
   });
 
   test('the element slots render the elements of the developer, with the state; the attributes of the developer stay; each part exposes its element', async () => {

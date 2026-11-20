@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
+import { computed, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { injectDateTimeField, stateAttributes } from '../common/date-time-field/field';
 import { useElement } from '../common/element';
@@ -20,10 +20,14 @@ defineSlots<{
 const attrs = useAttrs();
 const field = injectDateTimeField();
 const { element, setElement } = useElement<HTMLElement>();
+const slots = useSlots();
 const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () =>
     props.disabled || field.state.disabled || field.state.readonly || field.state.empty,
+  // A tag in `as` is known at the render. The element of a component or of the `element` slot,
+  // which wins over `as`, is known after the mount.
+  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
   type: 'button',
 });
 const state = computed<TimeFieldClearState>(() => ({ ...field.state, disabled: isDisabled.value }));
@@ -51,6 +55,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
   <button v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </button>

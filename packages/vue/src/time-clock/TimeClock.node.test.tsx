@@ -35,6 +35,19 @@ describe('<TimeClock.Root /> on a server', () => {
     expect(html).toMatch(/<input type="range" min="1" max="12" step="1" value="3"/);
   });
 
+  it('renders the buttons of another tag in `as` with the role `button` and no `type`', async () => {
+    const html = removeComments(
+      await renderToString(
+        <TimeClock.Root defaultValue={Temporal.PlainTime.from('15:30')}>
+          <TimeClock.ViewTrigger as="span" view="hour" />
+          <TimeClock.DayPeriod as="span" value="pm" />
+        </TimeClock.Root>,
+      ),
+    );
+    expect(html.match(/<span role="button" tabindex="0"/g)).toHaveLength(2);
+    expect(html).not.toMatch(/<span[^>]* type=/);
+  });
+
   it('renders for en-US, and not for the locale of the runtime', async () => {
     mockRuntimeDateTimeLocale('de-DE');
     const html = removeComments(await renderToString(clock()));

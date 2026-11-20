@@ -66,7 +66,7 @@ Import the component and assemble its parts:
 
 A segment is an `<input type="text" role="spinbutton">`. Its `size` attribute fits its greatest number and its placeholder. To make the box follow the text, add `field-sizing: content` to your styles. Chrome 123, Firefox 152 and Safari 26.2 have it, and an older browser keeps the width of `size`.
 
-To render your own element for a part, use its `element` slot. The slot of `TimeField.Input` also gets the `segments` of the layout to render.
+To render another element for a part, give its `as` prop a tag or a component, or use its `element` slot, which wins over `as`. A segment is a native input, so it takes no `as`. `TimeField.Root` has no `element` slot, because its element holds the form input. The slot of `TimeField.Input` also gets the `segments` of the layout to render.
 
 ## Value
 
@@ -170,7 +170,7 @@ The field renders with `renderToString`. The server HTML has the segments, their
 
 The locale of the field is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The field never reads the locale of the visitor, so the server HTML and the first render of the browser agree. Give the locale of your app to render it.
 
-A server and a browser can have other `Intl` data for the same locale, such as another hour cycle. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. An element that you render in an `element` slot keeps the attributes of the server, because your attributes on it win over those of the part. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
+A server and a browser can have other `Intl` data for the same locale, such as another hour cycle. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. An element that you render in an `element` slot, or a component in `as`, keeps the attributes of the server, because your attributes on it win over those of the part. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 

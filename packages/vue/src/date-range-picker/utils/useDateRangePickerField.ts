@@ -128,6 +128,9 @@ export function useDateRangePickerField(
     return {
       ...mergeProps(fieldHandlers, givenAttributes(attributes)),
       ...props,
+      // The part renders the root with no `as`. The type of the attributes of an element has the
+      // `as` of motion-v, which the root does not take.
+      as: undefined,
       // `null` removes the name, and Vue writes no attribute for it.
       'aria-label': ariaLabel() as string | undefined,
       'aria-labelledby': (ariaLabelledby() ?? attributes['aria-labelledby']) as string | undefined,

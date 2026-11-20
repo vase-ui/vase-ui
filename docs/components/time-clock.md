@@ -58,6 +58,8 @@ Import the component and assemble its parts:
 
 <<< ./time-clock/Anatomy.vue
 
+To render another element for a part, give its `as` prop a tag or a component, or use its `element` slot, which wins over `as`. `TimeClock.Face` has no `element` slot, because its element holds the range input.
+
 `TimeClock.Face` is the part that the user presses or drags. The `number` slot of the face gives each number of the face to `TimeClock.Number`. The face has no numbers without that slot. It also keeps a range input that is hidden from sight. The input is the one slider that assistive technology sees.
 
 Bind the time with `v-model`. The value is a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A pick keeps the kind of the value, and its date, its time zone and each unit that the user did not pick.
@@ -206,7 +208,7 @@ Set `minuteStep` for a step of the minutes, and `min` and `max` for the limits.
 
 The server HTML has the angle variables of the hand and of each number, the texts and the values of the range input. The face is thus exact before the page hydrates.
 
-The locale of the clock is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The clock never reads the locale of the visitor. A server and a browser can still have other `Intl` data, such as other digits, or another hour cycle for a locale that the browser lacks. After the hydration, the clock shows the texts, the numbers and the attributes of the browser. An element that you render in an `element` slot keeps the attributes of the server, because your attributes on it win over those of the part. Only a face with another count of numbers logs one message of Vue, which says that the hydration found mismatches. `TimeClock.Root` has `data-allow-mismatch="children"`, so Vue gives no warning either for your own content in the clock when it differs from the server HTML.
+The locale of the clock is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The clock never reads the locale of the visitor. A server and a browser can still have other `Intl` data, such as other digits, or another hour cycle for a locale that the browser lacks. After the hydration, the clock shows the texts, the numbers and the attributes of the browser. An element that you render in an `element` slot, or a component in `as`, keeps the attributes of the server, because your attributes on it win over those of the part. Only a face with another count of numbers logs one message of Vue, which says that the hydration found mismatches. `TimeClock.Root` has `data-allow-mismatch="children"`, so Vue gives no warning either for your own content in the clock when it differs from the server HTML.
 
 ## Keyboard
 

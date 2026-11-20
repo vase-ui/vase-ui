@@ -87,6 +87,21 @@ describe('<DateField.Root /> on a server', () => {
     expect(html).toMatch(/<button disabled type="button"/);
   });
 
+  it('renders the tag of `as`, and a Clear of another tag as a button with no `type`', async () => {
+    const html = await renderToString(
+      <DateField.Root as="section">
+        <DateField.Input as="p" />
+        <DateField.Clear as="span" aria-label="Clear">
+          ×
+        </DateField.Clear>
+      </DateField.Root>,
+    );
+    expect(html).toMatch(/^<section role="group"/);
+    expect(html).toMatch(/<p /);
+    expect(html).toMatch(/<span role="button" tabindex="-1" aria-disabled="true"/);
+    expect(html).not.toMatch(/<span[^>]* type=/);
+  });
+
   it('renders for en-US, and not for the locale of the runtime', async () => {
     mockRuntimeDateTimeLocale('de-DE');
     const html = await renderToString(

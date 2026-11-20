@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, mergeProps, onMounted, useAttrs, useSlots, watch } from 'vue';
+import { computed, mergeProps, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
-import { writeAttributes } from '../common/writeAttributes';
+import { useAttributesAfterMount } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockNumberProps, TimeClockNumberState } from './types';
 import { angleOfFaceNumber, radiusOfFaceNumber } from './views';
@@ -20,7 +20,6 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
-const slots = useSlots();
 const clock = injectClock();
 const { element, setElement } = useElement<HTMLElement>();
 const state = computed<TimeClockNumberState>(() => {
@@ -50,11 +49,7 @@ watch(
   { flush: 'sync' },
 );
 
-// The element of the `element` slot can have attributes of the developer that win over those of
-// the part, so the part writes only to its own element.
-onMounted(() => {
-  if (element.value && !slots.element) writeAttributes(element.value, elementProps());
-});
+useAttributesAfterMount(element, elementProps, () => props.as);
 
 defineExpose({ element });
 
@@ -85,6 +80,9 @@ branch with no slot. -->
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state">{{ text }}</slot>
+  </component>
   <span v-else-if="$slots.default" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </span>

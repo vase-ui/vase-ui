@@ -9,6 +9,7 @@ export interface TimePickerFieldState extends TimeFieldRootState {}
  */
 export interface TimePickerFieldProps extends Omit<
   TimeFieldRootProps,
+  | 'as'
   | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
@@ -100,6 +101,9 @@ function fieldProps(attributes: Record<string, unknown>) {
   return {
     ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
+    // The part renders the root with no `as`. The type of the attributes of an element has the
+    // `as` of motion-v, which the root does not take.
+    as: undefined,
     modelValue: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for each other part.
     defaultValue: picker.template.value,

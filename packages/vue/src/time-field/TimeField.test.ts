@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { TimeFieldRootChangeEventDetails } from '@vase-ui/vue/time-field';
+import DateTimeFieldParts from '../../test/fixtures/DateTimeFieldParts.vue';
 import TimeFields from '../../test/fixtures/TimeFields.vue';
 import { mount, settle } from '../../test/render';
 
@@ -57,6 +58,23 @@ describe('the segments', () => {
     await nextTick();
     expect(types(segments())).toEqual(['hour', 'dayPeriod']);
     expect(segments().map((s) => s.value)).toEqual(['09', 'AM']);
+  });
+
+  test('`as` renders a tag in place of the element of the root, Input, Literal and Clear', async () => {
+    const { root } = mount(DateTimeFieldParts, {
+      family: 'time',
+      root: { as: 'section', defaultValue: time('09:05'), hourCycle: 24 },
+      input: { as: 'p' },
+      literal: { as: 'em' },
+      clear: { as: 'span' },
+    });
+    await nextTick();
+    const group = root.querySelector('section')!;
+    expect(group).toHaveAttribute('role', 'group');
+    expect(group.lastElementChild).toHaveAttribute('aria-hidden', 'true');
+    expect(group.querySelector('p')).toHaveAttribute('data-allow-mismatch', 'children');
+    expect([...group.querySelectorAll('em')].map((literal) => literal.textContent)).toEqual([':']);
+    expect(group.querySelector('span[aria-label="Clear"]')).toHaveAttribute('role', 'button');
   });
 
   test('the element slots render the elements of the developer, and the attributes of the developer stay', async () => {

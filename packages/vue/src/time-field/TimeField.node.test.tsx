@@ -35,6 +35,19 @@ describe('<TimeField.Root /> on a server', () => {
     expect(html).toMatch(/<input[^>]* type="time"[^>]* name="start"[^>]* value="15:04"/);
   });
 
+  it('renders a Clear of another tag in `as` as a button with no `type`', async () => {
+    const html = await renderToString(
+      <TimeField.Root>
+        <TimeField.Input />
+        <TimeField.Clear as="span" aria-label="Clear">
+          ×
+        </TimeField.Clear>
+      </TimeField.Root>,
+    );
+    expect(html).toMatch(/<span role="button" tabindex="-1" aria-disabled="true"/);
+    expect(html).not.toMatch(/<span[^>]* type=/);
+  });
+
   it('renders the name of the zone of a zoned value as a literal that a screen reader reads', async () => {
     const html = await renderToString(cases()[1]!);
     expect(html).toMatch(/<span[^>]* data-type="timeZoneName"[^>]*>GMT-5<\/span>/);

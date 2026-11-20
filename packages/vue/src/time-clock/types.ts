@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 import type { TimeValue } from '../internals/date-time/temporal';
 import type { TimeClockDayPeriodValue, TimeClockFaceNumber, TimeClockView } from './views';
 
@@ -16,9 +17,8 @@ export interface TimeClockRootState {
   empty: boolean;
 }
 
-export interface TimeClockRootProps<
-  Value extends TimeValue = Temporal.PlainTime,
-> extends /* @vue-ignore */ HTMLAttributes {
+export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
    * A new value keeps the date and the time zone of the value.
@@ -85,7 +85,7 @@ export type TimeClockRootViewChangeEventDetails =
 
 export interface TimeClockFaceState extends TimeClockRootState {}
 
-export interface TimeClockFaceProps extends /* @vue-ignore */ HTMLAttributes {
+export interface TimeClockFaceProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The `aria-valuetext` of the range input, for the number that the face shows. The default is
    * the number with its unit, such as `30 minutes`. An `aria-valuetext` attribute wins.
@@ -100,7 +100,7 @@ export interface TimeClockHandState extends TimeClockRootState {
   betweenNumbers: boolean;
 }
 
-export interface TimeClockHandProps extends /* @vue-ignore */ HTMLAttributes {}
+export interface TimeClockHandProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface TimeClockNumberState extends TimeClockRootState {
   /** The time of the clock selects the number. */
@@ -109,7 +109,8 @@ export interface TimeClockNumberState extends TimeClockRootState {
   inner: boolean;
 }
 
-export interface TimeClockNumberProps extends /* @vue-ignore */ HTMLAttributes {
+export interface TimeClockNumberProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The number that the part shows. The `number` slot of `TimeClock.Face` gives it. */
   number: TimeClockFaceNumber;
 }
@@ -119,10 +120,8 @@ export interface TimeClockDayPeriodState extends TimeClockRootState {
   selected: boolean;
 }
 
-export interface TimeClockDayPeriodProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled' | 'value'
-> {
+export interface TimeClockDayPeriodProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'value'> {
   /** The day period that the button selects. Its text is that period in the locale. */
   value: TimeClockDayPeriodValue;
 }
@@ -132,10 +131,8 @@ export interface TimeClockViewTriggerState extends TimeClockRootState {
   active: boolean;
 }
 
-export interface TimeClockViewTriggerProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled'
-> {
+export interface TimeClockViewTriggerProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /** The unit that the face shows after a press. The text is that unit of the time. */
   view: TimeClockView;
 }

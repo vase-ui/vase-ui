@@ -59,6 +59,14 @@ function onMousedown(event: MouseEvent) {
     :state="state"
     :segments="field.segments"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <template v-for="(segment, index) in field.segments" :key="index">
+      <slot name="segment" :segment="segment" :index="index">
+        <TimeFieldSegment v-if="segment.editable" :segment="segment" />
+        <TimeFieldLiteral v-else :segment="segment" />
+      </slot>
+    </template>
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <template v-for="(segment, index) in field.segments" :key="index">
       <slot name="segment" :segment="segment" :index="index">

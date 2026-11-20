@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, useAttrs, useSlots } from 'vue';
+import { computed, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
-import { writeAttributes } from '../common/writeAttributes';
+import { useAttributesAfterMount } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockViewTriggerProps, TimeClockViewTriggerState } from './types';
 import { faceNumberOf } from './views';
@@ -29,6 +29,9 @@ const { element, setElement } = useElement<HTMLElement>();
 const { disabled, mergeAttributes } = useButton({
   element,
   disabled: () => clock.state.disabled,
+  // A tag in `as` is known at the render. The element of a component or of the `element` slot,
+  // which wins over `as`, is known after the mount.
+  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
   type: 'button',
 });
 const state = computed<TimeClockViewTriggerState>(() => ({
@@ -46,11 +49,7 @@ const text = computed(() =>
       }),
 );
 
-// The element of the `element` slot can have attributes of the developer that win over those of
-// the part, so the part writes only to its own element.
-onMounted(() => {
-  if (element.value && !slots.element) writeAttributes(element.value, elementProps());
-});
+useAttributesAfterMount(element, elementProps, () => props.as);
 
 defineExpose({ element });
 
@@ -82,6 +81,9 @@ branch with no slot. -->
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state">{{ text }}</slot>
+  </component>
   <button v-else-if="$slots.default" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </button>

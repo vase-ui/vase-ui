@@ -10,6 +10,7 @@ export interface DatePickerTimeFieldState extends TimeFieldRootState {}
  */
 export interface DatePickerTimeFieldProps extends Omit<
   TimeFieldRootProps,
+  | 'as'
   | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'

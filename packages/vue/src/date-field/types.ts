@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 import type {
   DateTimeFieldChangeEventDetails,
   DateTimeFieldChangeEventReason,
@@ -21,9 +22,8 @@ export type DateFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 
 export interface DateFieldRootState extends DateTimeFieldState {}
 
-export interface DateFieldRootProps<
-  Value extends DateFieldRootValue = DateFieldRootValue,
-> extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface DateFieldRootProps<Value extends DateFieldRootValue = DateFieldRootValue>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /**
    * The value: a `Temporal.PlainDate`, `PlainDateTime`, `ZonedDateTime` or `PlainYearMonth`, or
    * `null` for no value. The field gives a value of the same kind, calendar, time and time zone.
@@ -96,7 +96,8 @@ export type DateFieldInputSegment = DateTimeFieldSegment;
 
 export interface DateFieldInputState extends DateFieldRootState {}
 
-export interface DateFieldInputProps extends /* @vue-ignore */ HTMLAttributes {}
+export interface DateFieldInputProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface DateFieldSegmentState extends DateTimeFieldSegmentState {}
 
@@ -114,17 +115,16 @@ export interface DateFieldLiteralState extends DateFieldRootState {
   type: 'literal' | 'era' | 'timeZoneName';
 }
 
-export interface DateFieldLiteralProps extends /* @vue-ignore */ HTMLAttributes {
+export interface DateFieldLiteralProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The item that the part shows. The `segment` slot of `DateField.Input` gives it. */
   segment: Extract<DateFieldInputSegment, { editable: false }>;
 }
 
 export interface DateFieldClearState extends DateFieldRootState {}
 
-export interface DateFieldClearProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled'
-> {
+export interface DateFieldClearProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /** The user cannot press the button. It is also disabled while the field is empty. */
   disabled?: boolean;
 }

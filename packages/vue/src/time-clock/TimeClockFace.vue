@@ -249,7 +249,16 @@ function elementProps() {
 </script>
 
 <template>
-  <div v-bind="elementProps()" :ref="setElement">
+  <component :is="as" v-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+    <template v-if="$slots.number">
+      <template v-for="(number, index) in clock.numbers" :key="number.value">
+        <slot name="number" :number="number" :index="index" />
+      </template>
+    </template>
+    <input v-bind="inputProps()" :ref="setInput" />
+  </component>
+  <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <template v-if="$slots.number">
       <template v-for="(number, index) in clock.numbers" :key="number.value">

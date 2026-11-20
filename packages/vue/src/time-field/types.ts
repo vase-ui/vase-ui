@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 import type {
   DateTimeFieldChangeEventDetails,
   DateTimeFieldChangeEventReason,
@@ -19,9 +20,8 @@ export type TimeFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 
 export interface TimeFieldRootState extends DateTimeFieldState {}
 
-export interface TimeFieldRootProps<
-  Value extends TimeFieldRootValue = Temporal.PlainTime,
-> extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.PlainTime>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
    * The field gives a value of the same kind, with the date and the time zone of the value.
@@ -77,7 +77,8 @@ export type TimeFieldInputSegment = DateTimeFieldSegment;
 
 export interface TimeFieldInputState extends TimeFieldRootState {}
 
-export interface TimeFieldInputProps extends /* @vue-ignore */ HTMLAttributes {}
+export interface TimeFieldInputProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface TimeFieldSegmentState extends DateTimeFieldSegmentState {}
 
@@ -95,17 +96,16 @@ export interface TimeFieldLiteralState extends TimeFieldRootState {
   type: 'literal' | 'era' | 'timeZoneName';
 }
 
-export interface TimeFieldLiteralProps extends /* @vue-ignore */ HTMLAttributes {
+export interface TimeFieldLiteralProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The item that the part shows. The `segment` slot of `TimeField.Input` gives it. */
   segment: Extract<TimeFieldInputSegment, { editable: false }>;
 }
 
 export interface TimeFieldClearState extends TimeFieldRootState {}
 
-export interface TimeFieldClearProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled'
-> {
+export interface TimeFieldClearProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /** The user cannot press the button. It is also disabled while the field is empty. */
   disabled?: boolean;
 }

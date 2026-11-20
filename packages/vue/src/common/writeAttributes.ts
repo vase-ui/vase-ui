@@ -1,3 +1,5 @@
+import { onMounted, useSlots, type Ref } from 'vue';
+
 /**
  * Writes the attributes of a part again after the mount. While Vue hydrates, it keeps the
  * attributes and the style of each element that it keeps, so a server with other `Intl` data
@@ -25,4 +27,23 @@ export function writeAttributes(element: HTMLElement, attributes: Record<string,
     const input = element as HTMLInputElement;
     if (input.value !== String(value)) input.value = String(value);
   }
+}
+
+/**
+ * Writes the attributes of the element of a part again after the mount, with `writeAttributes`.
+ * The element of the `element` slot or of a component in `as` can have attributes of the developer
+ * that win over those of the part, so the part writes only to its own element or to a tag.
+ */
+export function useAttributesAfterMount(
+  element: Readonly<Ref<HTMLElement | null>>,
+  attributes: () => Record<string, unknown>,
+  as: () => unknown = () => undefined,
+) {
+  const slots = useSlots();
+  onMounted(() => {
+    const tag = as();
+    if (element.value && !slots.element && (tag === undefined || typeof tag === 'string')) {
+      writeAttributes(element.value, attributes());
+    }
+  });
 }
