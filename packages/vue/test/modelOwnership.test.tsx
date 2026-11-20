@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
-import { Drawer } from '@vase-ui/vue/drawer';
+import { Menu } from '@vase-ui/vue/menu';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -46,29 +46,29 @@ it('VUE-141: Input keeps the last parent text and accepts typed edits after rele
   expect(input).toHaveValue('first');
 });
 
-it('VUE-142: a lone drawer trigger waits for the parent to select it', async () => {
+it('VUE-142: a lone menu trigger waits for the parent to select it', async () => {
   const triggerId = shallowRef<string | null | undefined>(null);
   await render(() => (
-    <Drawer.Root
+    <Menu.Root
       defaultOpen
       modal={false}
       triggerId={triggerId.value}
       v-slots={{
         default: ({ payload }: { payload: string | undefined }) => [
-          <Drawer.Trigger id="a" payload="from A">
+          <Menu.Trigger id="a" payload="from A">
             A
-          </Drawer.Trigger>,
-          <Drawer.Portal>
-            <Drawer.Viewport>
-              <Drawer.Popup>{payload ?? 'no trigger'}</Drawer.Popup>
-            </Drawer.Viewport>
-          </Drawer.Portal>,
+          </Menu.Trigger>,
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>{payload ?? 'no trigger'}</Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>,
         ],
       }}
     />
   ));
   const trigger = screen.getByRole('button', { name: 'A' });
-  const dialog = screen.getByRole('dialog');
+  const dialog = screen.getByRole('menu');
   expect(dialog).toHaveTextContent('no trigger');
   expect(trigger).toHaveAttribute('aria-expanded', 'false');
   expect(trigger).not.toHaveAttribute('aria-controls');

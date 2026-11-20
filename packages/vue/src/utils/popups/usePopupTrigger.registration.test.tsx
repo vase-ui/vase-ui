@@ -289,8 +289,8 @@ describe('useTriggerRegistration', () => {
   });
 
   describe('callers that pass the callback straight into a ref', () => {
-    // Mirrors `Drawer.SwipeArea`: the callback is the `ref` of the element. Vue calls it again on
-    // each patch, and the watcher of the registration re-registers the element when the id changes.
+    // The callback is the `ref` of the element. Vue calls it again on each patch, and the watcher of
+    // the registration re-registers the element when the id changes.
     const RefOnlyTrigger = defineComponent({
       props: { id: String as PropType<string | undefined>, store: storeProp },
       setup(props) {

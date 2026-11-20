@@ -6,67 +6,260 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
-      "describe": ["<Drawer.Popup />"],
-      "title": "warns without relying on React owner-stack support",
-      "kind": "not-applicable",
-      "reason": "The case mocks `SafeReact.captureOwnerStack`, which only React has. The warning of `Drawer.Popup` has no owner stack."
+      "upstream": "packages/react/src/drawer/content/DrawerContent.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
+      "reason": "`Drawer.swipe.test.ts` tests the content: a mouse press in it starts no swipe, so a person selects its text, and a touch there still swipes. `Drawer.Content` marks the press in its own listener and writes no attribute, so the case about the attribute of the content has no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/drawer/indent-background/DrawerIndentBackground.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.test.ts",
+      "reason": "`Drawer.test.ts` tests the indent background: it has `data-active` while a drawer of the provider is open."
+    },
+    {
+      "upstream": "packages/react/src/drawer/indent/DrawerIndent.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.test.ts",
+      "reason": "`Drawer.test.ts` tests the indent: it has `data-active` while a drawer of the provider is open, and the progress of the swipe in `--drawer-swipe-progress`. `Drawer.swipe.test.ts` tests that progress in a swipe that opens."
     },
     {
       "upstream": "packages/react/src/drawer/provider/DrawerProvider.test.tsx",
-      "describe": ["<Drawer.Provider />"],
-      "title": "releases closed drawers once they are removed",
       "kind": "replaced",
-      "test": "packages/vue/src/drawer/provider/DrawerProvider.node.test.tsx",
-      "reason": "The case forces a garbage collection through `node:v8`, so Base UI runs it only in jsdom. A browser has no `node:v8`. The case is in the test file that the Node project runs, with the same title. It reads the context of the provider from a server render."
-    },
-    {
-      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "describe": ["<Drawer.SwipeArea />"],
-      "title": "works before a generated swipe area id is available",
-      "kind": "not-applicable",
-      "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
-    },
-    {
-      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "describe": ["<Drawer.SwipeArea />"],
-      "title": "registers the swipe area once a generated id becomes available",
-      "kind": "not-applicable",
-      "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
+      "test": "packages/vue/src/drawer/Drawer.test.ts",
+      "reason": "`Drawer.test.ts` tests the provider: the indent parts are active while a drawer is open and not after its close, and they render with no provider. `Drawer.hydration.test.ts` tests that the provider is not active in the server HTML. The registry cases are internal forms of React: the provider counts the open roots of a reactive set."
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
-      "describe": ["<Drawer.Popup />"],
-      "title": "does not treat dialogs inside nested drawers as nested drawers",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.test.ts",
+      "reason": "`Drawer.test.ts` tests the popup: its role and attributes, the first focus on the popup element and `initialFocus`, the negative snap point offset of a drawer that closes up, the count and the heights of nested drawers, a dialog in a drawer that is no nested drawer, and the error for a popup with no viewport. The popup throws in place of a warning. The cases about the order of React effects and the owner stack have no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.test.ts",
+      "reason": "`Drawer.test.ts` tests the root: the dialog behavior, the handle, the snap point events and the order of the events at a close, the back gesture of Android, and a drawer that counts as a dialog for a dialog. `Drawer.swipe.test.ts` tests the swipe with its threshold and its speed, the snap points of a swipe, a cancelled close and a parent that keeps the drawer open. A snap point change comes after `update:open` at a close. The store and the effect order of React have no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/snap.test.ts",
+      "reason": "`snap.test.ts` tests the heights of the snap points: the units, the values with no height, the clamp, the last of two equal heights, an empty list and a popup with no height. `Drawer.test.ts` tests the offset of a point on the popup. A drawer has a viewport, so the case for a drawer with no viewport has no counterpart, and `KeepAlive` needs no code (section 5)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/useDrawerSnapPoints.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/snap.test.ts",
+      "reason": "`snap.test.ts` tests the movement past the open place as a square root, and the nearest point."
+    },
+    {
+      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
+      "reason": "`Drawer.swipe.test.ts` tests the swipe area: the open at 1 px with the area as the trigger, the popup that follows the finger from its closed place, the release, a release outside the popup that closes nothing, a disabled area, an area that becomes inert, no text selection and the focus that stays, and a swipe while the popup of the last close leaves: the popup enters at the place of the finger after the leave. The Indent has the progress of the Backdrop. Pointer Events carry the swipe, so the cases about touch events and compatibility pointer events have no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
+      "reason": "`Drawer.swipe.test.ts` tests the swipe of the viewport: the release, the square root against the direction, a fast flick, the leave from the place of the drag with `data-swipe-dismiss`, a cancelled close, the elements where a mouse starts no swipe, no text selection, the press of another button, a render in a swipe, a popup that goes, a nested drawer, a listener that stops the press, the snap points, and with a real touch in Chromium: a scroller at its edge and not, a drag across the axis, a touch that starts outside the popup, a `touchmove` listener in the popup, a range input and a selection. The `touchmove` listener is on the viewport element. Pointer Events carry the swipe, so the cases about the touch path, a non-cancelable `touchmove` and the order of React effects have no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.keyboard.test.tsx",
+      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider with the new parts. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code (section 5)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/Drawer.spec.ts",
+      "reason": "`Drawer.spec.ts` tests the types of the handle, the props of the root and the trigger, the details of the two change events, the snap point, the element of a template ref and the payload in the slot of the root."
+    },
+    {
+      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The case nests a Dialog and a Drawer of the older popup code. Dialog moved to the popup layer, and the two do not share a stack until Drawer moves to it. The change that moves Drawer to the popup layer ports the case again."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/popup/DrawerPopupCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/popup/DrawerPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeAreaDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewportCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerBackdropCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerCloseDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerPopupCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerSwipeAreaDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerViewportCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "DrawerViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Trigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Close",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "`Drawer.Close` is `Dialog.Close`. The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>` that renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the backdrop animates it, it is in the DOM only while the drawer is open or leaves, and a kept backdrop has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the popup animates it, it is in the DOM only while the drawer is open or leaves, and a kept popup has `[hidden]`. `.x-leave-to[data-swipe-direction]` and `[data-swipe-dismiss]` select its leave (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
+      "entry": "Viewport",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the viewport has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: closed is `[hidden]` with `keepMounted`, or `:has(> .x-leave-active)` while its popup leaves (rules 8.9 and 8.15)."
     }
   ],
   "surfaceAdditions": [
     {
+      "entry": "Root",
+      "emit": "update:triggerId",
+      "reason": "`v-model:trigger-id` binds the `triggerId` prop, so the root emits `update:triggerId` after `openChange` (rule 8.5)."
+    },
+    {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "`Drawer.Portal` is `Dialog.Portal`. With `disabled`, the portal element and its parts render in the place of the part, also on a server (`VUE-128`). Base UI has no such prop."
+      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>`. With `disabled`, the parts render in place, also on a server. Base UI has no such prop."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "`Drawer.Portal` is `Dialog.Portal`, a `<Teleport>`, and `defer` is a prop of `<Teleport>`. Base UI has no such prop."
     },
     {
       "entry": "Trigger",
       "prop": "disabled",
-      "reason": "The part gives `disabled` to `Dialog.Trigger`, which reads it for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "SwipeArea",
       "prop": "id",
-      "reason": "The part reads `id` to register the swipe area as a trigger in the store of the drawer, and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the swipe area, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `id` to its element, or a generated id, and the root names the area by it as a trigger, so it is a declared prop. Base UI reads it from the native attributes of the area, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part gives `id` to its element, or a generated id, and the trigger names it in `aria-controls`, so it is a declared prop (rule 8.4). Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Title",
       "prop": "id",
-      "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby` and follows a change of it. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+      "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to its element, or a generated id, and the popup names it in `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby` and follows a change of it. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to its element, or a generated id, and the popup names it in `aria-describedby`, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
@@ -81,5 +274,168 @@
       "reason": "`Drawer.Handle` is the class `DrawerHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerBackdrop.vue",
+      "behavior": "The backdrop is an overlay under the popup, with the progress of a swipe.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/close/DrawerClose.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/parts.ts",
+      "behavior": "`Drawer.Close` is the close button of Dialog.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/content/DrawerContent.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerContent.vue",
+      "behavior": "The content marks a press in it, so a mouse selects its text.",
+      "witness": "packages/vue/src/drawer/Drawer.swipe.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/content/drawerContentAttribute.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root.ts",
+      "behavior": "The root keeps the presses that the content marks.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/description/DrawerDescription.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/parts.ts",
+      "behavior": "`Drawer.Description` is the description of Dialog.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/handle.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root.ts",
+      "behavior": "The handle of the drawer.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/indent-background/DrawerIndentBackground.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerIndentBackground.vue",
+      "behavior": "The indent background is active while a drawer of the provider is open.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/indent/DrawerIndent.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerIndent.vue",
+      "behavior": "The indent is active while a drawer of the provider is open, with the progress of a swipe.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/parts.ts",
+      "behavior": "The parts of the namespace `Drawer`.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/popup/DrawerPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerPopup.vue",
+      "behavior": "The popup is the dialog element, with the variables of the swipe, the snap point and the nest.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/portal/DrawerPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/parts.ts",
+      "behavior": "`Drawer.Portal` is the portal of Dialog.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/provider/DrawerProvider.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerProvider.vue",
+      "behavior": "The provider counts the open drawers for the indent parts.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/provider/DrawerProviderContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root.ts",
+      "behavior": "What the provider gives to its roots and to the indent parts.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerRoot.vue",
+      "behavior": "The root is a dialog root with a swipe direction, snap points and a nest.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/DrawerRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/root.ts",
+      "behavior": "What the root gives to its parts and to each root in it.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/root/useDrawerSnapPoints.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/snap.ts",
+      "behavior": "The heights and the release of the snap points.",
+      "witness": "packages/vue/src/drawer/snap.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerSwipeArea.vue",
+      "behavior": "A swipe on the area opens the drawer.",
+      "witness": "packages/vue/src/drawer/Drawer.swipe.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/title/DrawerTitle.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/parts.ts",
+      "behavior": "`Drawer.Title` is the title of Dialog.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/trigger/DrawerTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerTrigger.vue",
+      "behavior": "The trigger opens the drawer.",
+      "witness": "packages/vue/src/drawer/Drawer.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerViewport.vue",
+      "behavior": "The viewport holds the swipe that closes the drawer.",
+      "witness": "packages/vue/src/drawer/Drawer.swipe.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/viewport/DrawerViewportContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/swipe.ts",
+      "behavior": "The tracker of the swipe.",
+      "witness": "packages/vue/src/drawer/Drawer.swipe.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardContext.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/keyboard.ts",
+      "behavior": "What the keyboard provider gives to the viewport.",
+      "witness": "packages/vue/src/drawer/Drawer.keyboard.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/drawer/DrawerVirtualKeyboardProvider.vue",
+      "behavior": "The keyboard provider keeps a focused field above the software keyboard.",
+      "witness": "packages/vue/src/drawer/Drawer.keyboard.test.tsx"
+    }
+  ]
 }

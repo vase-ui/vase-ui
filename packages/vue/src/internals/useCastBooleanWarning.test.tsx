@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { DatePicker } from '../date-picker';
-import { Drawer } from '../drawer';
+import * as Menu from '../menu/index.parts';
 import { Menubar } from '../menubar';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
@@ -142,14 +142,14 @@ describe('useCastBooleanWarning', () => {
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDrawer',
+      name: 'MyMenu',
       props: { open: Boolean },
       setup(props) {
-        return () => <Drawer.Root open={props.open} />;
+        return () => <Menu.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyDrawer', 'Drawer.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([message('MyMenu', 'Menu.Root', 'open')]);
   });
 
   it('gives one warning for a part that gives the prop to another part', async () => {
@@ -175,66 +175,63 @@ describe('useCastBooleanWarning', () => {
     ]);
   });
 
-  it('warns for the default true of Drawer.Root modal', async () => {
+  it('warns for the default true of Menu.Root modal', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDrawer',
+      name: 'MyMenu',
       props: { modal: Boolean },
       setup(props) {
-        return () => <Drawer.Root modal={props.modal} />;
+        return () => <Menu.Root modal={props.modal} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyDrawer', 'Drawer.Root', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('MyMenu', 'Menu.Root', 'modal')]);
   });
 
-  it('warns for Drawer.Trigger nativeButton', async () => {
+  it('warns for Menu.Trigger nativeButton', async () => {
     const Wrapper = defineComponent({
       name: 'MyTrigger',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Drawer.Root>
-            <Drawer.Trigger as="span" nativeButton={props.nativeButton}>
+          <Menu.Root>
+            <Menu.Trigger as="span" nativeButton={props.nativeButton}>
               Action
-            </Drawer.Trigger>
-          </Drawer.Root>
+            </Menu.Trigger>
+          </Menu.Root>
         );
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([
-      message('MyTrigger', 'Drawer.Trigger', 'nativeButton'),
-    ]);
+    expect(takeReportedMessages()).toEqual([message('MyTrigger', 'Menu.Trigger', 'nativeButton')]);
   });
 
-  it('warns for the Boolean union of Drawer.Popup initialFocus', async () => {
+  it('warns for the Boolean union of Menu.Popup finalFocus', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDrawerPopup',
-      props: { initialFocus: Boolean },
+      name: 'MyMenuPopup',
+      props: { finalFocus: Boolean },
       setup(props) {
-        return () => <Drawer.Popup initialFocus={props.initialFocus} aria-label="Example" />;
+        return () => <Menu.Popup finalFocus={props.finalFocus} aria-label="Example" />;
       },
     });
     await render(() => (
-      <Drawer.Root>
-        <Drawer.Portal keepMounted>
-          <Drawer.Viewport>
+      <Menu.Root>
+        <Menu.Portal keepMounted>
+          <Menu.Positioner>
             <Wrapper />
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
     ));
-    expect(takeReportedMessages()).toEqual([
-      message('MyDrawerPopup', 'Drawer.Popup', 'initialFocus'),
-    ]);
+    await flushMicrotasks();
+    expect(takeReportedMessages()).toEqual([message('MyMenuPopup', 'Menu.Popup', 'finalFocus')]);
   });
 
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MyDrawer',
+      name: 'MyMenu',
       props: { open: Boolean },
       setup(props) {
-        return () => <Drawer.Root open={props.open} />;
+        return () => <Menu.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -246,12 +243,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <Drawer.Root open={props.open} />;
+        return () => <Menu.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <Drawer.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <Menu.Root>'),
     ]);
   });
 

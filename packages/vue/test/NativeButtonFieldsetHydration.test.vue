@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -10,9 +9,6 @@ defineProps<{ fieldsetRoot?: boolean }>();
 
 <template>
   <component :is="fieldsetRoot ? Fieldset.Root : 'fieldset'" disabled>
-    <Drawer.Root>
-      <Drawer.Trigger v-slot="{ state }">{{ state.disabled }}</Drawer.Trigger>
-    </Drawer.Root>
     <Menu.Root>
       <Menu.Trigger v-slot="{ state }">{{ state.disabled }}</Menu.Trigger>
     </Menu.Root>

@@ -8,9 +8,11 @@ import { Drawer } from '@vase-ui/vue/drawer';
     <Drawer.VirtualKeyboardProvider>
       <Drawer.Portal>
         <Drawer.Viewport>
-          <Drawer.Popup>
-            <input aria-label="Name" />
-          </Drawer.Popup>
+          <Transition name="sheet" appear>
+            <Drawer.Popup>
+              <input aria-label="Name" />
+            </Drawer.Popup>
+          </Transition>
         </Drawer.Viewport>
       </Drawer.Portal>
     </Drawer.VirtualKeyboardProvider>

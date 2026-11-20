@@ -74,6 +74,50 @@ Add `data-vase-ui-swipe-ignore` to a descendant to stop the swipe dismissal on i
 
 Use `Drawer.VirtualKeyboardProvider` when a bottom sheet holds form fields and you want Vase UI to move the focus and scroll the content for a software keyboard. A drawer without this provider does not change.
 
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                       | On                          | State                                                                             |
+| ------------------------------ | --------------------------- | --------------------------------------------------------------------------------- |
+| `[aria-expanded="true"]`       | trigger                     | The drawer is open for this trigger.                                              |
+| `:disabled`                    | trigger, close              | The button is disabled. A part that is not a button has `[aria-disabled="true"]`. |
+| `[hidden]`                     | popup, backdrop, viewport   | The drawer is closed, with `keepMounted`.                                         |
+| `[data-nested]`                | viewport                    | A dialog root or a drawer root is above the root of this drawer.                  |
+| `[data-swipe-direction]`       | popup, swipe area           | The direction of the swipe that closes the drawer, or that opens it on the area.  |
+| `[data-swiping]`               | popup, backdrop, swipe area | A swipe moves the popup.                                                          |
+| `[data-swipe-dismiss]`         | popup, backdrop             | The part leaves after a swipe.                                                    |
+| `[data-expanded]`              | popup                       | The drawer is at the snap point `1`.                                              |
+| `[data-nested-drawer-open]`    | popup                       | A drawer in this drawer is open.                                                  |
+| `[data-nested-drawer-swiping]` | popup                       | A swipe moves a drawer in this drawer.                                            |
+| `[data-open]`                  | swipe area                  | The drawer is open. Use `:not([data-open])` for a closed drawer.                  |
+| `[data-disabled]`              | swipe area                  | The swipe area opens nothing.                                                     |
+| `[data-active]`                | indent, indent background   | A drawer of the provider is open.                                                 |
+
+`Drawer.Viewport` stays in the DOM while its popup leaves. To select its leave, use `:has(> .sheet-leave-active)`, with the leave class of the `<Transition>` around the popup.
+
+The popup sets `--drawer-swipe-movement-x`, `--drawer-swipe-movement-y`, `--drawer-snap-point-offset`, `--drawer-swipe-strength` and `--nested-drawers`. While a drawer in it is open, it also sets `--drawer-height`, `--drawer-frontmost-height` and the `--drawer-swipe-progress` of that drawer. The backdrop and `Drawer.Indent` set `--drawer-swipe-progress`, and `--drawer-height` while a swipe has a progress. `--drawer-swipe-strength` is `1`, except in the leave after a swipe.
+
+## Touch
+
+A touch drag on the popup goes to the swipe or to the browser. The drawer decides at the first move that is 6 px from the start:
+
+- A move that is more across the axis of the drawer than along it stays with the browser.
+- In a scroller on the axis of the drawer, the swipe takes the drag only when the scroller is at its edge and the finger moves toward the closed place. Else the scroller scrolls.
+- Else the swipe takes the drag.
+
+A touch starts a swipe also on a button, a field or `Drawer.Content`. A touch starts no swipe on a range input, or while the popup has a text selection. A touch that starts outside the popup moves the popup from the point where the finger comes into it.
+
+A mouse or a pen starts a swipe only in the popup. It starts none on a control, in `Drawer.Content`, or in a scroller on the axis of the drawer.
+
+## Back gesture
+
+On Android, in a browser with `CloseWatcher`, the back gesture closes the top open drawer with the reason `'close-watcher'`. A listener that cancels the change keeps the drawer open, unless the browser does not let a page cancel the gesture.
+
+## Server render
+
+`Drawer.Portal` renders its content after its mount, as `Dialog.Portal` does. The server HTML thus has the triggers and the swipe area only. The popup of an open root comes one update after the mount. With `disabled` on `Drawer.Portal`, the content renders in place, also on the server. `Drawer.Provider` is not active in the server HTML. It becomes active after the mount of an open root.
+
 ## Examples
 
 ### State
@@ -124,6 +168,8 @@ Your styles position the drawer. `swipeDirection` is `"down"` by default, for a 
 ### Nested drawers
 
 Use the `[data-nested-drawer-open]` selector and the `--nested-drawers` CSS variable to style a drawer while a nested drawer is open.
+
+These values follow the component tree: a `Drawer.Root` in a `Drawer.Root` is a nested drawer. A drawer that a handle opens from another tree is no nested drawer. The `nestedDialogOpen` state of the viewport follows the stack: a dialog or a drawer is open above this drawer.
 
 This demo stacks nested drawers with a constant peek. The frontmost drawer stays at the bottom, and the drawers behind it become smaller and move up. The demo also uses the `--drawer-height` and `--drawer-frontmost-height` CSS variables for drawers of different heights.
 
@@ -210,8 +256,9 @@ Put a bottom sheet with form controls in `Drawer.VirtualKeyboardProvider`. When 
 - **Keep the frame of the popup stable**: put the header and the footer outside a plain scrollable body.
 - **Lift an input that is fixed in the footer**: reserve a footer slot below the scroll area, and offset it by `var(--drawer-keyboard-inset, 0px)`. When the input in the footer has the focus, the demo gives the footer `position: fixed` and adds the inset to its bottom padding. The `transform` of the popup makes the popup the container of the fixed footer.
 - **Always include the `0px` fallback**: the provider sets `--drawer-keyboard-inset` only while the keyboard is aligned. A plain `var(--drawer-keyboard-inset)` is thus not valid before the first alignment and after the cleanup.
+- **Bind no `padding-bottom` on the scroll body**: the provider gives the scroll body room below its content with `padding-bottom`. Vue writes a bound `padding-bottom` again at each render, and that removes the room.
 
-<<< ./drawer/VirtualKeyboard.vue{8,16}
+<<< ./drawer/VirtualKeyboard.vue{8,18}
 
 <DemoFrame>
   <DemoDrawerVirtualKeyboardAware />
@@ -347,7 +394,7 @@ A trigger can be inside or outside `Drawer.Root`. For a simple interaction, put 
 
 When the content of the drawer cannot be next to its trigger, use a detached trigger. Put `Drawer.Trigger` outside `Drawer.Root`, and connect the two with a handle from `Drawer.createHandle()`.
 
-The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Drawer.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts, and a development build shows a warning for that call. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Drawer.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./drawer/DetachedTriggers.vue{4,8,10}
 
@@ -357,7 +404,7 @@ The drawer can show different content for each trigger. Give a `payload` to each
 
 ### Stacking and animations
 
-Use CSS transitions or animations to animate the open, the close, the swipe and the nested stack of a drawer. A drawer has the attribute `data-starting-style` when it starts to open, and `data-ending-style` when it starts to close.
+The backdrop and the popup are in the DOM only while the drawer is open. Put each of them in a `<Transition appear>`, and animate the open and the close with the classes of `<Transition>`. A swipe that closes the drawer leaves the popup at the place of the drag, and the leave goes on from there.
 
 The `--nested-drawers` CSS variable gives the depth in the stack. The frontmost drawer has the index `0`.
 
@@ -415,14 +462,14 @@ Use the `--drawer-swipe-movement-x`, `--drawer-swipe-movement-y` and `--drawer-s
 }
 ```
 
-Use the `data-swipe-direction` attribute with `data-ending-style` to animate the dismissal in its direction:
+Use the `data-swipe-direction` attribute with the leave class of `<Transition name="sheet">` to animate the dismissal in its direction. After a swipe, the popup and the backdrop also have `data-swipe-dismiss` in their leave.
 
 ```css
-.DrawerPopup[data-ending-style][data-swipe-direction='right'] {
+.sheet-leave-to[data-swipe-direction='right'] {
   transform: translateX(100%);
 }
 
-.DrawerPopup[data-ending-style][data-swipe-direction='down'] {
+.sheet-leave-to[data-swipe-direction='down'] {
   transform: translateY(100%);
 }
 ```
@@ -435,8 +482,8 @@ Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer
   opacity: calc(var(--backdrop-opacity) * (1 - var(--drawer-swipe-progress)));
 }
 
-.DrawerPopup[data-ending-style],
-.DrawerBackdrop[data-ending-style] {
+.sheet-leave-active,
+.fade-leave-active {
   transition-duration: calc(var(--drawer-swipe-strength) * 400ms);
 }
 
@@ -466,4 +513,4 @@ Creates a handle that connects a `Drawer.Root` with detached `Drawer.Trigger` pa
 
 <ApiReference name="Drawer.Handle" :heading-level="4" />
 
-When no trigger has the `id` that `open()` gets, it opens the drawer with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.
+`open(null)`, and an `id` that no trigger has, open the drawer with no trigger. A `computed` that reads `isOpen` follows the open state.

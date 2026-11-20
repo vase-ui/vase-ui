@@ -4,7 +4,6 @@ import type { Component } from 'vue';
 import { createRenderer, screen } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import * as Combobox from '../../../combobox/index.parts';
-import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Select from '../../../select/index.parts';
@@ -51,7 +50,6 @@ interface PortalPart {
 
 const portalParts: PortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
-  { name: 'Drawer.Portal', root: Drawer.Root, portal: Drawer.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
   {
     name: 'NavigationMenu.Portal',

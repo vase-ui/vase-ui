@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { shallowRef, useTemplateRef } from 'vue';
-import { Drawer } from '@vase-ui/vue/drawer';
+import { Menu } from '@vase-ui/vue/menu';
 import { motion } from 'motion-v';
 import type { MotionProps } from 'motion-v';
 
 const open = shallowRef(false);
 const root = useTemplateRef('root');
 
-function handleOpenChange(nextOpen: boolean, details: Drawer.Root.ChangeEventDetails) {
+function handleOpenChange(nextOpen: boolean, details: Menu.Root.ChangeEventDetails) {
   if (!nextOpen) {
     details.preventUnmountOnClose();
   }
@@ -21,27 +21,27 @@ function handleAnimationComplete() {
 </script>
 
 <template>
-  <Drawer.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
-    <Drawer.Trigger class="button">Open the drawer</Drawer.Trigger>
-    <Drawer.Portal>
-      <Drawer.Viewport>
-        <Drawer.Popup>
+  <Menu.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
+    <Menu.Trigger class="button">Open the menu</Menu.Trigger>
+    <Menu.Portal>
+      <Menu.Positioner :side-offset="8">
+        <Menu.Popup>
           <template #render="{ props, state }">
             <motion.div
               v-bind="props as MotionProps"
               class="popup"
               :initial="{ height: 0 }"
-              :animate="{ height: state.open ? 160 : 0 }"
+              :animate="{ height: state.open ? 96 : 0 }"
               @animation-complete="handleAnimationComplete"
             >
-              <Drawer.Title>A drawer with motion-v</Drawer.Title>
-              <Drawer.Close class="button">Close</Drawer.Close>
+              <Menu.Item class="item">Add to library</Menu.Item>
+              <Menu.Item class="item">Add to playlist</Menu.Item>
             </motion.div>
           </template>
-        </Drawer.Popup>
-      </Drawer.Viewport>
-    </Drawer.Portal>
-  </Drawer.Root>
+        </Menu.Popup>
+      </Menu.Positioner>
+    </Menu.Portal>
+  </Menu.Root>
 </template>
 
 <style scoped>
@@ -55,17 +55,23 @@ function handleAnimationComplete() {
 }
 
 .popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   overflow: hidden;
   box-sizing: border-box;
-  width: 20rem;
-  max-width: calc(100vw - 2rem);
-  padding: 0 1.5rem;
+  width: 12rem;
+  padding: 0 0.25rem;
   border: 1px solid currentColor;
   background-color: canvas;
   color: canvastext;
+}
+
+.item {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.item[data-highlighted] {
+  background-color: canvastext;
+  color: canvas;
 }
 </style>
