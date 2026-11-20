@@ -43,7 +43,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -52,7 +52,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -69,11 +69,11 @@
     }
   }
 
-  &[data-panel-open] .Icon {
+  &[aria-expanded='true'] .Icon {
     transform: rotate(90deg);
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -86,22 +86,20 @@
 
 .Panel {
   display: flex;
-  height: var(--collapsible-panel-height);
   flex-direction: column;
   justify-content: end;
   overflow: hidden;
   font-size: 0.875rem;
   line-height: 1.25rem;
   transition: height 150ms ease-out;
+}
 
-  &[hidden]:not([hidden='until-found']) {
-    display: none;
-  }
+.PanelOpen {
+  height: var(--collapsible-panel-height);
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    height: 0;
-  }
+.PanelClosed {
+  height: 0;
 }
 
 .Content {

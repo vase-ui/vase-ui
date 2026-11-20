@@ -1,10 +1,8 @@
 {
   "id": "VUE-156",
   "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L142-L147",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L203-L211",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L562-L583"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L142-L147"
   ],
-  "behavior": "Disclosure panels restore the value and priority of inline alignment styles after measuring. A replacement releases the find-in-page duration on the original element. A cached panel restores that duration before its parent reads it in the deactivation hook. Base UI saves only the alignment values and keeps the duration until close or effect cleanup.",
+  "behavior": "The panels of Collapsible and Accordion put back the value and the priority of each inline alignment style after a read of their size. Base UI saves only the alignment values and puts them back with no priority.",
   "dueWith": "packages/react/src/collapsible/panel/useCollapsiblePanel.ts"
 }

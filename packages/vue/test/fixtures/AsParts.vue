@@ -7,9 +7,11 @@ import {
   routeLocationKey,
   routerKey,
 } from 'vue-router';
+import { Accordion } from '../../src/accordion';
 import { Avatar } from '../../src/avatar';
 import { Button } from '../../src/button';
 import { CheckboxGroup } from '../../src/checkbox-group';
+import { Collapsible } from '../../src/collapsible';
 import { Field } from '../../src/field';
 import { Fieldset } from '../../src/fieldset';
 import { Meter } from '../../src/meter';
@@ -221,6 +223,57 @@ function setter(name: string) {
       <button v-bind="elementProps" :ref="elementRef">Send</button>
     </template>
   </Button>
+  <Collapsible.Root
+    :as="is('Collapsible.Root')"
+    v-bind="attrs('Collapsible.Root')"
+    :ref="setter('Collapsible.Root')"
+    default-open
+  >
+    <Collapsible.Trigger
+      :as="is('Collapsible.Trigger')"
+      v-bind="attrs('Collapsible.Trigger')"
+      :ref="setter('Collapsible.Trigger')"
+      >Details</Collapsible.Trigger
+    >
+    <Collapsible.Panel
+      :as="is('Collapsible.Panel')"
+      v-bind="attrs('Collapsible.Panel')"
+      :ref="setter('Collapsible.Panel')"
+      >Panel</Collapsible.Panel
+    >
+  </Collapsible.Root>
+  <Accordion.Root
+    :as="is('Accordion.Root')"
+    v-bind="attrs('Accordion.Root')"
+    :ref="setter('Accordion.Root')"
+    :default-value="['a']"
+  >
+    <Accordion.Item
+      :as="is('Accordion.Item')"
+      v-bind="attrs('Accordion.Item')"
+      :ref="setter('Accordion.Item')"
+      value="a"
+    >
+      <Accordion.Header
+        :as="is('Accordion.Header')"
+        v-bind="attrs('Accordion.Header')"
+        :ref="setter('Accordion.Header')"
+      >
+        <Accordion.Trigger
+          :as="is('Accordion.Trigger')"
+          v-bind="attrs('Accordion.Trigger')"
+          :ref="setter('Accordion.Trigger')"
+          >Item</Accordion.Trigger
+        >
+      </Accordion.Header>
+      <Accordion.Panel
+        :as="is('Accordion.Panel')"
+        v-bind="attrs('Accordion.Panel')"
+        :ref="setter('Accordion.Panel')"
+        >Panel</Accordion.Panel
+      >
+    </Accordion.Item>
+  </Accordion.Root>
   <Toggle :as="is('Toggle')" v-bind="attrs('Toggle')" :ref="setter('Toggle')">Bold</Toggle>
   <ToggleGroup
     :as="is('ToggleGroup')"

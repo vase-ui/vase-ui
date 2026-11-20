@@ -7,10 +7,18 @@ import { waitFor } from './waitFor';
 
 // The element of each part with no `as`.
 const TAGS = {
+  'Accordion.Root': 'div',
+  'Accordion.Item': 'div',
+  'Accordion.Header': 'h3',
+  'Accordion.Trigger': 'button',
+  'Accordion.Panel': 'div',
   'Avatar.Root': 'span',
   'Avatar.Fallback': 'span',
   Button: 'button',
   CheckboxGroup: 'div',
+  'Collapsible.Root': 'div',
+  'Collapsible.Trigger': 'button',
+  'Collapsible.Panel': 'div',
   RadioGroup: 'div',
   'Field.Root': 'div',
   'Field.Description': 'p',
@@ -172,7 +180,14 @@ describe('prop: as', () => {
   });
 
   test('the server HTML has the tag and the attributes of the client, and the hydration keeps each element with no message', async () => {
-    const as = { ...SECTIONS, 'Tabs.Tab': 'div', Button: 'div', Toggle: 'div' };
+    const as = {
+      ...SECTIONS,
+      'Tabs.Tab': 'div',
+      Button: 'div',
+      Toggle: 'div',
+      'Collapsible.Trigger': 'div',
+      'Accordion.Trigger': 'div',
+    };
     const root = await renderOnServer('AsParts', { as });
     // The corner shows after the root measures the overflow.
     const parts = PARTS.filter((part) => part !== 'ScrollArea.Corner');
@@ -180,8 +195,7 @@ describe('prop: as', () => {
     expect(elements.map((element) => element.localName)).toEqual(
       parts.map((part) => as[part as keyof typeof as]),
     );
-    // A tab, a button and a toggle in a <div> have no `type`. The button and the toggle have the role
-    // and the tab stop.
+    // A tab and a button part in a <div> have no `type`. A button part has the role and the tab stop.
     const read = (element: Element) =>
       Object.fromEntries(
         ['type', 'role', 'tabindex'].map((name) => [name, element.getAttribute(name)]),
@@ -189,18 +203,23 @@ describe('prop: as', () => {
     const tab = partElement(root, 'Tabs.Tab');
     const button = partElement(root, 'Button');
     const toggle = partElement(root, 'Toggle');
+    const triggers = ['Collapsible.Trigger', 'Accordion.Trigger'].map((part) =>
+      partElement(root, part),
+    );
     const slotButton = root.querySelector('[data-part="slot-wins"]')!;
     const expected = [
       { type: null, role: 'tab', tabindex: '0' },
       { type: null, role: 'button', tabindex: '0' },
       { type: null, role: 'button', tabindex: '0' },
+      { type: null, role: 'button', tabindex: '0' },
+      { type: null, role: 'button', tabindex: '0' },
       // The slot wins over `as`, and the part knows its element after the mount.
       { type: 'button', role: null, tabindex: null },
     ];
-    expect([tab, button, toggle, slotButton].map(read)).toEqual(expected);
+    expect([tab, button, toggle, ...triggers, slotButton].map(read)).toEqual(expected);
     const exposed = hydrate(AsParts, { as }, root);
     await nextTick();
     parts.forEach((part, index) => expect(elementOf(exposed, part), part).toBe(elements[index]));
-    expect([tab, button, toggle, slotButton].map(read)).toEqual(expected);
+    expect([tab, button, toggle, ...triggers, slotButton].map(read)).toEqual(expected);
   });
 });
