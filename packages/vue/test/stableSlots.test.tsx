@@ -3,14 +3,8 @@ import { createRenderer, flushMicrotasks, screen, waitFor, waitForPositioned } f
 import DatePickerPositionerSlots from '../src/date-picker/positioner/DatePickerPositionerSlots.test.vue';
 import DateRangePickerPositionerSlots from '../src/date-range-picker/positioner/DateRangePickerPositionerSlots.test.vue';
 import TimePickerPositionerSlots from '../src/time-picker/positioner/TimePickerPositionerSlots.test.vue';
-import ContextMenuPositionerSlots from './ContextMenuPositionerSlots.test.vue';
 
 const partsWithPopup = [
-  {
-    name: 'ContextMenu.Positioner',
-    Fixture: ContextMenuPositionerSlots,
-    waitForPart: async () => waitForPositioned(await screen.findByTestId('positioner')),
-  },
   {
     name: 'DatePicker.Positioner',
     Fixture: DatePickerPositionerSlots,

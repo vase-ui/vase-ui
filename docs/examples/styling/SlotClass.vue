@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { Menu } from '@vase-ui/vue/menu';
+import { TimePicker } from '@vase-ui/vue/time-picker';
 </script>
 
 <template>
-  <Menu.Root>
-    <Menu.Trigger>
-      <template #render="{ props, state }">
-        <button v-bind="props" :ref="props.ref" :class="state.open ? 'open' : 'closed'">
-          Settings
-        </button>
+  <TimePicker.Root>
+    <TimePicker.List>
+      <template #item="{ time }">
+        <TimePicker.Item :time="time">
+          <template #render="{ props, state, text }">
+            <div v-bind="props" :ref="props.ref" :class="state.selected ? 'selected' : 'idle'">
+              {{ text }}
+            </div>
+          </template>
+        </TimePicker.Item>
       </template>
-    </Menu.Trigger>
-  </Menu.Root>
+    </TimePicker.List>
+  </TimePicker.Root>
 </template>

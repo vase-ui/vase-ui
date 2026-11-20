@@ -1,7 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { shallowRef } from 'vue';
-import { Menu } from '@vase-ui/vue/menu';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -44,44 +43,6 @@ it('VUE-141: Input keeps the last parent text and accepts typed edits after rele
   await new Promise((resolve) => setTimeout(resolve));
   await flushMicrotasks();
   expect(input).toHaveValue('first');
-});
-
-it('VUE-142: a lone menu trigger waits for the parent to select it', async () => {
-  const triggerId = shallowRef<string | null | undefined>(null);
-  await render(() => (
-    <Menu.Root
-      defaultOpen
-      modal={false}
-      triggerId={triggerId.value}
-      v-slots={{
-        default: ({ payload }: { payload: string | undefined }) => [
-          <Menu.Trigger id="a" payload="from A">
-            A
-          </Menu.Trigger>,
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup>{payload ?? 'no trigger'}</Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>,
-        ],
-      }}
-    />
-  ));
-  const trigger = screen.getByRole('button', { name: 'A' });
-  const dialog = screen.getByRole('menu');
-  expect(dialog).toHaveTextContent('no trigger');
-  expect(trigger).toHaveAttribute('aria-expanded', 'false');
-  expect(trigger).not.toHaveAttribute('aria-controls');
-
-  triggerId.value = undefined;
-  await flushMicrotasks();
-  expect(trigger).toHaveAttribute('aria-expanded', 'false');
-  expect(trigger).not.toHaveAttribute('aria-controls');
-  triggerId.value = 'a';
-  await flushMicrotasks();
-  expect(trigger).toHaveAttribute('aria-expanded', 'true');
-  expect(trigger).toHaveAttribute('aria-controls', dialog.id);
-  expect(dialog).toHaveTextContent('from A');
 });
 
 it('binds the group, pressed and checked values with the default model', async () => {

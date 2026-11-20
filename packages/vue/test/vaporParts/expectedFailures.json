@@ -39,9 +39,6 @@
     "src/common/useResizeObserver.test.tsx": {
       "fails": {}
     },
-    "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
-      "fails": {}
-    },
     "src/internals/composite/item/useCompositeItem.test.tsx": {
       "fails": {}
     },
@@ -66,9 +63,6 @@
     "src/internals/useInputRender.test.tsx": {
       "fails": {}
     },
-    "src/internals/useItemRegistry.test.tsx": {
-      "fails": {}
-    },
     "src/internals/useOpenChangeComplete.test.tsx": {
       "fails": {}
     },
@@ -79,12 +73,6 @@
       "fails": {}
     },
     "src/internals/withoutPropsOf.test.ts": {
-      "fails": {}
-    },
-    "src/menu/filter-root/useMenuFilterItem.test.tsx": {
-      "fails": {}
-    },
-    "src/menu/trigger/MenuTrigger.press.test.tsx": {
       "fails": {}
     },
     "src/select/item-text/SelectItemText.test.tsx": {

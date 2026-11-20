@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import { Menu, MenuPositionerCssVariables } from '@vase-ui/vue/menu';
+import { Select, SelectPositionerCssVariables } from '@vase-ui/vue/select';
 
 const popupStyle = {
-  maxHeight: `var(${MenuPositionerCssVariables.availableHeight})`,
+  maxHeight: `var(${SelectPositionerCssVariables.availableHeight})`,
 };
 </script>
 
 <template>
-  <Menu.Root>
-    <Menu.Trigger>Song</Menu.Trigger>
-    <Menu.Portal>
-      <Menu.Positioner>
-        <Menu.Popup :style="popupStyle">
-          <Menu.Item>Add to Library</Menu.Item>
-          <Menu.Item>Add to Playlist</Menu.Item>
-        </Menu.Popup>
-      </Menu.Positioner>
-    </Menu.Portal>
-  </Menu.Root>
+  <Select.Root>
+    <Select.Trigger>
+      <Select.Value placeholder="Song" />
+    </Select.Trigger>
+    <Select.Portal>
+      <Select.Positioner>
+        <Select.Popup :style="popupStyle">
+          <Select.Item value="library">Add to Library</Select.Item>
+          <Select.Item value="playlist">Add to Playlist</Select.Item>
+        </Select.Popup>
+      </Select.Positioner>
+    </Select.Portal>
+  </Select.Root>
 </template>

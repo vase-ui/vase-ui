@@ -174,6 +174,10 @@ export function usePlacement(
     inline?: Middleware;
     /** The shift keeps the popup in the layout viewport, so a pinch zoom does not move it. */
     shiftInLayoutViewport?: boolean;
+    /** After the first place of an open, the popup keeps its side and its alignment. */
+    lazyFlip?: () => boolean;
+    /** The popup moves across the side axis into the layout viewport. */
+    shiftAcross?: () => boolean;
   },
 ) {
   const rtl = shallowRef(false);
@@ -214,7 +218,10 @@ export function usePlacement(
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
+  // A list that filters its items shrinks, and the popup would flip back at each change.
+  const kept = shallowRef<Placement>();
   const placement = computed<Placement>(() => {
+    if (kept.value) return kept.value;
     const side = physicalSide(props.side, rtl.value);
     return props.align === 'center' ? side : `${side}-${props.align}`;
   });
@@ -246,20 +253,25 @@ export function usePlacement(
         ? null
         : shift({
             ...common,
-            ...(options.shiftInLayoutViewport && { rootBoundary: 'layoutViewport' as const }),
+            // The layout viewport as the root boundary stops the popup from moving during a pinch
+            // zoom.
+            ...((options.shiftInLayoutViewport || options.shiftAcross?.()) && {
+              rootBoundary: 'layoutViewport' as const,
+            }),
             mainAxis: alignMode.value !== 'none',
-            crossAxis: props.sticky || shiftsSide,
-            limiter: props.sticky
-              ? undefined
-              : limitShift((state) => {
-                  const arrow = arrowElement.value?.getBoundingClientRect();
-                  if (!arrow) return {};
-                  const vertical = getSideAxis(getSide(state.placement)) === 'y';
-                  const room = vertical
-                    ? padding.value.left + padding.value.right
-                    : padding.value.top + padding.value.bottom;
-                  return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
-                }),
+            crossAxis: props.sticky || shiftsSide || !!options.shiftAcross?.(),
+            limiter:
+              props.sticky || options.shiftAcross?.()
+                ? undefined
+                : limitShift((state) => {
+                    const arrow = arrowElement.value?.getBoundingClientRect();
+                    if (!arrow) return {};
+                    const vertical = getSideAxis(getSide(state.placement)) === 'y';
+                    const room = vertical
+                      ? padding.value.left + padding.value.right
+                      : padding.value.top + padding.value.bottom;
+                    return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
+                  }),
           });
     // https://floating-ui.com/docs/flip#combining-with-shift
     const collision =
@@ -333,6 +345,14 @@ export function usePlacement(
   // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
   // so only the first placement hides the popup: the server HTML and the first render have no place.
   const placed = floating.isPositioned;
+  watch(
+    [placed, () => root.open],
+    ([isPlaced, open]) => {
+      if (!open) kept.value = undefined;
+      else if (isPlaced && options.lazyFlip?.()) kept.value = floating.placement.value;
+    },
+    { flush: 'sync' },
+  );
 
   const placedSide = computed(() => getSide(floating.placement.value));
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));

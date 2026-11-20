@@ -33,6 +33,8 @@ const CaretRightIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M6 12V4l4.5 4z' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -43,38 +45,46 @@ const CaretRightIcon: FunctionalComponent = () =>
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Menu.Popup :class="styles.Popup">
-          <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="styles.Popup">
+            <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
 
-          <Menu.SubmenuRoot>
-            <Menu.SubmenuTrigger :class="styles.SubmenuTrigger">
-              Add to Playlist
-              <CaretRightIcon />
-            </Menu.SubmenuTrigger>
-            <Menu.Portal>
-              <Menu.Positioner
-                :class="styles.Positioner"
-                :side-offset="getOffset"
-                :align-offset="getOffset"
-              >
-                <Menu.Popup :class="styles.Popup">
-                  <Menu.Item :class="styles.Item">Get Up!</Menu.Item>
-                  <Menu.Item :class="styles.Item">Inside Out</Menu.Item>
-                  <Menu.Item :class="styles.Item">Night Beats</Menu.Item>
-                  <Menu.Separator :class="styles.Separator" />
-                  <Menu.Item :class="styles.Item">New playlist…</Menu.Item>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.SubmenuRoot>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger :class="styles.SubmenuTrigger">
+                Add to Playlist
+                <CaretRightIcon />
+              </Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner
+                  :class="styles.Positioner"
+                  :side-offset="getOffset"
+                  :align-offset="getOffset"
+                >
+                  <Transition
+                    :enter-from-class="popupHiddenClass"
+                    :leave-to-class="popupHiddenClass"
+                    appear
+                  >
+                    <Menu.Popup :class="styles.Popup">
+                      <Menu.Item :class="styles.Item">Get Up!</Menu.Item>
+                      <Menu.Item :class="styles.Item">Inside Out</Menu.Item>
+                      <Menu.Item :class="styles.Item">Night Beats</Menu.Item>
+                      <Menu.Separator :class="styles.Separator" />
+                      <Menu.Item :class="styles.Item">New playlist…</Menu.Item>
+                    </Menu.Popup>
+                  </Transition>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
 
-          <Menu.Separator :class="styles.Separator" />
-          <Menu.Item :class="styles.Item">Play Next</Menu.Item>
-          <Menu.Item :class="styles.Item">Play Last</Menu.Item>
-          <Menu.Separator :class="styles.Separator" />
-          <Menu.Item :class="styles.Item">Favorite</Menu.Item>
-          <Menu.Item :class="styles.Item">Share</Menu.Item>
-        </Menu.Popup>
+            <Menu.Separator :class="styles.Separator" />
+            <Menu.Item :class="styles.Item">Play Next</Menu.Item>
+            <Menu.Item :class="styles.Item">Play Last</Menu.Item>
+            <Menu.Separator :class="styles.Separator" />
+            <Menu.Item :class="styles.Item">Favorite</Menu.Item>
+            <Menu.Item :class="styles.Item">Share</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

@@ -25,14 +25,10 @@ import { Menubar } from '@vase-ui/vue/menubar';
             </Menu.Group>
 
             <Menu.RadioGroup>
-              <Menu.RadioItem value="">
-                <Menu.RadioItemIndicator />
-              </Menu.RadioItem>
+              <Menu.RadioItem value="" />
             </Menu.RadioGroup>
 
-            <Menu.CheckboxItem>
-              <Menu.CheckboxItemIndicator />
-            </Menu.CheckboxItem>
+            <Menu.CheckboxItem />
 
             <Menu.Viewport />
           </Menu.Popup>

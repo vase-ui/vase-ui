@@ -50,10 +50,29 @@
       "reason": "The table has the one row Drawer. The handle of Drawer is the handle of Dialog, and the case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests `openWithPayload()` with no root."
     },
     {
+      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "describe": ["concrete popup handles"],
+      "title": "$component handle is closed and names itself in warnings while no root is attached",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "Each family of the table has the handle of the popup layer, which gives no warning with no root. The case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests that such a handle is closed and does nothing."
+    },
+    {
       "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/preview-card/line.test.ts",
       "reason": "`line.test.ts` tests the line of a wrapped link with native links and a real pointer: the line under the pointer at the end of the delay, the line of an open card while the pointer moves, a link of two parts, a link whose lines overlap, the line after a scroll, a virtual anchor with the link as its context element, and the side rectangle with no line. The line is a record of each link, so the cases of a stored point go."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no guards beside a trigger. The popup of a menu has a sentinel at each end. The sentinel after the popup sends the focus to the next tab stop after the trigger (`packages/vue/src/popup/focus.ts`)."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "Vase UI has no guards beside a trigger. The block `the focus` of this test covers Tab and Shift+Tab from the popup. The next tab stop comes from the tab order at the time of the key."
     }
   ],
   "surfaceAdditions": [],
@@ -170,20 +189,6 @@
       "destination": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx",
       "member": "RegisteredTrigger",
       "witness": "packages/vue/src/utils/popups/usePopupTrigger.registration.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.ts",
-      "member": "useTriggerFocusGuards",
-      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx",
-      "witness": "packages/vue/src/utils/popups/focus/usePopupFocus.trigger-guards.test.tsx",
-      "behavior": "Moves focus through the guards beside a popup trigger."
     }
   ]
 }

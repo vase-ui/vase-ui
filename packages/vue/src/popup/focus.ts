@@ -1,7 +1,9 @@
 import { nextTick, watch } from 'vue';
+import { addEventListener } from '../common/addEventListener';
+import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
-import type { Layer } from './layer';
+import { layerOf, type Layer } from './layer';
 import type { InteractionType, PopupRoot } from './root';
 
 /**
@@ -14,6 +16,9 @@ export type FocusTarget =
   | HTMLElement
   | null
   | ((interaction: InteractionType) => HTMLElement | boolean | null | undefined | void);
+
+/** The element that had the focus before the open of each root. */
+const befores = new WeakMap<PopupRoot, Element | null>();
 
 const CANDIDATES =
   'a[href],area[href],button,input:not([type="hidden"]),select,textarea,iframe,summary,details,audio[controls],video[controls],[tabindex],[contenteditable]:not([contenteditable="false"])';
@@ -104,6 +109,12 @@ export function usePopupFocus(
      * @default ['focus-out']
      */
     noReturn?: readonly string[];
+    /** The popup takes the focus when the focused element in it leaves the DOM or is hidden. */
+    restoreLostFocus?: boolean;
+    /** The first sentinel also asks for a close when it gets the focus from the popup. */
+    closeBefore?: boolean;
+    /** The root that the last sentinel closes, and after whose trigger the focus goes. */
+    exit?: () => PopupRoot;
   },
 ) {
   let before: Element | null = null;
@@ -137,6 +148,7 @@ export function usePopupFocus(
       const doc = ownerDocument(popup);
       const active = activeElement(doc);
       before = active === doc.body ? null : active;
+      befores.set(root, before);
       took = true;
       const target = resolve(options.initialFocus(), root.interaction);
       if (target === false) return;
@@ -149,6 +161,29 @@ export function usePopupFocus(
         return;
       }
       focus(popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup);
+    },
+    { flush: 'post' },
+  );
+
+  // Only Chromium sends `focusout` when the focused element leaves the DOM
+  // (test/measurements/popup.test.ts), so a `MutationObserver` looks for the removal, and for an
+  // attribute that hides the element.
+  watch(
+    () => (options.restoreLostFocus && root.open ? root.popup : null),
+    (popup, _, onCleanup) => {
+      if (!popup) return;
+      let focused: Element | null = null;
+      const restore = () => {
+        if (!focused || (focused.isConnected && focused.checkVisibility())) return;
+        const active = activeElement(ownerDocument(popup));
+        if (!active || active === popup.ownerDocument.body) focus(popup);
+      };
+      const onFocusin = (event: FocusEvent) => (focused = event.target as Element);
+      const observer = new MutationObserver(restore);
+      observer.observe(popup, { childList: true, subtree: true, attributes: true });
+      onCleanup(
+        mergeCleanups(() => observer.disconnect(), addEventListener(popup, 'focusin', onFocusin)),
+      );
     },
     { flush: 'post' },
   );
@@ -207,14 +242,23 @@ export function usePopupFocus(
       } else if (layer.trap) {
         focus(place === 'before' ? last : first);
       } else if (place === 'before') {
+        if (options.closeBefore) root.request(false, 'focus-out', event);
         focus(focusableTrigger() ?? (before as HTMLElement | null));
       } else {
-        // With no trigger, the element that had the focus before the open has its place. With
+        // The root that the last sentinel closes, such as the menu of a submenu. With no trigger,
+        // a menu gives the focus back to the element that had it before the open, as a context
+        // menu does, and another popup gives it to the next tab stop after that element. With
         // neither, the next Tab goes on in the order of the document.
-        const place = root.activeTrigger ?? before;
-        const next = place ? nextTabStop(place, [popup, ...root.portalElements]) : undefined;
-        if (layer.focusOut) root.request(false, 'focus-out', event);
-        focus(next);
+        const exit = options.exit?.() ?? root;
+        const trigger = exit.activeTrigger;
+        const earlier = exit === root ? before : (befores.get(exit) ?? null);
+        const elements = [exit.popup, ...exit.portalElements, popup, ...root.portalElements];
+        let next: Element | null | undefined;
+        if (trigger) next = nextTabStop(trigger, elements);
+        else if (options.exit) next = earlier;
+        else if (earlier) next = nextTabStop(earlier, elements);
+        if ((layerOf(exit) ?? layer).focusOut) exit.request(false, 'focus-out', event);
+        focus(next as HTMLElement | null | undefined);
       }
     },
   };
@@ -227,10 +271,10 @@ function tabStopOf(target: HTMLElement, popup: Element) {
 }
 
 /** The first tab stop after the trigger in the document, outside the elements of the popup. */
-export function nextTabStop(trigger: Element, popupElements: Element[]) {
+export function nextTabStop(trigger: Element, popupElements: (Element | null)[]) {
   return tabbables(ownerDocument(trigger).body).find(
     (stop) =>
-      !popupElements.some((element) => element.contains(stop)) &&
+      !popupElements.some((element) => element?.contains(stop)) &&
       trigger.compareDocumentPosition(stop) & trigger.DOCUMENT_POSITION_FOLLOWING,
   );
 }
