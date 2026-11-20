@@ -58,4 +58,16 @@ describe('server render and hydration', () => {
     expect(read()).toEqual(['0', '-1', '-1', '-1', '-1']);
     expect(root.querySelector('#one')).toHaveAttribute('aria-pressed', 'true');
   });
+
+  test('a disabled Toolbar.Button that renders a Toggle has aria-disabled and no disabled in the server HTML, so Tab reaches it before the hydration', async () => {
+    const props = { scene: { buttonDisabled: true } };
+    const root = await renderOnServer('ToggleGroupInToolbar', props);
+    const toggle = root.querySelector('#alone')!;
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
+    expect(toggle).not.toHaveAttribute('disabled');
+    hydrate(ToggleGroupInToolbar, props, root);
+    await settle();
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
+    expect(toggle).not.toHaveAttribute('disabled');
+  });
 });

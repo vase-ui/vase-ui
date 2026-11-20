@@ -159,7 +159,11 @@ describe('the value', () => {
     'toggles with no value get their own values, so the user presses them one at a time (multiple: %s)',
     async (multiple) => {
       const log: string[] = [];
-      const noValues = [{ key: 'a', value: undefined }, { key: 'b', value: '' }, { key: 'c' }];
+      const noValues = [
+        { key: 'a', value: undefined },
+        { key: 'b', value: '' },
+        { key: 'c', value: '' },
+      ];
       const { toggle, pressed } = await mountGroup(record(log, { multiple }), noValues);
       await userEvent.click(toggle('a'));
       await userEvent.click(toggle('b'));
@@ -308,6 +312,18 @@ describe('the keys', () => {
     expect(focused()).toBe('a');
   });
 
+  test('the arrow keys move on from a disabled toggle that has the focus', async () => {
+    const list = items('a', 'b', 'c');
+    list[1]!.attrs = { disabled: true, as: 'span' };
+    const { toggle } = await mountGroup({}, list);
+    toggle('b').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('c');
+    toggle('b').focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(focused()).toBe('a');
+  });
+
   test.each(['Shift', 'Control', 'Alt', 'Meta'])(
     'with %s, an arrow key does nothing',
     async (modifier) => {
@@ -371,6 +387,15 @@ describe('the tab stop', () => {
     shown.splice(0, 1);
     await nextTick();
     expect(tabindexes()).toEqual(['-1', '0']);
+  });
+
+  test('moves to the first enabled toggle when the toggle that had the focus unmounts', async () => {
+    const { toggle, tabindexes, items: shown } = await mountGroup({});
+    toggle('a').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    shown.splice(1, 1);
+    await nextTick();
+    expect(tabindexes()).toEqual(['0', '-1']);
   });
 
   test('a toggle that mounts later before the others gets the tab stop by its place in the document', async () => {
