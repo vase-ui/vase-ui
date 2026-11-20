@@ -67,10 +67,7 @@ export interface OTPFieldRootProps extends /* @vue-ignore */ Omit<
    * Identifies the field when a form is submitted.
    */
   name?: string;
-  /**
-   * A string specifying the `form` element with which the hidden input is associated.
-   * This string's value must match the id of a `form` element in the same document.
-   */
+  /** The `id` of the form that owns the inputs of the field, for a field outside that form. */
   form?: string;
   /**
    * Whether the user must enter a value before submitting a form.
