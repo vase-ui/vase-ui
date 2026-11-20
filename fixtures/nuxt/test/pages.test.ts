@@ -1786,6 +1786,8 @@ async function readFormState(page: Page): Promise<FormState> {
 // What a program does to /form-state before its scripts run: it writes each hidden input with no
 // event, as a browser restores it.
 async function changeFormStateBeforeHydration(page: Page) {
+  // The page can still parse its HTML. The link comes after the form.
+  await page.getByTestId('away').waitFor();
   await page.evaluate(() => {
     const write = (name: string, values: string[]) => {
       document
