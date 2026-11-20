@@ -10,7 +10,6 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
@@ -172,23 +171,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Menubar role={undefined} data-testid="part" />,
     expected: () => 'menubar',
-  },
-  {
-    name: 'NavigationMenu.Trigger aria-expanded',
-    attribute: 'aria-expanded',
-    createNode: () => (
-      <NavigationMenu.Root>
-        <NavigationMenu.List>
-          <NavigationMenu.Item value="one">
-            <NavigationMenu.Trigger aria-expanded={undefined} data-testid="part">
-              One
-            </NavigationMenu.Trigger>
-            <NavigationMenu.Content />
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-      </NavigationMenu.Root>
-    ),
-    expected: () => 'false',
   },
   {
     name: 'PreviewCard.Popup data-open',

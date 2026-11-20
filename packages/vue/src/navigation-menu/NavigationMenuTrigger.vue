@@ -60,8 +60,7 @@ function onKeydown(event: KeyboardEvent) {
   const target = event.currentTarget as HTMLElement;
   if (root.nested || trigger.button.disabled.value || event.target !== target) return;
   const rtl = ownerWindow(target).getComputedStyle(target).direction === 'rtl';
-  const key =
-    root.orientation === 'vertical' ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown';
+  const key = root.orientation === 'vertical' ? (rtl ? 'ArrowLeft' : 'ArrowRight') : 'ArrowDown';
   if (event.key !== key) return;
   event.preventDefault();
   event.stopPropagation();

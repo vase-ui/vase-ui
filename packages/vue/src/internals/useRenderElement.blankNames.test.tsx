@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createRenderer, screen, waitFor } from '#test-utils';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -56,33 +55,6 @@ interface Blank {
 const EMPTY: Blank = { name: 'an empty value', value: '' };
 const WHITE_SPACE: Blank = { name: 'white space', value: '\n\t ' };
 
-function createNavigationMenu(attrs: Record<string, string>) {
-  return (
-    <NavigationMenu.Root>
-      <NavigationMenu.List>
-        <NavigationMenu.Item value="products">
-          <NavigationMenu.Trigger data-testid="trigger">Products</NavigationMenu.Trigger>
-          <NavigationMenu.Content>
-            <NavigationMenu.Link href="#products">All products</NavigationMenu.Link>
-          </NavigationMenu.Content>
-        </NavigationMenu.Item>
-      </NavigationMenu.List>
-      <NavigationMenu.Portal>
-        <NavigationMenu.Positioner>
-          <NavigationMenu.Popup data-testid="part" {...attrs}>
-            <NavigationMenu.Viewport />
-          </NavigationMenu.Popup>
-        </NavigationMenu.Positioner>
-      </NavigationMenu.Portal>
-    </NavigationMenu.Root>
-  );
-}
-
-async function showNavigationMenu() {
-  await fireEvent.click(screen.getByTestId('trigger'));
-  await flushMicrotasks();
-}
-
 const rows: Row[] = [
   {
     name: 'Dialog.Popup',
@@ -129,22 +101,6 @@ const rows: Row[] = [
       </Menu.Root>
     ),
     expected: 'Actions',
-  },
-  {
-    name: 'NavigationMenu.Popup aria-label',
-    attribute: 'aria-label',
-    // An empty string is falsy, and `resolvePopupLabel` reads the `aria-label` by its truth.
-    blanks: [WHITE_SPACE],
-    createNode: createNavigationMenu,
-    show: showNavigationMenu,
-    expected: 'Products',
-  },
-  {
-    name: 'NavigationMenu.Popup aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: createNavigationMenu,
-    show: showNavigationMenu,
-    expected: 'Products',
   },
   {
     name: 'useRender',

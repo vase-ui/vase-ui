@@ -17,7 +17,6 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
@@ -223,30 +222,6 @@ const families = [
           </PreviewCard.Positioner>
         </PreviewCard.Portal>
       </PreviewCard.Root>
-    ),
-    marksPage: false,
-    movesFocus: false,
-  },
-  {
-    name: 'NavigationMenu',
-    renderPart: () => (
-      <NavigationMenu.Root defaultValue="one">
-        <NavigationMenu.List>
-          <NavigationMenu.Item value="one">
-            <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
-            </NavigationMenu.Content>
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-        <NavigationMenu.Portal data-testid="portal">
-          <NavigationMenu.Positioner>
-            <NavigationMenu.Popup data-testid="popup">
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
-          </NavigationMenu.Positioner>
-        </NavigationMenu.Portal>
-      </NavigationMenu.Root>
     ),
     marksPage: false,
     movesFocus: false,

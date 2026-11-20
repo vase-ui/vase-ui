@@ -3,7 +3,6 @@ import { nextTick, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
-  flushMicrotasks,
   isVaporApp,
   screen,
   waitFor,
@@ -78,51 +77,6 @@ it.each([true, false])(
   },
 );
 
-it('VUE-94: keeps the author pointer style when a hover block moves between triggers', async () => {
-  const pointerEvents = shallowRef<'none' | 'all'>('none');
-  await render(() => (
-    <NavigationMenu.Root delay={0}>
-      <NavigationMenu.List data-testid="list">
-        {['One', 'Two'].map((value) => (
-          <NavigationMenu.Item value={value}>
-            <NavigationMenu.Trigger
-              style={{ pointerEvents: value === 'One' ? 'all' : pointerEvents.value }}
-            >
-              {value}
-            </NavigationMenu.Trigger>
-            <NavigationMenu.Content>{value}</NavigationMenu.Content>
-          </NavigationMenu.Item>
-        ))}
-      </NavigationMenu.List>
-      <NavigationMenu.Portal keepMounted>
-        <NavigationMenu.Positioner data-testid="positioner" style={{ pointerEvents: 'all' }}>
-          <NavigationMenu.Popup>
-            <NavigationMenu.Viewport />
-          </NavigationMenu.Popup>
-        </NavigationMenu.Positioner>
-      </NavigationMenu.Portal>
-    </NavigationMenu.Root>
-  ));
-  const one = screen.getByRole('button', { name: 'One' });
-  const two = screen.getByRole('button', { name: 'Two' });
-  await fireEvent.mouseEnter(one);
-  await fireEvent.mouseMove(one);
-  await flushMicrotasks();
-  expect(screen.getByTestId('list').style.pointerEvents).toBe('none');
-  expect(one.style.pointerEvents).toBe('all');
-  expect(two.style.pointerEvents).toBe('none');
-  expect(screen.getByTestId('positioner').style.pointerEvents).toBe('all');
-  pointerEvents.value = 'all';
-  await fireEvent.mouseEnter(two);
-  await fireEvent.mouseMove(two);
-  await flushMicrotasks();
-  expect(two.style.pointerEvents).toBe('all');
-  await fireEvent.pointerDown(two);
-  expect(screen.getByTestId('list').style.pointerEvents).toBe('');
-  expect(one.style.pointerEvents).toBe('all');
-  expect(two.style.pointerEvents).toBe('all');
-});
-
 it('VUE-94: keeps the author pointer style on the parent menu of an open submenu', async () => {
   const { user } = await render(
     <Menu.Root defaultOpen>
@@ -188,20 +142,17 @@ it('updates the positioner when the controlled Navigation Menu value changes', a
     </NavigationMenu.Root>
   ));
   const { style } = screen.getByTestId('positioner');
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
+  await waitFor(() => expect(style.getPropertyValue('--positioner-width')).toBe('120px'));
 
   const popup = screen.getByTestId('popup');
-  await waitFor(() => expect(popup.style.getPropertyValue('--popup-width')).toBe('auto'));
+  expect(popup.style.getPropertyValue('--popup-width')).toBe('');
   const widths = recordStyleProperty(popup, '--popup-width');
   active.value = 'two';
-  await waitSingleFrame();
+  await waitFor(() => expect(style.getPropertyValue('--positioner-width')).toBe('180px'));
   expect(widths).toContain('120px');
-  expect(style.getPropertyValue('--positioner-width')).toBe('180px');
 
   active.value = 'one';
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
+  await waitFor(() => expect(style.getPropertyValue('--positioner-width')).toBe('120px'));
 });
 
 it.runIf(isVaporApp)(

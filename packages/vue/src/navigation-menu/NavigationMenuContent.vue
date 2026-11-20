@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  mergeProps,
-  useAttrs,
-  useId,
-  watch,
-  type TransitionProps,
-} from 'vue';
+import { computed, mergeProps, useAttrs, useId, watch, type TransitionProps } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { ownerDocument } from '../common/owner';

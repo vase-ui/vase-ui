@@ -8,7 +8,6 @@ import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
@@ -156,29 +155,6 @@ const menuFilterParts = (part: string) => (k: string, blankId: BlankId) => (
       </Menu.Portal>
     </Menu.Root>
   </Menu.FilterProvider>
-);
-
-const navigationMenuParts = (part: string) => (k: string, blankId: BlankId) => (
-  <NavigationMenu.Root defaultValue="one">
-    <NavigationMenu.List>
-      <NavigationMenu.Item value="one">
-        <NavigationMenu.Trigger {...blankIdIf(part === 'Trigger', blankId)}>
-          One {k}
-        </NavigationMenu.Trigger>
-        <NavigationMenu.Content>Content</NavigationMenu.Content>
-      </NavigationMenu.Item>
-    </NavigationMenu.List>
-    <NavigationMenu.Portal>
-      <NavigationMenu.Positioner>
-        <NavigationMenu.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
-          <NavigationMenu.Viewport
-            {...blankIdIf(part === 'Viewport', blankId)}
-            data-testid="ready"
-          />
-        </NavigationMenu.Popup>
-      </NavigationMenu.Positioner>
-    </NavigationMenu.Portal>
-  </NavigationMenu.Root>
 );
 
 const selectParts = (part: string) => (k: string, blankId: BlankId) => (
@@ -356,12 +332,6 @@ const rows: Row[] = [
       </Menubar>
     ),
   },
-  ...(['Trigger', 'Popup', 'Viewport'] as const).map((part): Row => ({
-    name: `NavigationMenu.${part}`,
-    tree: navigationMenuParts(part),
-    ready: 'ready',
-    named: (k) => ({ testId: `popup${k}`, name: `One ${k}` }),
-  })),
   ...(['Root', 'Trigger', 'Popup', 'List'] as const).map((part): Row => ({
     name: `Select.${part}`,
     tree: selectParts(part),

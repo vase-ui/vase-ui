@@ -1,8 +1,8 @@
-// Measurements for Navigation Menu. M1 to M6 and N2 and N4 use native elements and plain Vue, with
-// no code of the library. N1, N5, N6 and N9 measure the parts, and each states the result that
-// decided that the part has no code for it. N3, N7 and N8 are cases of `NavigationMenu.test.ts`.
+// Measurements for Navigation Menu. M1 to M6, N2, N3 and N4 use native elements and plain Vue, with
+// no code of the library. N1, N5, N6 and N9 measure the parts. N7 and N8 are cases of
+// `NavigationMenu.test.ts`.
 import { afterEach, describe, expect, inject, onTestFinished, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive, version } from 'vue';
 import MeasureScopedTeleport from '../fixtures/MeasureScopedTeleport.vue';
 import MeasureTeleportScene from '../fixtures/MeasureTeleportScene.vue';
@@ -32,7 +32,6 @@ function sceneOf(setup: Partial<{ shown: string | null; target: 'view' | null; p
     target: null as 'view' | null,
     popup: true,
     direction: 'none',
-    refs: [] as (string | null)[],
     ...setup,
   });
 }
@@ -110,14 +109,18 @@ describe('a disabled <Teleport> with no target (M3)', () => {
 describe('a target in an element that leaves (M4)', () => {
   test('the ref of the target gets null at the close; the content stays in it for the leave, and goes with it', async () => {
     const scene = sceneOf({ target: 'view', shown: 'a' });
-    ({ root } = mount(MeasureTeleportScene, { scene }));
+    const refs: (string | null)[] = [];
+    ({ root } = mount(MeasureTeleportScene, {
+      scene,
+      onRef: (value: string | null) => refs.push(value),
+    }));
     await nextTick();
     const content = root.querySelector('[data-name="a"]')!;
     const popup = root.querySelector('.popup')!;
-    scene.refs.length = 0;
+    refs.length = 0;
     scene.popup = false;
     await nextTick();
-    expect(scene.refs).toEqual([null]);
+    expect(refs).toEqual([null]);
     expect(popup.className).toContain('p-leave-active');
     expect(popup.contains(content)).toBe(true);
     await waitFor(() => expect(popup.isConnected).toBe(false));
@@ -176,6 +179,34 @@ describe('a real pointer that crosses an element (N2)', () => {
   });
 });
 
+describe('Tab after a key listener moved the focus to a sentinel (N3)', () => {
+  function scene(stop: string) {
+    root = document.body.appendChild(document.createElement('div'));
+    root.innerHTML = `<input id="trigger" aria-label="Trigger"><input id="next" aria-label="Next"><span id="sentinel" tabindex="0"></span>${stop}<input id="end" aria-label="End">`;
+    const trigger = root.querySelector<HTMLElement>('#trigger')!;
+    trigger.addEventListener('keydown', (event) => {
+      if (event.key === 'Tab') root!.querySelector<HTMLElement>('#sentinel')!.focus();
+    });
+    trigger.focus();
+  }
+
+  test('the browser moves the focus on from the sentinel', async () => {
+    scene('<input id="stop" aria-label="Stop">');
+    await userEvent.tab();
+    expect(document.activeElement!.id).toBe('stop');
+  });
+
+  test('to a link: Chromium and Firefox; WebKit only with Option, by the setting of the system', async () => {
+    scene('<a id="stop" href="#stop">Stop</a>');
+    await userEvent.tab();
+    expect(document.activeElement!.id).toBe(server.browser === 'webkit' ? 'end' : 'stop');
+    if (server.browser !== 'webkit') return;
+    root!.querySelector<HTMLElement>('#trigger')!.focus();
+    await userEvent.keyboard('{Alt>}{Tab}{/Alt}');
+    expect(document.activeElement!.id).toBe('stop');
+  });
+});
+
 describe('a MutationObserver of new content (N4)', () => {
   test('runs before the paint: a size that its callback writes is the size of the next frame', async () => {
     root = document.body.appendChild(document.createElement('div'));
@@ -228,7 +259,11 @@ describe('the parts', () => {
         values.add(style.getPropertyValue('--positioner-width'));
       }
     });
-    observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
+    observer.observe(document.body, {
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['style'],
+    });
     const order = ['trigger-one', 'trigger-two', 'trigger-two', 'trigger-one'];
     for (let index = 0; index < 200; index += 1) {
       get(order[index % order.length]!).click();
@@ -247,29 +282,32 @@ describe('the parts', () => {
   test.each([
     { name: 'mounts open', setup: { root: { defaultValue: 'one' } } },
     { name: 'is kept, and opens at another trigger', setup: { portal: { keepMounted: true } } },
-  ])('N6: a positioner with a transition of its place that $name runs no transition', async ({ setup }) => {
-    // The CSS of the demos: a transition of the place, with none while `data-instant` is on.
-    const style = document.head.appendChild(document.createElement('style'));
-    style.textContent =
-      '.moving { transition: top 200ms, left 200ms } .moving[data-instant] { transition: none }';
-    onTestFinished(() => style.remove());
-    mount(NavigationMenuParts, { ...setup, positioner: { class: 'moving' } });
-    await nextTick();
-    if (!('root' in setup)) {
-      get('trigger-one').click();
+  ])(
+    'N6: a positioner with a transition of its place that $name runs no transition',
+    async ({ setup }) => {
+      // The CSS of the demos: a transition of the place, with none while `data-instant` is on.
+      const style = document.head.appendChild(document.createElement('style'));
+      style.textContent =
+        '.moving { transition: top 200ms, left 200ms } .moving[data-instant] { transition: none }';
+      onTestFinished(() => style.remove());
+      mount(NavigationMenuParts, { ...setup, positioner: { class: 'moving' } });
+      await nextTick();
+      if (!('root' in setup)) {
+        get('trigger-one').click();
+        await waitFor(() => expect(get('positioner')).not.toHaveAttribute('hidden'));
+        await wait(250);
+        get('trigger-one').click();
+        await waitFor(() => expect(get('positioner')).toHaveAttribute('hidden'));
+        get('trigger-two').click();
+      }
       await waitFor(() => expect(get('positioner')).not.toHaveAttribute('hidden'));
-      await wait(250);
-      get('trigger-one').click();
-      await waitFor(() => expect(get('positioner')).toHaveAttribute('hidden'));
-      get('trigger-two').click();
-    }
-    await waitFor(() => expect(get('positioner')).not.toHaveAttribute('hidden'));
-    await waitFor(() => expect(get('positioner').style.visibility).toBe(''));
-    for (let index = 0; index < 3; index += 1) {
-      await frame();
-      expect(get('positioner').getAnimations()).toEqual([]);
-    }
-  });
+      await waitFor(() => expect(get('positioner').style.visibility).toBe(''));
+      for (let index = 0; index < 3; index += 1) {
+        await frame();
+        expect(get('positioner').getAnimations()).toEqual([]);
+      }
+    },
+  );
 
   test('N9: a kept, closed positioner with a size and a ::before takes no pointer', async () => {
     mount(NavigationMenuParts, {

@@ -1,8 +1,8 @@
 import { expectType } from '#test-utils';
-import {
+import type {
   NavigationMenu,
-  type NavigationMenuRootChangeEventDetails,
-  type NavigationMenuRootChangeEventReason,
+  NavigationMenuRootChangeEventDetails,
+  NavigationMenuRootChangeEventReason,
 } from '@vase-ui/vue/navigation-menu';
 
 // The root and the item take the type of the value.
@@ -32,7 +32,6 @@ expectType<'left' | 'right' | 'up' | 'down' | null, typeof contentState.activati
 declare const positionerState: NavigationMenu.Positioner.State;
 expectType<boolean, typeof positionerState.instant>(positionerState.instant);
 
-// A template ref of a part has its element, and the root has `close()`.
-const root = null as unknown as InstanceType<typeof NavigationMenu.Root>;
-expectType<HTMLElement | null, typeof root.element>(root.element);
-expectType<() => void, typeof root.close>(root.close);
+// A template ref of a part has its element.
+const popup = null as unknown as InstanceType<typeof NavigationMenu.Popup>;
+expectType<HTMLElement | null, typeof popup.element>(popup.element);

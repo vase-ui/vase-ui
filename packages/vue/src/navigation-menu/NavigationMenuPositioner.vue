@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  mergeProps,
-  provide,
-  reactive,
-  shallowRef,
-  toRefs,
-  useAttrs,
-  watch,
-} from 'vue';
+import { computed, mergeProps, provide, reactive, shallowRef, toRefs, useAttrs, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { useElement } from '../common/element';
 import { ownerWindow } from '../common/owner';

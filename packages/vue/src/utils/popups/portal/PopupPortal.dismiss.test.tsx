@@ -8,7 +8,6 @@ import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
@@ -157,30 +156,6 @@ const children = {
       </Tooltip.Portal>
     </Tooltip.Root>
   ),
-  // The list calls `useDismissLayer`, and the portal is not below the list.
-  navigationMenu: (record: Recorder) => (
-    <NavigationMenu.Root
-      defaultValue="item"
-      onValueChange={(value: unknown, details: { reason: string }) =>
-        record(value !== null, details)
-      }
-    >
-      <NavigationMenu.List>
-        <NavigationMenu.Item value="item">
-          <NavigationMenu.Trigger>Child trigger</NavigationMenu.Trigger>
-          <NavigationMenu.Content>Content</NavigationMenu.Content>
-        </NavigationMenu.Item>
-      </NavigationMenu.List>
-      <NavigationMenu.Portal>
-        <NavigationMenu.Backdrop data-testid="backdrop" />
-        <NavigationMenu.Positioner data-testid="positioner">
-          <NavigationMenu.Popup data-testid="popup">
-            <NavigationMenu.Viewport />
-          </NavigationMenu.Popup>
-        </NavigationMenu.Positioner>
-      </NavigationMenu.Portal>
-    </NavigationMenu.Root>
-  ),
 };
 
 const INTERNAL_BACKDROP = 'internal backdrop';
@@ -316,20 +291,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       parent: 'dialog',
       child: 'tooltip',
       part: 'positioner',
-      closesChild: false,
-    },
-    {
-      name: 'NavigationMenu.Backdrop / dialog',
-      parent: 'dialog',
-      child: 'navigationMenu',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'NavigationMenu.Popup / dialog',
-      parent: 'dialog',
-      child: 'navigationMenu',
-      part: 'popup',
       closesChild: false,
     },
     // The case of a Popover above a Dialog comes back with the Dialog unit, when Dialog moves to

@@ -22,6 +22,8 @@ defineProps({
   /** The props of a `<Transition>` around the popup. */
   popupTransition: Object as PropType<Props>,
   inline: Boolean,
+  /** The item `one` is in the list while its value is `true`. */
+  items: { type: Object as PropType<{ one: boolean }>, default: () => ({ one: true }) },
   noViewport: Boolean,
   /** The content of `one` holds this many more links. */
   moreLinks: { type: Number, default: 0 },
@@ -40,7 +42,7 @@ defineExpose({ root: rootPart });
       style="display: flex; gap: 8px; margin: 0; padding: 0; list-style: none"
       v-bind="list"
     >
-      <NavigationMenu.Item value="one">
+      <NavigationMenu.Item v-if="items.one" value="one">
         <NavigationMenu.Trigger data-testid="trigger-one" v-bind="triggers?.one">
           One <NavigationMenu.Icon data-testid="icon-one" />
         </NavigationMenu.Trigger>

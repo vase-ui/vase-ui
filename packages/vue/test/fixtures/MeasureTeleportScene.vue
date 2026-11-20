@@ -12,11 +12,12 @@ defineProps({
       target: 'view' | null;
       direction: string;
       popup: boolean;
-      refs: (string | null)[];
     }>,
     required: true,
   },
   around: Boolean,
+  /** Gets each value of the ref of the target. */
+  onRef: { type: Function as PropType<(value: string | null) => void>, default: () => {} },
 });
 // A root keeps the last target, because the ref of the target gets `null` at the close.
 const view = shallowRef<HTMLElement | null>(null);
@@ -52,7 +53,7 @@ const view = shallowRef<HTMLElement | null>(null);
         :ref="
           (element) => {
             if (element) view = element as HTMLElement;
-            scene.refs.push(element ? 'view' : null);
+            onRef(element ? 'view' : null);
           }
         "
         class="view"

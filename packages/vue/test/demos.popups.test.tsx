@@ -77,11 +77,7 @@ function focus(element: HTMLElement) {
 
 /** The triggers of `root` that a part marks with an attribute and that have no open popup. */
 function markedTriggers(root: ParentNode): Trigger[] {
-  return [
-    ...root.querySelectorAll<HTMLElement>(
-      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger], [data-vase-ui-tooltip-trigger]',
-    ),
-  ]
+  return [...root.querySelectorAll<HTMLElement>('[aria-haspopup], [data-vase-ui-tooltip-trigger]')]
     .filter((element) =>
       element.matches(
         ':not(:disabled, [aria-disabled="true"], [data-disabled], [data-popup-open], [aria-expanded="true"])',
@@ -160,6 +156,13 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
       },
     }));
   }
+  // A trigger of a navigation menu is a button with `aria-expanded` in the `<nav>` of the root or of
+  // the popup.
+  if (family === 'navigation-menu') {
+    return [...root.querySelectorAll<HTMLElement>('nav button[aria-expanded="false"]')].map(
+      (element) => ({ element, open: click(element) }),
+    );
+  }
   if (depth === 0 && family === 'toast') {
     return [...root.querySelectorAll<HTMLElement>('button')].map((element) => ({
       element,
@@ -191,13 +194,19 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`.
+// A closed popup that stays in the DOM is `hidden`. The content of an open item of a navigation
+// menu is the element that its trigger names in `aria-controls`, also in a viewport in place.
 function openPopups() {
-  return portals().flatMap((portal) => [
-    ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+  return [
+    ...portals().flatMap((portal) => [
+      ...portal.querySelectorAll<HTMLElement>(
+        '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      ),
+    ]),
+    ...[...document.querySelectorAll('nav [aria-expanded="true"][aria-controls]')].flatMap(
+      (trigger) => document.getElementById(trigger.getAttribute('aria-controls')!) ?? [],
     ),
-  ]);
+  ];
 }
 
 /** The animations that run and that end. A demo can animate its popup with a script. */

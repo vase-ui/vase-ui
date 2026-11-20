@@ -95,7 +95,11 @@ export interface PopupRootState {
   open(): boolean;
   activeTriggerId(): string | null;
   /** Emits the change event. Its listeners can cancel the change. */
-  emitChange(open: boolean, trigger: PopupTrigger | undefined, details: PopupChangeEventDetails): void;
+  emitChange(
+    open: boolean,
+    trigger: PopupTrigger | undefined,
+    details: PopupChangeEventDetails,
+  ): void;
   /** Sets the state after a change that no listener cancelled. */
   set(open: boolean, trigger: PopupTrigger | undefined): void;
 }

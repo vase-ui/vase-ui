@@ -79,8 +79,9 @@ export interface NavigationMenuItem {
 const rootKey: InjectionKey<NavigationMenuRoot> = Symbol('navigation menu root');
 const itemKey: InjectionKey<NavigationMenuItem> = Symbol('navigation menu item');
 /** The placement that `NavigationMenu.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('navigation menu positioner');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  'navigation menu positioner',
+);
 /** The sizes that `NavigationMenu.Popup` gives to the positioner around it. */
 export const sizesKey: InjectionKey<ShallowRef<ReturnType<typeof usePopupSizes> | null>> =
   Symbol('navigation menu sizes');
@@ -155,7 +156,9 @@ export function useNavigationMenuRoot(
   const target = computed(() => viewport.value ?? (popup.leaving ? lastViewport.value : null));
 
   const element = shallowRef<HTMLElement | null>(null);
-  const portals = shallowRef<{ readonly target: PortalTarget; readonly sentinels: Sentinels }[]>([]);
+  const portals = shallowRef<{ readonly target: PortalTarget; readonly sentinels: Sentinels }[]>(
+    [],
+  );
   const inlineSentinels = shallowRef<Sentinels | null>(null);
   const inline = computed(() => portals.value.length === 0);
   const sentinels = (): Sentinels =>
@@ -192,7 +195,8 @@ export function useNavigationMenuRoot(
   }
 
   // The content of the open item follows its trigger in the Tab order. Each key rule moves the
-  // focus to a sentinel at `keydown`, and the browser does the Tab from there.
+  // focus to a sentinel at `keydown`, and the browser does the Tab from there, with the setting of
+  // the system for the elements that Tab reaches (test/measurements/navigation-menu.test.ts, N3).
   function onTabKey(event: KeyboardEvent) {
     const trigger = popup.activeTrigger;
     const box = popup.popup;
