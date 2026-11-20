@@ -14,17 +14,17 @@
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.tsx",
       "kind": "not-applicable",
-      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element, so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
     },
     {
       "upstream": "packages/react/src/direction-provider/index.parts.ts",
       "kind": "not-applicable",
-      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element, so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
     },
     {
       "upstream": "packages/react/src/direction-provider/index.ts",
       "kind": "not-applicable",
-      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element, so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.spec.tsx",
@@ -49,7 +49,7 @@
       "upstream": "docs/src/app/(docs)/react/utils/direction-provider/types.md",
       "entry": "DirectionProvider",
       "kind": "not-applicable",
-      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element (rule 8.16), so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
+      "reason": "The cut has a better way: the HTML attribute `dir` on `<html>` or on an element around the parts. Each part reads the direction of its own element, so its CSS and its keys agree. A popup in `<body>` has the direction of `<html dir>`. A part that places content by the direction in the server HTML, such as `Slider.Root`, takes `dir` on its own element."
     },
     {
       "upstream": "docs/src/app/(docs)/react/utils/direction-provider/types.md",
@@ -60,7 +60,7 @@
     {
       "upstream": "packages/react/src/internals/direction-context/DirectionContext.tsx",
       "kind": "not-applicable",
-      "reason": "The provider and `useDirection` are cut. Each part reads the direction of its own element (rule 8.16)."
+      "reason": "The provider and `useDirection` are cut. Each part reads the direction of its own element."
     }
   ],
   "surfaceAdditions": [],

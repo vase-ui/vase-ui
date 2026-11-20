@@ -272,7 +272,7 @@
     {
       "upstream": "packages/utils/src/mergeObjects.ts",
       "kind": "not-applicable",
-      "reason": "Vue merges the attributes of a part (rule 6.3)."
+      "reason": "Vue merges the attributes of a part."
     },
     {
       "upstream": "packages/utils/src/useAnimationFrame.test.ts",
@@ -287,12 +287,12 @@
     {
       "upstream": "packages/utils/src/useControlled.test.tsx",
       "kind": "not-applicable",
-      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue."
     },
     {
       "upstream": "packages/utils/src/useControlled.ts",
       "kind": "not-applicable",
-      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue."
     },
     {
       "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
@@ -307,7 +307,7 @@
     {
       "upstream": "packages/utils/src/useControlled.spec.ts",
       "kind": "not-applicable",
-      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue."
     },
     {
       "upstream": "packages/utils/src/empty.test.ts",

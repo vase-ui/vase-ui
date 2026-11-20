@@ -42,7 +42,7 @@
       "upstream": "docs/src/app/(docs)/react/utils/merge-props/types.md",
       "entry": "makeEventPreventable",
       "kind": "not-applicable",
-      "reason": "Cut (rule 8.7). The better way is `details.cancel()` in the change event of a part. For a native event with no change event, a capture listener on the part calls `event.stopPropagation()`."
+      "reason": "Cut. The better way is `details.cancel()` in the change event of a part. For a native event with no change event, a capture listener on the part calls `event.stopPropagation()`."
     }
   ],
   "surfaceAdditions": [],

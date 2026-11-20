@@ -38,7 +38,7 @@
     {
       "upstream": "packages/react/src/utils/collapsibleOpenStateMapping.ts",
       "kind": "not-applicable",
-      "reason": "The parts of Collapsible and Accordion write their own attributes from their state. A trigger has `aria-expanded` and a panel has `hidden`, which CSS selects (rule 8.15), so no mapping of the open state to attributes is shared."
+      "reason": "The parts of Collapsible and Accordion write their own attributes from their state. A trigger has `aria-expanded` and a panel has `hidden`, which CSS selects, so no mapping of the open state to attributes is shared."
     },
     {
       "upstream": "packages/react/src/utils/useRegisteredLabelId.ts",
@@ -77,7 +77,7 @@
     {
       "upstream": "packages/react/src/utils/getFiniteAnimations.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/utils/getHighlightReason.ts",
@@ -142,7 +142,7 @@
     {
       "upstream": "packages/react/src/utils/resolveAriaLabelledBy.ts",
       "kind": "not-applicable",
-      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
+      "reason": "A native `<label for>` names a control. The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/scrollable.ts",
@@ -157,12 +157,12 @@
     {
       "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",
       "kind": "not-applicable",
-      "reason": "Each part reads its locale through `locale-provider/` (rule 8.14)."
+      "reason": "Each part reads its locale through `locale-provider/`."
     },
     {
       "upstream": "packages/react/src/utils/useFormatLocale.ts",
       "kind": "not-applicable",
-      "reason": "Each part reads its locale through `locale-provider/` (rule 8.14)."
+      "reason": "Each part reads its locale through `locale-provider/`."
     },
     {
       "upstream": "packages/react/src/utils/useSwipeDismiss.test.tsx",

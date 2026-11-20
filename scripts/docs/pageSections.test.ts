@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { ownFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 import { listFamilyPages } from './familyPages.ts';
-import { checkPageSections, hasPageTemplate } from './pageSections.ts';
+import { checkPageSections } from './pageSections.ts';
 
 const PATH = 'docs/components/sample.md';
 
@@ -122,12 +122,13 @@ test('a heading in a code block is no section', () => {
   assert.deepEqual(checkPageSections(PATH, 'sample', false, page(anatomy, code, ...rest)), []);
 });
 
-test('each family page with the tag of the differences section has the sections of the template', () => {
+test('each family page has the sections of the template', () => {
   const docs = join(REPOSITORY_ROOT, 'docs');
-  const pages = listFamilyPages(docs).flatMap(({ path, family }) => {
-    const text = readFileSync(join(docs, path), 'utf8');
-    return hasPageTemplate(text) ? [{ path: `docs/${path}`, family, text }] : [];
-  });
+  const pages = listFamilyPages(docs).map(({ path, family }) => ({
+    path: `docs/${path}`,
+    family,
+    text: readFileSync(join(docs, path), 'utf8'),
+  }));
   assert.ok(pages.some(({ family }) => family === 'collapsible'));
   assert.deepEqual(
     pages.flatMap(({ path, family, text }) =>

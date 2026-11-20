@@ -38,11 +38,6 @@ export function pageSectionsOf(family: string, own: boolean): string[] {
   ];
 }
 
-/** Whether a page has the template: the tag of the differences section is on it. */
-export function hasPageTemplate(text: string): boolean {
-  return text.includes(DIFFERENCES_TAG);
-}
-
 /** The `##` sections of a Markdown text with the lines below each heading. A code block holds no heading. */
 function readSections(text: string): { title: string; body: string }[] {
   const sections: { title: string; lines: string[] }[] = [];
