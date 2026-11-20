@@ -224,6 +224,18 @@ interface Gesture {
 }
 
 /**
+ * Captures a pointer. The events of a script can name a pointer that is not active, and such a
+ * pointer has no capture: the browser throws `NotFoundError`.
+ */
+function capture(target: Element, id: number) {
+  try {
+    target.setPointerCapture(id);
+  } catch {
+    // The swipe goes on with no capture.
+  }
+}
+
+/**
  * Follows one pointer for a swipe: a mouse, a pen or a touch. Bind `listeners` to the element and
  * `onTouchmove` in the capture phase, as a listener that is not passive.
  */
@@ -299,7 +311,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
     current.originX = event.clientX;
     current.originY = event.clientY;
     if (current.type !== 'touch' && !current.target.hasPointerCapture(current.id)) {
-      current.target.setPointerCapture(current.id);
+      capture(current.target, current.id);
     }
     swiping.value = true;
     options.start(event);
@@ -327,9 +339,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
       lastX: event.clientX,
       lastY: event.clientY,
     };
-    if (options.captureAtPress && event.pointerType !== 'touch') {
-      target.setPointerCapture(event.pointerId);
-    }
+    if (options.captureAtPress && event.pointerType !== 'touch') capture(target, event.pointerId);
   }
 
   /** At 6 px from the start on one axis, a touch decides one time who has the drag. */

@@ -237,6 +237,17 @@ describe('the swipe that closes', () => {
     await closed();
   });
 
+  test('closes at a flick of a script that names a pointer that is not active', async () => {
+    await mountDrawer();
+    // No pointer has the id 99, so the swipe has no pointer capture.
+    flick(get('text'), textOf(), 99, [
+      [10, 1010],
+      [25, 1020],
+      [40, 1030],
+    ]);
+    await closed();
+  });
+
   test('leaves from the place of the drag with `data-swipe-dismiss` and the strength of the release', async () => {
     await mountDrawer({ transition: true, backdrop: {} });
     const popup = get('popup');
@@ -577,7 +588,8 @@ describe('the swipe area', () => {
     expect(area.getAttribute('aria-hidden')).toBe('true');
     expect(area.style.touchAction).toBe('pan-x');
     expect(area.dataset.swipeDirection).toBe('up');
-    const release = await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
+    const start = centerOf('swipe-area');
+    const release = await press(start, { x: 0, y: -100 }, 10);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     await nextTick();
     expect(log).toEqual(['openChange true swipe swipe-area']);
@@ -590,6 +602,8 @@ describe('the swipe area', () => {
     );
     expect(area.hasAttribute('data-swiping')).toBe(true);
     expect(get('popup').hasAttribute('data-swiping')).toBe(true);
+    // A drag of more than half of the popup keeps it open at a release of any speed.
+    await userEvent.pointer({ coords: { x: start.x, y: start.y - 160 } });
     await release();
     await nextTick();
     expect(byTestId('popup')).not.toBe(null);
@@ -676,7 +690,8 @@ describe('the swipe area', () => {
     const { x, y } = centerOf('swipe-area');
     await userEvent.pointer({ coords: { x, y } });
     await userEvent.pointer({ keys: '[MouseLeft>]' });
-    for (const step of [150, 160, 170]) await userEvent.pointer({ coords: { x, y: y - step } });
+    // The drag from the first move is more than half of the popup, so the release keeps it open.
+    for (const step of [150, 250, 330]) await userEvent.pointer({ coords: { x, y: y - step } });
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     expect(log).toEqual(['openChange true swipe swipe-area']);
