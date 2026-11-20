@@ -275,14 +275,14 @@ export function useSelectRoot(
     laterPress: true,
   });
 
-  function change(next: unknown, reason: SelectRootChangeEventReason, event: Event) {
+  function change(next: unknown, reason: SelectRootChangeEventReason, event: Event, byUser = true) {
     const details = createChangeEventDetails(reason, event);
     emit('valueChange', next, details);
     if (details.isCanceled) return false;
     valueModel.setOwn(next);
     emit('update:modelValue', next);
     // A controlled root shows the value that the parent gives in its next render.
-    void nextTick(() => field?.onEdit());
+    if (byUser) void nextTick(() => field?.onEdit());
     return true;
   }
 
@@ -302,7 +302,8 @@ export function useSelectRoot(
   }
 
   // An item that leaves changes the value, as an option of a native select that leaves. A list that
-  // mounts for the first time changes nothing.
+  // mounts for the first time changes nothing. The user did not edit the value, so the field keeps
+  // its errors.
   let listMounted = false;
   watch(
     () => list.items({ hidden: true }).map((item) => itemValues.get(item.element)),
@@ -315,9 +316,9 @@ export function useSelectRoot(
       const event = new Event('vase-ui');
       if (multiple.value) {
         const next = values.value.filter(has);
-        if (next.length !== values.value.length) change(next, 'none', event);
+        if (next.length !== values.value.length) change(next, 'none', event, false);
       } else if (value.value != null && !has(value.value)) {
-        change(firstValue != null && has(firstValue) ? firstValue : null, 'none', event);
+        change(firstValue != null && has(firstValue) ? firstValue : null, 'none', event, false);
       }
     },
     { flush: 'post' },

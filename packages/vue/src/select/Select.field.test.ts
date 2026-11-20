@@ -212,6 +212,26 @@ describe('the field', () => {
   });
 });
 
+describe('an item that leaves', () => {
+  test('changes the value with no edit of the user, so the form keeps the error of the field', async () => {
+    const updates: unknown[] = [];
+    const show = reactive({ b: true });
+    await mountField({
+      vaseForm: true,
+      form: { errors: { letter: 'Taken.' }, 'onUpdate:errors': (e: unknown) => updates.push(e) },
+      field: { name: 'letter' },
+      root: { defaultValue: 'b\nline' },
+      show,
+    });
+    trigger().focus();
+    await waitFor(() => expect(byTestId('item-b')).not.toBe(null));
+    show.b = false;
+    await waitFor(() => expect(trigger()).toHaveTextContent(''));
+    await settle();
+    expect(updates).toEqual([]);
+  });
+});
+
 describe('the fill', () => {
   test('selects the item whose form text, label or text is the text of the input, with no regard to case', async () => {
     const log: string[] = [];
