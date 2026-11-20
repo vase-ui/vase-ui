@@ -77,9 +77,9 @@ In a [wrapper of `DateRangePicker.Root`](/handbook/composition#wrap-a-part), giv
 
 ## In a form
 
-Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. Each field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
+Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. As in [Date Field](/components/date-field), each field reports a field with some segments empty as `badInput`, a limit that the input type cannot check as `rangeUnderflow` or `rangeOverflow`, and a date that `unavailableDates` matches as `customError`.
 
-The end field is invalid when it is before the first end of the range, or before `minDate`. Its `minDate` is the later of the two, so its hidden input gives `rangeUnderflow`, or a `customError` for a zoned value. A change of the first end to a later moment than the last end also makes the end field invalid. A field that shows a time compares the time too, so a time that is before the first time of the same day is invalid. A field that shows no time compares days. Two zoned ends compare by the moment, also when they are in two time zones.
+The end field is invalid when it is before the first end of the range, or before `minDate`. Its `min` is the later of the two, so its hidden input gives `rangeUnderflow`, also for a zoned value. A change of the first end to a later moment than the last end also makes the end field invalid. A field that shows a time compares the time too, so a time that is before the first time of the same day is invalid. A field that shows no time compares days. Two zoned ends compare by the moment, also when they are in two time zones.
 
 Put the picker in a `Field` to show the errors of its validation. Do not give a `name` to that `Field`: it replaces `startName` and `endName` for both fields. A reset of the form puts an uncontrolled picker back to its default range.
 

@@ -3,9 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
     "typecheck": "pnpm --filter @vase-ui/vue exec vue-tsc -p ../../fixtures/vite/tsconfig.json",
-    "test": "vite build && vitest run",
     "test:published:floor": "pnpm --filter @vase-ui/vue exec vue-tsc -p ../../fixtures/vite/published/tsconfig.floor.json && vite build --config published/vite.config.ts --mode floor && vitest run --config published/vite.config.ts --mode floor",
     "test:published:vapor": "vite build --config published/vite.config.ts --mode vapor && vitest run --config published/vite.config.ts --mode vapor"
   },

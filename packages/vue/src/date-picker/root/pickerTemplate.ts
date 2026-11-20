@@ -1,4 +1,4 @@
-import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import type { DateTimeFieldGranularity } from '../../common/date-time-field/field';
 import { isKind, today, yearMonthInCalendar } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 

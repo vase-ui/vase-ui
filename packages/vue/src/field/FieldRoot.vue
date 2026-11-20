@@ -346,6 +346,11 @@ function nativeFailure(el: NativeControl): Result | null {
 function failuresOf(el: NativeControl) {
   const failures = { ...noFailures };
   for (const key of Object.keys(noFailures) as (keyof Failures)[]) failures[key] = el.validity[key];
+  const own = control.value?.customError;
+  if (own && failures.customError && el.validationMessage === own.message) {
+    failures.customError = false;
+    failures[own.flag] = true;
+  }
   return failures;
 }
 
@@ -379,9 +384,13 @@ function validationInput() {
 }
 
 // A control can set a custom validity of its own, such as the partial entry of a date field. The
-// field removes only the message of `validate`.
+// field removes only the message of `validate`, and the failure of the control stays.
 function removeMessages() {
   messageInput?.setCustomValidity('');
+  const own = control.value?.customError;
+  if (own && messageInput && messageInput === control.value?.inputs[0]) {
+    messageInput.setCustomValidity(own.message);
+  }
   messageInput = undefined;
 }
 

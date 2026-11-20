@@ -36,7 +36,8 @@ describe.each(FIELDS)('the $end field of a date range picker', ({ part: Part, na
       await render(
         <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
           <Part aria-label="Check-in" data-testid="own" />
-          <Part aria-label={null} data-testid="none" />
+          {/* The types of Vue have no `null` for an attribute, and Vue writes no attribute for it. */}
+          <Part aria-label={null as unknown as string} data-testid="none" />
         </DateRangePicker.Root>,
       );
 

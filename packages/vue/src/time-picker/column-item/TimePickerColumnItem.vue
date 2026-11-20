@@ -37,7 +37,7 @@ export interface TimePickerColumnItemProps
 import { computed } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { clampTime } from '../../time-clock/utils/clockViews';
+import { clampTime } from '../../time-clock/views';
 import { useTimePickerColumnContext } from '../column/TimePickerColumnContext';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { columnText, isColumnValueAllowed, timeOfColumnValue } from '../utils/columns';

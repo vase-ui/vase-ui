@@ -17,8 +17,8 @@ const unavailableDates = { dayOfWeek: [6, 7] };
       locale="en-US"
       required
       :default-value="defaultValue"
-      :min-date="minDate"
-      :max-date="maxDate"
+      :min="minDate"
+      :max="maxDate"
       :unavailable-dates="unavailableDates"
       :class="styles.Root"
     >

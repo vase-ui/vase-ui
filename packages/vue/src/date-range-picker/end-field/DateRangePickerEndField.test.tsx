@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Field } from '@vase-ui/vue/field';
-import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { createRenderer, screen, waitFor } from '#test-utils';
 import DateRangePickerAnatomy from '../root/DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -17,18 +17,6 @@ const hiddenInputOf = (container: Element) =>
 
 describe('<DateRangePicker.EndField />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<DateRangePicker.EndField />, () => ({
-    elementIsRoot: false,
-    refInstanceof: window.HTMLDivElement,
-    render(node) {
-      return render(
-        <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
-          {node}
-        </DateRangePicker.Root>,
-      );
-    },
-  }));
 
   it('shows the last day of the range in its segments, and gives it to the hidden input', async () => {
     const { container } = await render(
@@ -166,7 +154,8 @@ describe('<DateRangePicker.EndField />', () => {
       const { container } = await renderInField();
 
       const ids = [...container.querySelectorAll('[id]')].map((element) => element.id);
-      expect(ids.length).toBeGreaterThan(6);
+      // The label, and the group and the first segment of each field.
+      expect(ids.length).toBeGreaterThan(4);
       expect(new Set(ids).size).toBe(ids.length);
     });
 

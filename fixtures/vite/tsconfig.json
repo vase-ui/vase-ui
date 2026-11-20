@@ -12,5 +12,5 @@
     "noPropertyAccessFromIndexSignature": false,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "test", "published", "*.config.ts"]
+  "include": ["src", "published"]
 }

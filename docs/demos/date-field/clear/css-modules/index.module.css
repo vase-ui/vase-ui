@@ -59,6 +59,8 @@
 }
 
 .Segment {
+  /* The box follows the text. A browser with no `field-sizing` keeps the width of `size`. */
+  field-sizing: content;
   margin: 0;
   padding: 0 0.125rem;
   border: 0;
@@ -138,7 +140,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -156,7 +158,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 

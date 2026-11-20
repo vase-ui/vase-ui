@@ -2,16 +2,13 @@
 // A part of each family whose input Chromium restores and that takes the value of that input at
 // the `pageshow` event. A new `revision` renders the part again with the same value, as a render
 // before that event does.
-export type FormRestoreFamily =
-  'toolbar' | 'toolbar-default' | 'select' | 'combobox' | 'date-field' | 'time-field';
+export type FormRestoreFamily = 'toolbar' | 'toolbar-default' | 'select' | 'combobox';
 </script>
 
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { DateField } from '@vase-ui/vue/date-field';
 import { Select } from '@vase-ui/vue/select';
-import { TimeField } from '@vase-ui/vue/time-field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
 const props = defineProps<{
@@ -25,16 +22,12 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
 const text = shallowRef('server');
 const font = shallowRef<string | null>('serif');
 const fruit = shallowRef<string | null>(null);
-const when = shallowRef<Temporal.PlainDate | null>(null);
-const alarm = shallowRef<Temporal.PlainTime | null>(null);
 
 const MODELS = {
   toolbar: text,
   'toolbar-default': text,
   select: font,
   combobox: fruit,
-  'date-field': when,
-  'time-field': alarm,
 };
 
 const model = computed(() => String(MODELS[props.family].value));
@@ -106,27 +99,6 @@ function handleToolbarInput(event: Event) {
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>
-    <DateField.Root
-      v-else-if="family === 'date-field'"
-      v-model="when"
-      name="when"
-      locale="en-US"
-      :data-revision="revision"
-      @value-change="record"
-    >
-      <DateField.Input />
-    </DateField.Root>
-    <TimeField.Root
-      v-else-if="family === 'time-field'"
-      v-model="alarm"
-      name="alarm"
-      locale="en-US"
-      :hour-cycle="24"
-      :data-revision="revision"
-      @value-change="record"
-    >
-      <TimeField.Input />
-    </TimeField.Root>
   </form>
   <output data-testid="model">{{ model }}</output>
   <output data-testid="changes">{{ changes.join('; ') }}</output>

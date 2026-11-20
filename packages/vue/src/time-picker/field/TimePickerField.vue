@@ -1,8 +1,5 @@
 <script lang="ts">
-import type {
-  TimeFieldRootProps,
-  TimeFieldRootState,
-} from '../../time-field/root/TimeFieldRoot.vue';
+import type { TimeFieldRootProps, TimeFieldRootState } from '../../time-field/types';
 
 export interface TimePickerFieldState extends TimeFieldRootState {}
 
@@ -12,6 +9,7 @@ export interface TimePickerFieldState extends TimeFieldRootState {}
  */
 export interface TimePickerFieldProps extends Omit<
   TimeFieldRootProps,
+  | 'as'
   | 'modelValue'
   | 'defaultValue'
   | 'referenceDate'
@@ -19,11 +17,11 @@ export interface TimePickerFieldProps extends Omit<
   | 'hourCycle'
   | 'forceLeadingZeros'
   | 'hideTimeZone'
-  | 'minTime'
-  | 'maxTime'
+  | 'min'
+  | 'max'
   | 'locale'
   | 'disabled'
-  | 'readOnly'
+  | 'readonly'
   | 'required'
   | 'name'
   | 'form'
@@ -37,11 +35,10 @@ import { usePickerPartElement } from '../../internals/date-time/picker/usePicker
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
-import TimeFieldRoot from '../../time-field/root/TimeFieldRoot.vue';
+import TimeFieldRoot from '../../time-field/TimeFieldRoot.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type {
   TimePickerRootChangeEventDetails,
@@ -50,11 +47,10 @@ import type {
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<TimePickerFieldProps>(), { as: 'div' });
+const props = defineProps<TimePickerFieldProps>();
 
 defineSlots<{
   default(props: { state: TimePickerFieldState }): unknown;
-  render: ComponentRenderFn<HTMLProps, TimePickerFieldState>;
 }>();
 
 const picker = useTimePickerRootContext();
@@ -66,9 +62,7 @@ interface TimeFieldActions {
   clear: () => void;
 }
 
-// This part renders `TimeField.Root` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `TimeField.Root` dynamic. Vue then renders `TimeField.Root` again each time this part renders.
+// This part renders `TimeField.Root` and makes no element of its own.
 const field = useTemplateRef<TimeFieldActions>('field');
 const element = computed(() => field.value?.element ?? null);
 const inputElement = computed(() => field.value?.inputElement ?? null);
@@ -107,6 +101,9 @@ function fieldProps(attributes: Record<string, unknown>) {
   return {
     ...mergeProps(fieldHandlers, givenAttributes(attributes)),
     ...props,
+    // The part renders the root with no `as`. The type of the attributes of an element has the
+    // `as` of motion-v, which the root does not take.
+    as: undefined,
     modelValue: picker.value.value,
     // The default value gives the kind of a new value, the same kind as for each other part.
     defaultValue: picker.template.value,
@@ -115,38 +112,33 @@ function fieldProps(attributes: Record<string, unknown>) {
     hourCycle: root.hourCycle,
     forceLeadingZeros: root.forceLeadingZeros,
     hideTimeZone: root.hideTimeZone,
-    minTime: root.minTime,
-    maxTime: root.maxTime,
+    min: root.minTime,
+    max: root.maxTime,
     locale: root.locale,
     disabled: root.disabled,
-    readOnly: root.readOnly,
+    readonly: root.readOnly,
     required: root.required,
     name: root.name,
     form: root.form,
   };
 }
 
+// `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+function clear() {
+  field.value?.clear();
+  if (picker.value.value !== null) handleValueChange(null, createChangeEventDetails(REASONS.none));
+}
+
 defineExpose({
   element,
   inputElement,
   /** Sets the value to `null` and empties each segment. The reason of the change is `none`. */
-  clear: () => field.value?.clear(),
+  clear,
 });
 </script>
 
 <template>
   <TimeFieldRoot
-    v-if="$slots.render"
-    ref="field"
-    v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
-    @value-change="handleValueChange"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </TimeFieldRoot>
-  <TimeFieldRoot
-    v-else
     ref="field"
     v-bind="fieldProps(withoutPropsOf($attrs, TimeFieldRoot))"
     @value-change="handleValueChange"

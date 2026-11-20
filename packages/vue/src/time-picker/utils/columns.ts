@@ -7,13 +7,13 @@ import {
   isTimeAllowed,
   timeOfDayPeriod,
   timeOfFaceNumber,
-} from '../../time-clock/utils/clockViews';
+} from '../../time-clock/views';
 import type {
   TimeClockDayPeriodValue,
   TimeClockHourCycle,
   TimeClockView,
   TimeLimits,
-} from '../../time-clock/utils/clockViews';
+} from '../../time-clock/views';
 
 /** The unit that a column of the time picker sets. */
 export type TimePickerColumnUnit = TimeClockView | 'dayPeriod';

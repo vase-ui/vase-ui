@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import * as TimeClock from '../../time-clock/index.parts';
-import * as TimeField from '../../time-field/index.parts';
+import * as TimeClock from '../../time-clock/parts';
+import * as TimeField from '../../time-field/parts';
 import * as TimePicker from '../index.parts';
 
 defineOptions({ inheritAttrs: false });

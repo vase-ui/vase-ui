@@ -1,6 +1,5 @@
 import { expectType } from '#test-utils';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import { REASONS } from '../../internals/reasons';
 
 declare const day: Temporal.PlainDate;
 declare const dateTime: Temporal.PlainDateTime;
@@ -40,20 +39,9 @@ declare const zoned: Temporal.ZonedDateTime;
 <DateRangePicker.Root minDate={new Date()} />;
 
 function assertValueChange(details: DateRangePicker.Root.ChangeEventDetails) {
-  if (details.reason === REASONS.drag) {
-    const event: PointerEvent | TouchEvent = details.event;
-    void event;
-  }
-
-  if (details.reason === REASONS.dayPress) {
-    const event: MouseEvent | KeyboardEvent | PointerEvent = details.event;
-    void event;
-  }
-
-  if (details.reason === REASONS.inputPaste) {
-    const event: ClipboardEvent = details.event;
-    void event;
-  }
+  // The picker gives the details of a field, a clock or a calendar with no change.
+  const event: Event = details.event;
+  void event;
 }
 
 void assertValueChange;

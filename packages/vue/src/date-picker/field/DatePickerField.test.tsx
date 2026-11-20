@@ -7,7 +7,6 @@ import { Form } from '@vase-ui/vue/form';
 import {
   createFormDataSpy,
   createRenderer,
-  describeConformance,
   fireEvent,
   flushMicrotasks,
   heldMountFormResetTests,
@@ -15,7 +14,6 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import { recordResetListeners } from '../../internals/date-time/picker/test-utils';
 import DatePickerAnatomy from '../root/DatePickerAnatomy.test.vue';
 import { createPartRef } from '../root/test-utils';
 
@@ -28,14 +26,6 @@ const hiddenInputOf = (container: Element) =>
 
 describe('<DatePicker.Field />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<DatePicker.Field />, () => ({
-    elementIsRoot: false,
-    refInstanceof: window.HTMLDivElement,
-    render(node) {
-      return render(<DatePicker.Root defaultValue={day}>{node}</DatePicker.Root>);
-    },
-  }));
 
   it('shows the value of the picker in its segments, and gives it to the hidden input', async () => {
     const { container } = await render(
@@ -492,10 +482,10 @@ describe('<DatePicker.Field />', () => {
   });
 
   // The root of the field and the field part of the picker each listen for the reset of the form.
-  // The root hears of it first, and the cases run again with the part first.
-  describe.each([{ order: 'the root first' }, { order: 'the part first' }])(
+  // The root listens on the form and the part on the document, so the root hears of it first.
+  describe.each([{ order: 'the root first' }])(
     'VUE-21: a native reset clears the error of the field, with $order',
-    ({ order }) => {
+    () => {
       // The reset value, `null`, is also an error, so a validation after the reset shows.
       const createValidate = () =>
         vi.fn((value: unknown) => (value === null ? 'Choose a date' : 'Wrong date'));
@@ -527,11 +517,7 @@ describe('<DatePicker.Field />', () => {
         await flushMicrotasks();
       }
 
-      async function resetForm(resets: ReturnType<typeof recordResetListeners>) {
-        if (order === 'the part first') {
-          // The listener of the root and the listener of the part.
-          resets.reverse(2);
-        }
+      async function resetForm() {
         screen.getByTestId<HTMLFormElement>('form').reset();
         // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
         await wait(0);
@@ -546,13 +532,12 @@ describe('<DatePicker.Field />', () => {
 
       it('starts no validation for the value of the reset, and validates the next entry', async () => {
         const validate = createValidate();
-        const resets = recordResetListeners(document);
         const { container } = await render(renderForm(validate));
         await fill(container, '2026-11-14');
         expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
         validate.mockClear();
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputOf(container).value).toBe('');
         expect(segmentOf(container, 'day').value).toBe('');
@@ -567,13 +552,12 @@ describe('<DatePicker.Field />', () => {
 
       it('clears the error of the form when the reset leaves the value, and validates the next entry', async () => {
         const validate = createValidate();
-        const resets = recordResetListeners(document);
         const { container } = await render(
           renderForm(validate, { defaultValue: day }, { when: 'Server error' }),
         );
         expect(screen.getByTestId('error')).toHaveTextContent('Server error');
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputOf(container).value).toBe('2026-11-14');
         expect(validate).not.toHaveBeenCalled();

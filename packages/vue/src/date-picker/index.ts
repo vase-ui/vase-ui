@@ -48,12 +48,10 @@ export type {
   PopoverDescriptionState as DatePickerDescriptionState,
 } from '../popover/description/PopoverDescription.vue';
 
-export * as DatePickerFieldDataAttributes from '../date-field/root/DateFieldRootDataAttributes';
 export * as DatePickerTriggerDataAttributes from '../popover/trigger/PopoverTriggerDataAttributes';
 export * as DatePickerPositionerCssVariables from '../popover/positioner/PopoverPositionerCssVars';
 export * as DatePickerPositionerDataAttributes from '../popover/positioner/PopoverPositionerDataAttributes';
 export * as DatePickerCalendarDataAttributes from '../calendar/root/CalendarRootDataAttributes';
-export * as DatePickerTimeFieldDataAttributes from '../time-field/root/TimeFieldRootDataAttributes';
 export * as DatePickerPopupCssVariables from '../popover/popup/PopoverPopupCssVars';
 export * as DatePickerPopupDataAttributes from '../popover/popup/PopoverPopupDataAttributes';
 export * as DatePickerArrowDataAttributes from '../popover/arrow/PopoverArrowDataAttributes';

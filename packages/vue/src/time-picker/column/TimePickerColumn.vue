@@ -46,7 +46,7 @@ import { usePickerFocusTarget } from '../../internals/date-time/picker/usePicker
 import { toPlainTime } from '../../internals/date-time/temporal';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { isValidStep } from '../../time-clock/utils/clockViews';
+import { isValidStep } from '../../time-clock/views';
 import TimePickerColumnItem from '../column-item/TimePickerColumnItem.vue';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import { columnValues, selectedColumnValue } from '../utils/columns';

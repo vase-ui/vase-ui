@@ -1,10 +1,10 @@
 <script lang="ts">
-import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { ChangeEventDetails } from '../../common/changeEventDetails';
 import type {
   RangeChangeEventReason,
   RangeValue,
 } from '../../internals/date-time/calendar/rangeSelection';
-import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
+import type { DateTimeFieldChangeEventReason } from '../../common/date-time-field/field';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type {
@@ -21,10 +21,11 @@ export type DateRangePickerRootValue<Value extends DateValue = DateValue> = Rang
 
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 
+// `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DateRangePickerRootChangeEventReason =
-  RangeChangeEventReason | DateTimeFieldChangeEventReason;
+  RangeChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DateRangePickerRootChangeEventDetails =
-  VaseUIChangeEventDetails<DateRangePickerRootChangeEventReason>;
+  ChangeEventDetails<DateRangePickerRootChangeEventReason>;
 
 export type DateRangePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type DateRangePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;

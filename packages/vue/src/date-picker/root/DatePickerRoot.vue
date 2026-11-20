@@ -1,10 +1,12 @@
 <script lang="ts">
 import type { CalendarChangeEventReason } from '../../internals/date-time/calendar/calendarProps';
-import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
-import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
+import type {
+  DateTimeFieldChangeEventReason,
+  DateTimeFieldGranularity,
+} from '../../common/date-time-field/field';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
-import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
+import type { ChangeEventDetails } from '../../common/changeEventDetails';
 import type {
   PopoverRootActions,
   PopoverRootChangeEventDetails,
@@ -19,10 +21,10 @@ export type DatePickerRootValue = DateValue | Temporal.PlainYearMonth;
 
 export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
+// `none` is the reason of a native reset of the form, and of `clear()` of a field part.
 export type DatePickerRootChangeEventReason =
-  CalendarChangeEventReason | DateTimeFieldChangeEventReason;
-export type DatePickerRootChangeEventDetails =
-  VaseUIChangeEventDetails<DatePickerRootChangeEventReason>;
+  CalendarChangeEventReason | DateTimeFieldChangeEventReason | 'none';
+export type DatePickerRootChangeEventDetails = ChangeEventDetails<DatePickerRootChangeEventReason>;
 
 export type DatePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type DatePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;

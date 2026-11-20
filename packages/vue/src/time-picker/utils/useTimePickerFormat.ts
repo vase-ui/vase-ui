@@ -1,7 +1,7 @@
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 import { hourCycleOf } from '../../internals/date-time/format';
-import type { TimeClockHourCycle } from '../../time-clock/utils/clockViews';
+import type { TimeClockHourCycle } from '../../time-clock/views';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import type { TimePickerRootContext } from '../root/TimePickerRootContext';
 

@@ -48,8 +48,6 @@ export type {
   PopoverDescriptionState as DateRangePickerDescriptionState,
 } from '../popover/description/PopoverDescription.vue';
 
-export * as DateRangePickerStartFieldDataAttributes from '../date-field/root/DateFieldRootDataAttributes';
-export * as DateRangePickerEndFieldDataAttributes from '../date-field/root/DateFieldRootDataAttributes';
 export * as DateRangePickerTriggerDataAttributes from '../popover/trigger/PopoverTriggerDataAttributes';
 export * as DateRangePickerPositionerCssVariables from '../popover/positioner/PopoverPositionerCssVars';
 export * as DateRangePickerPositionerDataAttributes from '../popover/positioner/PopoverPositionerDataAttributes';

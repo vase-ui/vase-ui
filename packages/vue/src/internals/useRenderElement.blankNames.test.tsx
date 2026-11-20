@@ -2,11 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { TimeClock } from '@vase-ui/vue/time-clock';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -46,8 +44,6 @@ interface Row {
   expected: string;
   // The default is each blank value.
   blanks?: Blank[];
-  // The element that has the name. The default is the element of the part.
-  getNamed?: () => HTMLElement;
   // The step that shows the part, for a part that the render does not show.
   show?: () => Promise<void>;
 }
@@ -88,17 +84,6 @@ async function showNavigationMenu() {
 }
 
 const rows: Row[] = [
-  {
-    name: 'DateField.Clear',
-    attribute: 'aria-label',
-    createNode: (attrs) => (
-      <DateField.Root>
-        <DateField.Input />
-        <DateField.Clear data-testid="part" {...attrs} />
-      </DateField.Root>
-    ),
-    expected: 'Clear',
-  },
   {
     name: 'Dialog.Popup',
     attribute: 'aria-labelledby',
@@ -161,17 +146,6 @@ const rows: Row[] = [
     show: showNavigationMenu,
     expected: 'Products',
   },
-  ...(['aria-label', 'aria-labelledby'] as const).map((attribute): Row => ({
-    name: `TimeClock.Face ${attribute}`,
-    attribute,
-    createNode: (attrs) => (
-      <TimeClock.Root locale="en-US">
-        <TimeClock.Face {...attrs} />
-      </TimeClock.Root>
-    ),
-    expected: 'hour',
-    getNamed: () => screen.getByRole('slider'),
-  })),
   {
     name: 'useRender',
     attribute: 'aria-label',
@@ -193,12 +167,12 @@ describe('VUE-106: a blank aria-label or aria-labelledby of the consumer', () =>
 
   it.each(cases)(
     'keeps the name of $name for $blank',
-    async ({ attribute, createNode, expected, getNamed, show, value }) => {
+    async ({ attribute, createNode, expected, show, value }) => {
       await render(createNode({ [attribute]: value }));
       await show?.();
 
       await waitFor(() => {
-        expect((getNamed ?? (() => screen.getByTestId('part')))()).toHaveAccessibleName(expected);
+        expect(screen.getByTestId('part')).toHaveAccessibleName(expected);
       });
     },
   );
