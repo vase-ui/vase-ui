@@ -224,11 +224,11 @@ const protocols = ['http', 'https', 'ssh'];
       <NumberField.Root :min="1" :max="64" required>
         <Field.Label>Number of instances</Field.Label>
         <NumberField.Group>
-          <NumberField.Decrement>
+          <NumberField.Decrement aria-label="Decrease">
             <MinusIcon />
           </NumberField.Decrement>
           <NumberField.Input />
-          <NumberField.Increment>
+          <NumberField.Increment aria-label="Increase">
             <PlusIcon />
           </NumberField.Increment>
         </NumberField.Group>

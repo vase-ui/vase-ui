@@ -197,17 +197,13 @@ watch(
   { flush: 'post' },
 );
 
-useFormReset(
-  formInput,
-  () => {
-    const first = toCode(firstValue, props).code;
-    field?.onReset(first);
-    if (code.value === first) return;
-    setOwn(first);
-    emit('update:modelValue', first);
-  },
-  () => props.form,
-);
+useFormReset(formInput, () => {
+  const first = toCode(firstValue, props).code;
+  field?.onReset(first);
+  if (code.value === first) return;
+  setOwn(first);
+  emit('update:modelValue', first);
+});
 
 if (process.env.NODE_ENV !== 'production') {
   watchPostEffect(() => {

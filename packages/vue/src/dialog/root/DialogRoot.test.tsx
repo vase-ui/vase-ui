@@ -1471,47 +1471,35 @@ describe('<Dialog.Root />', () => {
       });
 
       it('dismisses on first outside click after NumberField scrub interaction (pointer lock path)', async () => {
-        const originalRequestPointerLock = Element.prototype.requestPointerLock;
-        const requestPointerLockSpy = vi.fn(() => Promise.resolve());
+        await render(
+          <ContainedTriggerDialog
+            rootProps={{ defaultOpen: true, modal: false }}
+            popupProps={{
+              children: () => (
+                <NumberField.Root defaultValue={100}>
+                  <NumberField.ScrubArea data-testid="scrub-area">
+                    <span>Amount</span>
+                  </NumberField.ScrubArea>
+                  <NumberField.Input aria-label="Amount" />
+                </NumberField.Root>
+              ),
+            }}
+          />,
+        );
 
-        try {
-          Element.prototype.requestPointerLock =
-            requestPointerLockSpy as typeof originalRequestPointerLock;
+        const scrubArea = screen.getByTestId('scrub-area');
 
-          await render(
-            <ContainedTriggerDialog
-              rootProps={{ defaultOpen: true, modal: false }}
-              popupProps={{
-                children: () => (
-                  <NumberField.Root defaultValue={100}>
-                    <NumberField.ScrubArea data-testid="scrub-area">
-                      <span>Amount</span>
-                    </NumberField.ScrubArea>
-                    <NumberField.Input aria-label="Amount" />
-                  </NumberField.Root>
-                ),
-              }}
-            />,
-          );
+        await fireEvent.pointerDown(scrubArea, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseDown(scrubArea, { button: 0 });
+        await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+        await fireEvent.mouseUp(document.body, { button: 0 });
+        // A press that starts inside with a prevented `pointerdown` and ends outside suppresses the
+        // next click until a timer of 0 ms ends.
+        await wait(0);
 
-          const scrubArea = screen.getByTestId('scrub-area');
+        await fireEvent.click(document.body);
 
-          await fireEvent.pointerDown(scrubArea, { pointerType: 'mouse', button: 0 });
-          await fireEvent.mouseDown(scrubArea, { button: 0 });
-          await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
-          await fireEvent.mouseUp(document.body, { button: 0 });
-          // A press that starts inside with a prevented `pointerdown` and ends outside suppresses the
-          // next click until a timer of 0 ms ends.
-          await wait(0);
-
-          await fireEvent.click(document.body);
-
-          expect(screen.queryByRole('dialog')).toBe(null);
-          // The scrub area requests no pointer lock in WebKit.
-          expect(requestPointerLockSpy.mock.calls.length).toBe(platform.engine.webkit ? 0 : 1);
-        } finally {
-          Element.prototype.requestPointerLock = originalRequestPointerLock;
-        }
+        expect(screen.queryByRole('dialog')).toBe(null);
       });
     });
 

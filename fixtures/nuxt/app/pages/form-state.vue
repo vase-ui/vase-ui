@@ -2,7 +2,6 @@
 import { reactive, ref, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { Select } from '@vase-ui/vue/select';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -15,7 +14,6 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
 const filter = ref('');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
-const quantity = ref<number | null>(1);
 const when = shallowRef<Temporal.PlainDate | null>(null);
 const alarm = shallowRef<Temporal.PlainTime | null>(null);
 const changes = reactive<Record<string, number>>({});
@@ -69,14 +67,6 @@ function handleFilterInput(event: Event) {
           </Combobox.Positioner>
         </Combobox.Portal>
       </Combobox.Root>
-      <NumberField.Root
-        v-model="quantity"
-        name="quantity"
-        locale="en-US"
-        @value-change="count('quantity')"
-      >
-        <NumberField.Input aria-label="Quantity" data-testid="quantity-input" />
-      </NumberField.Root>
       <DateField.Root v-model="when" name="when" locale="en-US" @value-change="count('when')">
         <DateField.Input data-testid="when" />
       </DateField.Root>
@@ -96,7 +86,6 @@ function handleFilterInput(event: Event) {
         filter,
         font,
         fruit,
-        quantity,
         when: when?.toString() ?? null,
         alarm: alarm?.toString({ smallestUnit: 'minute' }) ?? null,
       })

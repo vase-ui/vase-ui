@@ -320,7 +320,7 @@ describe('<Toolbar.Input />', () => {
         </Toolbar.Root>,
       );
 
-      expect(screen.getByRole('textbox')).toHaveAttribute('aria-roledescription', 'Number field');
+      expect(screen.getByRole('spinbutton')).toBeInTheDocument();
     });
 
     it('handles interactions', async () => {
@@ -337,7 +337,7 @@ describe('<Toolbar.Input />', () => {
         </Toolbar.Root>,
       );
 
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('spinbutton');
 
       await user.keyboard('[Tab]');
       expect(input).toHaveAttribute('tabindex', '0');
@@ -366,7 +366,7 @@ describe('<Toolbar.Input />', () => {
         </Toolbar.Root>,
       );
 
-      const input = screen.getByRole('textbox');
+      const input = screen.getByRole('spinbutton');
 
       expect(input).not.toHaveAttribute('disabled');
       expect(input).toHaveAttribute('data-disabled');

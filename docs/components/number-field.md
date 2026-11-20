@@ -54,23 +54,67 @@ Import the component and assemble its parts:
 
 <<< ./number-field/Anatomy.vue
 
-`NumberField.Root` renders its element and a hidden `<input type="number">` after it. A form submits the number of that input, not the text of `NumberField.Input`. A reset of the form puts an uncontrolled number field back to `defaultValue`, or to no value when it has none. A controlled number field does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+`NumberField.Root` renders a `<div>`. Its last child is a hidden `<input type="number">`, so the root is one element, and a rule of `<style scoped>`, `v-show` and `<Transition>` reach it. `NumberField.Input` renders an `<input type="text" role="spinbutton">`, and the buttons render a `<button>`. A part outside `NumberField.Root` throws an error.
 
-Because of the hidden input, `NumberField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+Give the input an `id`, and give a `<label>` the same `for`. In a `Field`, the label of the field names the input. The buttons have no text of their own: give each one a text or an `aria-label`.
 
-Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
+## Value
 
-With no `locale` prop, the server HTML has the text in the format of `en-US`. When the root is mounted, the text changes to the format of the locale of the browser. Give the root a `locale` prop to get the same text on the server and in the browser.
+Bind the value with `v-model`, or give `defaultValue` to an uncontrolled root. `null` is an empty field. A change emits `valueChange` and then `update:modelValue`. To keep the value, call `details.cancel()` in `valueChange`. The `reason` of the details says what changed the value. This root refuses each paste:
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `NumberField.Input` when the field accepts its characters. After the hydration, the root emits `valueChange` and `update:modelValue` with the number of that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`, and the root emits `valueCommitted`.
+```vue-html
+<NumberField.Root @value-change="(value, details) => details.reason === 'input-paste' && details.cancel()">
+```
 
-The root also takes a number that a program or the browser writes into its hidden input before the page hydrates. It takes a number that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+The root emits `valueCommitted` when the user ends a change: at the blur after typed edits, at a key or a wheel step, at the release of a button or a scrub area, and at a fill.
 
-`NumberField.ScrubAreaCursor` renders its element only while the user scrubs. It does not render for a touch, in a WebKit browser such as Safari, or after `requestPointerLock()` throws or rejects.
+The text is the value in the format of `format` and `locale`. With no `locale` prop, the text has the locale of the nearest [`LocaleProvider`](/utils/locale-provider), else `en-US`, on the server and in the browser. Text that the user types stays as typed while it is the value, and the blur gives it the format. With a rounding option in `format`, the blur rounds the typed number.
 
-The part renders its element in a `Teleport`, in the `<body>` of the document of the scrub area. When the scrub area is in a shadow root, such as the root of a Vue custom element, the element is in that root. The styles of the root then apply to it. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach the element. `:deep()` does not reach it either. Write the element in the `#render` slot of the part, or use a CSS module or a `style` binding.
+## Steps and the form
 
-The cursor has `position: fixed`. Its containing block is the viewport, or else the nearest ancestor that has a transform, a filter or containment. Each time that the scrub area places the cursor, it reads the place and the scale of that block, and it puts the cursor at the pointer. It does not correct a rotation or a skew of the block. If the block or an ancestor of the block clips its content, that element also clips the cursor.
+The arrow keys, the buttons, the wheel with `allowWheelScrub` and the scrub area step the value. A step is `step`, `smallStep` with Alt or `largeStep` with Shift. Home and End go to `min` and `max`. With `snapOnStep`, a step gives a multiple of its amount, counted from `min`, or from 0 with no `min`.
+
+A form submits the number of the hidden input, not the text of the input. With a number in `step`, the browser accepts only the multiples of `step` from `min`. With no `min`, the browser counts the multiples from the value, so each value is valid. With no `step`, or `'any'`, a step is 1 and the form accepts each number. A typed number goes into the range, unless `allowOutOfRange` lets the form report it.
+
+A reset of the form puts the field back to `defaultValue`, or to the model of its mount. The root then emits only `update:modelValue`.
+
+## Scrub area
+
+A press on `NumberField.ScrubArea` and a move of the pointer step the value: one step for each `pixelSensitivity` px on the axis of `orientation`. A horizontal move toward the end of the line, or a move up, steps up. The drag stops at the edge of the screen.
+
+Style the cursor with CSS. To keep the cursor during a drag out of the area, select the root while it has `data-scrubbing`:
+
+```css
+.ScrubArea {
+  cursor: ew-resize;
+}
+
+html:has([data-scrubbing]) {
+  cursor: ew-resize;
+}
+```
+
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                  | Part                              | State                                                                                                |
+| ------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `:disabled`               | Input, buttons                    | The field is disabled. A button is also disabled by its prop, in a read-only field and at its bound. |
+| `[aria-disabled="true"]`  | A button that is not a `<button>` | The button is disabled, as `:disabled` says above.                                                   |
+| `:read-only`              | Input                             | The field is read-only.                                                                              |
+| `:required`               | Input                             | The field is required.                                                                               |
+| `[aria-invalid="true"]`   | Input                             | The field is invalid, or the value is out of range.                                                  |
+| `:focus`, `:focus-within` | Input; root and group             | The input has the focus.                                                                             |
+
+The parts have these attributes:
+
+| Attribute                                                 | Parts                            |
+| --------------------------------------------------------- | -------------------------------- |
+| `data-scrubbing`                                          | Each part                        |
+| `data-disabled`                                           | Root, group, scrub area          |
+| `data-readonly`, `data-required`, `data-invalid`          | Root, group, scrub area, buttons |
+| `data-valid`, `data-touched`, `data-dirty`, `data-filled` | Each part                        |
 
 ## API reference
 

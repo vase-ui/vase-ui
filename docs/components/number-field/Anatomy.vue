@@ -4,13 +4,11 @@ import { NumberField } from '@vase-ui/vue/number-field';
 
 <template>
   <NumberField.Root>
-    <NumberField.ScrubArea>
-      <NumberField.ScrubAreaCursor />
-    </NumberField.ScrubArea>
+    <NumberField.ScrubArea />
     <NumberField.Group>
-      <NumberField.Decrement />
+      <NumberField.Decrement aria-label="Decrease" />
       <NumberField.Input />
-      <NumberField.Increment />
+      <NumberField.Increment aria-label="Increase" />
     </NumberField.Group>
   </NumberField.Root>
 </template>

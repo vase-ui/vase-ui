@@ -5,24 +5,6 @@ import { NumberField } from '@vase-ui/vue/number-field';
 
 const id = useId();
 
-const CursorGrowIcon: FunctionalComponent = () =>
-  h(
-    'svg',
-    {
-      width: '26',
-      height: '14',
-      viewBox: '0 0 24 14',
-      fill: 'black',
-      stroke: 'white',
-      style: { display: 'block' },
-    },
-    [
-      h('path', {
-        d: 'M19.5 5.5L6.49737 5.51844V2L1 6.9999L6.5 12L6.49737 8.5L19.5 8.5V12L25 6.9999L19.5 2V5.5Z',
-      }),
-    ],
-  );
-
 const PlusIcon: FunctionalComponent = () =>
   h(
     'svg',
@@ -56,28 +38,26 @@ const MinusIcon: FunctionalComponent = () =>
   );
 
 const stepperClasses =
-  'flex h-full w-8 items-center justify-center border border-neutral-950 bg-white bg-clip-padding text-neutral-950 outline-0 select-none dark:border-white dark:bg-neutral-950 dark:text-white hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400';
+  'flex h-full w-8 items-center justify-center border border-neutral-950 bg-white bg-clip-padding text-neutral-950 outline-0 select-none dark:border-white dark:bg-neutral-950 dark:text-white hover:not-disabled:bg-neutral-100 dark:hover:not-disabled:bg-neutral-800 active:not-disabled:bg-neutral-200 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400';
 </script>
 
 <template>
-  <NumberField.Root :id="id" :default-value="100" class="flex flex-col items-start gap-1">
+  <NumberField.Root :default-value="100" class="flex flex-col items-start gap-1">
     <NumberField.ScrubArea class="cursor-ew-resize font-bold select-none">
       <label :for="id" class="cursor-ew-resize text-sm font-bold text-neutral-950 dark:text-white"
         >Amount</label
       >
-      <NumberField.ScrubAreaCursor class="drop-shadow-[0_1px_1px_#0008] filter">
-        <CursorGrowIcon />
-      </NumberField.ScrubAreaCursor>
     </NumberField.ScrubArea>
 
     <NumberField.Group class="flex h-8">
-      <NumberField.Decrement :class="[stepperClasses, 'border-r-0']">
+      <NumberField.Decrement aria-label="Decrease" :class="[stepperClasses, 'border-r-0']">
         <MinusIcon />
       </NumberField.Decrement>
       <NumberField.Input
+        :id="id"
         class="h-full w-[7ch] border border-neutral-950 bg-white px-2 text-left text-sm font-normal text-neutral-950 tabular-nums any-pointer-coarse:text-base dark:border-white dark:bg-neutral-950 dark:text-white focus:z-1 focus:outline-2 focus:-outline-offset-1 focus:outline-neutral-950 dark:focus:outline-white"
       />
-      <NumberField.Increment :class="[stepperClasses, 'border-l-0']">
+      <NumberField.Increment aria-label="Increase" :class="[stepperClasses, 'border-l-0']">
         <PlusIcon />
       </NumberField.Increment>
     </NumberField.Group>
