@@ -202,7 +202,7 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
 ## Entry points
 
-The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use the flat names of that part. This section holds for each other family until its refactor.
+The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) export no flat components and no constants of attribute and variable names. Their types follow item 8 of that part. This section holds for each other family until its refactor.
 
 The package is `@vase-ui/vue`. It is ESM only.
 
@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button, Locale Provider, Toggle, Toggle Group and Toolbar follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+The families in `REFACTORED_FOLDERS` of `packages/vue/test/refactoredFolders.ts` follow the rules of this part. That list holds each folder of `packages/vue/src` with an `index.ts` and a `types.ts`. Each other family moves to these rules in its own change, and that change adds its `types.ts`. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -718,7 +718,7 @@ The public form:
 5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change.
 6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
 7. `<Transition>` animates a part that appears and goes. The parts have no `data-starting-style`, `data-ending-style` or `transitionStatus`.
-8. A component is `Family.Part`, or the family name when the family has one part. A type is flat, such as `FieldRootProps`. No namespace types, and no constants for the names of data attributes.
+8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat, as in Base UI: `Field.Root.Props` and `FieldRootProps`. `parts.ts` declares the constant of each part with the type `typeof` its SFC. A type-only namespace beside the constant holds `Props`, `State` and the event types that the part has. A family with one part declares them in `index.ts`: `Checkbox.Props`. No constants for the names of data attributes.
 9. A part gives a form what the matching native control gives: the same name and value rules, the same constraint validation, the same implicit submit, the same reset. `uncheckedValue` of a checkbox and a switch adds an entry in a `formdata` listener of the form.
 10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.

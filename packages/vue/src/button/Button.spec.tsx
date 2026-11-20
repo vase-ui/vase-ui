@@ -8,6 +8,12 @@ expectType<HTMLElement | null, typeof button.element>(button.element);
 export const props: ButtonProps = { disabled: true, focusableWhenDisabled: true };
 export const state: ButtonState = { disabled: true };
 
+// The types of the part are on the part too.
+const namespaceProps = null as unknown as Button.Props;
+const namespaceState = null as unknown as Button.State;
+expectType<ButtonProps, typeof namespaceProps>(namespaceProps);
+expectType<ButtonState, typeof namespaceState>(namespaceState);
+
 export const withNativeAttributes = (
   <Button type="submit" form="order" name="action" value="save" />
 );

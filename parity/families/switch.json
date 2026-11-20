@@ -56,7 +56,7 @@
       "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Switch` is the part: one `<input type=\"checkbox\" role=\"switch\">` (rules 8.1, 8.3). The flat types `SwitchProps`, `SwitchState` and `SwitchChangeEventReason` replace the namespace types. `readonly` replaces `readOnly`. `value` and `form` are plain attributes, and the `element` of the template ref replaces `inputRef`."
+      "reason": "`Switch` is the part: one `<input type=\"checkbox\" role=\"switch\">` (rules 8.1, 8.3). The types of the part are `Switch.Props`, `Switch.State` and `Switch.ChangeEventReason`, also with the flat names `SwitchProps`, `SwitchState` and `SwitchChangeEventReason`. `readonly` replaces `readOnly`. `value` and `form` are plain attributes, and the `element` of the template ref replaces `inputRef`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/switch/types.md",
