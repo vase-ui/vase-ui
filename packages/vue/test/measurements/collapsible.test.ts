@@ -32,7 +32,9 @@ function element<T extends HTMLElement = HTMLElement>(id: string) {
 /** Counts the transitions that start on `target`. */
 function countTransitions(target: Element) {
   const runs: string[] = [];
-  target.addEventListener('transitionrun', (event) => runs.push(event.propertyName));
+  target.addEventListener('transitionrun', (event) =>
+    runs.push((event as TransitionEvent).propertyName),
+  );
   return runs;
 }
 

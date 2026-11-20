@@ -238,7 +238,7 @@ describe('the trigger', () => {
   test('VUE-112: a disabled fieldset disables a native trigger, and its state says it', async () => {
     const scene = reactive({ fieldset: false });
     const { trigger } = await mountCollapsible({ scene });
-    expect(trigger).toHaveTextContent(/^Trigger$/);
+    expect(trigger.textContent!.trim()).toBe('Trigger');
     scene.fieldset = true;
     await waitFor(() => expect(trigger).toHaveTextContent('Trigger disabled'));
     expect(trigger).toBeDisabled();

@@ -9,7 +9,7 @@ const props = defineProps({
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
   kind: { type: String as PropType<'Variable' | 'VariableKeptBox' | 'Grid'>, required: true },
   writes: { type: String as PropType<'none' | 'after' | 'both'>, default: 'none' },
-  hiddenValue: { type: [Boolean, String], default: true },
+  hiddenValue: { type: [Boolean, String] as PropType<true | 'until-found'>, default: true },
 });
 const element = shallowRef<HTMLElement | null>(null);
 
