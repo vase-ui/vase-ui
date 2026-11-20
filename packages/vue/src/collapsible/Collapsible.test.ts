@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, inject, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick, reactive } from 'vue';
+import { defineComponent, h, nextTick, reactive } from 'vue';
 import type { CollapsibleRootChangeEventDetails } from '@vase-ui/vue/collapsible';
 import { expectNoAxeViolations } from '../../test/axe';
 import { dataAttributes } from '../../test/field';
@@ -56,6 +56,13 @@ function rootEvents(log: string[], props: Record<string, unknown> = {}) {
     'onUpdate:open': (open: boolean) => log.push(`update ${open}`),
   });
 }
+
+/** A component that renders a `<span>` and exposes no element. */
+const PlainSpan = defineComponent({
+  setup(_, { slots }) {
+    return () => h('span', slots.default?.());
+  },
+});
 
 /** Navigates to the fragment `id`, as a link to it does. */
 async function navigateTo(id: string) {
@@ -138,6 +145,23 @@ describe('the elements', () => {
     await nextTick();
     expect(root.querySelector('[role=button]')!.tagName).toBe('SPAN');
   });
+
+  // A Vapor app without the interop plugin renders no virtual DOM component in a part.
+  test.skipIf(inject('app') === 'vapor')(
+    'read the root element of a component in `as` that exposes no element',
+    async () => {
+      const { exposed, trigger, panel, press } = await mountCollapsible({
+        trigger: { as: PlainSpan },
+        panel: { as: PlainSpan },
+      });
+      expect(exposed.trigger.element).toBe(trigger);
+      expect(trigger).toHaveAttribute('role', 'button');
+      expect(trigger).not.toHaveAttribute('type');
+      await press();
+      expect(exposed.panel.element).toBe(panel());
+      expect(panel()!.style.getPropertyValue('--collapsible-panel-height')).toMatch(/^\d+px$/);
+    },
+  );
 
   test('VUE-60: the panel has one root node; a scoped style and v-show reach its element', async () => {
     const scene = reactive({ shown: true });

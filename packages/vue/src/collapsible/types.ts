@@ -1,9 +1,9 @@
-import type { ButtonHTMLAttributes, Component, HTMLAttributes } from 'vue';
+import type { ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
-export interface CollapsibleRootProps extends /* @vue-ignore */ HTMLAttributes {
-  /** A tag or a component in place of the `<div>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface CollapsibleRootProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The panel is open. `v-model:open` binds it. */
   open?: boolean;
   /**
@@ -29,12 +29,8 @@ export type CollapsibleRootChangeEventReason = 'trigger-press' | 'none';
 export type CollapsibleRootChangeEventDetails =
   ChangeEventDetails<CollapsibleRootChangeEventReason>;
 
-export interface CollapsibleTriggerProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled'
-> {
-  /** A tag or a component in place of the `<button>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface CollapsibleTriggerProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /**
    * The user cannot press the trigger. A disabled root also disables it.
    * @default false
@@ -47,9 +43,8 @@ export interface CollapsibleTriggerState extends CollapsibleRootState {
   disabled: boolean;
 }
 
-export interface CollapsiblePanelProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
-  /** A tag or a component in place of the `<div>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface CollapsiblePanelProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /**
    * A closed panel stays in the DOM, with `hidden` and `inert`.
    * @default false

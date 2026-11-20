@@ -1,12 +1,12 @@
-import type { ButtonHTMLAttributes, Component, HTMLAttributes } from 'vue';
+import type { ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
 /** The values of the open items. */
 export type AccordionValue<Value = any> = Value[];
 
-export interface AccordionRootProps<Value = any> extends /* @vue-ignore */ HTMLAttributes {
-  /** A tag or a component in place of the `<div>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface AccordionRootProps<Value = any>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The values of the open items. `v-model` binds it. With `null`, no item is open, and the root
    * stays controlled.
@@ -48,9 +48,7 @@ export type AccordionRootChangeEventReason = 'trigger-press' | 'none';
 
 export type AccordionRootChangeEventDetails = ChangeEventDetails<AccordionRootChangeEventReason>;
 
-export interface AccordionItemProps extends /* @vue-ignore */ HTMLAttributes {
-  /** A tag or a component in place of the `<div>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface AccordionItemProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value of the item in the value of the root. With none, the item has a generated value. */
   value?: any;
   /**
@@ -70,19 +68,13 @@ export type AccordionItemChangeEventReason = AccordionRootChangeEventReason;
 
 export type AccordionItemChangeEventDetails = AccordionRootChangeEventDetails;
 
-export interface AccordionHeaderProps extends /* @vue-ignore */ HTMLAttributes {
-  /** A tag or a component in place of the `<h3>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
-}
+export interface AccordionHeaderProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export type AccordionHeaderState = AccordionItemState;
 
-export interface AccordionTriggerProps extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled' | 'id'
-> {
-  /** A tag or a component in place of the `<button>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface AccordionTriggerProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
   /**
    * The user cannot press the trigger. A disabled item or root also disables it.
    * @default false
@@ -97,9 +89,8 @@ export interface AccordionTriggerState extends AccordionItemState {
   disabled: boolean;
 }
 
-export interface AccordionPanelProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
-  /** A tag or a component in place of the `<div>`. The `element` slot wins over it. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface AccordionPanelProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /** A closed panel stays in the DOM, with `hidden` and `inert`. With none, the root decides. */
   keepMounted?: boolean;
   /**

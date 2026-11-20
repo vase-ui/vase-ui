@@ -8,21 +8,24 @@ import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers'
  */
 export function useButton(options: {
   element: Readonly<Ref<Element | null>>;
+  /**
+   * The tag of the element before the mount: a tag in `as`. The server then writes the attributes
+   * of the client.
+   */
+  tag?: () => string | undefined;
   /** Disabled by the part: its prop, or its group. */
   disabled: () => boolean;
   focusableWhenDisabled?: () => boolean;
-  /**
-   * The tag of the element while the part does not know its element: a tag that the developer
-   * gives in `as`. Without it, the part takes a `<button>` until the mount.
-   */
-  tag?: () => string | undefined;
   /**
    * The `type` of a `<button>`, so that the button does not submit its form. Written only on a
    * `<button>`, or on an element that the part does not know yet. A `type` of the developer wins.
    */
   type?: 'button';
 }) {
-  const isNative = computed(() => isNativeButton(options.element.value, options.tag?.()));
+  const isNative = computed(() => {
+    const element = options.element.value;
+    return element ? isNativeButton(element) : isNativeTag(options.tag?.());
+  });
   const inDisabledFieldset = useInDisabledFieldset(options.element);
   const disabledByFieldset = computed(() => isNative.value && inDisabledFieldset.value);
   /** Disabled by the part, or by a disabled fieldset around a native button. */
@@ -63,7 +66,7 @@ export function useButton(options: {
     // A disabled `<fieldset>` takes each button in it out of the tab order. A `Fieldset.Root` with
     // another element does the same.
     const focusable = !!options.focusableWhenDisabled?.() && !disabledByFieldset.value;
-    const element = options.element.value;
+    const localName = options.element.value?.localName ?? options.tag?.();
     const attributes: Record<string, unknown> = isNative.value
       ? isDisabled && focusable
         ? { 'aria-disabled': 'true' }
@@ -73,7 +76,7 @@ export function useButton(options: {
           tabindex: isDisabled && !focusable ? -1 : 0,
           'aria-disabled': isDisabled ? 'true' : undefined,
         };
-    if (options.type && (element?.localName ?? options.tag?.() ?? 'button') === 'button') {
+    if (options.type && (localName === undefined || localName === 'button')) {
       attributes.type = options.type;
     }
     return {
@@ -97,17 +100,18 @@ export function useButton(options: {
   };
 }
 
-/**
- * A `<button>`, an `<input>` that is a button, or an element that the part does not know yet, with
- * no tag or the tag `button`.
- */
-function isNativeButton(element: Element | null, tag: string | undefined) {
-  if (!element) return tag === undefined || tag === 'button';
+/** A `<button>`, or an `<input>` that is a button. */
+function isNativeButton(element: Element) {
   if (element.localName === 'button') return true;
   return (
     element.localName === 'input' &&
     ['button', 'submit', 'reset', 'image'].includes((element as HTMLInputElement).type)
   );
+}
+
+/** A `<button>`, an `<input>`, or a tag that the part does not know yet. */
+function isNativeTag(tag: string | undefined) {
+  return tag === undefined || tag === 'button' || tag === 'input';
 }
 
 function isLink(element: Element) {

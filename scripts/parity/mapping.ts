@@ -186,9 +186,11 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
 }
 
 /**
- * A part of the refactored form takes the slot `element` in place of the slot `render`. Its prop
- * `as` is optional, and the template renders the default element, so `as` has no default. The
- * check accepts both forms until each family has the new one.
+ * A part of the refactored form takes `as` and the slot `element` in place of the row `render`.
+ * Its `as` has no default: the template renders the element of the part when `as` is not given. A
+ * part that is a native form control, a form element or an image has the slot `element` only. A
+ * part of the older form keeps the prop `as` and the slot `render`, until each family has the new
+ * form.
  */
 export function acceptElementSlot(
   expected: ExpectedSurface,
@@ -198,12 +200,12 @@ export function acceptElementSlot(
   if (row === undefined || !actual.slots.has('element')) {
     return;
   }
-  expected.slots.delete('render');
-  expected.slots.set('element', row);
   const as = expected.props.get('as');
   if (as && actual.props.has('as')) {
-    as.compareDefault = false;
+    expected.props.set('as', { ...as, default: null, compareDefault: false });
   } else {
     expected.props.delete('as');
   }
+  expected.slots.delete('render');
+  expected.slots.set('element', row);
 }
