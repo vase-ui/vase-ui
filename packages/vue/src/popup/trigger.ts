@@ -1,5 +1,8 @@
-import { computed, onMounted, watch, type Ref } from 'vue';
+import { computed, onMounted, shallowRef, watch, type Ref } from 'vue';
+import { addEventListener } from '../common/addEventListener';
 import { useButton } from '../common/button';
+import { mergeCleanups } from '../common/mergeCleanups';
+import { ownerDocument } from '../common/owner';
 import { interactionOf, type InteractionType, type PopupRoot } from './root';
 
 /**
@@ -74,6 +77,28 @@ export function usePopupTrigger(
 
   let pressed = false;
   let keyed = false;
+  // The trigger of a press that acted at `pointerdown`, until the release. The `click` of the press
+  // comes to the trigger only after a release on it. After a release at another place, the next
+  // `click`, such as that of a native label, is no click of the press.
+  const press = shallowRef<Element | null>(null);
+  watch(
+    press,
+    (trigger, _, onCleanup) => {
+      if (!trigger) return;
+      const release = (event: PointerEvent) => {
+        press.value = null;
+        pressed = event.type === 'pointerup' && trigger.contains(event.composedPath()[0] as Node);
+      };
+      const doc = ownerDocument(trigger);
+      onCleanup(
+        mergeCleanups(
+          addEventListener(doc, 'pointerup', release, true),
+          addEventListener(doc, 'pointercancel', release, true),
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
 
   function toggle(event: MouseEvent, interaction?: InteractionType) {
     const current = root();
@@ -98,10 +123,12 @@ export function usePopupTrigger(
 
   function onPointerdown(event: PointerEvent) {
     pressed = false;
+    press.value = null;
     if (!options.pressAtPointerdown || event.pointerType !== 'mouse' || event.button !== 0) return;
     if (button.disabled.value) return;
     pressed = true;
     toggle(event);
+    press.value = event.currentTarget as Element;
   }
 
   function onKeydown(event: KeyboardEvent) {

@@ -168,6 +168,22 @@ describe('the field', () => {
     await waitFor(() => expect(document.activeElement).toBe(byTestId('item-a')));
   });
 
+  test('a click on Field.Label opens the select after a press that opened it and ended away from the trigger', async () => {
+    const { label } = await mountField();
+    const rect = trigger().getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+      keys: '[MouseLeft>]',
+    });
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    const away = { x: 5, y: window.innerHeight - 5 };
+    await userEvent.pointer({ coords: away });
+    await userEvent.pointer({ coords: away, keys: '[/MouseLeft]' });
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(false));
+    await userEvent.click(label);
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+  });
+
   test('a disabled field, a disabled fieldset and the root disable the trigger', async () => {
     const field = reactive<Attrs>({ disabled: true });
     const fieldset = reactive<Attrs>({});
