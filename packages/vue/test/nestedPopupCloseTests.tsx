@@ -276,29 +276,27 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     return { user, popup, checkReturn };
   }
 
+  async function checkSelectSkip(fromMenu: boolean) {
+    const { user, checkReturn } = await openWithoutTrigger(() => renderList('select'), fromMenu);
+    const trigger = screen.getByTestId('list-trigger');
+    await waitForLaterMillisecond(() =>
+      openAndWaitForFocus(trigger, () => user.keyboard('{Enter}')),
+    );
+    expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+
+    await checkReturn();
+  }
+
   // A popup of the old layer returns the focus to the trigger of an earlier popup of that layer.
   // The menu is on the popup layer, so the old layer does not know its trigger. The case runs again
   // when the Dialog and Drawer units move these families to the popup layer.
-  const SKIPPED_MIXED_LAYERS = new Set(['the app opens the popup']);
-  it.each([
-    { name: 'the app opens the popup', fromMenu: false },
-    { name: 'a menu item opens the popup', fromMenu: true },
-  ])(
-    'BUG-6037: skips the trigger of a select that was open in the popup: $name',
-    async ({ name, fromMenu }, context) => {
-      if (SKIPPED_MIXED_LAYERS.has(name)) context.skip();
-      const { user, checkReturn } = await openWithoutTrigger(() => renderList('select'), fromMenu);
-      const trigger = screen.getByTestId('list-trigger');
-      await waitForLaterMillisecond(() =>
-        openAndWaitForFocus(trigger, () => user.keyboard('{Enter}')),
-      );
-      expect(screen.getByTestId('list-popup').contains(document.activeElement)).toBe(true);
-      await user.keyboard('{Escape}');
-      await waitFor(() => expect(trigger).toHaveFocus());
+  it.skip('BUG-6037: skips the trigger of a select that was open in the popup: the app opens the popup', () =>
+    checkSelectSkip(false));
 
-      await checkReturn();
-    },
-  );
+  it('BUG-6037: skips the trigger of a select that was open in the popup: a menu item opens the popup', () =>
+    checkSelectSkip(true));
 
   // The old layer does not know the trigger of a menu on the popup layer. The case runs again when
   // the Dialog and Drawer units move these families to the popup layer.

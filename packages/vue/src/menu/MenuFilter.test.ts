@@ -169,13 +169,23 @@ describe('the highlight', () => {
     expect(log).toEqual(['true trigger-press', 'false item-press']);
   });
 
-  test('Home and End move the caret while the input has text', async () => {
+  test('Home and End move the highlight while the input is empty, and keep their default while it has text', async () => {
     const { trigger } = await mountFilter();
     await open(trigger);
     await userEvent.keyboard('{End}');
     expect(highlighted()).toBe('carrot');
-    await userEvent.keyboard('a{Home}');
-    expect(input().selectionStart).toBe(0);
+    await userEvent.keyboard('a{ArrowDown}');
+    expect(highlighted()).toBe('apple');
+    let prevented: boolean | undefined;
+    const read = (event: KeyboardEvent) => (prevented = event.defaultPrevented);
+    document.addEventListener('keydown', read);
+    try {
+      await userEvent.keyboard('{End}');
+    } finally {
+      document.removeEventListener('keydown', read);
+    }
+    expect(prevented).toBe(false);
+    expect(highlighted()).toBe('apple');
   });
 });
 

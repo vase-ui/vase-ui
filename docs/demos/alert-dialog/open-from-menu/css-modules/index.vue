@@ -19,6 +19,8 @@ const CaretDownIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M12 6H4l4 4.5z' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -29,12 +31,14 @@ const CaretDownIcon: FunctionalComponent = () =>
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Menu.Popup :class="styles.MenuPopup">
-          <Menu.Item :class="styles.MenuItem">Play</Menu.Item>
-          <Menu.Item :class="styles.MenuItem">Share</Menu.Item>
-          <Menu.Separator :class="styles.Separator" />
-          <Menu.Item :class="styles.MenuItem" @click="dialogOpen = true">Delete…</Menu.Item>
-        </Menu.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="styles.MenuPopup">
+            <Menu.Item :class="styles.MenuItem">Play</Menu.Item>
+            <Menu.Item :class="styles.MenuItem">Share</Menu.Item>
+            <Menu.Separator :class="styles.Separator" />
+            <Menu.Item :class="styles.MenuItem" @click="dialogOpen = true">Delete…</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

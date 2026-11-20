@@ -167,7 +167,7 @@ function elementProps() {
   return mergeProps(
     {
       'data-popup-open': open ? '' : undefined,
-      'data-pressed': open && root.reason === 'trigger-press' ? '' : undefined,
+      'data-pressed': open ? '' : undefined,
       style: { '-webkit-touch-callout': 'none' },
       onContextmenu,
       onPointerdown,

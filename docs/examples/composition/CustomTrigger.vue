@@ -6,8 +6,8 @@ import MyButton from './MyButton.vue';
 <template>
   <Menu.Root>
     <Menu.Trigger>
-      <template #render="{ props }">
-        <MyButton v-bind="props" size="md">Open menu</MyButton>
+      <template #element="{ props, elementRef }">
+        <MyButton v-bind="props" :ref="elementRef" size="md">Open menu</MyButton>
       </template>
     </Menu.Trigger>
     <Menu.Portal>

@@ -7,10 +7,16 @@ import { Menu } from '@vase-ui/vue/menu';
     <Menu.Trigger :class="$style.Button">Song</Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="$style.Positioner" :side-offset="8">
-        <Menu.Popup :class="$style.Popup">
-          <Menu.Item :class="$style.Item">Add to Library</Menu.Item>
-          <Menu.Item :class="$style.Item">Add to Playlist</Menu.Item>
-        </Menu.Popup>
+        <Transition
+          :enter-from-class="$style.PopupHidden"
+          :leave-to-class="$style.PopupHidden"
+          appear
+        >
+          <Menu.Popup :class="$style.Popup">
+            <Menu.Item :class="$style.Item">Add to Library</Menu.Item>
+            <Menu.Item :class="$style.Item">Add to Playlist</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>
@@ -31,8 +37,7 @@ import { Menu } from '@vase-ui/vue/menu';
   transition: opacity 150ms;
 }
 
-.Popup[data-starting-style],
-.Popup[data-ending-style] {
+.PopupHidden {
   opacity: 0;
 }
 

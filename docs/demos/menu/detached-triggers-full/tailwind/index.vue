@@ -54,6 +54,14 @@ const itemClass = `
   data-highlighted:before:bg-neutral-950 data-highlighted:before:content-['']
   dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white
 `;
+
+const popupHiddenClass = 'scale-90 opacity-0';
+// The viewport has the side of the new trigger in `data-activation-direction`.
+const contentEnterFromClass =
+  'opacity-0 group-data-[activation-direction~=left]:-translate-x-1/2 group-data-[activation-direction~=right]:translate-x-1/2';
+const contentLeavingClass = 'absolute top-0 left-0';
+const contentLeaveToClass =
+  'opacity-0 group-data-[activation-direction~=left]:translate-x-1/2 group-data-[activation-direction~=right]:-translate-x-1/2';
 </script>
 
 <template>
@@ -71,33 +79,54 @@ const itemClass = `
           align="start"
           class="outline-none h-[var(--positioner-height)] w-[var(--positioner-width)] max-w-[var(--available-width)] transition-[top,left,right,bottom,transform] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none"
         >
-          <Menu.Popup
-            class="relative h-[var(--popup-height,auto)] w-[var(--popup-width,auto)] py-1 origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[width,height,opacity,scale] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-starting-style:scale-90 data-starting-style:opacity-0 data-ending-style:scale-90 data-ending-style:opacity-0 data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
           >
-            <Menu.Viewport
-              class="relative h-full w-full overflow-clip p-0 [&_[data-current]]:w-[var(--popup-width)] [&_[data-current]]:translate-x-0 [&_[data-current]]:opacity-100 [&_[data-current]]:transition-[translate,opacity] [&_[data-current]]:duration-[350ms,175ms] [&_[data-current]]:ease-[cubic-bezier(0.22,1,0.36,1)] data-[activation-direction~='left']:[&_[data-current][data-starting-style]]:-translate-x-1/2 data-[activation-direction~='left']:[&_[data-current][data-starting-style]]:opacity-0 data-[activation-direction~='right']:[&_[data-current][data-starting-style]]:translate-x-1/2 data-[activation-direction~='right']:[&_[data-current][data-starting-style]]:opacity-0 [&_[data-previous]]:w-[var(--popup-width)] [&_[data-previous]]:translate-x-0 [&_[data-previous]]:opacity-100 [&_[data-previous]]:transition-[translate,opacity] [&_[data-previous]]:duration-[350ms,175ms] [&_[data-previous]]:ease-[cubic-bezier(0.22,1,0.36,1)] data-[activation-direction~='left']:[&_[data-previous][data-ending-style]]:translate-x-1/2 data-[activation-direction~='left']:[&_[data-previous][data-ending-style]]:opacity-0 data-[activation-direction~='right']:[&_[data-previous][data-ending-style]]:-translate-x-1/2 data-[activation-direction~='right']:[&_[data-previous][data-ending-style]]:opacity-0"
+            <Menu.Popup
+              class="relative h-[var(--popup-height,auto)] w-[var(--popup-width,auto)] py-1 origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[width,height,opacity,scale] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
-              <template v-if="payload">
-                <template v-for="(group, groupIndex) in MENUS[payload].groups" :key="groupIndex">
-                  <Menu.Group>
-                    <Menu.GroupLabel
-                      v-if="groupIndex === 0"
-                      class="px-4 py-2 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
-                    >
-                      {{ MENUS[payload].heading }}
-                    </Menu.GroupLabel>
-                    <Menu.Item v-for="item in group" :key="item" :class="itemClass">
-                      {{ item }}
-                    </Menu.Item>
-                  </Menu.Group>
-                  <Menu.Separator
-                    v-if="groupIndex < MENUS[payload].groups.length - 1"
-                    class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white"
-                  />
-                </template>
-              </template>
-            </Menu.Viewport>
-          </Menu.Popup>
+              <Menu.Viewport
+                v-slot="{ triggerId }"
+                class="group relative h-full w-full overflow-clip p-0"
+              >
+                <Transition
+                  :enter-from-class="contentEnterFromClass"
+                  :leave-active-class="contentLeavingClass"
+                  :leave-to-class="contentLeaveToClass"
+                >
+                  <div
+                    :key="triggerId ?? ''"
+                    class="w-[var(--popup-width)] transition-[translate,opacity] duration-[350ms,175ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  >
+                    <template v-if="payload">
+                      <template
+                        v-for="(group, groupIndex) in MENUS[payload].groups"
+                        :key="groupIndex"
+                      >
+                        <Menu.Group>
+                          <Menu.GroupLabel
+                            v-if="groupIndex === 0"
+                            class="px-4 py-2 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
+                          >
+                            {{ MENUS[payload].heading }}
+                          </Menu.GroupLabel>
+                          <Menu.Item v-for="item in group" :key="item" :class="itemClass">
+                            {{ item }}
+                          </Menu.Item>
+                        </Menu.Group>
+                        <Menu.Separator
+                          v-if="groupIndex < MENUS[payload].groups.length - 1"
+                          class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white"
+                        />
+                      </template>
+                    </template>
+                  </div>
+                </Transition>
+              </Menu.Viewport>
+            </Menu.Popup>
+          </Transition>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>

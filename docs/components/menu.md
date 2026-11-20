@@ -70,6 +70,23 @@ Import the component and assemble its parts:
 
 <<< ./menu/Anatomy.vue
 
+## Animation
+
+The popup and the backdrop are in the DOM only while the menu is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. A submenu leaves before its parent popup leaves.
+
+With `keepMounted` on `Menu.Portal`, the closed popup stays in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate it with CSS on `[hidden]`.
+
+## Style hooks
+
+| Hook                     | Part                      | When                                                                         |
+| ------------------------ | ------------------------- | ---------------------------------------------------------------------------- |
+| `[aria-expanded="true"]` | trigger                   | The menu of the trigger is open.                                             |
+| `[data-popup-open]`      | submenu trigger           | The submenu is open.                                                         |
+| `[aria-checked="true"]`  | checkbox item, radio item | The item is checked.                                                         |
+| `[aria-disabled="true"]` | item                      | The item is disabled. A disabled trigger has `:disabled`.                    |
+| `[data-highlighted]`     | item, input               | The item has the highlight, or the input shows its focus ring.               |
+| `[data-instant]`         | popup                     | The menu opened or closed by a key, or moved between the menus of a menubar. |
+
 ## Examples
 
 ### Open on hover
@@ -111,7 +128,7 @@ The `delay` prop gives the time in milliseconds to wait before the menu opens on
 
 ### Checkbox items
 
-Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its state with `v-model`.
+Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its state with `v-model`. The default slot of the item gets `state.checked`: show a mark with `v-if`, or style the item with `[aria-checked="true"]`.
 
 <DemoFrame>
   <DemoMenuCheckboxItems />
@@ -144,7 +161,7 @@ Use `<Menu.CheckboxItem>` for an item that turns a setting on or off. Bind its s
 
 ### Radio items
 
-Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio buttons. Bind the selected value with `v-model` on the group.
+Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio buttons. Bind the selected value with `v-model` on the group. The default slot of each item gets `state.checked`.
 
 <DemoFrame>
   <DemoMenuRadioItems />
@@ -261,7 +278,7 @@ A trigger can be inside or outside `<Menu.Root>`. For a simple interaction, put 
 
 If the menu cannot be next to its trigger, use a detached trigger. Put `<Menu.Trigger>` outside `<Menu.Root>`, and connect the two with a handle from `Menu.createHandle()`. Only a menu at the top level can have a detached trigger. A submenu has its trigger in its `<Menu.SubmenuRoot>`.
 
-The methods of the handle, `open()` and `close()`, need a mounted `<Menu.Root>` with the same handle. The handle ignores a call while no root uses it: before a root mounts, and after it unmounts. A development build shows a warning for that call. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
+The methods of the handle, `open()` and `close()`, need a mounted `<Menu.Root>` with the same handle. The handle ignores a call while no root uses it: before a root mounts, and after it unmounts. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
 
 <<< ./menu/DetachedTriggers.vue{4,8,10}
 
@@ -310,9 +327,9 @@ The type argument of `createHandle()` gives the payload its type:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, use `v-model:open` on `<Menu.Root>`, or the `open` prop with the `openChange` event. With more than one trigger, control the active trigger with the `triggerId` prop of `<Menu.Root>` and the `id` prop of each `<Menu.Trigger>`.
+To control the open state, use `v-model:open` on `<Menu.Root>`, or the `open` prop with the `openChange` event. With more than one trigger, control the active trigger with `v-model:trigger-id` on `<Menu.Root>` and the `id` prop of each `<Menu.Trigger>`.
 
-The root has no event for a change of the trigger. The `openChange` event gives a second argument, `eventDetails`. Its `trigger` is the trigger element that started the change.
+The `openChange` event gives a second argument, `eventDetails`. Its `trigger` is the trigger element that started the change.
 
 <DemoFrame>
   <DemoMenuDetachedTriggersControlled />
@@ -390,10 +407,7 @@ A menu can animate its content when each trigger has a different content.
 
 Put the content in `<Menu.Viewport>`. Its `div` has the `data-activation-direction` attribute, which gives the position of the new trigger relative to the old trigger. The value has at most two tokens, one for each axis: `left` or `right`, and `up` or `down`, for example `right down`. Match one token with the `~=` attribute selector, such as `[data-activation-direction~='right']`.
 
-In `<Menu.Viewport>`, a `div` holds each content. Use their attributes to style the animations:
-
-- `data-current`: the content that shows when no transition runs, or the new content in a transition.
-- `data-previous`: the old content in a transition.
+The default slot of `<Menu.Viewport>` gets `triggerId`, the `id` of the active trigger. Put the content in a `<Transition>`, and give it the `triggerId` as its `key`. At a move, Vue keeps the old content for its leave while the new content enters. Select the old content with the leave classes.
 
 Use `Menu.Viewport` only when one popup has more than one trigger, the content changes with the trigger, and the change is animated. With a viewport, set `width: var(--positioner-width)` and `height: var(--positioner-height)` on the Positioner. Its box then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
 
@@ -477,7 +491,7 @@ An item matches its text by default. Use `label` to change that text.
 
 <<< ./menu/Label.vue{14}
 
-A group with no matching items gets the `hidden` attribute and stays mounted. If your styles set `display` on a group, add a `[hidden]` rule, so that the group still hides.
+An item that does not match, and a group with no matching items, get the `hidden` attribute and stay mounted with their state. If your styles set `display` on an item or a group, add a `[hidden]` rule, so that it still hides. `:first-child` can match a hidden item: select the first shown item with `:nth-child(1 of :not([hidden]))`.
 
 ```css
 .Group {
@@ -501,7 +515,7 @@ For external filtering, set `filter` to `null` and render the results yourself. 
 
 #### Controlling the query
 
-Control the query with `v-model` on `<Menu.FilterProvider>`, or with its `modelValue` prop and its `valueChange` event. The query resets to an empty string when the menu closes. The `valueChange` event reports that change with the reason `'popup-close'`. Call `eventDetails.cancel()` to keep the query.
+Control the query with `v-model` on `<Menu.FilterProvider>`, or with its `modelValue` prop and its `valueChange` event. The query resets to an empty string when the popup leaves the DOM, after the leave of its `<Transition>`. The `valueChange` event reports that change with the reason `'popup-close'`. Call `eventDetails.cancel()` to keep the query.
 
 #### Highlighting
 

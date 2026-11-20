@@ -863,7 +863,7 @@ describe('more behaviors of the parts', () => {
     const sub: string[] = [];
     const { trigger } = await mountMenu({
       submenu: {
-        trigger: { delay: 0, closeDelay: 100 },
+        trigger: { delay: 0, closeDelay: 400 },
         root: {
           onOpenChange: (open: boolean, details: MenuRootChangeEventDetails) =>
             sub.push(`${open} ${details.reason}`),
@@ -884,7 +884,7 @@ describe('more behaviors of the parts', () => {
     };
     await away();
     await userEvent.hover(item('sub'));
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     expect(subPopup()).not.toBe(null);
     await away();
     await closed(subPopup);

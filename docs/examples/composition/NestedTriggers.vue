@@ -14,8 +14,8 @@ import MyButton from './MyButton.vue';
             <Dialog.Trigger v-bind="tooltipTrigger">
               <template #render="{ props: dialogTrigger }">
                 <Menu.Trigger v-bind="dialogTrigger">
-                  <template #render="{ props: menuTrigger }">
-                    <MyButton v-bind="menuTrigger" size="md">Open menu</MyButton>
+                  <template #element="{ props: menuTrigger, elementRef }">
+                    <MyButton v-bind="menuTrigger" :ref="elementRef" size="md">Open menu</MyButton>
                   </template>
                 </Menu.Trigger>
               </template>
