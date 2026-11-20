@@ -7,8 +7,14 @@ import type {
 } from './types';
 
 /**
- * Provides a shared state to a series of checkboxes.
+ * Holds the shared state of a series of checkboxes.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The group is disabled.
+ * @selector `[data-valid]` The field of the group is valid.
+ * @selector `[data-invalid]` The field of the group is invalid.
+ * @selector `[data-touched]` In a field, the focus left the group.
+ * @selector `[data-dirty]` In a field, the value differs from the first value.
+ * @selector `[data-filled]` In a field, the value is not empty.
  */
 export const CheckboxGroup: typeof CheckboxGroupComponent = CheckboxGroupComponent;
 export namespace CheckboxGroup {

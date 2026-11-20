@@ -4,9 +4,9 @@ import { Input } from '@vase-ui/vue/input';
 </script>
 
 <template>
-  <Field.Root v-slot="{ validity, value }" name="email">
+  <Field.Root v-slot="{ value }" name="email">
     <Field.Label>Email</Field.Label>
     <Input type="email" required />
-    <p v-if="validity.typeMismatch">{{ value }} is not an email address.</p>
+    <Field.Error match="typeMismatch">{{ value }} is not an email address.</Field.Error>
   </Field.Root>
 </template>

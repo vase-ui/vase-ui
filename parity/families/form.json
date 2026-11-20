@@ -16,19 +16,19 @@
       "upstream": "docs/src/app/(docs)/react/components/form/types.md",
       "entry": "Form",
       "kind": "not-applicable",
-      "reason": "`submit(event, values)` replaces `onFormSubmit`: the first argument is the native `SubmitEvent`, and the form prevents the native submit while it has a `submit` listener, as Base UI does for `onFormSubmit`. `v-model:errors` replaces `errors`. The modes are `submit`, `blur` and `change` (rule 8.17). The form has no state to read, so the family has no `FormState`."
+      "reason": "The `submit` event, with the native `SubmitEvent` and the values, is in place of `onFormSubmit`. The form prevents the native submit while it has a `submit` listener, as Base UI does for `onFormSubmit`. `v-model:errors` binds `errors`. The template ref has `validate()`, in place of `actionsRef`. The modes are `'submit'`, `'blur'` and `'change'`. The form has no state to read, so the family has no `FormState`."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Form",
       "emit": "submit",
-      "reason": "Base UI calls the native `onSubmit` of the consumer after its validation. In Vue, a native listener in the attributes runs before the part, so the part emits `submit` after its validation. `types.md` has no row for a native listener."
+      "reason": "The part emits `submit` after its validation. In Vue, a native listener in the attributes runs before the part, so the part declares the event. Base UI calls the native `onSubmit` of the consumer after its validation, and `types.md` has no row for a native listener."
     },
     {
       "entry": "Form",
       "emit": "update:errors",
-      "reason": "`v-model:errors` controls the errors. An edit asks to remove the key of its field. Base UI takes the `errors` prop and has no event for the change."
+      "reason": "`v-model:errors` binds the errors. An edit asks to remove the key of its field. Base UI takes the `errors` prop and has no event for the change."
     }
   ],
   "returnTypeDifferences": [],

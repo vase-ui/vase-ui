@@ -7,8 +7,16 @@ import type {
 } from './types';
 
 /**
- * Provides a shared state to a series of radio buttons.
+ * Holds the shared state of a series of radio buttons.
  * Renders a `<div>` element.
+ * @selector `[aria-disabled="true"]` The group is disabled.
+ * @selector `[aria-readonly="true"]` The group is read-only.
+ * @selector `[aria-required="true"]` The group or one of its radios is required.
+ * @selector `[data-valid]` The field of the group is valid.
+ * @selector `[aria-invalid="true"]` The field of the group is invalid.
+ * @selector `[data-touched]` In a field, the focus left the group.
+ * @selector `[data-dirty]` In a field, the value differs from the first value.
+ * @selector `[data-filled]` In a field, the group has a value.
  */
 export const RadioGroup: typeof RadioGroupComponent = RadioGroupComponent;
 export namespace RadioGroup {
