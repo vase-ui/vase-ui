@@ -72,16 +72,6 @@
     "src/common/useResizeObserver.test.tsx": {
       "fails": {}
     },
-    "src/drawer/popup/DrawerPopup.test.tsx": {
-      "fails": {
-        "<Drawer.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/drawer/trigger/DrawerTrigger.test.tsx": {
-      "fails": {
-        "<Drawer.Trigger /> > VUE-73: aria-controls names only an element in the document > has no aria-controls while the popup mounts in a branch that KeepAlive holds": "vue-16305-keep-alive"
-      }
-    },
     "src/filter-dropdown/item/FilterDropdownHiddenItemText.test.tsx": {
       "fails": {}
     },

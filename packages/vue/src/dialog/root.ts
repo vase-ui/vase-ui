@@ -155,6 +155,7 @@ export function useDialogRoot<Payload>(
 
   return {
     root,
+    context,
     /** Asks for a close with the reason `'imperative-action'`. */
     close() {
       root.request(false, 'imperative-action', new Event('vase-ui'));
@@ -167,18 +168,19 @@ export function injectDialog(part: string) {
   const context = inject(dialogKey, null);
   if (!context) {
     throw new Error(
-      `Vase UI: <Dialog.${part}> must be inside <Dialog.Root> or <AlertDialog.Root>. Without a root the part has no dialog. Put the part inside <Dialog.Root> or <AlertDialog.Root>.`,
+      `Vase UI: <Dialog.${part}> must be inside <Dialog.Root>, <AlertDialog.Root> or <Drawer.Root>. Without a root the part has no dialog. Put the part inside one of these roots.`,
     );
   }
   return context;
 }
 
 /**
- * Does what `Dialog.Trigger` and `AlertDialog.Trigger` do. The dialog of a trigger is the root of its
- * `handle`, else the root around it. A trigger with a `handle` and no mounted root is closed.
+ * Does what `Dialog.Trigger`, `AlertDialog.Trigger` and `Drawer.Trigger` do. The dialog of a
+ * trigger is the root of its `handle`, else the root around it. A trigger with a `handle` and no
+ * mounted root is closed.
  */
 export function useDialogTrigger(
-  family: 'Dialog' | 'AlertDialog',
+  family: 'Dialog' | 'AlertDialog' | 'Drawer',
   props: {
     readonly id?: string | undefined;
     readonly disabled?: boolean | undefined;
@@ -242,11 +244,15 @@ export function provideDialogPortal(context: DialogForParts) {
   provide(portalKey, context.root);
 }
 
-/** `Dialog.Backdrop`, `Dialog.Viewport` and `Dialog.Popup` need the portal of their root. */
-export function injectDialogPortal(part: string, context: DialogForParts) {
+/** A backdrop, a viewport and a popup need the portal of their root. */
+export function injectDialogPortal(
+  part: string,
+  context: DialogForParts,
+  family: 'Dialog' | 'Drawer' = 'Dialog',
+) {
   if (inject(portalKey, null) !== context.root) {
     throw new Error(
-      `Vase UI: <Dialog.${part}> must be inside <Dialog.Portal>. Without the portal the part is not above the page. Put the part inside <Dialog.Portal>.`,
+      `Vase UI: <${family}.${part}> must be inside <${family}.Portal>. Without the portal the part is not above the page. Put the part inside <${family}.Portal>.`,
     );
   }
 }

@@ -156,7 +156,9 @@ export function usePopupFocus(
     // that closes is no target, also while the popup leaves.
     const element = [
       target === true ? null : tabStopOf(target, popup),
-      root.activeTrigger as HTMLElement | null,
+      // A trigger that takes no focus, such as the swipe area of a drawer, gives its place to the
+      // element that had the focus before the open.
+      root.activeTrigger?.matches(CANDIDATES) ? (root.activeTrigger as HTMLElement) : null,
       before as HTMLElement | null,
     ].find((each) => each?.isConnected && !popup.contains(each));
     const keyboard = root.closeInteraction === 'keyboard';

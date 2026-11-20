@@ -197,6 +197,8 @@ export interface SwipeTrackerOptions {
   move(x: number, y: number, event: PointerEvent): void;
   /** The drag ends: with its release, or with none. */
   end(release: SwipeRelease | null): void;
+  /** The press ends, with a drag or with none. */
+  done?(): void;
 }
 
 interface Gesture {
@@ -232,6 +234,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
   function finish(release: SwipeRelease | null) {
     const current = gesture;
     gesture = undefined;
+    if (current) options.done?.();
     if (!current?.started) return;
     if (current.type !== 'touch' && current.target.hasPointerCapture(current.id)) {
       current.target.releasePointerCapture(current.id);
@@ -311,7 +314,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
       target,
       pressX: event.clientX,
       pressY: event.clientY,
-      claimed: event.pointerType === 'touch' ? undefined : true,
+      claimed: event.pointerType === 'touch' && options.claim ? undefined : true,
       started: false,
       originX: event.clientX,
       originY: event.clientY,
@@ -347,7 +350,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
         return;
       }
       if (event.buttons === 0 && !current.started) {
-        gesture = undefined;
+        finish(null);
         return;
       }
     }
@@ -411,5 +414,9 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
     },
     /** Ends the drag with no release. */
     cancel: () => finish(null),
+    /** A press goes on. */
+    get pressing() {
+      return !!gesture;
+    },
   };
 }
