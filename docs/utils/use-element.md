@@ -26,7 +26,7 @@ The component renders its own element, or the element that a consumer renders in
 - `element` is that element. For a component in the slot, it is the `element` that the component exposes. It is `null` on a server, before the mount and after the unmount.
 - Expose `element`. A template ref of the consumer then reads the native element.
 - A Vase UI part exposes `element` too. The component can be the element of a part, and a part can be the element of the component.
-- `inheritAttrs: false` keeps the attributes off the slot. `mergeProps` of Vue merges them with the attributes of the component, and the value of the consumer wins. It joins `class` and `style`, and keeps each listener.
+- With `inheritAttrs: false`, the template binds the attributes of the consumer on the element. `mergeProps` of Vue merges them with the attributes of the component, and the value of the consumer wins. It joins `class` and `style`, and keeps each listener.
 - `ElementSlotProps` of `@vase-ui/vue/types` types the scope of the `element` slot.
 
 ## Examples

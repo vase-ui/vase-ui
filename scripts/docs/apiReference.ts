@@ -82,7 +82,7 @@ export interface ApiClass extends ClassSurface {
 }
 
 export interface ApiType {
-  /** `useRender.Parameters`. */
+  /** `Resizable.Panel.Size`. */
   name: string;
   properties: PropertySurface[];
   /** The values of a union of strings, such as `ImageLoadingStatus`, in the sequence of the declaration. Empty for a type with properties. */
