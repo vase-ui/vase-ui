@@ -1,6 +1,6 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { defineComponent, h, nextTick, reactive } from 'vue';
+import { nextTick, reactive } from 'vue';
 import type { DrawerSnapPoint } from '@vase-ui/vue/drawer';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import { touchDrag } from '../../test/pointer';
@@ -215,11 +215,15 @@ describe('the swipe that closes', () => {
     const popup = get('popup');
     const backdrop = get('backdrop');
     await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
-    await drag(textOf(), { x: 0, y: 200 }, 4);
+    // The last sample moves 100 px in 20 ms, and the 100 px that are left take the least time.
+    flick(get('text'), textOf(), await mousePointerId(textOf()), [
+      [10, 1010],
+      [100, 1030],
+      [200, 1050],
+    ]);
     await nextTick();
-    const strength = popup.style.getPropertyValue('--drawer-swipe-strength');
-    expect(Number(strength)).toBeLessThan(1);
-    expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe(strength);
+    expect(popup.style.getPropertyValue('--drawer-swipe-strength')).toBe('0.1');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe('0.1');
     await waitFor(() => expect(popup.isConnected).toBe(false));
   });
 
@@ -511,30 +515,21 @@ describe('the swipe area', () => {
   });
 
   test('VUE-57: ends the swipe when the area unmounts, and the popup goes to its open place', async () => {
-    const shown = reactive({ area: true });
+    const area = reactive<Props>({});
     const log: string[] = [];
-    const root = reactive({
-      defaultOpen: false,
-      onOpenChange: (open: boolean) => log.push(`${open}`),
+    mount(DrawerParts, {
+      swipeArea: area,
+      trigger: null,
+      backdrop: {},
+      provider: true,
+      root: reactive({ defaultOpen: false, onOpenChange: (open: boolean) => log.push(`${open}`) }),
     });
-    mount(
-      defineComponent(
-        () => () =>
-          h(DrawerParts, {
-            swipeArea: shown.area ? {} : undefined,
-            trigger: null,
-            backdrop: {},
-            provider: true,
-            root,
-          }),
-      ),
-    );
     await nextTick();
     await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     await nextTick();
     expect(get('popup').hasAttribute('data-swiping')).toBe(true);
-    shown.area = false;
+    area.removed = true;
     await waitFor(() => expect(byTestId('swipe-area')).toBe(null));
     await nextTick();
     const popup = get('popup');

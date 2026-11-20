@@ -8,7 +8,7 @@ type Props = Record<string, unknown>;
 // A drawer with one trigger, and the parts that their props name. The viewport covers the view,
 // and the popup is a sheet of 300 px at the edge of its swipe direction. The popup holds a text, a
 // text field, a button, a scroller of 600 px of content in 100 px, and the parts that their props
-// name, with a title and a description for `title`. With `transition`, the popup and the backdrop leave in 200 ms to their closed place.
+// name, with a title and a description for `title`. A swipe area goes when its props have `removed`. With `transition`, the popup and the backdrop leave in 200 ms to their closed place.
 // `nested` puts a second drawer with the same parts in the popup, and `dialog` puts a modal dialog
 // there. `provider` puts the drawer in a provider, beside an indent and its background.
 const props = defineProps({
@@ -44,7 +44,7 @@ const id = (name: string) => `${props.testPrefix}${name}`;
         >Open</Drawer.Trigger
       >
       <Drawer.SwipeArea
-        v-if="swipeArea"
+        v-if="swipeArea && !swipeArea.removed"
         :data-testid="id('swipe-area')"
         class="drawer-test-area"
         v-bind="swipeArea"
