@@ -13,6 +13,15 @@ defineProps({
 
 <template>
   <Fieldset.Legend>
+    <template #element="{ props, elementRef }">
+      <legend v-bind="props" :ref="elementRef">
+        <Button v-slot="{ state }" class="InNativeLegend">
+          Native legend {{ state.disabled }}
+        </Button>
+      </legend>
+    </template>
+  </Fieldset.Legend>
+  <Fieldset.Legend>
     <Button v-slot="{ state }" class="InLegend">Legend {{ state.disabled }}</Button>
   </Fieldset.Legend>
   <Button v-slot="{ state }" class="Native" :disabled="scene.ownDisabled">

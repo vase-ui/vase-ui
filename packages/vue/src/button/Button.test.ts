@@ -642,11 +642,13 @@ describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)'
     expect(find('Native').matches(':disabled')).toBe(true);
   });
 
-  test('a button in the first legend stays enabled', async () => {
+  test('a button in a native first <legend> stays enabled, and a button in Fieldset.Legend is disabled', async () => {
     const { find } = mountFieldset(true);
     await settle();
-    expect(find('InLegend')).toHaveTextContent('Legend false');
-    expect(find('InLegend').matches(':disabled')).toBe(false);
+    expect(find('InNativeLegend')).toHaveTextContent('Native legend false');
+    expect(find('InNativeLegend').matches(':disabled')).toBe(false);
+    expect(find('InLegend')).toHaveTextContent('Legend true');
+    expect(find('InLegend').matches(':disabled')).toBe(true);
   });
 
   test('an element that is not a native button stays enabled, and its click listener runs', async () => {
@@ -662,7 +664,7 @@ describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)'
     const { find } = mountFieldset(true);
     await settle();
     expect(find('Focusable')).toHaveTextContent('Focusable true');
-    find('InLegend').focus();
+    find('InNativeLegend').focus();
     await userEvent.keyboard('{Tab}');
     expect(find('Custom')).toHaveFocus();
   });
