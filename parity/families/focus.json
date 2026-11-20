@@ -9,7 +9,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Navigation.module.css",
       "kind": "not-applicable",
-      "reason": "`packages/vue/test/floating-ui-tests/Navigation.tsx` holds the rules of the style sheet as style objects, because the package has no type for a CSS module. A style object holds no media query, so the media rule has no counterpart."
+      "reason": "The file is the style sheet of a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
@@ -45,6 +45,43 @@
       "upstream": "packages/react/test/floating-ui-tests/Navigation.tsx",
       "kind": "not-applicable",
       "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "describe": [],
+      "title": "excludes display: contents candidates when checkVisibility is unavailable",
+      "kind": "not-applicable",
+      "reason": "Each browser of the floor has `checkVisibility()` (Baseline Widely available), so `tabbable` has no path for a browser without it."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "describe": [],
+      "title": "finds adjacent controls around a non-tabbable anchor in a %s tree",
+      "kind": "replaced",
+      "test": "packages/vue/src/resizable/tabbable.test.ts",
+      "reason": "Vase UI has no `getTabbableNearElement`: no part moves the focus to the tab stop beside an element. The case \"leaves out an element with a negative tabindex in a %s tree\" keeps the half that `tabbable` covers."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "describe": [],
+      "title": "finds adjacent controls around a disabled anchor",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no `getTabbableNearElement`: no part moves the focus to the tab stop beside an element."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "describe": [],
+      "title": "does not choose a destination when the anchor is absent from the composed tree",
+      "kind": "not-applicable",
+      "reason": "Vase UI has no `getTabbableNearElement`: no part moves the focus to the tab stop beside an element."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "describe": [],
+      "title": "does not let a disabled radio anchor suppress its peer when checked=%s and direction=%s",
+      "kind": "replaced",
+      "test": "packages/vue/src/resizable/tabbable.test.ts",
+      "reason": "Vase UI has no `getTabbableNearElement`: no part moves the focus to the tab stop beside an element. The case \"does not let a disabled radio suppress its peer when checked=%s and direction=%s\" keeps the half that `tabbable` covers."
     }
   ],
   "surfaceAdditions": [],

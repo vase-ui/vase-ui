@@ -1,8 +1,7 @@
 import { getComputedStyle, getNodeName, isHTMLElement, isShadowRoot } from '@floating-ui/utils/dom';
-import { ownerDocument } from '../common/owner';
 import { contains } from '../common/shadowDom';
 
-export type FocusableElement = HTMLElement | SVGElement;
+type FocusableElement = HTMLElement | SVGElement;
 
 const CANDIDATE_SELECTOR =
   'a[href],button,input,select,textarea,summary,details,iframe,object,embed,[tabindex],[contenteditable]:not([contenteditable="false"]),audio[controls],video[controls]';
@@ -83,23 +82,10 @@ function isFocusableElement(element: Element | null): element is FocusableElemen
   return true;
 }
 
-export function isHiddenByStyles(styles: CSSStyleDeclaration) {
-  return styles.visibility === 'hidden' || styles.visibility === 'collapse';
-}
-
-export function isElementVisible(
-  element: Element | null,
-  styles: CSSStyleDeclaration | null = element ? getComputedStyle(element) : null,
-) {
-  if (!element || !element.isConnected || !styles || isHiddenByStyles(styles)) {
-    return false;
-  }
-
-  if (typeof element.checkVisibility === 'function') {
-    return element.checkVisibility();
-  }
-
-  return styles.display !== 'none' && styles.display !== 'contents';
+function isElementVisible(element: Element, styles: CSSStyleDeclaration) {
+  return (
+    styles.visibility !== 'hidden' && styles.visibility !== 'collapse' && element.checkVisibility()
+  );
 }
 
 function isVisibleInTabbableTree(element: Element, isAncestor: boolean) {
@@ -194,11 +180,7 @@ function appendCandidates(container: ParentNode, list: FocusableElement[]) {
   });
 }
 
-export function isTabbable(element: Element | null) {
-  return isFocusableElement(element) && getTabIndex(element) >= 0;
-}
-
-export function focusable(container: Element) {
+function focusable(container: Element) {
   const candidates: FocusableElement[] = [];
   appendCandidates(container, candidates);
   return candidates.filter(isFocusableElement);
@@ -206,41 +188,9 @@ export function focusable(container: Element) {
 
 // A browser visits an element with a positive `tabindex` first. This list keeps the order of the
 // document for it, as Base UI does.
-export function tabbable(container: Element, exclude?: (element: Element) => boolean) {
-  const elements = focusable(container);
-  // Only the remaining radios determine the tab stop for a group.
-  const candidates = exclude ? elements.filter((element) => !exclude(element)) : elements;
+export function tabbable(container: Element) {
+  const candidates = focusable(container);
   return candidates.filter(
     (element) => getTabIndex(element) >= 0 && isTabbableRadio(element, candidates),
   );
-}
-
-export function getTabbableNearElement(
-  referenceElement: Element | null,
-  direction: 1 | -1,
-  exclude?: (element: Element) => boolean,
-): FocusableElement | null {
-  if (!referenceElement) {
-    return null;
-  }
-
-  // Keep the anchor's composed-tree position separate from the focusable radio candidates.
-  const list: FocusableElement[] = [];
-  appendCandidates(ownerDocument(referenceElement).body, list);
-  const index = list.indexOf(referenceElement as FocusableElement);
-  if (index === -1) {
-    return null;
-  }
-
-  const candidates = list.filter(isFocusableElement);
-  for (let offset = 1; offset < list.length; offset += 1) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The remainder of a division by the length is an index of `list`.
-    const element = list[(index + direction * offset + list.length) % list.length]!;
-    if (!exclude?.(element) && isTabbable(element) && isTabbableRadio(element, candidates)) {
-      return element;
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `indexOf` found the element, so `index` is an index of `list`.
-  return list[index]!;
 }

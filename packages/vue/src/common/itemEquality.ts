@@ -5,7 +5,7 @@ export type ItemEqualityComparer<Item = any, Value = Item> = (
   selectedValue: Value,
 ) => boolean;
 
-// Compared by identity in `findSelectionIndex`; don't wrap it.
+// A caller compares a comparer with this function by identity, so do not wrap it.
 export const defaultItemEquality: ItemEqualityComparer = (itemValue, selectedValue) =>
   Object.is(itemValue, selectedValue);
 
@@ -64,64 +64,6 @@ export function findItemIndex<Item, Value>(
     }
     return compareItemEquality(itemValue, selectedValue, comparer);
   });
-}
-
-// The default comparer is `Object.is`, so the values can be indexed instead of rescanned
-// for every item. A custom comparer may match values that don't hash alike.
-function createSelectionMatcher<Item, Value>(
-  selectedValues: readonly Value[],
-  comparer: ItemEqualityComparer<Item, Value>,
-): (itemValue: Item) => boolean {
-  if (comparer !== defaultItemEquality) {
-    return (itemValue) => selectedValueIncludes(selectedValues, itemValue, comparer);
-  }
-  const index = new Set<unknown>(selectedValues);
-  index.delete(undefined);
-  // `Set` treats +0 and -0 as equal; `Object.is` does not.
-  return (itemValue) =>
-    index.has(itemValue) &&
-    (itemValue !== 0 || selectedValues.some((v) => Object.is(itemValue, v)));
-}
-
-export function findSelectionIndex<Item, Value>(
-  itemValues: readonly Item[],
-  selectedValue: Value | readonly Value[] | null | undefined,
-  comparer: ItemEqualityComparer<Item, Value>,
-  multiple: boolean,
-): number | null {
-  // Only treat the value as a list in multiple mode: an array can itself be a valid
-  // single-select value.
-  const index =
-    multiple && Array.isArray(selectedValue)
-      ? // Anchor to the first selected item in rendered order so the index does not depend
-        // on the order in which the values were added to the array.
-        itemValues.findIndex(createSelectionMatcher(selectedValue, comparer))
-      : findItemIndex(itemValues, selectedValue as Value, comparer);
-  return index === -1 ? null : index;
-}
-
-/** Resolves the first selected index as items register or change. */
-export function resolveSelectedIndex<Item, Value>(
-  index: number,
-  itemValue: Item,
-  registry: readonly Item[],
-  selectedValues: readonly Value[],
-  comparer: ItemEqualityComparer<Item, Value>,
-  currentIndex: number | null,
-): number | null {
-  if (selectedValueIncludes(selectedValues, itemValue, comparer)) {
-    // A later item only takes over once the current anchor stops being selected.
-    return currentIndex != null &&
-      index > currentIndex &&
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `index` is an index of `registry` and is above `currentIndex`, so `registry[currentIndex]` exists.
-      selectedValueIncludes(selectedValues, registry[currentIndex]!, comparer)
-      ? currentIndex
-      : index;
-  }
-  // The holder re-elects the anchor once it stops being selected.
-  return index === currentIndex
-    ? findSelectionIndex(registry, selectedValues, comparer, true)
-    : currentIndex;
 }
 
 export function removeItem<Item, Value>(

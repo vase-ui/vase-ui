@@ -15,17 +15,17 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.ts",
       "kind": "not-applicable",
-      "reason": "The methods of the class call React hooks. `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` holds the state, the context and the selectors on Vue reactivity."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/Store.ts",
       "kind": "not-applicable",
-      "reason": "The class keeps a list of subscribers and gives each one the new state object. A write to `shallowReactive` state tells the readers, so `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` has no such list."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/index.ts",
       "kind": "not-applicable",
-      "reason": "The file exports the store classes and hooks for React. The store of Vase UI is in `packages/vue/src/utils/popups/handleStoreAdapter.ts`."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/useStore.ts",
@@ -150,7 +150,7 @@
     {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
-      "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/handleStoreAdapter.test.tsx` tests the writes of the Vue store."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/Store.spec.ts",
@@ -165,7 +165,7 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.spec.ts",
       "kind": "not-applicable",
-      "reason": "It tests the types of the React hooks of `ReactStore`. `packages/vue/src/utils/popups/handleStoreAdapter.spec.ts` tests the types of `select`, `set` and `update`."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/createSelector.test.ts",
@@ -321,6 +321,11 @@
       "describe": ["shadow DOM utilities", "getTarget"],
       "kind": "not-applicable",
       "reason": "No part of Vase UI uses `getTarget`, so `common/shadowDom.ts` has none. A part reads `event.composedPath()` where it needs the target in a shadow root."
+    },
+    {
+      "upstream": "packages/utils/src/platform/screen-reader.ts",
+      "kind": "not-applicable",
+      "reason": "No part has a workaround for one screen reader, so `common/platform/` has no group for it."
     }
   ],
   "surfaceAdditions": [],

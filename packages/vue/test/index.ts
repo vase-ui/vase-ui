@@ -2,7 +2,6 @@ export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export { installPartsInterop, isVaporApp, isVaporParts } from './testApp';
-export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockBrowserToday, mockToday } from './mockBrowserToday';
 export { mockRuntimeDateTimeLocale, mockRuntimeLocale } from './mockRuntimeLocale';
 export {

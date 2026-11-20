@@ -208,9 +208,6 @@ export interface ComboboxRootProps<
 
 export interface ComboboxRootState {}
 
-/** The state of a field around a part. */
-export type ComboboxFieldState = FieldState;
-
 export interface ComboboxLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;

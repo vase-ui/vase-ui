@@ -1,13 +1,6 @@
 import { afterEach, it, expect } from 'vitest';
-import { isJSDOM } from '#test-utils';
 import { visuallyHidden, visuallyHiddenInput } from '../common/visuallyHidden';
-import {
-  getTabbableNearElement,
-  isElementVisible,
-  isHiddenByStyles,
-  isTabbable,
-  tabbable,
-} from './tabbable';
+import { tabbable } from './tabbable';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -122,18 +115,18 @@ it('keeps aria-disabled elements in the tab order', () => {
   element.setAttribute('aria-disabled', 'true');
   document.body.append(element);
 
-  expect(isTabbable(element)).toBe(true);
   expect(tabbable(document.body)).toContain(element);
 });
 
 it('excludes elements hidden with CSS visibility from the tab order', () => {
   const button = document.createElement('button');
+  const collapsed = document.createElement('button');
 
   button.style.visibility = 'hidden';
-  document.body.append(button);
+  collapsed.style.visibility = 'collapse';
+  document.body.append(button, collapsed);
 
-  expect(isTabbable(button)).toBe(false);
-  expect(tabbable(document.body)).not.toContain(button);
+  expect(tabbable(document.body)).toEqual([]);
 });
 
 it('keeps descendants of display: contents ancestors in the tab order', () => {
@@ -151,27 +144,21 @@ it('keeps descendants of display: contents ancestors in the tab order', () => {
   wrapper.append(dialog);
   document.body.append(wrapper);
 
-  expect(isTabbable(button)).toBe(true);
   expect(tabbable(document.body)).toContain(button);
 });
 
-it.skipIf(isJSDOM)(
-  'keeps visible descendants of display: contents ancestors in the tab order in Chromium',
-  () => {
-    const wrapper = document.createElement('div');
-    const button = document.createElement('button');
+it('keeps visible descendants of display: contents ancestors in the tab order in Chromium', () => {
+  const wrapper = document.createElement('div');
+  const button = document.createElement('button');
 
-    wrapper.style.display = 'contents';
-    wrapper.tabIndex = 0;
-    wrapper.append(button);
-    document.body.append(wrapper);
+  wrapper.style.display = 'contents';
+  wrapper.tabIndex = 0;
+  wrapper.append(button);
+  document.body.append(wrapper);
 
-    expect(isTabbable(wrapper)).toBe(false);
-    expect(isTabbable(button)).toBe(true);
-    expect(tabbable(document.body)).toContain(button);
-    expect(tabbable(document.body)).not.toContain(wrapper);
-  },
-);
+  expect(tabbable(document.body)).toContain(button);
+  expect(tabbable(document.body)).not.toContain(wrapper);
+});
 
 it('excludes descendants of hidden display: contents ancestors from the tab order', () => {
   const wrapper = document.createElement('div');
@@ -182,7 +169,6 @@ it('excludes descendants of hidden display: contents ancestors from the tab orde
   wrapper.append(button);
   document.body.append(wrapper);
 
-  expect(isTabbable(button)).toBe(false);
   expect(tabbable(document.body)).not.toContain(button);
 });
 
@@ -195,7 +181,6 @@ it('keeps descendants that override ancestor visibility in the tab order', () =>
   wrapper.append(button);
   document.body.append(wrapper);
 
-  expect(isTabbable(button)).toBe(true);
   expect(tabbable(document.body)).toContain(button);
 });
 
@@ -209,21 +194,6 @@ it('excludes display: contents candidates when checkVisibility reports them hidd
   });
   document.body.append(button);
 
-  expect(isTabbable(button)).toBe(false);
-  expect(tabbable(document.body)).not.toContain(button);
-});
-
-it('excludes display: contents candidates when checkVisibility is unavailable', () => {
-  const button = document.createElement('button');
-
-  button.style.display = 'contents';
-  Object.defineProperty(button, 'checkVisibility', {
-    configurable: true,
-    value: undefined,
-  });
-  document.body.append(button);
-
-  expect(isTabbable(button)).toBe(false);
   expect(tabbable(document.body)).not.toContain(button);
 });
 
@@ -235,68 +205,54 @@ it('excludes descendants of display: none ancestors from the tab order', () => {
   wrapper.append(button);
   document.body.append(wrapper);
 
-  expect(isTabbable(button)).toBe(false);
   expect(tabbable(document.body)).not.toContain(button);
 });
 
-it.skipIf(isJSDOM)(
-  'excludes descendants of block content-visibility:hidden ancestors from the tab order',
-  () => {
-    const wrapper = document.createElement('div');
-    const button = document.createElement('button');
+it('excludes descendants of block content-visibility:hidden ancestors from the tab order', () => {
+  const wrapper = document.createElement('div');
+  const button = document.createElement('button');
 
-    wrapper.style.setProperty('content-visibility', 'hidden');
-    wrapper.append(button);
-    document.body.append(wrapper);
+  wrapper.style.setProperty('content-visibility', 'hidden');
+  wrapper.append(button);
+  document.body.append(wrapper);
 
-    expect(isTabbable(button)).toBe(false);
-    expect(tabbable(document.body)).not.toContain(button);
-  },
-);
+  expect(tabbable(document.body)).not.toContain(button);
+});
 
-it.skipIf(isJSDOM)(
-  'keeps descendants of display: contents content-visibility:hidden ancestors in the tab order',
-  () => {
-    const wrapper = document.createElement('div');
-    const button = document.createElement('button');
+it('keeps descendants of display: contents content-visibility:hidden ancestors in the tab order', () => {
+  const wrapper = document.createElement('div');
+  const button = document.createElement('button');
 
-    wrapper.style.display = 'contents';
-    wrapper.style.setProperty('content-visibility', 'hidden');
-    wrapper.append(button);
-    document.body.append(wrapper);
+  wrapper.style.display = 'contents';
+  wrapper.style.setProperty('content-visibility', 'hidden');
+  wrapper.append(button);
+  document.body.append(wrapper);
 
-    expect(isTabbable(button)).toBe(true);
-    expect(tabbable(document.body)).toContain(button);
-  },
-);
+  expect(tabbable(document.body)).toContain(button);
+});
 
-it.skipIf(isJSDOM)(
-  'keeps descendants of inline content-visibility:hidden ancestors in the tab order',
-  () => {
-    const wrapper = document.createElement('div');
-    const button = document.createElement('button');
+it('keeps descendants of inline content-visibility:hidden ancestors in the tab order', () => {
+  const wrapper = document.createElement('div');
+  const button = document.createElement('button');
 
-    wrapper.style.display = 'inline';
-    wrapper.style.setProperty('content-visibility', 'hidden');
-    wrapper.append(button);
-    document.body.append(wrapper);
+  wrapper.style.display = 'inline';
+  wrapper.style.setProperty('content-visibility', 'hidden');
+  wrapper.append(button);
+  document.body.append(wrapper);
 
-    expect(isTabbable(button)).toBe(true);
-    expect(tabbable(document.body)).toContain(button);
-  },
-);
+  expect(tabbable(document.body)).toContain(button);
+});
 
-it.skipIf(isJSDOM)('keeps content-visibility:hidden candidates in the tab order', () => {
+it('keeps content-visibility:hidden candidates in the tab order', () => {
   const button = document.createElement('button');
 
   button.style.setProperty('content-visibility', 'hidden');
   document.body.append(button);
 
-  expect(isTabbable(button)).toBe(true);
   expect(tabbable(document.body)).toContain(button);
 });
 
-it.skipIf(isJSDOM)('keeps zero-size elements in the tab order', () => {
+it('keeps zero-size elements in the tab order', () => {
   const element = document.createElement('div');
 
   element.tabIndex = 0;
@@ -306,7 +262,6 @@ it.skipIf(isJSDOM)('keeps zero-size elements in the tab order', () => {
   element.style.border = '0';
   document.body.append(element);
 
-  expect(isTabbable(element)).toBe(true);
   expect(tabbable(document.body)).toContain(element);
 });
 
@@ -316,7 +271,6 @@ it('keeps visuallyHidden elements in the tab order', () => {
   Object.assign(button.style, visuallyHidden);
   document.body.append(button);
 
-  expect(isTabbable(button)).toBe(true);
   expect(tabbable(document.body)).toContain(button);
 });
 
@@ -327,7 +281,6 @@ it('keeps visuallyHiddenInput elements in the tab order', () => {
   Object.assign(input.style, visuallyHiddenInput);
   document.body.append(input);
 
-  expect(isTabbable(input)).toBe(true);
   expect(tabbable(document.body)).toContain(input);
 });
 
@@ -385,76 +338,26 @@ it('treats slotted elements inside inert shadow content as untabbable', () => {
 });
 
 it.each(['shadow', 'slot'] as const)(
-  'finds adjacent controls around a non-tabbable anchor in a %s tree',
+  'leaves out an element with a negative tabindex in a %s tree',
   (type) => {
     const before = document.createElement('button');
     const after = document.createElement('button');
     const host = document.createElement('div');
     const shadowRoot = host.attachShadow({ mode: 'open' });
-    const anchor = document.createElement('button');
-    anchor.tabIndex = -1;
+    const element = document.createElement('button');
+    element.tabIndex = -1;
     if (type === 'slot') {
       shadowRoot.appendChild(document.createElement('slot'));
-      host.appendChild(anchor);
+      host.appendChild(element);
     } else {
-      shadowRoot.appendChild(anchor);
+      shadowRoot.appendChild(element);
     }
     document.body.append(before, host, after);
 
-    expect(getTabbableNearElement(anchor, -1)).toBe(before);
-    expect(getTabbableNearElement(anchor, 1)).toBe(after);
     expect(tabbable(document.body)).toEqual([before, after]);
-    expect(anchor.tabIndex).toBe(-1);
+    expect(element.tabIndex).toBe(-1);
   },
 );
-
-it('finds adjacent controls around a disabled anchor', () => {
-  const before = document.createElement('button');
-  const anchor = document.createElement('button');
-  const after = document.createElement('button');
-  anchor.disabled = true;
-  document.body.append(before, anchor, after);
-
-  expect(getTabbableNearElement(anchor, -1)).toBe(before);
-  expect(getTabbableNearElement(anchor, 1)).toBe(after);
-});
-
-it('does not choose a destination when the anchor is absent from the composed tree', () => {
-  document.body.appendChild(document.createElement('button'));
-  const detachedAnchor = document.createElement('button');
-
-  expect(getTabbableNearElement(detachedAnchor, -1)).toBe(null);
-  expect(getTabbableNearElement(detachedAnchor, 1)).toBe(null);
-});
-
-it.each([
-  { name: 'after the anchor', direction: 1 as const },
-  { name: 'before the anchor', direction: -1 as const },
-])('skips the elements that `exclude` accepts, $name', ({ direction }) => {
-  const farBefore = document.createElement('button');
-  const nearBefore = document.createElement('button');
-  const anchor = document.createElement('button');
-  const nearAfter = document.createElement('button');
-  const farAfter = document.createElement('button');
-  document.body.append(farBefore, nearBefore, anchor, nearAfter, farAfter);
-
-  const target = getTabbableNearElement(
-    anchor,
-    direction,
-    (element) => element === nearBefore || element === nearAfter,
-  );
-
-  expect(target).toBe(direction === 1 ? farAfter : farBefore);
-});
-
-it('gives the anchor when `exclude` accepts each other element', () => {
-  const anchor = document.createElement('button');
-  const other = document.createElement('button');
-  document.body.append(anchor, other);
-
-  expect(getTabbableNearElement(anchor, 1, (element) => element === other)).toBe(anchor);
-  expect(getTabbableNearElement(anchor, -1, (element) => element === other)).toBe(anchor);
-});
 
 it.each([
   [false, 1],
@@ -462,22 +365,22 @@ it.each([
   [true, 1],
   [true, -1],
 ] as const)(
-  'does not let a disabled radio anchor suppress its peer when checked=%s and direction=%s',
+  'does not let a disabled radio suppress its peer when checked=%s and direction=%s',
   (checked, direction) => {
-    const anchor = document.createElement('input');
+    const disabledRadio = document.createElement('input');
     const peer = document.createElement('input');
     const other = document.createElement('button');
-    anchor.type = 'radio';
+    disabledRadio.type = 'radio';
     peer.type = 'radio';
-    anchor.name = 'group';
+    disabledRadio.name = 'group';
     peer.name = 'group';
-    anchor.disabled = true;
-    anchor.checked = checked;
-    document.body.append(...(direction === 1 ? [anchor, peer, other] : [other, peer, anchor]));
+    disabledRadio.disabled = true;
+    disabledRadio.checked = checked;
+    document.body.append(
+      ...(direction === 1 ? [disabledRadio, peer, other] : [other, peer, disabledRadio]),
+    );
 
     expect(tabbable(document.body)).toEqual(direction === 1 ? [peer, other] : [other, peer]);
-    expect(getTabbableNearElement(anchor, direction)).toBe(peer);
-    expect(getTabbableNearElement(anchor, direction === 1 ? -1 : 1)).toBe(other);
   },
 );
 
@@ -491,7 +394,6 @@ it.each([
   element.setAttribute(attribute, '');
   document.body.append(element);
 
-  expect(isTabbable(element)).toBe(true);
   expect(tabbable(document.body)).toContain(element);
 });
 
@@ -511,7 +413,6 @@ it.each([
 
   element.setAttribute('tabindex', '-1');
 
-  expect(isTabbable(element)).toBe(false);
   expect(tabbable(document.body)).not.toContain(element);
 });
 
@@ -525,7 +426,6 @@ it.each([
   element.setAttribute('tabindex', value);
   document.body.append(element);
 
-  expect(isTabbable(element)).toBe(true);
   expect(tabbable(document.body)).toContain(element);
 });
 
@@ -539,44 +439,4 @@ it('keeps the order of the document for elements with a positive tabindex', () =
   document.body.append(first, second, third);
 
   expect(tabbable(document.body)).toEqual([first, second, third]);
-});
-
-it('treats hidden visibility styles as hidden', () => {
-  const hidden = document.createElement('div');
-  const collapsed = document.createElement('div');
-  const visible = document.createElement('div');
-
-  hidden.style.visibility = 'hidden';
-  collapsed.style.visibility = 'collapse';
-
-  document.body.append(hidden, collapsed, visible);
-
-  expect(isHiddenByStyles(getComputedStyle(hidden))).toBe(true);
-  expect(isHiddenByStyles(getComputedStyle(collapsed))).toBe(true);
-  expect(isHiddenByStyles(getComputedStyle(visible))).toBe(false);
-});
-
-it('uses CSS visibility fallbacks when checkVisibility is unavailable', () => {
-  const visible = document.createElement('button');
-  const displayHidden = document.createElement('button');
-  const displayContents = document.createElement('button');
-  const contentHidden = document.createElement('button');
-
-  displayHidden.style.display = 'none';
-  displayContents.style.display = 'contents';
-  contentHidden.style.contentVisibility = 'hidden';
-  Object.defineProperty(displayContents, 'checkVisibility', {
-    configurable: true,
-    value: undefined,
-  });
-  Object.defineProperty(contentHidden, 'checkVisibility', {
-    configurable: true,
-    value: undefined,
-  });
-  document.body.append(visible, displayHidden, displayContents, contentHidden);
-
-  expect(isElementVisible(visible)).toBe(true);
-  expect(isElementVisible(displayHidden)).toBe(false);
-  expect(isElementVisible(displayContents)).toBe(false);
-  expect(isElementVisible(contentHidden)).toBe(true);
 });

@@ -41,7 +41,7 @@
     {
       "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the `aria-label` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and `#render` is a slot, which is a function. A control reads its `aria-label` prop."
+      "reason": "The file reads the `aria-label` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and the slot `element` is a function. A control reads its `aria-label` prop."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
@@ -66,7 +66,7 @@
     {
       "upstream": "packages/react/src/global.d.ts",
       "kind": "not-applicable",
-      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. `packages/vue/src/internals/useAnimationsFinished.ts` reads `VASE_UI_ANIMATIONS_DISABLED` and declares it there."
+      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. A part animates with `<Transition>` of Vue (rule 8.9), so Vase UI has no such flag."
     },
     {
       "upstream": "packages/react/src/index.test.tsx",
@@ -343,12 +343,12 @@
     {
       "upstream": "packages/react/src/internals/useAnchorPositioning.test.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/useAnchorPositioning.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue` (spec section 10). Each popup family tests the placement in its own test file."
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/useAnimationsFinished.test.tsx",
@@ -474,6 +474,11 @@
       "upstream": "packages/react/test/conformanceTests/utils.ts",
       "kind": "not-applicable",
       "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/src/internals/itemEquality.test.ts",
+      "kind": "not-applicable",
+      "reason": "The cases test `findSelectionIndex` and `resolveSelectedIndex`, and no part needs them. Combobox and Select find a selected item with `findItemIndex` and `selectedValueIncludes`, and `common/itemEquality.test.ts` tests those."
     }
   ],
   "surfaceAdditions": [],
@@ -577,13 +582,6 @@
       "destination": "packages/vue/src/common/filter.ts",
       "member": "getFilter",
       "witness": "packages/vue/src/common/filter.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/internals/itemEquality.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/common/itemEquality.test.ts",
-      "behavior": "The comparison of the values of items.",
-      "witness": "packages/vue/src/common/itemEquality.test.ts"
     },
     {
       "upstream": "packages/react/src/internals/itemEquality.ts",
