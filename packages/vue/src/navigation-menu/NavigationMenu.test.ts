@@ -202,7 +202,8 @@ describe('the value', () => {
         'onUpdate:modelValue': () => log.push('update'),
       },
     });
-    await userEvent.click(get('trigger-one'));
+    // A click of the DOM moves no pointer, so no hover joins the log.
+    get('trigger-one').click();
     await wait(20);
     expect(byTestId('popup')).toBe(null);
     expect(log).toEqual(['valueChange one']);
@@ -833,12 +834,13 @@ describe('the content', () => {
   // A Vapor part has no instance that tells a client-only mount from a hydration, so it mounts a
   // kept content again after its own mount.
   test.skipIf(isVaporParts)('a kept content mounts the components in it one time', async () => {
-    let mounts = 0;
-    await mountMenu({ contents: { one: { keepMounted: true } }, countMount: () => (mounts += 1) });
+    let count = 0;
+    const mounts = { add: () => (count += 1) };
+    await mountMenu({ contents: { one: { keepMounted: true } }, mounts });
     await frame();
     get('trigger-one').click();
     await shows('one');
-    expect(mounts).toBe(1);
+    expect(count).toBe(1);
   });
 
   test('with a kept portal, the closed contents are hidden in the closed popup', async () => {

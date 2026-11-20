@@ -34,8 +34,8 @@ defineProps({
   moreLinks: { type: Number, default: 0 },
   /** A nested root in the content of `one`, in place unless `inline` is `false`. */
   nested: Object as PropType<{ root?: Props; inline?: boolean; contents?: Record<string, Props> }>,
-  /** Called at each mount of a component in the content of `one`. */
-  countMount: Function as PropType<() => void>,
+  /** `add` runs at each mount of a component in the content of `one`. */
+  mounts: Object as PropType<{ add: () => void }>,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart });
@@ -60,7 +60,7 @@ defineExpose({ root: rootPart });
         >
           <NavigationMenu.Link href="#one-a" data-testid="link-one-a">One A</NavigationMenu.Link>
           <NavigationMenu.Link href="#one-b" data-testid="link-one-b">One B</NavigationMenu.Link>
-          <MountLog v-if="countMount" @mount="countMount" />
+          <MountLog v-if="mounts" @mount="mounts.add()" />
           <NavigationMenu.Link
             v-for="index in moreLinks"
             :key="index"
