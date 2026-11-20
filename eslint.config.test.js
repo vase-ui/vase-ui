@@ -49,9 +49,8 @@ function page(body) {
   return `---\norder: 1\n---\n\n<script setup lang="ts">\nimport { data } from './parity.data.ts';\n</script>\n\n# Sample\n\n{{ data.title }}\n\n${body}\n`;
 }
 
-// The rules of the older forms apply to a family with no `types.ts`. No family has this folder, so
-// a refactor of a family does not change the cases.
-const SRC = 'packages/vue/src/older-family';
+// No family has this folder, so a change of a family does not change the cases.
+const SRC = 'packages/vue/src/sample-family';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
@@ -66,8 +65,6 @@ const WAIT_FILES = [
 const VNODE_HINT = 'mounts a vnode one time';
 const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
 const REF_HINT = 'before the element is in the document';
-const RENDER_SLOT_HINT = 'usesRenderSlot()';
-const RENDER_SLOT_REST = 'name="render" :props="elementProps()" :state="state" />';
 const MODEL_PART = docsSfc("const open = defineModel<boolean>('open');", '<div>{{ open }}</div>');
 
 const INPUT_SYNC_SAMPLES = [
@@ -113,100 +110,6 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'onCleanup',
   },
-  {
-    name: 'a copy of the held state',
-    file: `${SRC}/useSample.ts`,
-    code: 'let held = isHeld.value;',
-    ruleId: 'no-restricted-syntax',
-    hint: 'as a source',
-  },
-  {
-    name: 'a copy of the held state with a string key',
-    file: `${SRC}/useSample.ts`,
-    code: "let held = isHeld['value'];",
-    ruleId: 'no-restricted-syntax',
-    hint: 'as a source',
-  },
-  {
-    name: 'a direct popup element write in a part',
-    file: `${SRC}/DialogPopup.vue`,
-    code: docsSfc("store.set('popupElement', element);"),
-    ruleId: 'no-restricted-syntax',
-    hint: 'createElementSetter',
-  },
-  {
-    name: 'a direct list element write in a composable',
-    file: `${SRC}/useList.ts`,
-    code: "store.set('listElement', element);",
-    ruleId: 'no-restricted-syntax',
-    hint: 'createElementSetter',
-  },
-  {
-    name: 'conditional part forms inside template v-if',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc(
-      '',
-      '<template v-if="shown"><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
-    ),
-    ruleId: 'vue/no-restricted-syntax',
-    hint: 'fragment',
-  },
-  {
-    name: 'conditional part forms inside template v-else',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc(
-      '',
-      '<div v-if="other" /><template v-else><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
-    ),
-    ruleId: 'vue/no-restricted-syntax',
-    hint: 'fragment',
-  },
-  ...[
-    ['a #render slot with $slots.render', `<slot v-if="$slots.render" ${RENDER_SLOT_REST}`],
-    [
-      'a #render slot with a condition and $slots.render',
-      `<slot v-if="shouldRender && $slots.render" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with a condition after usesRenderSlot()',
-      `<slot v-if="usesRenderSlot() && shouldRender" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with || after usesRenderSlot()',
-      `<slot v-if="usesRenderSlot() || other" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with usesRenderSlot and no call',
-      `<slot v-if="$slots.render && usesRenderSlot" ${RENDER_SLOT_REST}`,
-    ],
-    ['a #render slot with elementProps() and no condition', `<slot ${RENDER_SLOT_REST}`],
-    [
-      'a #render slot in a template with $slots.render',
-      `<template v-if="$slots.render"><Style /><slot ${RENDER_SLOT_REST}</template>`,
-    ],
-    [
-      'a #render slot in a div inside a template with usesRenderSlot()',
-      `<template v-if="usesRenderSlot()"><div><slot ${RENDER_SLOT_REST}</div></template>`,
-    ],
-    [
-      'a #render slot with no condition in a Teleport with usesRenderSlot()',
-      `<Teleport v-if="usesRenderSlot()" to="body"><slot ${RENDER_SLOT_REST}</Teleport>`,
-    ],
-    [
-      'a #render slot with v-show="usesRenderSlot()"',
-      `<slot v-show="usesRenderSlot()" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with elementProps() in mergeProps and no usesRenderSlot()',
-      '<slot v-if="shown" name="render" :props="mergeProps(elementProps(), other)" :state="state" />',
-    ],
-  ].map(([name, template]) => ({
-    name,
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc('', template),
-    ruleId: 'vue/no-restricted-syntax',
-    hint: RENDER_SLOT_HINT,
-  })),
   {
     name: 'a spread of elementProps() with no ref by name',
     file: `${SRC}/DialogRoot.vue`,
@@ -254,7 +157,7 @@ const reported = [
     file: `${SRC}/useRoot.ts`,
     code: "import { cloneVNode } from 'vue';\n\nexport const clone = cloneVNode;\n",
     ruleId: 'no-restricted-imports',
-    hint: '#render',
+    hint: '`element` slot',
   },
   {
     name: 'an import of withDirectives',
@@ -303,7 +206,7 @@ const reported = [
     file: `${SRC}/useRoot.ts`,
     code: 'export const read = (instance: { $el: unknown }) => instance.$el;\n',
     ruleId: 'no-restricted-properties',
-    hint: 'resolveElement',
+    hint: 'useElement',
   },
   {
     name: 'a read of $parent',
@@ -320,8 +223,8 @@ const reported = [
     hint: 'Firefox 114',
   })),
   {
-    name: 'a read of $parent in resolveElement.ts',
-    file: 'packages/vue/src/internals/resolveElement.ts',
+    name: 'a read of $parent in element.ts',
+    file: 'packages/vue/src/common/element.ts',
     code: 'export const read = (instance: { $parent: unknown }) => instance.$parent;\n',
     ruleId: 'no-restricted-properties',
     hint: 'provide',
@@ -331,7 +234,7 @@ const reported = [
     file: `${SRC}/DialogRoot.vue`,
     code: `<script setup lang="ts"></script>\n\n<template>\n  <div>{{ $el }}</div>\n</template>\n`,
     ruleId: 'vue/no-restricted-syntax',
-    hint: 'resolveElement',
+    hint: 'useElement',
   },
   {
     name: 'a read of $parent in a template',
@@ -869,27 +772,7 @@ const reported = [
     [
       'useFloating',
       "import { useFloating } from '@floating-ui/vue';\n\nexport const position = useFloating;\n",
-      'usePopupPositioner',
-    ],
-    [
-      'onActivated',
-      "import { onActivated } from 'vue';\n\nexport const hook = onActivated;\n",
-      'useKeepAliveState',
-    ],
-    [
-      'onDeactivated',
-      "import { onDeactivated } from 'vue';\n\nexport const hook = onDeactivated;\n",
-      'useKeepAliveState',
-    ],
-    [
-      'Transition',
-      "import { Transition } from 'vue';\n\nexport const component = Transition;\n",
-      'data-starting-style',
-    ],
-    [
-      'TransitionGroup',
-      "import { TransitionGroup } from 'vue';\n\nexport const component = TransitionGroup;\n",
-      'data-starting-style',
+      'usePlacement',
     ],
   ].map(([name, code, hint]) => ({
     name: `an import of ${name}`,
@@ -898,43 +781,20 @@ const reported = [
     ruleId: 'no-restricted-imports',
     hint,
   })),
-  ...['onActivated', 'onDeactivated'].flatMap((hook) => [
-    {
-      name: `an import of ${hook} in an SFC`,
-      file: `${SRC}/DialogRoot.vue`,
-      code: `<script setup lang="ts">\nimport { ${hook} } from 'vue';\n${hook}(() => {});\n</script>\n<template><div /></template>\n`,
-      ruleId: 'no-restricted-imports',
-      hint: 'useKeepAliveState',
-    },
-    {
-      name: `an import of ${hook} in useAnchorPositioning.ts`,
-      file: 'packages/vue/src/internals/useAnchorPositioning.ts',
-      code: `import { ${hook} } from 'vue';\nexport const hook = ${hook};\n`,
-      ruleId: 'no-restricted-imports',
-      hint: 'useKeepAliveState',
-    },
-  ]),
   {
-    name: 'an import of getCurrentInstance in useAnchorPositioning.ts',
-    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    name: 'an import of getCurrentInstance in placement.ts',
+    file: 'packages/vue/src/popup/placement.ts',
     code: "import { getCurrentInstance } from 'vue';\n\nexport const instance = getCurrentInstance();\n",
     ruleId: 'no-restricted-imports',
     hint: 'provide',
   },
   {
-    name: 'an import of a prehydration script through its subpath in useAnchorPositioning.ts',
-    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    name: 'an import of a prehydration script through its subpath in placement.ts',
+    file: 'packages/vue/src/popup/placement.ts',
     code: "import { script } from '#prehydration/tabs';\n\nexport const text = script;\n",
     ruleId: 'no-restricted-imports',
     hint: './prehydrationScript.min',
   },
-  ...['Transition', 'transition', 'TransitionGroup', 'transition-group'].map((tag) => ({
-    name: `the element ${tag} in a template`,
-    file: `${SRC}/DialogRoot.vue`,
-    code: `<script setup lang="ts"></script>\n\n<template>\n  <${tag}><div /></${tag}>\n</template>\n`,
-    ruleId: 'vue/no-restricted-syntax',
-    hint: 'data-starting-style',
-  })),
   {
     name: 'defineModel',
     file: `${SRC}/DialogRoot.vue`,
@@ -1331,11 +1191,6 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
       'an array of callbacks',
       'export let callbacks: (() => void)[] | null = null;\ncallbacks = [];',
     ],
-    [
-      'a value other than the held state',
-      'export let latestValues = values.value;\nlatestValues = [];',
-    ],
-    ['a dynamic key on the held ref', 'export let entry = isHeld[value];\nentry = next;'],
   ].map(([name, code]) => ({ name, file: `${SRC}/useSample.ts`, code: `${code}\n` })),
   {
     name: 'a release in a test',
@@ -1343,51 +1198,9 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: 'export let release: (() => void) | undefined;\n',
   },
   {
-    name: 'a popup element write in the shared setter',
-    file: 'packages/vue/src/utils/popups/createElementSetter.ts',
-    code: "store.set('popupElement', element);",
-  },
-  {
-    name: 'a different store key and a list element in a map',
-    file: `${SRC}/useList.ts`,
-    code: "store.set('listElementId', id); map.set('listElement', element);",
-  },
-  {
     name: 'a root node read at the event',
     file: `${SRC}/useRoot.ts`,
     code: "declare const element: Element;\n\nelement.addEventListener('click', () => element.getRootNode());\n",
-  },
-  {
-    name: 'conditional part forms at the root',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc(
-      '',
-      '<slot v-if="shown && usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else-if="shown" v-bind="elementProps()" :ref="setRef" />',
-    ),
-  },
-  {
-    name: 'conditional part forms with a style before the render slot',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc(
-      '',
-      '<template v-if="usesRenderSlot()"><Style /><slot name="render" :props="elementProps()" /></template><component :is="as" v-else v-bind="elementProps()" :ref="setRef" />',
-    ),
-  },
-  {
-    name: 'conditional part forms inside a Teleport',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc(
-      '',
-      '<Teleport v-if="shown" to="body"><slot v-if="usesRenderSlot()" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></Teleport>',
-    ),
-  },
-  {
-    name: 'conditional part forms inside a template in a test SFC',
-    file: `${SRC}/DialogPart.test.vue`,
-    code: docsSfc(
-      '',
-      '<template v-if="shown"><slot v-if="$slots.render" name="render" :props="elementProps()" /><component :is="as" v-else v-bind="elementProps()" :ref="setRef" /></template>',
-    ),
   },
   {
     name: 'a spread of elementProps() with the ref by name',
@@ -1396,46 +1209,6 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
       '',
       '<component :is="as" v-bind="elementProps()" :ref="setRef"><slot /></component>',
     ),
-  },
-  {
-    name: 'elementProps() as the props of the #render slot',
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc('', '<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" />'),
-  },
-  ...[
-    [
-      'a #render slot with (keepMounted || mounted) && usesRenderSlot()',
-      `<slot v-if="(keepMounted || mounted) && usesRenderSlot()" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with two && conditions and usesRenderSlot()',
-      `<slot v-if="a && b && usesRenderSlot()" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot with v-else-if="usesRenderSlot()"',
-      `<div v-if="other" /><slot v-else-if="usesRenderSlot()" ${RENDER_SLOT_REST}`,
-    ],
-    [
-      'a #render slot in a template with value != null && usesRenderSlot()',
-      `<template v-if="value != null && usesRenderSlot()"><slot ${RENDER_SLOT_REST}<Style /></template>`,
-    ],
-    [
-      'a #render slot with empty props and $slots.render',
-      '<slot v-if="$slots.render" name="render" :props="{} as HTMLProps" :state="state" />',
-    ],
-    [
-      'a #render slot forwarded with v-bind="slotProps"',
-      '<Part><template #render="slotProps"><slot name="render" v-bind="slotProps" /></template></Part>',
-    ],
-  ].map(([name, template]) => ({
-    name,
-    file: `${SRC}/DialogRoot.vue`,
-    code: docsSfc('', template),
-  })),
-  {
-    name: 'a #render slot with $slots.render and elementProps() in a test SFC',
-    file: `${SRC}/DialogPart.test.vue`,
-    code: docsSfc('', `<slot v-if="$slots.render" ${RENDER_SLOT_REST}`),
   },
   {
     name: 'a spread of elementProps() with no ref by name in a test SFC',
@@ -1488,8 +1261,8 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: 'export const element = <div />;\n',
   },
   {
-    name: 'a read of $el in resolveElement.ts',
-    file: 'packages/vue/src/internals/resolveElement.ts',
+    name: 'a read of $el in element.ts',
+    file: 'packages/vue/src/common/element.ts',
     code: 'export const read = (instance: { $el: unknown }) => instance.$el;\n',
   },
   {
@@ -1693,18 +1466,13 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('span');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
   },
   {
-    name: 'an import of onActivated and onDeactivated in useKeepAliveState.ts',
-    file: 'packages/vue/src/internals/useKeepAliveState.ts',
-    code: "import { onActivated, onDeactivated } from 'vue';\n\nexport const hooks = [onActivated, onDeactivated];\n",
-  },
-  {
     name: 'imports of both KeepAlive hooks in a test file',
     file: `${SRC}/DialogRoot.test.tsx`,
     code: "import { onActivated, onDeactivated } from 'vue';\n\nexport const hooks = [onActivated, onDeactivated];\n",
   },
   {
-    name: 'an import of useFloating in useAnchorPositioning.ts',
-    file: 'packages/vue/src/internals/useAnchorPositioning.ts',
+    name: 'an import of useFloating in placement.ts',
+    file: 'packages/vue/src/popup/placement.ts',
     code: "import { useFloating } from '@floating-ui/vue';\n\nexport const position = useFloating;\n",
   },
   {
@@ -1713,9 +1481,9 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: "import { offset } from '@floating-ui/vue';\nimport type { Placement } from '@floating-ui/vue';\nimport { watch } from 'vue';\n\nexport const used = [offset, watch];\nexport type Side = Placement;\n",
   },
   {
-    name: 'relative imports of a common file, a prehydration script and useVaseUiId',
+    name: 'relative imports of a common file and a prehydration script',
     file: `${SRC}/useRoot.ts`,
-    code: "import { ownerDocument } from '../common/owner';\nimport { useVaseUiId } from '../internals/useVaseUiId';\nimport { script } from './prehydrationScript.min';\n\nexport const used = [ownerDocument, useVaseUiId, script];\n",
+    code: "import { ownerDocument } from '../common/owner';\nimport { script } from './prehydrationScript.min';\n\nexport const used = [ownerDocument, script];\n",
   },
   {
     name: 'the names of Vase UI and a link to Base UI in a comment',
@@ -1812,10 +1580,6 @@ for (const { name, code } of [
   {
     name: 'a `watchPostEffect` callback',
     code: "import { watchPostEffect } from 'vue';\n\ndeclare const element: Element;\nwatchPostEffect(() => element.getRootNode());\n",
-  },
-  {
-    name: 'a `useDomEffect` effect',
-    code: "import { useDomEffect } from '../utils/popups/useDomEffect';\n\ndeclare const element: Element;\nuseDomEffect([], () => {\n  element.getRootNode();\n});\n",
   },
 ]) {
   test(`reports a root node read in ${name} one time`, async () => {

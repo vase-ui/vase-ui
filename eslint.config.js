@@ -8,7 +8,6 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
 import siteConfig from './docs/.vitepress/config.ts';
-import { REFACTORED_FOLDERS } from './packages/vue/test/refactoredFolders.ts';
 
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
@@ -18,9 +17,9 @@ const VUE_TEST_SCRIPT_FILES = TEST_SCRIPT_FILES.map((pair) => ['packages/vue/**'
 const MESSAGES = {
   getCurrentInstance:
     'The current instance is null in Vapor mode. Use `provide` and `inject`, a prop or an exposed value.',
-  cloneVNode: 'Vapor mode cannot clone a vnode. Use the `as` prop or the `#render` slot.',
+  cloneVNode: 'Vapor mode cannot clone a vnode. Use the `as` prop or the `element` slot.',
   slotCall: 'Vapor mode cannot call a slot in script. Render the slot in the template.',
-  $el: 'A Vapor ref has no `$el`. Use `useElement`, `resolveElement` or the exposed `element`.',
+  $el: 'A Vapor ref has no `$el`. Use `useElement` or the exposed `element`.',
   $parent: 'Vapor mode has no `$parent`. Use `provide` and `inject`.',
   arrayCopyMethod:
     'The build supports Firefox 114, and Firefox 114 does not have this array method. Use `sort`, `reverse` or `splice` on a copy. See "Compiler flags" in CONTRIBUTING.md.',
@@ -28,10 +27,6 @@ const MESSAGES = {
   vMemo: 'Vapor mode has no `v-memo`. Remove it.',
   refByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Bind the setter beside the spread: `v-bind="elementProps()" :ref="setRef"`.',
-  conditionalForms:
-    'A `<template v-if>` around the `#render` slot and the element makes the root of the part a fragment. Vue then gives the element no scope id, no `v-show` and no custom directive of the consumer. Put the condition in both forms: `<slot v-if="shown && usesRenderSlot()" name="render" … />`, then `<component :is="as" v-else-if="shown" … >`.',
-  renderSlotCall:
-    'A slot of a Vapor component reads `props` only when it uses `props`. `elementProps()` thus does not tell the part that it renders the `#render` slot. End the `v-if` of the slot, or of the `<template>` that holds the slot, with the call: `v-if="usesRenderSlot()"` or `v-if="shouldRender && usesRenderSlot()"`.',
   inputRefByName:
     'Vapor mode applies a `ref` only when the template binds it by name. It ignores the `ref` key of a bound object. Give the input a named ref or bind its setter beside the spread.',
   defineComponent:
@@ -41,11 +36,9 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   releaseFunction:
-    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`, or return it from `useDomEffect`. See "What differs from the React source" in CONTRIBUTING.md.',
-  heldCopy:
-    'A copy of `isHeld` can differ from its source. Give `isHeld` to the watcher as a source.',
+    'A release function in a `let` has no owner. Create the resource in a `watch` callback and give its release to `onCleanup`. See "What differs from the React source" in CONTRIBUTING.md.',
   staleRootNode:
-    'A root node that a watcher, a hook, a `computed` or a `useDomEffect` effect reads is stale after `Teleport` moves the element. Use `observeRootNode` or `followRootNode` of `src/internals`, or read the root node at the time of the event.',
+    'A root node that a watcher, a hook or a `computed` reads is stale after `Teleport` moves the element. Use `observeRootNode` or `followRootNode` of `src/common`, or read the root node at the time of the event.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
   html: 'This name can render a string as HTML. Show data with text interpolation.',
   htmlDynamicArgument:
@@ -69,13 +62,7 @@ const MESSAGES = {
   prehydrationImport:
     'The build writes this subpath import. A test job has no `dist`, and Vite cannot resolve the import. Write `./prehydrationScript.min`.',
   useFloating:
-    '`useAnchorPositioning` gives `useFloating` the middleware of Base UI, and it corrects `isPositioned` for a popup that closes during a position pass. Call `usePopupPositioner` in a positioner part.',
-  popupElementWrite:
-    'A part that writes this key itself does not follow `KeepAlive`, and it can clear the element of a part that replaced it. Give `popupElementTarget(store)` or `stateElementTarget(store, key)` to `createElementSetter`.',
-  keepAliveHook:
-    "`onActivated` also runs at the first mount, and a part that mounts in a held branch gets no `onDeactivated`. Read `isHeld` of `useKeepAliveState`, and react to a change with a `watch`. Give `flush: 'sync'` to work that must run in the hook.",
-  transition:
-    'CSS drives each animation through `data-starting-style`, `data-ending-style` and `getAnimations()`. Use `useTransitionStatus`.',
+    '`usePlacement` of `src/popup/placement.ts` gives `useFloating` the middleware of Base UI. Call `usePlacement` in a positioner part.',
   inputValueWrite: 'Restore the input through its Vue value binding.',
   handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
@@ -109,8 +96,6 @@ const RESTRICTED_IMPORTS = [
     message: MESSAGES.customDirective,
   },
   { name: 'vue', importNames: ['defineComponent'], message: MESSAGES.defineComponent },
-  { name: 'vue', importNames: ['onActivated', 'onDeactivated'], message: MESSAGES.keepAliveHook },
-  { name: 'vue', importNames: ['Transition', 'TransitionGroup'], message: MESSAGES.transition },
   { name: '@floating-ui/vue', importNames: ['useFloating'], message: MESSAGES.useFloating },
 ];
 
@@ -321,12 +306,7 @@ const RESTRICTED_SYNTAX = [
   },
   {
     selector:
-      "VariableDeclaration[kind='let'] > VariableDeclarator > MemberExpression.init[object.name='isHeld']:matches([computed=false][property.name='value'], [computed=true][property.value='value'])",
-    message: MESSAGES.heldCopy,
-  },
-  {
-    selector:
-      "CallExpression[callee.name=/^(?:watch|watchEffect|watchPostEffect|watchSyncEffect|onBeforeMount|onMounted|onBeforeUpdate|onUpdated|onActivated|computed|useDomEffect)$/] CallExpression[callee.property.name='getRootNode']",
+      "CallExpression[callee.name=/^(?:watch|watchEffect|watchPostEffect|watchSyncEffect|onBeforeMount|onMounted|onBeforeUpdate|onUpdated|onActivated|computed)$/] CallExpression[callee.property.name='getRootNode']",
     message: MESSAGES.staleRootNode,
   },
   {
@@ -384,12 +364,6 @@ const RESTRICTED_SYNTAX_IN_VUE_FILES = [
 const BUILT_IN_DIRECTIVES =
   'if|else|else-if|for|show|bind|on|model|slot|text|html|cloak|pre|once|is';
 
-const RENDER_SLOT_MARK =
-  "VAttribute[directive=true][key.name.name=/^(?:if|else-if)$/] > VExpressionContainer > :matches(CallExpression[callee.name='usesRenderSlot'], LogicalExpression[operator='&&'][right.callee.name='usesRenderSlot'])";
-// A start tag has only its attributes below it, so the descendant form is exact.
-const ELEMENT_PROPS_SLOT_TAG =
-  "VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.argument.name='props'] CallExpression[callee.name='elementProps'])";
-
 const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
   {
@@ -399,23 +373,10 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     message: MESSAGES.refByName,
   },
   {
-    // The selector nests two `:has` steps, because a chain of two child steps in one `:has`
-    // matches nothing in esquery.
-    selector: `:not(VElement[name='template']:has(> VStartTag:has(${RENDER_SLOT_MARK}))) > ${ELEMENT_PROPS_SLOT_TAG}:not(:has(${RENDER_SLOT_MARK}))`,
-    message: MESSAGES.renderSlotCall,
-  },
-  {
     // A selector cannot read the bound object, so the rule applies to each `<input>` with a spread.
     selector:
       "VElement[name='input'] > VStartTag:has(VAttribute[directive=true][key.name.name='bind']:not([key.argument])):not(:has(VAttribute[directive=true][key.name.name='bind'][key.argument.name='ref'])):not(:has(VAttribute[directive=false][key.name='ref'][value.value=/.+/]))",
     message: MESSAGES.inputRefByName,
-  },
-  {
-    // The `#render` slot has a `v-if` only where the element form comes after it. A start tag has
-    // only its attributes below it, so the descendant form is exact.
-    selector:
-      "VElement[name='template']:not([parent.type='VDocumentFragment']) > VElement[name='slot'] > VStartTag:has(VAttribute[directive=true][key.name.name='if']):has(VAttribute[directive=false][key.name='name'][value.value='render'])",
-    message: MESSAGES.conditionalForms,
   },
   {
     // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.
@@ -442,21 +403,12 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
     selector: "MemberExpression[computed=false][property.name='toLocaleString']",
     message: MESSAGES.toLocaleString,
   },
-  { selector: 'VElement[name=/^transition(?:-?group)?$/]', message: MESSAGES.transition },
   {
     selector: `VIdentifier[name=${BASE_UI_NAME}], VLiteral[value=${BASE_UI_NAME}]`,
     message: MESSAGES.baseUiName,
   },
   ...RESTRICTED_EXPRESSION_SYNTAX,
 ];
-
-// The rules of the forms that the families of `REFACTORED_FOLDERS` replace.
-const OLD_FORM_MESSAGES = new Set([
-  MESSAGES.renderSlotCall,
-  MESSAGES.conditionalForms,
-  MESSAGES.transition,
-  MESSAGES.keepAliveHook,
-]);
 
 // The sinks of the Trusted Types API that take `TrustedHTML`, and the methods of the HTML Sanitizer
 // API, which also render a string as HTML. The list has `execCommand` for each command, not only
@@ -992,24 +944,6 @@ export default defineConfig([
     ignores: TEST_FILES,
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX_IN_VUE_FILES] },
   },
-  ...[
-    ['ts', RESTRICTED_SYNTAX],
-    ['vue', RESTRICTED_SYNTAX_IN_VUE_FILES],
-  ].map(([extension, syntax]) => ({
-    files: [`packages/vue/src/**/*.${extension}`],
-    ignores: [...TEST_FILES, 'packages/vue/src/utils/popups/**'],
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        ...syntax,
-        {
-          selector:
-            "CallExpression[callee.object.name='store'][callee.computed=false][callee.property.name='set'][arguments.0.value=/^(popupElement|listElement)$/]",
-          message: MESSAGES.popupElementWrite,
-        },
-      ],
-    },
-  })),
   {
     files: ['packages/vue/src/**/*.tsx'],
     ignores: TEST_FILES,
@@ -1079,7 +1013,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['packages/vue/src/internals/useAnchorPositioning.ts'],
+    files: ['packages/vue/src/popup/placement.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -1091,19 +1025,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['packages/vue/src/internals/useKeepAliveState.ts'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: RESTRICTED_IMPORTS.filter(({ message }) => message !== MESSAGES.keepAliveHook),
-          patterns: RESTRICTED_IMPORT_PATTERNS,
-        },
-      ],
-    },
-  },
-  {
-    files: ['packages/vue/src/common/element.ts', 'packages/vue/src/internals/resolveElement.ts'],
+    files: ['packages/vue/src/common/element.ts'],
     rules: {
       'no-restricted-properties': [
         'error',
@@ -1131,26 +1053,6 @@ export default defineConfig([
     // for a parameter of `generic`, and a fix then removes a type argument that vue-tsc needs.
     files: ['**/*.{js,mjs,vue}', 'fixtures/nuxt/**'],
     extends: [tseslint.configs.disableTypeChecked],
-  },
-  {
-    // The families of `REFACTORED_FOLDERS` render one native element for each part, take the
-    // `element` slot and animate with `<Transition>`. These rules state the older forms that the
-    // other families still have.
-    files: REFACTORED_FOLDERS.map((folder) => `packages/vue/src/${folder}/**/*.{ts,vue}`),
-    ignores: TEST_FILES,
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: RESTRICTED_IMPORTS.filter(({ message }) => !OLD_FORM_MESSAGES.has(message)),
-          patterns: RESTRICTED_IMPORT_PATTERNS,
-        },
-      ],
-      'vue/no-restricted-syntax': [
-        'error',
-        ...RESTRICTED_TEMPLATE_SYNTAX.filter(({ message }) => !OLD_FORM_MESSAGES.has(message)),
-      ],
-    },
   },
   eslintConfigPrettier,
 ]);
