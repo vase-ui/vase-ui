@@ -1,5 +1,5 @@
 ---
-order: 7
+order: 9
 description: A guide to the Temporal API, the polyfill and the types in the date and time components of Vase UI.
 ---
 
@@ -94,9 +94,9 @@ For a calendar other than ISO and Gregorian in an engine that needs the polyfill
 
 ## Time zones
 
-A `Temporal.ZonedDateTime` value keeps its time zone. A component reads today in the zone of its value, else in the zone of the runtime. The prop `timeZone` of a date field or a date picker sets that zone. `Calendar` and `RangeCalendar` take `today` for another zone, such as `Temporal.Now.plainDateISO('Asia/Tokyo')`.
+A `Temporal.ZonedDateTime` value keeps its time zone. A component reads today in the zone of its value, else in the zone of the runtime. The `timeZone` prop of `DateField`, `DatePicker` and `DateRangePicker` sets that zone. `Calendar` and `RangeCalendar` take `today` for another zone, such as `Temporal.Now.plainDateISO('Asia/Tokyo')`.
 
-A zone change can skip an hour, and a time in that hour does not exist. When a pick gives a value such a time, the component moves the time forward by the size of the gap, as `Temporal` does.
+A zone change can skip an hour, and a time in that hour does not exist. When a pick gives a time in that hour, the component moves the time forward by the size of the gap, as `Temporal` does.
 
 ## Servers
 
@@ -104,7 +104,7 @@ A server does not know the locale and the time zone of a visitor. With no `local
 
 `Calendar` reads today to mark the day and to pick its first month. With no `today` prop, it reads the clock only after the mount, so the server HTML marks no day as today. Give it `today` when the server knows the day of the visitor. The server HTML then has that day.
 
-A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. A picker reads today after its mount, and a date picker reads it again at each open of its popup. No render reads the clock. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
+A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. `DatePicker` and `DateRangePicker` read today after the mount and at each open of the popup. No render reads the clock. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
 
 On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
 

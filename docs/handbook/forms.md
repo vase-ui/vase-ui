@@ -142,7 +142,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 <<< ../examples/forms/ConstraintValidation.vue{8}
 
-`Input`, `Checkbox`, `Radio` and `Switch` render native inputs, so the browser shows their validation messages at the control. Each other form component, such as `Select` or `NumberField`, takes part in native submission and validation with a visually hidden input. That input is in the element of the component, and it is `position: absolute`. Give the root of the component, or an element around it, `position: relative`. The native validation message then points at the control.
+`Input`, `Checkbox`, `Radio` and `Switch` render native inputs, so the browser shows their validation messages at the control. A component such as `Select` or `NumberField` takes part in native submission and validation with a visually hidden input. That input is in the element of the component, and it is `position: absolute`. Give the root of the component, or an element around it, `position: relative`. The native validation message then points at the control.
 
 ## Custom validation
 
@@ -168,9 +168,9 @@ Bind the errors that a server returns after a submission with `v-model:errors` o
 
 <<< ../examples/forms/ServerErrors.vue{15,19,24}
 
-After a submit, the next change of `errors` moves the focus to the first field that has an error. An edit or a reset before that change cancels the move.
+After a submit that passes the validation, the next change of `errors` moves the focus to the first field that has an error. An edit or a reset before that change cancels the move.
 
-The [Form page](/components/form) has a demo that shows the errors of a server after a submission.
+The demo [Submit to a server](/components/form#submit-to-a-server) of the Form page shows the errors of a server after a submission.
 
 ## Displaying errors
 
@@ -309,6 +309,6 @@ To submit the form:
 | `actionsRef` of `Form` and `Field.Root`            | A template ref with `validate()`. The `validate(name?)` of `Form` returns `true` when each field that it checks is valid. |
 | `dirty` and `touched` of `Field.Root`              | `v-model:dirty` and `v-model:touched`.                                                                                    |
 | `Field.Control`                                    | `Input`.                                                                                                                  |
-| `Field.Validity`                                   | The default slot of `Field.Root`. It gives `validity`, `errors`, `value` and `initialValue`.                              |
+| `Field.Validity`                                   | The default slot of `Field.Root`. It gives `state`, `validity`, `errors`, `value` and `initialValue`.                     |
 | `match={true}` on `Field.Error`                    | `invalid` on `Field.Root`. `Field.Error` with no `match` shows while the field is invalid.                                |
 | React Hook Form                                    | [VeeValidate](#veevalidate), a form library for Vue.                                                                      |

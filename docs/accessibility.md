@@ -13,7 +13,7 @@ The components follow the [WAI-ARIA Authoring Practices Guide](https://www.w3.or
 
 ## Focus management
 
-The components move the focus after an interaction. For example, an open dialog moves the focus into its popup. When the dialog closes, it gives the focus back to the element that had it before. The props `initialFocus` and `finalFocus` of a popup part, such as `Dialog.Popup`, change these targets.
+The components move the focus after an interaction. For example, an open dialog moves the focus into its popup. When the dialog closes, it gives the focus back to its trigger, else to the element that had the focus before. The props `initialFocus` and `finalFocus` of a popup part, such as `Dialog.Popup`, change these targets.
 
 Give each element that can get the focus a visible focus style, as [WCAG 2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) requires. Use the `:focus-visible` pseudo-class: it matches when the browser shows a focus indicator, such as after a key press.
 
@@ -23,7 +23,7 @@ Give text and the parts of each control enough contrast with their background. [
 
 ## Accessible labels
 
-`Field` and `Fieldset` connect each form control to its label, its description and its error. The [forms guide](/handbook/forms#naming-form-controls) shows how. A native `<label>` also names an input.
+`Field` connects each form control to its label, its description and its error. `Fieldset` connects a group of controls to its legend. The [forms guide](/handbook/forms#naming-form-controls) shows how. A native `<label>` also names an input.
 
 A control with no visible label needs a name from `aria-label` or `aria-labelledby`. An icon button is an example. An image that gives information needs `alt` text. The [accessible name computation](https://www.w3.org/TR/accname-1.2/) gives the rules.
 
@@ -37,7 +37,7 @@ An open popup that can hold the focus, such as a Dialog, a Menu, a Popover or a 
 
 [axe-core](https://github.com/dequelabs/axe-core) reports each sentinel under the rule `aria-hidden-focus`. The report is a false positive: [ACT rule 6cfa84](https://www.w3.org/WAI/standards-guidelines/act/rules/6cfa84/) passes a sentinel that moves the focus. Base UI and Floating UI render the same sentinels ([base-ui#5237](https://github.com/mui/base-ui/issues/5237), [floating-ui#2758](https://github.com/floating-ui/floating-ui/issues/2758)).
 
-An open Context Menu, and a Dialog or a Popover with `modal` set to `'trap-focus'`, give `aria-hidden="true"` to the rest of the page. axe-core then reports each control of the page under the same rule. No control of the page has the focus while the popup is open: a `'trap-focus'` popup keeps the focus, and a Context Menu closes when the focus leaves it.
+An open Context Menu gives `aria-hidden="true"` to the rest of the page. A Dialog or a Drawer with `modal` set to `'trap-focus'` does the same. So does a Popover with `modal` set to `'trap-focus'` and a `Popover.Close`. axe-core then reports each control of the page under the same rule. No control of the page can get the focus while the popup is open: a `'trap-focus'` popup keeps the focus, and a Context Menu closes when the focus leaves it.
 
 Check the page while no popup is open. To check an open popup, turn off the rule `aria-hidden-focus` for that check only:
 
