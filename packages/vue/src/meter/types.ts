@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 
-export interface MeterRootProps extends /* @vue-ignore */ HTMLAttributes {
+export interface MeterRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   value: number;
   /** @default 0 */
   min?: number;
@@ -17,6 +18,14 @@ export interface MeterRootProps extends /* @vue-ignore */ HTMLAttributes {
   getAriaValueText?: (formattedValue: string, value: number) => string;
 }
 
-export interface MeterLabelProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface MeterLabelProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
 }
+
+export interface MeterValueProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface MeterTrackProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface MeterIndicatorProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}

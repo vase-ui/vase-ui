@@ -1,15 +1,17 @@
-export * as OTPField from './index.parts';
-
-export { default as OTPFieldRoot } from './root/OTPFieldRoot.vue';
-export { default as OTPFieldInput } from './input/OTPFieldInput.vue';
-export { default as OTPFieldSeparator } from '../separator/Separator.vue';
-
-export type * from './root/OTPFieldRoot.vue';
-export type * from './input/OTPFieldInput.vue';
+export * as OTPField from './parts';
+export type {
+  OTPFieldInputState,
+  OTPFieldRootChangeEventDetails,
+  OTPFieldRootChangeEventReason,
+  OTPFieldRootCompleteEventDetails,
+  OTPFieldRootCompleteEventReason,
+  OTPFieldRootInvalidEventDetails,
+  OTPFieldRootInvalidEventReason,
+  OTPFieldRootProps,
+  OTPFieldRootState,
+  OTPFieldRootValidationType,
+} from './types';
 export type {
   SeparatorProps as OTPFieldSeparatorProps,
   SeparatorState as OTPFieldSeparatorState,
 } from '../separator';
-
-export * as OTPFieldRootDataAttributes from './root/OTPFieldRootDataAttributes';
-export * as OTPFieldInputDataAttributes from './input/OTPFieldInputDataAttributes';

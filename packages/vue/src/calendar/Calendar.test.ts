@@ -313,6 +313,20 @@ describe('the navigation buttons', () => {
     expect(log).toEqual([]);
   });
 
+  test('VUE-143: a hold stops after one step when that step releases the press', async () => {
+    const log: string[] = [];
+    const pointer = { pointerId: 5, pointerType: 'mouse', button: 0, bubbles: true };
+    const { next } = await mountCalendar({
+      root: logged(log, {
+        onMonthChange: () => window.dispatchEvent(new PointerEvent('pointerup', pointer)),
+      }),
+    });
+    next().dispatchEvent(new PointerEvent('pointerdown', pointer));
+    // Two repeats would come in this time.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(log).toEqual(['update:month 2026-12']);
+  });
+
   test('a hold pauses while the pointer is out of the button', async () => {
     const log: string[] = [];
     const { next } = await mountCalendar({ root: logged(log) });

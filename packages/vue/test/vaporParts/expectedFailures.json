@@ -4,17 +4,9 @@
       "summary": "A ref in a virtual DOM slot has no owner when its parent vnode comes from outside a render function.",
       "link": "https://github.com/vuejs/core/issues/16301"
     },
-    "vue-16305-hydration": {
-      "summary": "A Vapor component cannot read its hydration state or its first server node.",
-      "link": "https://github.com/vuejs/core/issues/16305"
-    },
     "vue-16305-keep-alive": {
       "summary": "A Vapor component cannot read whether KeepAlive holds its branch.",
       "link": "https://github.com/vuejs/core/issues/16305"
-    },
-    "vue-16308": {
-      "summary": "A function ref on a dynamic component gets null and the same element again after a value that the ref reads changes.",
-      "link": "https://github.com/vuejs/core/issues/16308"
     }
   },
   "files": {
@@ -99,9 +91,6 @@
     "src/internals/useOpenChangeComplete.test.tsx": {
       "fails": {}
     },
-    "src/internals/usePressAndHold.test.tsx": {
-      "fails": {}
-    },
     "src/internals/useRenderElement.test.tsx": {
       "fails": {}
     },
@@ -135,14 +124,6 @@
         "<NavigationMenu.Positioner /> > resets data-instant after the first activation of a held mount": "vue-16305-keep-alive"
       }
     },
-    "src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx": {
-      "fails": {
-        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<NumberField.ScrubAreaCursor /> > Base UI component API > prop: render > renders a customized root element with an element": "vue-16308"
-      }
-    },
     "src/popover/popup/PopoverPopup.test.tsx": {
       "fails": {
         "<Popover.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -155,17 +136,6 @@
       "fails": {
         "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
       }
-    },
-    "src/resizable/panel/ResizablePanel.test.tsx": {
-      "fails": {
-        "<Resizable.Panel /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Resizable.Panel /> > hydration > gives the collapsed state of the server HTML to both panel slots while it hydrates": "vue-16305-hydration",
-        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a removed panel, data-collapsed": "vue-16305-hydration",
-        "<Resizable.Panel /> > hydration > writes the client value of an attribute after the hydration, a stored layout, data-collapsed": "vue-16305-hydration"
-      }
-    },
-    "src/resizable/root/ResizableRoot.edges.test.tsx": {
-      "fails": {}
     },
     "src/select/item-text/SelectItemText.test.tsx": {
       "fails": {

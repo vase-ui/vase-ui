@@ -11,15 +11,12 @@ export const linkPress = 'link-press' as const;
 export const clearPress = 'clear-press' as const;
 export const chipRemovePress = 'chip-remove-press' as const;
 export const trackPress = 'track-press' as const;
-export const incrementPress = 'increment-press' as const;
-export const decrementPress = 'decrement-press' as const;
 export const dayPress = 'day-press' as const;
 export const monthPress = 'month-press' as const;
 export const yearPress = 'year-press' as const;
 
 export const inputChange = 'input-change' as const;
 export const inputClear = 'input-clear' as const;
-export const inputBlur = 'input-blur' as const;
 export const inputPaste = 'input-paste' as const;
 export const inputPress = 'input-press' as const;
 
@@ -32,8 +29,6 @@ export const monthChange = 'month-change' as const;
 
 export const pointer = 'pointer' as const;
 export const drag = 'drag' as const;
-export const wheel = 'wheel' as const;
-export const scrub = 'scrub' as const;
 
 export const popupClose = 'popup-close' as const;
 export const cancelOpen = 'cancel-open' as const;

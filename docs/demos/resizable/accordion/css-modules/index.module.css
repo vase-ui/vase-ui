@@ -14,6 +14,9 @@
 .Panel {
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.Animated {
   transition: flex-grow 200ms;
 
   @media (prefers-reduced-motion: reduce) {
@@ -21,7 +24,7 @@
   }
 }
 
-.Root[data-dragging] > .Panel {
+.Root[data-dragging] > .Animated {
   transition: none;
 }
 
@@ -79,6 +82,10 @@
   outline: none;
   cursor: row-resize;
 
+  @media (pointer: coarse) {
+    --resizable-handle-hit-area-size: 24px;
+  }
+
   @media (prefers-color-scheme: dark) {
     background-color: oklch(26.9% 0 0deg);
   }
@@ -95,7 +102,7 @@
     cursor: default;
   }
 
-  &[data-disabled] {
+  &[aria-disabled='true'] {
     cursor: default;
   }
 

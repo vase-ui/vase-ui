@@ -149,7 +149,7 @@
       "describe": ["<Tabs.Tab />", "prop: nativeButton"],
       "title": "renders a react-router Link",
       "kind": "not-applicable",
-      "reason": "The case renders a component of React Router. The `element` slot renders each element or component, and the case of a link covers it."
+      "reason": "The case renders a component of React Router. `as` and the `element` slot render each element or component: `test/as.test.ts` renders `RouterLink` of vue-router, and the case of a link covers the press."
     },
     {
       "upstream": "packages/react/src/tabs/tab/TabsTab.test.tsx",
@@ -267,13 +267,13 @@
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Tab",
       "kind": "not-applicable",
-      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). `class`, `style` and the `element` slot replace `className`, `style` and `render`. The tab has no `data-active` and no `data-disabled`: CSS selects `[aria-selected=\"true\"]` and `[aria-disabled=\"true\"]` (rule 8.15)."
+      "reason": "The tab reads the element that it renders, so it has no `nativeButton` (rule 8.3). `class`, `style`, `as` and the `element` slot replace `className`, `style` and `render`. The tab has no `data-active` and no `data-disabled`: CSS selects `[aria-selected=\"true\"]` and `[aria-disabled=\"true\"]` (rule 8.15)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Panel",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The panel has no `data-hidden`, which `[hidden]` selects, and no `data-index` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The panel has no `data-hidden`, which `[hidden]` selects, and no `data-index` (rule 8.15). `class`, `style`, `as` and the `element` slot replace `className`, `style` and `render`."
     }
   ],
   "surfaceAdditions": [

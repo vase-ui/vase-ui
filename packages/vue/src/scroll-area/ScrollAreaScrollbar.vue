@@ -140,6 +140,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="rendered && as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
   <div v-else-if="rendered" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </div>

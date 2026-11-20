@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, onUnmounted, useAttrs, type HTMLAttributes } from 'vue';
+import { mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { injectScrollArea } from './root';
+import type { ScrollAreaCornerProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<ScrollAreaCornerProps>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {
@@ -47,6 +48,14 @@ function elementProps() {
     :props="elementProps()"
     :elementRef="setElement"
   />
+  <component
+    :is="as"
+    v-else-if="!root.state.cornerHidden && as"
+    v-bind="elementProps()"
+    :ref="setElement"
+  >
+    <slot />
+  </component>
   <div v-else-if="!root.state.cornerHidden" v-bind="elementProps()" :ref="setElement">
     <slot />
   </div>

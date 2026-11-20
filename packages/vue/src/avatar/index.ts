@@ -4,6 +4,7 @@ export type {
   AvatarFallbackState,
   AvatarImageProps,
   AvatarImageState,
+  AvatarRootProps,
   AvatarRootState,
   ImageLoadingStatus,
 } from './types';

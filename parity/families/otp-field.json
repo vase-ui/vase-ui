@@ -6,29 +6,60 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInputDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/utils/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part writes its own attributes from the state of the root. No mapping of the state to attributes is shared."
+    },
+    {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "The file mocks `SafeReact` to test the id fallback of React 17. Vue has `useId` in each version that the package supports."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
-      "describe": [
-        "<OTPField.Root />",
-        "value handling",
-        "prop: validationType",
-        "hidden validation input"
-      ],
-      "title": "renders the hidden validation input with an alphanumeric pattern during SSR",
       "kind": "replaced",
-      "test": "packages/vue/src/otp-field/root/OTPFieldRoot.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case is in the test file that the Node project runs, with the same titles."
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "`OTPField.test.ts` tests the code, `v-model` and the change, invalid and complete events, the form input and its validity, `autoSubmit`, the reset, the field, the names, the tab stop and the order of the slots, with the native elements of the parts. `OTPField.hydration.test.ts` tests the server HTML."
     },
     {
-      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
-      "describe": ["<OTPField.Root />", "Form", "server-side rendering"],
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/otp-field/root/OTPFieldRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The two cases are in the test file that the Node project runs, with the same titles."
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "`OTPField.test.ts` tests the attributes of a slot, typed text, paste, the keys, Enter, the focus, the click, the composition and the fill of a slot, with a real keyboard and pointer in each browser."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.android.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.android.test.ts",
+      "reason": "`OTPField.android.test.ts` mocks the platform and tests the same composition."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/utils/otp.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/code.test.ts",
+      "reason": "`code.test.ts` tests each case of the file on the functions of `code.ts`, and the flag of refused characters."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.spec.tsx",
+      "reason": "`OTPField.spec.tsx` tests the namespace types, the required `length`, and the `event` of the details by `reason`."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.spec.tsx",
+      "reason": "`OTPField.spec.tsx` tests that a slot takes the attributes of an input and no `index`. The slot has no `render` slot: the `element` slot gives its props."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -47,9 +78,137 @@
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
       "describe": ["<OTPField.Input />"],
+      "title": "allows a composed mousedown handler to prevent focus",
+      "kind": "not-applicable",
+      "reason": "`event.preventDefault()` on a native listener has its native meaning only, so a listener of the developer does not stop the code of the part (rule 8.7)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "stops propagation when ArrowDown moves focus to the empty end slot",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The slot calls `preventDefault()` for a key that it handles, and the event reaches an ancestor, as from a native input. A composite around the field acts only on its own items."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "does not reselect the final slot when typing the same character",
+      "kind": "not-applicable",
+      "reason": "The case counts the calls of `select()`. The case of the key of the selected character tests what the user sees: the focus moves, and the code does not change."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "leaves vertical arrow navigation unhandled in disabled mode",
+      "kind": "not-applicable",
+      "reason": "A disabled input gets no key from a user."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "warns in development when clipboard text cannot be read during paste handling",
+      "kind": "not-applicable",
+      "reason": "A `paste` event of a browser has `clipboardData`, and its text can always be read."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "ignores a paste event when clipboard text is unavailable",
+      "kind": "not-applicable",
+      "reason": "A `paste` event of a browser has `clipboardData`, and its text can always be read."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "adds disabled and readonly state attributes to each slot",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "A slot has no `data-disabled` and no `data-readonly`: CSS selects `:disabled` and `:read-only` on the same input (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
       "title": "applies a native label to every slot",
       "kind": "not-applicable",
-      "reason": "A `<label for>` names the first input only. A `Field.Label` names each input with `aria-labelledby`, and the cases of the inputs in a field test it."
+      "reason": "A `<label for>` names the first input only, as in HTML. `aria-labelledby` on the root names the group, and a `Field.Label` names the group and each input."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "keeps the shared label on the first slot even if an aria-label is provided",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "warns when aria-label is provided on the first slot without an associated label",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "does not warn for a first-slot aria-label when a native label is associated",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "describe": ["<OTPField.Input />"],
+      "title": "does not warn for a first-slot aria-label when Field.Label is associated",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": [
+        "<OTPField.Root />",
+        "value handling",
+        "prop: validationType",
+        "built-in filtering"
+      ],
+      "title": "applies single-character validation to each visible slot",
+      "kind": "not-applicable",
+      "reason": "A slot accepts only the characters of the type, so a `pattern` on a slot can never fail. The form input has the `pattern` of a whole code."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": [
+        "<OTPField.Root />",
+        "value handling",
+        "prop: validationType",
+        "hidden validation input"
+      ],
+      "title": "omits the hidden validation pattern when set to `none`",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The form input of the type `none` has the pattern `.{length}`, so an incomplete code fails the native validation of each type (rule 8.11)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": [
+        "<OTPField.Root />",
+        "value handling",
+        "prop: validationType",
+        "hidden validation input"
+      ],
+      "title": "renders the hidden validation input with an alphanumeric pattern during SSR",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.hydration.test.ts",
+      "reason": "`OTPField.hydration.test.ts` renders the field on a server and reads the pattern and the attributes of each input."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form", "server-side rendering"],
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.hydration.test.ts",
+      "reason": "`OTPField.hydration.test.ts` renders the field on a server and reads the ids, the values and the form input."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
@@ -72,28 +231,82 @@
       "reason": "The case asserts the focused state of the root, which is cut (rule 8.15). The cases of the filled state test `data-filled`."
     },
     {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "prop: mask", "native masking"],
+      "title": "renders password slot inputs when enabled",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "`mask` is cut. `type=\"password\"` on each `OTPField.Input` is the native attribute on the element that it changes."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form"],
+      "title": "redirects hidden validation input focus to the first visible slot",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The form input gives the focus to the end slot: the first empty slot, where the user types next. For an empty code it is the first slot."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form"],
+      "title": "accepts valid hidden-input autofill and moves focus to the first slot when autofill is cleared",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "A fill of the form input moves the focus only when the field has it, so a fill does not take the focus from another control (WCAG 3.2.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form"],
+      "title": "handles password manager autofill through the hidden input",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "A fill of the form input moves the focus only when the field has it, so a fill does not take the focus from another control (WCAG 3.2.2)."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form", "prop: autoSubmit"],
+      "title": "keeps the completed value when the owning form has no requestSubmit method",
+      "kind": "not-applicable",
+      "reason": "`requestSubmit()` is Baseline Widely available, so each form has it."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form", "prop: autoSubmit"],
+      "title": "does not call flushSync inside a layout effect when auto-submitting a Base UI Form",
+      "kind": "not-applicable",
+      "reason": "The case tests `flushSync` of React in a layout effect. Vue has neither."
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form", "prop: autoSubmit"],
+      "title": "blocks invalid Base UI Form auto-submit without calling flushSync inside a layout effect",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/OTPField.test.ts",
+      "reason": "The case tests `flushSync` of React. The case of a `Form` that blocks the submit tests the blocked submit and the focus."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`v-model` replaces `value` and `onValueChange`. `autocomplete`, `inputmode` and `readonly` replace `autoComplete`, `inputMode` and `readOnly`, also in the state (rule 8.2). `mask` is cut: `type=\"password\"` on each `OTPField.Input` is the native attribute on the element that it changes. The state has no `focused`, and the group has no `data-focused`: CSS selects `:focus-within` (rule 8.15). The details of a change have no `allowPropagation`, `isPropagationAllowed` or `trigger`: the part stops no event, and `details.event.target` is the element (rule 8.6). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "Input",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "OTPFieldInputDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The input has no props: the attributes of an input type it, so the part has no props type. It has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`: CSS selects `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus` on the same input (rule 8.15). `readonly` replaces `readOnly` in the state, and the state has no `focused`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "OTPFieldRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "entry": "OTPFieldInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
@@ -102,47 +315,44 @@
       "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     }
   ],
-  "surfaceAdditions": [
-    {
-      "entry": "Root",
-      "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to find out if a label names the group and the inputs, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Root",
-      "changeEventReason": "none",
-      "reason": "A native reset changes the value. Base UI does not follow a reset."
-    }
-  ],
+  "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
+      "upstream": "packages/react/src/otp-field/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/parts.ts",
+      "behavior": "The parts of the namespace `OTPField`.",
+      "witness": "packages/vue/src/otp-field/OTPField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/OTPFieldRoot.vue",
+      "behavior": "The root holds the code, makes each change, and renders the group and the form input.",
+      "witness": "packages/vue/src/otp-field/OTPField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/otp-field/OTPFieldInput.vue",
+      "behavior": "A slot shows its character, and gives the root its text, its keys and its focus.",
+      "witness": "packages/vue/src/otp-field/OTPField.test.ts"
+    },
+    {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRootContext.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/otp-field/root/otpField.ts",
-      "member": "OTPFieldRootContext",
-      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx",
-      "additional": [
-        {
-          "destination": "packages/vue/src/otp-field/input/OTPFieldInput.vue",
-          "member": "inputState"
-        }
-      ]
+      "destination": "packages/vue/src/otp-field/root.ts",
+      "member": "otpFieldKey",
+      "witness": "packages/vue/src/otp-field/OTPField.test.ts"
     },
     {
       "upstream": "packages/react/src/otp-field/utils/otp.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/otp-field/root/otpField.ts",
-      "member": "normalizeOTPValue",
-      "witness": "packages/vue/src/otp-field/utils/otp.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/otp-field/utils/stateAttributesMapping.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/otp-field/root/otpField.ts",
-      "member": "inputStateAttributesMapping",
-      "witness": "packages/vue/src/otp-field/input/OTPFieldInput.test.tsx"
+      "destination": "packages/vue/src/otp-field/code.ts",
+      "member": "toCode",
+      "witness": "packages/vue/src/otp-field/code.test.ts"
     }
   ]
 }

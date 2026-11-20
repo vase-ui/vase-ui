@@ -1,15 +1,9 @@
-import type { ButtonHTMLAttributes, Component } from 'vue';
+import type { ButtonHTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
-export interface ToggleProps<Value extends string = string> extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled' | 'value'
-> {
-  /**
-   * A tag or a component that the part renders in place of its `<button>`, with the same
-   * attributes and content. The `element` slot wins over it.
-   */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface ToggleProps<Value extends string = string>
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'value'> {
   /** The pressed state. With no value, the toggle owns its state. */
   modelValue?: boolean;
   /**

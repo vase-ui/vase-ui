@@ -410,6 +410,15 @@ function onEdit() {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot
+      :state="state"
+      :validity="validity"
+      :errors="errors"
+      :value="value"
+      :initialValue="firstValue"
+    />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot
       :state="state"

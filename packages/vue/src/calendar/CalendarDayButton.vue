@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, useAttrs, useSlots, watch } from 'vue';
+import { computed, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { formatText } from '../internals/date-time/calendar/formatText';
 import { isSameDay } from '../internals/date-time/temporal';
 import { dayAttributes } from './days';
@@ -32,7 +32,6 @@ defineSlots<{
 const calendar = injectCalendar();
 const day = injectDay();
 const attrs = useAttrs();
-const slots = useSlots();
 const { element, setElement } = useElement<HTMLElement>();
 // An unavailable day keeps the focus and takes no press.
 const button = useButton({
@@ -40,7 +39,7 @@ const button = useButton({
   disabled: () => day.state.disabled || day.state.unavailable,
   focusableWhenDisabled: () => !day.state.disabled,
   type: 'button',
-  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
+  tag: useAsTag(() => props.as),
 });
 const text = computed(() => formatText(day.day, { day: 'numeric' }, calendar.locale));
 

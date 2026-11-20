@@ -18,12 +18,9 @@ interface ReasonToEventMap {
   [REASONS.yearPress]: MouseEvent | KeyboardEvent | PointerEvent;
   [REASONS.chipRemovePress]: PointerEvent | MouseEvent | KeyboardEvent;
   [REASONS.trackPress]: PointerEvent | MouseEvent | TouchEvent;
-  [REASONS.incrementPress]: PointerEvent | MouseEvent | TouchEvent;
-  [REASONS.decrementPress]: PointerEvent | MouseEvent | TouchEvent;
 
   [REASONS.inputChange]: InputEvent | Event;
   [REASONS.inputClear]: InputEvent | FocusEvent | Event;
-  [REASONS.inputBlur]: FocusEvent;
   [REASONS.inputPaste]: ClipboardEvent;
   [REASONS.inputPress]: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;
 
@@ -37,8 +34,6 @@ interface ReasonToEventMap {
   [REASONS.pointer]: PointerEvent;
   [REASONS.drag]: PointerEvent | TouchEvent;
   [REASONS.swipe]: PointerEvent | TouchEvent;
-  [REASONS.wheel]: WheelEvent;
-  [REASONS.scrub]: PointerEvent;
 
   [REASONS.cancelOpen]: MouseEvent;
   [REASONS.siblingOpen]: Event;

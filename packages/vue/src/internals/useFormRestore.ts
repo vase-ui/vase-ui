@@ -90,7 +90,7 @@ export function useFormRestoreAsInput<Value>(
     if (!isTextControl(element) || element.type === 'hidden') {
       return;
     }
-    // A range slider takes its changed thumbs together. A pending render already owns this input.
+    // A pending render already owns this input.
     if (model.value !== undefined && !binding.value.applied) {
       return;
     }

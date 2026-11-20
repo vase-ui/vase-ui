@@ -5,14 +5,20 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 const OTP_LENGTH = 6;
 
 const id = useId();
+const labelId = `${id}-label`;
 </script>
 
 <template>
   <div class="flex w-full max-w-80 flex-col items-start gap-1">
-    <label :for="id" class="text-sm font-bold text-neutral-950 dark:text-white"
+    <label :id="labelId" :for="id" class="text-sm font-bold text-neutral-950 dark:text-white"
       >Verification code</label
     >
-    <OTPField.Root :id="id" :length="OTP_LENGTH" class="flex w-full items-center gap-2">
+    <OTPField.Root
+      :id="id"
+      :aria-labelledby="labelId"
+      :length="OTP_LENGTH"
+      class="flex w-full items-center gap-2"
+    >
       <div class="flex gap-2">
         <OTPField.Input
           v-for="index in 3"

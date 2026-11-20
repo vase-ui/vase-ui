@@ -45,7 +45,12 @@ afterEach(() => {
   while (cleanups.length > 0) cleanups.pop()!();
 });
 
-function createAppOf(component: vue.Component, props: Record<string, unknown>, hydrate: boolean) {
+/** Creates the app of the project, as `mount` and `hydrate` do. */
+export function createAppOf(
+  component: vue.Component,
+  props: Record<string, unknown>,
+  hydrate: boolean,
+) {
   const kind = inject('app');
   const create = kind.startsWith('vapor')
     ? hydrate

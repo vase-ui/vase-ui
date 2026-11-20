@@ -22,8 +22,8 @@ function onRangeChange(value: number[]) {
   <Slider.Root :default-value="[25, 75]" @value-change="onRangeChange">
     <Slider.Control>
       <Slider.Track>
-        <Slider.Thumb :index="0" aria-label="Minimum" />
-        <Slider.Thumb :index="1" aria-label="Maximum" />
+        <Slider.Thumb aria-label="Minimum" />
+        <Slider.Thumb aria-label="Maximum" />
       </Slider.Track>
     </Slider.Control>
   </Slider.Root>

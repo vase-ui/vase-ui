@@ -4,10 +4,6 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 
 <template>
   <Fieldset.Root>
-    <Fieldset.Legend>
-      <template #element="{ props, elementRef }">
-        <legend v-bind="props" :ref="elementRef">Billing details</legend>
-      </template>
-    </Fieldset.Legend>
+    <Fieldset.Legend as="legend">Billing details</Fieldset.Legend>
   </Fieldset.Root>
 </template>

@@ -1,8 +1,9 @@
 import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { FieldState } from '../field/control';
+import type { AsProps } from '../common/element';
 
-export interface CheckboxGroupProps extends /* @vue-ignore */ HTMLAttributes {
+export interface CheckboxGroupProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** `null` is an empty value. */
   modelValue?: string[] | null;
   defaultValue?: string[] | null;

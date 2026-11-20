@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
+import { mergeProps, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { injectProgressRoot, statusAttributes } from './root';
-import type { ProgressIndicatorState } from './types';
+import type { ProgressIndicatorProps, ProgressIndicatorState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<ProgressIndicatorProps>();
 defineSlots<{
   default?(scope: { state: ProgressIndicatorState }): unknown;
   element?(scope: {
@@ -40,6 +40,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="root.state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="root.state" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="root.state" />
   </div>

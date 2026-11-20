@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, useAttrs, useSlots } from 'vue';
+import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarViewTriggerProps, CalendarViewTriggerState } from './types';
 
@@ -23,14 +23,13 @@ defineSlots<{
 
 const calendar = injectCalendar();
 const attrs = useAttrs();
-const slots = useSlots();
 const { element, setElement } = useElement<HTMLElement>();
 // A calendar of weeks or days, and a range calendar, show days only.
 const button = useButton({
   element,
   disabled: () => props.disabled || calendar.state.disabled || !calendar.hasViews,
   type: 'button',
-  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
+  tag: useAsTag(() => props.as),
 });
 const state = computed<CalendarViewTriggerState>(() => ({
   ...calendar.state,

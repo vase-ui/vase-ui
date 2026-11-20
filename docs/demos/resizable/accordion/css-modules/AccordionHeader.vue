@@ -1,27 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Resizable } from '@vase-ui/vue/resizable';
 import styles from './index.module.css';
 
-const panel = Resizable.useParentPanel();
-const expanded = computed(() => !(panel?.state.value.collapsed ?? false));
-
-function toggle() {
-  if (expanded.value) {
-    panel?.collapse();
-  } else {
-    panel?.expand();
-  }
-}
+defineProps<{
+  /** The panel is expanded. */
+  expanded: boolean;
+  /** The `id` of the panel. */
+  controls: string;
+}>();
+defineEmits<{ toggle: [] }>();
 </script>
 
 <template>
   <button
     type="button"
     :aria-expanded="expanded"
-    :aria-controls="panel?.id.value"
+    :aria-controls="controls"
     :class="styles.Header"
-    @click="toggle"
+    @click="$emit('toggle')"
   >
     <slot />
     <svg

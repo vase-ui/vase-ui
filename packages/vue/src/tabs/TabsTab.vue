@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectTabsList } from './list';
 import { injectTabsRoot, rootStateAttributes, type RootTab } from './root';
@@ -21,6 +21,7 @@ defineSlots<{
 const root = injectTabsRoot();
 const list = injectTabsList();
 const attrs = useAttrs();
+const asTag = useAsTag(() => props.as);
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
@@ -54,8 +55,7 @@ onUnmounted(unregister);
 defineExpose({ element });
 
 function elementProps() {
-  // The element of the `element` slot is known after the mount.
-  const button = !element.value || element.value.localName === 'button';
+  const button = (element.value?.localName ?? asTag() ?? 'button') === 'button';
   return mergeProps(
     {
       role: 'tab',
@@ -112,6 +112,9 @@ function onKeydown(event: KeyboardEvent) {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
   <button v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </button>

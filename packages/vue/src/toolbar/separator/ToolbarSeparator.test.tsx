@@ -32,6 +32,16 @@ describe('<Toolbar.Separator />', () => {
     },
   );
 
+  it('renders the tag of `as`', async () => {
+    await render(
+      <Toolbar.Root>
+        <Toolbar.Separator as="li" />
+      </Toolbar.Root>,
+    );
+
+    expect(screen.getByRole('separator').tagName).toBe('LI');
+  });
+
   it('allows its orientation to be overridden', async () => {
     await render(
       <Toolbar.Root orientation="horizontal">
@@ -105,6 +115,18 @@ describe('<Toolbar.Separator />', () => {
         'aria-orientation',
         'vertical',
       );
+    });
+
+    it('hydrates a separator in an <hr>, which has no content', async () => {
+      const props = { as: 'hr' };
+      const serverHtml = await renderOnServer(
+        'src/toolbar/separator/ToolbarSeparatorHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrate(ToolbarSeparatorHydration, { serverHtml, props });
+
+      expect(within(container).getByRole('separator').tagName).toBe('HR');
     });
   });
 

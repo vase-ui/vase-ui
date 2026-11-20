@@ -53,7 +53,6 @@ export {
   renderOnServer,
   hydrate,
   hydrateAfter,
-  mockNavigationType,
   mockPageBeforeLoad,
   recordInputEvents,
   setAttributeInHtml,

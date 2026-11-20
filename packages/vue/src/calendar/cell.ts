@@ -1,14 +1,6 @@
-import {
-  computed,
-  inject,
-  useAttrs,
-  useSlots,
-  watch,
-  type ComputedRef,
-  type InjectionKey,
-} from 'vue';
+import { computed, inject, useAttrs, watch, type ComputedRef, type InjectionKey } from 'vue';
 import { useButton } from '../common/button';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { formatText } from '../internals/date-time/calendar/formatText';
 import { isSameDay } from '../internals/date-time/temporal';
 import { injectCalendar } from './root';
@@ -41,7 +33,6 @@ export function useCell(
     );
   }
   const attrs = useAttrs();
-  const slots = useSlots();
   const { element, setElement } = useElement<HTMLElement>();
   const date = computed(() => options.cell().toPlainDate({ day: 1 }));
   const state: ComputedRef<CalendarCellState> = computed(() =>
@@ -51,7 +42,7 @@ export function useCell(
     element,
     disabled: () => state.value.disabled,
     type: 'button',
-    tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
+    tag: useAsTag(() => props.as),
   });
   const text = computed(() => formatText(options.cell(), options.format(), calendar.locale));
 

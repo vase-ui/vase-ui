@@ -57,7 +57,7 @@ const VARIANTS: Variant[] = ['css-modules', 'tailwind'];
  */
 const ATTRIBUTE_STATES: Record<string, { selector: string; attributes: string[] } | undefined> = {
   resizable: {
-    selector: '[role="separator"], [data-vase-ui-resizable-edge]',
+    selector: '[role="separator"]',
     attributes: ['data-at-min', 'data-at-max', 'data-crossing'],
   },
 };

@@ -61,7 +61,7 @@ In a popup, the <kbd>Esc</kbd> key stops the propagation of the event, so that p
 
 ## Preventing Vase UI from handling an event
 
-To stop the handler of Vase UI for an event such as `paste`, call `event.preventVaseUIHandler()` in your listener on the part:
+To stop the handler of Vase UI for an event such as `keydown`, call `event.preventVaseUIHandler()` in your listener on the part:
 
 <<< ../examples/customization/PreventHandler.vue{7}
 

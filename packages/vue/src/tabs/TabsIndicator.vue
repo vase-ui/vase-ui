@@ -121,6 +121,15 @@ function elementProps() {
     <slot name="element" :props="elementProps()" :elementRef="setElement" :state="state" />
     <PrehydrationScript :script="prehydrationScript" />
   </template>
+  <component
+    :is="as"
+    v-else-if="root.value !== null && as"
+    v-bind="elementProps()"
+    :ref="setElement"
+  >
+    <slot :state="state" />
+    <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />
+  </component>
   <span v-else-if="root.value !== null" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />

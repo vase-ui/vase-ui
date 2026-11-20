@@ -57,7 +57,7 @@ describe('server render and hydration', () => {
 });
 
 describe('the name in the server HTML', () => {
-  test.each(['wrapped', 'native', 'two'] as const)(
+  test.each(['wrapped', 'native', 'as', 'two'] as const)(
     'VUE-89: the server HTML of the root names its first legend, and the client keeps the name (legend: %s)',
     async (legend) => {
       const props = { scene: { legend } };
@@ -66,7 +66,9 @@ describe('the name in the server HTML', () => {
       const legendId = fieldset.getAttribute('aria-labelledby');
       const legendElement = root.querySelector(`#${legendId}`);
       expect(legendElement).toHaveTextContent('Billing');
-      expect(legendElement!.localName).toBe(legend === 'native' ? 'legend' : 'div');
+      expect(legendElement!.localName).toBe(
+        legend === 'native' || legend === 'as' ? 'legend' : 'div',
+      );
       expect(fieldset).toHaveAccessibleName('Billing');
       hydrate(FieldsetLegends, props, root);
       await settle();

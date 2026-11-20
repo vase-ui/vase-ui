@@ -6,248 +6,512 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
-      "describe": ["<NumberField.Input />"],
-      "title": "warns without an owner stack when React cannot provide one",
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrementDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The case tests the owner stack of React. Vue has no owner stack."
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrementDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInputDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+      "kind": "not-applicable",
+      "reason": "The part is cut. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
+      "kind": "not-applicable",
+      "reason": "The context gives the cursor its place. The family has no cursor part, so the scrub area provides nothing."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
+      "kind": "not-applicable",
+      "reason": "The file gives the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the parts, the value and the text, `v-model`, the cancel, the commit, the steps, the keys, the wheel, the locale and the characters. `NumberField.field.test.ts` tests the hidden input, the fill, the reset, the `form` prop, Enter, the constraints, `Field`, `Form` and the fieldset. `NumberField.hydration.test.ts` tests the server HTML."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.iOS.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.iOS.test.ts",
+      "reason": "`NumberField.iOS.test.ts` tests the input mode on iOS for each range, and an `inputmode` of the developer."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the buttons: a mouse press and its click, a click with no press, the hold and its repeat, the keys of the amount, a touch, a pointer cancel, the bound and the end of a hold."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the increment button, its hold, `snapOnStep` and its element slot."
+    },
+    {
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrement.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the decrement button, `snapOnStep` from `min` and its `disabled` prop."
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the element of the group, its role, its state attributes and its element slot."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the input: its role and attributes, the characters, paste, composition, the blur, the rounding of the format and the keys."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "`NumberField.test.ts` tests the scrub area: the steps for each `pixelSensitivity` px, `orientation`, the text direction, the commit, the end with no commit, a label in the area and a touch."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.gecko.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests the release of the pointer lock in Firefox. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests the cut cursor part. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/getViewportRect.test.ts",
+      "kind": "not-applicable",
+      "reason": "The file tests the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/utils/parse.test.ts",
-      "describe": ["NumberField parse", "parseNumber"],
-      "title": "keeps only the last of many dots",
       "kind": "replaced",
-      "test": "packages/vue/src/number-field/utils/parse.test.ts",
-      "reason": "The case reads `.0.0.0 … .5` as 0.5. Vase UI does not read dots that are not group separators (BUG-5424, https://github.com/mui/base-ui/issues/5424), so that text gives `null`. The case \"BUG-5424: keeps only the last of many dots that are group separators\" tests the same count of dots with groups of three digits, and it tests that the text of Base UI gives `null`."
+      "test": "packages/vue/src/number-field/text.test.ts",
+      "reason": "`text.test.ts` has the cases of the parse of a text in a locale and a format, and of the characters that the input accepts."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Input",
-      "prop": "aria-roledescription",
-      "kind": "not-applicable",
-      "reason": "The row documents a native attribute and its default. In Vase UI the attribute goes to the element through the attributes, with its type from `InputHTMLAttributes`, and it replaces the default `'Number field'`. A declared prop would take it out of the attributes."
+      "upstream": "packages/react/src/number-field/utils/validate.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/step.test.ts",
+      "reason": "`step.test.ts` has the cases of one step, the snap and the binary noise. `text.test.ts` has the cases of the rounding of the format."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "should round to explicit maximumFractionDigits on blur",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "A focus and a blur with no typed edit change no value, as for a native input: a form is not dirty because the user moved through it. The blur rounds a typed number, and each step rounds its result. The case \"a focus and a blur with no typed edit change nothing and emit nothing, also when the format rounds the value\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "rounds the stored value, not the compact text, on blur ($name)",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "With no typed edit, the blur rounds no value (see \"should round to explicit maximumFractionDigits on blur\"). The case \"a rounding option of the format rounds the typed number at the blur, before the commit\" tests a typed number."
     },
     {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
       "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
       "title": "does not mark the field focused when the focus default is prevented",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The browser cannot cancel `focus`, so `preventDefault()` has no native meaning there (rule 8.7). The family has no `focused` state (rule 8.15)."
     },
     {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
-      "describe": ["<NumberField />", "prop: readOnly"],
-      "title": "keeps focus state in sync on a readOnly field",
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
+      "title": "does not reformat, touch, or commit on blur when the blur default is prevented",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The browser cannot cancel `blur`, so `preventDefault()` has no native meaning there (rule 8.7). `details.cancel()` cancels a change."
     },
     {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
-      "describe": ["<NumberField />", "Field"],
-      "title": "[data-filled]",
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
+      "title": "ignores a change whose native default was already prevented",
       "kind": "not-applicable",
-      "reason": "The case asserts the focused state of the field, which is cut (rule 8.15). `[data-filled]` of the field has the cases of the input in a field."
+      "reason": "The browser cannot cancel `input`, so `preventDefault()` has no native meaning there (rule 8.7). `details.cancel()` cancels a change."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "steps keyboard from dirty input text when the controlled value lags onValueChange",
+      "kind": "not-applicable",
+      "reason": "A controlled field that the parent does not write shows the value of its prop again, as `Input` does, so no typed text stays to step from. A typed number is the value at once, so a step after an edit starts from it: the case \"a step after a typed edit starts from the typed number\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "keeps dirty-input authority after a non-mutating key so the next keyboard step uses dirty text",
+      "kind": "not-applicable",
+      "reason": "A controlled field that the parent does not write shows the value of its prop again, as `Input` does, so no typed text stays to step from. A typed number is the value at once, so a step after an edit starts from it: the case \"a step after a typed edit starts from the typed number\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "keeps dirty-input authority after a non-mutating key so a button step uses dirty text",
+      "kind": "not-applicable",
+      "reason": "A controlled field that the parent does not write shows the value of its prop again, as `Input` does, so no typed text stays to step from. A typed number is the value at once, so a step after an edit starts from it: the case \"a step after a typed edit starts from the typed number\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "commits dirty text on blur after a cursor key when the controlled value does not mirror it",
+      "kind": "not-applicable",
+      "reason": "A controlled field that the parent does not write shows the value of its prop again, as `Input` does, so no typed text stays to step from. A typed number is the value at once, so a step after an edit starts from it: the case \"a step after a typed edit starts from the typed number\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "warns in development when clipboard text cannot be read during paste handling",
+      "kind": "not-applicable",
+      "reason": "The paste is the native one: the browser puts the text at the selection, and the input reads no clipboard. `beforeinput` refuses a paste that does not give a number."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "describe": ["<NumberField.Input />"],
+      "title": "reports an unchanged value once when a paste event carries no clipboard data",
+      "kind": "not-applicable",
+      "reason": "The paste is the native one, and the input reads no clipboard. A paste with no text gives no `input` event."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "describe": ["<NumberField.Increment />", "press and hold"],
+      "title": "starts the hold once a touch press settles and ignores the compatibility click",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "A held touch steps first at the first repeat, 460 ms after the press, and a tap steps at its click. A touch that becomes a scroll gets `pointercancel` before then (`test/measurements/number-field.test.ts`, M2), so no timer and no count of moves tell a hold from a scroll. The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "describe": ["<NumberField.Increment />", "press and hold"],
+      "title": "does not start the hold when the touch moves like a scroll",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "A touch that moves like a scroll gets `pointercancel`, and the hold ends with no step (M2). The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "describe": ["<NumberField.Increment />", "press and hold"],
+      "title": "treats a touch press with several small moves as a tap",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "A touch steps at its click, whatever its moves. The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "describe": ["<NumberField />", "Field"],
       "title": "adds [data-focused] attribute on every focus",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The family has no `focused` state and no `data-focused`: `:focus` on the input and `:focus-within` on the root (rule 8.15)."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "describe": ["<NumberField />", "Field", "[data-focused] without a blur event"],
+      "title": "is removed when the focused input becomes disabled",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "Field", "[data-focused] without a blur event"],
+      "title": "is removed when the focused input unmounts",
+      "kind": "not-applicable",
+      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus (rule 8.15)."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "describe": ["<NumberField />", "hidden input"],
       "title": "validates the autofilled value even when the change is canceled",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.field.test.ts",
+      "reason": "A cancelled fill changes nothing and tells the field nothing (`_shared.md` section 1). The case \"a fill of a disabled or read-only field, and a cancelled fill, change nothing\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />"],
+      "title": "blocks submission when step mismatch occurs with default step",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.field.test.ts",
+      "reason": "With no `step`, the hidden input has `step=\"any\"`, so the form accepts each number. `:step=\"1\"` gives the constraint of Base UI. The case \"with min and step, the form refuses a number off the grid; with no step it accepts each number\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />", "prop: locale"],
+      "title": "should use the default locale if no locale is provided",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/NumberField.test.ts",
+      "reason": "With no `locale` prop, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser (rule 8.14). The case \"the text has the locale prop, else the locale of the nearest LocaleProvider, and never the locale of the visitor\" tests it."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "describe": ["<NumberField />"],
+      "suite": "hiddenInputSizeTests",
       "kind": "not-applicable",
-      "reason": "The field validates the value of its control. A cancelled autofill keeps the value of the root, so the field has no new value to validate."
+      "reason": "The hidden input is 1 px with `visuallyHiddenInput` for each name. The browser focuses it at an invalid submit and shows its message there (`test/measurements/number-field.test.ts`)."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "describe": ["<NumberField.ScrubArea />"],
+      "title": "tracks visual viewport scale and removes scrub listeners after pointer lock exits",
+      "kind": "not-applicable",
+      "reason": "The case tests the end of the pointer lock. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "describe": ["<NumberField.ScrubArea />", "prop: teleportDistance"],
+      "title": "wraps the virtual cursor around the allowed bounds",
+      "kind": "not-applicable",
+      "reason": "The case tests `teleportDistance`, which wraps a locked pointer. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "describe": ["<NumberField.ScrubArea />", "React.Activity"],
+      "title": "does not resume scrubbing when a hidden scrub area is revealed again",
+      "kind": "not-applicable",
+      "reason": "Vue has no `<Activity>`. A part keeps no state about a hold of `KeepAlive` (`_shared.md` section 5), and an unmount of the area ends the scrub with no commit."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Input",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`v-model` (`modelValue`, `update:modelValue`) and `valueChange` replace `value` and `onValueChange`, and `valueCommitted` replaces `onValueCommitted`. `readonly` replaces `readOnly`, also in the state (rule 8.2). `step` has no default: with none, a step is 1 and the hidden input has `step=\"any\"`, so the form accepts each number, and `:step=\"1\"` gives the constraint. `locale` has no default: the nearest `LocaleProvider`, else `en-US` (rule 8.14). `inputElement` on the template ref replaces `inputRef`. The `id` prop of `NumberField.Input` names the element that has the role (rule 8.4). `as` replaces `render`: the root keeps its hidden input as its last child, so it has no `element` slot. The state has no `focused`: `:focus-within` (rule 8.15). The change details have no `allowPropagation`, `isPropagationAllowed` and `trigger`: the family stops no propagation and has no trigger (rule 8.6)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Group",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The `element` slot and `as` replace `render`, and `class` and `style` replace `className` and `style`. The group has no `data-focused`: `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Input",
+      "kind": "not-applicable",
+      "reason": "The `element` slot replaces `render`; the input is the native form control, so it has no `as` (rule 6.1). The input has `role=\"spinbutton\"` and no default `aria-roledescription`: the role says what it is in the language of the screen reader (rule 8.13), and an `aria-roledescription` of the developer is a plain attribute. It has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`: `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus` (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Increment",
+      "kind": "not-applicable",
+      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). The `element` slot and `as` replace `render`. The button has no default `aria-label`: the developer gives a text or an `aria-label` (rule 8.13). It has no `data-disabled` and no `data-focused`: `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` of the root (rule 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Decrement",
+      "kind": "not-applicable",
+      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). The `element` slot and `as` replace `render`. The button has no default `aria-label`: the developer gives a text or an `aria-label` (rule 8.13). It has no `data-disabled` and no `data-focused`: `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` of the root (rule 8.15)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "ScrubArea",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "`orientation` replaces `direction`: on the web, `direction` is the direction of text, and Slider and Toolbar name this value set `orientation`. `teleportDistance` is cut: The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser. The `element` slot and `as` replace `render`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "ScrubAreaCursor",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Decrement",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Increment",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldDecrementDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldGroupDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldIncrementDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldInputDataAttributes",
-      "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The part is cut. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldScrubAreaCursorDataAttributes",
+      "entry": "NumberFieldGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldIncrementDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldDecrementDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldScrubAreaDataAttributes",
       "kind": "not-applicable",
-      "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
-    }
-  ],
-  "surfaceAdditions": [
-    {
-      "entry": "Increment",
-      "prop": "disabled",
-      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
-      "entry": "Decrement",
-      "prop": "disabled",
-      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldScrubAreaCursorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
+  "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+      "upstream": "packages/react/src/number-field/index.parts.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
-      "member": "useNumberFieldStepperButton",
-      "witness": "packages/vue/src/number-field/root/useNumberFieldStepperButton.test.tsx",
-      "additional": [
-        {
-          "destination": "packages/vue/src/number-field/root/NumberFieldRoot.vue",
-          "member": "prepareStepper"
-        }
-      ]
+      "destination": "packages/vue/src/number-field/parts.ts",
+      "behavior": "The parts of the namespace `NumberField` and their types.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
     },
     {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
-      "member": "NumberFieldScrubAreaContext",
-      "witness": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx"
+      "destination": "packages/vue/src/number-field/NumberFieldRoot.vue",
+      "behavior": "The root holds the value and the text, steps the value, and renders the hidden input.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/root.ts",
+      "member": "numberFieldKey",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/button.ts",
+      "member": "useStepButton",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
     },
     {
       "upstream": "packages/react/src/number-field/utils/constants.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/internals/usePressAndHold.ts",
-      "member": "DEFAULT_TICK_DELAY",
-      "witness": "packages/vue/src/number-field/increment/NumberFieldIncrement.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/number-field/scrub-area/NumberFieldScrubArea.vue",
-      "member": "getViewportRect",
-      "witness": "packages/vue/src/number-field/utils/getViewportRect.test.ts"
+      "destination": "packages/vue/src/number-field/button.ts",
+      "behavior": "The times of the first repeat and of each next repeat of a held button.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
     },
     {
       "upstream": "packages/react/src/number-field/utils/stateAttributesMapping.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/number-field/root/NumberFieldRootContext.ts",
-      "member": "stateAttributesMapping",
-      "witness": "packages/vue/src/number-field/root/NumberFieldRoot.test.tsx"
+      "destination": "packages/vue/src/number-field/root.ts",
+      "member": "stateAttributes",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
     },
     {
       "upstream": "packages/react/src/number-field/utils/types.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/number-field/utils/parse.ts",
-      "member": "IncrementValueParameters",
-      "witness": "packages/vue/src/number-field/root/NumberFieldRootContext.test.tsx"
+      "destination": "packages/vue/src/number-field/root.ts",
+      "member": "StepKeys",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/parse.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/text.ts",
+      "member": "createNumberText",
+      "witness": "packages/vue/src/number-field/text.test.ts"
     },
     {
       "upstream": "packages/react/src/number-field/utils/validate.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/number-field/utils/parse.ts",
-      "member": "toValidatedNumber",
-      "witness": "packages/vue/src/number-field/utils/validate.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/number-field/root/NumberFieldRoot.vue",
-      "member": "setValue",
-      "witness": "packages/vue/src/number-field/input/NumberFieldInput.test.tsx",
+      "destination": "packages/vue/src/number-field/step.ts",
+      "member": "stepValue",
+      "witness": "packages/vue/src/number-field/step.test.ts",
       "additional": [
         {
-          "destination": "packages/vue/src/number-field/input/NumberFieldInput.vue",
-          "member": "allowedNonNumericKeys"
+          "destination": "packages/vue/src/number-field/text.ts",
+          "member": "createNumberText"
         }
       ]
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/NumberFieldGroup.vue",
+      "behavior": "The group renders a `role=\"group\"` element with the state of the root.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/NumberFieldInput.vue",
+      "behavior": "The input shows the text, takes the characters, and steps the value at the keys and the wheel.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/NumberFieldIncrement.vue",
+      "behavior": "The increment button steps the value up.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/NumberFieldDecrement.vue",
+      "behavior": "The decrement button steps the value down.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/number-field/scrub-area/NumberFieldScrubArea.vue",
-      "member": "onScrub",
-      "witness": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
-      "additional": [
-        {
-          "destination": "packages/vue/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.vue",
-          "member": "place"
-        }
-      ]
+      "relation": "merged-into",
+      "destination": "packages/vue/src/number-field/NumberFieldScrubArea.vue",
+      "behavior": "The scrub area steps the value with the moves of a pressed pointer.",
+      "witness": "packages/vue/src/number-field/NumberField.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/number-field/NumberField.spec.tsx",
+      "behavior": "The types of the change and commit details by reason, and of the template refs.",
+      "witness": "packages/vue/src/number-field/NumberField.spec.tsx"
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/number-field/NumberField.spec.tsx",
+      "behavior": "The type of the template ref of the input.",
+      "witness": "packages/vue/src/number-field/NumberField.spec.tsx"
     }
   ]
 }

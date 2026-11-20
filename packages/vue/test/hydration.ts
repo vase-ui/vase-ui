@@ -187,14 +187,6 @@ function mockNavigation(navigation: Partial<PerformanceNavigationTiming>) {
 }
 
 /**
- * Gives `type` as the type of the navigation of the page until the test ends. A part can read it
- * before its first render, and a runner can load the test page in any way.
- */
-export function mockNavigationType(type: NavigationTimingType): void {
-  mockNavigation({ type });
-}
-
-/**
  * Gives a `back_forward` navigation until the test ends. Its `load` event ends only when the case
  * calls the returned function. A part that mounts before then waits for the `pageshow` event of the
  * page.

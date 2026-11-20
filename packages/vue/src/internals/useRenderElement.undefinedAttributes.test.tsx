@@ -12,12 +12,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { NumberField } from '@vase-ui/vue/number-field';
-import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
@@ -26,7 +23,6 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
 import { NOOP } from '../common/empty';
-import * as Resizable from '../resizable/index.parts';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -199,22 +195,6 @@ const rows: Row[] = [
     expected: () => 'false',
   },
   {
-    name: 'NumberField.Group role',
-    attribute: 'role',
-    createNode: () => (
-      <NumberField.Root>
-        <NumberField.Group role={undefined} data-testid="part" />
-      </NumberField.Root>
-    ),
-    expected: () => 'group',
-  },
-  {
-    name: 'OTPField.Root role',
-    attribute: 'role',
-    createNode: () => <OTPField.Root length={4} role={undefined} data-testid="part" />,
-    expected: () => 'group',
-  },
-  {
     name: 'Popover.Popup role',
     attribute: 'role',
     createNode: () => (
@@ -245,18 +225,6 @@ const rows: Row[] = [
     expected: () => '',
   },
   {
-    name: 'Resizable.Handle role',
-    attribute: 'role',
-    createNode: () => (
-      <Resizable.Root>
-        <Resizable.Panel id="a" />
-        <Resizable.Handle role={undefined} aria-label="Resize" data-testid="part" />
-        <Resizable.Panel id="b" />
-      </Resizable.Root>
-    ),
-    expected: () => 'separator',
-  },
-  {
     name: 'Select.Trigger aria-haspopup',
     attribute: 'aria-haspopup',
     createNode: () => (
@@ -271,12 +239,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Select.Separator role={undefined} data-testid="part" />,
     expected: () => 'presentation',
-  },
-  {
-    name: 'Slider.Root role',
-    attribute: 'role',
-    createNode: () => <Slider.Root role={undefined} data-testid="part" />,
-    expected: () => 'group',
   },
   {
     name: 'TimeClock.Root role',

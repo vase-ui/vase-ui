@@ -19,6 +19,7 @@ function getInvalidClassName(invalidPulse: number, evenClassName: string, oddCla
 }
 
 const id = useId();
+const labelId = `${id}-label`;
 const descriptionId = `${id}-description`;
 
 const {
@@ -37,9 +38,10 @@ const invalidClassName = computed(() =>
 
 <template>
   <div :class="styles.Field">
-    <label :for="id" :class="styles.Label">Recovery code</label>
+    <label :id="labelId" :for="id" :class="styles.Label">Recovery code</label>
     <OTPField.Root
       :id="id"
+      :aria-labelledby="labelId"
       :length="CODE_LENGTH"
       validation-type="alphanumeric"
       :normalize-value="normalizeRecoveryCode"

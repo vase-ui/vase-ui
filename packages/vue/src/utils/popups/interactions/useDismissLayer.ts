@@ -922,7 +922,7 @@ export function useDismissLayer(
 
       // If pointerdown was prevented, no click may be generated for that
       // interaction. However, Firefox may still emit an immediate click after
-      // pointerup (e.g. NumberField scrub with pointer lock), so suppress for
+      // pointerup (e.g. a NumberField scrub that ends outside), so suppress for
       // one tick to absorb that synthetic click only.
       if (pressStartedInsideDefaultPrevented) {
         suppressImmediateOutsideClickAfterPreventedStart();

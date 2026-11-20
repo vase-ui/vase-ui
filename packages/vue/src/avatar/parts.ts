@@ -6,6 +6,7 @@ import type {
   AvatarFallbackState,
   AvatarImageProps,
   AvatarImageState,
+  AvatarRootProps,
   AvatarRootState,
 } from './types';
 
@@ -17,6 +18,7 @@ import type {
  */
 export const Root: typeof AvatarRoot = AvatarRoot;
 export namespace Root {
+  export type Props = AvatarRootProps;
   export type State = AvatarRootState;
 }
 

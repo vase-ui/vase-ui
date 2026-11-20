@@ -3,6 +3,7 @@ import {
   Progress,
   type ProgressRootProps,
   type ProgressStatus,
+  type ProgressValueProps,
   type ProgressValueState,
 } from '@vase-ui/vue/progress';
 
@@ -44,7 +45,11 @@ expectType<
 // The types of a part are on the part, and the status is on the family, as in Base UI.
 const rootProps = null as unknown as Progress.Root.Props;
 const valueState = null as unknown as Progress.Value.State;
+// A part with no props of its own has `Props` for `as`.
+const valueProps = null as unknown as Progress.Value.Props;
 const status = null as unknown as Progress.Status;
 expectType<ProgressRootProps, typeof rootProps>(rootProps);
 expectType<ProgressValueState, typeof valueState>(valueState);
+expectType<ProgressValueProps, typeof valueProps>(valueProps);
+expectType<'as', keyof ProgressValueProps & 'as'>('as');
 expectType<ProgressStatus, typeof status>(status);
