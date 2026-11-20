@@ -120,7 +120,7 @@ Import the component and assemble its parts:
 
 </DemoSource>
 
-In the grid of months, the navigation buttons move one year. In the grid of years, they move one page of `visibleYears` years. A page of years starts with a multiple of `visibleYears`, so the page of 2026 has the years from 2016 to 2027.
+In the grid of months, the navigation buttons move one year. In the grid of years, they move one page of `visibleYears` years. With the default 12 years, the page of 2026 has the years from 2016 to 2027.
 
 ### Month picker
 
@@ -559,21 +559,21 @@ Put `Calendar.Grid` in a `<Transition>`, with the first day of the month as its 
 
 No render reads the clock or the locale of the visitor. Give `locale` or a `LocaleProvider`, or the text is `en-US`. With no `today`, the root reads the clock after the mount, so the server HTML marks no day as today. With no value, `month`, `defaultMonth` or focused day, the server HTML also has no month, and the page of today comes after the mount. Give `defaultMonth`, or keep the room of the month in CSS. A server that knows the day of the visitor gives `today`. An expression of `Temporal.Now` in a template can give another day in the browser.
 
-A server and a browser can write other names of the days and another form of a date. The hydration writes the text of the browser in `Calendar.Weekday`, `Calendar.Caption` and `Calendar.ViewTrigger` with no message. Vue allows another text only in an element whose one child is that text. With `as` or a default slot, put the text in an element of the default slot. In another part, also give that element `data-allow-mismatch="text"`. A name in an `aria-*` attribute keeps the text of the server until the part renders again.
+A server and a browser can write other names of the days and another form of a date. `Calendar.Weekday`, `Calendar.Caption` and `Calendar.ViewTrigger` have `data-allow-mismatch="text"`, so the hydration writes the text of the browser with no message. Vue allows another text only in an element whose one child is that text. With `as` or a default slot, put the text in an element of the default slot. In another part, also give that element `data-allow-mismatch="text"`. A name in an `aria-*` attribute keeps the text of the server until the part renders again.
 
 ## Keyboard
 
-| Key                            | Action                                                                                                                                                                         |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Tab                            | Moves the focus to the one tab stop of the grid: the focused day, month or year, else the first selected one, else today, else the first one that can take the focus.          |
-| Left Arrow, Right Arrow        | Moves the focus to the day, the month or the year before or after. The two keys swap in a right-to-left document.                                                              |
-| Up Arrow, Down Arrow           | Moves the focus to the same day of the week before or after, or `columns` cells before or after in a grid of months or years.                                                  |
-| Home, End                      | Moves the focus to the first or the last day of the week, or to the first or the last cell of the row.                                                                         |
-| Page Up, Page Down             | Moves the focus to the same day of the month before or after. In the grid of months, it moves a year. In the grid of years, it moves `visibleYears` years.                     |
-| Shift+Page Up, Shift+Page Down | Moves the focus to the same day a year before or after. It does nothing in a grid of months or years.                                                                          |
-| Shift+Left, Shift+Right        | Moves the focus to the same day a month before or after. With `multiple`, it moves one day and adds that day to the selection. It does nothing in a grid of months or years.   |
-| Shift+Up, Shift+Down           | Moves the focus to the same day a year before or after. With `multiple`, it moves one week and adds that day to the selection. It does nothing in a grid of months or years.   |
-| Enter, Space                   | Selects the day, or the month of a month picker. In the grid of years, shows the months of the year. In the grid of months of a calendar of days, shows the days of the month. |
+| Key                            | Action                                                                                                                                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab                            | Moves the focus to the tab stop of the grid. The tab stop is the focused day, month or year. Else it is the first selected one, else today, else the first one that can take the focus. |
+| Left Arrow, Right Arrow        | Moves the focus to the day, the month or the year before or after. The two keys swap in a right-to-left document.                                                                       |
+| Up Arrow, Down Arrow           | Moves the focus to the same day of the week before or after, or `columns` cells before or after in a grid of months or years.                                                           |
+| Home, End                      | Moves the focus to the first or the last day of the week, or to the first or the last cell of the row.                                                                                  |
+| Page Up, Page Down             | Moves the focus to the same day of the month before or after. In the grid of months, it moves a year. In the grid of years, it moves `visibleYears` years.                              |
+| Shift+Page Up, Shift+Page Down | Moves the focus to the same day a year before or after. It does nothing in a grid of months or years.                                                                                   |
+| Shift+Left, Shift+Right        | Moves the focus to the same day a month before or after. With `multiple`, it moves one day and adds that day to the selection. It does nothing in a grid of months or years.            |
+| Shift+Up, Shift+Down           | Moves the focus to the same day a year before or after. With `multiple`, it moves one week and adds that day to the selection. It does nothing in a grid of months or years.            |
+| Enter, Space                   | Selects the day, or the month of a month picker. In the grid of years, shows the months of the year. In the grid of months of a calendar of days, shows the days of the month.          |
 
 ## API reference
 

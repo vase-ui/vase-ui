@@ -55,7 +55,7 @@ A clock face that picks the hours, the minutes and the seconds of a time.
 
 - **Load `Temporal` first**: An engine with no `Temporal` needs a polyfill, and TypeScript before 6.0 needs `skipLibCheck`. [Dates and times](/handbook/dates-and-times) gives the steps.
 - **Name the clock**: The root is a `group` with no name of its own. Give it an `aria-label`, or an `aria-labelledby` that names a heading, to say what the time is for.
-- **Place the hand and the numbers**: The parts set no position. Give the face `position: relative`, and place the hand, the numbers and the range input in it with the CSS variables of `TimeClock.Hand` and `TimeClock.Number`. The style sheet of each demo is a model.
+- **Place the hand and the numbers**: The parts set no position. Give the face `position: relative`, because its range input has `position: absolute`. Place the hand and the numbers in the face with their CSS variables. The style sheet of each demo is a model.
 
 ## Anatomy
 
@@ -210,7 +210,7 @@ A half of the day.
 
 ### TimeClock.Root.ChangeEventReason
 
-The `reason` of the details of a change of the time: `item-press` is a press on `TimeClock.DayPeriod`, and `input-change` is a change of the range input by assistive technology.
+The `reason` of the details of `valueChange`: `item-press` is a press on `TimeClock.DayPeriod`, and `input-change` is a change of the range input by assistive technology.
 
 <ApiReference name="TimeClock.Root.ChangeEventReason" />
 

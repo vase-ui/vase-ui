@@ -136,7 +136,7 @@ export namespace NextButton {
 }
 
 /**
- * A button that shows the grid of months or of years, and the days again.
+ * A button that shows the grid of months or of years, and then the first view again.
  * Renders a `<button>` element.
  * @selector `[data-active]` The grid shows the view of the trigger.
  * @selector `:disabled` The trigger is a native button, and it is disabled: by its prop, by the calendar, or because the calendar shows days only.

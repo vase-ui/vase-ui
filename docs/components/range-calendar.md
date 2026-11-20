@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue range calendar component that picks the first day and the last day of a range with a press, a drag or the keyboard.
+description: An unstyled Vue range calendar component that picks the first and the last day of a range with a press, a drag or the keyboard.
 ---
 
 <script setup lang="ts">
@@ -64,14 +64,14 @@ Import the component and assemble its parts:
 
 ### Pick a range
 
-`RangeCalendar.Root` holds the parts of [Calendar](/components/calendar) and shows days only: `Calendar.ViewTrigger` is disabled in it, and `Calendar.MonthGrid` and `Calendar.YearGrid` render nothing. The value is `[start, end]`, and a range in progress is `[start, null]`.
+`RangeCalendar.Root` holds the parts of [Calendar](/components/calendar) and shows days only: `Calendar.ViewTrigger` is disabled in it, and `Calendar.MonthGrid` and `Calendar.YearGrid` render nothing.
 
 - The first press on a day starts a range in progress. The root has `data-selecting` until the range ends.
 - The second press ends the range, with the two days in the order of the calendar. A press on the first day again gives a range of one day.
 - A press after a complete range starts a new range. A press that gives a range that is not valid also starts a new range at the pressed day.
 - A range is not valid when it has fewer days than `minDays` or more days than `maxDays`. With no `allowNonContiguousRanges`, a range that crosses a disabled or unavailable day is not valid. With it, the crossed day gets `data-range-middle` and is not selected.
 - A drag with a mouse, a pen or a finger from one day to another gives the range in one `valueChange`. When that range is not valid, it ends at the last day that gives a valid range. A press and a release on one day is a press. Escape stops a drag, and the release after it changes nothing.
-- While a range is in progress, the day under a mouse or a pen, or the day that has the focus, shows the range that a press on it gives.
+- While a range is in progress, the days show the range of a press on the day under a mouse or a pen, or on the focused day.
 
 `Calendar.Day` and `Calendar.DayButton` have `data-range-start`, `data-range-end` and `data-range-middle`. A range of one day has the first two. The day buttons have `touch-action: none`, so that a finger can drag over the days. To let the page scroll from a day, give the button a `style` with another `touch-action`.
 
@@ -147,18 +147,18 @@ The server HTML has the grid, the range, one tab stop and the touch style of eac
 
 ## Keyboard
 
-| Key                            | Action                                                                                                                                                                                |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tab                            | Moves the focus to the one tab stop of the grid: the focused day, else the first selected day, else today, else the first day that can take the focus.                                |
-| Left Arrow, Right Arrow        | Moves the focus to the day before or after. The two keys swap in a right-to-left document.                                                                                            |
-| Up Arrow, Down Arrow           | Moves the focus to the same day of the week before or after.                                                                                                                          |
-| Home, End                      | Moves the focus to the first or the last day of the week.                                                                                                                             |
-| Page Up, Page Down             | Moves the focus to the same day of the month before or after, or to the last day of a shorter month.                                                                                  |
-| Shift+Page Up, Shift+Page Down | Moves the focus to the same day a year before or after.                                                                                                                               |
-| Enter, Space                   | Picks the day. The first press starts the range, and the second press ends it.                                                                                                        |
-| Shift+Left, Shift+Right        | Moves the focus one day, and makes the range from the first day to that day. The first day is the start of a range in progress, else the day that had the focus before the first key. |
-| Shift+Up, Shift+Down           | Moves the focus one week, and makes the range in the same way.                                                                                                                        |
-| Escape                         | Stops a drag. Else, puts back the range from before the first press of a range in progress. It works with the focus on each element of the calendar.                                  |
+| Key                            | Action                                                                                                                                                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab                            | Moves the focus to the tab stop of the grid. The tab stop is the focused day, else the first selected day, else today, else the first day that can take the focus.                                          |
+| Left Arrow, Right Arrow        | Moves the focus to the day before or after. The two keys swap in a right-to-left document.                                                                                                                  |
+| Up Arrow, Down Arrow           | Moves the focus to the same day of the week before or after.                                                                                                                                                |
+| Home, End                      | Moves the focus to the first or the last day of the week.                                                                                                                                                   |
+| Page Up, Page Down             | Moves the focus to the same day of the month before or after, or to the last day of a shorter month.                                                                                                        |
+| Shift+Page Up, Shift+Page Down | Moves the focus to the same day a year before or after.                                                                                                                                                     |
+| Enter, Space                   | Picks the day. The first press starts the range, and the second press ends it.                                                                                                                              |
+| Shift+Left, Shift+Right        | Moves the focus one day, and makes the range from the first day to that day. The first day is the start of a range in progress, else the day that had the focus before the first key.                       |
+| Shift+Up, Shift+Down           | Moves the focus one week, and makes the range in the same way.                                                                                                                                              |
+| Escape                         | Stops a drag. Else, puts back the range from before the first press of a range in progress. It works with the focus on each element of the calendar. The calendar prevents the key only in these two cases. |
 
 ## API reference
 

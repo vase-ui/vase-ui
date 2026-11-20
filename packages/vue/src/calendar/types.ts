@@ -191,8 +191,7 @@ export interface CalendarBaseProps extends AsProps, /* @vue-ignore */ Omit<HTMLA
   locale?: Intl.LocalesArgument | undefined;
   /**
    * The calendar of the grid, such as `gregory` or `persian`. The default is the calendar of a
-   * value that is not ISO, else `gregory`. The value keeps its own calendar. A year and month shows
-   * in this calendar only when the two calendars have the same months, as `buddhist` and `gregory` do.
+   * value that is not ISO, else `gregory`. The value keeps its own calendar.
    */
   calendar?: string | undefined;
   /**
@@ -223,9 +222,10 @@ export interface CalendarRootProps<
 > extends CalendarBaseProps {
   /**
    * The selected value, or the list of selected values with `multiple`. `v-model` binds it. A
-   * `Temporal.PlainYearMonth` selects a month in the grid of months. A new value has the kind, the
-   * calendar, the time and the zone of the first value, else of `defaultValue`, else of the last
-   * value. With none of them, it is a `Temporal.PlainDate`.
+   * `Temporal.PlainYearMonth` selects a month in the grid of months. Its months show in `calendar`
+   * only when the two calendars have the same months, as `gregory` and `buddhist` do. A new value
+   * has the kind, the calendar, the time and the zone of the first value, else of `defaultValue`,
+   * else of the last value. With none of them, it is a `Temporal.PlainDate`.
    */
   modelValue?: (Multiple extends true ? readonly Value[] : Value | null) | undefined;
   /** The value at the mount of an uncontrolled calendar. It also gives the kind of a new value. */
@@ -425,7 +425,8 @@ export interface CalendarSelectOption {
 
 export interface CalendarViewTriggerProps extends ButtonProps {
   /**
-   * The view that a press shows. A second press shows the days again.
+   * The view that a press shows. A second press shows the first view again: the days, or the
+   * months of a month picker.
    * @default 'year'
    */
   view?: 'month' | 'year' | undefined;

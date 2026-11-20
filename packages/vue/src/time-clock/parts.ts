@@ -49,7 +49,8 @@ export namespace Root {
 
 /**
  * Shows the numbers of the view, and takes a press, a drag and the keys. The `id` and each `aria-*`
- * attribute of the face go to its range input.
+ * attribute of the face go to its range input. The face has no `element` slot, because its element
+ * holds the range input.
  * Renders a `<div>` element with a range `<input>` element in it.
  * @selector `[data-view]` The unit that the face shows: `hour`, `minute` or `second`.
  * @selector `[data-disabled]` The clock is disabled.
