@@ -44,21 +44,21 @@ const UnderlineIcon: FunctionalComponent = () =>
     <Toggle
       aria-label="Bold"
       value="bold"
-      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 aria-pressed:bg-neutral-950 aria-pressed:text-white dark:aria-pressed:bg-white dark:aria-pressed:text-neutral-950 aria-pressed:hover:bg-neutral-950 aria-pressed:hover:text-white dark:aria-pressed:hover:bg-white dark:aria-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
       <BoldIcon />
     </Toggle>
     <Toggle
       aria-label="Italic"
       value="italic"
-      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 aria-pressed:bg-neutral-950 aria-pressed:text-white dark:aria-pressed:bg-white dark:aria-pressed:text-neutral-950 aria-pressed:hover:bg-neutral-950 aria-pressed:hover:text-white dark:aria-pressed:hover:bg-white dark:aria-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
       <ItalicIcon />
     </Toggle>
     <Toggle
       aria-label="Underline"
       value="underline"
-      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 data-pressed:bg-neutral-950 data-pressed:text-white dark:data-pressed:bg-white dark:data-pressed:text-neutral-950 data-pressed:hover:bg-neutral-950 data-pressed:hover:text-white dark:data-pressed:hover:bg-white dark:data-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:bg-neutral-100 dark:hover:bg-neutral-800 aria-pressed:bg-neutral-950 aria-pressed:text-white dark:aria-pressed:bg-white dark:aria-pressed:text-neutral-950 aria-pressed:hover:bg-neutral-950 aria-pressed:hover:text-white dark:aria-pressed:hover:bg-white dark:aria-pressed:hover:text-neutral-950 focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
       <UnderlineIcon />
     </Toggle>

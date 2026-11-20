@@ -13,6 +13,7 @@ export const REFACTORED_FOLDERS = [
   'fieldset',
   'form',
   'input',
+  'locale-provider',
   'meter',
   'progress',
   'radio',
@@ -21,4 +22,6 @@ export const REFACTORED_FOLDERS = [
   'separator',
   'switch',
   'tabs',
+  'toggle',
+  'toggle-group',
 ];

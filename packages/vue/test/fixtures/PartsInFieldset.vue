@@ -17,7 +17,7 @@ defineProps({
 <template>
   <Form v-bind="form">
     <fieldset v-if="native" :disabled="scene.disabled">
-      <FieldsetContent :field="field" :input="input" />
+      <FieldsetContent native :field="field" :input="input" />
     </fieldset>
     <Fieldset.Root v-else :disabled="scene.disabled">
       <FieldsetContent :field="field" :input="input" />

@@ -4,20 +4,14 @@ import type {
   ToggleChangeEventReason,
   ToggleProps,
   ToggleState,
-} from './Toggle.vue';
+} from './types';
 
-/**
- * A two-state button that can be on or off.
- * Renders a `<button>` element.
- */
 export const Toggle: typeof ToggleComponent = ToggleComponent;
 export namespace Toggle {
+  export type Props<Value extends string = string> = ToggleProps<Value>;
   export type State = ToggleState;
-  export type Props<TValue extends string = string> = ToggleProps<TValue>;
   export type ChangeEventReason = ToggleChangeEventReason;
   export type ChangeEventDetails = ToggleChangeEventDetails;
 }
 
-export type * from './Toggle.vue';
-
-export * as ToggleDataAttributes from './ToggleDataAttributes';
+export type { ToggleChangeEventDetails, ToggleChangeEventReason, ToggleProps, ToggleState };

@@ -1,235 +1,178 @@
-<script lang="ts">
-import { inject } from 'vue';
-import type { ComputedRef, HTMLAttributes, InjectionKey } from 'vue';
-import type { VaseUIChangeEventDetails } from '../internals/createVaseUIEventDetails';
-import type { REASONS } from '../internals/reasons';
-import type { Orientation, VaseUIComponentProps, WithVaseUIEvent } from '../internals/types';
-
-export interface ToggleGroupState {
-  /**
-   * Whether the component should ignore user interaction.
-   */
-  disabled: boolean;
-  /**
-   * When `false` only one item in the group can be pressed. If any item in
-   * the group becomes pressed, the others will become unpressed.
-   * When `true` multiple items can be pressed.
-   * @default false
-   */
-  multiple: boolean;
-  /**
-   * The orientation of the toggle group.
-   */
-  orientation: Orientation;
-}
-
-export interface ToggleGroupProps<Value extends string = string>
-  extends
-    VaseUIComponentProps<ToggleGroupState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
-  /**
-   * The pressed state of the toggle group represented by an array of
-   * the values of all pressed toggle buttons.
-   * This is the controlled counterpart of `defaultValue`.
-   * `null` is an empty value, and the group stays controlled.
-   */
-  modelValue?: readonly Value[] | null | undefined;
-  /**
-   * The pressed state of the toggle group represented by an array of
-   * the values of all pressed toggle buttons.
-   * This is the uncontrolled counterpart of `modelValue`.
-   * `null` is an empty value.
-   */
-  defaultValue?: readonly Value[] | null | undefined;
-  /**
-   * Whether the toggle group should ignore user interaction.
-   * @default false
-   */
-  disabled?: boolean | undefined;
-  /**
-   * @default 'horizontal'
-   */
-  orientation?: Orientation | undefined;
-  /**
-   * Whether to loop keyboard focus back to the first item
-   * when the end of the list is reached while using the arrow keys.
-   * @default true
-   */
-  loopFocus?: boolean | undefined;
-  /**
-   * When `false` only one item in the group can be pressed. If any item in
-   * the group becomes pressed, the others will become unpressed.
-   * When `true` multiple items can be pressed.
-   * @default false
-   */
-  multiple?: boolean | undefined;
-}
-
-export type ToggleGroupChangeEventReason = typeof REASONS.none;
-
-export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroupChangeEventReason>;
-
-interface ToggleGroupContext<Value> {
-  value: ComputedRef<readonly Value[]>;
-  setGroupValue: (
-    newValue: Value,
-    nextPressed: boolean,
-    eventDetails: ToggleGroupChangeEventDetails,
-  ) => void;
-  disabled: ComputedRef<boolean>;
-  /**
-   * Whether the group got `modelValue` or `defaultValue`.
-   * A Toggle with no `value` prop reports an error only then.
-   */
-  isValueInitialized: ComputedRef<boolean>;
-}
-
-const toggleGroupKey: InjectionKey<ToggleGroupContext<any>> = Symbol();
-
-export function useToggleGroupContext<Value>(): ToggleGroupContext<Value> | undefined {
-  return inject(toggleGroupKey, undefined);
-}
-</script>
-
 <script setup lang="ts" generic="Value extends string = any">
-// vue-tsc resolves `Value` before it checks a listener of a template.
-// With the default `any`, that check accepts `(value: ('a' | 'b')[]) => void`.
-import { computed, provide } from 'vue';
-import { EMPTY_ARRAY } from '../common/empty';
-import { useControlled } from '../common/useControlled';
-import { useCompositeRoot } from '../internals/composite/root/useCompositeRoot';
-import type { ComponentRenderFn, HTMLProps } from '../internals/types';
-import { useCastBooleanWarning } from '../internals/useCastBooleanWarning';
-import { useRenderElement } from '../internals/useRenderElement';
+// vue-tsc resolves `Value` before it checks a listener of a template. With the default `any`, that
+// check accepts `(value: ('a' | 'b')[]) => void`.
+import { computed, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
+import { byDocumentOrder, useElement } from '../common/element';
+import { useModel } from '../common/model';
+import { useInDisabledFieldset } from '../fieldset/part';
 import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
 import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
+import { toggleGroupKey, type GroupToggle } from './toggle';
+import type { ToggleGroupChangeEventDetails, ToggleGroupProps, ToggleGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ToggleGroupProps<Value>>(), {
-  as: 'div',
   modelValue: undefined,
   defaultValue: undefined,
+  multiple: false,
   disabled: false,
   orientation: 'horizontal',
   loopFocus: true,
-  multiple: false,
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  useCastBooleanWarning('ToggleGroup');
-}
-
 const emit = defineEmits<{
-  /**
-   * Callback fired when the pressed states of the toggle group changes.
-   */
-  valueChange: [groupValue: Value[], eventDetails: ToggleGroupChangeEventDetails];
-  /**
-   * Event handler called after `valueChange` with the new value, unless a listener cancels the
-   * change. `v-model` uses it.
-   */
-  'update:modelValue': [groupValue: Value[]];
+  /** The user presses a toggle. `details.cancel()` keeps the value as it was. */
+  valueChange: [value: Value[], details: ToggleGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value[]];
 }>();
-
 defineSlots<{
-  default(props: { state: ToggleGroupState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ToggleGroupState>;
+  default?(scope: { state: ToggleGroupState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: ToggleGroupState;
+  }): unknown;
 }>();
 
-const toolbarContext = useToolbarRootContext(true);
-const toolbarGroupContext = useToolbarGroupContext();
+// The Toolbar family replaces the toolbar lines of this file with the item contract of its toolbar.
+// Until then, a toolbar holds the tab stop and the keys of the toggles.
+const toolbar = useToolbarRootContext(true);
+const toolbarGroup = useToolbarGroupContext();
+const attrs = useAttrs();
+const { element, setElement } = useElement<HTMLElement>();
+const inDisabledFieldset = useInDisabledFieldset(element);
 
-const groupDisabled = computed(
-  () =>
-    props.disabled ||
-    toolbarContext?.disabled.value ||
-    toolbarGroupContext?.disabled.value ||
-    false,
+// `null` is an empty value, and the group stays controlled.
+const model = () => (props.modelValue === undefined ? undefined : (props.modelValue ?? []));
+const { value, setOwn } = useModel<readonly Value[]>(model, model() ?? props.defaultValue ?? []);
+const toggles = shallowReactive<GroupToggle[]>([]);
+const focused = shallowRef<GroupToggle>();
+
+const disabledForToggles = computed(
+  () => props.disabled || !!toolbar?.disabled.value || !!toolbarGroup?.disabled.value,
 );
-
-const groupValue = useControlled<readonly Value[]>({
-  // `undefined` makes the part uncontrolled, so only `null` becomes an empty value.
-  controlled: () => (props.modelValue === null ? EMPTY_ARRAY : props.modelValue),
-  default: () => props.defaultValue ?? EMPTY_ARRAY,
-  name: 'ToggleGroup',
-  state: 'value',
-});
-
-function setGroupValue(
-  newValue: Value,
-  nextPressed: boolean,
-  eventDetails: ToggleGroupChangeEventDetails,
-) {
-  let newGroupValue: Value[];
-  if (props.multiple) {
-    newGroupValue = groupValue.value.slice();
-    if (nextPressed) {
-      newGroupValue.push(newValue);
-    } else {
-      newGroupValue.splice(groupValue.value.indexOf(newValue), 1);
-    }
-  } else {
-    newGroupValue = nextPressed ? [newValue] : [];
-  }
-
-  emit('valueChange', newGroupValue, eventDetails);
-
-  if (eventDetails.isCanceled) {
-    return;
-  }
-
-  emit('update:modelValue', newGroupValue);
-  groupValue.value = newGroupValue;
-}
-
 const state = computed<ToggleGroupState>(() => ({
-  disabled: groupDisabled.value,
+  disabled: disabledForToggles.value || inDisabledFieldset.value,
   multiple: props.multiple,
   orientation: props.orientation,
 }));
-
-provide(toggleGroupKey, {
-  disabled: groupDisabled,
-  setGroupValue,
-  value: groupValue,
-  // The raw props tell an absent value from the empty default.
-  isValueInitialized: computed(
-    () => props.modelValue !== undefined || props.defaultValue !== undefined,
-  ),
+const tabStop = computed(() => {
+  if (toolbar) return undefined;
+  const last = focused.value;
+  if (last && !last.disabled) return last;
+  return enabledToggles()[0];
 });
 
-// In a toolbar, the root of the toolbar is the composite root, and the toggles are its items.
-// A second root here would give the toolbar a second tab stop. The context of a component does
-// not change, so `setup` can make this choice one time.
-const composite = toolbarContext
-  ? undefined
-  : useCompositeRoot({
-      loopFocus: () => props.loopFocus,
-      enableHomeAndEndKeys: true,
-      orientation: () => props.orientation,
-    });
-
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  state,
-  ref: composite?.registerRoot,
-  props: (attrs) => [
-    {
-      onFocusin: composite?.onFocusin,
-      onFocusout: composite?.onFocusout,
-      onKeydown: composite?.onKeydown,
-    },
-    { role: 'group' },
-    attrs,
-  ],
+provide(toggleGroupKey, {
+  get value() {
+    return value.value;
+  },
+  get disabled() {
+    return disabledForToggles.value;
+  },
+  get hasValue() {
+    return props.modelValue !== undefined || props.defaultValue !== undefined;
+  },
+  get tabStop() {
+    return tabStop.value;
+  },
+  press,
+  addToggle(toggle) {
+    toggles.push(toggle);
+    return () => {
+      toggles.splice(toggles.indexOf(toggle), 1);
+      if (focused.value === toggle) focused.value = undefined;
+    };
+  },
 });
 
 defineExpose({ element });
+
+function elementProps() {
+  return mergeProps(
+    {
+      role: 'group',
+      'data-orientation': props.orientation,
+      'data-disabled': state.value.disabled ? '' : undefined,
+      ...(!toolbar && { onKeydown, onFocusin }),
+    },
+    attrs,
+  );
+}
+
+function press(toggleValue: string, pressed: boolean, details: ToggleGroupChangeEventDetails) {
+  const current = value.value as readonly string[];
+  const next = (
+    props.multiple
+      ? pressed
+        ? [...current, toggleValue]
+        : current.filter((item) => item !== toggleValue)
+      : pressed
+        ? [toggleValue]
+        : []
+  ) as Value[];
+  emit('valueChange', next, details);
+  if (details.isCanceled) return false;
+  setOwn(next);
+  emit('update:modelValue', next);
+  return true;
+}
+
+function enabledToggles() {
+  return toggles
+    .filter((toggle) => !toggle.disabled)
+    .sort((a, b) => byDocumentOrder(a.element, b.element));
+}
+
+function onFocusin(event: FocusEvent) {
+  const toggle = toggles.find((candidate) => candidate.element === event.target);
+  if (toggle) focused.value = toggle;
+}
+
+type Step = 'first' | 'last' | 'next' | 'previous' | 'right' | 'left';
+
+const steps: Record<string, Record<string, Step>> = {
+  horizontal: { Home: 'first', End: 'last', ArrowRight: 'right', ArrowLeft: 'left' },
+  vertical: { Home: 'first', End: 'last', ArrowDown: 'next', ArrowUp: 'previous' },
+};
+
+function onKeydown(event: KeyboardEvent) {
+  const step = steps[props.orientation]?.[event.key];
+  const current = toggles.find((toggle) => toggle.element === event.target);
+  if (!step || !current || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  event.preventDefault();
+  const enabled = enabledToggles();
+  let next: GroupToggle | undefined;
+  if (step === 'first') next = enabled[0];
+  else if (step === 'last') next = enabled.at(-1);
+  else {
+    const rtl = getComputedStyle(event.currentTarget as Element).direction === 'rtl';
+    const forward = step === 'next' || step === (rtl ? 'left' : 'right');
+    // A focused toggle can be disabled, and the keys still move on from it.
+    const choices = current.disabled
+      ? [...enabled, current].sort((a, b) => byDocumentOrder(a.element, b.element))
+      : enabled;
+    const index = choices.indexOf(current) + (forward ? 1 : -1);
+    // `at(-1)` is the last toggle.
+    next = props.loopFocus ? choices.at(index % choices.length) : choices[index];
+  }
+  next?.element.focus();
+}
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </component>
+  <div v-else v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </div>
 </template>

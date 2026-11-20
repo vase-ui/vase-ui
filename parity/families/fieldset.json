@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/fieldset/Fieldset.test.ts",
-      "reason": "`Fieldset.Legend` is a native `<legend>`. `Fieldset.test.ts` tests its id, the name of the group and the server HTML."
+      "reason": "`Fieldset.Legend` is a `<div>` that names its root. `Fieldset.test.ts` tests its id, the name of the group and the server HTML."
     },
     {
       "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
@@ -26,7 +26,7 @@
       "upstream": "docs/src/app/(docs)/react/components/fieldset/types.md",
       "entry": "Legend",
       "kind": "not-applicable",
-      "reason": "The legend has no state: `fieldset:disabled > legend` selects a disabled legend, and the default slot of `Fieldset.Root` has `state.disabled`."
+      "reason": "The legend has no state: `.Fieldset:disabled .Legend` selects the legend of a disabled root, and the default slot of `Fieldset.Root` has `state.disabled`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/fieldset/types.md",

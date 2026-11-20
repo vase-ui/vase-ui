@@ -5,7 +5,6 @@ import { AlertDialog } from '../alert-dialog';
 import { Collapsible } from '../collapsible';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
-import { Toggle } from '../toggle';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
 import SlotHost from './SlotHost.test.vue';
@@ -220,20 +219,24 @@ describe('useCastBooleanWarning', () => {
     expect(takeReportedMessages()).toEqual([message('MyDialog', 'Dialog.Root', 'modal')]);
   });
 
-  it('warns for Toggle nativeButton', async () => {
+  it('warns for Dialog.Trigger nativeButton', async () => {
     const Wrapper = defineComponent({
-      name: 'MyToggle',
+      name: 'MyTrigger',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Toggle as="span" nativeButton={props.nativeButton}>
-            Action
-          </Toggle>
+          <Dialog.Root>
+            <Dialog.Trigger as="span" nativeButton={props.nativeButton}>
+              Action
+            </Dialog.Trigger>
+          </Dialog.Root>
         );
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyToggle', 'Toggle', 'nativeButton')]);
+    expect(takeReportedMessages()).toEqual([
+      message('MyTrigger', 'Dialog.Trigger', 'nativeButton'),
+    ]);
   });
 
   it('warns for the Boolean union of Dialog.Popup initialFocus', async () => {

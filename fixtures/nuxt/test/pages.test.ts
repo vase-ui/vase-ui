@@ -12,6 +12,7 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 );
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
+const PROVIDER_TEXT = new Intl.NumberFormat('fr-FR', { style: 'percent' }).format(0.42);
 const EURO_FORMAT = { style: 'currency', currency: 'EUR' } as const;
 const EURO_TEXT = new Intl.NumberFormat('en-US', EURO_FORMAT).format(1234.5);
 
@@ -95,20 +96,31 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
   ).toBe('25%');
 }
 
+// A root in a `LocaleProvider` has the locale of the provider.
+async function expectProviderRoot(page: Page) {
+  expect(await page.getByTestId('provider-value').textContent()).toBe(PROVIDER_TEXT);
+  expect(await page.getByTestId('provider-root').getAttribute('aria-valuetext')).toBe(
+    PROVIDER_TEXT,
+  );
+}
+
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
+  await expectProviderRoot(page);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
   expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
-// HTML takes the first `<legend>` of a `<fieldset>` as its name.
+// The root names the fieldset with the id of its legend.
 async function expectFieldsetPage(page: Page) {
   const readTag = (testId: string) =>
     page.getByTestId(testId).evaluate((element) => element.localName);
 
   expect(await readTag('fieldset')).toBe('fieldset');
-  expect(await readTag('legend')).toBe('legend');
-  expect(await page.getByTestId('legend').getAttribute('id')).toBeTruthy();
+  expect(await readTag('legend')).toBe('div');
+  const legendId = await page.getByTestId('legend').getAttribute('id');
+  expect(legendId).toBeTruthy();
+  expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
   expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
@@ -281,20 +293,26 @@ function readButtons(page: Page, testId: string, attributeName: string) {
     );
 }
 
-// The tab stop of a group is its first toggle that is not disabled, also when another toggle is
-// pressed. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
+// A group writes its tab stop at the mount, so each button of its server HTML is in the order of
+// the Tab key. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
 async function expectToggleGroupPage(page: Page) {
   expect(await page.getByTestId('alone').getAttribute('role')).toBe('group');
-  expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'alone', 'tabindex')).toEqual([null, null, null]);
   expect(await readButtons(page, 'alone', 'aria-pressed')).toEqual(['false', 'true', 'false']);
-  expect(await readButtons(page, 'alone', 'data-pressed')).toEqual([null, '', null]);
-  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
+  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual([null, null]);
   expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['0', '-1', '-1']);
   expect(await readButtons(page, 'in-toolbar', 'aria-pressed')).toEqual([null, 'true', 'false']);
   expect(await readAttributes(page.getByTestId('single'), ['tabindex', 'aria-pressed'])).toEqual({
-    tabindex: '0',
+    tabindex: null,
     'aria-pressed': 'true',
   });
+}
+
+// The tab stop of a group is its first toggle that is not disabled, also when another toggle is
+// pressed.
+async function expectHydratedToggleGroupPage(page: Page) {
+  expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
 }
 
 function readDisableScrollbarStyles(page: Page) {
@@ -1914,7 +1932,11 @@ const PAGES: PageCase[] = [
     expectPage: expectToolbarPage,
     expectHydratedPage: expectHydratedToolbarPage,
   },
-  { path: '/toggle-group', expectPage: expectToggleGroupPage },
+  {
+    path: '/toggle-group',
+    expectPage: expectToggleGroupPage,
+    expectHydratedPage: expectHydratedToggleGroupPage,
+  },
   {
     path: '/switch',
     expectPage: expectSwitchPage,
@@ -2670,7 +2692,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
   });
 
   it.each(RANGE_PAGES)(
-    'keeps the en-US text of $path for a visitor in de-DE after hydration',
+    'keeps the text of $path in the locale of each root for a visitor in de-DE after hydration',
     async ({ path, rootAttributes }) => {
       const page = await createPage(undefined, { locale: 'de-DE' });
       const messages = collectMessages(page);
@@ -2687,6 +2709,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         PERCENT_TEXT,
       );
       await expectCurrencyRoot(page, rootAttributes);
+      await expectProviderRoot(page);
       expect(messages).toEqual([]);
     },
   );

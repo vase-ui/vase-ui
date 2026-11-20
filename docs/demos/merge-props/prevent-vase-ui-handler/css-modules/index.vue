@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import { h, ref } from 'vue';
 import type { FunctionalComponent } from 'vue';
-import { mergeProps } from '@vase-ui/vue/merge-props';
-import { Toggle } from '@vase-ui/vue/toggle';
-import type { HTMLProps } from '@vase-ui/vue/types';
+import { Toggle, type ToggleChangeEventDetails } from '@vase-ui/vue/toggle';
 import styles from './index.module.css';
 
 const locked = ref(true);
 const pressed = ref(true);
 
-function getToggleProps(props: HTMLProps) {
-  return mergeProps<'button'>(props, {
-    onClick(event) {
-      if (locked.value) {
-        event.preventVaseUIHandler();
-      }
-    },
-  });
+function onPressedChange(_: boolean, details: ToggleChangeEventDetails) {
+  if (locked.value) {
+    details.cancel();
+  }
 }
 
 const ICON_PROPS = {
@@ -47,13 +41,15 @@ const HeartOutlineIcon: FunctionalComponent = () =>
 <template>
   <div :class="styles.Container">
     <div :class="styles.ToggleRow">
-      <Toggle v-model="pressed" aria-label="Favorite" :class="styles.Toggle">
-        <template #render="{ props, state }">
-          <button type="button" v-bind="getToggleProps(props)">
-            <HeartFilledIcon v-if="state.pressed" />
-            <HeartOutlineIcon v-else />
-          </button>
-        </template>
+      <Toggle
+        v-slot="{ state }"
+        v-model="pressed"
+        aria-label="Favorite"
+        :class="styles.Toggle"
+        @pressed-change="onPressedChange"
+      >
+        <HeartFilledIcon v-if="state.pressed" />
+        <HeartOutlineIcon v-else />
       </Toggle>
       <span :class="styles.Label">Favorite {{ locked ? '(locked)' : '(unlocked)' }}</span>
     </div>

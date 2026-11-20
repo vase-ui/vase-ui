@@ -8,7 +8,7 @@ import FieldWithInput from '../../test/fixtures/FieldWithInput.vue';
 import FormElementReplaced from '../../test/fixtures/FormElementReplaced.vue';
 import FormInTransition from '../../test/fixtures/FormInTransition.vue';
 import FormValues from '../../test/fixtures/FormValues.vue';
-import SubmitWithModifiers from '../../test/fixtures/SubmitWithModifiers.vue';
+import SubmitOnce from '../../test/fixtures/SubmitOnce.vue';
 import TeleportedFields from '../../test/fixtures/TeleportedFields.vue';
 import { mount, settle, submitsPrevented, typeAtEnd } from '../../test/render';
 import { screen } from '../../test/queries';
@@ -102,47 +102,59 @@ describe('the element', () => {
 });
 
 describe('submit', () => {
-  test('a submit that passes runs the listener one time with the native event, and Form does not prevent it', async () => {
-    const data: (string | null)[] = [];
-    const events: Event[] = [];
-    const { exposed, submit } = await mountForm({
-      form: {
-        onSubmit: (event: Event) => {
-          events.push(event);
-          data.push(new FormData(exposed.form.element).get('email') as string | null);
-        },
-      },
-      fields: [{ input: { name: 'email', defaultValue: 'a@b.c', required: true } }],
+  test('with no listener, the browser submits a form that passes at a press, at Enter and at requestSubmit(), and the form prevents a blocked submit', async () => {
+    const { form, input, submit } = await mountForm({
+      fields: [{ input: { id: 'name', required: true } }],
     });
     submit();
-    expect(events).toHaveLength(1);
-    expect(events[0]).toBeInstanceOf(SubmitEvent);
-    expect(data).toEqual(['a@b.c']);
-    expect(submitsPrevented).toEqual([false]);
+    expect(input('name')).toHaveFocus();
+    await typeAtEnd(input('name'), 'a');
+    submit();
+    await userEvent.keyboard('{Enter}');
+    form.requestSubmit();
+    expect(submitsPrevented).toEqual([true, false, false, false]);
   });
 
-  test('the native modifiers .prevent and .once work', () => {
+  test('a listener with .once runs one time, and the form prevents each submit while the listener is bound', () => {
     const submits: SubmitEvent[] = [];
-    const { root } = mount(SubmitWithModifiers, {
+    const { root } = mount(SubmitOnce, {
       submits: { add: (event: SubmitEvent) => submits.push(event) },
     });
     const button = root.querySelector('button')!;
     button.click();
     button.click();
     expect(submits).toHaveLength(1);
-    expect(submitsPrevented).toEqual([true, false]);
+    expect(submitsPrevented).toEqual([true, true]);
   });
 
-  test('Enter in a text input, a submit button outside with the form attribute, and requestSubmit() submit', async () => {
+  test('with two listeners and two .once listeners, as mergeProps gives them, each listener runs at each submit, each .once listener runs one time, and the form prevents each submit', async () => {
+    const [first, second, firstOnce, secondOnce] = [vi.fn(), vi.fn(), vi.fn(), vi.fn()];
+    const { submit } = await mountForm({
+      form: { onSubmit: [first, second], onSubmitOnce: [firstOnce, secondOnce] },
+      fields: [],
+    });
+    submit();
+    submit();
+    for (const listener of [first, second]) expect(listener).toHaveBeenCalledTimes(2);
+    for (const listener of [firstOnce, secondOnce]) expect(listener).toHaveBeenCalledTimes(1);
+    expect(submitsPrevented).toEqual([true, true]);
+  });
+
+  test('a press, Enter in a text input, a submit button outside with the form attribute, and requestSubmit() run the listener with the event and the values, and the form prevents each native submit', async () => {
     const submitted = vi.fn();
     const validated: unknown[] = [];
-    const { form, input } = await mountForm({
+    const { form, input, submit } = await mountForm({
       form: { id: 'profile', onSubmit: submitted },
-      fields: [{ root: recordValidate(validated), input: { id: 'name', defaultValue: 'a' } }],
+      fields: [
+        {
+          root: recordValidate(validated, { name: 'name' }),
+          input: { id: 'name', defaultValue: 'a' },
+        },
+      ],
     });
+    submit();
     input('name').focus();
     await userEvent.keyboard('{Enter}');
-    expect(submitted).toHaveBeenCalledTimes(1);
     const outside = document.body.appendChild(document.createElement('button'));
     try {
       outside.type = 'submit';
@@ -152,8 +164,13 @@ describe('submit', () => {
       outside.remove();
     }
     form.requestSubmit();
-    expect(submitted).toHaveBeenCalledTimes(3);
-    expect(validated).toEqual(['a', 'a', 'a']);
+    expect(submitted).toHaveBeenCalledTimes(4);
+    for (const [event, values] of submitted.mock.calls) {
+      expect(event).toBeInstanceOf(SubmitEvent);
+      expect(values).toEqual({ name: 'a' });
+    }
+    expect(submitsPrevented).toEqual([true, true, true, true]);
+    expect(validated).toEqual(['a', 'a', 'a', 'a']);
   });
 
   test('a blocked submit is prevented, runs no listener, and focuses the first invalid control in the document', async () => {
@@ -183,7 +200,7 @@ describe('submit', () => {
 });
 
 describe('the values of the form', () => {
-  test('@submit.prevent gets the event and the typed values of the named fields; a disabled field and a field outside the form have none', async () => {
+  test('@submit gets the event and the typed values of the named fields; a disabled field and a field outside the form have none', async () => {
     const submits: { prevented: boolean; values: Record<string, unknown> }[] = [];
     const { root } = mount(FormValues, {
       saves: {

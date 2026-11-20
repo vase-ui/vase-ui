@@ -49,6 +49,8 @@ const RESTYLED_FAMILIES = new Set([
   'radio-group',
   'switch',
   'tabs',
+  'toggle',
+  'toggle-group',
 ]);
 
 /**
