@@ -19,7 +19,6 @@ import {
   readPartBadges,
 } from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
-import { hasPageTemplate } from './pageSections.ts';
 
 const FIXTURES = join(import.meta.dirname, '..', 'parity', 'fixtures');
 const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
@@ -518,11 +517,8 @@ test('each @selector and @cssVariable tag of each family page has a name in back
   assert.deepEqual(problems, []);
 });
 
-test('each prop, exposed member and named slot of a page with the differences section has a description', () => {
-  const docs = join(REPOSITORY_ROOT, 'docs');
-  const pages = listFamilyPages(docs).filter(({ path }) =>
-    hasPageTemplate(readFileSync(join(docs, path), 'utf8')),
-  );
+test('each prop, exposed member and named slot of a family page has a description', () => {
+  const pages = listFamilyPages(join(REPOSITORY_ROOT, 'docs'));
   assert.notEqual(pages.length, 0);
   const missing = pages.flatMap(({ family }) =>
     read(family).parts.flatMap((apiPart) =>

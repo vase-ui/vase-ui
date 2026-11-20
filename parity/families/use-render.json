@@ -62,63 +62,63 @@
       "describe": ["useRender", "state to data attributes"],
       "title": "converts state to data attributes automatically",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "handles undefined values in state",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "merges state-based data attributes with existing props",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "props override state-based data attributes",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "handles empty state",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "handles undefined state",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "converts boolean values in state to data attributes",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "converts number values in state to data attributes",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "packages/react/src/use-render/useRender.test.tsx",
       "describe": ["useRender", "state to data attributes"],
       "title": "supports custom stateAttributesMapping for kebab-case conversion",
       "kind": "not-applicable",
-      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA. `useElement` writes no attribute."
     },
     {
       "upstream": "docs/src/app/(docs)/react/utils/use-render/types.md",

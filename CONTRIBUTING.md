@@ -493,7 +493,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 
 A component page is `docs/components/<family>.md`. A utility has a page `docs/utils/<family>.md`, with the same rules. `docs/components/collapsible.md` is the model page.
 
-A page with `<BaseUiDifferences />` has the page template, and `pnpm test:docs` checks the sequence of its `##` sections. Each part of the template holds this:
+Each page has the page template, and `pnpm test:docs` checks the sequence of its `##` sections. Each part of the template holds this:
 
 1. The front matter: `order: 1` and a `description`, "An unstyled Vue <name> component that …". The group then shows its pages in the sequence of their titles.
 2. The title and one sentence, the subtitle of the Base UI page.
@@ -539,7 +539,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:*` too.
 - Write each selector and each CSS variable of a part as a tag in the JSDoc of its constant. Put the tags after the line that names the element: ``@selector `[hidden]` The panel is closed.`` or ``@cssVariable `--collapsible-panel-height` The height of the content of the panel, in pixels.`` The reference shows them in the tables Selectors and CSS variables.
 - Write one selector for each state that a developer styles, as CSS writes it for the element of the part. Write no selector for `:hover`, `:focus`, `:focus-visible` or `:active`.
-- The slots `default` and `element` and the exposed `element` share one description when their JSDoc is empty. On a page with the template, each other prop, slot and exposed member needs a JSDoc.
+- The slots `default` and `element` and the exposed `element` share one description when their JSDoc is empty. Each other prop, slot and exposed member needs a JSDoc.
 - `<ApiReference name="…" />` shows one function, class or type, such as `Dialog.createHandle`, with no heading. The page writes the heading.
 - A Base UI page can end a heading of its reference with `[New]` or `[Preview]`. The extract records the word, and the reference shows a badge. Do not write the word on the page.
 - `pnpm docs:dev` makes the reference again after a save of a file in `packages/vue/src`. After a change in `parity` or of an installed package, start the server again.

@@ -66,7 +66,7 @@
     {
       "upstream": "packages/react/src/global.d.ts",
       "kind": "not-applicable",
-      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. A part animates with `<Transition>` of Vue (rule 8.9), so Vase UI has no such flag."
+      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. A part animates with `<Transition>` of Vue, so Vase UI has no such flag."
     },
     {
       "upstream": "packages/react/src/index.test.tsx",
@@ -138,12 +138,12 @@
     {
       "upstream": "packages/react/src/internals/field-root-context/useSetFieldFocused.ts",
       "kind": "not-applicable",
-      "reason": "A field has no focused state (rule 8.15). CSS selects `:focus-within`."
+      "reason": "A field has no focused state. CSS selects `:focus-within`."
     },
     {
       "upstream": "packages/react/src/internals/TransitionStatusDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/composite/composite.test.ts",
@@ -228,62 +228,62 @@
     {
       "upstream": "packages/react/src/internals/createBaseUIEventDetails.ts",
       "kind": "not-applicable",
-      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
+      "reason": "`common/changeEventDetails.ts` creates the details of a change, and each family names its own reasons."
     },
     {
       "upstream": "packages/react/src/internals/createFlushBeforePaint.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/field-constants/constants.ts",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/field-constants/index.ts",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/getHiddenInputType.ts",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/getStateAttributesProps.test.ts",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/getStateAttributesProps.ts",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/handleHiddenInputInvalid.ts",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/index.ts",
       "kind": "not-applicable",
-      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
+      "reason": "A native `<label for>` names a control. The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
       "kind": "not-applicable",
-      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
+      "reason": "A native `<label for>` names a control. The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.ts",
       "kind": "not-applicable",
-      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
+      "reason": "A native `<label for>` names a control. The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/noop.ts",
@@ -293,12 +293,12 @@
     {
       "upstream": "packages/react/src/internals/reason-parts.ts",
       "kind": "not-applicable",
-      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
+      "reason": "`common/changeEventDetails.ts` creates the details of a change, and each family names its own reasons."
     },
     {
       "upstream": "packages/react/src/internals/reasons.ts",
       "kind": "not-applicable",
-      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
+      "reason": "`common/changeEventDetails.ts` creates the details of a change, and each family names its own reasons."
     },
     {
       "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
@@ -313,32 +313,32 @@
     {
       "upstream": "packages/react/src/internals/stateAttributesMapping.test.ts",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/stateAttributesMapping.ts",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/types.ts",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/use-button/index.ts",
       "kind": "not-applicable",
-      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+      "reason": "Each button part renders a native `<button>` in its template. `common/button.ts` holds the keys of a part that is not a native button."
     },
     {
       "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
       "kind": "not-applicable",
-      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+      "reason": "Each button part renders a native `<button>` in its template. `common/button.ts` holds the keys of a part that is not a native button."
     },
     {
       "upstream": "packages/react/src/internals/use-button/useButton.ts",
       "kind": "not-applicable",
-      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+      "reason": "Each button part renders a native `<button>` in its template. `common/button.ts` holds the keys of a part that is not a native button."
     },
     {
       "upstream": "packages/react/src/internals/useAnchorPositioning.test.tsx",
@@ -353,12 +353,12 @@
     {
       "upstream": "packages/react/src/internals/useAnimationsFinished.test.tsx",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useAnimationsFinished.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useBaseUiId.ts",
@@ -378,37 +378,37 @@
     {
       "upstream": "packages/react/src/internals/useOpenChangeComplete.tsx",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/useRenderElement.tsx",
       "kind": "not-applicable",
-      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+      "reason": "Each part renders its own element in its template and takes the slot `element`. Vue merges the attributes of the developer. No map gives a state attribute."
     },
     {
       "upstream": "packages/react/src/internals/useTransitionStatus.test.tsx",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useTransitionStatus.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useTriggerSwitchTransition.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useUnmountAfterClose.ts",
       "kind": "not-applicable",
-      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+      "reason": "A part animates with `<Transition>` of Vue. No part tracks a transition status or waits for animations."
     },
     {
       "upstream": "packages/react/src/internals/useValueChanged.test.tsx",
@@ -423,17 +423,17 @@
     {
       "upstream": "packages/react/test/formData.ts",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/test/hiddenInputSizeTests.tsx",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/test/hiddenInputTypeTests.tsx",
       "kind": "not-applicable",
-      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+      "reason": "Each form part renders its native control, or one hidden input in its root element. The browser gives the form data and the validation, and each form family tests them in its own test file."
     },
     {
       "upstream": "packages/react/test/positionerConformanceTests.tsx",
@@ -443,37 +443,37 @@
     {
       "upstream": "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
       "kind": "not-applicable",
-      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6). `types/types.spec.ts` tests its types."
+      "reason": "`common/changeEventDetails.ts` creates the details of a change. `types/types.spec.ts` tests its types."
     },
     {
       "upstream": "packages/react/test/describeConformance.tsx",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/test/conformanceTests/className.tsx",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/test/conformanceTests/propForwarding.tsx",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/test/conformanceTests/refForwarding.tsx",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/test/conformanceTests/renderProp.tsx",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/test/conformanceTests/utils.ts",
       "kind": "not-applicable",
-      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/itemEquality.test.ts",
