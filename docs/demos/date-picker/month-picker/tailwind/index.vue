@@ -13,7 +13,7 @@ const buttonClassName =
 const titleClassName =
   'h-8 cursor-pointer rounded-md px-2 font-semibold outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white';
 const cellClassName =
-  'box-border h-10 flex-1 cursor-pointer rounded-md border border-transparent outline-0 hover:enabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 aria-[current=date]:border-neutral-400 data-disabled:cursor-default data-disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white dark:hover:enabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950';
+  'box-border h-10 flex-1 cursor-pointer rounded-md border border-transparent outline-0 hover:enabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 aria-[current=date]:border-neutral-400 disabled:cursor-default disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white dark:hover:enabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950';
 
 const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
@@ -46,7 +46,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
           </DateField.Input>
         </DatePicker.Field>
         <DatePicker.Trigger
-          aria-label="Choose date"
+          aria-label="Choose month"
           class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-disabled:bg-neutral-100 disabled:text-neutral-500 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-disabled:bg-neutral-800 dark:disabled:text-neutral-400 dark:aria-expanded:bg-neutral-800 dark:focus-visible:outline-white"
         >
           <svg

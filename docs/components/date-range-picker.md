@@ -128,7 +128,7 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 
 ## Accessibility
 
-- `DateRangePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose dates`, or `Change dates` with the `text` of its slots.
+- `DateRangePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose dates`, or `Change dates` with the `text` of its slots, as in the [sample of Date Picker](/components/date-picker#accessibility).
 - `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"` and no name of their own. The label of a `Field` joins the `aria-label` of each field: the `aria-labelledby` of the group holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`. The `aria-labelledby` of a field replaces both.
 - `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `Popover.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DateRangePicker.Popup` to move the focus to another element, or `false` to move none.

@@ -237,6 +237,14 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 - A picker that is `disabled` or `readonly` has a disabled trigger, and Alt and Down does nothing.
 - `DatePicker.TimeField` is not a control of the `Field` that holds the picker. It has no label from that field, so give it an `aria-label`.
 
+This trigger shows the value, or `Choose date` with no value, and its text is its name. A server can have other `Intl` data, so the element of the text has `data-allow-mismatch`:
+
+```vue-html
+<DatePicker.Trigger v-slot="{ text }">
+  <span data-allow-mismatch="text">{{ text ?? 'Choose date' }}</span>
+</DatePicker.Trigger>
+```
+
 ## Portal target
 
 Set `to` on `Popover.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).

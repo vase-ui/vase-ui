@@ -208,7 +208,7 @@ A key goes over a disabled item.
 
 ## Accessibility
 
-- `TimePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose time`, or `Change time` with the `text` of its slots.
+- `TimePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose time`, or `Change time` with the `text` of its slots, as in the [sample of Date Picker](/components/date-picker#accessibility).
 - `TimePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `Popover.Title`.
 - `TimePicker.List` and `TimePicker.Column` are listboxes with one tab stop each, and each item is a `<button>` with the role `option` and `aria-selected`. The list has no name of its own. The name of a column is the name of its unit in the locale. Give them an `aria-label` or an `aria-labelledby` to change it.
 - When the popup opens, the focus goes to the first of these parts that the popup has: the selected item of the list or of a column, or the first item when no item is selected, or the clock face. When the popup closes, the focus goes back to the trigger. Give `initialFocus` to `TimePicker.Popup` to move the focus to another element, or `false` to move none.

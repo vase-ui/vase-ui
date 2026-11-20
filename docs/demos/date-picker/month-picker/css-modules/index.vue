@@ -29,7 +29,7 @@ const popupHiddenClass = styles.PopupHidden;
             </template>
           </DateField.Input>
         </DatePicker.Field>
-        <DatePicker.Trigger aria-label="Choose date" :class="styles.Trigger">
+        <DatePicker.Trigger aria-label="Choose month" :class="styles.Trigger">
           <svg
             aria-hidden="true"
             width="16"

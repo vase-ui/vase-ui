@@ -306,24 +306,24 @@ The template of each such part has the `#render` slot, then the element, and no 
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A provider whose only output is its children renders `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
-A part that Base UI writes as another part renders that part and no element of its own. `DatePicker.Calendar` is the example:
+A part that renders a part of another family renders that part and no element of its own. `DatePicker.Calendar` is the example:
 
 - Set `inheritAttrs: false`. Declare only the props that the wrapper reads. Bind `mergeProps(attrs, owned)` on `InnerPart`, with `attrs` from `useAttrs()`. `owned` comes last. It holds the values that the wrapper gives, and `undefined` for each prop of `InnerPart` that the wrapper keeps out. Each other prop, attribute and listener reaches `InnerPart`.
-- Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
-- Write the template in two forms, one for `#render` and one for the content. The first form has `v-if="$slots.render"` and gives only the `#render` slot. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.render"`, then `v-else-if="shouldRender"`. A part that has no default slot has no slot template in the second form.
-- Do not write `v-if` on a slot template, as in `<template v-if="$slots.render" #render>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
+- Give the `element` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
+- Write the template in two forms, one for `element` and one for the content. The first form has `v-if="$slots.element"` and gives only the `element` slot: `<template #element="scope"><slot name="element" v-bind="scope" /></template>`. The second form has `v-else` and gives only the default slot: `<template #default="slotProps"><slot v-bind="slotProps" /></template>`. The slot props come from that part. A part with a render condition adds it to both forms: `v-if="shouldRender && $slots.element"`, then `v-else-if="shouldRender"`. A part that has no default slot has no slot template in the second form.
+- Do not write `v-if` on a slot template, as in `<template v-if="$slots.element" #element>`. It makes the slots of that part dynamic. Vue then renders that part again each time the part renders. Vue also renders again each part in that slot that has slot content. For a positioner, this includes the popup, the list and each item.
 - If that part reads `$slots.default`, add a third form. The second form then has `v-else-if="$slots.default"`, and the third form has `v-else` and no slot. Without the third form, that part always gets a default slot, so it never shows its own content.
 - Fallback content in the `<slot>` of that part needs no third form. Vue shows the fallback when the slot renders nothing. The check mark of `ItemIndicator.vue` is an example.
 - `test/stableSlots.test.tsx` checks this rule. Add a fixture and a row to its `partsWithPopup` for each new part that has a popup below it.
-- Declare the wrapper's public component events with `defineEmits`. Relay each declared event once with its original arguments, before the inner emit returns. For a cancelable change, the inner part then checks `details.isCanceled` before it requests the model update. Undeclared listeners reach the inner part through `attrs`.
+- Declare no event of that part. A listener of the consumer is an attribute, so it reaches that part through `attrs`, and its `details.cancel()` acts on the details of that part. Declare with `defineEmits` only the event of a state that the wrapper holds, such as `update:view` of `TimePicker.Clock`.
 - Expose the `element` of that part.
 - To add a listener, put it in `owned`. `mergeProps` runs a listener of the consumer with the same key first.
 
-A root that Base UI writes as the root of another family renders that root:
+A root that renders the root of another family, such as `DatePicker.Root`, renders that root:
 
-- Set `inheritAttrs: false` on the wrapper root. Bind `mergeProps(attrs, owned)` on `OtherRoot`, as above. The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
+- Set `inheritAttrs: false` on the wrapper root. Bind `mergeProps(attrs, owned)` on `OtherRoot`, as above. The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `element` slot.
 - Its props interface extends an `Omit` of the props interface of the other root.
-- The rule above for events applies to the events of the other root.
+- It declares each event of the other root that its own API has, such as `openChange` and `update:open`. Its listener in `owned` emits the event with the arguments of the other root.
 - It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
 
 Base UI can also give a part of another family a new name and new types, such as `AutocompleteItem = ComboboxItem as AutocompleteItem`. That part is then the part of the other family:
