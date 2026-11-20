@@ -2,7 +2,7 @@
 import { computed, provide } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useModel } from '../common/model';
-import { getFilter } from '../internals/filter';
+import { getFilter } from '../common/filter';
 import { useLocale } from '../locale-provider/part';
 import { filterProviderKey } from './filter';
 import type { MenuFilterProviderChangeEventDetails, MenuFilterProviderProps } from './types';

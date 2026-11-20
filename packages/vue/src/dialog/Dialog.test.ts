@@ -978,7 +978,6 @@ describe('the focus', () => {
   test.each([true, false])(
     'BUG-6037: a `finalFocus` container gives the focus to its radio that stays, when the radio in the popup that leaves is checked=%s',
     async (checked) => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       mount(DialogRadioReturn, { checked });
       const element = await opened();
       element.querySelector('input')!.focus();
@@ -1025,14 +1024,11 @@ describe('the focus', () => {
     await openFrom('popover');
   });
 
-  // The menu is on the older popup code, which gives the focus back to its trigger after the dialog
-  // takes the focus. The Menu unit ports the case again.
-  test.skip('a dialog that an item of a menu opens gives the focus back to the trigger of the menu', async () => {
+  test('a dialog that an item of a menu opens gives the focus back to the trigger of the menu', async () => {
     await openFrom('menu');
   });
 
   test('BUG-5519: the focus goes back to the trigger at the close while the popup leaves, and the trigger is in use', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const { root } = mount(DialogInTransition);
     await nextTick();
     const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
@@ -1097,7 +1093,6 @@ describe('the focus', () => {
   });
 
   test('a `finalFocus` in the popup that leaves gives the focus to the trigger', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const { root } = mount(DialogInTransition, {
       popup: { finalFocus: () => byTestId('popup')!.querySelector('button') },
     });
@@ -1296,7 +1291,6 @@ describe('the viewport, the backdrop and the leave', () => {
   });
 
   test('a popup in a <Transition> in the viewport gets its leave classes; the viewport and the backdrop stay inert while they leave, and a press reaches the page', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     // The leave lasts 300 ms, so the case reads the state at the start of each leave.
     const log = new Set<string>();
     const classesAtLeave: Record<string, string[]> = {};
@@ -1331,7 +1325,6 @@ describe('the viewport, the backdrop and the leave', () => {
   });
 
   test('an open while the popup leaves waits for the end of the leave, so the page has one popup', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const { root } = mount(DialogInTransition);
     await nextTick();
     const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
@@ -1356,7 +1349,6 @@ describe('the viewport, the backdrop and the leave', () => {
   });
 
   test('the viewport and the backdrop of a dialog under a modal dialog are inert until that dialog closes; a dialog that closes under it stays inert while it leaves', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const scene = sceneOf({ first: true, second: false });
     mount(DialogStack, { scene });
     await opened('first-popup');

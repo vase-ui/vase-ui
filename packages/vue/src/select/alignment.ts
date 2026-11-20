@@ -8,7 +8,7 @@ import {
   getMaxScrollOffset,
   normalizeScrollOffset,
   SCROLL_EDGE_TOLERANCE_PX,
-} from '../utils/scrollEdges';
+} from '../common/scrollEdges';
 import type { SelectContext } from './root';
 
 export interface Box {

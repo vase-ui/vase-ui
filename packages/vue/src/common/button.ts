@@ -1,6 +1,6 @@
 import { computed, mergeProps, type Ref } from 'vue';
 import { useInDisabledFieldset } from '../fieldset/part';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
+import { dispatchClickWithModifiers } from './dispatchClickWithModifiers';
 
 /**
  * The behavior of a button: the attributes of its state, the stop of a disabled button, and the

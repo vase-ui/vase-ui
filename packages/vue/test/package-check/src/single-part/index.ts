@@ -8,4 +8,3 @@ export namespace SinglePart {
 }
 
 export type * from './SinglePart.vue';
-export * as SinglePartDataAttributes from './SinglePartDataAttributes';

@@ -3,7 +3,7 @@ import { useButton } from '../common/button';
 import { givenId } from '../common/id';
 import { platform } from '../common/platform';
 import { useListItem } from '../list/list';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
+import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
 import { useFilteredItem } from './filter';
 import { injectMenu, registerMenuItem, type MenuContext } from './root';
 

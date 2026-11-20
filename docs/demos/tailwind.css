@@ -16,7 +16,7 @@
   }
 }
 @layer utilities {
-  @scope ([data-demo='tailwind'], [data-vase-ui-portal], body) to (#app, [data-demo]) {
+  @scope ([data-demo='tailwind'], body) to (#app, [data-demo]) {
     @tailwind utilities source(none);
   }
 }

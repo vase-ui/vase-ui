@@ -1151,7 +1151,6 @@ describe('more rules', () => {
   });
 
   test('a clear button in a <Transition> that shows again while it leaves enters again', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const root = reactive<Props>({ modelValue: 'Apple' });
     mount(ComboboxClearInTransition, { root });
     await nextTick();

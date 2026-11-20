@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import CSPProviders from '../../test/fixtures/CSPProviders.vue';
 import CSPStyleElements from '../../test/fixtures/CSPStyleElements.vue';
 import { hydrate, renderOnServer, settle } from '../../test/render';
-import { styleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar } from '../common/styles';
 
 describe('server render and hydration', () => {
   test('renders on a server: the provider renders no element, and the parts below it have its values', async () => {

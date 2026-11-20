@@ -3,7 +3,7 @@ import { computed, mergeProps, onMounted, shallowRef, useAttrs, watch } from 'vu
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrating } from '../common/hydration';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
-import PrehydrationScript from '../internals/PrehydrationScript.vue';
+import PrehydrationScript from './PrehydrationScript.vue';
 import { injectTabsList } from './list';
 import { measureActiveTab, type ActiveTabMeasure } from './measure';
 import { script } from './prehydrationScript.min';

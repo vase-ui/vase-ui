@@ -34,121 +34,14 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/test/hiddenInputTypeTests.tsx",
-      "describe": ["hidden input type"],
-      "title": "stays focusable through inputRef",
-      "kind": "not-applicable",
-      "reason": "The case gives the React ref prop `inputRef`. A part of Vase UI exposes its input as `inputElement`, and a part cannot know if a consumer reads an exposed member. With no `name`, no `autoComplete`, no `required` and no field, the input thus stays `type=\"hidden\"`, which cannot take the focus. A consumer that focuses the input gives the control one of them."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement"],
-      "title": "updates merged refs and event handlers when ref shape changes across rerenders",
-      "kind": "not-applicable",
-      "reason": "A part gives its ref callbacks one time, in `setup`, so their shape cannot change. React makes a new merged ref when the `ref` argument changes. A new test covers the handler half: a listener of the part that changes between two renders."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "warns when render is passed a function with an uppercase name",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "warns when render is passed a function with an uppercase acronym prefix",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "does not warn when render is passed a lowercase callback",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "does not warn when render is passed a screaming snake case callback",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "does not warn when render is passed a callback with an inferred useCallback name",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "does not warn when render is passed as a React element",
-      "kind": "not-applicable",
-      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": [
-        "useRenderElement",
-        "prop: render",
-        "lazy-wrapped render element (Flight shape)"
-      ],
-      "kind": "not-applicable",
-      "reason": "The cases test the lazy wrapper that the Flight client of React Server Components gives in place of a render element."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "throws error for invalid render element in development",
-      "kind": "not-applicable",
-      "reason": "The case tests `React.isValidElement` and `React.cloneElement`. No part clones a vnode."
-    },
-    {
       "upstream": "packages/react/src/internals/useRenderElement.spec.tsx",
       "kind": "not-applicable",
       "reason": "The file tests that the result type follows `enabled`. The Vue composable has no `enabled` parameter: the template decides with `v-if`."
     },
     {
-      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
-      "describe": ["useButton", "server-side rendering"],
-      "kind": "replaced",
-      "test": "packages/vue/src/internals/use-button/useButton.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The cases are in the test file that the Node project runs, with the same titles."
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
-      "describe": ["<CompositeList />", "prop: elementsRef"],
-      "title": "syncs replacement refs without publishing an unchanged map",
-      "kind": "not-applicable",
-      "reason": "The case replaces the ref objects of a mounted list. A Vue part gives `elementsRef` and `labelsRef` one time, in `setup`. The new case `does not publish an unchanged map when a label changes` covers the half that applies."
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
-      "describe": ["<CompositeList />", "Suspense integration"],
-      "kind": "not-applicable",
-      "reason": "React hides a mounted tree and detaches its refs when a component in it suspends again. A mounted Vue component cannot suspend again."
-    },
-    {
-      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
-      "describe": ["resolvePopupLabel"],
-      "title": "uses a render element's own label instead of the trigger",
-      "kind": "not-applicable",
-      "reason": "The case gives a React element with an `aria-label` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see an attribute of the element of the slot. `resolvePopupLabel` reads the attributes of the part."
-    },
-    {
-      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
-      "describe": ["resolvePopupLabel"],
-      "title": "reads a server-created render element's label",
-      "kind": "not-applicable",
-      "reason": "The case gives the lazy wrapper of the React Flight client as `render`."
-    },
-    {
       "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the `aria-label` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and `#render` is a slot, which is a function. A control reads its `aria-label` prop."
+      "reason": "The file reads the `aria-label` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and the slot `element` is a function. A control reads its `aria-label` prop."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
@@ -173,7 +66,7 @@
     {
       "upstream": "packages/react/src/global.d.ts",
       "kind": "not-applicable",
-      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. `packages/vue/src/internals/useAnimationsFinished.ts` reads `VASE_UI_ANIMATIONS_DISABLED` and declares it there."
+      "reason": "The file declares the global `BASE_UI_ANIMATIONS_DISABLED`. A part animates with `<Transition>` of Vue (rule 8.9), so Vase UI has no such flag."
     },
     {
       "upstream": "packages/react/src/index.test.tsx",
@@ -243,175 +136,355 @@
       "reason": "The file declares the type of a CSS module. No Vase UI test imports a CSS module. A test component sets its styles as style objects."
     },
     {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement"],
-      "title": "accepts className as function",
-      "kind": "not-applicable",
-      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement"],
-      "title": "accepts className as function that returns undefined",
-      "kind": "not-applicable",
-      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement"],
-      "title": "accepts style as function",
-      "kind": "not-applicable",
-      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement"],
-      "title": "accepts style as function that returns undefined",
-      "kind": "not-applicable",
-      "reason": "Vase UI has no state callback prop for class or style. The render slot supplies state for Vue class and style bindings."
-    },
-    {
       "upstream": "packages/react/src/internals/field-root-context/useSetFieldFocused.ts",
       "kind": "not-applicable",
       "reason": "A field has no focused state (rule 8.15). CSS selects `:focus-within`."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "preserves native label activation inside a shadow root",
-      "kind": "replaced",
-      "test": "packages/vue/src/field/Field.test.ts",
-      "reason": "The case tests `Field.Label`. A `<label for>` moves the focus natively, also in a shadow root. `Field.test.ts` tests the label."
+      "upstream": "packages/react/src/internals/TransitionStatusDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/composite.test.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/composite.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/constants.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/item/useCompositeItem.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeListContext.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/useCompositeListItem.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/listIndex.test.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRootContext.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/gridNavigation.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/useCompositeRoot.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/constants.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/react/src/internals/createBaseUIEventDetails.ts",
+      "kind": "not-applicable",
+      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
+    },
+    {
+      "upstream": "packages/react/src/internals/createFlushBeforePaint.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/field-constants/constants.ts",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/field-constants/index.ts",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/getHiddenInputType.ts",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/getStateAttributesProps.test.ts",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/getStateAttributesProps.ts",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/handleHiddenInputInvalid.ts",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/index.ts",
+      "kind": "not-applicable",
+      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "does not throw when a label is clicked in a detached React root",
-      "kind": "replaced",
-      "test": "packages/vue/src/field/Field.test.ts",
-      "reason": "The case tests a click on a `Field.Label` that is not a `<label>`. `Field.test.ts` tests such a label."
+      "kind": "not-applicable",
+      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel", "%s"],
-      "title": "focuses the trigger without opening the popup in the document",
-      "kind": "replaced",
-      "test": "packages/vue/src/select/Select.field.test.ts",
-      "reason": "The case renders Select and Combobox, which use no `useLabel`. `Select.field.test.ts` tests that a click on `Select.Label` gives the trigger the focus and opens nothing. `Combobox.test.ts` tests that a press on the label moves the focus to the control."
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.ts",
+      "kind": "not-applicable",
+      "reason": "A native `<label for>` names a control (rule 8.4). The field family gives the ids of a label, a description and an error, and tests them in its own test file."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel", "%s"],
-      "title": "focuses the trigger in its shadow root without opening the popup (outer matching ID: %s)",
-      "kind": "replaced",
-      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
-      "reason": "The case renders Select and Combobox, which use no `useLabel`. The cases of `with a label and a control` test a label and a control in shadow roots with the label part of the test."
+      "upstream": "packages/react/src/internals/noop.ts",
+      "kind": "not-applicable",
+      "reason": "`common/empty.ts` holds `NOOP`."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "focuses a control in the light DOM from a label in a shadow root",
-      "kind": "replaced",
-      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
-      "reason": "The case renders Select, which uses no `useLabel`. The case of the same title in `with a label and a control` tests it with the label part of the test."
+      "upstream": "packages/react/src/internals/reason-parts.ts",
+      "kind": "not-applicable",
+      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "focuses a control in an ancestor shadow root from a label in a nested shadow root",
-      "kind": "replaced",
-      "test": "packages/vue/src/internals/labelable-provider/useLabel.test.tsx",
-      "reason": "The case renders Select, which uses no `useLabel`. The case of the same title in `with a label and a control` tests it with the label part of the test."
+      "upstream": "packages/react/src/internals/reasons.ts",
+      "kind": "not-applicable",
+      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6), and each family names its own reasons."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Each popup family names its popup in its own parts, with `aria-labelledby` of its title or its trigger, and tests the name in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.ts",
+      "kind": "not-applicable",
+      "reason": "Each popup family names its popup in its own parts, with `aria-labelledby` of its title or its trigger, and tests the name in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/stateAttributesMapping.test.ts",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/types.ts",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/index.ts",
+      "kind": "not-applicable",
+      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.ts",
+      "kind": "not-applicable",
+      "reason": "Each button part renders a native `<button>` in its template (rule 8.3). `common/button.ts` holds the keys of a part that is not a native button."
+    },
+    {
+      "upstream": "packages/react/src/internals/useAnchorPositioning.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/useAnchorPositioning.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/placement.ts` replaces the file. It places a popup with `@floating-ui/vue`. Each popup family tests the placement in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/internals/useAnimationsFinished.test.tsx",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useAnimationsFinished.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useBaseUiId.ts",
+      "kind": "not-applicable",
+      "reason": "Each part takes its id from `useId()` of Vue through `common/id.ts`."
+    },
+    {
+      "upstream": "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The parts with a live region render its text in their template, and Vue patches the text. `combobox/liveRegion.ts` holds the one live region that a part writes."
+    },
+    {
+      "upstream": "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
+      "kind": "not-applicable",
+      "reason": "The parts with a live region render its text in their template, and Vue patches the text. `combobox/liveRegion.ts` holds the one live region that a part writes."
+    },
+    {
+      "upstream": "packages/react/src/internals/useOpenChangeComplete.tsx",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/useRenderElement.tsx",
+      "kind": "not-applicable",
+      "reason": "Each part renders its own element in its template and takes the slot `element` (rule 6.1). Vue merges the attributes of the developer (rule 6.3). No map gives a state attribute (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/internals/useTransitionStatus.test.tsx",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useTransitionStatus.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useTriggerSwitchTransition.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useUnmountAfterClose.ts",
+      "kind": "not-applicable",
+      "reason": "A part animates with `<Transition>` of Vue (rule 8.9). No part tracks a transition status or waits for animations."
+    },
+    {
+      "upstream": "packages/react/src/internals/useValueChanged.test.tsx",
+      "kind": "not-applicable",
+      "reason": "A part reacts to a change of a value with `watch` of Vue."
+    },
+    {
+      "upstream": "packages/react/src/internals/useValueChanged.ts",
+      "kind": "not-applicable",
+      "reason": "A part reacts to a change of a value with `watch` of Vue."
+    },
+    {
+      "upstream": "packages/react/test/formData.ts",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/test/hiddenInputSizeTests.tsx",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/test/hiddenInputTypeTests.tsx",
+      "kind": "not-applicable",
+      "reason": "Each form part renders its native control, or one hidden input in its root element (rules 8.1 and 8.11). The browser gives the form data and the validation, and each form family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/test/positionerConformanceTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
+    },
+    {
+      "upstream": "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
+      "kind": "not-applicable",
+      "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6). `types/types.spec.ts` tests its types."
+    },
+    {
+      "upstream": "packages/react/test/describeConformance.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/className.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/propForwarding.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/refForwarding.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/renderProp.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/utils.ts",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/src/internals/itemEquality.test.ts",
+      "kind": "not-applicable",
+      "reason": "The cases test `findSelectionIndex` and `resolveSelectedIndex`, and no part needs them. Combobox and Select find a selected item with `findItemIndex` and `selectedValueIncludes`, and `common/itemEquality.test.ts` tests those."
     }
   ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
   "relocations": [
-    {
-      "upstream": "packages/react/src/internals/composite/composite.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/listIndex.ts",
-      "member": "scrollIntoViewIfNeeded",
-      "witness": "packages/vue/src/internals/composite/composite.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/constants.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
-      "member": "HYDRATING_COMPOSITE_ITEM",
-      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
-      "member": "useCompositeItem",
-      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/item/useCompositeItem.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
-      "member": "useCompositeItem",
-      "witness": "packages/vue/src/internals/composite/item/useCompositeItem.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
-      "member": "useCompositeList",
-      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/list/CompositeListContext.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
-      "member": "CompositeListContext",
-      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/list/useCompositeListItem.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/list/useCompositeList.ts",
-      "member": "useCompositeListItem",
-      "witness": "packages/vue/src/internals/composite/list/CompositeList.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
-      "member": "useCompositeRoot",
-      "witness": "packages/vue/src/internals/composite/root/CompositeRoot.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/root/CompositeRootContext.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/root/useCompositeRoot.ts",
-      "member": "CompositeRootContext",
-      "witness": "packages/vue/src/internals/composite/root/useCompositeRoot.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/composite/root/gridNavigation.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/gridNavigation.ts",
-      "member": "gridNavigation",
-      "witness": "packages/vue/src/internals/composite/root/CompositeRoot.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/use-button/index.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/use-button/useButton.ts",
-      "member": "useButton",
-      "witness": "packages/vue/src/internals/use-button/useButton.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/internals/useTriggerSwitchTransition.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupPositioner.ts",
-      "member": "useTriggerSwitchTransition",
-      "witness": "packages/vue/src/utils/popups/usePopupPositioner.triggerSwitch.test.tsx"
-    },
     {
       "upstream": "packages/react/src/internals/field-register-control/index.ts",
       "relation": "merged-into",
@@ -481,6 +554,69 @@
       "destination": "packages/vue/src/common/hold.ts",
       "behavior": "A press of the main button on a step button steps, and a hold repeats the step after 460 ms and then each 60 ms. NumberField and the navigation buttons of Calendar share it.",
       "witness": "packages/vue/src/calendar/Calendar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/PrehydrationScript.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tabs/PrehydrationScript.vue",
+      "behavior": "Renders the script of a part only in the server HTML, with the nonce of `CSPProvider`.",
+      "witness": "packages/vue/src/tabs/PrehydrationScript.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/listIndex.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/resizable/tabbable.ts",
+      "member": "isElementVisible",
+      "witness": "packages/vue/src/resizable/tabbable.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/filter.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/common/filter.test.ts",
+      "behavior": "The matches of the filter of a list.",
+      "witness": "packages/vue/src/common/filter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/filter.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/filter.ts",
+      "member": "getFilter",
+      "witness": "packages/vue/src/common/filter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/itemEquality.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/itemEquality.ts",
+      "member": "compareItemEquality",
+      "witness": "packages/vue/src/common/itemEquality.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/prehydrationScript.stub.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/prehydrationScript.stub.ts",
+      "member": "script",
+      "witness": "packages/vue/src/tabs/PrehydrationScript.node.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveValueLabel.test.ts",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/common/resolveValueLabel.test.ts",
+      "behavior": "The label of a selected value.",
+      "witness": "packages/vue/src/common/resolveValueLabel.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveValueLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/resolveValueLabel.ts",
+      "member": "resolveSelectedLabel",
+      "witness": "packages/vue/src/common/resolveValueLabel.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/serializeValue.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/serializeValue.ts",
+      "member": "serializeValue",
+      "witness": "packages/vue/src/common/serializeValue.test.ts"
     }
   ]
 }

@@ -4,31 +4,40 @@
     "packages/react/test/viewportConformanceTests.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
-  "notApplicableCommits": [],
-  "relocations": [
-    {
-      "upstream": "packages/react/src/utils/popups/viewport/usePopupAutoResize.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/viewport/usePopupViewport.ts",
-      "member": "usePopupAutoResize",
-      "witness": "packages/vue/src/utils/popups/viewport/usePopupViewport.transitions.test.tsx"
-    },
+  "exceptions": [
     {
       "upstream": "packages/react/src/utils/popups/viewport/CommonPopupCssVars.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/viewport/popupSizeStyles.ts",
-      "member": "popupSizeStyles",
-      "witness": "packages/vue/src/utils/popups/viewport/usePopupViewport.resize.test.tsx"
+      "kind": "not-applicable",
+      "reason": "`src/popup/viewport.ts` replaces the file. Navigation Menu and the popup families with a viewport test it in their own test files."
     },
     {
       "upstream": "packages/react/src/utils/popups/viewport/CommonViewportDataAttributes.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/viewport/usePopupViewport.ts",
-      "member": "popupViewportStateMapping",
-      "witness": "packages/vue/src/utils/popups/viewport/usePopupViewport.transitions.test.tsx"
+      "kind": "not-applicable",
+      "reason": "`src/popup/viewport.ts` replaces the file. Navigation Menu and the popup families with a viewport test it in their own test files."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/viewport/usePopupAutoResize.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/viewport.ts` replaces the file. Navigation Menu and the popup families with a viewport test it in their own test files."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/viewport/usePopupViewport.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/viewport.ts` replaces the file. Navigation Menu and the popup families with a viewport test it in their own test files."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/viewport/usePopupViewport.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/viewport.ts` replaces the file. Navigation Menu and the popup families with a viewport test it in their own test files."
+    },
+    {
+      "upstream": "packages/react/test/viewportConformanceTests.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a suite that the popup families share. Each popup family tests the same behavior in its own test file, with no shared suite."
     }
-  ]
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": [],
+  "relocations": []
 }

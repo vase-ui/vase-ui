@@ -4,58 +4,7 @@
     "src/common/shadowDom.test.ts": {
       "fails": {}
     },
-    "src/common/useMutationObserver.test.tsx": {
-      "fails": {}
-    },
-    "src/common/useResizeObserver.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/composite/item/useCompositeItem.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/composite/list/CompositeList.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/composite/root/useCompositeRoot.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/ownedElements.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useAnimationsFinished.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useFormReset.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useInitialLiveRegionTextMutation.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useOpenChangeComplete.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useRenderElement.test.tsx": {
-      "fails": {}
-    },
-    "src/internals/useTransitionStatus.test.tsx": {
-      "fails": {}
-    },
-    "src/utils/popups/createElementSetter.test.tsx": {
-      "fails": {}
-    },
-    "src/utils/popups/interactions/usePopupHover.session.test.ts": {
-      "fails": {}
-    },
-    "src/utils/popups/useDomEffect.test.tsx": {
-      "fails": {}
-    },
-    "src/utils/popups/viewport/usePopupViewport.transitions.test.tsx": {
-      "fails": {}
-    },
-    "src/utils/styles.test.tsx": {
-      "fails": {}
-    },
-    "src/utils/useSwipeDismiss.test.tsx": {
+    "src/common/styles.test.tsx": {
       "fails": {}
     },
     "test/modelOwnership.test.tsx": {
@@ -71,9 +20,6 @@
       "fails": {}
     },
     "test/vaporParts/vaporParts.test.tsx": {
-      "fails": {}
-    },
-    "test/withoutVaporAnchors.test.tsx": {
       "fails": {}
     }
   }

@@ -38,7 +38,7 @@
   "imports": {
     "#test-utils": "./test/index.ts",
     "#prehydration/*": {
-      "browser": "./dist/internals/prehydrationScript.stub.js",
+      "browser": "./dist/common/prehydrationScript.stub.js",
       "default": "./dist/*/prehydrationScript.min.js"
     }
   },

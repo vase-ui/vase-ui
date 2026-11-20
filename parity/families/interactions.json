@@ -25,48 +25,9 @@
   "matchedCommit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "default options"],
-      "title": "does not dismiss with the escape key that ends a composition spanning a reopen",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx",
-      "reason": "The case asserts that Escape directly after `compositionend` keeps the popup open. Only WebKit sends `compositionend` before the `keydown` that ends a composition, so only WebKit needs that window. In the other engines Vase UI closes the popup (`BUG-6158`). The case \"ignores Escape for 5 ms after compositionend in WebKit\" tests the window in WebKit."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "describe": ["useListNavigation"],
-      "title": "focus management in nested lists",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. In the block `lists below the list in the component tree`, the cases open a list below with its key, in a browser, and the first item of that list gets the focus."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "describe": ["useListNavigation"],
-      "title": "keyboard navigation in nested menus lists",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The case `moves in a grid of a list below, and closes that list for Escape` of the block `lists below the list in the component tree` makes the same moves in a browser."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "describe": ["useListNavigation"],
-      "title": "keyboard navigation in nested menus with different orientation",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
-      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The cases of `VUE-46` in the block `lists below the list in the component tree` press the close key of a list below a horizontal list, in a browser. The list below closes, and the list above moves its highlight."
-    },
-    {
-      "upstream": "packages/react/test/useTestInteractions.test.tsx",
-      "describe": ["useTestInteractions"],
-      "title": "prop getters are memoized",
-      "kind": "not-applicable",
-      "reason": "`setup` runs one time, so the composable makes the getters one time and their identity cannot change. React makes new getters when a props object of the list changes. A new case covers the half that applies: a getter reads the current props of an entry that changes."
-    },
-    {
       "upstream": "packages/react/test/floating-ui-tests/Button.tsx",
       "kind": "not-applicable",
-      "reason": "Only `EmojiPicker.tsx` renders this React test component. The Vue picker of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` renders a `button` element."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Button.module.css",
@@ -76,7 +37,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.tsx",
       "kind": "not-applicable",
-      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/ComplexGrid.module.css",
@@ -86,7 +47,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.tsx",
       "kind": "not-applicable",
-      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/EmojiPicker.module.css",
@@ -96,7 +57,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/Grid.tsx",
       "kind": "not-applicable",
-      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Grid.module.css",
@@ -106,17 +67,17 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/gridNavigationWithColumns.ts",
       "kind": "not-applicable",
-      "reason": "`packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the function, beside the grids that call it."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/ListboxFocus.tsx",
       "kind": "not-applicable",
-      "reason": "The file is a React test component. `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx` holds the Vue component that the cases render, with only what the cases read."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Menu.tsx",
       "kind": "not-applicable",
-      "reason": "Two cases render this React test component, and Base UI runs them only in jsdom. Each case has a `replaced` row. The cases that replace them render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Menu.module.css",
@@ -126,7 +87,7 @@
     {
       "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.tsx",
       "kind": "not-applicable",
-      "reason": "One case renders this React test component, and Base UI runs it only in jsdom. The case has a `replaced` row. The cases that replace it render the component `NestedList` of `packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx`."
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/MenuOrientation.module.css",
@@ -155,12 +116,124 @@
       "reason": "`Tooltip.test.ts` tests the anchor at the pointer through `Tooltip`: the axes, the move with the pointer, the stop on the popup, the trigger as the anchor after a focus open, a pen and a touch, and an open by code that stays with its trigger at a scroll."
     },
     {
+      "upstream": "packages/react/src/utils/popups/interactions/gridNavigation.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.test.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the file: one stack of open layers closes a popup on an outside press and on Escape. Each popup family tests the dismissal in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the file: one stack of open layers closes a popup on an outside press and on Escape. Each popup family tests the dismissal in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverShared.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
-      "describe": ["useHoverTriggerInteraction"],
-      "title": "treats disabled child trigger as inactive in wrapper fallback mode",
-      "kind": "replaced",
-      "test": "packages/vue/src/tooltip/Tooltip.test.ts",
-      "reason": "Only a tooltip trigger was a disabled trigger of the hover of `utils/popups`. `Tooltip.test.ts` tests that the hover from the active trigger to a disabled trigger closes the tooltip."
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/hover.ts` replaces the file: the delays, the safe triangle to the popup and the close of a hover. Each popup family that opens on hover tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.webkit.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/react/test/floating-ui-tests/useFloating.ts",
+      "kind": "not-applicable",
+      "reason": "The file is a fixture of the tests of the interaction hooks of Base UI. `src/popup/` and `src/list/` replace those hooks."
+    },
+    {
+      "upstream": "packages/react/test/useTestInteractions.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The helper drives the interaction hooks of Base UI. `src/popup/` replaces those hooks, and each popup family tests them with real events."
+    },
+    {
+      "upstream": "packages/react/test/useTestInteractions.ts",
+      "kind": "not-applicable",
+      "reason": "The helper drives the interaction hooks of Base UI. `src/popup/` replaces those hooks, and each popup family tests them with real events."
     }
   ],
   "surfaceAdditions": [],
@@ -168,129 +241,11 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/utils/popups/interactions/gridNavigation.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/internals/composite/gridNavigation.ts",
-      "member": "navigateUniformGrid",
-      "witness": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useClick.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "useTriggerPress",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "useTriggerFocus",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "useTriggerModality",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.modality.test.tsx"
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
       "relation": "merged-into",
       "destination": "packages/vue/src/tooltip/cursor.ts",
       "behavior": "The anchor at the mouse pointer of a tooltip with `trackCursorAxis`.",
       "witness": "packages/vue/src/tooltip/Tooltip.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx",
-      "member": "createHoverApp",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx",
-      "member": "createPopupApp",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
-      "member": "PopupHoverSession",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.session.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverShared.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
-      "member": "getDelay",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.delay.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
-      "member": "enterTrigger",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.trigger.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
-      "member": "enterPopup",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/safePolygon.ts",
-      "member": "safePolygon",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts",
-      "additional": [
-        {
-          "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.ts",
-          "member": "trackHoverPolygon"
-        }
-      ]
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx",
-      "member": "ClickTrigger",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.press.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx",
-      "member": "setSafariOnMac",
-      "witness": "packages/vue/src/utils/popups/usePopupTrigger.focus.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/safePolygon.test.ts",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts",
-      "member": "createPlacementScenario",
-      "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.polygon.test.ts"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.ts",
-      "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/interactions/useDismissLayer.ts",
-      "member": "useDismissLayer",
-      "witness": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx",
-      "member": "setWebKit",
-      "witness": "packages/vue/src/utils/popups/interactions/useDismissLayer.test.tsx"
     }
   ]
 }

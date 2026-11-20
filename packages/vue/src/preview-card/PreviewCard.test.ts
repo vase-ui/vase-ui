@@ -328,7 +328,6 @@ describe('the handle', () => {
 
 describe('in the DOM', () => {
   test('a popup in a <Transition> gets the leave classes after a close, and the portal keeps it until the leave ends', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     mount(PreviewCardInTransition, { root: { defaultOpen: true, defaultTriggerId: 'a' } });
     const element = await opened();
     await placed();
@@ -610,7 +609,6 @@ describe('the hover', () => {
   );
 
   test('a hover on a link while the card leaves after a hover close opens it with no delay, in a <Transition> and with `keepMounted`; after the leave, the delay holds', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     for (const portal of [{}, { keepMounted: true }]) {
       const log: string[] = [];
       const { unmount } = mount(PreviewCardInTransition, {
@@ -636,7 +634,6 @@ describe('the hover', () => {
   });
 
   test('a hover while the card leaves after Escape waits for the delay', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     mount(PreviewCardInTransition, { trigger: { delay: 150, closeDelay: 0 } });
     await userEvent.hover(byId('a'));
     await waitFor(() => expect(byId('a')).toHaveAttribute('data-popup-open'));

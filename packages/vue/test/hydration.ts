@@ -1,4 +1,4 @@
-import { onTestFinished, vi } from 'vitest';
+import { onTestFinished } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
 import { installPartsInterop } from './testApp';
@@ -35,7 +35,7 @@ export interface HydrateAfterOptions extends HydrateOptions {
 /**
  * Renders a component on a server and returns its HTML.
  * The server render runs in Node with no DOM, through a Vitest browser command.
- * @param file The path of a Vue file from the root of the package: `test/fixtures/PlainPart.vue`.
+ * @param file The path of a Vue file from the root of the package: `test/fixtures/PartForm.vue`.
  * Its default export is the component.
  */
 export async function renderOnServer(
@@ -149,77 +149,6 @@ export async function hydrateAfter(
   }
 
   return { container };
-}
-
-/**
- * Gives `html` with `value` in the attribute `name` of the first element that matches `selector`.
- * A case of a server whose `Intl` data differs from the data of the browser changes the server
- * HTML with it.
- */
-export function setAttributeInHtml(
-  html: string,
-  selector: string,
-  name: string,
-  value: string,
-): string {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  const element = template.content.querySelector(selector);
-  if (!element) {
-    throw new Error(`No element of the HTML matches \`${selector}\`.`);
-  }
-  element.setAttribute(name, value);
-  return template.innerHTML;
-}
-
-function mockNavigation(navigation: Partial<PerformanceNavigationTiming>) {
-  const getEntriesByType = performance.getEntriesByType.bind(performance);
-  const spy = vi
-    .spyOn(performance, 'getEntriesByType')
-    .mockImplementation((entryType) =>
-      entryType === 'navigation'
-        ? [navigation as PerformanceNavigationTiming]
-        : getEntriesByType(entryType),
-    );
-  onTestFinished(() => {
-    spy.mockRestore();
-  });
-}
-
-/**
- * Gives a `back_forward` navigation until the test ends. Its `load` event ends only when the case
- * calls the returned function. A part that mounts before then waits for the `pageshow` event of the
- * page.
- * @returns Ends `load` and sends `pageshow`, in the order of the browser.
- */
-export function mockPageBeforeLoad(): () => void {
-  const navigation = { type: 'back_forward' as const, loadEventEnd: 0 };
-  mockNavigation(navigation);
-  return () => {
-    navigation.loadEventEnd = performance.now();
-    window.dispatchEvent(new PageTransitionEvent('pageshow'));
-  };
-}
-
-/**
- * Records the type of each `input`, `change`, `blur` and `focusout` event that reaches `target`
- * until the test ends.
- */
-export function recordInputEvents(target: EventTarget): string[] {
-  const types: string[] = [];
-  const record = (event: Event) => {
-    types.push(event.type);
-  };
-  const eventTypes = ['input', 'change', 'blur', 'focusout'];
-  for (const type of eventTypes) {
-    target.addEventListener(type, record, true);
-  }
-  onTestFinished(() => {
-    for (const type of eventTypes) {
-      target.removeEventListener(type, record, true);
-    }
-  });
-  return types;
 }
 
 async function renderOnClient(

@@ -24,12 +24,3 @@ export const visuallyHiddenInput: CSSProperties = {
   ...visuallyHiddenBase,
   position: 'absolute',
 };
-
-// A hidden input with no name has zero size, so that Chrome gives it no compositor layer.
-// It stays on screen. Then the native validation message shows when it grows to 1px on `invalid`.
-export const visuallyHiddenInputPinned: CSSProperties = {
-  ...visuallyHidden,
-  width: 0,
-  height: 0,
-  top: 0,
-};

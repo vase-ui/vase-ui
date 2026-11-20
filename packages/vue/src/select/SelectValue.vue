@@ -6,7 +6,7 @@ import {
   resolveMultipleLabels,
   resolveSelectedLabel,
   type ItemLabel,
-} from '../internals/resolveValueLabel';
+} from '../common/resolveValueLabel';
 import { injectSelectRoot } from './root';
 import type { SelectValueProps, SelectValueState } from './types';
 

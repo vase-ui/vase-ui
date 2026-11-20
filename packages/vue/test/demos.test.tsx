@@ -95,12 +95,6 @@ describe('the style sheet of the Tailwind demos', () => {
       expected: { height: '32px', 'padding-top': '0px' },
     },
     {
-      name: 'a portal element gets utilities only',
-      vnode: () => h('div', { 'data-vase-ui-portal': '' }, h('div', { class: 'h-8' })),
-      selector: '.h-8',
-      expected: { height: '32px', 'box-sizing': 'content-box' },
-    },
-    {
       name: 'an element in <body> outside each frame gets utilities only',
       vnode: () => h('div', { class: 'h-8' }),
       selector: '.h-8',

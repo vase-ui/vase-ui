@@ -1,6 +1,6 @@
 import { expect, describe, it, afterEach, vi } from 'vitest';
 import { createSlotHost } from '../../test/fixtures/slotHost';
-import { closest, closestInEventPath, contains, getTarget } from './shadowDom';
+import { closest, contains } from './shadowDom';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -75,7 +75,7 @@ describe('shadow DOM utilities', () => {
       const button = document.createElement('button');
       let matchedElement: Element | null = null;
       const listener = vi.fn((event: PointerEvent) => {
-        matchedElement = closest(getTarget(event) as Node, 'button');
+        matchedElement = closest(event.composedPath()[0] as Node, 'button');
       });
       const host = document.createElement('span');
       const target = document.createElement('span');
@@ -89,54 +89,6 @@ describe('shadow DOM utilities', () => {
 
       expect(listener).toHaveBeenCalledOnce();
       expect(matchedElement).toBe(button);
-    });
-  });
-
-  it('uses the path during dispatch and the target ancestors after dispatch', () => {
-    const first = document.createElement('div');
-    const second = document.createElement('div');
-    const target = document.createElement('button');
-    document.body.append(first, second);
-    first.append(target);
-    const isOwner = (element: Element) => element === first || element === second;
-    const event = new Event('click', { bubbles: true });
-    let during: Element | null = null;
-    target.addEventListener('click', () => {
-      second.append(target);
-      during = closestInEventPath(event, isOwner);
-    });
-    target.dispatchEvent(event);
-    expect(during).toBe(first);
-    expect(closestInEventPath(event, isOwner)).toBe(second);
-  });
-
-  describe('getTarget', () => {
-    it('returns the composed-path target while the event is being dispatched', () => {
-      const parent = document.createElement('div');
-      const child = document.createElement('span');
-      parent.appendChild(child);
-      document.body.appendChild(parent);
-
-      let target: EventTarget | null = null;
-      parent.addEventListener('click', (event) => {
-        target = getTarget(event);
-      });
-      child.dispatchEvent(new Event('click', { bubbles: true }));
-
-      expect(target).toBe(child);
-      parent.remove();
-    });
-
-    it('falls back to `target` once dispatch has completed', () => {
-      const element = document.createElement('div');
-      document.body.appendChild(element);
-
-      const event = new Event('click');
-      element.dispatchEvent(event);
-
-      expect(event.composedPath()).toHaveLength(0);
-      expect(getTarget(event)).toBe(element);
-      element.remove();
     });
   });
 });

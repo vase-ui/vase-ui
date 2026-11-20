@@ -1,7 +1,7 @@
 import { getParentNode, isHTMLElement, isLastTraversableNode } from '@floating-ui/utils/dom';
 import { ownerWindow } from '../common/owner';
-import { getCssDimensions } from '../utils/getCssDimensions';
-import { getElementTransform } from '../utils/getElementTransform';
+import { getCssDimensions } from './getCssDimensions';
+import { getElementTransform } from '../common/getElementTransform';
 import type { TabsTabPosition, TabsTabSize } from './types';
 
 export interface ActiveTabMeasure {
