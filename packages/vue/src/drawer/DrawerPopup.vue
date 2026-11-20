@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
+import {
+  computed,
+  inject,
+  mergeProps,
+  onBeforeUnmount,
+  onUnmounted,
+  useAttrs,
+  useId,
+  watch,
+} from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDialogPortal } from '../dialog/root';
@@ -47,6 +56,11 @@ const state = computed<DrawerPopupState>(() => ({
 }));
 
 watch(element, (popup) => root.setPopup(popup), { flush: 'sync' });
+// Vue stops the watcher before it removes the element of the part, so the part clears the popup of
+// the root. The popup of a part that mounted first stays.
+onBeforeUnmount(() => {
+  if (root.popup === element.value) root.setPopup(null);
+});
 watch(
   () => [props.initialFocus, props.finalFocus] as const,
   ([initialFocus, finalFocus]) =>
