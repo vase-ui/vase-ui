@@ -34,7 +34,7 @@ export function useCursorAnchor(root: PopupRoot, axis: () => 'none' | Axis) {
   );
 
   watch(
-    () => (root.open && axis() !== 'none' ? root.popup : null),
+    () => (root.open ? root.popup : null),
     (popup, _, onCleanup) => {
       if (!popup) return;
       paused = false;

@@ -89,6 +89,8 @@ export function useGroupMember(
   function join() {
     const trigger = root.activeTrigger;
     group = (trigger && triggerGroups.get(trigger)) ?? fallback;
+    // The timer of a close of this tooltip would end the group while it is open again.
+    group.timer.clear();
     const previous = group.current;
     group.current = self;
     const inGroup = previous !== null && previous !== self;

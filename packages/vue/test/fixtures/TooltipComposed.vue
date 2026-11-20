@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { Popover } from '../../src/popover';
-import { Toolbar } from '../../src/toolbar';
 import { Tooltip } from '../../src/tooltip';
 
 type Props = Record<string, unknown>;
 
 // A tooltip trigger with another element or part. Each trigger has the id `trigger`, and each popup
-// of a tooltip has the test id `popup`.
+// of a tooltip has the test id `popup`. With the kind `renders`, each trigger calls `renders.count`
+// with its id and its open state at each render of its content, and shows the text that it gives.
 defineProps({
   kind: {
     type: String as PropType<
       | 'disabled-button'
       | 'fieldset'
       | 'popover-trigger'
-      | 'toolbar-button'
       | 'in-popover'
       | 'outside-popover'
       | 'nested'
+      | 'renders'
     >,
     required: true,
   },
@@ -25,6 +25,10 @@ defineProps({
   trigger: Object as PropType<Props>,
   inner: Object as PropType<Props>,
   popover: Object as PropType<Props>,
+  renders: {
+    type: Object as PropType<{ count(id: string, open: boolean): string }>,
+    default: () => ({ count: () => '' }),
+  },
 });
 </script>
 
@@ -70,21 +74,6 @@ defineProps({
       </Popover.Positioner>
     </Popover.Portal>
   </Popover.Root>
-  <Toolbar.Root v-else-if="kind === 'toolbar-button'">
-    <Toolbar.Button id="first">First</Toolbar.Button>
-    <Tooltip.Root v-bind="root">
-      <Tooltip.Trigger id="trigger" v-bind="trigger">
-        <template #element="{ props, elementRef }">
-          <Toolbar.Button v-bind="{ ...props, ...inner }" :ref="elementRef">Push</Toolbar.Button>
-        </template>
-      </Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Positioner>
-          <Tooltip.Popup data-testid="popup">Nothing waits</Tooltip.Popup>
-        </Tooltip.Positioner>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  </Toolbar.Root>
   <template v-else-if="kind === 'in-popover' || kind === 'outside-popover'">
     <Popover.Root v-bind="popover">
       <Popover.Trigger id="popover-trigger">Open</Popover.Trigger>
@@ -114,6 +103,31 @@ defineProps({
       </Tooltip.Portal>
     </Tooltip.Root>
   </template>
+  <Tooltip.Provider v-else-if="kind === 'renders'">
+    <Tooltip.Root>
+      <Tooltip.Trigger id="trigger" :delay="0" v-slot="{ state }">
+        A{{ renders.count('trigger', state.open) }}
+      </Tooltip.Trigger>
+      <Tooltip.Trigger id="second" v-slot="{ state }">
+        B{{ renders.count('second', state.open) }}
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner>
+          <Tooltip.Popup data-testid="popup">Bold</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+    <Tooltip.Root>
+      <Tooltip.Trigger id="other" v-slot="{ state }">
+        C{{ renders.count('other', state.open) }}
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Positioner>
+          <Tooltip.Popup>Italic</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  </Tooltip.Provider>
   <Tooltip.Root v-else v-bind="root">
     <Tooltip.Trigger
       id="trigger"

@@ -112,12 +112,11 @@ export function usePopupHover(
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
   function onPointermove(event: PointerEvent) {
     const current = root();
-    if (current && openTimer.isStarted() && !onInner) startOpen(event, current);
+    if (current && openTimer.isStarted()) startOpen(event, current);
   }
 
   function onPointerleave() {
     openTimer.clear();
-    onInner = false;
   }
 
   // A trigger in this trigger gets the `pointerover` first, and this trigger gets the same event.

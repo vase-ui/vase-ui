@@ -144,7 +144,7 @@ describe.skipIf(inject('app') === 'vapor')('a popover', () => {
   });
 });
 
-describe.skipIf(inject('app') === 'vapor')('a tooltip trigger', () => {
+describe('a tooltip trigger', () => {
   test('in a disabled Toolbar.Button, opens at a hover', async () => {
     const { trigger, find } = await mountCompose({ kind: 'tooltip', disabled: true });
     expect(trigger).toHaveAttribute('aria-disabled', 'true');

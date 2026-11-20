@@ -70,6 +70,8 @@ The popup has `data-instant` when an animation should not run. Give `[data-insta
 
 With `keepMounted` on `Tooltip.Portal`, the closed popup stays in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate the popup with CSS on `[hidden]`.
 
+To keep the popup in the DOM until an animation of JavaScript ends, use the JavaScript hooks of `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
+
 ## Opening and closing
 
 A mouse that rests on the trigger opens the tooltip after `delay`, 600 ms by default. The focus of a key opens it at once, and a press does not. The tooltip closes when the pointer leaves the trigger and the popup, when the focus leaves the trigger, at Escape, and at a press outside. A press on the trigger closes the tooltip, unless the trigger has `closeOnClick` set to `false`. A touch opens no tooltip.

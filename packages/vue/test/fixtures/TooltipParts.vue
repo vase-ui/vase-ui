@@ -46,12 +46,12 @@ defineExpose({ parts });
     opacity: 0;
   }
 }
-.short-enter-active,
-.short-leave-active {
-  transition: opacity 200ms;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s;
 }
-.short-enter-from,
-.short-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

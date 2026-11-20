@@ -5,9 +5,10 @@ import { Tooltip } from '../../src/tooltip';
 type Item = { key: string; attrs?: Record<string, unknown> };
 type Props = Record<string, unknown>;
 
-// One tooltip. Each trigger has the text and the `data-key` of its key. The popup has the test ids
-// `popup-<name>` and `positioner-<name>`, a payload and a button. With `transition`, the popup is
-// in a `<Transition appear>` of that name.
+// One tooltip. Each trigger has the text and the `data-key` of its key. The positioner has the test
+// id `positioner-<name>`, and a hidden element with the test id `positioner-instant-<name>` and the
+// `instant` of its state. The popup has the test id `popup-<name>` and the payload. With
+// `transition`, the popup is in a `<Transition appear>` of that name.
 const props = defineProps({
   name: { type: String, default: 't' },
   root: Object as PropType<Props>,
@@ -18,10 +19,10 @@ const props = defineProps({
   arrow: Object as PropType<Props>,
   viewport: Boolean,
   transition: String,
-  noPopup: Boolean,
 });
 const rootPart = useTemplateRef('rootPart');
-defineExpose({ root: rootPart });
+const popupPart = useTemplateRef('popupPart');
+defineExpose({ root: rootPart, popup: popupPart });
 const triggerList = () => props.triggers ?? [{ key: props.name }];
 </script>
 
@@ -38,14 +39,15 @@ const triggerList = () => props.triggers ?? [{ key: props.name }];
       </Tooltip.Trigger>
       <Tooltip.Portal v-bind="portal">
         <Tooltip.Positioner :data-testid="`positioner-${name}`" v-bind="positioner">
-          <template v-if="!noPopup">
+          <template #default="{ state }">
+            <span hidden :data-testid="`positioner-instant-${name}`">{{ state.instant }}</span>
             <Transition v-if="transition" :name="transition" appear>
-              <Tooltip.Popup :data-testid="`popup-${name}`" v-bind="popup">
+              <Tooltip.Popup ref="popupPart" :data-testid="`popup-${name}`" v-bind="popup">
                 <Tooltip.Arrow v-if="arrow" :data-testid="`arrow-${name}`" v-bind="arrow" />
                 Tip {{ name }} <span data-testid="payload">{{ payload }}</span>
               </Tooltip.Popup>
             </Transition>
-            <Tooltip.Popup v-else :data-testid="`popup-${name}`" v-bind="popup">
+            <Tooltip.Popup v-else ref="popupPart" :data-testid="`popup-${name}`" v-bind="popup">
               <Tooltip.Arrow v-if="arrow" :data-testid="`arrow-${name}`" v-bind="arrow" />
               <Tooltip.Viewport v-if="viewport" :data-testid="`viewport-${name}`">
                 <template #default="{ triggerId }">{{ triggerId }}</template>

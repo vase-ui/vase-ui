@@ -14,29 +14,25 @@ export function useOpenOnFocus(
   root: () => PopupRoot | null,
   options: {
     element: Readonly<Ref<HTMLElement | null>>;
-    delay: number;
     /** The trigger opens nothing. */
     disabled: () => boolean;
     /** The focus event comes from a trigger in this trigger. */
-    inner?: (event: FocusEvent) => boolean;
+    inner: (event: FocusEvent) => boolean;
     /**
      * The focus of the trigger opens nothing, until the focus leaves the trigger. The trigger also
      * sets it after a press. A text field matches `:focus-visible` at each focus.
      */
-    blocked?: { value: boolean };
+    blocked: { value: boolean };
   },
 ) {
-  const timer = useTimeout();
   const later = useTimeout();
 
   function onFocusin(event: FocusEvent) {
     const current = root();
     const element = options.element.value;
-    if (!current || !element || options.disabled() || options.blocked?.value) return;
-    if (options.inner?.(event) || !(event.target as Element).matches(':focus-visible')) return;
-    const open = () => current.request(true, 'trigger-focus', event, options.element.value);
-    if (options.delay > 0) timer.start(options.delay, open);
-    else open();
+    if (!current || !element || options.disabled() || options.blocked.value) return;
+    if (options.inner(event) || !(event.target as Element).matches(':focus-visible')) return;
+    current.request(true, 'trigger-focus', event, element);
   }
 
   // The focus stays in the tooltip: in its popup, or on another trigger of the root.
@@ -57,14 +53,13 @@ export function useOpenOnFocus(
   }
 
   function onFocusout(event: FocusEvent) {
-    timer.clear();
     const current = root();
     const element = options.element.value;
     if (!current || !element) return;
     const related = event.relatedTarget as Element | null;
     if (related) {
       if (!staysInside(current, related)) {
-        if (options.blocked) options.blocked.value = false;
+        options.blocked.value = false;
         close(event);
       }
       return;
@@ -74,10 +69,10 @@ export function useOpenOnFocus(
     const doc = ownerDocument(element);
     later.start(0, () => {
       if (activeElement(doc) === element) {
-        if (options.blocked && !current.open) options.blocked.value = true;
+        if (!current.open) options.blocked.value = true;
         return;
       }
-      if (options.blocked) options.blocked.value = false;
+      options.blocked.value = false;
       close(event);
     });
   }

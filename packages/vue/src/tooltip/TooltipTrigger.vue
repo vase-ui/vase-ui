@@ -40,8 +40,8 @@ const group = injectGroup();
 const asTag = useAsTag(() => props.as);
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 const triggerDisabled = computed(() => props.disabled || !!context.value?.disabled);
-// A press, a close by Escape or by a press, and a window that gets the focus again: the focus of
-// the trigger opens nothing until the focus or the mouse pointer leaves the trigger.
+// A press, a close by Escape or by a press on a trigger, and a window that gets the focus again:
+// the focus of the trigger opens nothing until the focus or the mouse pointer leaves the trigger.
 const blocked = { value: false };
 
 watch(element, (trigger) => trigger && setTriggerGroup(trigger, group), { flush: 'sync' });
@@ -68,12 +68,7 @@ watch(
   open,
   (isOpen) => {
     const reason = root()?.reason;
-    if (
-      !isOpen &&
-      (reason === 'escape-key' || reason === 'trigger-press' || reason === 'outside-press')
-    ) {
-      blocked.value = true;
-    }
+    if (!isOpen && (reason === 'escape-key' || reason === 'trigger-press')) blocked.value = true;
   },
   { flush: 'sync' },
 );
@@ -94,7 +89,6 @@ const hover = usePopupHover(root, {
 });
 const focus = useOpenOnFocus(root, {
   element,
-  delay: 0,
   disabled: () => triggerDisabled.value,
   inner: (event) => innerTriggerEvents.has(event),
   blocked,

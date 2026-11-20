@@ -1,4 +1,4 @@
-import { describe, expect, inject, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { computed, nextTick, reactive } from 'vue';
 import { Tooltip, type TooltipRootChangeEventDetails } from '@vase-ui/vue/tooltip';
@@ -34,6 +34,25 @@ function rootEvents(log: string[], props: Props = {}) {
     'onUpdate:open': (open: boolean) => log.push(`update ${open}`),
   });
 }
+
+/**
+ * Props of a root that write in `delays` the time from the pointer event that started the delay of
+ * each open by the hover to that open.
+ */
+function hoverDelays(delays: number[], props: Props = {}) {
+  return reactive<Props>({
+    ...props,
+    onOpenChange: (open: boolean, details: TooltipRootChangeEventDetails) => {
+      if (open && details.reason === 'trigger-hover') {
+        delays.push(performance.now() - details.event.timeStamp);
+      }
+    },
+  });
+}
+
+// A timer of the browser runs at least its delay after its start. The browser rounds the times of
+// its clock, so a measured time can be up to 2 ms below the delay.
+const atLeast = (delay: number) => delay - 2;
 
 async function opened(name = 't') {
   await waitFor(() => expect(popup(name)).not.toBe(null));
@@ -135,6 +154,25 @@ describe('the parts', () => {
     expect(positioner()).toHaveAttribute('data-side', 'top');
     expect(byTestId('arrow-t')).toHaveAttribute('aria-hidden', 'true');
     expect(exposed.parts[0].root).toHaveProperty('close');
+    expect(exposed.parts[0].popup.element).toBe(element);
+  });
+
+  test('`as` of the positioner, the popup and the arrow renders its tag', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: { defaultOpen: true },
+          positioner: { as: 'section' },
+          popup: { as: 'aside' },
+          arrow: { as: 'span' },
+        },
+      ],
+    });
+    const element = await opened();
+    expect(positioner()!.localName).toBe('section');
+    expect(element.localName).toBe('aside');
+    expect(byTestId('arrow-t')!.localName).toBe('span');
   });
 
   test('`as` renders its tag: a `<button>` gets `type="button"`, another tag gets no type and no role', async () => {
@@ -281,6 +319,22 @@ describe('the root', () => {
     await opened('r');
     expect(byTestId('payload')).toHaveTextContent('out');
   });
+
+  test('a trigger with a handle stays closed when the parent of the root refuses the open', async () => {
+    const handle = Tooltip.createHandle();
+    const log: string[] = [];
+    await mountTooltips({
+      tooltips: [
+        { name: 'r', root: rootEvents(log, { handle, open: false }), triggers: [] },
+        { name: 'o', triggers: [{ key: 'out', attrs: { handle, delay: 0 } }] },
+      ],
+    });
+    await userEvent.hover(trigger('out'));
+    await waitFor(() => expect(log).toEqual(['openChange true trigger-hover', 'update true']));
+    await sleep(40);
+    expect(popup('r')).toBe(null);
+    expect(trigger('out')).not.toHaveAttribute('data-popup-open');
+  });
 });
 
 describe('the dismissal', () => {
@@ -365,29 +419,42 @@ describe('the dismissal', () => {
 
 describe('the hover', () => {
   test('a mouse that rests on the trigger opens after `delay`; a pointer that leaves before that opens nothing; the close comes `closeDelay` after the leave', async () => {
+    const times: { open?: number; close?: number } = {};
+    let left = 0;
     await mountTooltips({
-      tooltips: [{ name: 't', triggers: [{ key: 't', attrs: { delay: 120, closeDelay: 120 } }] }],
+      tooltips: [
+        {
+          name: 't',
+          root: {
+            onOpenChange: (open: boolean, details: TooltipRootChangeEventDetails) => {
+              if (open) times.open = performance.now() - details.event.timeStamp;
+              else times.close = performance.now() - left;
+            },
+          },
+          triggers: [{ key: 't', attrs: { delay: 150, closeDelay: 150 } }],
+        },
+      ],
     });
+    for (const type of ['pointerenter', 'pointerleave']) {
+      trigger().dispatchEvent(new PointerEvent(type, { pointerType: 'mouse' }));
+    }
+    await sleep(300);
+    expect(times).toEqual({});
+    trigger().addEventListener('pointerleave', (event) => (left = event.timeStamp));
     await userEvent.hover(trigger());
-    await hoverAway();
-    await sleep(200);
-    expect(popup()).toBe(null);
-    await userEvent.hover(trigger());
-    await sleep(40);
-    expect(popup()).toBe(null);
     await opened();
+    expect(times.open).toBeGreaterThanOrEqual(atLeast(150));
     await hoverAway();
-    await sleep(40);
-    expect(popup()).not.toBe(null);
     await closed();
+    expect(times.close).toBeGreaterThanOrEqual(atLeast(150));
   });
 
   test('a trigger with no `delay` waits 600 ms', async () => {
-    await mountTooltips();
+    const delays: number[] = [];
+    await mountTooltips({ tooltips: [{ name: 't', root: hoverDelays(delays) }] });
     await userEvent.hover(trigger());
-    await sleep(450);
-    expect(popup()).toBe(null);
     await opened();
+    expect(delays[0]).toBeGreaterThanOrEqual(atLeast(600));
   });
 
   test('a hover opens on a trigger in a disabled fieldset and on a `<button disabled>` in the `element` slot', async () => {
@@ -466,21 +533,18 @@ describe('the hover', () => {
 
   test('a hover on the trigger while the popup leaves after a hover close opens the root at once; the element enters after the leave', async () => {
     const log: string[] = [];
+    const attrs = reactive<Props>({ delay: 0 });
     await mountTooltips({
       tooltips: [
-        {
-          name: 't',
-          root: rootEvents(log),
-          transition: 'short',
-          triggers: [{ key: 't', attrs: { delay: 50 } }],
-        },
+        { name: 't', root: rootEvents(log), transition: 'fade', triggers: [{ key: 't', attrs }] },
       ],
     });
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     await userEvent.hover(trigger());
     const first = await opened();
+    attrs.delay = 10_000;
     await hoverAway();
-    await waitFor(() => expect(first.className).toContain('short-leave-active'));
+    await waitFor(() => expect(first.className).toContain('fade-leave-active'));
     let most = 0;
     const observer = new MutationObserver(() => {
       most = Math.max(most, document.querySelectorAll('[data-testid="popup-t"]').length);
@@ -493,9 +557,8 @@ describe('the hover', () => {
     // The old popup ends its leave before the new one enters.
     await nextTick();
     expect(first.isConnected).toBe(true);
-    expect(first.className).toContain('short-leave-active');
-    await waitFor(() => expect(popup()).not.toBe(first));
-    expect(popup()).not.toBe(null);
+    expect(first.className).toContain('fade-leave-active');
+    await waitFor(() => expect(popup() ?? first).not.toBe(first));
     await sleep(20);
     expect(most).toBe(1);
   });
@@ -508,11 +571,9 @@ describe('the hover', () => {
     await opened();
     await userEvent.keyboard('{Escape}');
     await closed();
-    const center = centerOf(trigger());
     await userEvent.hover(trigger(), { position: { x: 5, y: 5 } });
     await sleep(60);
     expect(popup()).toBe(null);
-    expect(center.x).toBeGreaterThan(0);
     await hoverAway();
     await userEvent.hover(trigger());
     await opened();
@@ -564,21 +625,30 @@ describe('the hover', () => {
   });
 
   test('a trigger that unmounts in its delay opens nothing', async () => {
-    const tooltips = reactive([{ name: 't', triggers: [{ key: 't', attrs: { delay: 50 } }] }]);
+    const log: string[] = [];
+    const tooltips = reactive([
+      { name: 't', root: rootEvents(log), triggers: [{ key: 't', attrs: { delay: 100 } }] },
+    ]);
     await mountTooltips({ tooltips });
-    await userEvent.hover(trigger());
+    trigger().dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
     tooltips[0]!.triggers = [];
-    await sleep(100);
-    expect(popup()).toBe(null);
+    await sleep(200);
+    expect(log).toEqual([]);
   });
 });
 
 describe('the focus', () => {
-  test('a Tab to the trigger opens the tooltip at once with `data-instant="focus"`; a Tab away closes it with `trigger-focus`', async () => {
+  test('a Tab to the trigger opens the tooltip at once with the instant state `focus`; a Tab away closes it with `trigger-focus`', async () => {
     const log: string[] = [];
     await mountTooltips({
       tooltips: [
-        { name: 't', root: rootEvents(log), triggers: [{ key: 't', attrs: { delay: 10_000 } }] },
+        {
+          name: 't',
+          root: rootEvents(log),
+          arrow: {},
+          viewport: true,
+          triggers: [{ key: 't', attrs: { delay: 10_000 } }],
+        },
       ],
     });
     byId('before').focus();
@@ -586,6 +656,9 @@ describe('the focus', () => {
     expect(document.activeElement).toBe(trigger());
     const element = await opened();
     expect(element).toHaveAttribute('data-instant', 'focus');
+    expect(byTestId('arrow-t')).toHaveAttribute('data-instant', 'focus');
+    expect(byTestId('viewport-t')).toHaveAttribute('data-instant', 'focus');
+    expect(byTestId('positioner-instant-t')).toHaveTextContent('focus');
     await userEvent.keyboard('{Tab}');
     await closed();
     expect(log).toEqual([
@@ -733,6 +806,16 @@ describe('the focus', () => {
     await opened();
   });
 
+  test('after a close by a press outside, a Tab to the trigger opens the tooltip', async () => {
+    await mountTooltips({ tooltips: [{ name: 't', root: { defaultOpen: true } }] });
+    await opened();
+    await userEvent.click(byId('outside'));
+    await closed();
+    byId('before').focus();
+    await userEvent.keyboard('{Tab}');
+    await opened();
+  });
+
   test('a press that gives the trigger no focus blocks the focus open until the mouse leaves the trigger', async () => {
     await mountTooltips({
       tooltips: [{ name: 't', triggers: [{ key: 't', attrs: { delay: 10_000 } }] }],
@@ -793,14 +876,14 @@ describe('the press', () => {
         {
           name: 't',
           triggers: [
-            { key: 'a', attrs: { delay: 100 } },
+            { key: 'a', attrs: { delay: 300 } },
             { key: 'b', attrs: { delay: 0, closeOnClick: false } },
           ],
         },
       ],
     });
     await userEvent.click(trigger('a'));
-    await sleep(200);
+    await sleep(500);
     expect(popup()).toBe(null);
     await userEvent.hover(trigger('b'));
     await opened();
@@ -833,18 +916,57 @@ describe('the press', () => {
 });
 
 describe('the group', () => {
-  test('a provider gives its `delay`; a trigger `delay` wins; while the group is active, a hover opens at once', async () => {
+  test('a trigger `delay` wins over the `delay` of the provider; while the group is active, a hover opens at once', async () => {
+    const delays: number[] = [];
     await mountTooltips({
-      provider: { delay: 40, timeout: 400 },
-      tooltips: [{ name: 'a' }, { name: 'b', triggers: [{ key: 'b', attrs: { delay: 10_000 } }] }],
+      provider: { delay: 10_000, timeout: 10_000 },
+      tooltips: [
+        { name: 'c', root: hoverDelays(delays), triggers: [{ key: 'c', attrs: { delay: 250 } }] },
+        { name: 'a' },
+        { name: 'b', triggers: [{ key: 'b', attrs: { delay: 10_000 } }] },
+      ],
     });
+    await userEvent.hover(trigger('c'));
+    await opened('c');
+    expect(delays[0]).toBeGreaterThanOrEqual(atLeast(250));
     await userEvent.hover(trigger('a'));
-    await sleep(10);
-    expect(popup('a')).toBe(null);
     await opened('a');
+    await closed('c');
     await userEvent.hover(trigger('b'));
     await opened('b');
     await closed('a');
+  });
+
+  test('the provider gives its `delay` and its `closeDelay`, and a tooltip reads them at their use', async () => {
+    const times: { open?: number; close?: number } = {};
+    let left = 0;
+    const provider = reactive({ delay: 10_000, closeDelay: 10_000 });
+    await mountTooltips({
+      provider,
+      tooltips: [
+        {
+          name: 'a',
+          root: {
+            onOpenChange: (open: boolean, details: TooltipRootChangeEventDetails) => {
+              if (open) times.open = performance.now() - details.event.timeStamp;
+              else times.close = performance.now() - left;
+            },
+          },
+        },
+      ],
+    });
+    trigger('a').addEventListener('pointerleave', (event) => (left = event.timeStamp));
+    provider.delay = 150;
+    provider.closeDelay = 150;
+    await nextTick();
+    await userEvent.hover(trigger('a'));
+    await opened('a');
+    await hoverAway();
+    await closed('a');
+    expect(times.open).toBeGreaterThanOrEqual(atLeast(150));
+    // The open delay of a trigger with no provider is 600 ms.
+    expect(times.open).toBeLessThan(600);
+    expect(times.close).toBeGreaterThanOrEqual(atLeast(150));
   });
 
   test('one tooltip of a group is open at a time; the other closes with `none`; the new one has `data-instant="delay"` at its insert, and the old one before its leave', async () => {
@@ -886,7 +1008,7 @@ describe('the group', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const log: string[] = [];
       await mountTooltips({
-        provider: { delay: 0 },
+        provider: { delay: 0, timeout: 10_000 },
         tooltips: [
           {
             name: 'a',
@@ -915,9 +1037,10 @@ describe('the group', () => {
     },
   );
 
-  test('the group stays active for `timeout` after the last close; then a hover waits its delay', async () => {
+  test('the group stays active for `timeout` after the last close; then a hover waits its delay; a tooltip reads `timeout` at its close', async () => {
+    const provider = reactive({ delay: 10_000, timeout: 10_000 });
     await mountTooltips({
-      provider: { delay: 150, timeout: 300 },
+      provider,
       tooltips: [{ name: 'a', triggers: [{ key: 'a', attrs: { delay: 0 } }] }, { name: 'b' }],
     });
     await userEvent.hover(trigger('a'));
@@ -925,76 +1048,80 @@ describe('the group', () => {
     await hoverAway();
     await closed('a');
     await userEvent.hover(trigger('b'));
-    await sleep(60);
-    expect(popup('b')).not.toBe(null);
+    await opened('b');
+    provider.timeout = 100;
     await hoverAway();
     await closed('b');
+    await sleep(300);
+    await userEvent.hover(trigger('b'));
+    await sleep(200);
+    expect(popup('b')).toBe(null);
+  });
+
+  test('a tooltip that opens again while the timer of its close runs keeps the group active after that timer', async () => {
+    const a: Props = reactive({ open: true, 'onUpdate:open': (open: boolean) => (a.open = open) });
+    await mountTooltips({
+      provider: { delay: 10_000, timeout: 200 },
+      tooltips: [{ name: 'a', root: a }, { name: 'b' }],
+    });
+    await opened('a');
+    a.open = false;
+    await closed('a');
+    a.open = true;
+    await opened('a');
     await sleep(400);
     await userEvent.hover(trigger('b'));
-    await sleep(60);
-    expect(popup('b')).toBe(null);
     await opened('b');
+    await closed('a');
   });
 
   test('the tooltips with no provider are one group with no timeout: one open at a time, and the next hover waits its delay', async () => {
     const log: string[] = [];
+    const delays: number[] = [];
     await mountTooltips({
       tooltips: [
         { name: 'a', root: rootEvents(log, { defaultOpen: true }) },
-        { name: 'b', triggers: [{ key: 'b', attrs: { delay: 80 } }] },
+        { name: 'b', root: hoverDelays(delays), triggers: [{ key: 'b', attrs: { delay: 300 } }] },
       ],
     });
     await opened('a');
     await userEvent.hover(trigger('b'));
-    await sleep(30);
-    expect(popup('b')).toBe(null);
     await opened('b');
+    expect(delays[0]).toBeGreaterThanOrEqual(atLeast(300));
     await closed('a');
     expect(popup('b')).toHaveAttribute('data-instant', 'delay');
     expect(log).toEqual(['openChange false none', 'update false']);
   });
 
-  test('the props of the provider are read at their use', async () => {
-    const provider = reactive({ delay: 10_000, closeDelay: 10_000 });
-    await mountTooltips({ provider, tooltips: [{ name: 'a' }] });
-    provider.delay = 0;
-    provider.closeDelay = 0;
-    await nextTick();
-    await userEvent.hover(trigger('a'));
-    await opened('a');
-    await hoverAway();
-    await closed('a');
-  });
-
   test('after the active trigger of an open tooltip unmounts, the next hover waits its delay, and its tooltip has no `data-instant`', async () => {
-    const tooltips = reactive([
-      { name: 'a', root: { defaultOpen: true } as Props },
-      { name: 'b', triggers: [{ key: 'b', attrs: { delay: 80 } }] },
+    const delays: number[] = [];
+    const tooltips = reactive<({ name: string } & Props)[]>([
+      { name: 'a', root: { defaultOpen: true } },
+      { name: 'b', root: hoverDelays(delays) },
     ]);
-    await mountTooltips({ provider: { delay: 80, timeout: 10_000 }, tooltips });
+    await mountTooltips({ provider: { delay: 300, timeout: 10_000 }, tooltips });
     await opened('a');
     tooltips[0]!.triggers = [];
     await closed('a');
     await userEvent.hover(trigger('b'));
-    await sleep(30);
-    expect(popup('b')).toBe(null);
     const element = await opened('b');
+    expect(delays[0]).toBeGreaterThanOrEqual(atLeast(300));
     expect(element).not.toHaveAttribute('data-instant');
   });
 
   test('after an open tooltip unmounts, the next hover waits its delay', async () => {
+    const delays: number[] = [];
     const tooltips = reactive<({ name: string } & Props)[]>([
       { name: 'a', root: { defaultOpen: true } },
-      { name: 'b', triggers: [{ key: 'b', attrs: { delay: 80 } }] },
+      { name: 'b', root: hoverDelays(delays) },
     ]);
-    await mountTooltips({ provider: { delay: 80, timeout: 10_000 }, tooltips });
+    await mountTooltips({ provider: { delay: 300, timeout: 10_000 }, tooltips });
     await opened('a');
     tooltips.splice(0, 1);
     await closed('a');
     await userEvent.hover(trigger('b'));
-    await sleep(30);
-    expect(popup('b')).toBe(null);
     await opened('b');
+    expect(delays[0]).toBeGreaterThanOrEqual(atLeast(300));
   });
 
   test('the group of a tooltip is the group of its active trigger', async () => {
@@ -1070,6 +1197,7 @@ describe('the pointer anchor (`trackCursorAxis`)', () => {
       await atPointer();
       await userEvent.hover(trigger(), { position: { x: 200, y: 70 } });
       await atPointer();
+      expect(byTestId('positioner-instant-t')).toHaveTextContent('tracking-cursor');
       if (axis === 'both') expect(positioner()!.style.pointerEvents).toBe('none');
     },
   );
@@ -1176,6 +1304,37 @@ describe('the pointer anchor (`trackCursorAxis`)', () => {
     expect(element.getBoundingClientRect().left).toBe(left);
     movePointer(trigger(), { x: box.left + 250, y: box.top + 20 });
     await waitFor(() => expect(Math.abs(centerOf(element).x - (box.left + 250))).toBeLessThan(1));
+  });
+
+  test('a popup in a shadow root follows the pointer on the page outside that shadow root', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    onTestFinished(() => host.remove());
+    const shadow = host.attachShadow({ mode: 'open' });
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: { trackCursorAxis: 'x' },
+          portal: { to: shadow },
+          positioner: { side: 'bottom' },
+          triggers: [
+            {
+              key: 't',
+              attrs: { delay: 0, closeDelay: 10_000, style: 'width: 300px; height: 40px' },
+            },
+          ],
+        },
+      ],
+    });
+    const box = trigger().getBoundingClientRect();
+    await userEvent.hover(trigger(), { position: { x: 40, y: 20 } });
+    const element = await waitFor(() => {
+      const found = shadow.querySelector<HTMLElement>('[data-testid="popup-t"]');
+      expect(found).not.toBe(null);
+      return found!;
+    });
+    movePointer(document.body, { x: box.left + 150, y: box.bottom + 200 });
+    await waitFor(() => expect(Math.abs(centerOf(element).x - (box.left + 150))).toBeLessThan(1));
   });
 });
 
@@ -1321,6 +1480,29 @@ describe('`disabled`', () => {
   });
 });
 
+describe('the renders', () => {
+  test('an open renders no other trigger of the root and no trigger of another tooltip of the group', async () => {
+    const renders: string[] = [];
+    mount(TooltipComposed, {
+      kind: 'renders',
+      renders: {
+        count(id: string, open: boolean) {
+          renders.push(id);
+          return open ? ' open' : '';
+        },
+      },
+    });
+    await nextTick();
+    renders.length = 0;
+    await userEvent.hover(byId('trigger'));
+    await waitFor(() => expect(byId('trigger')).toHaveTextContent('A open'));
+    await nextTick();
+    expect(renders).toContain('trigger');
+    expect(renders).not.toContain('second');
+    expect(renders).not.toContain('other');
+  });
+});
+
 describe('the trigger leaves', () => {
   test('the unmount of the active trigger closes the tooltip with `none`; a cancelled close leaves it open', async () => {
     for (const cancel of [false, true]) {
@@ -1371,7 +1553,7 @@ describe('the portal, the positioner and the popup', () => {
         { name: 't', portal: { keepMounted: true }, triggers: [{ key: 't', attrs: { delay: 0 } }] },
       ],
     });
-    const element = await waitFor(() => popup()!);
+    const element = await opened();
     expect(element).toHaveAttribute('hidden');
     expect(element).toHaveAttribute('inert');
     expect(positioner()).not.toHaveAttribute('hidden');
@@ -1379,6 +1561,60 @@ describe('the portal, the positioner and the popup', () => {
     await userEvent.hover(trigger());
     await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
     expect(positioner()!.style.pointerEvents).toBe('');
+  });
+
+  test('a kept popup that closed follows no anchor, and the first frame of the next open has the place of its new trigger', async () => {
+    const frames: number[] = [];
+    const first = reactive<Props>({ delay: 0, style: 'margin-left: 0' });
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: {
+            onOpenChange: (open: boolean) => {
+              if (open) {
+                requestAnimationFrame(() =>
+                  frames.push(positioner()!.getBoundingClientRect().left),
+                );
+              }
+            },
+          },
+          portal: { keepMounted: true },
+          positioner: { side: 'bottom' },
+          triggers: [
+            { key: 'a', attrs: first },
+            { key: 'b', attrs: { delay: 0, style: 'margin-left: 300px' } },
+          ],
+        },
+      ],
+    });
+    const element = await opened();
+    await userEvent.hover(trigger('a'));
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await waitFor(() => expect(frames).toHaveLength(1));
+    const left = positioner()!.getBoundingClientRect().left;
+    await hoverAway();
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    first.style = 'margin-left: 100px';
+    await sleep(100);
+    expect(positioner()!.getBoundingClientRect().left).toBe(left);
+    await userEvent.hover(trigger('b'));
+    await waitFor(() => expect(frames).toHaveLength(2));
+    await sleep(100);
+    expect(Math.abs(frames[1]! - positioner()!.getBoundingClientRect().left)).toBeLessThan(1);
+    expect(Math.abs(frames[1]! - left)).toBeGreaterThan(100);
+  });
+
+  test('a kept popup has `data-instant="delay"` after a close because its active trigger unmounted', async () => {
+    const tooltips = reactive<({ name: string } & Props)[]>([
+      { name: 't', root: { defaultOpen: true }, portal: { keepMounted: true } },
+    ]);
+    await mountTooltips({ tooltips });
+    const element = await opened();
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    tooltips[0]!.triggers = [];
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    expect(element).toHaveAttribute('data-instant', 'delay');
   });
 
   test('`to` moves the content to a container', async () => {
@@ -1464,23 +1700,4 @@ describe('with other parts', () => {
     await waitFor(() => expect(byTestId('popover')).not.toBe(null));
     expect(log).toContain('openChange false trigger-press');
   });
-
-  test.skipIf(inject('app') === 'vapor')(
-    'a `Toolbar.Button` in the `element` slot: a disabled item keeps the focus and opens the tooltip at a hover',
-    async () => {
-      mount(TooltipComposed, {
-        kind: 'toolbar-button',
-        trigger: { delay: 0 },
-        inner: { disabled: true },
-      });
-      await nextTick();
-      expect(byId('trigger')).toHaveAttribute('aria-disabled', 'true');
-      await userEvent.hover(byId('trigger'));
-      await waitFor(() => expect(byTestId('popup')).not.toBe(null));
-    },
-  );
-});
-
-test.skipIf(server.browser !== 'chromium')('the browser is Chromium', () => {
-  expect(server.browser).toBe('chromium');
 });
