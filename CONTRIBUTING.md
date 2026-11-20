@@ -279,7 +279,7 @@ The families of [the rules of the refactored families](#the-rules-of-the-refacto
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
-- These native button parts read `useInDisabledFieldset` with their own element (`VUE-112`): `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup.
+- These native button parts read `useInDisabledFieldset` with their own element (`VUE-112`): `Accordion.Trigger`, `Collapsible.Trigger`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup.
 - `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. Before the mount it has no element. It is then a native button when `as` is `button` and it has no `#render` slot, so the server HTML follows `Fieldset.Root`. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
 The template of each such part has the `#render` slot, then the element, and no wrapper component:
@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button, Locale Provider, Toggle and Toggle Group follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -1387,7 +1387,6 @@ The composite item:
 
 A part that is in a composite only in some trees:
 
-- `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - Read the optional context in setup. Call `useCompositeItem(element, options)` or `useCompositeRoot(options)` when that context requires it.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
@@ -1586,7 +1585,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
 - A part that turns autocorrect off gives the key `autoCorrect`, and it takes `autocorrect` out of the attributes of the consumer. The comment in `NumberFieldInput.vue` gives the reason.
-- Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it. `Toggle` does this for `type` and `form`: `const { form, type, ...elementAttrs } = attrs`.
+- Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it.
 - Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - Bind `hidden="until-found"` on a closed searchable panel. An accepted page match clears the start style before the browser measures the text. If the panel stays closed, restore the matched element even if Vue has replaced it. A cached panel needs its closed attributes before the parent activation hook.
 - Bind listeners on the part's own element through its props. The element in the render slot then receives them too. `Collapsible.Panel` binds `onBeforematch`. `NavigationMenu.Positioner` binds both focus listeners in the capture phase.

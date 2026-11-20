@@ -16,8 +16,16 @@ export function useButton(options: {
    * `<button>`, or on an element that the part does not know yet. A `type` of the developer wins.
    */
   type?: 'button';
+  /**
+   * The tag of the element before the mount, where the part knows it (a tag in `as`). The server
+   * then writes the attributes of that element. With none, the part counts a `<button>`.
+   */
+  tag?: () => string | undefined;
 }) {
-  const isNative = computed(() => isNativeButton(options.element.value));
+  const tag = () => options.tag?.() ?? 'button';
+  const isNative = computed(() =>
+    options.element.value ? isNativeButton(options.element.value) : tag() === 'button',
+  );
   const inDisabledFieldset = useInDisabledFieldset(options.element);
   const disabledByFieldset = computed(() => isNative.value && inDisabledFieldset.value);
   /** Disabled by the part, or by a disabled fieldset around a native button. */
@@ -68,7 +76,7 @@ export function useButton(options: {
           tabindex: isDisabled && !focusable ? -1 : 0,
           'aria-disabled': isDisabled ? 'true' : undefined,
         };
-    if (options.type && (!element || element.localName === 'button')) {
+    if (options.type && (element?.localName ?? tag()) === 'button') {
       attributes.type = options.type;
     }
     return {
@@ -92,9 +100,8 @@ export function useButton(options: {
   };
 }
 
-/** A `<button>`, an `<input>` that is a button, or an element that the part does not know yet. */
-function isNativeButton(element: Element | null) {
-  if (!element) return true;
+/** A `<button>`, or an `<input>` that is a button. */
+function isNativeButton(element: Element) {
   if (element.localName === 'button') return true;
   return (
     element.localName === 'input' &&

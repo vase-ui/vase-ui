@@ -22,4 +22,6 @@ export const REFACTORED_FOLDERS = [
   'separator',
   'switch',
   'tabs',
+  'toggle',
+  'toggle-group',
 ];
