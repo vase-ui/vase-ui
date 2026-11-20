@@ -115,17 +115,44 @@ export async function holdPress(element: Element) {
 }
 
 /**
- * Drags with the real pointer, as `userEvent.dragAndDrop`. WebKit ends the drag of a draggable
- * element with no `pointerup` and no `pointercancel`. The page then keeps the button pressed, and
- * its next press gives no `pointerdown`. Vitest runs later test files in the same page. In WebKit,
- * the helper thus releases the button off the page when the case ends.
+ * Drags with the real pointer, as `userEvent.dragAndDrop`. Vitest runs later test files in the
+ * same page, so the helper removes what the drag leaves when the case ends.
+ *
+ * WebKit ends the drag of a draggable element with no `pointerup` and no `pointercancel`. The page
+ * then keeps the button pressed, and its next press gives no `pointerdown`. In WebKit, the helper
+ * releases the button off the page.
+ *
+ * Playwright sends the drag events of Firefox with pointer 0, and its mouse with another pointer.
+ * Firefox keeps pointer 0 at the drop point. After each change of the layout, Firefox gives
+ * `pointerover` and `:hover` to the element under that point. In Firefox, the helper ends a second
+ * drag on the edge of the page, where pointer 0 is over no element that a test renders.
  */
 export async function dragAndDrop(...args: Parameters<typeof userEvent.dragAndDrop>) {
   if (server.browser === 'webkit') {
     onTestFinished(() => userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' }));
   }
+  if (server.browser === 'firefox') {
+    onTestFinished(dropOnEdge);
+  }
   // eslint-disable-next-line no-restricted-properties -- This helper is the one call of the command.
   await userEvent.dragAndDrop(...args);
+}
+
+async function dropOnEdge() {
+  const handle = document.body.appendChild(document.createElement('div'));
+  handle.draggable = true;
+  handle.style.cssText =
+    'position: fixed; z-index: 2147483647; left: 0; top: 0; width: 20px; height: 20px';
+  try {
+    // Playwright ignores a release past the edge of the page.
+    await userEvent.pointer([
+      { coords: { x: 10, y: 10 }, keys: '[MouseLeft>]' },
+      { coords: { x: 30, y: 30 } },
+      { coords: { x: innerWidth, y: innerHeight }, keys: '[/MouseLeft]' },
+    ]);
+  } finally {
+    handle.remove();
+  }
 }
 
 interface ClientPoint {
