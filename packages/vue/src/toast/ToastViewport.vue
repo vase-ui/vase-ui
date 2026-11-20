@@ -109,7 +109,8 @@ watch(
   (viewport, _, onCleanup) => {
     if (!viewport) return;
     const doc = viewport.ownerDocument;
-    const win = doc.defaultView!;
+    const win = doc.defaultView;
+    if (!win) return;
     let check: ReturnType<typeof setTimeout> | undefined;
     // The window gets `blur` when the focus goes into a frame of the page. The page has the focus
     // then, and the frame is the active element one task later (test/measurements/toast.test.ts).
@@ -147,7 +148,8 @@ watch(
   ([viewport, any], _, onCleanup) => {
     if (!viewport || !any) return;
     const doc = viewport.ownerDocument;
-    const win = doc.defaultView!;
+    const win = doc.defaultView;
+    if (!win) return;
     const onWindowKeydown = (event: KeyboardEvent) => {
       if (event.key !== 'F6' || event.defaultPrevented) return;
       // A focus listener of the developer can close the toasts.

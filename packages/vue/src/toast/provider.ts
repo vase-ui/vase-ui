@@ -201,8 +201,9 @@ export function useToastProvider(
   function close(id?: string) {
     const before = current;
     const closing = id === undefined ? before : before.filter((toast) => toast.id === id);
-    if (closing.length === 0) return;
-    const index = id === undefined ? -1 : before.indexOf(closing[0]!);
+    const [first] = closing;
+    if (!first) return;
+    const index = id === undefined ? -1 : before.indexOf(first);
     const element = id === undefined ? viewport.value?.element : rootElement(id);
     for (const toast of closing) clearTimer(toast.id);
     setList(id === undefined ? [] : before.filter((toast) => toast.id !== id));
@@ -283,7 +284,8 @@ export function useToastProvider(
   }
 
   function onManagerEvent({ action, options }: ToastManagerEvent) {
-    if (action === 'promise') promise(options.promise, options);
+    // The manager waits for the promise of each provider.
+    if (action === 'promise') void promise(options.promise, options);
     else if (action === 'update') update(options.id, options.updates);
     else if (action === 'close') close(options.id);
     else add(options);

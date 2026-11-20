@@ -5,6 +5,7 @@ import type { UseToastManagerReturnValue } from '@vase-ui/vue/toast';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import ToastAnchored from '../../test/fixtures/ToastAnchored.vue';
 import ToastElementSlots from '../../test/fixtures/ToastElementSlots.vue';
+import ToastLabelInTransition from '../../test/fixtures/ToastLabelInTransition.vue';
 import ToastPartAlone from '../../test/fixtures/ToastPartAlone.vue';
 import ToastParts from '../../test/fixtures/ToastParts.vue';
 import { expectNoAxeViolations } from '../../test/axe';
@@ -159,6 +160,17 @@ describe('the list (B1)', () => {
     manager.update('missing', updater);
     expect(updater).not.toHaveBeenCalled();
     expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test('a measure of an unchanged height gives no new list', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    await waitFor(() => expect(manager.toasts.value[0]!.height).toBeGreaterThan(0));
+    const before = manager.toasts.value;
+    toastRoot('a')!.querySelector('h2')!.textContent = 'A';
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await nextTick();
+    expect(manager.toasts.value).toBe(before);
   });
 
   test('each change gives a new object and a new array; a toast that does not change keeps its object; a height counts no update', async () => {
@@ -783,6 +795,45 @@ describe('the names and the announcements (B7)', () => {
     expect(action).toHaveAttribute('aria-label', 'Undo the change');
     await userEvent.click(action);
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('a slot that comes after the mount is content', async () => {
+    const list = reactive<Props>({ titleText: '' });
+    const { manager } = await mountToasts({ list });
+    await added(manager, { id: 'a', description: 'Description' });
+    const root = toastRoot('a')!;
+    expect(root.querySelector('h2')).toBe(null);
+    list.titleText = 'Later';
+    await nextTick();
+    expect(root.querySelector('h2')).toHaveTextContent('Later');
+    expect(root).toHaveAttribute('aria-labelledby', root.querySelector('h2')!.id);
+  });
+
+  test('in a <Transition>, a description that shows during its leave renders one element at each moment; the new element enters after the old one goes, and the root names it', async () => {
+    const { exposed } = mount(ToastLabelInTransition);
+    await nextTick();
+    const manager = exposed.manager as Manager;
+    await added(manager, { id: 'a', description: 'Old' });
+    const root = toastRoot('a')!;
+    const descriptions = () => [...root.querySelectorAll('p')];
+    const [old] = descriptions();
+    let most = 0;
+    const observer = new MutationObserver(() => (most = Math.max(most, descriptions().length)));
+    observer.observe(root, { childList: true });
+    manager.update('a', { description: '' });
+    await nextTick();
+    manager.update('a', { description: 'New' });
+    await nextTick();
+    expect(descriptions()).toEqual([old]);
+    await waitFor(() => {
+      expect(descriptions()).toHaveLength(1);
+      expect(descriptions()[0]).not.toBe(old);
+      expect(descriptions()[0]!.className).toBe('');
+    });
+    observer.disconnect();
+    expect(most).toBe(1);
+    expect(descriptions()[0]).toHaveTextContent('New');
+    expect(root).toHaveAttribute('aria-labelledby', descriptions()[0]!.id);
   });
 
   test('VUE-93: an empty `id` counts as none', async () => {

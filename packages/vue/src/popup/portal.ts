@@ -59,9 +59,7 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     { immediate: true },
   );
 
-  const rendered = computed(
-    () => placed.value && (root.open || root.leaving || root.keepMounted),
-  );
+  const rendered = computed(() => placed.value && (root.open || root.leaving || root.keepMounted));
   // The server HTML of a disabled portal has no sentinels and no block, because the server has no
   // popup element and no layer.
   const sentinels = computed(() => mounted.value && root.open && !!root.popup);
