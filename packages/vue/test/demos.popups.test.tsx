@@ -195,7 +195,7 @@ function portals() {
 function openPopups() {
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      '[data-open], :is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden])',
     ),
   ]);
 }
@@ -237,16 +237,6 @@ function triggersAt(
 
 // What axe reports and a user does not meet. Each row is a rule and the elements that are correct.
 const ACCEPTED: Record<string, (element: Element) => boolean> = {
-  // In WebKit on an Apple system, a focus guard is a button. A menu has the guards of its submenu
-  // triggers as children, and a menubar has the guards of its menus.
-  'aria-required-children': (element) => {
-    const buttons = [...element.querySelectorAll('[role="button"]')];
-    return (
-      element.matches('[role="menu"], [role="menubar"]') &&
-      buttons.length > 0 &&
-      buttons.every((button) => button.matches('[data-vase-ui-focus-guard]'))
-    );
-  },
   // In WebKit, VoiceOver needs `aria-selected` on the highlighted item of a menu that has an input.
   'aria-allowed-attr': (element) => element.matches('[role="menuitem"][aria-selected="true"]'),
   // The arrow keys of the input move the highlight of a list, and the list scrolls to it.
@@ -350,6 +340,8 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
 
         await expectNoViolationsInOpenState(frame);
         for (const portal of portals().filter((element) => !frame.contains(element))) {
+          // The parts of a popup that closed leave `<body>` after their leave transition.
+          if (!portal.isConnected) continue;
           await expectNoViolationsInOpenState(portal);
           cut.push(...optionsWithCutText(portal));
         }
