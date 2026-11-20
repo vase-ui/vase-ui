@@ -19,17 +19,19 @@ const titleId = useId();
       :disable-pointer-dismissal="!isNarrow"
       @open-change="open = $event"
     >
-      <Dialog.Portal disabled :data-modal="isNarrow || undefined" class="portal">
-        <Dialog.Backdrop class="backdrop" />
-        <Dialog.Popup
-          :aria-labelledby="titleId"
-          :initial-focus="isNarrow ? undefined : false"
-          class="panel"
-        >
-          <Dialog.Title :id="titleId">Task details</Dialog.Title>
-          <p>Review the draft before Friday.</p>
-          <Dialog.Close>Close</Dialog.Close>
-        </Dialog.Popup>
+      <Dialog.Portal disabled>
+        <div :data-modal="isNarrow || undefined" class="portal">
+          <Dialog.Backdrop class="backdrop" />
+          <Dialog.Popup
+            :aria-labelledby="titleId"
+            :initial-focus="isNarrow ? undefined : false"
+            class="panel"
+          >
+            <Dialog.Title :id="titleId">Task details</Dialog.Title>
+            <p>Review the draft before Friday.</p>
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Popup>
+        </div>
       </Dialog.Portal>
     </Dialog.Root>
   </div>

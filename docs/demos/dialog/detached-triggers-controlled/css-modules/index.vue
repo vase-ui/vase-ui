@@ -3,6 +3,9 @@ import { shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import styles from '../../_index.module.css';
 
+const backdropHiddenClass = styles.BackdropHidden;
+const popupHiddenClass = styles.PopupHidden;
+
 const demoDialog = Dialog.createHandle<number>();
 
 const open = shallowRef(false);
@@ -46,15 +49,23 @@ function openProgrammatically() {
   >
     <template #default="{ payload }">
       <Dialog.Portal>
-        <Dialog.Backdrop :class="styles.Backdrop" />
-        <Dialog.Popup :class="styles.Popup">
-          <Dialog.Title v-if="payload !== undefined" :class="styles.Title">
-            Dialog {{ payload }}
-          </Dialog.Title>
-          <div :class="styles.Actions">
-            <Dialog.Close :class="styles.Button">Close</Dialog.Close>
-          </div>
-        </Dialog.Popup>
+        <Transition
+          :enter-from-class="backdropHiddenClass"
+          :leave-to-class="backdropHiddenClass"
+          appear
+        >
+          <Dialog.Backdrop :class="styles.Backdrop" />
+        </Transition>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Dialog.Popup :class="styles.Popup">
+            <Dialog.Title v-if="payload !== undefined" :class="styles.Title">
+              Dialog {{ payload }}
+            </Dialog.Title>
+            <div :class="styles.Actions">
+              <Dialog.Close :class="styles.Button">Close</Dialog.Close>
+            </div>
+          </Dialog.Popup>
+        </Transition>
       </Dialog.Portal>
     </template>
   </Dialog.Root>

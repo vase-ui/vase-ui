@@ -60,7 +60,7 @@ Import the component and assemble its parts:
 
 ## Animation
 
-The popup and the backdrop are in the DOM only while the popover is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at the open, so `<Transition>` needs `appear` to run the enter of the first open.
+The popup and the backdrop are in the DOM only while the popover is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at each open, so `<Transition>` needs `appear` to run the enter.
 
 With `keepMounted` on `Popover.Portal`, the closed popup and backdrop stay in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate them with CSS on `[hidden]`.
 

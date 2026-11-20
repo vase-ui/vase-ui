@@ -1,4 +1,4 @@
-import { DialogHandle } from '../dialog/store/DialogHandle';
+import { DialogHandle } from './dialog/store/DialogHandle';
 
 /**
  * Controls a Drawer imperatively and associates detached `Drawer.Trigger` components with a

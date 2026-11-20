@@ -116,9 +116,7 @@ onMounted(restoreDemoVariant);
 .dark
   .demo-frame
   :deep(
-    :is([class*='_Button_'][data-color='red'], [class*='_DangerButton_']):active:not(
-        [data-disabled]
-      )
+    :is([class*='_Button_'][data-color='red'], [class*='_DangerButton_']):active:not(:disabled)
   ) {
   color: oklch(80.8% 0.114 19.571deg);
 }

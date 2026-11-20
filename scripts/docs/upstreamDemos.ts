@@ -38,10 +38,12 @@ const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate
  */
 const RESTYLED_FAMILIES = new Set([
   'accordion',
+  'alert-dialog',
   'button',
   'checkbox',
   'checkbox-group',
   'collapsible',
+  'dialog',
   'field',
   'fieldset',
   'form',

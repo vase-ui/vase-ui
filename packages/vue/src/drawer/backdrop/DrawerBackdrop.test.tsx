@@ -13,8 +13,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import * as Dialog from '../../dialog/index.parts';
-import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DialogStore } from '../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import DrawerBackdropHydration from './DrawerBackdropHydration.test.vue';
 import DrawerBackdropReplacement from './DrawerBackdropReplacement.test.vue';
@@ -35,9 +34,9 @@ describe('<Drawer.Backdrop />', () => {
 
   it('uses the dialog state when there is no drawer gesture', async () => {
     await render(
-      <Dialog.Root open modal={false}>
+      <Drawer.Root open modal={false}>
         <Drawer.Backdrop data-testid="backdrop" />
-      </Dialog.Root>,
+      </Drawer.Root>,
     );
     const backdrop = screen.getByTestId('backdrop');
     expect(backdrop).toHaveAttribute('data-open');
@@ -113,9 +112,9 @@ describe('<Drawer.Backdrop />', () => {
     await render(() => (
       <Drawer.Root open modal={false}>
         <Drawer.Backdrop data-testid="backdrop" data-label={label.value} />
-        <Dialog.Root>
+        <Drawer.Root>
           <Drawer.Backdrop forceRender data-testid="dialog-backdrop" data-label={label.value} />
-        </Dialog.Root>
+        </Drawer.Root>
         <Drawer.Portal>
           <Drawer.Viewport>
             <Drawer.Popup

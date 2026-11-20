@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { shallowRef, useTemplateRef } from 'vue';
-import { Dialog } from '@vase-ui/vue/dialog';
+import { Drawer } from '@vase-ui/vue/drawer';
 import { motion } from 'motion-v';
 import type { MotionProps } from 'motion-v';
 
 const open = shallowRef(false);
 const root = useTemplateRef('root');
 
-function handleOpenChange(nextOpen: boolean, details: Dialog.Root.ChangeEventDetails) {
+function handleOpenChange(nextOpen: boolean, details: Drawer.Root.ChangeEventDetails) {
   if (!nextOpen) {
     details.preventUnmountOnClose();
   }
@@ -21,25 +21,27 @@ function handleAnimationComplete() {
 </script>
 
 <template>
-  <Dialog.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
-    <Dialog.Trigger class="button">Open the dialog</Dialog.Trigger>
-    <Dialog.Portal>
-      <Dialog.Popup>
-        <template #render="{ props, state }">
-          <motion.div
-            v-bind="props as MotionProps"
-            class="popup"
-            :initial="{ height: 0 }"
-            :animate="{ height: state.open ? 160 : 0 }"
-            @animation-complete="handleAnimationComplete"
-          >
-            <Dialog.Title>A dialog with motion-v</Dialog.Title>
-            <Dialog.Close class="button">Close</Dialog.Close>
-          </motion.div>
-        </template>
-      </Dialog.Popup>
-    </Dialog.Portal>
-  </Dialog.Root>
+  <Drawer.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
+    <Drawer.Trigger class="button">Open the drawer</Drawer.Trigger>
+    <Drawer.Portal>
+      <Drawer.Viewport>
+        <Drawer.Popup>
+          <template #render="{ props, state }">
+            <motion.div
+              v-bind="props as MotionProps"
+              class="popup"
+              :initial="{ height: 0 }"
+              :animate="{ height: state.open ? 160 : 0 }"
+              @animation-complete="handleAnimationComplete"
+            >
+              <Drawer.Title>A drawer with motion-v</Drawer.Title>
+              <Drawer.Close class="button">Close</Drawer.Close>
+            </motion.div>
+          </template>
+        </Drawer.Popup>
+      </Drawer.Viewport>
+    </Drawer.Portal>
+  </Drawer.Root>
 </template>
 
 <style scoped>

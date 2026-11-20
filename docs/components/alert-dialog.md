@@ -58,6 +58,8 @@ Import the component and assemble its parts:
 
 The popup has the role `alertdialog`. An alert dialog is always modal, and a press outside the popup does not close it. The Escape key and `AlertDialog.Close` close it. `AlertDialog.Root` has no `modal` prop and no `disablePointerDismissal` prop.
 
+Put the popup and the backdrop each in a `<Transition appear>` to animate them, and select the parts with the selectors of Dialog. See [Animation](/components/dialog#animation) and [Styling](/components/dialog#styling).
+
 ## Examples
 
 ### Detached triggers
@@ -66,7 +68,7 @@ A trigger can be inside or outside `AlertDialog.Root`. For a simple interaction,
 
 When the content of the alert dialog cannot be next to its trigger, use a detached trigger. Put `AlertDialog.Trigger` outside `AlertDialog.Root`, and connect the two with a handle from `AlertDialog.createHandle()`.
 
-The methods of the handle, such as `open()` and `openWithPayload()`, act only while an `AlertDialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts, and a development build shows a warning for that call. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `openWithPayload()`, act only while an `AlertDialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. When two mounted roots have the same handle, the handle acts on the root that took it last. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./alert-dialog/DetachedTriggers.vue{4,8,10}
 
@@ -115,9 +117,9 @@ The type argument of `createHandle()` gives the type of the payload:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, give `open` to `AlertDialog.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with the `triggerId` prop of the root and the `id` of each `AlertDialog.Trigger`.
+To control the open state, give `open` to `AlertDialog.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with `v-model:trigger-id` on the root and the `id` of each `AlertDialog.Trigger`.
 
-The root has no event for a change of the trigger id. The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
+The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
 
 <DemoFrame>
   <DemoAlertDialogDetachedTriggersControlled />
@@ -201,4 +203,4 @@ Creates a handle that connects an `AlertDialog.Root` with detached `AlertDialog.
 
 <ApiReference name="AlertDialog.Handle" :heading-level="4" />
 
-When no trigger has the `id` that `open()` gets, it opens the alert dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.
+`open(null)`, and `open()` with an `id` that no trigger has, open the alert dialog with no trigger. `openWithPayload()` also opens it with no trigger, and the default slot of the root gets its payload until a trigger opens the alert dialog. A `computed` that reads `isOpen` follows the open state.

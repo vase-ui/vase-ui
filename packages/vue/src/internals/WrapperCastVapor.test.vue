@@ -1,9 +1,9 @@
 <script setup vapor lang="ts">
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
+import { Drawer } from '@vase-ui/vue/drawer';
 
 defineProps<{ open?: boolean | undefined }>();
 </script>
 
 <template>
-  <AlertDialog.Root :open="open" />
+  <Drawer.Root :open="open" />
 </template>

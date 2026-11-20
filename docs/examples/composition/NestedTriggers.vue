@@ -9,19 +9,19 @@ import MyButton from './MyButton.vue';
   <Dialog.Root>
     <Tooltip.Root>
       <Menu.Root>
-        <Tooltip.Trigger>
-          <template #render="{ props: tooltipTrigger }">
-            <Dialog.Trigger v-bind="tooltipTrigger">
-              <template #render="{ props: dialogTrigger }">
-                <Menu.Trigger v-bind="dialogTrigger">
+        <Dialog.Trigger>
+          <template #element="{ props: dialogTrigger, elementRef }">
+            <Tooltip.Trigger v-bind="dialogTrigger" :ref="elementRef">
+              <template #render="{ props: tooltipTrigger }">
+                <Menu.Trigger v-bind="tooltipTrigger">
                   <template #render="{ props: menuTrigger }">
                     <MyButton v-bind="menuTrigger" size="md">Open menu</MyButton>
                   </template>
                 </Menu.Trigger>
               </template>
-            </Dialog.Trigger>
+            </Tooltip.Trigger>
           </template>
-        </Tooltip.Trigger>
+        </Dialog.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner>
             <Tooltip.Popup>Opens a menu and a dialog</Tooltip.Popup>

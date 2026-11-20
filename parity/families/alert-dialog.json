@@ -4,32 +4,154 @@
     "docs/src/app/(docs)/react/components/alert-dialog/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/alert-dialog/AlertDialog.test.ts",
+      "reason": "`AlertDialog.test.ts` tests the alert dialog: the role and `aria-modal`, the inert page, no close at a press on the backdrop and on the fixed element, Escape, a close that a listener refuses, the close button, the seven parts of Dialog below its root and the handle. `Dialog.test.ts` tests the count of nested dialogs across the two families."
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/alert-dialog/AlertDialog.spec.ts",
+      "reason": "`AlertDialog.spec.ts` tests the types of the handle and its payload, a handle of Dialog that is refused, the slot of the root and the details."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Trigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Close",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The button reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogCloseDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogPopupCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "AlertDialogViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the backdrop animates it, and a kept backdrop has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the popup animates it, and a kept popup has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "entry": "Viewport",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the viewport has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`. The viewport is new in the DOM at each open, so a CSS animation is its enter; `:has(> .x-leave-active)` selects it while its popup leaves, and a kept viewport has `[hidden]` (rules 8.9 and 8.15)."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "`AlertDialog.Portal` is `Dialog.Portal`. With `disabled`, the portal element and its parts render in the place of the part, also on a server (`VUE-128`). Base UI has no such prop."
+      "reason": "A disabled portal renders its content in place, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
     },
     {
       "entry": "Trigger",
       "prop": "disabled",
-      "reason": "The part gives `disabled` to `Dialog.Trigger`, which reads it for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Title",
       "prop": "id",
-      "reason": "The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby` and follows a change of it. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` in `aria-labelledby`. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
-      "reason": "The part gives `id` to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby` and follows a change of it. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` in `aria-describedby`. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
       "prop": "disabled",
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:triggerId",
+      "reason": "`v-model:trigger-id` binds the active trigger, as a second state that a developer binds is a named model (rule 8.5)."
+    },
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     }
   ],
   "returnTypeDifferences": [
@@ -39,5 +161,35 @@
       "reason": "`AlertDialog.Handle` is the class `AlertDialogHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/alert-dialog/handle.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/dialog/root.ts",
+      "behavior": "The handle of the alert dialog, a handle of Dialog with a type brand.",
+      "witness": "packages/vue/src/alert-dialog/AlertDialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/alert-dialog/AlertDialogRoot.vue",
+      "behavior": "The root of an alert dialog: modal, with no close at a press outside.",
+      "witness": "packages/vue/src/alert-dialog/AlertDialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/alert-dialog/AlertDialogTrigger.vue",
+      "behavior": "The trigger opens the alert dialog at a press.",
+      "witness": "packages/vue/src/alert-dialog/AlertDialog.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/alert-dialog/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/alert-dialog/parts.ts",
+      "behavior": "The parts of the namespace `AlertDialog`.",
+      "witness": "packages/vue/src/alert-dialog/AlertDialog.test.ts"
+    }
+  ]
 }

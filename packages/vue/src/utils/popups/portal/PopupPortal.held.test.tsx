@@ -10,11 +10,9 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -43,15 +41,17 @@ async function waitPastFocusFrame() {
   await waitSingleFrame();
 }
 
-function renderDialog() {
+function renderDrawer() {
   return (
-    <Dialog.Root defaultOpen>
-      <Dialog.Portal data-testid="portal">
-        <Dialog.Popup data-testid="popup">
-          <button>Inside</button>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Drawer.Root defaultOpen>
+      <Drawer.Portal data-testid="portal">
+        <Drawer.Viewport>
+          <Drawer.Popup data-testid="popup">
+            <button>Inside</button>
+          </Drawer.Popup>
+        </Drawer.Viewport>
+      </Drawer.Portal>
+    </Drawer.Root>
   );
 }
 
@@ -84,38 +84,8 @@ async function measurePopupOffset() {
 
 const families = [
   {
-    name: 'Dialog',
-    renderPart: renderDialog,
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
-    name: 'AlertDialog',
-    renderPart: () => (
-      <AlertDialog.Root defaultOpen>
-        <AlertDialog.Portal data-testid="portal">
-          <AlertDialog.Popup data-testid="popup">
-            <button>Inside</button>
-          </AlertDialog.Popup>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
-    ),
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
     name: 'Drawer',
-    renderPart: () => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal data-testid="portal">
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="popup">
-              <button>Inside</button>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
+    renderPart: renderDrawer,
     marksPage: true,
     movesFocus: true,
   },
@@ -309,8 +279,8 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     },
   );
 
-  it('a dialog whose root mounts in the flush that shows its branch locks the scroll, marks the page and takes the focus', async () => {
-    const { HeldBranch, hide, mountInActivation } = createHeldBranch(renderDialog);
+  it('a drawer whose root mounts in the flush that shows its branch locks the scroll, marks the page and takes the focus', async () => {
+    const { HeldBranch, hide, mountInActivation } = createHeldBranch(renderDrawer);
     const { container } = await render(
       <div>
         <button data-testid="outside">Outside</button>
@@ -355,7 +325,7 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
   // Only the project `vapor` renders a Vapor component. There the `KeepAlive` of the fixture is the
   // `KeepAlive` of Vapor.
   it.runIf(isVaporApp)(
-    'a dialog below the KeepAlive of a Vapor component stays out of the document until the branch shows',
+    'a drawer below the KeepAlive of a Vapor component stays out of the document until the branch shows',
     async () => {
       expect((VaporHeldBranch as { __vapor?: boolean }).__vapor).toBe(true);
       const visible = shallowRef(true);
@@ -366,7 +336,7 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
           <VaporHeldBranch
             visible={visible}
             mounted={mounted}
-            part={defineComponent(() => renderDialog)}
+            part={defineComponent(() => renderDrawer)}
           />
         </div>,
       );
@@ -397,35 +367,39 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     },
   );
 
-  it('a nested dialog does not set data-nested-dialog-open on the dialog above', async () => {
+  it('a nested drawer does not set data-nested-drawer-open on the drawer above', async () => {
     const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal>
-          <Dialog.Popup data-testid="child">
-            <button>Child</button>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="child">
+              <button>Child</button>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ));
     await render(
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal>
-          <Dialog.Popup data-testid="parent">
-            <button>Parent</button>
-            <HeldBranch />
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>,
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="parent">
+              <button>Parent</button>
+              <HeldBranch />
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
     );
     const parent = screen.getByTestId('parent');
 
     await mountWhileHeld();
 
-    expect(parent).not.toHaveAttribute('data-nested-dialog-open');
+    expect(parent).not.toHaveAttribute('data-nested-drawer-open');
 
     await show();
 
-    expect(parent).toHaveAttribute('data-nested-dialog-open');
+    expect(parent).toHaveAttribute('data-nested-drawer-open');
   });
 
   it('a drawer does not activate Drawer.Indent', async () => {

@@ -1,4 +1,4 @@
-import { watch } from 'vue';
+import { nextTick, watch } from 'vue';
 import { ownerDocument } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
 import type { Layer } from './layer';
@@ -20,11 +20,13 @@ const CANDIDATES =
 
 /**
  * The tab stops in the container, in the order of the document: each focusable element with a
- * `tabIndex` of 0 or more that is not disabled, not inert and shown, and one radio of a group.
+ * `tabIndex` of 0 or more that is not disabled, not inert and shown, and one radio of a group. The
+ * elements in `skipped` are none.
  */
-export function tabbables(container: Element): HTMLElement[] {
-  const found: HTMLElement[] = [];
-  collect(container, found);
+export function tabbables(container: Element, skipped?: Element): HTMLElement[] {
+  const collected: HTMLElement[] = [];
+  collect(container, collected);
+  const found = skipped ? collected.filter((element) => !skipped.contains(element)) : collected;
   return found.filter((element) => {
     if (!isNamedRadio(element)) return true;
     const group = found.filter(
@@ -105,7 +107,6 @@ export function usePopupFocus(
     () => root.open,
     (open) => {
       if (open) {
-        before = activeElement(ownerDocument(root.activeTrigger));
         took = false;
         return;
       }
@@ -118,6 +119,11 @@ export function usePopupFocus(
     () => root.open && options.takesFocus() && options.placed() && root.popup,
     (popup) => {
       if (!popup) return;
+      // A popup that an item of another popup opens gets the focus after that popup closed and
+      // gave the focus back to its trigger.
+      const doc = ownerDocument(popup);
+      const active = activeElement(doc);
+      before = active === doc.body ? null : active;
       took = true;
       const target = resolve(options.initialFocus(), root.interaction);
       if (target === false) return;
@@ -146,10 +152,25 @@ export function usePopupFocus(
     if (active && active !== doc.body && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
-    const trigger = root.activeTrigger as HTMLElement | null;
-    // A focus of an element that left the DOM or is hidden does nothing.
-    const element = target !== true ? target : trigger?.isConnected ? trigger : before;
-    focus(element as HTMLElement | null, root.closeInteraction === 'keyboard');
+    // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
+    // that closes is no target, also while the popup leaves.
+    const element = [
+      target === true ? null : tabStopOf(target, popup),
+      root.activeTrigger as HTMLElement | null,
+      before as HTMLElement | null,
+    ].find((each) => each?.isConnected && !popup.contains(each));
+    const keyboard = root.closeInteraction === 'keyboard';
+    if (!element?.closest('[inert]')) {
+      focus(element, keyboard);
+      return;
+    }
+    // The layer removes its `inert` from the page in the update of the close. A focus of an inert
+    // element does nothing, and a focus in the same task after the removal works
+    // (test/measurements/dialog.test.ts).
+    void nextTick(() => {
+      const now = activeElement(doc);
+      if (!now || now === doc.body || popup.contains(now)) focus(element, keyboard);
+    });
   }
 
   return {
@@ -173,15 +194,23 @@ export function usePopupFocus(
       } else if (layer.trap) {
         focus(place === 'before' ? last : first);
       } else if (place === 'before') {
-        focus(root.activeTrigger as HTMLElement | null);
+        focus((root.activeTrigger ?? before) as HTMLElement | null);
       } else {
-        const trigger = root.activeTrigger;
-        const next = trigger ? nextTabStop(trigger, [popup, ...root.portalElements]) : undefined;
-        root.request(false, 'focus-out', event);
+        // With no trigger, the element that had the focus before the open has its place. With
+        // neither, the next Tab goes on in the order of the document.
+        const place = root.activeTrigger ?? before;
+        const next = place ? nextTabStop(place, [popup, ...root.portalElements]) : undefined;
+        if (layer.focusOut) root.request(false, 'focus-out', event);
         focus(next);
       }
     },
   };
+}
+
+/** The target, or its first tab stop outside the popup when the target is no tab stop. */
+function tabStopOf(target: HTMLElement, popup: Element) {
+  if (target.matches(CANDIDATES) && isTabbable(target)) return target;
+  return tabbables(target, popup)[0] ?? target;
 }
 
 // The first tab stop after the trigger in the document, outside the elements of the popup.

@@ -25,7 +25,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -34,7 +34,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -42,7 +42,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -77,11 +77,11 @@
   @media (prefers-color-scheme: dark) {
     background-color: rgb(0 0 0 / 50%);
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.BackdropHidden {
+  opacity: 0;
 }
 
 .Viewport {
@@ -106,14 +106,14 @@
   transition: opacity 150ms;
   pointer-events: none;
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-  }
-
   @media (min-width: 80rem) {
     max-width: none;
   }
+}
+
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.PopupRootHidden {
+  opacity: 0;
 }
 
 .Popup {
@@ -135,10 +135,11 @@
     color: white;
     box-shadow: none;
   }
+}
 
-  [data-starting-style] & {
-    transform: scale(1.05);
-  }
+/* The enter-from class of the `<Transition>` around the panel. */
+.PopupEnterFrom {
+  transform: scale(1.05);
 }
 
 .Close {

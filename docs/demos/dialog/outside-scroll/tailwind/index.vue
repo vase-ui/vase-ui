@@ -3,6 +3,12 @@ import { h, useTemplateRef } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 
+const backdropHiddenClass = 'opacity-0';
+const backdropLeaveActiveClass = 'duration-[350ms]! ease-[cubic-bezier(0.375,0.015,0.545,0.455)]!';
+const popupEnterFromClass = 'translate-y-[100dvh]';
+const popupLeaveToClass = 'translate-y-[max(100dvh,100%)]';
+const popupLeaveActiveClass = 'duration-[350ms]! ease-[cubic-bezier(0.375,0.015,0.545,0.455)]!';
+
 const popupRef = useTemplateRef('popup');
 
 const XIcon: FunctionalComponent = () =>
@@ -120,57 +126,71 @@ const RELATED_LINKS = [
 <template>
   <Dialog.Root>
     <Dialog.Trigger
-      class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex h-8 items-center justify-center gap-2 border border-neutral-950 dark:border-white bg-white dark:bg-neutral-950 px-3 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 dark:text-white select-none hover:not-disabled:bg-neutral-100 dark:hover:not-disabled:bg-neutral-800 active:not-disabled:bg-neutral-200 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
       >Open dialog</Dialog.Trigger
     >
     <Dialog.Portal>
-      <Dialog.Backdrop
-        class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-[600ms] ease-[var(--ease-out-fast)] data-starting-style:opacity-0 data-ending-style:opacity-0 data-ending-style:duration-[350ms] data-ending-style:ease-[cubic-bezier(0.375,0.015,0.545,0.455)] supports-[-webkit-touch-callout:none]:absolute"
-      />
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        :leave-active-class="backdropLeaveActiveClass"
+        appear
+      >
+        <Dialog.Backdrop
+          class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-[600ms] ease-[var(--ease-out-fast)] supports-[-webkit-touch-callout:none]:absolute"
+        />
+      </Transition>
       <Dialog.Viewport class="fixed inset-0 overflow-y-auto overscroll-contain">
         <div class="flex min-h-full items-center overflow-clip">
-          <Dialog.Popup
-            ref="popup"
-            class="outline-0 relative mx-auto my-16 flex w-[min(40rem,calc(100vw-2rem))] flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[translate] duration-[700ms] ease-[cubic-bezier(0.45,1.005,0,1.005)] data-starting-style:translate-y-[100dvh] data-ending-style:translate-y-[max(100dvh,100%)] data-ending-style:duration-[350ms] data-ending-style:ease-[cubic-bezier(0.375,0.015,0.545,0.455)] motion-reduce:transition-none"
-            :initial-focus="popupRef"
+          <Transition
+            :enter-from-class="popupEnterFromClass"
+            :leave-to-class="popupLeaveToClass"
+            :leave-active-class="popupLeaveActiveClass"
+            appear
           >
-            <div class="relative flex flex-col gap-1 pr-8">
-              <Dialog.Title class="text-base font-bold">Dialog</Dialog.Title>
-              <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
-                This layout keeps an outer container scrollable while the dialog can extend past the
-                bottom edge.
-              </Dialog.Description>
-              <Dialog.Close
-                class="absolute -top-1 -right-1 inline-flex items-center justify-center w-8 h-8 border-none bg-transparent p-0 text-neutral-950 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 active:bg-neutral-200 dark:active:bg-neutral-700 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
-                aria-label="Close"
-              >
-                <XIcon />
-              </Dialog.Close>
-            </div>
+            <Dialog.Popup
+              ref="popup"
+              class="outline-0 relative mx-auto my-16 flex w-[min(40rem,calc(100vw-2rem))] flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[translate] duration-[700ms] ease-[cubic-bezier(0.45,1.005,0,1.005)] motion-reduce:transition-none"
+              :initial-focus="popupRef?.element"
+            >
+              <div class="relative flex flex-col gap-1 pr-8">
+                <Dialog.Title class="text-base font-bold">Dialog</Dialog.Title>
+                <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
+                  This layout keeps an outer container scrollable while the dialog can extend past
+                  the bottom edge.
+                </Dialog.Description>
+                <Dialog.Close
+                  class="absolute -top-1 -right-1 inline-flex items-center justify-center w-8 h-8 border-none bg-transparent p-0 text-neutral-950 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 active:bg-neutral-200 dark:active:bg-neutral-700 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+                  aria-label="Close"
+                >
+                  <XIcon />
+                </Dialog.Close>
+              </div>
 
-            <div class="flex flex-col gap-4">
-              <section
-                v-for="item in CONTENT_SECTIONS"
-                :key="item.title"
-                class="flex flex-col gap-1"
-              >
-                <h3 class="text-sm font-bold">{{ item.title }}</h3>
-                <p class="text-sm text-neutral-700 dark:text-neutral-300">{{ item.body }}</p>
-              </section>
-            </div>
+              <div class="flex flex-col gap-4">
+                <section
+                  v-for="item in CONTENT_SECTIONS"
+                  :key="item.title"
+                  class="flex flex-col gap-1"
+                >
+                  <h3 class="text-sm font-bold">{{ item.title }}</h3>
+                  <p class="text-sm text-neutral-700 dark:text-neutral-300">{{ item.body }}</p>
+                </section>
+              </div>
 
-            <p class="text-sm text-neutral-600 dark:text-neutral-400">
-              Related docs:
-              <template v-for="(item, index) in RELATED_LINKS" :key="item.href"
-                >{{ index > 0 ? ', ' : ''
-                }}<a
-                  class="text-neutral-950 dark:text-white underline underline-offset-[0.16em] decoration-[1px] hover:no-underline focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white focus-visible:outline-offset-2"
-                  :href="item.href"
-                  >{{ item.label }}</a
-                ></template
-              >.
-            </p>
-          </Dialog.Popup>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                Related docs:
+                <template v-for="(item, index) in RELATED_LINKS" :key="item.href"
+                  >{{ index > 0 ? ', ' : ''
+                  }}<a
+                    class="text-neutral-950 dark:text-white underline underline-offset-[0.16em] decoration-[1px] hover:no-underline focus-visible:outline-2 focus-visible:outline-neutral-950 dark:focus-visible:outline-white focus-visible:outline-offset-2"
+                    :href="item.href"
+                    >{{ item.label }}</a
+                  ></template
+                >.
+              </p>
+            </Dialog.Popup>
+          </Transition>
         </div>
       </Dialog.Viewport>
     </Dialog.Portal>

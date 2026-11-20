@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import DialogRoot from '../dialog/root/DialogRoot.vue';
+import DrawerRoot from '../drawer/root/DrawerRoot.vue';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { withoutPropsOf } from './withoutPropsOf';
 
@@ -9,12 +9,12 @@ describe('withoutPropsOf', () => {
     { name: 'disabled' },
     { name: 'portalOwnerRole' },
     { name: 'portal-owner-role' },
-  ])('drops the declared prop $name', ({ name }) => {
+  ])('VUE-135: drops the declared prop $name', ({ name }) => {
     expect(withoutPropsOf({ [name]: '' }, PopupPortal)).toEqual({});
   });
 
   it('drops handle and trigger-id from the attributes of a generic part', () => {
-    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, DialogRoot)).toEqual({
+    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, DrawerRoot)).toEqual({
       id: 'picker',
     });
   });

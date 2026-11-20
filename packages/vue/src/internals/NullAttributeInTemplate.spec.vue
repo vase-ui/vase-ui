@@ -3,15 +3,15 @@
 import * as Combobox from '../combobox/index.parts';
 import * as DatePicker from '../date-picker/index.parts';
 import * as DateRangePicker from '../date-range-picker/index.parts';
-import * as Dialog from '../dialog/index.parts';
+import * as Drawer from '../drawer/index.parts';
 import * as Menu from '../menu/index.parts';
 import * as TimePicker from '../time-picker/index.parts';
 </script>
 
 <template>
   <Menu.GroupLabel :aria-hidden="null" />
-  <Dialog.Popup :aria-describedby="null" />
-  <Dialog.Popup :aria-describedby="undefined" />
+  <Drawer.Popup :aria-describedby="null" />
+  <Drawer.Popup :aria-describedby="undefined" />
   <!-- @vue-expect-error `aria-hidden` is a Boolean -->
   <Menu.GroupLabel :aria-hidden="5" />
 

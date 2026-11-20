@@ -1,8 +1,8 @@
-import DialogDescription from '../../dialog/description/DialogDescription.vue';
+import DialogDescription from '../dialog/description/DialogDescription.vue';
 import type {
   DialogDescriptionProps,
   DialogDescriptionState,
-} from '../../dialog/description/DialogDescription.vue';
+} from '../dialog/description/DialogDescription.vue';
 
 export const DrawerDescription: typeof DialogDescription = DialogDescription;
 

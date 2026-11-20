@@ -2,7 +2,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { KeepAlive, defineComponent, onScopeDispose, shallowRef, watch } from 'vue';
 import type { PropType } from 'vue';
 import { createHeldBranch, createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useDialogRootContext } from '../dialog/root/DialogRootContext';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from './DrawerRootContext';
 import type { DrawerSnapPoint } from './DrawerRootContext';

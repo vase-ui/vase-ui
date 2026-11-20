@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { Dialog } from '@vase-ui/vue/dialog';
+import { Menu } from '@vase-ui/vue/menu';
 </script>
 
 <template>
-  <Dialog.Root>
-    <Dialog.Trigger>
+  <Menu.Root>
+    <Menu.Trigger>
       <template #render="{ props, state }">
         <button v-bind="props" :ref="props.ref">
           <template v-if="state.open">Open</template>
           <template v-else>Closed</template>
         </button>
       </template>
-    </Dialog.Trigger>
-  </Dialog.Root>
+    </Menu.Trigger>
+  </Menu.Root>
 </template>
