@@ -21,7 +21,8 @@ export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
-   * A new value keeps the date and the time zone of the value.
+   * A new value has the kind, the date and the time zone of the value. It keeps each unit that the
+   * user does not pick, unless `min` or `max` changes the time.
    */
   modelValue?: Value | null;
   /** The first value of a clock with no `modelValue`. */
@@ -66,7 +67,15 @@ export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime
    * `LocaleProvider`, else `en-US`.
    */
   locale?: Intl.LocalesArgument;
+  /**
+   * The user cannot change the time or the view, and no part of the clock takes the focus.
+   * @default false
+   */
   disabled?: boolean;
+  /**
+   * The user cannot change the time. The range input takes the focus, and the view triggers work.
+   * @default false
+   */
   readonly?: boolean;
 }
 

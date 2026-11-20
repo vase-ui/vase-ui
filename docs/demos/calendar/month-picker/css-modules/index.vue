@@ -12,7 +12,10 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
   <Calendar.Root v-model="selected" locale="en-US" :class="styles.Root">
     <div :class="styles.Header">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
-      <Calendar.ViewTrigger :class="styles.Title" />
+      <Calendar.ViewTrigger
+        aria-description="Shows the years, or the months again"
+        :class="styles.Title"
+      />
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
     </div>
     <Calendar.MonthGrid :class="styles.Rows">
