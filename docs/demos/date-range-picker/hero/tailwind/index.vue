@@ -34,7 +34,7 @@ const inputClassName =
               <DateField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                :class="segmentClassName"
+                :class="field-sizing-content segmentClassName"
               />
               <DateField.Literal v-else :segment="segment" :class="literalClassName" />
             </template>
@@ -49,7 +49,7 @@ const inputClassName =
               <DateField.Segment
                 v-if="segment.editable"
                 :segment="segment"
-                :class="segmentClassName"
+                :class="field-sizing-content segmentClassName"
               />
               <DateField.Literal v-else :segment="segment" :class="literalClassName" />
             </template>
