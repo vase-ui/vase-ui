@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { hasContent, useHasSlot } from './label';
 import { injectToastRoot } from './root';
@@ -12,11 +12,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ToastActionProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: ToastActionState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastActionState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastActionState>): unknown;
 }>();
 
 const root = injectToastRoot('Action');

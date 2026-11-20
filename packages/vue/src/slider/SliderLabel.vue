@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderLabelProps, SliderLabelState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<SliderLabelProps>();
 defineSlots<{
   default?(scope: { state: SliderLabelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderLabelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SliderLabelState>): unknown;
 }>();
 
 const slider = injectSlider('Label');

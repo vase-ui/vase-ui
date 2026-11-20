@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectGroup } from './group';
 import type { MenuGroupLabelProps, MenuGroupLabelState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<MenuGroupLabelProps>();
 defineSlots<{
   default?(scope: { state: MenuGroupLabelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuGroupLabelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuGroupLabelState>): unknown;
 }>();
 
 const attrs = useAttrs();

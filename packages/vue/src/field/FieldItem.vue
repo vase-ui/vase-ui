@@ -9,7 +9,7 @@ import {
   useAttrs,
   useId,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { fieldKey, fieldStateAttributes, type FieldControl } from './control';
 import { fieldPartsKey, injectFieldRoot, joinIds, type FieldLabel } from './root';
@@ -20,11 +20,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<FieldItemProps>();
 defineSlots<{
   default?(scope: { state: FieldItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: FieldItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<FieldItemState>): unknown;
 }>();
 
 const parts = injectFieldRoot('Item');

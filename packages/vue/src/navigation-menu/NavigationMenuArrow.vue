@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectNavigationMenuRoot, injectPositioner } from './root';
 import type { NavigationMenuArrowProps, NavigationMenuArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuArrowProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuArrowState>): unknown;
 }>();
 
 const { popup } = injectNavigationMenuRoot('Arrow');

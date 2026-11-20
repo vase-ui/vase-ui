@@ -1,5 +1,5 @@
 import type { HTMLAttributes, LabelHTMLAttributes } from 'vue';
-import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { ChangeEventDetails, GenericEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 import type { ThumbCollisionBehavior } from './values';
@@ -67,11 +67,10 @@ export type SliderIndicatorState = SliderRootState;
 export type SliderRootChangeEventReason = 'input-change' | 'track-press' | 'drag' | 'keyboard';
 export type SliderRootCommitEventReason = SliderRootChangeEventReason;
 
-type Details<Reason extends SliderRootChangeEventReason, Native extends Event> = Omit<
-  ChangeEventDetails<Reason>,
-  'event'
+type Details<Reason extends SliderRootChangeEventReason, Native extends Event> = ChangeEventDetails<
+  Reason,
+  Native
 > & {
-  event: Native;
   /** The thumb that moves. */
   activeThumbIndex: number;
 };
@@ -82,9 +81,9 @@ export type SliderRootChangeEventDetails =
   | Details<'input-change', Event>;
 
 export type SliderRootCommitEventDetails =
-  | { reason: 'keyboard'; event: KeyboardEvent }
-  | { reason: 'track-press' | 'drag'; event: PointerEvent }
-  | { reason: 'input-change'; event: Event };
+  | GenericEventDetails<'keyboard', KeyboardEvent>
+  | GenericEventDetails<'track-press' | 'drag', PointerEvent>
+  | GenericEventDetails<'input-change'>;
 
 export interface SliderControlProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 

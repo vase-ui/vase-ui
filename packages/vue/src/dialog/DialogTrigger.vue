@@ -1,4 +1,5 @@
 <script setup lang="ts" generic="Payload = unknown">
+import type { ElementSlotProps } from '../common/element';
 import { useDialogTrigger } from './root';
 import type { DialogTriggerProps, DialogTriggerState } from './types';
 
@@ -7,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<DialogTriggerProps<Payload>>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: DialogTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DialogTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DialogTriggerState>): unknown;
 }>();
 
 const { element, setElement, state, elementProps } = useDialogTrigger('Dialog', props);

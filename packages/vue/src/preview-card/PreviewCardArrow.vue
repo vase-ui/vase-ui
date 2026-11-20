@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPreviewCardRoot, injectPositioner } from './root';
 import type { PreviewCardArrowProps, PreviewCardArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<PreviewCardArrowProps>();
 defineSlots<{
   default?(scope: { state: PreviewCardArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardArrowState>): unknown;
 }>();
 
 const { root } = injectPreviewCardRoot('Arrow');

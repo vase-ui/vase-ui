@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onUnmounted, provide, shallowReactive, useAttrs } from 'vue';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { chipsKey, injectComboboxRoot, pressAroundInput, type ChipsContext } from './root';
 import type { ComboboxChipsProps, ComboboxChipsState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxChipsProps>();
 defineSlots<{
   default?(scope: { state: ComboboxChipsState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxChipsState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxChipsState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Chips');

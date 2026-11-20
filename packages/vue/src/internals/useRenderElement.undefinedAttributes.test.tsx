@@ -2,16 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
 const Note = defineComponent(
   (props: VaseUIComponentProps<object> & WithVaseUIEvent<HTMLAttributes>) => {
-    const { elementProps, tag } = useRender(props, {
+    const { elementProps } = useRenderElement('div', props, {
       props: (attrs) => [{ role: 'note' }, attrs],
     });
-    return () => h(tag.value, elementProps());
+    return () => h('div', elementProps());
   },
   { props: ['as'], inheritAttrs: false },
 );
@@ -26,7 +25,7 @@ interface Row {
 
 const rows: Row[] = [
   {
-    name: 'useRender role',
+    name: 'the role of a note',
     attribute: 'role',
     createNode: () => <Note role={undefined} data-testid="part" />,
     expected: () => 'note',

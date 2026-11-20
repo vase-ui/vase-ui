@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, shallowRef, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { avatarKey } from './root';
 import type { AvatarRootProps, AvatarRootState, ImageLoadingStatus } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<AvatarRootProps>();
 defineSlots<{
   default?(scope: { state: AvatarRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AvatarRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AvatarRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

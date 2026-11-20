@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, nextTick, provide, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { chipKey, createComboboxDetails, injectChipsOf, injectComboboxRoot } from './root';
 import type { ComboboxChipProps, ComboboxChipState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxChipProps>();
 defineSlots<{
   default?(scope: { state: ComboboxChipState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxChipState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxChipState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Chip');

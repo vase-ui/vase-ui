@@ -10,7 +10,7 @@ import {
   useId,
 } from 'vue';
 import { clamp } from '../common/clamp';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { visuallyHidden } from '../common/visuallyHidden';
 import { useLocale } from '../locale-provider/part';
 import { progressKey, statusAttributes } from './root';
@@ -25,11 +25,7 @@ const props = withDefaults(defineProps<ProgressRootProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ProgressRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ProgressRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ProgressRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

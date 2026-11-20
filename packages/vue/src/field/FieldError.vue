@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { fieldStateAttributes } from './control';
@@ -12,12 +12,11 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<FieldErrorProps>();
 const slots = defineSlots<{
   default?(scope: { state: FieldErrorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: FieldErrorState;
-    messages: string[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<FieldErrorState> & {
+      messages: string[];
+    },
+  ): unknown;
 }>();
 
 const field = injectFieldRoot('Error');

@@ -2,7 +2,7 @@
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { dayPeriodText } from '../internals/date-time/format';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockDayPeriodProps, TimeClockDayPeriodState } from './types';
@@ -12,11 +12,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<TimeClockDayPeriodProps>();
 defineSlots<{
   default?(scope: { state: TimeClockDayPeriodState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeClockDayPeriodState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeClockDayPeriodState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { createRenderer, screen } from '#test-utils';
-import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -38,10 +37,10 @@ const Part = defineComponent(
 
 const Note = defineComponent(
   (props: VaseUIComponentProps<object> & WithVaseUIEvent<HTMLAttributes>) => {
-    const { elementProps, tag } = useRender(props, {
+    const { elementProps } = useRenderElement('div', props, {
       props: (attrs) => [{ role: 'note', 'aria-describedby': 'note-text' }, attrs],
     });
-    return () => h(tag.value, elementProps());
+    return () => h('div', elementProps());
   },
   { props: ['as'], inheritAttrs: false },
 );
@@ -65,7 +64,7 @@ describe('VUE-110: a blank ID reference attribute of the consumer', () => {
     expect(getAttributes.mock.lastCall?.[0]).toStrictEqual({ 'data-testid': 'part' });
   });
 
-  it('keeps the description of a useRender component', async () => {
+  it('keeps the description of a note', async () => {
     await render(<Note aria-describedby="" data-testid="part" />);
 
     expect(screen.getByTestId('part')).toHaveAttribute('aria-describedby', 'note-text');

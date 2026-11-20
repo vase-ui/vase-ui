@@ -74,6 +74,18 @@ Each `Portal` part renders its content in a `Teleport`, in another place of the 
 
 The default element of `NavigationMenu.Content` is in a `<Teleport>`, so a scoped rule does not reach it. Render your element in its `element` slot, and bind `props` and `elementRef` on it.
 
+## Text direction
+
+Set the `dir` attribute on `<html>`, or on an element around the parts. Each part reads the text direction of its own element, as a native control does. Its arrow keys and its layout follow that direction.
+
+- In CSS, `:dir(rtl)` matches an element in right-to-left text.
+- In script, `getComputedStyle(element).direction` gives the direction of an element.
+- A popup in a portal is in `<body>`, so it has the direction of `<html>`. For another direction, give `dir` to its positioner.
+
+A server cannot read the direction of an element around a part. `Slider.Root` places its thumbs in the server HTML, so give it its own `dir`. Without it, the thumbs move when the page hydrates.
+
+<<< ../examples/styling/TextDirection.vue{7}
+
 ## Tailwind CSS
 
 Apply Tailwind CSS classes to each part with the `class` attribute. The variants that start with `data-` use the data attributes of the part.

@@ -6,7 +6,7 @@ export type TextDirection = 'ltr' | 'rtl';
 export const DirectionContext: InjectionKey<ComputedRef<TextDirection>> = Symbol();
 
 /**
- * Gives the text direction of the nearest `DirectionProvider`, or `'ltr'` when there is none.
+ * Gives the text direction of the nearest provider of `DirectionContext`, or `'ltr'` when there is none.
  * Call it in `setup`.
  * The result is a ref, because `setup` runs one time and the provider can change.
  */

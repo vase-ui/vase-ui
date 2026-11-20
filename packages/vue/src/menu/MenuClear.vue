@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectFilter } from './filter';
 import { injectMenu } from './root';
 import type { MenuClearProps, MenuClearState } from './types';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<MenuClearProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: MenuClearState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuClearState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuClearState>): unknown;
 }>();
 
 const filter = injectFilter(injectMenu('Clear'), 'Clear');

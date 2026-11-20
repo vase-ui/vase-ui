@@ -8,7 +8,7 @@ import {
   onDeactivated,
   shallowRef,
 } from 'vue';
-import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import TextDirectionProvider from '../../../internals/direction-context/TextDirectionProvider.test.vue';
 import {
   createHeldBranch,
   createRenderer,
@@ -113,14 +113,14 @@ describe('usePopupAutoResize', () => {
     'anchors the popup for side=$side in $direction mode',
     async ({ side, direction, expected }) => {
       await render(() => (
-        <DirectionProvider direction={direction}>
+        <TextDirectionProvider direction={direction}>
           {scene({
             root: openRoot,
             triggers: [{ id: 'trigger' }],
             positioner: { side, collisionAvoidance: { side: 'none' } },
             content: () => 'Content',
           })}
-        </DirectionProvider>
+        </TextDirectionProvider>
       ));
 
       const { style } = screen.getByTestId('popup');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { groupKey, injectComboboxRoot } from './root';
 import type { ComboboxGroupLabelProps, ComboboxGroupLabelState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<ComboboxGroupLabelProps>();
 defineSlots<{
   default?(scope: { state: ComboboxGroupLabelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxGroupLabelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxGroupLabelState>): unknown;
 }>();
 
 injectComboboxRoot('GroupLabel');

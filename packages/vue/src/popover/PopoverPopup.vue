@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { sizeVariables } from '../popup/viewport';
 import { injectPopoverRoot, injectPositioner } from './root';
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<PopoverPopupProps>(), {
 });
 defineSlots<{
   default?(scope: { state: PopoverPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverPopupState>): unknown;
 }>();
 
 const context = injectPopoverRoot('Popup');

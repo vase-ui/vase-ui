@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { selectGroupKey } from './root';
 import type { SelectGroupLabelProps, SelectGroupLabelState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<SelectGroupLabelProps>();
 defineSlots<{
   default?(scope: { state: SelectGroupLabelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectGroupLabelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectGroupLabelState>): unknown;
 }>();
 
 const group = inject(selectGroupKey, null);

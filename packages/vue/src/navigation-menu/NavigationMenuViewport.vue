@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, shallowRef, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { visuallyHidden } from '../common/visuallyHidden';
 import { injectNavigationMenuRoot, injectPositionerIfAny } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuViewportProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuViewportState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuViewportState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Viewport');

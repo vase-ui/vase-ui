@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { DayOfWeek } from '../internals/date-time/temporal';
 import { injectMonth } from './month';
 import { injectCalendar, stateAttributes } from './root';
@@ -14,12 +14,11 @@ defineSlots<{
   default?(): unknown;
   /** One day of the week, from the first day of the week. */
   weekday?(scope: { weekday: DayOfWeek; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarGridHeaderRowState;
-    weekdays: readonly DayOfWeek[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarGridHeaderRowState> & {
+      weekdays: readonly DayOfWeek[];
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

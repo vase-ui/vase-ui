@@ -63,7 +63,7 @@ export function useCastBooleanWarning(partName: string): void {
       warn(
         `${wrapperName} gives \`${prop}: false\` to <${partName}>, but its caller did not set \`${prop}\`.`,
         `Vue sets an absent Boolean prop to \`false\`, so the part cannot use its default or the value of its parent.`,
-        `Give \`${prop}\` the default \`undefined\` in ${wrapperName}, or forward the props with \`useForwardProps\`.`,
+        `Give \`${prop}\` the default \`undefined\` in ${wrapperName}, or do not declare it.`,
       );
     }
   }

@@ -85,6 +85,7 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
         ...REFACTORED_FOLDERS.map((folder) => `src/${folder}/**/*.test.ts`),
         'test/measurements/*.test.ts',
         'test/as.test.ts',
+        'src/use-element/*.test.ts',
       ],
       exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
       retry: 0,

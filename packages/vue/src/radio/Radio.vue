@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { fieldKey, fieldStateAttributes, useFieldControl } from '../field/control';
@@ -13,11 +13,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<RadioProps<Value>>();
 const slots = defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: RadioState;
-  }): unknown;
+  element?(scope: ElementSlotProps<RadioState>): unknown;
 }>();
 
 const group = injectGroup();

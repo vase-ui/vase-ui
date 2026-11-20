@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onScopeDispose, onServerPrefetch, shallowRef, useAttrs } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useDrag } from './drag';
 import {
   adjustLayout,
@@ -20,11 +20,7 @@ const props = withDefaults(defineProps<ResizableHandleProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ResizableHandleState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ResizableHandleState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ResizableHandleState>): unknown;
 }>();
 
 const root = injectRoot('Handle');

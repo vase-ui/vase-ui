@@ -8,7 +8,7 @@ import {
   useId,
   type CSSProperties,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
@@ -22,13 +22,12 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<SliderThumbProps>();
 const slots = defineSlots<{
   default?(scope: { state: SliderThumbState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderThumbState;
-    inputProps: Record<string, unknown>;
-    inputRef: (target: unknown) => void;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<SliderThumbState> & {
+      inputProps: Record<string, unknown>;
+      inputRef: (target: unknown) => void;
+    },
+  ): unknown;
 }>();
 
 // The attributes and the listeners of the developer that go to the input.

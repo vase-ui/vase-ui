@@ -10,8 +10,8 @@ import {
 import CompositeItem from '../../../../test/fixtures/CompositeItemPart.vue';
 import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPart.vue';
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
-import { DirectionProvider } from '../../../direction-provider';
-import type { TextDirection } from '../../../direction-provider';
+import type { TextDirection } from '../../direction-context/DirectionContext';
+import TextDirectionProvider from '../../direction-context/TextDirectionProvider.test.vue';
 import { useCompositeRoot, useCompositeRootContext } from './useCompositeRoot';
 import { gridNavigation } from '../gridNavigation';
 
@@ -27,13 +27,13 @@ describe('useCompositeRoot', () => {
     const direction = shallowRef<TextDirection>('ltr');
 
     const App = defineComponent(() => () => (
-      <DirectionProvider direction={direction.value}>
+      <TextDirectionProvider direction={direction.value}>
         <CompositeRoot data-testid="root" orientation="horizontal">
           <CompositeListItemPart data-testid="1" />
           <CompositeListItemPart data-testid="2" />
           <CompositeListItemPart data-testid="3" />
         </CompositeRoot>
-      </DirectionProvider>
+      </TextDirectionProvider>
     ));
 
     await render(<App />);

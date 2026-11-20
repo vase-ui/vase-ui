@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, useAttrs, watchEffect } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectAvatarRoot } from './root';
 import type { AvatarFallbackProps, AvatarFallbackState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<AvatarFallbackProps>(), { delay: 0 });
 defineSlots<{
   default?(scope: { state: AvatarFallbackState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AvatarFallbackState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AvatarFallbackState>): unknown;
 }>();
 
 const root = injectAvatarRoot('Fallback');

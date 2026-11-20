@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, nextTick, onUnmounted, provide, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectDialogPortal } from '../dialog/root';
 import { keepFocus } from '../popup/portal';
 import { injectKeyboard } from './keyboard';
@@ -27,11 +27,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<DrawerViewportProps>();
 defineSlots<{
   default?(scope: { state: DrawerViewportState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerViewportState>): unknown;
 }>();
 
 const drawer = injectDrawer('Viewport');

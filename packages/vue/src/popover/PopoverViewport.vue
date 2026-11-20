@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupViewport } from '../popup/viewport';
 import { injectPopoverRoot } from './root';
 import type { PopoverViewportProps, PopoverViewportState } from './types';
@@ -11,11 +11,7 @@ defineProps<PopoverViewportProps>();
 defineSlots<{
   /** Give the content the `triggerId` as its `key` in a `<Transition>`, so that it leaves and enters at a move. */
   default?(scope: { state: PopoverViewportState; triggerId: string | null }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverViewportState>): unknown;
 }>();
 
 const context = injectPopoverRoot('Viewport');

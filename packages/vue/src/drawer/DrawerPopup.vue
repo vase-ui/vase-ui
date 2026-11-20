@@ -9,7 +9,7 @@ import {
   useId,
   watch,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDialogPortal } from '../dialog/root';
 import { injectDrawer, viewportKey } from './root';
@@ -23,11 +23,7 @@ const props = withDefaults(defineProps<DrawerPopupProps>(), {
 });
 defineSlots<{
   default?(scope: { state: DrawerPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerPopupState>): unknown;
 }>();
 
 const drawer = injectDrawer('Popup');

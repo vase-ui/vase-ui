@@ -4,7 +4,7 @@ import type { Ref } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import CompositeItem from '../../../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
-import { DirectionProvider } from '../../../direction-provider';
+import TextDirectionProvider from '../../direction-context/TextDirectionProvider.test.vue';
 import type { HTMLProps } from '../../types';
 import type { CompositeMetadata } from '../list/useCompositeList';
 import { useCompositeListItem } from '../list/useCompositeList';
@@ -473,13 +473,13 @@ describe('Composite', () => {
       it('horizontal orientation', async () => {
         await render(
           <div dir="rtl">
-            <DirectionProvider direction="rtl">
+            <TextDirectionProvider direction="rtl">
               <CompositeRoot orientation="horizontal">
                 <CompositeItem data-testid="1">1</CompositeItem>
                 <CompositeItem data-testid="2">2</CompositeItem>
                 <CompositeItem data-testid="3">3</CompositeItem>
               </CompositeRoot>
-            </DirectionProvider>
+            </TextDirectionProvider>
           </div>,
         );
 
@@ -528,13 +528,13 @@ describe('Composite', () => {
       it('both horizontal and vertical orientation', async () => {
         await render(
           <div dir="rtl">
-            <DirectionProvider direction="rtl">
+            <TextDirectionProvider direction="rtl">
               <CompositeRoot orientation="both">
                 <CompositeItem data-testid="1">1</CompositeItem>
                 <CompositeItem data-testid="2">2</CompositeItem>
                 <CompositeItem data-testid="3">3</CompositeItem>
               </CompositeRoot>
-            </DirectionProvider>
+            </TextDirectionProvider>
           </div>,
         );
 
@@ -875,11 +875,11 @@ describe('Composite', () => {
       it('horizontal orientation', async () => {
         await render(
           <div dir="rtl">
-            <DirectionProvider direction="rtl">
+            <TextDirectionProvider direction="rtl">
               <GridCompositeRoot grid={threeColsGrid} orientation="horizontal" enableHomeAndEndKeys>
                 <TestGridItems />
               </GridCompositeRoot>
-            </DirectionProvider>
+            </TextDirectionProvider>
           </div>,
         );
 
@@ -924,11 +924,11 @@ describe('Composite', () => {
       it('both horizontal and vertical orientation', async () => {
         await render(
           <div dir="rtl">
-            <DirectionProvider direction="rtl">
+            <TextDirectionProvider direction="rtl">
               <GridCompositeRoot grid={threeColsGrid} orientation="both" enableHomeAndEndKeys>
                 <TestGridItems />
               </GridCompositeRoot>
-            </DirectionProvider>
+            </TextDirectionProvider>
           </div>,
         );
 
@@ -979,7 +979,7 @@ describe('Composite', () => {
       it('uses the forward edge when navigating from a spanning item', async () => {
         await render(
           <div dir="rtl">
-            <DirectionProvider direction="rtl">
+            <TextDirectionProvider direction="rtl">
               <GridCompositeRoot
                 grid={gridNavigation({
                   cols: 3,
@@ -995,7 +995,7 @@ describe('Composite', () => {
                 <CompositeItem data-testid="2">2</CompositeItem>
                 <CompositeItem data-testid="3">3</CompositeItem>
               </GridCompositeRoot>
-            </DirectionProvider>
+            </TextDirectionProvider>
           </div>,
         );
 

@@ -17,7 +17,13 @@ Import the component and wrap it around your app:
 
 <<< ./csp-provider/Anatomy.vue
 
-Under a strict Content Security Policy (CSP), the browser blocks an inline `<style>` or `<script>` tag. The tag needs a matching [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce) attribute. `CSPProvider` gives its `nonce` and `disableStyleElements` values to all Vase UI components below it.
+Under a strict Content Security Policy (CSP), the browser blocks an inline `<style>` or `<script>` tag. The tag needs a matching [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/nonce) attribute. `CSPProvider` gives its `nonce` and `disableStyleElements` values to all Vase UI components below it. The nearest provider gives both values. `CSPProvider` renders no element.
+
+These parts render an inline element:
+
+- `ScrollArea.Root` renders a `<style>` element that hides the native scrollbar of `ScrollArea.Viewport`.
+- `Select.Popup` and `Select.List` use the same `<style>` element while the popup has a scroll arrow or aligns its item with the trigger.
+- `Tabs.Indicator` with `renderBeforeHydration` renders a `<script>` element in the server HTML.
 
 ## Supplying a nonce
 
@@ -48,7 +54,7 @@ Then give the nonce to the root component as a prop, for example with `createSSR
 
 You do not need a `nonce` for `<style>` elements if you disable them and use external style sheets only.
 
-`<ScrollArea.Root>` renders an inline `<style>` element. It hides the native scrollbar of `<ScrollArea.Viewport>`. With `disableStyleElements`, put the rules of that element in your own style sheet:
+With `disableStyleElements`, put the rules of the `<style>` element in your own style sheet:
 
 ```css
 .vase-ui-disable-scrollbar {

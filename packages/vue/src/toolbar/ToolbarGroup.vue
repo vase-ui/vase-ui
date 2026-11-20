@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectToolbar, toolbarKey } from './item';
 import type { ToolbarGroupProps, ToolbarGroupState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ToolbarGroupProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: ToolbarGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarGroupState>): unknown;
 }>();
 
 const toolbar = injectToolbar();

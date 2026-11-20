@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { Input, type InputChangeEventDetails } from '../input';
 import { injectToolbar, useToolbarItem } from './item';
 import type { ToolbarInputProps, ToolbarInputState } from './types';
@@ -20,11 +20,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarInputState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarInputState>): unknown;
 }>();
 
 const toolbar = injectToolbar();

@@ -7,7 +7,7 @@
   "
 >
 import { computed, mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { assertTemporal, compareDates, withDate } from '../internals/date-time/temporal';
 import { calendarKey, useCalendar } from './root';
@@ -53,11 +53,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: CalendarRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CalendarRootState>): unknown;
 }>();
 
 type Given = CalendarValue | readonly CalendarValue[] | null | undefined;

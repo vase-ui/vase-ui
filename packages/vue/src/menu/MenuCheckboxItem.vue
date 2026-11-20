@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { useMenuItem } from './item';
 import type {
@@ -26,11 +26,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: MenuCheckboxItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuCheckboxItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuCheckboxItemState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -22,22 +22,22 @@ The part passes `eventDetails` as the second argument to a change listener. It l
 After the listener accepts a change, the part emits its model update with the new value. For example, `v-model:open` listens for `update:open`, and `v-model` listens for `update:modelValue`. Automatic tab selection always emits its update, even if the listener calls `cancel()`.
 
 ```ts
-interface VaseUIChangeEventDetails {
+interface ChangeEventDetails {
   reason: string;
   event: Event;
   cancel: () => void;
-  allowPropagation: () => void;
-  isCanceled: boolean;
-  isPropagationAllowed: boolean;
-  trigger: Element | undefined;
+  readonly isCanceled: boolean;
 }
 ```
 
 - `reason` tells why the change event occurred. Use it to run a side effect only for some reasons. An editor can show the possible string values after you type `reason === '`.
 - `event` is the native DOM event that caused the change. When no DOM event caused it, `event` is a plain `Event`.
 - `cancel` stops a cancelable change.
-- `allowPropagation` allows the DOM event to propagate where Vase UI stops the propagation.
 - `isCanceled` shows whether the change event is canceled.
+
+`@vase-ui/vue/types` exports `ChangeEventDetails`, and `GenericEventDetails` with only `reason` and `event` for an event that a listener cannot cancel. A part that adds a member lists it on its page. A popup part adds these members:
+
+- `allowPropagation` allows the DOM event to propagate where Vase UI stops the propagation.
 - `isPropagationAllowed` shows whether the DOM event is allowed to propagate.
 - `trigger` is the element that started the change, when there is one. When a popup closes for a reason that names no element, such as <kbd>Esc</kbd> or a press outside, `trigger` is the trigger that opened the popup, if it is still in the document.
 
@@ -59,21 +59,16 @@ In a popup, the <kbd>Esc</kbd> key stops the propagation of the event, so that p
 
 <<< ../examples/customization/AllowPropagation.vue{5-7}
 
-## Preventing Vase UI from handling an event
+## Stop a native event before a part gets it
 
-To stop the handler of Vase UI for an event such as `keydown`, call `event.preventVaseUIHandler()` in your listener on the part:
+To stop a change of a part, [cancel the change event](#canceling-a-vase-ui-event) for its `reason`. To stop a native event that causes no change event, add a capture listener on the part and call `event.stopPropagation()`:
 
-<<< ../examples/customization/PreventHandler.vue{9}
+<<< ../examples/customization/StopEvent.vue{7}
 
-Your listener then takes over the interaction. Use the method with [controlled state](#controlling-components-with-state) to fit the behavior of a part to your app. When the interaction causes a change event, it is more explicit to [cancel that event](#canceling-a-vase-ui-event) for a specific `reason`.
+Your capture listener runs before the listeners of the part. After the call, no bubble listener gets the event. Two limits apply:
 
-The method has no effect in these cases:
-
-- A native event that the part declares as an emit, such as `submit` of `Form`. The part emits the event after its own work.
-- A listener that the part adds with `addEventListener`, such as a listener on the document or the window. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
-- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. In `Select`, a key listener that calls `preventDefault()` stops the keys of the list.
-
-To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](/utils/merge-props#preventing-vase-ui-s-default-behavior).
+- No bubble listener above the part gets the event. This includes the listeners of your app and the <kbd>Esc</kbd> listener of a popup.
+- A capture listener on an element around the part, or on the document, runs before your listener. The call does not stop it. A popup has such listeners for a press outside. To stop that close, call `cancel()` on the change event.
 
 ## Controlling components with state
 

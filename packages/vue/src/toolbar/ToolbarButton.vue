@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectToolbar, useToolbarItem } from './item';
 import type { ToolbarButtonProps, ToolbarButtonState } from './types';
 
@@ -13,11 +13,7 @@ const props = withDefaults(defineProps<ToolbarButtonProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ToolbarButtonState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarButtonState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarButtonState>): unknown;
 }>();
 
 const toolbar = injectToolbar();

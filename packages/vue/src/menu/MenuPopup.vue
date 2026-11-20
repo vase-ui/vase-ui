@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { sizeVariables } from '../popup/viewport';
 import { injectMenu, injectPositioner } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<MenuPopupProps>(), { finalFocus: undefined });
 defineSlots<{
   default?(scope: { state: MenuPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuPopupState>): unknown;
 }>();
 
 const menu = injectMenu('Popup');

@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = unknown">
 import { computed, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useNavigationMenuRoot } from './root';
 import type {
   NavigationMenuRootChangeEventDetails,
@@ -25,11 +25,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: NavigationMenuRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

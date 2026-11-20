@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { sizeVariables } from '../popup/viewport';
 import { injectPositioner, injectPreviewCardRoot } from './root';
 import type { PreviewCardPopupProps, PreviewCardPopupState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<PreviewCardPopupProps>();
 defineSlots<{
   default?(scope: { state: PreviewCardPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardPopupState>): unknown;
 }>();
 
 const context = injectPreviewCardRoot('Popup');

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import { injectDateTimeField, stateAttributes } from '../common/date-time-field/field';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import DateFieldLiteral from './DateFieldLiteral.vue';
 import DateFieldSegment from './DateFieldSegment.vue';
 import type { DateFieldInputProps, DateFieldInputSegment, DateFieldInputState } from './types';
@@ -15,12 +15,11 @@ defineSlots<{
    * `DateField.Literal` for each other item.
    */
   segment?(scope: { segment: DateFieldInputSegment; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DateFieldInputState;
-    segments: readonly DateFieldInputSegment[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<DateFieldInputState> & {
+      segments: readonly DateFieldInputSegment[];
+    },
+  ): unknown;
 }>();
 
 const attrs = useAttrs();

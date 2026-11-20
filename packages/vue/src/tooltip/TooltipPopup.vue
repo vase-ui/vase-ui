@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { sizeVariables } from '../popup/viewport';
 import { injectPositioner, injectTooltipRoot } from './root';
 import type { TooltipPopupProps, TooltipPopupState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<TooltipPopupProps>();
 defineSlots<{
   default?(scope: { state: TooltipPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TooltipPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TooltipPopupState>): unknown;
 }>();
 
 const context = injectTooltipRoot('Popup');

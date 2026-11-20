@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ElementSlotProps } from '../common/element';
 import { useNavigationButton } from './navigation';
 import type { CalendarNextButtonProps, CalendarNextButtonState } from './types';
 
@@ -7,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CalendarNextButtonProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: CalendarNextButtonState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarNextButtonState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CalendarNextButtonState>): unknown;
 }>();
 
 const { element, setElement, state, elementProps } = useNavigationButton(props, 1);

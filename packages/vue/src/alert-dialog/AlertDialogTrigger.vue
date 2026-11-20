@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { useDialogTrigger } from '../dialog/root';
+import type { ElementSlotProps } from '../common/element';
 import type { AlertDialogTriggerProps, AlertDialogTriggerState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -7,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<AlertDialogTriggerProps<Payload>>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: AlertDialogTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AlertDialogTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AlertDialogTriggerState>): unknown;
 }>();
 
 const { element, setElement, state, elementProps } = useDialogTrigger('AlertDialog', props);

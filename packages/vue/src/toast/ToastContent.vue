@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectToastRoot } from './root';
 import type { ToastContentProps, ToastContentState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ToastContentProps>();
 defineSlots<{
   default?(scope: { state: ToastContentState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastContentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastContentState>): unknown;
 }>();
 
 const root = injectToastRoot('Content');

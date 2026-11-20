@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onMounted, shallowRef, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrating } from '../common/hydration';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import PrehydrationScript from '../internals/PrehydrationScript.vue';
@@ -15,11 +15,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<TabsIndicatorProps>(), { renderBeforeHydration: false });
 const slots = defineSlots<{
   default?(scope: { state: TabsIndicatorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TabsIndicatorState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TabsIndicatorState>): unknown;
 }>();
 
 const root = injectTabsRoot();

@@ -1,7 +1,7 @@
 import type { NativeElements } from 'vue';
 import { expectType } from '#test-utils';
 import { mergeProps, mergePropsN } from '@vase-ui/vue/merge-props';
-import type { HTMLProps } from '@vase-ui/vue/types';
+import type { HTMLProps } from '../internals/types';
 
 const slotProps = null as unknown as HTMLProps;
 

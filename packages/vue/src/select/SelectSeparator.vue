@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { SelectSeparatorProps, SelectSeparatorState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -8,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<SelectSeparatorProps>(), { orientation: 'horizontal' });
 defineSlots<{
   default?(scope: { state: SelectSeparatorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectSeparatorState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectSeparatorState>): unknown;
 }>();
 
 const attrs = useAttrs();

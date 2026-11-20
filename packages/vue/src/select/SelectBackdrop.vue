@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onMounted, onUnmounted, shallowRef, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPortal, injectSelectRoot } from './root';
 import type { SelectBackdropProps, SelectBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<SelectBackdropProps>();
 defineSlots<{
   default?(scope: { state: SelectBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectBackdropState>): unknown;
 }>();
 
 const { root } = injectSelectRoot('Backdrop');
