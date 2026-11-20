@@ -5,6 +5,9 @@ import { createCommentVNode, Fragment, h } from 'vue';
 import { isVaporParts } from '#test-utils';
 import expectations from './expectedFailures.json' with { type: 'json' };
 
+const files: Record<string, { fails: Record<string, string> }> = expectations.files;
+const causes: Record<string, { summary: string; link: string }> = expectations.causes;
+
 let collectionError: unknown;
 try {
   h(Fragment, [undefined]);
@@ -51,22 +54,20 @@ it('accepts a comment vnode for an empty branch of a Fragment', () => {
 });
 
 it('each expected failure names a cause of the list', () => {
-  for (const [file, { fails }] of Object.entries(expectations.files)) {
+  for (const [file, { fails }] of Object.entries(files)) {
     for (const [name, cause] of Object.entries(fails)) {
-      expect(Object.hasOwn(expectations.causes, cause), `${file} > ${name}`).toBe(true);
+      expect(Object.hasOwn(causes, cause), `${file} > ${name}`).toBe(true);
     }
   }
 });
 
 it('each cause of the list has an expected failure', () => {
-  const usedCauses = new Set(
-    Object.values(expectations.files).flatMap(({ fails }) => Object.values(fails)),
-  );
-  expect([...usedCauses].sort()).toEqual(Object.keys(expectations.causes).sort());
+  const usedCauses = new Set(Object.values(files).flatMap(({ fails }) => Object.values(fails)));
+  expect([...usedCauses].sort()).toEqual(Object.keys(causes).sort());
 });
 
 it('each cause has a summary, and its link is a URL of an issue', () => {
-  for (const cause of Object.values(expectations.causes)) {
+  for (const cause of Object.values(causes)) {
     expect(cause.summary.trim().length).toBeGreaterThan(0);
     const link = new URL(cause.link);
     expect(link.protocol).toBe('https:');

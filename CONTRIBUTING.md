@@ -341,7 +341,7 @@ A part whose new types change a prop is the exception.
 
 ### Parts with nodes of their own
 
-Some upstream parts put nodes of their own in the element. An example is the focus guards of `Toast.Viewport`.
+Some upstream parts put nodes of their own in the element. An example is the focus guards of `NavigationMenu.Viewport`.
 
 - Put the extra nodes in an internal SFC, `<Part>Children.vue`.
 - A part of a refactored family writes the extra nodes in its own template, in its own element and in the element of `as`. Its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot. A server writes no content in a void element, such as `<hr>` or `<input>` in `as`. So `Separator` and `Button` with no default slot give their `as` element no slot.
@@ -357,9 +357,9 @@ Some upstream parts put nodes of their own in the element. An example is the foc
 
 <!-- prettier-ignore -->
 ```vue
-<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="ToastViewportChildren" />
+<slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
 <component :is="as" v-else v-bind="elementProps()" :ref="setRef">
-  <ToastViewportChildren><slot :state="state" /></ToastViewportChildren>
+  <NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren>
 </component>
 ```
 
@@ -599,7 +599,7 @@ The change event carries these details:
 - An `id` prop or attribute counts as absent when `trim()` gives an empty string (`VUE-93`). HTML requires a nonempty id with no ASCII white space. ASCII white space separates ids in a list such as `aria-labelledby`. `useVaseUiId` gives the generated id for a blank override. `useLabel` also treats a blank `id` prop as absent. The parts of the refactored families read their `id` prop through `givenId` of `src/common/id.ts`. A part that reads its `id` prop in another way reads it through `given('id', props.id)` of `src/internals/givenAttributes.ts` before its own default, as `Select.Trigger` does.
 - A part that another part names calls `useRegisteredId(getId, register, element)` in `setup`. `getId` gives the id that the part binds to its element. `register` is the function of a registry, such as `registerId` of `createIdRegistry()`. `element` is a ref or a getter of the element of the part.
 - A part binds its own id to its element, such as the `id` prop or a generated id. It never binds the registered id. A `#render` slot can give the element another `id`, and the attribute that comes last wins on the element. With the registered id, the element would keep the `id` of a slot after the slot drops it.
-- Before the mount, the registered id is the id that the part binds. A server has no element, so the server HTML names that id. From the mount on, the registered id is the `id` that the element has now, and it follows each change (`VUE-118`, `VUE-121`). Base UI registers the id that the part binds, so a `render` element with another `id` leaves a reference that names no element.
+- Before the mount, the registered id is the id that the part binds. A server has no element, so the server HTML names that id. From the mount on, the registered id is the `id` that the element has now, and it follows each change (`VUE-118`). Base UI registers the id that the part binds, so a `render` element with another `id` leaves a reference that names no element.
 - A part has no registered id while `getId` gives `undefined`, and while `KeepAlive` holds the part. From the mount on, it also has none while it has no element, and while its element has an empty `id`. No part names it then.
 - `useReferencedId(getId, element)` gives the same id with no registration.
 - A reference that the server HTML has reads the id with `useReferencedId` when the named part has no id registry.
@@ -838,7 +838,7 @@ The fixture in `fixtures/vite/published` imports `Toggle` from the built package
   - The `tabindex` of a `Resizable.Handle` that has no panel on one side.
   - The `aria-valuenow`, `aria-valuemin` and `aria-valuemax` of a `Resizable.Handle` while a panel of its root has a first size that is a length. They wait for the first measurement of the page.
   - The `aria-disabled` of a part in a native disabled `<fieldset>` (`VUE-112`).
-  - Each reference to an `id` that a `#render` slot gives: the `for` of a label, and each `aria-labelledby`, `aria-describedby` and `aria-controls` that names a part (`VUE-118`, `VUE-121`). Give the `id` prop to the part, and the server HTML names the element.
+  - Each reference to an `id` that a `#render` slot gives: the `for` of a label, and each `aria-labelledby`, `aria-describedby` and `aria-controls` that names a part (`VUE-118`). Give the `id` prop to the part, and the server HTML names the element.
   - Each value of a calendar root with no `today` prop that depends on today. See [Dates and times](#dates-and-times).
 - By default, a portal renders its popup after the mount, so the server HTML has no `Dialog.Popup` and no `Popover.Popup`. With `disabled` on `Dialog.Portal`, the popup renders in the place of the part, also on a server. `Dialog.Popup` reads `aria-labelledby` and `aria-describedby` from its root. The title and the description give their ids to the root in `setup`, after the popup rendered. Without explicit attributes, the first render of a popup that holds them has neither attribute.
 - Hydration must give no warning. The hydrated DOM must be equal to a client-only render. Vue does not compare `aria-*`, `role` or `data-*`.
@@ -1155,8 +1155,6 @@ The placement owner is `src/utils/popups/usePopupPositioner.ts`. Its anchor meas
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node.
 - Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `menu/positioner/MenuPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
-- Toast uses `usePopupPlacement` and `usePositioner` directly. It supplies its own size policy.
-- Bind `positionerStyles` on the positioner.
 - Provide the placement to the popup and arrow. Each arrow calls `createArrowRef()` once. An old arrow releases only its own element (`VUE-160`).
 - Combobox uses `usePopupArrow` for the arrow state and decorative element bindings.
 - The positioning context is `store.context.positioning`. The JSDoc of `PopupPositioningContext` in `utils/popups/types.ts` gives its members, and the comments of `useVaseUIFloating` say when the composable writes it.
@@ -1201,8 +1199,6 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `enqueueFocus(element, options)` of `focus/tabbable.ts` keeps one pending focus for the page. The focus manager and the list navigation share it. Do not copy it.
 
 ### Popup portal
-
-All portal parts use `utils/popups/portal/PopupPortal.vue`. Pass the optional `usePortalFocus` function only for a popup that needs tab guards. Toast omits it.
 
 - `to` accepts a CSS selector, an element or a shadow root. An absent target uses the nearest portal element or the document body. An explicit null delays the portal. Resolve selectors after the client patch so a later sibling can supply the target.
 - A change between targets moves the same portal element and its children. A held Teleport moves its content out of the visible document.
@@ -1289,24 +1285,20 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The JSDoc of each option of `useTypeahead` gives its forms.
 - `KeepAlive` can take the list out of the document with no `focusout`. Thus the deactivation ends the session, and `onTyping` gets `false`.
 
-### Toast store
+### Toast
 
-The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+The toasts of one `Toast.Provider` are in `src/toast/provider.ts`, in plain refs. The parts get them with `provide` and `inject`.
 
-- `ToastStore` is a `ReactiveStore`, and the rules of [Popup store](#popup-store) for a `ReactiveStore` apply to it.
+- The list holds the open toasts only, the newest first. `close` removes a toast at once. `<TransitionGroup>` of the developer keeps the element of a closed toast for its leave.
+- A method reads a copy of the list that Vue does not track. An effect that calls a method thus does not run again at each change of the list.
 - A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
-
-### Toast parts
-
-- `Toast.Title` and `Toast.Description` are the label parts. The comments of each part in `src/toast` give its rules, and `parity/better` has a row for each behavior where Toast does more than Base UI.
-- While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left. A provider that mounts in a held branch takes its timers and its subscription first at the activation.
-- A `Toast.Viewport` that mounts in a held branch adds its document and window listeners at the activation. While `KeepAlive` holds the viewport, F6 keeps the action of the browser.
-- `Toast.Root` measures no height while `KeepAlive` holds it, also when it mounts in a held branch. It measures at the activation. A new toast keeps `data-starting-style` until then, so its enter transition plays when it shows.
-- `Toast.Root` ends a swipe in progress with no dismissal when `KeepAlive` deactivates it.
-- `Toast.Root` closes on Escape while the focus is in it, and it stops that event (`VUE-127`). A popup under the toast, such as a modal dialog, listens for Escape on the document, so it stays open. The root does not stop an Escape that it does not handle. An Escape during the exit of the toast is such an Escape, because it closes nothing.
-- `Toast.Viewport` returns the focus to the element that had it before F6 for an Escape that reaches it, and it stops that event (`VUE-130`). A toast stops the Escape that closes it, so the viewport gets only an Escape that no toast handled. The viewport does not stop an Escape that moves no focus. That is the case when the viewport got the focus without F6, and when the element cannot take the focus.
-- A `Toast.Root` with no title takes its name from its last description (`VUE-99`), unless the consumer gives it a name. The root reads only its own attributes for this rule. Put `aria-label` or `aria-labelledby` on `Toast.Root`, not on the element of the `#render` slot.
-- In the `#render` slot of a label part, mount `children` for the label of the toast. To show your own content in another element, give the content in the default slot and the element in `as`.
+- `Toast.Root` finds the end of its leave in the DOM: at its unmount, a `MutationObserver` of its document waits until its element is out of the document. It then calls `onRemove`. The element with the classes of the group can be a positioner around the root.
+- Vue does not patch an element that leaves. A swipe that closes a toast thus writes `data-swipe-direction` and the movement variables, and closes the toast in the next tick.
+- The timers run while the provider is mounted, the pointer and the keyboard focus are not in the viewport, the window has the focus and the page is shown. A server mounts no provider, so it starts no timer and listens to no manager.
+- `Toast.Root` closes on Escape while the focus is in it, and it stops that event (`VUE-127`). A popup under the toast, such as a modal dialog, stays open. A root in its leave closes nothing and stops nothing.
+- `Toast.Viewport` returns the focus to the element that had it before F6 for an Escape that reaches it, and it stops that event (`VUE-130`). It does not stop an Escape that moves no focus.
+- A `Toast.Root` with no title takes its name from its last description (`VUE-99`), unless the developer gives it an `aria-label` or an `aria-labelledby` that is not blank.
+- The provider renders the alerts of the toasts of high priority in the parent node of the viewport, because the viewport is a polite live region.
 
 ### Composite
 
@@ -1568,7 +1560,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The titles and the descriptions of Popover, Dialog and Drawer add their ids to the root of the popup layer (`src/popup/root.ts`), and the popup names the last mounted title and description. A part removes only its own id.
 - Release a registration on watcher invalidation when its source changes. Release a lifetime registration on scope disposal. Vue disposes the old scope before the replacement's mount hook.
 - A compiled template can mount a new part before it unmounts the part that it replaces. A removal by value then removes the value of the new part.
-- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the labels of a root, for the titles and the descriptions of a toast, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
+- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the labels of a root, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
 - `KeepAlive` takes the DOM of a deactivated part out of the document. The id of that part then must not stay in a `for`, an `aria-controls`, an `aria-owns`, an `aria-labelledby` or an `aria-describedby`.
 - A registration with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while `KeepAlive` holds the part. `useRegisteredId` does this for a label and a message. `usePickerPartElement` does it for the element of a picker field or trigger.
 - The getter of such a registration reads `isHeld` of `useKeepAliveState`. `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A new entry in that hook would reverse the order of the parts.
@@ -1625,7 +1617,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handl
 - Vitest reports `Expect test to fail` when a listed case passes on the release candidate. Remove that entry. An entry for a case that the file lacks also fails the run. Correct or remove it. A file key that names no file stops Vitest at the start.
 - To add a file, add its key with an empty `fails` object. Run `pnpm test:vapor-parts`. Add only the cases that fail for a cause in Vue.
 - The project `vapor-parts` needs Vue 3.6, so `pnpm test` leaves it out. Run it alone: it cannot connect beside another browser project in one run. When CI selects package tests, the job `test-vapor-parts` runs each listed file. The job uses the Vue version of `test-vue-rc`. The job has no `continue-on-error`, so a failure stays visible. The job installs a prerelease, so `required` does not need it.
-- The optional job `test-vue-minor` checks the SHA-256 digest of each Vue tarball before it installs the pinned build. When you change the pin, record the reviewed tarball digests in `.github/workflows/vue-<commit>.sha256`. The job runs both `vapor` and `vapor-parts` in the Vitest mode `vue-minor`. Use that mode for an assertion that differs between the pinned build and the release candidate. The summary counts passes, failures and cases that did not run for each cause in `expectedFailures.json`. The job runs the cases for `vue-16301` as ordinary tests.
+- The optional job `test-vue-minor` checks the SHA-256 digest of each Vue tarball before it installs the pinned build. When you change the pin, record the reviewed tarball digests in `.github/workflows/vue-<commit>.sha256`. The job runs both `vapor` and `vapor-parts` in the Vitest mode `vue-minor`. Use that mode for an assertion that differs between the pinned build and the release candidate. The summary counts passes, failures and cases that did not run for each cause in `expectedFailures.json`.
 - Return a child array directly from a JSX slot so Vue can normalize each child. A Vapor slot reads a nested Fragment before Vue normalizes its children. The `vapor-parts` project checks the Fragments that JSX and `h()` create, starting at test collection. A `null`, `undefined` or boolean child fails the check even in a case with an expected Vue failure. Omit an absent Fragment child or use `createCommentVNode()`.
 - To run `vapor` or `vapor-parts` on your machine, install the Vue version of their jobs: `pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@<version>`. After the run, restore `packages/vue/package.json` and `pnpm-lock.yaml` with git. Then run `pnpm install`. Do not commit the release candidate.
 - The hydration helpers and a test that makes its own app use an ordinary Vue app in each project. An ordinary app needs `vaporInteropPlugin` to render a part compiled as a Vapor component. The hydration helpers give their app to `installPartsInterop`, which installs the plugin in the project `vapor-parts` only. A test file of the list that makes its own app does the same. A test with a custom element gives `installPartsInterop` as `configureApp` to `defineCustomElement`.
@@ -1738,7 +1730,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 | `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]` | `toasts.value`, because the composable returns a ref |
 | A React element as the label of a toast, such as `title: <strong>Saved</strong>` | A function that returns the vnode: `title: () => h('strong', 'Saved')`. A toast keeps no vnode. |
 | A React element in a row of `it.each` or `describe.each`, or in a constant that a case renders | A function that returns the vnode. The case calls it. See [Test rules](#test-rules). |
-| The label of the toast as the children of its part, such as `<Toast.Title>{toast.title}</Toast.Title>` | `<Toast.Title />`. The part shows the label of its toast. A default slot counts as content also when it renders `undefined`. |
+| The label of the toast as the children of its part, such as `<Toast.Title>{toast.title}</Toast.Title>` | `<Toast.Title />`. The part shows the label of its toast. A default slot counts as content. |
 | Children of a label part that are `undefined` in one state, such as `{explicit ? 'Title' : undefined}` | `v-slots={explicit ? { default: () => 'Title' } : {}}`. The part then has a default slot only while it has content. |
 | A function component that calls a hook and spreads the rest of its props | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`. |
 | A function component of a test with a prop that starts with `on`, such as `onRenameClick` | `defineComponent` with a setup function and `props: ['onRenameClick']`. Vue passes an undeclared `on…` prop to the root as a listener. It warns when that root renders a fragment, as a part with no element does. |
@@ -1821,7 +1813,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A ported case can pass while the behavior in its title is broken. Add assertions that fail when that behavior breaks. State them in the body of the pull request. When the source has a branch for one engine, an added assertion for that branch reads the same flag of `platform`.
 - A case of an `<img>` gives it a real picture and fires no `load` or `error` event of its own. `test/pictures.ts` gives a picture that the document has, a picture that must load and a URL with no file.
-- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
+- The counterpart of an upstream file of test components is a `.ts` file at the mapped path. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
@@ -1839,7 +1831,7 @@ Where a case has no better form, it differs from the Base UI case only by these 
 - Where the Base UI cases of a file declare the same test component, the ported file can declare that component one time. A prop of the component gives a difference between the cases.
 - Vitest fakes `requestAnimationFrame` with the other timers. With fake timers and `VASE_UI_ANIMATIONS_DISABLED` set to `false`, a closed part stays in its exit until the test moves the clock. A ported jsdom case that asserts a part in its exit thus sets the flag to `false`. With `true`, the part leaves at once.
 - Where Base UI uses a short `waitFor` timeout to show that an open delay runs or does not run, a ported case asserts the open directly after the awaited event when the part opens in the task of that event. Otherwise the case records the time of the enter event and the time of the open in listeners. It then compares the difference with half of the delay. A slow run then cannot change the result.
-- A Base UI case can start the timeout of a toast and then move the real pointer to the toast. On a busy machine, the command of the browser can take longer than the timeout, and the toast closes before the pointer comes. The ported case adds the toast with `timeout: 0` and moves the pointer to it. It then gives the toast its timeout with `manager.update`, and the timer starts paused because the pointer rests on the toast. Fake timers do not prevent this fault. While a command of `vitest/browser` waits for an element, as `click` and `hover` do, Vitest moves the fake clock by 50 ms every 50 ms. See `real browser input` in `toast/viewport/ToastViewport.test.tsx`.
+- A Base UI case can start the timeout of a toast and then move the real pointer to the toast. On a busy machine, the command of the browser can take longer than the timeout, and the toast closes before the pointer comes. The ported case adds the toast with `timeout: 0` and moves the pointer to it. It then gives the toast its timeout with `manager.update`, and the timer starts paused because the pointer rests on the toast. Fake timers do not prevent this fault. While a command of `vitest/browser` waits for an element, as `click` and `hover` do, Vitest moves the fake clock by 50 ms every 50 ms. See `the timers (B2)` in `toast/Toast.test.ts`.
 - One `clock.tick(n)` of Base UI can run two timers. The second timer can read a state that Vue writes in the flush after the first timer. The ported case then calls `vi.useFakeTimers()` with no `shouldAdvanceTime`, and it moves the clock with `await vi.advanceTimersByTimeAsync(n)`. The async form runs the flush of Vue between the two timers, as a browser does. A clock that moves by itself can run both timers in one step.
 - A case that moves the focus out of a popup with `fireEvent` dispatches all its focus events in one task: `await Promise.all([fireEvent.focusOut(…), fireEvent.focusIn(…), …])`. The Base UI case calls `fireEvent` with no `await`, so its events come in one task.
 - The focus manager checks each `focusout` event in a microtask. A `focusout` event in the popup sets `insideComponentTree`, and the next check clears it. With all events in one task, the check of the first `focusout` clears the marker, and the check of the last one closes the popup. With an `await` between the events, the check of the last one clears the marker, and the popup stays open. `validates when the popup is blurred` of `Select.Root` is the model.
@@ -2201,8 +2193,8 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - Each other date of a demo is a fixed date.
 - Do not write `Temporal` in the template of a demo. A template reads only the globals that Vue lists, and `Temporal` is not one of them. Make each value in the script.
 - The text and the links of a demo are about Vase UI. A demo does not name Base UI or React. A link to the documentation or to the source of Vase UI goes to a page of this site or to `https://github.com/vase-ui/vase-ui`. When Base UI links a page that this site does not have, link the nearest page that exists, or remove that link.
-- A page shows its demos together, and a screen reader lists the landmarks of a page by role and name. Give each landmark of one role on a page a name of its own. The viewport of a toast is a `region` landmark, and its default name is "Notifications". The outer root of a navigation menu is a `navigation` landmark with no name. A root inside another root is a `div`, not a landmark. Give each of these two parts its name with `aria-label`.
-- The name says what the demo shows, in the fewest words, as "Undo notifications" and "Nested submenus" do. The first demo of the Toast page keeps the default name. Base UI gives these parts no `aria-label` in its demos. A demo that names such a part thus has one attribute more than its Base UI file.
+- A page shows its demos together, and a screen reader lists the landmarks of a page by role and name. Give each landmark of one role on a page a name of its own. The viewport of a toast is a `region` landmark with no name of its own. The outer root of a navigation menu is a `navigation` landmark with no name. A root inside another root is a `div`, not a landmark. Give each of these two parts its name with `aria-label`.
+- The name says what the demo shows, in the fewest words, as "Undo notifications" and "Nested submenus" do. The first demo of the Toast page has the name "Notifications". Base UI gives these parts no `aria-label` in its demos. A demo that names such a part thus has one attribute more than its Base UI file.
 - VitePress does not add the base path of the site to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.
 - A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the mapped path in `docs/demos/<family>`.

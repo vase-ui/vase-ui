@@ -930,9 +930,13 @@ describe('modal (3.2, L4 to L6)', () => {
     expect(byId('before')).not.toHaveAttribute('inert');
   });
 
-  test('a modal popover leaves its backdrop, its child popups and each `aria-live` region in use, and keeps an `aria-hidden` of the developer after the close', async () => {
-    const live = document.body.appendChild(document.createElement('div'));
+  test('a modal popover leaves its backdrop, its child popups, each `aria-live` region and each alert in use, and keeps an `aria-hidden` of the developer after the close', async () => {
+    const wrapper = document.body.appendChild(document.createElement('div'));
+    const live = wrapper.appendChild(document.createElement('div'));
     live.setAttribute('aria-live', 'polite');
+    const sibling = wrapper.appendChild(document.createElement('div'));
+    const alert = document.body.appendChild(document.createElement('div'));
+    alert.setAttribute('role', 'alert');
     const hidden = document.body.appendChild(document.createElement('div'));
     hidden.setAttribute('aria-hidden', 'true');
     try {
@@ -946,7 +950,9 @@ describe('modal (3.2, L4 to L6)', () => {
       await opened();
       await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
       await waitFor(() => expect(byId('outside')).toHaveAttribute('aria-hidden', 'true'));
-      expect(live).not.toHaveAttribute('aria-hidden');
+      expect(live.closest('[aria-hidden]')).toBe(null);
+      expect(sibling).toHaveAttribute('aria-hidden', 'true');
+      expect(alert).not.toHaveAttribute('aria-hidden');
       expect(byTestId('backdrop')).not.toHaveAttribute('aria-hidden');
       expect(byTestId('nested-popup').closest('[aria-hidden]')).toBe(null);
       await userEvent.keyboard('{Escape}');
@@ -954,7 +960,8 @@ describe('modal (3.2, L4 to L6)', () => {
       await closed();
       expect(hidden).toHaveAttribute('aria-hidden', 'true');
     } finally {
-      live.remove();
+      wrapper.remove();
+      alert.remove();
       hidden.remove();
     }
   });

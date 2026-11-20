@@ -1,14 +1,5 @@
 {
-  "causes": {
-    "vue-16301": {
-      "summary": "A ref in a virtual DOM slot has no owner when its parent vnode comes from outside a render function.",
-      "link": "https://github.com/vuejs/core/issues/16301"
-    },
-    "vue-16305-keep-alive": {
-      "summary": "A Vapor component cannot read whether KeepAlive holds its branch.",
-      "link": "https://github.com/vuejs/core/issues/16305"
-    }
-  },
+  "causes": {},
   "files": {
     "src/common/shadowDom.test.ts": {
       "fails": {}
@@ -58,25 +49,10 @@
     "src/internals/withoutPropsOf.test.ts": {
       "fails": {}
     },
-    "src/toast/action/ToastAction.test.tsx": {
-      "fails": {
-        "<Toast.Action /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Toast.Action /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/toast/utils/useToastLabelPart.test.tsx": {
-      "fails": {
-        "useToastLabelPart > <Toast.Description /> > drops aria-describedby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive",
-        "useToastLabelPart > <Toast.Title /> > drops aria-labelledby for a part that mounts while KeepAlive holds it, and points it at the part after the show": "vue-16305-keep-alive"
-      }
-    },
     "src/utils/popups/createElementSetter.test.tsx": {
       "fails": {}
     },
     "src/utils/popups/interactions/usePopupHover.session.test.ts": {
-      "fails": {}
-    },
-    "src/utils/popups/portal/PopupPortal.integration.test.tsx": {
       "fails": {}
     },
     "src/utils/popups/useDomEffect.test.tsx": {

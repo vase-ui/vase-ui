@@ -60,8 +60,7 @@ async function waitPastStampsSince(mark: ClockMark) {
     // With a mocked `Date` and a real `performance.now()`, the stamp can be more than one frame
     // after `Date.now()`.
     // Each move makes a mocked `Date.now()` at least 16 ms later. A part that measures a time with
-    // `Date.now()`, such as the store of Toast, thus measures at least 16 ms more than its timers
-    // waited.
+    // `Date.now()` thus measures at least 16 ms more than its timers waited.
     const frames = Math.max(1, Math.ceil((stamp + 1 - Date.now()) / FAKE_FRAME_DURATION));
     vi.setSystemTime(mockedTime + frames * FAKE_FRAME_DURATION);
   }

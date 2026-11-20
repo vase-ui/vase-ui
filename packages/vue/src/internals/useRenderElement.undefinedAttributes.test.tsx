@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -28,24 +27,6 @@ interface Row {
 const targetId = () => screen.getByTestId('target').id;
 
 const rows: Row[] = [
-  {
-    name: 'Toast.Root aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: () => (
-      <Toast.Provider>
-        <Toast.Viewport>
-          <Toast.Root
-            toast={{ id: 't', title: 'Saved' }}
-            aria-labelledby={undefined}
-            data-testid="part"
-          >
-            <Toast.Title data-testid="target" />
-          </Toast.Root>
-        </Toast.Viewport>
-      </Toast.Provider>
-    ),
-    expected: targetId,
-  },
   {
     name: 'useRender role',
     attribute: 'role',

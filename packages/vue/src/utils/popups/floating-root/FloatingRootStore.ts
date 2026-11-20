@@ -72,7 +72,7 @@ interface FloatingRootStoreOptions {
 }
 
 /**
- * The interaction store of a part that has no popup store, such as Navigation Menu and Toast. It
+ * The interaction store of a part that has no popup store, such as Navigation Menu. It
  * holds a copy of the open state, the anchor and the elements of its owner. `useFloatingRootStore`
  * keeps the copy up to date. The store reports an open change to the owner through `onOpenChange`,
  * and it does not write `open` itself.
