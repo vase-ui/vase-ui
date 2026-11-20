@@ -19,7 +19,10 @@ const emit = defineEmits<{
    * `details.cancel()` keeps each segment as it was.
    */
   valueChange: [value: Value | null, details: TimeFieldRootChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  /**
+   * Comes after the change event with the new value, unless a listener cancels the change.
+   * `v-model` uses it. A reset of the form and `clear()` emit it with no change event.
+   */
   'update:modelValue': [value: Value | null];
 }>();
 defineSlots<{ default?(scope: { state: TimeFieldRootState }): unknown }>();

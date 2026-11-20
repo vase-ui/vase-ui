@@ -32,7 +32,10 @@ const emit = defineEmits<{
     value: DateRangePickerRootValue<Value>,
     details: DateRangePickerRootChangeEventDetails,
   ];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  /**
+   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
+   * the form and `clear()` of a field emit it with no `valueChange`.
+   */
   'update:modelValue': [value: DateRangePickerRootValue<Value>];
   /** The popup opens or closes. `details.cancel()` keeps it as it was. */
   openChange: [open: boolean, details: DateRangePickerRootOpenChangeEventDetails];

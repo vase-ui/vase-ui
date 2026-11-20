@@ -38,8 +38,10 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
   referenceDate?: DateFieldRootValue;
   /**
    * The last unit that the field shows. A date shows `day` or `month`, and a year and month shows
-   * `month`. A date and time shows each unit, with `minute` as the default. With no value, it also
-   * gives the kind of the first value.
+   * `month`. A date and time shows each unit, with `minute` as the default. With no value,
+   * `defaultValue` or `referenceDate`, it also gives the kind of the first value: `day` a
+   * `Temporal.PlainDate`, `month` a `Temporal.PlainYearMonth`, and a time unit a
+   * `Temporal.PlainDateTime`.
    */
   granularity?: DateFieldRootGranularity;
   /** The hour cycle. The default is the hour cycle of the locale. */
@@ -55,7 +57,9 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
   locale?: Intl.LocalesArgument;
   /**
    * The calendar that the field shows, such as `gregory` or `persian`. The default is the calendar
-   * of a value that is not ISO, else the calendar of the locale. A value keeps its own calendar.
+   * of a value that is not ISO, else the calendar of the locale. A value keeps its own calendar. A
+   * year and month field with no value, `defaultValue` or `referenceDate` makes its first value in
+   * this calendar when its months are not ISO months, as in `hebrew`.
    */
   calendar?: string;
   /**
@@ -83,8 +87,11 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
   form?: string;
   /** The `autocomplete` of the form input. */
   autocomplete?: string;
+  /** The user must give a value before a submit. */
   required?: boolean;
+  /** The user cannot change the value, and the form does not get it. */
   disabled?: boolean;
+  /** The user cannot change the value. The form gets the value and does not validate it. */
   readonly?: boolean;
 }
 

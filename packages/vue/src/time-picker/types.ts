@@ -50,7 +50,8 @@ export interface TimePickerRootState {}
 export interface TimePickerRootProps<Value extends TimePickerRootValue = Temporal.PlainTime> {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
-   * A new value has the kind, the date and the zone of the value.
+   * A new value has the kind, the date and the zone of the value, else of `defaultValue`, else of
+   * the last value.
    */
   modelValue?: Value | null | undefined;
   /** The first value of a picker with no `modelValue`. */
@@ -70,6 +71,7 @@ export interface TimePickerRootProps<Value extends TimePickerRootValue = Tempora
   /**
    * A pick closes the popup. With no prop, a press on an item of `TimePicker.List` and the commit
    * of the last view of `TimePicker.Clock` close it, and a press in `TimePicker.Column` does not.
+   * In a wrapper that declares this prop, give it the default `undefined`.
    */
   closeOnSelect?: boolean | undefined;
   /**
@@ -197,7 +199,7 @@ export interface TimePickerPopupProps extends /* @vue-ignore */ Omit<
   /**
    * The element that gets the focus at the open. The default is the first list, column or clock in
    * the popup, else the default of `Popover.Popup`. `true`, `null` and a function that gives one of
-   * them ask for that default.
+   * them ask for that default. `false` moves no focus.
    */
   initialFocus?: PopoverPopupProps['initialFocus'] | undefined;
 }
