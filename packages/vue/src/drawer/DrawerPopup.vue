@@ -61,10 +61,7 @@ watch(element, (popup, _, onCleanup) => {
   onCleanup(() => observer.disconnect());
 });
 const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(() => {
-  removeLeaving();
-  if (root.popup === element.value) root.setPopup(null);
-});
+onUnmounted(removeLeaving);
 
 function elementProps() {
   const closed = !root.open;
@@ -77,7 +74,7 @@ function elementProps() {
       tabindex: -1,
       'aria-labelledby': root.titleId,
       'aria-describedby': root.descriptionId,
-      'aria-modal': dialog.modal === true && root.open ? 'true' : undefined,
+      'aria-modal': dialog.modal === true ? 'true' : undefined,
       'data-expanded': state.value.expanded ? '' : undefined,
       'data-nested-drawer-open': state.value.nestedDrawerOpen ? '' : undefined,
       'data-nested-drawer-swiping': state.value.nestedDrawerSwiping ? '' : undefined,
