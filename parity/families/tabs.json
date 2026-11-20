@@ -280,11 +280,13 @@
     {
       "entry": "Tab",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the root for the `aria-labelledby` of the panel, so it is a declared prop. Base UI reads it from the native attributes of the tab, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Panel",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the root for the `aria-controls` of the tab, so it is a declared prop. `types.md` has no row for a native attribute. Base UI gives the root a generated id, and an `id` of the consumer replaces only the id of the element."
     }
   ],

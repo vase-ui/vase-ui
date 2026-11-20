@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/root/useCollapsibleRoot.ts#L15-L22",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/trigger/CollapsibleTrigger.tsx#L54-L58"
   ],
-  "behavior": "When JavaScript supplies null as defaultOpen, Collapsible.Root starts closed and its trigger has aria-expanded=\"false\". Base UI passes the null default to its state and omits aria-expanded.",
+  "behavior": "When JavaScript gives `null` to `defaultOpen`, `Collapsible.Root` starts closed, and its trigger has `aria-expanded=\"false\"`. Base UI keeps the `null` in its state and leaves out `aria-expanded`.",
   "dueWith": "packages/react/src/collapsible/root/CollapsibleRoot.tsx"
 }

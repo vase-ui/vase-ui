@@ -69,12 +69,11 @@ const showsDefault = computed(
 const MEMBER_TABLES = [
   { key: 'events', title: 'Events', columns: ['Event', 'Arguments', 'Description'] },
   { key: 'exposed', title: 'Exposed', columns: ['Member', 'Type', 'Description'] },
-  {
-    key: 'dataAttributes',
-    title: 'Data attributes',
-    columns: ['Attribute', 'Type', 'Description'],
-  },
-  { key: 'cssVariables', title: 'CSS variables', columns: ['Variable', 'Type', 'Description'] },
+] as const;
+
+const STYLE_HOOK_TABLES = [
+  { key: 'selectors', title: 'Selectors', column: 'Selector' },
+  { key: 'cssVariables', title: 'CSS variables', column: 'Variable' },
 ] as const;
 
 /** `open(triggerId: string)`. */
@@ -311,7 +310,30 @@ function signatureOf({ name, parameters }: ApiClass['methods'][number]): string 
                   <code>{{ row.name }}</code>
                 </td>
                 <td>
-                  <code v-if="row.type">{{ row.type }}</code>
+                  <code>{{ row.type }}</code>
+                </td>
+                <td><TextWithCode :text="row.description" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </ScrollBox>
+      </template>
+    </template>
+    <template v-for="table in STYLE_HOOK_TABLES" :key="table.key">
+      <template v-if="part[table.key].length > 0">
+        <h4>{{ table.title }}</h4>
+        <ScrollBox class="api-table" :label="`${table.title} of ${part.name}`">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">{{ table.column }}</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in part[table.key]" :key="row.name">
+                <td>
+                  <code>{{ row.name }}</code>
                 </td>
                 <td><TextWithCode :text="row.description" /></td>
               </tr>

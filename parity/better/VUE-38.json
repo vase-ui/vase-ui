@@ -3,6 +3,7 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/viewport/usePopupViewport.tsx#L207-L227"
   ],
-  "behavior": "The picture of the old content is the DOM at the time of the trigger change. It has what a component in the content changed by itself. Base UI clones the content after each render of the viewport, so a change that no render of the viewport followed is not in its picture.",
-  "dueWith": "packages/react/src/utils/popups/viewport/usePopupViewport.tsx"
+  "behavior": "When the active trigger changes, the viewport copies the old content as the DOM has it at that time. The copy has each change that a component in the content made by itself. Base UI copies the content after each render of the viewport, so its copy lacks a change that no render of the viewport followed.",
+  "dueWith": "packages/react/src/utils/popups/viewport/usePopupViewport.tsx",
+  "families": ["popover", "tooltip", "preview-card", "menu"]
 }

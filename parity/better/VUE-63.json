@@ -7,5 +7,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L1029-L1071"
   ],
   "behavior": "A popup that is not modal can stay open when a guard of its trigger asks for the close, for example when its `open` prop does not change. Tab from the trigger then moves the focus to the elements of the popup, and Tab from the last of them moves it to the element after the trigger. Shift+Tab from the trigger moves the focus to the element before the trigger. Tab from the trigger skips a popup with no tabbable element. The trigger keeps the focus only when no other element is tabbable. The search for the next element skips the guards of the trigger and the content of the popup. In Base UI, the search can give a guard of the portal, and that guard sends the focus back into the popup. When the popup has no tabbable element, the guards call `focus()` on each other in the same call stack, and no handler ends the sequence. A popup that has guards beside its trigger has no guards at the place of its own portal (`VUE-66`), so the search cannot give one.",
-  "dueWith": "packages/react/src/utils/popups/useTriggerFocusGuards.ts"
+  "dueWith": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+  "families": []
 }

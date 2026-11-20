@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import config from '../../docs/.vitepress/config.ts';
 import type { ApiReference } from './apiReference.ts';
+import type { BaseUiDifferences } from './baseUiDifferences.ts';
 import { apiReferenceSearchHtml, searchIndexHtml } from './searchIndex.ts';
 
 const DOCS_ROOT = join(import.meta.dirname, '..', '..', 'docs');
@@ -72,8 +73,8 @@ const reference: ApiReference = {
       events: [{ name: 'openChange', type: '[open: boolean]', description: 'The popup opened.' }],
       slots: [],
       exposed: [],
-      dataAttributes: [{ name: 'data-open', type: null, description: 'Present while open.' }],
-      cssVariables: [{ name: '--sample-width', type: null, description: 'The width.' }],
+      selectors: [{ name: '[data-open]', description: 'The popup is open.' }],
+      cssVariables: [{ name: '--sample-width', description: 'The width.' }],
     },
   ],
   functions: [
@@ -105,7 +106,23 @@ const reference: ApiReference = {
     },
   ],
   types: [],
+  homes: [{ part: 'Root', family: 'sample' }],
 };
+
+const differences: BaseUiDifferences = {
+  release: '1.9.0',
+  own: null,
+  api: [
+    { baseUi: 'Sample.Trigger', prop: 'nativeButton', vaseUi: 'The trigger reads its element.' },
+  ],
+  added: [
+    { part: 'Sample.Root', kind: 'emit', member: 'update:triggerId', why: 'A second model.' },
+  ],
+  returnTypes: [],
+  behavior: [{ id: 'VUE-1', behavior: 'A press closes the popup.', evidence: [] }],
+};
+
+const data = { apiReference: reference, baseUiDifferences: differences };
 
 test('a part is one section, with the id of its heading on the page, its names and its descriptions', () => {
   const [section, ...others] = sectionsOf(apiReferenceSearchHtml(reference));
@@ -118,7 +135,7 @@ test('a part is one section, with the id of its heading on the page, its names a
     'Groups the parts.',
     'closeDelay',
     'openChange',
-    'data-open',
+    '[data-open]',
     '--sample-width',
   ]) {
     assert.ok(section?.text.includes(text), text);
@@ -144,8 +161,11 @@ test('a named reference adds text to the section of the page heading above it, a
 
 test('the text of the reference cannot add an element', () => {
   const html = searchIndexHtml('<ApiReference />', {
-    ...reference,
-    parts: reference.parts.map((part) => ({ ...part, description: 'Takes <b>bold</b> & more.' })),
+    ...data,
+    apiReference: {
+      ...reference,
+      parts: reference.parts.map((part) => ({ ...part, description: 'Takes <b>bold</b> & more.' })),
+    },
   });
 
   assert.ok(html.includes('Takes &lt;b&gt;bold&lt;/b&gt; &amp; more.'));
@@ -154,12 +174,28 @@ test('the text of the reference cannot add an element', () => {
 test('each form of the tag gets its reference', () => {
   const html = searchIndexHtml(
     '<ApiReference />\n<ApiReference name="Sample.createHandle" :heading-level="3" />',
-    reference,
+    data,
   );
 
   assert.ok(!html.includes('<ApiReference'));
   assert.ok(html.includes('#api-sample-root'));
   assert.ok(html.includes('The new handle.'));
+});
+
+test('each table of the differences section is one section, with the names and the texts of its rows', () => {
+  const sections = sectionsOf(searchIndexHtml('<BaseUiDifferences />', data));
+
+  assert.deepEqual(
+    sections.map(({ title, anchor }) => `${title} ${anchor}`),
+    ['API differences-api', 'Added in Vase UI differences-added', 'Behavior differences-behavior'],
+  );
+  for (const [index, text] of [
+    [0, 'Sample.Trigger nativeButton The trigger reads its element.'],
+    [1, 'Sample.Root update:triggerId A second model.'],
+    [2, 'A press closes the popup.'],
+  ] as const) {
+    assert.ok(sections[index]?.text.includes(text), text);
+  }
 });
 
 test('the site: the index of a component page has its props', async () => {

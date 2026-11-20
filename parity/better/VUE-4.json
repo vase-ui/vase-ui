@@ -5,5 +5,6 @@
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/interactions/useDismiss.ts#L265-L289"
   ],
   "behavior": "A press in a child popup that `Teleport` moved does not close the parent popup. This includes a press on a part in its portal, such as `Dialog.Backdrop`. A drag from a child popup of any family to an outside element keeps each popup above open. A drag from a portal below a popup that no popup owns does the same. The next outside click closes them. Escape closes the top popup first.",
-  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
+  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+  "families": []
 }

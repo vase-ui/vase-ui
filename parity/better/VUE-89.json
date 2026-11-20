@@ -10,5 +10,6 @@
     "https://www.w3.org/TR/wai-aria-1.2/#mapping_additional_relations_error_processing"
   ],
   "behavior": "The server HTML of `Progress.Root`, `Meter.Root` and `Fieldset.Root` has the id of the label part in `aria-labelledby`, when that part has no `id` prop. The root assumes a label until it is mounted, unless the consumer gives it an `aria-label` or `aria-labelledby`, also a blank one. A `progressbar` or a `meter` that has a label thus has its required name before the page hydrates. It has that name on a page with no client code too. Base UI adds the attribute after the page hydrates. With no label part, the server HTML of the root points at an id that no element has, and a user agent ignores that reference.",
-  "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts"
+  "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts",
+  "families": ["progress", "meter", "fieldset"]
 }

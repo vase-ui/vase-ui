@@ -5,5 +5,6 @@
     "https://dom.spec.whatwg.org/#dom-event-composedpath"
   ],
   "behavior": "A press in a popup in a closed shadow root does not close a popup that opened before it. Base UI records the owner of a press only in a listener of the document, and the path of the event has no node of a closed shadow root there.",
-  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
+  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+  "families": []
 }

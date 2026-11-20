@@ -27,6 +27,7 @@
     {
       "entry": "Menubar",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the menus of the menubar as the id of their root, so it is a declared prop. Base UI reads it from the native attributes of the menubar, and `types.md` has no row for a native attribute."
     }
   ],

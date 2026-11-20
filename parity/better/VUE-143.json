@@ -4,5 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/usePressAndHold.ts#L138-L160"
   ],
   "behavior": "A repeat button stops after one step when that step releases the press. Base UI starts its repeat timer after the first step returns, even if a pointer release ended the press during that step.",
-  "dueWith": "packages/react/src/internals/usePressAndHold.ts"
+  "dueWith": "packages/react/src/internals/usePressAndHold.ts",
+  "families": ["number-field", "calendar", "time-clock"]
 }

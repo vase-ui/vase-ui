@@ -96,6 +96,31 @@ test('listSampleFiles reports a <<< line that names an absent Vue file with the 
   );
 });
 
+test('listSampleFiles reports a sample that no page shows or imports and no shown sample imports', () => {
+  const sample = '<template><div /></template>\n';
+  const root = makeTree({
+    'docs/components/button.md': [
+      '<script setup>',
+      "import Live from './button/Live.vue';",
+      '</script>',
+      '',
+      '<<< ./button/Shown.vue',
+    ].join('\n'),
+    'docs/components/button/Shown.vue':
+      "<script setup>\nimport Part from './Part.vue';\n</script>\n",
+    'docs/components/button/Part.vue': sample,
+    'docs/components/button/Live.vue': sample,
+    'docs/components/button/Orphan.vue': sample,
+    'docs/examples/styling/Orphan.vue': sample,
+    'docs/examples/type-check/Typed.vue': sample,
+    'docs/demos/button/hero/css-modules/index.vue': sample,
+  });
+  assert.deepEqual(listSampleFiles(root).problems, [
+    'docs/components/button/Orphan.vue: no page shows or imports this sample, and no shown sample imports it. Show it on a page with <<<, or delete it.',
+    'docs/examples/styling/Orphan.vue: no page shows or imports this sample, and no shown sample imports it. Show it on a page with <<<, or delete it.',
+  ]);
+});
+
 test('listSampleFiles at REPOSITORY_ROOT includes docs samples, unshown examples and shown fixture files with no problem', () => {
   const { files, problems } = listSampleFiles(REPOSITORY_ROOT);
   assert.deepEqual(problems, []);

@@ -90,6 +90,14 @@ export interface ConstantSurface {
   type: string | null;
 }
 
+/** A block tag of a JSDoc, such as `@selector`. */
+export interface TagSurface {
+  /** The name of the tag, with no `@`. */
+  name: string;
+  /** The text of the tag, with each run of white space as one space. */
+  text: string;
+}
+
 export interface ExportMatch {
   /** `Root` for a direct export of the entry file, `Dialog.Root` for a member of a namespace export. */
   path: string;
@@ -102,6 +110,8 @@ export interface VaseProject {
   findExportAt: (entryFile: string, path: string) => ExportMatch | undefined;
   /** `undefined` when the export does not come from a `.vue` file. */
   readComponent: (match: ExportMatch) => ComponentSurface | undefined;
+  /** The block tags of the JSDoc of the export, in their sequence. */
+  readTags: (match: ExportMatch) => TagSurface[];
   /** The field names of an exported type, or `undefined` when the entry file has no such type. */
   readFields: (entryFile: string, typeName: string) => string[] | undefined;
   /** The string values of the union type at `path`, such as `Progress.Status`, in the sequence of the declaration. `undefined` when there is no such type or it is not a union of strings. */
@@ -786,6 +796,12 @@ export function createVaseProject(tsconfig: string): VaseProject {
         ]),
       };
     },
+
+    readTags: ({ symbol }) =>
+      ownTags(resolve(symbol)).map((tag) => ({
+        name: tag.tagName.text,
+        text: (ts.getTextOfJSDocComment(tag.comment) ?? '').replace(/\s+/g, ' ').trim(),
+      })),
 
     readFields(entryFile, typeName) {
       const symbol = directExport(entryFile, typeName);

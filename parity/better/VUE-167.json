@@ -4,6 +4,7 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortalLite.tsx#L7-L36",
     "https://vuejs.org/guide/built-ins/teleport.html"
   ],
+  "behavior": "A portal without a target renders inside the nearest portal, including a portal without focus guards. Base UI provides the parent portal context only from its full portal.",
   "dueWith": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx",
-  "behavior": "A portal without a target renders inside the nearest portal, including a portal without focus guards. Base UI provides the parent portal context only from its full portal."
+  "families": []
 }

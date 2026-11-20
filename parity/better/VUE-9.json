@@ -6,5 +6,6 @@
     "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex"
   ],
   "behavior": "While server HTML inside a composite root holds the tab stop on an item that has not mounted, mounted items keep `tabindex=\"-1\"`. When that server tab stop clears, mounted items set their tabindex from the highlighted index.",
-  "dueWith": "packages/react/src/internals/composite/item/useCompositeItem.ts"
+  "dueWith": "packages/react/src/internals/composite/item/useCompositeItem.ts",
+  "families": []
 }

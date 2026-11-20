@@ -5,5 +5,6 @@
     "https://vuejs.org/guide/built-ins/teleport.html"
   ],
   "behavior": "A change of the bound to value moves the same portal element and its children to the new target. An absent target uses the nearest portal or the body. Base UI creates a new portal node when its resolved container changes.",
-  "dueWith": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx"
+  "dueWith": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx",
+  "families": []
 }

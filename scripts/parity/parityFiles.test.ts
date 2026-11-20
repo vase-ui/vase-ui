@@ -256,6 +256,25 @@ const wrongFamilies: { name: string; change: (family: Json) => void; message: Re
     message: /surfaceAdditions\[0\]: names one member\./,
   },
   {
+    name: 'a nativeAttribute mark on a row with no prop',
+    change: (family) => {
+      family.surfaceAdditions[0] = {
+        entry: 'Root',
+        emit: 'x',
+        nativeAttribute: true,
+        reason: 'A reason.',
+      };
+    },
+    message: /surfaceAdditions\[0\]: only a row with "prop" has "nativeAttribute"\./,
+  },
+  {
+    name: 'a nativeAttribute mark that is not true',
+    change: (family) => {
+      family.surfaceAdditions[0].nativeAttribute = false;
+    },
+    message: /surfaceAdditions\[0\]\.nativeAttribute: must be true\./,
+  },
+  {
     name: 'two rows that name the same thing',
     change: (family) => {
       family.exceptions.push({ ...family.exceptions[0], reason: 'Another reason.' });
@@ -477,8 +496,14 @@ function makeBetter(): Json {
   };
 }
 
-test('a correct better row has no problem', () => {
+test('a correct better row has no problem, with or without families', () => {
   assert.deepEqual(validateBetterRow('parity/better/BUG-1.json', makeBetter()), []);
+  for (const families of [[], ['dialog', 'alert-dialog']]) {
+    assert.deepEqual(
+      validateBetterRow('parity/better/BUG-1.json', { ...makeBetter(), families }),
+      [],
+    );
+  }
 });
 
 const wrongBetter: { name: string; change: (row: Json) => void; file?: string; message: RegExp }[] =
@@ -524,6 +549,20 @@ const wrongBetter: { name: string; change: (row: Json) => void; file?: string; m
         row.dueWith = 'packages/react/src/select/';
       },
       message: /dueWith: must be a path that starts with .* and has no "\/" at its end\./,
+    },
+    {
+      name: 'a name of families that is not a family name',
+      change: (row) => {
+        row.families = ['Dialog'];
+      },
+      message: /families\[0\]: must be a name that matches/,
+    },
+    {
+      name: 'a family that families names two times',
+      change: (row) => {
+        row.families = ['dialog', 'dialog'];
+      },
+      message: /families\[1\]: names the same thing as families\[0\]\./,
     },
     {
       name: 'an unknown key',
