@@ -1419,6 +1419,18 @@ describe('the hover (L9)', () => {
     await closed();
   });
 
+  test('a popover with `openOnHover` that a press opened stays open after the pointer leaves its trigger', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 300, closeDelay: 0 } }],
+    });
+    await userEvent.click(trigger());
+    await opened();
+    await placed();
+    await moveMouse([centerOf(trigger()), centerOf(byId('outside'))]);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(popup()).not.toBe(null);
+  });
+
   test('a popover with `openOnHover` that `defaultOpen` opened closes after the pointer leaves its trigger', async () => {
     const log: string[] = [];
     const { trigger } = await mountPopover({

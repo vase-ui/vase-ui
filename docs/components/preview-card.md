@@ -65,7 +65,7 @@ Import the component and assemble its parts:
 
 ## Keyboard and touch
 
-The card opens when a mouse rests on the link, and when the keyboard moves the focus to the link. A touch opens nothing. Tab does not go into the card, and the card moves no focus when it opens or closes. A press in the card moves the focus to the card, so the card stays open.
+The card opens when a mouse rests on the link, and when the keyboard moves the focus to the link. A touch opens nothing. The card moves no focus when it opens or closes, so Tab on the link goes to the next element of the page. A press in the card moves the focus to the card, so the card stays open.
 
 When the link wraps over more lines, the card opens at the line under the pointer.
 

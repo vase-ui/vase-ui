@@ -94,8 +94,10 @@ describe('the line of a wrapped link', () => {
     await placedAt((box) => expectNear(box.top, second.bottom));
   });
 
-  test('a card that the focus opened is at the side rectangle: under the last line, at its middle', async () => {
-    mountLinks();
+  test('a card that the focus opened is at the side rectangle: under the last line, at its middle, also after a hover on the first line', async () => {
+    mountLinks({ trigger: { delay: 300 } });
+    await hoverLine('overlap', 0);
+    await userEvent.pointer({ coords: { x: 1, y: 1 } });
     // `focus()` after a key gives `:focus-visible` (test/measurements/preview-card.test.ts).
     await userEvent.keyboard('{Shift}');
     link('overlap').focus();
@@ -142,6 +144,27 @@ describe('the line of a wrapped link', () => {
     window.dispatchEvent(new Event('resize'));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expectNear(positioner()!.getBoundingClientRect().bottom, second.top);
+  });
+
+  test('one placement reads the lines of the link a few times: the line resets the anchor one time', async () => {
+    mountLinks({ trigger: { delay: 0, closeDelay: 5000 }, positioner: { side: 'top' } });
+    await hoverLine('overlap', 1);
+    const second = linesOf(link('overlap'))[1]!;
+    await placedAt((box) => expectNear(box.bottom, second.top));
+    const overlap = link('overlap');
+    let reads = 0;
+    const read = overlap.getClientRects.bind(overlap);
+    overlap.getClientRects = () => {
+      reads += 1;
+      return read();
+    };
+    onTestFinished(() => {
+      delete (overlap as Partial<Element>).getClientRects;
+    });
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(reads).toBeGreaterThan(0);
+    expect(reads).toBeLessThan(10);
   });
 
   test('the card stays at its line after a scroll of the page', async () => {

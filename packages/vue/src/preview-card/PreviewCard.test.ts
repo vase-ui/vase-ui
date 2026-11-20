@@ -551,6 +551,25 @@ describe('the hover', () => {
     expect(popup()).not.toBe(null);
   });
 
+  test('a card that the default opened stays open after the pointer goes from its link across the gap into the card and leaves the card', async () => {
+    const { trigger } = await mountCard({
+      root: { defaultOpen: true },
+      triggers: [{ key: 't', attrs: { delay: 0, closeDelay: 0, style: 'margin: 100px' } }],
+      positioner: { sideOffset: 30 },
+    });
+    const element = await opened();
+    await placed();
+    const link = trigger().getBoundingClientRect();
+    await moveMouse([
+      centerOf(trigger()),
+      { x: link.left + link.width / 2, y: link.bottom + 5 },
+      centerOf(element),
+      centerOf(byId('outside')),
+    ]);
+    await wait(100);
+    expect(popup()).toBe(element);
+  });
+
   test.each([
     { name: 'the default', root: { defaultOpen: true } },
     { name: 'the focus', root: {} },
@@ -826,21 +845,21 @@ describe('the active trigger leaves', () => {
 
   test('a cancelled close keeps the card open at its place with its payload', async () => {
     const handle = PreviewCard.createHandle<string>();
-    const props = reactive<Props>({
+    const removed = reactive({ first: false });
+    mount(PreviewCardHandles, {
       handle,
       root: {
         onOpenChange: (_: boolean, details: PreviewCardRootChangeEventDetails) => {
           if (details.reason === 'none') details.cancel();
         },
       },
-      noFirst: false,
+      removed,
     });
-    mount(PreviewCardHandles, props);
     await nextTick();
     handle.open('first');
     const element = await opened();
     expect(element).toHaveTextContent('first');
-    props.noFirst = true;
+    removed.first = true;
     await nextTick();
     await nextTick();
     expect(popup()).toBe(element);

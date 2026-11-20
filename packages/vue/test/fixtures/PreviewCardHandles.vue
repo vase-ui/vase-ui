@@ -3,13 +3,13 @@ import { useTemplateRef, type PropType } from 'vue';
 import { PreviewCard } from '../../src/preview-card';
 
 // Two links outside the root, with a handle, and one link in the root. The root comes before the
-// links outside it. With `noRoot`, no root has the handle; `noFirst` removes the first link.
+// links outside it. With `noRoot`, no root has the handle. `removed.first` removes the first link.
 const props = defineProps({
   handle: { type: Object as PropType<InstanceType<typeof PreviewCard.Handle>>, required: true },
   root: Object as PropType<Record<string, unknown>>,
   trigger: Object as PropType<Record<string, unknown>>,
   noRoot: Boolean,
-  noFirst: Boolean,
+  removed: Object as PropType<{ first: boolean }>,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart, handle: props.handle });
@@ -30,7 +30,7 @@ defineExpose({ root: rootPart, handle: props.handle });
   </PreviewCard.Root>
   <p>
     <PreviewCard.Trigger
-      v-if="!noFirst"
+      v-if="!removed?.first"
       id="first"
       href="#first"
       :handle
