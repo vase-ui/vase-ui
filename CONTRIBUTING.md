@@ -216,25 +216,25 @@ The package is `@vase-ui/vue`. It is ESM only.
 
 The entry point of a family exports:
 
-1. The namespace of the parts: `export * as Drawer from './index.parts'`. Documentation and tests use `<Drawer.Root>`.
-2. The flat components `DrawerRoot`, `DrawerTrigger` and so on. `app.component`, the `components` option and auto-import tools use them.
-3. The types, with the two upstream names: `Drawer.Root.Props` and `DrawerRootProps`. The same is true for `State`, `ChangeEventDetails`, `ChangeEventReason` and `Actions`.
-4. The attribute and variable names, such as `DrawerPopupDataAttributes` and `DrawerPopupCssVariables`, with upstream's names and values.
+1. The namespace of the parts: `export * as Menu from './index.parts'`. Documentation and tests use `<Menu.Root>`.
+2. The flat components `MenuRoot`, `MenuTrigger` and so on. `app.component`, the `components` option and auto-import tools use them.
+3. The types, with the two upstream names: `Menu.Root.Props` and `MenuRootProps`. The same is true for `State`, `ChangeEventDetails`, `ChangeEventReason` and `Actions`.
+4. The attribute and variable names, such as `MenuPopupDataAttributes` and `MenuPositionerCssVariables`, with upstream's names and values.
 
 The first form of a type is a namespace of types beside the constant in `index.parts.ts`:
 
 ```ts
-import DrawerRoot from './root/DrawerRoot.vue';
-import type { DrawerRootProps, DrawerRootState } from './root/DrawerRoot.vue';
+import MenuRoot from './root/MenuRoot.vue';
+import type { MenuRootProps, MenuRootState } from './root/MenuRoot.vue';
 
-export const Root: typeof DrawerRoot = DrawerRoot;
+export const Root: typeof MenuRoot = MenuRoot;
 export namespace Root {
-  export type Props<Payload = unknown> = DrawerRootProps<Payload>;
-  export type State = DrawerRootState;
+  export type Props<Payload = unknown> = MenuRootProps<Payload>;
+  export type State = MenuRootState;
 }
 ```
 
-Give the constant the type `typeof DrawerRoot`. Without it, the declaration build writes an expanded type. A consumer project that checks library files then reports an error.
+Give the constant the type `typeof MenuRoot`. Without it, the declaration build writes an expanded type. A consumer project that checks library files then reports an error.
 
 A family whose upstream folder has no `index.parts.ts` declares the constant and its namespace in `index.ts`. A family whose upstream folder has an `index.parts.ts` keeps that file, also when it has one part. `pnpm parity:check` finds a counterpart by its path.
 
@@ -309,7 +309,7 @@ The template of each such part has the `#render` slot, then the element, and no 
 - `describeConformance` asserts that a rule of `<style scoped>` of a consumer matches the element of the part. Give `elementIsRoot: false` only for a part with a hidden input or with its element in a `Teleport`. The suite then asserts that the rule does not match.
 - A provider whose only output is its children renders `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
-A part that Base UI writes as another part renders that part and no element of its own. `Drawer.Trigger` is the example:
+A part that Base UI writes as another part renders that part and no element of its own. `ContextMenu.Positioner` is the example:
 
 - Set `inheritAttrs: false`. Bind `{ ...withoutPropsOf($attrs, InnerPart), ...props }` on `InnerPart`. Vue gives an attribute to a declared prop of the inner part when their names match after camelization. The filter drops that attribute, so it sets no prop and reaches no element. To accept a prop of the inner part, declare it on the wrapper.
 - ESLint refuses `$attrs` on a component tag outside a call of `withoutPropsOf`. `src/internals/withoutPropsOf.coverage.node.test.ts` checks three rules in each SFC that its `exceptions` do not name. A part tag with an object `v-bind` has `withoutPropsOf($attrs, <that tag>)` in the bound expression. When each root node of a template is a part tag, each root has such a `v-bind`. A part with such a `v-bind` or such roots sets `inheritAttrs: false`.
@@ -336,7 +336,7 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its props and state types are aliases of the types of the other part. Where the Base UI state type has fewer keys, the Vase UI state type omits the other keys: `AutocompleteItemState` is `Omit<ComboboxItemState, 'selected'>`.
 - The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part. Its props interface then holds the text of Base UI for those props.
 
-A part whose new types change a prop is the exception. `Drawer.Trigger` is the example: its `handle` takes only a handle of Drawer.
+A part whose new types change a prop is the exception.
 
 - The part is an SFC that renders the other part. It follows the rules above for a part that Base UI writes as another part.
 - Its props interface extends an `Omit` of the props interface of the other part, and declares the changed prop.
@@ -455,7 +455,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `Drawer.Trigger` forwards its render slot to the inner part and exposes the inner element.
+- Use `useRenderElement` in the part that owns the default element. Expose `element` and bind `setRef` by name on that element. A wrapper such as `ContextMenu.Positioner` forwards its render slot to the inner part and exposes the inner element.
 - Supply `useButton(element, options)` through the `button` option of `useRenderElement`. The button checks its disabled state before it calls the merged click, pointerdown, mousedown, keydown or keyup listener. A key listener can veto keyboard activation.
 - `elementProps()` also holds the setter as `ref` for the `#render` slot. On the element of the part, Vue merges the spread and the binding by name into one `ref`. Vue thus calls the setter one time for each patch.
 - `useRenderElement` leaves out each attribute of the consumer that is not given, with `givenAttributes` of `src/internals/givenAttributes.ts`. The `props` function thus gets no such key, so a part makes no check for it there.
@@ -500,7 +500,7 @@ Rules:
 - `src/internals/useCastBooleanWarning.coverage.node.test.ts` fails for such a part with no call. Its table names each exception. A part that has no other such prop, as `Field.Error`, has no call.
 - Add each new such prop that is not an exception to the lists of [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare a required prop that can be `null` as `x: T | null`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
-- The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `DrawerTrigger.vue` is the example.
+- The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `ContextMenuPositioner.vue` is the example.
 - Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `FieldsetLegend.vue` declares the prop `id`, so its constant is `elementId`.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - Declare the prop of an `aria-*` attribute in camel case: `ariaLabel` for `aria-label`. Vue gives the attribute `aria-label` to that prop.
@@ -565,10 +565,10 @@ The change event carries these details:
 ### Actions, handles, slots, composables and ids
 
 - `actionsRef` becomes methods that the part exposes. A consumer reads them through a template ref.
-- Popup roots expose `close()` and `unmount()`. A root of the popup layer (`src/popup/`) exposes `close()` only. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `DrawerRootActions` and so on.
+- Popup roots expose `close()` and `unmount()`. A root of the popup layer (`src/popup/`) exposes `close()` only. `Field.Root` exposes `validate()`. Its prop `validate` is the validator function. `Form` exposes `validate(name?)`. The types are `MenuRootActions` and so on.
 - A part that Base UI does not have exposes its methods in the same way. `Resizable.Panel` exposes `collapse()`, `expand()`, `resize(size)` and `isCollapsed()` beside `element`. Each method of a panel emits `update:modelValue` of the root alone, as a native reset does.
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
-- Handles are upstream's objects, with no change: `Drawer.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`. A handle of the popup layer has no `store`.
+- Handles are upstream's objects, with no change: `Menu.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`. A handle of the popup layer has no `store`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
 - A part that renders a list has a slot that has the name of its item. `Combobox.List` has the slot `item`, and `Calendar.Week` has the slot `day`. Its props are the item and its `index`, such as `{ day, index }`.
 - A list part of a component that Base UI does not have can have a default slot. The default slot holds the nodes before the items. `Calendar.WeekNumber` is in the default slot of `Calendar.Week`. The `#render` slot does not render the default slot.
@@ -986,13 +986,13 @@ A date or time field and the `Intl` data of the server:
 - Give a reader a `Readonly<Ref<T>>` when it needs a ref. Replace the value of a shallow ref to notify readers of a new array.
 - A reader that accepts a value, ref or getter takes `MaybeRefOrGetter<T>`. Read it with `toValue` when the operation runs.
 - Provide a named action for a write that belongs to the provider.
-- Clear a shared element only when the registration still holds the element of the departing part. A compiled template can mount a new part before it unmounts the part that it replaces. The old part then does not clear the element of the new part. The viewport of `drawer/dialog/` does this for the key `viewportElement` of the popup store.
+- Clear a shared element only when the registration still holds the element of the departing part. A compiled template can mount a new part before it unmounts the part that it replaces. The old part then does not clear the element of the new part.
 - Keep pointer-session data local to the gesture unless another owner or a render needs it.
 - A React synthetic event becomes the DOM event. `isReactEvent` of Base UI has no counterpart.
 
 ### Context of a root
 
-A root gives values to its parts with `provide` and `inject`. A refactored family gives an object of getters and functions under a typed key, as `progress/root.ts` does. In another family, use `drawer/dialog/root/DialogRootContext.ts` as the model.
+A root gives values to its parts with `provide` and `inject`. A refactored family gives an object of getters and functions under a typed key, as `progress/root.ts` does. In another family, use `menu/root/MenuRootContext.ts` as the model.
 
 - Put the context refs and actions in a plain object.
 - A field that the root computes is a `ComputedRef`.
@@ -1010,7 +1010,6 @@ A root gives values to its parts with `provide` and `inject`. A refactored famil
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns.
 - `DirectionProvider` provides a computed ref of the text direction. `CSPProvider` provides a computed ref of its `nonce` and `disableStyleElements` settings. Each composable returns the nearest provider's ref.
 - Use one `ComputedRef` for a context that holds one changing value.
-- The context of the dialog code of Drawer (`drawer/dialog/`) is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
 - A part that renders a root can give that root a host, when the root needs a value that it has no prop for. The part calls `provide` with an internal `InjectionKey`, such as `RangeCalendarHostContext` and `dateTimeFieldHostKey`. The root calls `inject(key, undefined)` and works with no host. A host is internal, so it adds no prop and no event to the root.
 
@@ -1147,7 +1146,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - At the activation, a `watch` of `isHeld` with `flush: 'sync'` attaches the store of a mounted root directly. In the flush that mounts the root and shows its branch, the activation can come after the detach of `onMounted`. The `watch` of the handle then gets the same handle as in its last run and does not run its callback.
 - A root in a pending `<Suspense>` branch below a `KeepAlive` can get its activation before its mount. Only the `watch` of the handle attaches such a root, when Vue resolves the branch (`VUE-64`).
 - A part can mount below a root while `KeepAlive` holds the root and its store is not attached: below a deactivated root, below a root that mounted in a held branch, and below a root whose pending `<Suspense>` branch resolves while `KeepAlive` holds it. A call of the handle in a hook of such a part does not reach the store at once. The root keeps the call. At the activation, after the attach, the `watch` of `isHeld` queues each kept call in a microtask of its own. A microtask runs after the flush, when the trigger map does not skip the triggers of the root. Base UI runs the effects of such a part when `Activity` shows the tree, after the root attaches.
-- `openByTrigger` and `closePopup` of `BasePopupHandle` call `deferToHeldRoot` first. It finds the nearest popup root above the caller with `inject` of `HeldRootCallContext`, which `usePopupRoot` provides. A root takes only a call of its own handle while its store is detached, and it gives a call of another handle to the root above it. A call with no current component, such as a call in an event handler, gets no root, because `hasInjectionContext()` is `false`. A method that a family handle adds, such as `openWithPayload()` of the `DialogHandle` of `drawer/dialog/store`, also calls `deferToHeldRoot` first.
+- `openByTrigger` and `closePopup` of `BasePopupHandle` call `deferToHeldRoot` first. It finds the nearest popup root above the caller with `inject` of `HeldRootCallContext`, which `usePopupRoot` provides. A root takes only a call of its own handle while its store is detached, and it gives a call of another handle to the root above it. A call with no current component, such as a call in an event handler, gets no root, because `hasInjectionContext()` is `false`. A method that a family handle adds also calls `deferToHeldRoot` first.
 - The kept call runs the method of the handle again. It thus reaches the newest attached root, as the effect of the part does in Base UI.
 - A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The root has one trigger element and no handle.
 - The animations of one element end each open change of a popup root. `getPopupTransitionElement` checks the popup, the positioner, the backdrop and then `keptPopupRef`. `options.getTransitionElement(store)` of `usePopupRoot` and `useSingleAnchorPopupRoot` gives another element than the default. The root emits `openChangeComplete`, and a popup part emits none.
@@ -1293,7 +1292,7 @@ The Tooltip provider owns the delay group in `src/tooltip/root/TooltipRootContex
 
 The scroll lock stops the scroll of the page under a modal popup. The code is in `src/common/useScrollLock.ts`, `src/utils/popups/useAnchoredPopupScrollLock.ts` and `src/utils/popups/InternalBackdrop.vue`. The popup layer (`src/popup/layer.ts`) and the older popup code share it.
 
-- Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup. Call `useScrollLock` in `setup` of the root of a Drawer.
+- Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup.
 - A lock exists only while the part is enabled and is mounted. A server render takes no lock.
 - Each document has one count of locks. The first lock stops the scroll, and the last unlock restores the page. When a portal moves a modal popup to another document, the lock follows it.
 - With overlay scrollbars, the lock hides the overflow of the element that scrolls the view. With scrollbars that take room, `<html>` keeps its scrollbar, and `<body>` shows the page at its scroll offset, so the content does not move (`test/measurements/popup.test.ts`).
@@ -1631,11 +1630,10 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` does this.
 - A server stops an immediate watcher with the default or post flush after its first run in `setup`. A cleanup that removes the registration would run before the children render.
 - A registration from which a provider picks one value among many parts runs after the mount. A control that replaces another control then registers after the old control left the registrations. A control gives itself to its field with `field.setControl` in a `watch` of its element with `flush: 'post'`, and the field takes the control that registered last.
-- `Drawer.Title` and `Drawer.Description` register a getter of the `id` of their element in `setup` with `useRegisteredId`. `useDialogRoot` of `drawer/dialog/root/useDialogRoot.ts` makes one registry for each kind. It writes the id of the last registration to `titleElementId` or `descriptionElementId` of the store. Base UI clears that id when any part of the kind unmounts, also when another part of the kind stays.
-- The titles and the descriptions of Popover and Dialog add their ids to the root of the popup layer (`src/popup/root.ts`), and the popup names the last mounted title and description. A part removes only its own id.
+- The titles and the descriptions of Popover, Dialog and Drawer add their ids to the root of the popup layer (`src/popup/root.ts`), and the popup names the last mounted title and description. A part removes only its own id.
 - Release a registration on watcher invalidation when its source changes. Release a lifetime registration on scope disposal. Vue disposes the old scope before the replacement's mount hook.
 - A compiled template can mount a new part before it unmounts the part that it replaces. A removal by value then removes the value of the new part.
-- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the labels of a root, for the titles and the descriptions of a drawer and of a toast, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
+- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the labels of a root, for the titles and the descriptions of a toast, and for the labels of `Menu.Group` and `Menu.RadioGroup`.
 - `KeepAlive` takes the DOM of a deactivated part out of the document. The id of that part then must not stay in a `for`, an `aria-controls`, an `aria-owns`, an `aria-labelledby` or an `aria-describedby`.
 - A registration with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while `KeepAlive` holds the part. `useRegisteredId` does this for a label and a message. `usePickerPartElement` does it for the element of a picker field or trigger.
 - The getter of such a registration reads `isHeld` of `useKeepAliveState`. `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A new entry in that hook would reverse the order of the parts.
@@ -2057,7 +2055,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - Do not record such a state in a listener of an animation event or a transition event. After a stall, one frame can start and end the animation. The part then completes, hides the element or removes it in the microtasks before the events of that frame. A `waitFor` can thus end before the events come. Firefox sends `animationstart` to a hidden element after those microtasks. Chromium and Firefox send no `animationstart` to a removed element. The part completes only after the animations of the list of `nextAnimationsRead` end. To record a state at the end, read it in a callback of the `finished` promises of that list. `useAnimationsFinished` runs the completion some microtasks after the end, so that callback runs first.
 - In a listener of `animationstart` or `transitionrun`, read the fields of the event or a state that stays. Do not read `getAnimations()`. A late frame can end the animation before the browser sends the event, and the list is then empty.
 - In a new or changed case that needs the animations that a part waits for, get them from `nextAnimationsRead`. Call it before the action, or give it the action.
-- A case with an exit of 100 s can read `element.getAnimations()` directly after `await nextEvent(element, 'animationstart', { action })`. It can also read a state of the exit there. No late frame ends an animation of 100 s, so the animation still runs at that event. This read does not depend on a read of a part, so the case needs no wait for `openChangeComplete`. Get each `finished` promise in the task of the read. `BUG-5519: an exit animation` of `drawer/popup/DrawerPopup.test.tsx` is the model.
+- A case with an exit of 100 s can read `element.getAnimations()` directly after `await nextEvent(element, 'animationstart', { action })`. It can also read a state of the exit there. No late frame ends an animation of 100 s, so the animation still runs at that event. This read does not depend on a read of a part, so the case needs no wait for `openChangeComplete`. Get each `finished` promise in the task of the read. `BUG-5519: an exit animation` of `combobox/popup/ComboboxPopup.test.tsx` is the model.
 - A wait for `transitionrun` or `animationstart` can get an event of an earlier step. In each frame, the browser first runs the microtasks that the update of the animations queues, such as the callbacks of `finished`. Then it sends the animation events of the earlier style changes. A wait that ends in those microtasks thus attaches the next listener before those events. An example is a move of a hover popup to another trigger with `user.hover`. user-event gives the leave event no `relatedTarget`, so the popup closes and opens again: the move starts an exit and reverses it. To wait for the exit of a close after such a step, give the close to `nextAnimationsRead` as `action`. The read of the exit comes only after the close.
 - A case that gives a close of a popup to `nextAnimationsRead` after a move to another trigger waits for `openChangeComplete` with `true` between the open and the move. The root of a popup reads the animations of the popup when the popup loses `data-starting-style`, one frame after the open. A move with `user.hover` before that frame removes the attribute and starts an exit. The next frame cancels the exit, and the root reads the animations of the popup one more time. A later `nextAnimationsRead` on the popup would resolve with that read.
 - A case that needs an exit transition first waits for the end of the enter transition, with `nextEvent` and `after`. While an element has `data-starting-style`, a close starts no transition when the start style and the end style are equal. The part then finds no animation, and it completes the close. `holds the element of a content that opens again while its exit transition runs` of `navigation-menu/content/NavigationMenuContent.test.tsx` is the model.
