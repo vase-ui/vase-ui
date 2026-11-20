@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Accordion } from '@vase-ui/vue/accordion';
+import { Menubar } from '@vase-ui/vue/menubar';
 
-defineProps<{ keepMounted?: boolean; hiddenUntilFound?: boolean }>();
+defineProps<{ modal?: boolean; loopFocus?: boolean }>();
 </script>
 
 <template>
-  <Accordion.Panel :keep-mounted="keepMounted" :hidden-until-found="hiddenUntilFound">
+  <Menubar :modal="modal" :loop-focus="loopFocus">
     <slot />
-  </Accordion.Panel>
+  </Menubar>
 </template>
