@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { digits as getDigits } from '../format';
-import type { HourCycle } from './segmentLayout';
+import { digits as getDigits } from '../../internals/date-time/format';
+import type { HourCycle } from './layout';
 import {
   dayPeriodOfLetter,
   digitOf,
@@ -9,13 +9,12 @@ import {
   getPadding,
   getRange,
   parseLocaleText,
-  removeLastDigit,
   shiftYear,
   toNumbers,
   typeDigit,
   wrapNumber,
-} from './segmentLayout';
-import type { NumbersContext } from './segmentLayout';
+} from './layout';
+import type { NumbersContext } from './layout';
 
 const gregory = (hourCycle?: HourCycle): NumbersContext => ({
   calendar: 'gregory',
@@ -105,15 +104,6 @@ describe('number helpers', () => {
     { value: 7, range: { min: 1, max: 12 }, expected: 7 },
   ])('wraps $value in $range.min to $range.max', ({ value, range, expected }) => {
     expect(wrapNumber(value, range)).toBe(expected);
-  });
-
-  it.each([
-    { number: 12, expected: 1 },
-    { number: 2026, expected: 202 },
-    { number: 5, expected: undefined },
-    { number: 0, expected: undefined },
-  ])('removes the last digit of $number', ({ number, expected }) => {
-    expect(removeLastDigit(number)).toBe(expected);
   });
 
   it.each([
@@ -256,20 +246,22 @@ describe('limits and years', () => {
     { name: 'a day in a leap year', numbers: { year: 2028, month: 2 }, months: 12, days: 29 },
     { name: 'a day in a common year', numbers: { year: 2026, month: 2 }, months: 12, days: 28 },
     { name: 'a year with no month', numbers: { year: 2026 }, months: 12, days: 31 },
-    { name: 'a year of the fallback', numbers: {}, months: 12, days: 31 },
+    { name: 'no year', numbers: {}, months: 12, days: 31 },
+    { name: 'a month with no year', numbers: { month: 2 }, months: 12, days: 31 },
   ])('gives the limits for $name', ({ numbers, months, days }) => {
-    expect(getLimits(numbers, { era: 'ce', year: 2026 }, 'gregory')).toEqual({
+    expect(getLimits({ era: 'ce', ...numbers }, 'gregory')).toEqual({
       monthsInYear: months,
       daysInMonth: days,
     });
   });
 
-  it('gives a Hebrew leap year 13 months, and 12 months with no year at all', () => {
-    expect(getLimits({ era: 'am', year: 5784, month: 13 }, {}, 'hebrew')).toEqual({
+  it('gives a Hebrew leap year 13 months, a common year 12, and no year the widest range', () => {
+    expect(getLimits({ era: 'am', year: 5784, month: 13 }, 'hebrew')).toEqual({
       monthsInYear: 13,
       daysInMonth: 29,
     });
-    expect(getLimits({}, {}, 'gregory')).toEqual({ monthsInYear: 12, daysInMonth: 31 });
+    expect(getLimits({ era: 'am', year: 5785 }, 'hebrew').monthsInYear).toBe(12);
+    expect(getLimits({}, 'hebrew')).toEqual({ monthsInYear: 13, daysInMonth: 31 });
   });
 
   it.each([

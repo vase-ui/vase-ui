@@ -122,11 +122,17 @@ function fieldProps(attributes: Record<string, unknown>) {
   };
 }
 
+// `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+function clear() {
+  field.value?.clear();
+  if (picker.value.value !== null) handleValueChange(null, createChangeEventDetails(REASONS.none));
+}
+
 defineExpose({
   element,
   inputElement,
   /** Sets the value to `null` and empties each segment. The reason of the change is `none`. */
-  clear: () => field.value?.clear(),
+  clear,
 });
 </script>
 

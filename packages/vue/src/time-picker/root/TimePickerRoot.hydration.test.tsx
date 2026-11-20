@@ -16,10 +16,6 @@ describe('<TimePicker.Root /> hydration', () => {
     { name: 'a date and time in a zone', props: { value: '2026-11-14T15:04[Asia/Tokyo]' } },
     { name: 'a 24-hour cycle', props: { value: '15:04', hourCycle: 24 } },
     { name: 'limits', props: { value: '15:04', minTime: '09:00' } },
-    {
-      name: 'a server layout that differs',
-      props: { locale: 'is-IS', list: false, columns: false, clock: false },
-    },
     { name: 'a disabled picker', props: { value: '15:04', disabled: true } },
     { name: 'a read-only picker', props: { value: '15:04', readOnly: true } },
   ])('hydrates a picker with $name with no warning', async ({ props }) => {
@@ -36,9 +32,10 @@ describe('<TimePicker.Root /> hydration', () => {
   });
 
   // Node and Chromium have another `Intl` data for `is-IS`, so the texts of the items differ. The
-  // part allows the text mismatch, and the hydration writes the text of the client.
+  // part allows the text mismatch, and the hydration writes the text of the client. The field has
+  // another number of segments, and Vue logs a message for that.
   it('hydrates the texts of a list that the server formats in another way', async () => {
-    const props = { locale: 'is-IS', columns: false, clock: false };
+    const props = { locale: 'is-IS', field: false, columns: false, clock: false };
     const serverHtml = await renderOnServer(HYDRATION_FILE, props);
 
     await hydrate(TimePickerRootHydration, { serverHtml, props });

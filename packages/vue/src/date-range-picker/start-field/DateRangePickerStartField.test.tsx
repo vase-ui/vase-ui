@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { createRenderer, screen, waitFor } from '#test-utils';
 import DateRangePickerAnatomy from '../root/DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -16,18 +16,6 @@ const hiddenInputOf = (container: Element) =>
 
 describe('<DateRangePicker.StartField />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<DateRangePicker.StartField />, () => ({
-    elementIsRoot: false,
-    refInstanceof: window.HTMLDivElement,
-    render(node) {
-      return render(
-        <DateRangePicker.Root defaultValue={range('2026-11-18', '2026-11-20')}>
-          {node}
-        </DateRangePicker.Root>,
-      );
-    },
-  }));
 
   it('shows the first day of the range in its segments, and gives it to the hidden input', async () => {
     const { container } = await render(

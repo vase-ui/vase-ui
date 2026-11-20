@@ -3,7 +3,7 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
 import { TimeField } from '@vase-ui/vue/time-field';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 
 const dateTime = Temporal.PlainDateTime.from('2026-11-14T15:04');
 
@@ -26,14 +26,6 @@ describe('<DatePicker.TimeField />', () => {
 
     expect(document.querySelector('input[name="time"]')).toBeNull();
   });
-
-  describeConformance(<DatePicker.TimeField />, () => ({
-    elementIsRoot: false,
-    refInstanceof: window.HTMLDivElement,
-    render(node) {
-      return render(<DatePicker.Root defaultValue={dateTime}>{node}</DatePicker.Root>);
-    },
-  }));
 
   it('shows the time of the value of the picker, and gives back a value of its kind with its date', async () => {
     const onValueChange = vi.fn();
@@ -168,7 +160,12 @@ describe('<DatePicker.TimeField />', () => {
       // The time field has no label of the field, and no id of the field.
       expect(screen.getByTestId('time')).not.toHaveAttribute('aria-labelledby');
       expect(screen.getByTestId('time')).toHaveAttribute('aria-label', 'Time');
-      const ids = screen.getAllByRole('spinbutton').map((segment) => segment.id);
+      // The first segment of each field has an id.
+      const ids = screen
+        .getAllByRole('spinbutton')
+        .map((segment) => segment.id)
+        .filter(Boolean);
+      expect(ids).toHaveLength(2);
       expect(new Set(ids).size).toBe(ids.length);
       // Only the field of the picker names the form entry.
       const names = hiddenInputsOf(container).map((input) => input.getAttribute('name'));

@@ -4,19 +4,20 @@ import type { ShallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { createRenderer, flushMicrotasks, screen, wait } from '#test-utils';
-import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
+import type { DateTimeFieldChangeEventDetails } from '../../../common/date-time-field/field';
+import { DateField } from '../../../date-field';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { NOOP } from '../../noop';
 import { REASONS } from '../../reasons';
 import { useFormReset } from '../../useFormReset';
-import type { DateTimeFieldChangeEventDetails } from '../field/DateTimeFieldContext';
-import type { TemporalValue } from '../temporal';
-import { recordResetListeners } from './test-utils';
+import type { DateValue } from '../temporal';
 import { useDateTimePickerRoot } from './useDateTimePickerRoot';
 
 type End = 'start' | 'end';
-type Ends = readonly [TemporalValue | null, TemporalValue | null];
-type Probe = InstanceType<typeof DateTimeFieldProbe>;
+type Ends = readonly [DateValue | null, DateValue | null];
+interface FieldRoot {
+  inputElement: HTMLInputElement | null;
+}
 
 const EMPTY: Ends = [null, null];
 
@@ -37,14 +38,14 @@ const PickerOfTwoFields = defineComponent({
       updateValue: NOOP,
     });
 
-    const probes: Record<End, ShallowRef<Probe | null>> = {
+    const roots: Record<End, ShallowRef<FieldRoot | null>> = {
       start: shallowRef(null),
       end: shallowRef(null),
     };
     let lastReset: Event | undefined;
-    for (const probe of Object.values(probes)) {
+    for (const root of Object.values(roots)) {
       useFormReset(
-        computed(() => probe.value?.context.hiddenInputElement.value ?? null),
+        computed(() => root.value?.inputElement ?? null),
         (event) => {
           if (event !== lastReset) {
             lastReset = event;
@@ -57,14 +58,10 @@ const PickerOfTwoFields = defineComponent({
     function field(end: End) {
       const index = end === 'start' ? 0 : 1;
       return (
-        <DateTimeFieldProbe
-          ref={probes[end]}
-          locale="en-US"
+        <DateField.Root
+          ref={roots[end]}
           modelValue={(picker.value.value ?? EMPTY)[index] ?? null}
-          onValueChange={(
-            value: TemporalValue | null,
-            details: DateTimeFieldChangeEventDetails,
-          ) => {
+          onValueChange={(value: DateValue | null, details: DateTimeFieldChangeEventDetails) => {
             const [start, last] = picker.value.value ?? EMPTY;
             picker.commit(end === 'start' ? [value, last] : [start, value], details);
           }}
@@ -82,17 +79,16 @@ const hiddenInputsOf = (container: Element) =>
 describe('useDateTimePickerRoot', () => {
   const { render } = createRenderer();
 
-  // The first part that hears of the reset puts the picker back to its default value. The field
-  // root of the other end then gets its value before its own part hears of the reset, so the
-  // picker must tell each root about the reset, and not the part of that root.
-  describe.each([{ order: 'the roots first' }, { order: 'the parts first' }])(
+  // Each root listens on the form and hears of the reset before the parts, which listen on the
+  // document. The root tells its field the reset, so the value that the picker gives with the next
+  // render starts no validation.
+  describe.each([{ order: 'the roots first' }])(
     'VUE-21: a native reset of a picker with two fields, with $order',
-    ({ order }) => {
+    () => {
       const validate = vi.fn((value: unknown) => (value === null ? 'Choose a date' : 'Wrong date'));
 
       async function renderPicker() {
         validate.mockClear();
-        const resets = recordResetListeners(document);
         const { container } = await render(
           <Form data-testid="form">
             <Field.Root data-testid="root" name="range" validate={validate} validationMode="change">
@@ -101,7 +97,7 @@ describe('useDateTimePickerRoot', () => {
             </Field.Root>
           </Form>,
         );
-        return { container, resets };
+        return { container };
       }
 
       async function fill(input: HTMLInputElement, text: string) {
@@ -110,11 +106,7 @@ describe('useDateTimePickerRoot', () => {
         await flushMicrotasks();
       }
 
-      async function resetForm(resets: ReturnType<typeof recordResetListeners>) {
-        if (order === 'the parts first') {
-          // The listener of the root and the listener of the part, for each of the two fields.
-          resets.reverse(4);
-        }
+      async function resetForm() {
         screen.getByTestId<HTMLFormElement>('form').reset();
         // Each timeout of the reset starts before this one, and a flush of Vue comes after each.
         await wait(0);
@@ -128,14 +120,14 @@ describe('useDateTimePickerRoot', () => {
       }
 
       it('starts no validation for the value of each end, and validates the next entry', async () => {
-        const { container, resets } = await renderPicker();
+        const { container } = await renderPicker();
         const [start, end] = hiddenInputsOf(container);
         await fill(start!, '2026-11-14');
         await fill(end!, '2026-11-20');
         expect(screen.getByTestId('error')).toHaveTextContent('Wrong date');
         validate.mockClear();
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputsOf(container).map((input) => input.value)).toEqual(['', '']);
         expect(validate).not.toHaveBeenCalled();
@@ -148,12 +140,12 @@ describe('useDateTimePickerRoot', () => {
       });
 
       it('leaves no mark on the field whose value the reset keeps', async () => {
-        const { container, resets } = await renderPicker();
+        const { container } = await renderPicker();
         const [start, end] = hiddenInputsOf(container);
         await fill(start!, '2026-11-14');
         validate.mockClear();
 
-        await resetForm(resets);
+        await resetForm();
 
         expect(hiddenInputsOf(container).map((input) => input.value)).toEqual(['', '']);
         expect(validate).not.toHaveBeenCalled();

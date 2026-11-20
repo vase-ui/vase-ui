@@ -10,8 +10,8 @@ import {
   pagePlaces,
   stepValue,
   timeOfFaceNumber,
-} from './clockViews';
-import type { TimeClockView, TimeLimits } from './clockViews';
+} from './views';
+import type { TimeClockView, TimeLimits } from './views';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const always = () => true;

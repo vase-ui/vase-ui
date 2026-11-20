@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import { createRenderer, describeConformance, fireEvent, screen, waitFor } from '#test-utils';
-import { pointOnFace } from '../../time-clock/utils/test-utils';
+import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
+import { createPartRef } from '../../date-picker/root/test-utils';
+import { pointOnFace } from '../../../test/time-clockTestUtils';
 import TimePickerAnatomy from '../root/TimePickerAnatomy.test.vue';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -10,10 +11,27 @@ const mouse = { button: 0, buttons: 1, pointerId: 1, pointerType: 'mouse' };
 describe('<TimePicker.Clock />', () => {
   const { render } = createRenderer();
 
-  describeConformance(<TimePicker.Clock />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    render: (node) => render(<TimePicker.Root>{node}</TimePicker.Root>),
-  }));
+  it('renders the tag of `as` and the element of the `#render` slot, and exposes each', async () => {
+    const section = createPartRef<{ element: HTMLElement | null }>();
+    const article = createPartRef<{ element: HTMLElement | null }>();
+    await render(
+      <TimePicker.Root>
+        <TimePicker.Clock as="section" ref={section.ref} data-testid="section" />
+        <TimePicker.Clock ref={article.ref}>
+          {{
+            render: ({ props }: { props: Record<string, unknown> }) => (
+              <article {...props} data-testid="article" />
+            ),
+          }}
+        </TimePicker.Clock>
+      </TimePicker.Root>,
+    );
+
+    expect(section.current.element).toBe(screen.getByTestId('section'));
+    expect(section.current.element?.localName).toBe('section');
+    expect(article.current.element).toBe(screen.getByTestId('article'));
+    expect(article.current.element).toHaveAttribute('role', 'group');
+  });
 
   // The popup is open, and the face has a size in the fixture, so a press at an angle selects a
   // number.

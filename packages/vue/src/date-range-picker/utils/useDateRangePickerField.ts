@@ -16,6 +16,7 @@ import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useVaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
 import { mergeProps } from '../../merge-props';
+import type { DateRangePickerRootChangeEventDetails } from '../root/DateRangePickerRoot.vue';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
 /** The members that `DateField.Root` exposes. */
@@ -85,9 +86,20 @@ export function useDateRangePickerField(
 
   const fieldHandlers = { onKeydown: handleKeydown };
 
-  function handleValueChange(value: DateValue | null, details: DateTimeFieldChangeEventDetails) {
+  function handleValueChange(
+    value: DateValue | null,
+    details: DateTimeFieldChangeEventDetails | DateRangePickerRootChangeEventDetails,
+  ) {
     const [start, last] = picker.range.value;
     picker.commit(end === 'start' ? [value, last] : [start, value], details);
+  }
+
+  // `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+  function clear() {
+    field.value?.clear();
+    if (picker.range.value[index] !== null) {
+      handleValueChange(null, createChangeEventDetails(REASONS.none));
+    }
   }
 
   // The name says which end the field shows. A name that the consumer gives replaces it, and `null`
@@ -143,5 +155,5 @@ export function useDateRangePickerField(
     };
   }
 
-  return { element, inputElement, handleValueChange, fieldProps };
+  return { element, inputElement, handleValueChange, fieldProps, clear };
 }

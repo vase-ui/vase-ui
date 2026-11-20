@@ -63,7 +63,7 @@ if (outerField) {
 
 // This part renders `DateField.Root` and makes no element of its own.
 const field = useTemplateRef<DateFieldActions>('field');
-const { element, inputElement, handleValueChange, fieldProps } = useDateRangePickerField(
+const { element, inputElement, handleValueChange, fieldProps, clear } = useDateRangePickerField(
   'end',
   field,
   props,
@@ -74,7 +74,7 @@ defineExpose({
   element,
   inputElement,
   /** Sets the last day of the range to `null` and empties each segment. The reason of the change is `none`. */
-  clear: () => field.value?.clear(),
+  clear,
 });
 </script>
 

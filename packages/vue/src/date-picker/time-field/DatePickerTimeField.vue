@@ -33,7 +33,9 @@ export interface DatePickerTimeFieldProps extends Omit<
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import { fieldKey } from '../../field/control';
+import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { isKind } from '../../internals/date-time/temporal';
+import { REASONS } from '../../internals/reasons';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import TimeFieldRoot from '../../time-field/TimeFieldRoot.vue';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
@@ -108,10 +110,16 @@ function timeFieldProps() {
   };
 }
 
+// `clear()` of the field root gives only `update:modelValue`, so the part commits the change.
+function clear() {
+  field.value?.clear();
+  if (value.value !== null) handleValueChange(null, createChangeEventDetails(REASONS.none));
+}
+
 defineExpose({
   element,
   /** Sets the value to `null` and empties each segment. The reason of the change is `none`. */
-  clear: () => field.value?.clear(),
+  clear,
 });
 </script>
 

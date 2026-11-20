@@ -5,7 +5,7 @@ import {
   outerRingRadius,
   positionOfAngle,
   ratioOfPoint,
-} from './clockViews';
+} from './views';
 
 // A face that does not start at the origin, so a point is not an offset from the center.
 const rect = { left: 20, top: 40, width: 200, height: 200 };

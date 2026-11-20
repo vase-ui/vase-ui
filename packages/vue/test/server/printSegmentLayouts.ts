@@ -3,7 +3,7 @@
 // The `.node.test` file then gets the signal and the name of the last case.
 import { readFileSync, writeSync } from 'node:fs';
 import { registerHooks } from 'node:module';
-import type { SegmentLayoutOptions } from '../../src/internals/date-time/field/segmentLayout.ts';
+import type { SegmentLayoutOptions } from '../../src/common/date-time-field/layout.ts';
 
 export interface LayoutCase {
   name: string;
@@ -35,7 +35,7 @@ registerHooks({
 
 // A static import loads before the hook.
 const { getFixedSegmentTexts, getSegmentLayout } =
-  await import('../../src/internals/date-time/field/segmentLayout.ts');
+  await import('../../src/common/date-time-field/layout.ts');
 
 const cases = JSON.parse(readFileSync(0, 'utf8')) as LayoutCase[];
 const results: Record<string, LayoutResult> = {};

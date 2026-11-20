@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import * as DateField from '../../date-field/index.parts';
+import * as DateField from '../../date-field/parts';
 import * as RangeCalendar from '../../range-calendar/index.parts';
 import * as DateRangePicker from '../index.parts';
 
