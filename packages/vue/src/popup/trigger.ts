@@ -1,6 +1,11 @@
 import { computed, onMounted, watch, type Ref } from 'vue';
 import { useButton } from '../common/button';
-import type { PopupRoot } from './root';
+import { interactionOf, type PopupRoot } from './root';
+
+/** The `click` of a press of a mouse, which a trigger with `pressStart` handled at `pointerdown`. */
+export function isMouseClick(event: MouseEvent) {
+  return event.detail !== 0 && interactionOf(event) === 'mouse';
+}
 
 /**
  * A trigger of a popup: a button that registers with its root while it is mounted, and that
@@ -17,6 +22,8 @@ export function usePopupTrigger(
     tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;
+    /** A press of the main mouse button acts at its `pointerdown`, and its `click` does nothing. */
+    pressStart?: () => boolean;
   },
 ) {
   const button = useButton({
@@ -61,7 +68,7 @@ export function usePopupTrigger(
   });
   const open = computed(() => active.value && !!root()?.open);
 
-  function onClick(event: MouseEvent) {
+  function press(event: MouseEvent) {
     const current = root();
     if (!current) return;
     if (open.value && (options.closesAtPress?.(event) ?? true)) {
@@ -71,5 +78,15 @@ export function usePopupTrigger(
     }
   }
 
-  return { button, active, open, onClick };
+  function onClick(event: MouseEvent) {
+    if (options.pressStart?.() && isMouseClick(event)) return;
+    press(event);
+  }
+
+  function onPointerdown(event: PointerEvent) {
+    if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (!button.disabled.value) press(event);
+  }
+
+  return { button, active, open, onClick, onPointerdown };
 }

@@ -34,9 +34,17 @@ export interface Layer {
   /** Tab keeps the focus in the popup. */
   readonly trap: boolean;
   readonly lockScroll: boolean;
+  /** The element that the block leaves free, or `null` for none. */
+  readonly hole: Element | null;
+  /** More elements inside the layer, beside its popup, its portal and its triggers. */
+  readonly inside: readonly Element[];
+  /** A touch outside that moves also closes the popup. Else only a tap closes it. */
+  readonly touchDrag: boolean;
 }
 
-export type LayerRules = Omit<Layer, 'root'>;
+/** The rules of a layer. With no `hole`, the hole is the active trigger. */
+export type LayerRules = Omit<Layer, 'root' | 'hole' | 'inside' | 'touchDrag'> &
+  Partial<Pick<Layer, 'hole' | 'inside' | 'touchDrag'>>;
 
 interface Entry {
   readonly layer: Layer;
@@ -107,6 +115,16 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     },
     get lockScroll() {
       return current.value.lockScroll;
+    },
+    get hole() {
+      const { hole } = current.value;
+      return hole === undefined ? root.activeTrigger : hole;
+    },
+    get inside() {
+      return current.value.inside ?? [];
+    },
+    get touchDrag() {
+      return current.value.touchDrag ?? true;
     },
   };
   layersOfRoots.set(root, layer);
@@ -212,6 +230,7 @@ function insideElements(entry: Entry) {
     root.popup,
     ...root.portalElements.filter((element) => !(entry.layer.block && isFixed(element))),
     ...root.triggers.map((trigger) => trigger.element),
+    ...entry.layer.inside,
   ].filter((element): element is Element => !!element?.isConnected);
   return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
 }
@@ -315,8 +334,12 @@ function onPointermove(event: PointerEvent) {
   if (distance > 5) touch.moved = true;
   if (distance > 10) {
     const { entries } = touch;
-    touch = null;
-    closeOutside(event, entries);
+    // A layer with no `touchDrag` stays open while the user scrolls the page under it.
+    touch.entries = entries.filter((entry) => !entry.layer.touchDrag);
+    closeOutside(
+      event,
+      entries.filter((entry) => entry.layer.touchDrag),
+    );
   }
 }
 
@@ -325,7 +348,11 @@ function onPointerup(event: PointerEvent) {
     if (!touch) return;
     const { entries, moved, time } = touch;
     touch = null;
-    if (moved || event.timeStamp - time < 1000) closeOutside(event, entries);
+    const tap = !moved && event.timeStamp - time < 1000;
+    closeOutside(
+      event,
+      entries.filter((entry) => tap || (moved && entry.layer.touchDrag)),
+    );
     return;
   }
   pressing = false;

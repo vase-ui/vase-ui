@@ -61,18 +61,18 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   const blocks = computed(() => mounted.value && root.open && layer.block);
 
   const blockElement = shallowRef<HTMLElement | null>(null);
-  const hole = shallowRef<DOMRect>();
+  const holeRect = shallowRef<DOMRect>();
   watch(
-    [() => root.activeTrigger, blockElement],
-    ([trigger, block], _, onCleanup) => {
-      hole.value = undefined;
-      if (!trigger || !block) return;
-      onCleanup(autoUpdate(trigger, block, () => (hole.value = trigger.getBoundingClientRect())));
+    [() => layer.hole, blockElement],
+    ([free, block], _, onCleanup) => {
+      holeRect.value = undefined;
+      if (!free || !block) return;
+      onCleanup(autoUpdate(free, block, () => (holeRect.value = free.getBoundingClientRect())));
     },
     { flush: 'post' },
   );
   const blockStyle = computed<CSSProperties>(() => {
-    const rect = hole.value;
+    const rect = holeRect.value;
     return {
       position: 'fixed',
       inset: 0,
@@ -80,7 +80,7 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
       // (test/measurements/popup.test.ts).
       'user-select': 'none',
       '-webkit-user-select': 'none',
-      // The active trigger keeps its hover and its press.
+      // The hole of the layer keeps its hover and its press.
       clipPath: rect
         ? `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rect.left}px ${rect.top}px,${rect.right}px ${rect.top}px,${rect.right}px ${rect.bottom}px,${rect.left}px ${rect.bottom}px,${rect.left}px ${rect.top}px)`
         : undefined,

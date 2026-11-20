@@ -168,6 +168,8 @@ export function usePlacement(
     positioner: Readonly<Ref<HTMLElement | null>>;
     /** Places the positioner with insets from the edge that faces the anchor. */
     insets: () => boolean;
+    /** After a flip, the popup keeps its side while it is open. */
+    lazyFlip?: () => boolean;
   },
 ) {
   const rtl = shallowRef(false);
@@ -208,8 +210,10 @@ export function usePlacement(
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
+  // The side of a flip, which a popup with `lazyFlip` keeps while it is open.
+  const keptSide = shallowRef<PhysicalSide>();
   const placement = computed<Placement>(() => {
-    const side = physicalSide(props.side, rtl.value);
+    const side = keptSide.value ?? physicalSide(props.side, rtl.value);
     return props.align === 'center' ? side : `${side}-${props.align}`;
   });
 
@@ -327,6 +331,13 @@ export function usePlacement(
   const placed = floating.isPositioned;
 
   const placedSide = computed(() => getSide(floating.placement.value));
+  watch(
+    [() => root.open, placed, placedSide],
+    ([open, isPlaced, side]) => {
+      if (!open) keptSide.value = undefined;
+      else if (options.lazyFlip?.() && isPlaced) keptSide.value = side;
+    },
+  );
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));
   const align = computed<Align>(() => getAlignment(floating.placement.value) ?? 'center');
   const anchorHidden = computed(() => !!floating.middlewareData.value.hide?.referenceHidden);
