@@ -3,7 +3,7 @@
     "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/",
     "https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date)"
   ],
-  "reason": "Base UI has no date picker. A person types a date in a field or picks it in a calendar in a popup, and the picker gives one Temporal value to a form.",
+  "reason": "A person types a date in a field, or picks it in a calendar in a popup. The picker gives one Temporal value to a form.",
   "parts": ["Root", "Field", "Trigger", "Positioner", "Popup", "Calendar", "TimeField"],
   "types": ["DatePicker.Root.ChangeEventReason", "DatePicker.Root.OpenChangeEventReason"]
 }

@@ -44,7 +44,8 @@ export interface DatePickerRootState {}
 export interface DatePickerRootProps<Value extends DatePickerRootValue = DatePickerRootValue> {
   /**
    * The value: a `Temporal.PlainDate`, `PlainDateTime`, `ZonedDateTime` or `PlainYearMonth`, or
-   * `null` for no value. A new value has the kind, the calendar, the time and the zone of the value.
+   * `null` for no value. A new value has the kind, the calendar, the time and the zone of the value,
+   * else of the last value.
    */
   modelValue?: Value | null | undefined;
   /** The first value of a picker with no `modelValue`. */
@@ -64,6 +65,7 @@ export interface DatePickerRootProps<Value extends DatePickerRootValue = DatePic
   /**
    * A pick in the calendar closes the popup. The default is `true` for a value with no time, and
    * `false` for a value with a time, so that the user can set the time.
+   * In a wrapper that declares this prop, give it the default `undefined`.
    */
   closeOnSelect?: boolean | undefined;
   /**
@@ -232,7 +234,7 @@ export interface DatePickerPopupProps extends /* @vue-ignore */ Omit<
   /**
    * The element that gets the focus at the open. The default is the day or the month of the tab
    * stop of the calendar, else the default of `Popover.Popup`. `true`, `null` and a function that
-   * gives one of them ask for that default.
+   * gives one of them ask for that default. `false` moves no focus.
    */
   initialFocus?: PopoverPopupProps['initialFocus'] | undefined;
 }

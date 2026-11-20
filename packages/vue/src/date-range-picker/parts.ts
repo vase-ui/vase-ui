@@ -47,8 +47,9 @@ export namespace Root {
 }
 
 /**
- * The field of the first day: `DateField.Root` with the start of the range. Alt+ArrowDown in it
- * opens the popup.
+ * The field of the first day: `DateField.Root` with the start of the range. It takes the other
+ * props of `DateField.Root`, such as `id`, and it has the selectors of that part. Its form input has
+ * the name `startName`. Alt+ArrowDown in it opens the popup.
  * Renders a `<div>` element with a hidden form `<input>` element in it.
  */
 export const StartField: typeof DateRangePickerStartField = DateRangePickerStartField;
@@ -58,8 +59,9 @@ export namespace StartField {
 }
 
 /**
- * The field of the last day: `DateField.Root` with the end of the range. An end before the start
- * makes it invalid.
+ * The field of the last day: `DateField.Root` with the end of the range. It takes the other props
+ * of `DateField.Root`, such as `id`, and it has the selectors of that part. Its form input has the
+ * name `endName`. An end before the start makes it invalid. Alt+ArrowDown in it opens the popup.
  * Renders a `<div>` element with a hidden form `<input>` element in it.
  */
 export const EndField: typeof DateRangePickerEndField = DateRangePickerEndField;
@@ -69,8 +71,13 @@ export namespace EndField {
 }
 
 /**
- * A button that opens the popup: `Popover.Trigger` of the picker.
+ * A button that opens the popup: `Popover.Trigger` of the picker. The `text` of its slots is the
+ * range in the locale, or `undefined` while an end has no value.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The popup is open.
+ * @selector `[data-pressed]` The popup is open, and a press on the trigger or Alt+ArrowDown in a field opened it.
+ * @selector `:disabled` The trigger is a native button, and the trigger or the picker is disabled or read-only.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and the trigger or the picker is disabled or read-only.
  */
 export const Trigger: typeof DateRangePickerTrigger = DateRangePickerTrigger;
 export namespace Trigger {
@@ -81,6 +88,14 @@ export namespace Trigger {
 /**
  * Places the popup at the two fields: `Popover.Positioner` of the picker.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`.
+ * @selector `[data-align]` The alignment of the popup on that side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The anchor is out of the view.
+ * @cssVariable `--anchor-width` The width of the anchor.
+ * @cssVariable `--anchor-height` The height of the anchor.
+ * @cssVariable `--available-width` The width that the popup has before it goes out of its collision boundary.
+ * @cssVariable `--available-height` The height that the popup has before it goes out of its collision boundary.
+ * @cssVariable `--transform-origin` The `transform-origin` that makes the popup grow from its anchor.
  */
 export const Positioner: typeof DateRangePickerPositioner = DateRangePickerPositioner;
 export namespace Positioner {
@@ -92,6 +107,10 @@ export namespace Positioner {
  * The container of the calendar: `Popover.Popup` of the picker. It gives the focus to the
  * calendar at each open.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`.
+ * @selector `[data-align]` The alignment of the popup on that side: `start`, `center` or `end`.
+ * @selector `[data-instant]` The popup changes with no animation: `click` after a key opened it, `dismiss` after Escape closed it, or `focus` after the focus left it.
+ * @selector `[hidden]` The popup is closed, and `keepMounted` of `Popover.Portal` keeps it in the DOM.
  */
 export const Popup: typeof DateRangePickerPopup = DateRangePickerPopup;
 export namespace Popup {
@@ -100,8 +119,10 @@ export namespace Popup {
 }
 
 /**
- * The calendar of the picker: `RangeCalendar.Root` with the range of the picker. The press that
- * gives the second end, or a drag, closes the popup.
+ * The calendar of the picker: `RangeCalendar.Root` with the range of the picker. It takes the other
+ * props of `RangeCalendar.Root`, such as `numberOfMonths` and `minDays`, and it has the selectors of
+ * that part. A pick keeps the time of the end that it replaces. The press that gives the second
+ * end, or a drag, closes the popup when `closeOnSelect` of the root allows it.
  * Renders a `<div>` element.
  */
 export const Calendar: typeof DateRangePickerCalendar = DateRangePickerCalendar;

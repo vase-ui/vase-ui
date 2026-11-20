@@ -4,7 +4,7 @@
     "https://www.w3.org/WAI/ARIA/apg/patterns/listbox/",
     "https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time)"
   ],
-  "reason": "Base UI has no time picker. A person types a time in a field or picks it from a list, from columns or on a clock face in a popup, and the picker gives one Temporal value to a form.",
+  "reason": "A person types a time in a field, or picks it from a list, from columns or on a clock face in a popup. The picker gives one Temporal value to a form.",
   "parts": [
     "Root",
     "Field",

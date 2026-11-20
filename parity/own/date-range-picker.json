@@ -3,7 +3,7 @@
     "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/",
     "https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date)"
   ],
-  "reason": "Base UI has no date range picker. A person types the first day and the last day of a range in two fields, or picks them in a calendar in a popup, and the picker gives two Temporal values to a form.",
+  "reason": "A person types the first day and the last day of a range in two fields, or picks them in a calendar in a popup. The picker gives two Temporal values to a form.",
   "parts": ["Root", "StartField", "EndField", "Trigger", "Positioner", "Popup", "Calendar"],
   "types": ["DateRangePicker.Root.ChangeEventReason", "DateRangePicker.Root.OpenChangeEventReason"]
 }

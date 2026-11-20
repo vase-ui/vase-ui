@@ -30,7 +30,8 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
   /** The first value of a field with no `modelValue`. */
   defaultValue?: Value | null;
   /**
-   * Gives the kind, the date and the time zone of a first value. An arrow key in an empty segment
+   * Gives the kind, the date and the time zone of a first value. With no `referenceDate` and no
+   * `defaultValue`, the first value is a `Temporal.PlainTime`. An arrow key in an empty segment
    * takes its number from this value, else from midnight.
    */
   referenceDate?: Value;
@@ -64,8 +65,11 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
   form?: string;
   /** The `autocomplete` of the form input. */
   autocomplete?: string;
+  /** The user must give a value before a submit. */
   required?: boolean;
+  /** The user cannot change the value, and the form does not get it. */
   disabled?: boolean;
+  /** The user cannot change the value. The form gets the value and does not validate it. */
   readonly?: boolean;
 }
 
