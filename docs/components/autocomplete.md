@@ -63,7 +63,7 @@ An input that suggests options for the text that the user types.
 
 - **Avoid when a selection state is necessary**: Use [Combobox](/components/combobox) when the selection must stay and the text must be one of the items. The input of Autocomplete can hold free-form text, and its suggestions only complete the text when the user wants them.
 - **Form controls must have an accessible name**: Give the input a `<label>` element, or use [Field](/components/field). See the [forms guide](/handbook/forms).
-- **Closing animations**: Put a `<Transition appear>` around `<Autocomplete.Popup>`. The popup mounts at each open, and it stays in the DOM until its leave ends. See the [animation guide](/handbook/animation).
+- **Closing animations**: Put a `<Transition appear>` around `<Autocomplete.Popup>`. Without `keepMounted`, the popup mounts at each open, so the `<Transition>` needs `appear`. The popup stays in the DOM until its leave ends. See the [animation guide](/handbook/animation).
 
 ## Anatomy
 
