@@ -26,7 +26,17 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
  * The viewport of a popup that moves between triggers. At a move, the popup gets its old size,
  * then its new size one frame later, then no size when its animations end.
  */
-export function usePopupViewport(root: PopupRoot, slot: ShallowRef<ViewportSizes | null>) {
+export function usePopupViewport(
+  root: PopupRoot,
+  slot: ShallowRef<ViewportSizes | null>,
+  options: {
+    /**
+     * The root gets the `instant` state `'trigger-change'` after the animations of a move end.
+     * @default true
+     */
+    instant?: boolean;
+  } = {},
+) {
   const popup = shallowRef<Size>();
   const positioner = shallowRef<Size>();
   const direction = shallowRef<string>();
@@ -91,7 +101,7 @@ export function usePopupViewport(root: PopupRoot, slot: ShallowRef<ViewportSizes
       if (current !== move) return;
       popup.value = undefined;
       transitioning.value = false;
-      root.setInstant('trigger-change');
+      if (options.instant !== false) root.setInstant('trigger-change');
     },
   );
 

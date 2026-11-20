@@ -110,9 +110,7 @@ describe('useCastBooleanWarning', () => {
 
   it('finds the wrapper when the part is in the slot of another part', async () => {
     await render(() => <WrapperInSlot>Content</WrapperInSlot>);
-    expect(takeReportedMessages()).toEqual([
-      message('WrapperInSlot.test', 'Tooltip.Trigger', 'closeOnClick'),
-    ]);
+    expect(takeReportedMessages()).toEqual([message('WrapperInSlot.test', 'Menubar', 'modal')]);
   });
 
   it('gives no warning for an explicit false in the slot of a component that declares the same prop', async () => {

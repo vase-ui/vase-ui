@@ -89,6 +89,8 @@ const TrashIcon: FunctionalComponent = (_, { attrs }) =>
       }),
     ],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -136,10 +138,16 @@ const TrashIcon: FunctionalComponent = (_, { attrs }) =>
     >
       <Tooltip.Portal>
         <Tooltip.Positioner :side-offset="11" :class="styles.Positioner">
-          <Tooltip.Popup :class="styles.Popup">
-            <Tooltip.Arrow :class="styles.Arrow" />
-            Controlled tooltip
-          </Tooltip.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <Tooltip.Popup :class="styles.Popup">
+              <Tooltip.Arrow :class="styles.Arrow" />
+              Controlled tooltip
+            </Tooltip.Popup>
+          </Transition>
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>

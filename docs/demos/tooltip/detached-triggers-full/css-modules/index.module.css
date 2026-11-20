@@ -36,7 +36,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -45,7 +45,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -57,7 +57,7 @@
     border-left: none;
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -121,15 +121,15 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    scale: 0.9;
-  }
-
   &[data-instant] {
     transition: none;
   }
+}
+
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  scale: 0.9;
 }
 
 .Arrow {
@@ -193,8 +193,9 @@
   overflow: clip;
   padding: 0.25rem var(--viewport-inline-padding);
 
-  [data-previous],
-  [data-current] {
+  /* The content of a trigger. A `<Transition>` with the trigger id as the key keeps the old content
+     for its leave while the new content enters. */
+  .Content {
     width: calc(var(--popup-width) - 2 * var(--viewport-inline-padding));
     translate: 0;
     opacity: 1;
@@ -207,23 +208,21 @@
     }
   }
 
-  &[data-activation-direction~='left'] [data-current][data-starting-style] {
+  .ContentLeaving {
+    position: absolute;
+    top: 0.25rem;
+    left: var(--viewport-inline-padding);
+  }
+
+  &[data-activation-direction~='right'] .ContentLeaveTo,
+  &[data-activation-direction~='left'] .ContentEnterFrom {
     translate: -50% 0;
     opacity: 0;
   }
 
-  &[data-activation-direction~='right'] [data-current][data-starting-style] {
+  &[data-activation-direction~='right'] .ContentEnterFrom,
+  &[data-activation-direction~='left'] .ContentLeaveTo {
     translate: 50% 0;
-    opacity: 0;
-  }
-
-  &[data-activation-direction~='left'] [data-previous][data-ending-style] {
-    translate: 50% 0;
-    opacity: 0;
-  }
-
-  &[data-activation-direction~='right'] [data-previous][data-ending-style] {
-    translate: -50% 0;
     opacity: 0;
   }
 }

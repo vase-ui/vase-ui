@@ -1,7 +1,14 @@
 {
   "upstreamPaths": ["packages/react/src/utils/popups/delay-group/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/Tooltip.test.ts",
+      "reason": "`Tooltip.test.ts` tests the group through `Tooltip.Provider`: the delay of the group, `timeout`, one open tooltip at a time, `data-instant`, the tooltips with no provider, a tooltip that unmounts (VUE-48) and the props of the provider at their use. A tooltip reads the group at an event, so the group renders no tooltip."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": [],
@@ -9,16 +16,9 @@
     {
       "upstream": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.ts",
-      "member": "provideFloatingDelayGroup",
-      "witness": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx",
-      "member": "Group",
-      "witness": "packages/vue/src/tooltip/root/TooltipRootContext.delayGroup.test.tsx"
+      "destination": "packages/vue/src/tooltip/group.ts",
+      "behavior": "The group of tooltips: one open at a time, and an open at once while the group is active.",
+      "witness": "packages/vue/src/tooltip/Tooltip.test.ts"
     }
   ]
 }

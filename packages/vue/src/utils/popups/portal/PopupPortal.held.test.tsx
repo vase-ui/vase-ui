@@ -15,7 +15,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
-import { Tooltip } from '@vase-ui/vue/tooltip';
 
 function isMarked(element: Element) {
   return (
@@ -140,21 +139,6 @@ const families = [
       </Autocomplete.Root>
     ),
     marksPage: true,
-    movesFocus: false,
-  },
-  {
-    name: 'Tooltip',
-    renderPart: () => (
-      <Tooltip.Root defaultOpen>
-        <Tooltip.Trigger>Hover</Tooltip.Trigger>
-        <Tooltip.Portal data-testid="portal">
-          <Tooltip.Positioner>
-            <Tooltip.Popup data-testid="popup">Tip</Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    ),
-    marksPage: false,
     movesFocus: false,
   },
   {

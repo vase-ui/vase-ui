@@ -26,12 +26,27 @@ export function usePopupHover(
     closeDelay: () => number;
     /** The element is in the popup or in a popup above it. */
     inside: (element: Element) => boolean;
+    /**
+     * The pointer can cross the space to the popup in the triangle. A popup that takes no hover has
+     * `pointer-events: none` on its positioner.
+     * @default () => true
+     */
+    hoverablePopup?: () => boolean;
+    /** A hover also opens on a trigger element that is `:disabled` or has `aria-disabled`. */
+    openOnDisabled?: boolean;
+    /**
+     * The pointer of a `pointerover` is on a trigger in this trigger. The hover then waits for no
+     * open, and a popup that the hover opened for this trigger closes at once.
+     */
+    inner?: (event: PointerEvent) => boolean;
   },
 ) {
   const openTimer = useTimeout();
   const closeTimer = useTimeout();
   const restTimer = useTimeout();
   let openedAt = -Infinity;
+  /** The pointer is on a trigger in this trigger. */
+  let onInner = false;
 
   const hoverOpen = () => {
     const current = root();
@@ -47,42 +62,74 @@ export function usePopupHover(
     () => openTimer.clear(),
   );
 
-  function startOpen(event: PointerEvent) {
-    openTimer.start(options.delay(), () => {
-      const element = options.trigger.value;
-      const current = root();
-      // A toolbar item keeps the focus with `aria-disabled`, and a fieldset can disable the
-      // trigger in the delay.
-      if (!element || !current || !options.enabled()) return;
-      if (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true') return;
-      current.request(true, 'trigger-hover', event, element);
-      if (current.open && current.reason === 'trigger-hover') {
-        openedAt = ownerWindow(element).performance.now();
-      }
-    });
-  }
-
-  // A touch that rests for the delay would open the popup, and the click at its end would close it.
-  // A popup that is open for this trigger keeps the time of its open, for the press after it.
-  function onPointerenter(event: PointerEvent) {
+  function openAt(event: PointerEvent) {
+    const element = options.trigger.value;
     const current = root();
+    // A toolbar item keeps the focus with `aria-disabled`, and a fieldset can disable the trigger
+    // in the delay.
+    if (!element || !current || !options.enabled()) return;
     if (
-      !options.enabled() ||
-      event.pointerType === 'touch' ||
-      (current?.open && current.activeTrigger === options.trigger.value)
+      !options.openOnDisabled &&
+      (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true')
     ) {
       return;
     }
-    startOpen(event);
+    current.request(true, 'trigger-hover', event, element);
+    if (current.open && current.reason === 'trigger-hover') {
+      openedAt = ownerWindow(element).performance.now();
+    }
+  }
+
+  // A popup that is open for another trigger moves at once, and a popup that leaves after a hover
+  // close opens again at once.
+  function startOpen(event: PointerEvent, current: PopupRoot) {
+    if (current.open || (current.leaving && current.reason === 'trigger-hover')) {
+      openTimer.clear();
+      openAt(event);
+      return;
+    }
+    openTimer.start(options.delay(), () => openAt(event));
+  }
+
+  // A touch that rests for the delay would open the popup, and the click at its end would close it.
+  // A popup that is open for this trigger keeps the time of its open, for the press after it. A
+  // popup that code opened with no active trigger stays where it is.
+  function onPointerenter(event: PointerEvent) {
+    const current = root();
+    if (
+      !current ||
+      !options.enabled() ||
+      event.pointerType === 'touch' ||
+      onInner ||
+      (current.open &&
+        (current.activeTriggerId === null || current.activeTrigger === options.trigger.value))
+    ) {
+      return;
+    }
+    startOpen(event, current);
   }
 
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
   function onPointermove(event: PointerEvent) {
-    if (openTimer.isStarted()) startOpen(event);
+    const current = root();
+    if (current && openTimer.isStarted()) startOpen(event, current);
   }
 
   function onPointerleave() {
     openTimer.clear();
+  }
+
+  // A trigger in this trigger gets the `pointerover` first, and this trigger gets the same event.
+  // The pointer that comes back to the rest of this trigger sends no `pointerenter`.
+  function onPointerover(event: PointerEvent) {
+    const wasInner = onInner;
+    onInner = !!options.inner?.(event);
+    if (onInner) {
+      openTimer.clear();
+      if (hoverOpen()) root()?.request(false, 'trigger-hover', event);
+    } else if (wasInner) {
+      onPointerenter(event);
+    }
   }
 
   // While the hover keeps the popup open, one listener of the document follows the pointer.
@@ -125,7 +172,8 @@ export function usePopupHover(
     if (over === 'trigger') from = point;
     over = 'outside';
     const popup = root()?.popup;
-    if (from && trigger && popup && inTriangle(point, from, trigger, popup)) {
+    const crosses = options.hoverablePopup?.() ?? true;
+    if (crosses && from && trigger && popup && inTriangle(point, from, trigger, popup)) {
       restTimer.start(REST_IN_TRIANGLE, close);
       return;
     }
@@ -148,7 +196,7 @@ export function usePopupHover(
   });
 
   return {
-    listeners: { onPointerenter, onPointermove, onPointerleave },
+    listeners: { onPointerenter, onPointermove, onPointerleave, onPointerover },
     /** A press closes the open popup: it came more than 500 ms after the hover open. */
     closesAtPress(event: Event) {
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);

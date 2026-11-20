@@ -4,7 +4,6 @@ import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEvent
 import { REASONS } from '../../internals/reasons';
 import { createMenuHandle } from '../../menu/store/MenuHandle';
 import { createPreviewCardHandle } from '../../preview-card/store/PreviewCardHandle';
-import { createTooltipHandle } from '../../tooltip/store/TooltipHandle';
 import { BasePopupHandle } from './popupHandle';
 import { PopupTriggerMap } from './usePopupRoot';
 
@@ -362,7 +361,6 @@ describe('concrete popup handles', () => {
   }>([
     { component: 'Menu', warningName: 'Menu', createHandle: createMenuHandle },
     { component: 'PreviewCard', warningName: 'PreviewCard', createHandle: createPreviewCardHandle },
-    { component: 'Tooltip', warningName: 'Tooltip', createHandle: createTooltipHandle },
   ])(
     '$component handle is closed and names itself in warnings while no root is attached',
     ({ warningName, createHandle }) => {
