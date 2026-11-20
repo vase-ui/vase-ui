@@ -4,17 +4,218 @@
     "docs/src/app/(docs)/react/components/preview-card/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrowDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/trigger/PreviewCardTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewportCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/utils/constants.ts",
+      "kind": "not-applicable",
+      "reason": "The file holds the delays of a hover open and close for the store of Base UI. `PreviewCard.Trigger` has the defaults `600` and `300` of its `delay` and `closeDelay` props."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the `close()` of a template ref, the hover open and close with their delays, a card that no hover opened, the dismissal, nested cards, `data-instant` and the server render. The parts render no transition status and no unmount action: `<Transition>` animates the popup, and its JavaScript hooks replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete` (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.detached-triggers.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the handle and more links: links outside the root, `open(id)`, `close()`, `isOpen`, the payload of each link, a root before its links, the move to another link with no delay at a hover and at a focus, the open with no delay while the card leaves, and the close when the active link leaves the DOM."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/trigger/PreviewCardTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the link: its element and attributes with no ARIA attribute, the hover and focus delays, no open for a touch, the triangle to the card, the focus at the return to the window, and the error with no root."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the popup: its element and `tabindex`, its content, the close by hover, and the errors with no root and no positioner. The popup has no transition status (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/line.test.ts",
+      "reason": "`line.test.ts` tests the place of the card at the line of a wrapped link that the pointer was on: after the delay, while open, after a scroll, for a link of two parts, with a virtual anchor, with `positionMethod=\"fixed\"`, and the side rectangle after an open by the focus or the parent. `PreviewCard.test.ts` tests the error with no portal. The placement props are those of the popup layer, which `Popover.test.ts` tests."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortal.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the portal: `keepMounted`, a container in `to`, `to` of `null` and `disabled`. The portal renders no element of its own, so it has no `render` slot."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the backdrop: its element, `pointer-events: none`, and `hidden` and `inert` with `keepMounted`."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrow.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the arrow: its element, `aria-hidden` and the attributes of its side."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.test.ts",
+      "reason": "`PreviewCard.test.ts` tests the viewport: `data-instant`, the id of the active link in its slot, and the error with no positioner."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.spec.ts",
+      "reason": "`PreviewCard.spec.ts` tests the types of the payload through the root, the link and the handle, the details, the props of the positioner, and the element of a template ref."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.spec.ts",
+      "reason": "`PreviewCard.spec.ts` tests the types of the payload through the root, the link and the handle, the details, the props of the positioner, and the element of a template ref."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/trigger/PreviewCardTrigger.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/preview-card/PreviewCard.spec.ts",
+      "reason": "`PreviewCard.spec.ts` tests the types of the payload through the root, the link and the handle, the details, the props of the positioner, and the element of a template ref."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The reason `trigger-press` is cut: a press on the link navigates and changes no card, so no code sends it. `@after-enter` and `@after-leave` of a `<Transition>` around the popup replace `onOpenChangeComplete` (rule 8.9). A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardViewportCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "PreviewCardViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates it, and a kept backdrop has `[hidden]` (rules 8.9 and 8.15)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates it, and a kept popup has `[hidden]` (rules 8.9 and 8.15)."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Trigger",
       "prop": "id",
-      "reason": "The part reads `id` to register the trigger in the store of the preview card, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to register the link with its root, or a generated id when `id` is absent, so it is a declared prop. A handle opens the card for the link with this `id`. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:triggerId",
+      "reason": "`v-model:trigger-id` binds the active trigger, as a second state that a developer binds is a named model (rule 8.5)."
     }
   ],
   "returnTypeDifferences": [
@@ -24,5 +225,105 @@
       "reason": "`PreviewCard.Handle` is the class `PreviewCardHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardRoot.vue",
+      "behavior": "The root holds the open state, the active link and the layer of the preview card.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/root/PreviewCardContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/root.ts",
+      "behavior": "What the root gives to its parts.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/store/PreviewCardStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/root.ts",
+      "behavior": "The state of the root: the line of an open by hover, the instant state, and the close when the active link leaves the DOM.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/store/PreviewCardHandle.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/root.ts",
+      "behavior": "The handle of the preview card.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/trigger/PreviewCardTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardTrigger.vue",
+      "behavior": "The link opens the card at a hover and at a focus of the keyboard.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardPortal.vue",
+      "behavior": "The portal renders its content in a `<Teleport>` after its mount.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/root.ts",
+      "behavior": "The portal marks the parts in it.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardPositioner.vue",
+      "behavior": "The positioner places the popup at its anchor, at the line of a wrapped link.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/root.ts",
+      "behavior": "What the positioner gives to the popup and the arrow.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardPopup.vue",
+      "behavior": "The popup holds the content of the card.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardArrow.vue",
+      "behavior": "The arrow points to the anchor.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardBackdrop.vue",
+      "behavior": "The backdrop is an overlay under the popup.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/PreviewCardViewport.vue",
+      "behavior": "The viewport gives the direction of a move and the id of the active link.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/preview-card/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/preview-card/parts.ts",
+      "behavior": "The parts of the namespace `PreviewCard`.",
+      "witness": "packages/vue/src/preview-card/PreviewCard.test.ts"
+    }
+  ]
 }

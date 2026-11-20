@@ -9,6 +9,7 @@ type Props = Record<string, unknown>;
 // popup.
 defineProps({
   root: Object as PropType<Props>,
+  trigger: Object as PropType<Props>,
   portal: Object as PropType<Props>,
   popup: Object as PropType<Props>,
   log: { type: Object as PropType<{ add(entry: string): void }>, default: () => ({ add() {} }) },
@@ -17,7 +18,7 @@ defineProps({
 
 <template>
   <Popover.Root v-bind="root">
-    <Popover.Trigger>Trigger</Popover.Trigger>
+    <Popover.Trigger v-bind="trigger">Trigger</Popover.Trigger>
     <Popover.Portal v-bind="portal">
       <Transition name="fade" appear @after-leave="log.add('backdrop-after-leave')">
         <Popover.Backdrop data-testid="backdrop" />
