@@ -47,6 +47,7 @@ const RESTYLED_FAMILIES = new Set([
   'form',
   'handbook-forms',
   'input',
+  'navigation-menu',
   'number-field',
   'popover',
   'radio-group',

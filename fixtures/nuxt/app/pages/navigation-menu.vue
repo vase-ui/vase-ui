@@ -21,8 +21,8 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
           </NavigationMenu.Content>
         </NavigationMenu.Item>
         <NavigationMenu.Item>
-          <NavigationMenuNuxtLink to="/" active data-testid="nuxt-link"
-            >Home</NavigationMenuNuxtLink
+          <NavigationMenuNuxtLink to="/navigation-menu" data-testid="nuxt-link"
+            >Menu</NavigationMenuNuxtLink
           >
         </NavigationMenu.Item>
         <NavigationMenu.Item>

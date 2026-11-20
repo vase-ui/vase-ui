@@ -22,26 +22,28 @@ const CaretDownIcon: FunctionalComponent = () =>
   );
 
 const triggerClassName =
-  'flex h-8 items-center justify-center gap-1.5 bg-transparent px-2 text-sm font-normal text-neutral-950 no-underline select-none min-[501px]:px-3 hover:bg-neutral-100 data-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:bg-neutral-800 dark:data-pressed:bg-neutral-800';
+  'flex h-8 items-center justify-center gap-1.5 bg-transparent px-2 text-sm font-normal text-neutral-950 no-underline select-none min-[501px]:px-3 hover:bg-neutral-100 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:bg-neutral-800 dark:aria-expanded:bg-neutral-800';
 const sharedContentClassName =
   'h-full w-[calc(100vw_-_40px)] ' +
-  'transition-[opacity,translate] duration-[calc(var(--duration)*0.5),var(--duration)] ease-[ease,cubic-bezier(0.4,0,0.2,1)] ' +
-  'data-starting-style:data-[activation-direction=left]:opacity-0 data-starting-style:data-[activation-direction=right]:opacity-0 data-ending-style:opacity-0 ' +
-  'data-ending-style:duration-[calc(var(--duration)*0.5)] data-ending-style:ease-[ease] ' +
-  'data-starting-style:data-[activation-direction=left]:translate-x-[-2rem] ' +
-  'data-starting-style:data-[activation-direction=right]:translate-x-[2rem] ' +
-  'data-ending-style:data-[activation-direction=left]:translate-x-[2rem] ' +
-  'data-ending-style:data-[activation-direction=right]:translate-x-[-2rem]';
+  'transition-[opacity,translate] duration-[calc(var(--duration)*0.5),var(--duration)] ease-[ease,cubic-bezier(0.4,0,0.2,1)]';
+const sharedContentTransition = {
+  enterFromClass:
+    'data-[activation-direction=left]:opacity-0 data-[activation-direction=right]:opacity-0 data-[activation-direction=left]:translate-x-[-2rem] data-[activation-direction=right]:translate-x-[2rem]',
+  leaveToClass:
+    'opacity-0 duration-[calc(var(--duration)*0.5)] ease-[ease] data-[activation-direction=left]:translate-x-[2rem] data-[activation-direction=right]:translate-x-[-2rem]',
+};
 const productContentClassName = `${sharedContentClassName} p-0 min-[700px]:[width:min(675px,calc(100vw-40px))]`;
 const guidesContentClassName = `${sharedContentClassName} p-0 min-[700px]:[width:min(500px,calc(100vw-40px))]`;
 const submenuTriggerClassName =
-  'm-0 flex w-full min-w-[10rem] flex-col items-start gap-1 border-0 bg-transparent p-2 text-left text-inherit hover:bg-neutral-100 data-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:hover:bg-neutral-800 dark:data-pressed:bg-neutral-800';
+  'm-0 flex w-full min-w-[10rem] flex-col items-start gap-1 border-0 bg-transparent p-2 text-left text-inherit hover:bg-neutral-100 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:hover:bg-neutral-800 dark:aria-expanded:bg-neutral-800';
 const submenuContentClassName =
-  'flex h-full translate-x-0 flex-col gap-4 p-4 min-[700px]:blur-0 transition-[opacity,translate,filter] duration-[var(--duration)] ease-[var(--easing)] min-[700px]:duration-[calc(var(--duration)*1.35)] min-[700px]:ease-[cubic-bezier(0.16,1,0.3,1)] ' +
-  'data-starting-style:data-[activation-direction=left]:opacity-0 data-starting-style:data-[activation-direction=right]:opacity-0 data-starting-style:data-[activation-direction=left]:translate-x-[-50%] data-starting-style:data-[activation-direction=right]:translate-x-[50%] ' +
-  'data-ending-style:opacity-0 data-ending-style:data-[activation-direction=left]:translate-x-[50%] data-ending-style:data-[activation-direction=right]:translate-x-[-50%] ' +
-  'min-[700px]:data-starting-style:data-[activation-direction=up]:opacity-0 min-[700px]:data-starting-style:data-[activation-direction=down]:opacity-0 min-[700px]:data-starting-style:data-[activation-direction=up]:translate-y-[-72px] min-[700px]:data-starting-style:data-[activation-direction=down]:translate-y-[72px] min-[700px]:data-starting-style:blur-[2px] ' +
-  'min-[700px]:data-ending-style:data-[activation-direction=up]:translate-y-[72px] min-[700px]:data-ending-style:data-[activation-direction=down]:translate-y-[-72px] min-[700px]:data-ending-style:blur-[2px]';
+  'flex h-full translate-x-0 flex-col gap-4 p-4 min-[700px]:blur-0 transition-[opacity,translate,filter] duration-[var(--duration)] ease-[var(--easing)] min-[700px]:duration-[calc(var(--duration)*1.35)] min-[700px]:ease-[cubic-bezier(0.16,1,0.3,1)]';
+const submenuContentTransition = {
+  enterFromClass:
+    'data-[activation-direction=left]:opacity-0 data-[activation-direction=right]:opacity-0 data-[activation-direction=left]:translate-x-[-50%] data-[activation-direction=right]:translate-x-[50%] min-[700px]:data-[activation-direction=up]:opacity-0 min-[700px]:data-[activation-direction=down]:opacity-0 min-[700px]:data-[activation-direction=up]:translate-y-[-72px] min-[700px]:data-[activation-direction=down]:translate-y-[72px] min-[700px]:blur-[2px]',
+  leaveToClass:
+    'opacity-0 data-[activation-direction=left]:translate-x-[50%] data-[activation-direction=right]:translate-x-[-50%] min-[700px]:data-[activation-direction=up]:translate-y-[72px] min-[700px]:data-[activation-direction=down]:translate-y-[-72px] min-[700px]:blur-[2px]',
+};
 const linkCardClassName =
   'relative block h-full w-full border-0 bg-transparent p-2 text-left text-inherit no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:hover:bg-neutral-800';
 </script>
@@ -61,7 +63,10 @@ const linkCardClassName =
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="productContentClassName">
+        <NavigationMenu.Content
+          :class="productContentClassName"
+          :transition="sharedContentTransition"
+        >
           <NavigationMenu.Root
             class="overflow-hidden overflow-clip text-neutral-950 dark:text-white"
             :orientation="isDesktop ? 'vertical' : 'horizontal'"
@@ -86,7 +91,10 @@ const linkCardClassName =
                       menu.hint
                     }}</span>
                   </NavigationMenu.Trigger>
-                  <NavigationMenu.Content :class="submenuContentClassName">
+                  <NavigationMenu.Content
+                    :class="submenuContentClassName"
+                    :transition="submenuContentTransition"
+                  >
                     <div>
                       <h4 class="m-0 text-base leading-5 font-normal">{{ menu.title }}</h4>
                       <p class="m-0 mt-1 text-sm text-neutral-500 dark:text-neutral-400">
@@ -95,7 +103,7 @@ const linkCardClassName =
                     </div>
                     <ul class="-mx-2 m-0 flex list-none flex-col gap-0 p-0">
                       <li v-for="link in menu.links" :key="link.href">
-                        <!-- To use the link of a router, such as RouterLink, give it to `as`. -->
+                        <!-- For the link of a router, see the custom links of the docs. -->
                         <NavigationMenu.Link :class="linkCardClassName" :href="link.href">
                           <h5 class="m-0 text-sm leading-4 font-normal">{{ link.title }}</h5>
                           <p class="m-0 text-sm text-neutral-500 dark:text-neutral-400">
@@ -125,7 +133,10 @@ const linkCardClassName =
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="guidesContentClassName">
+        <NavigationMenu.Content
+          :class="guidesContentClassName"
+          :transition="sharedContentTransition"
+        >
           <div class="flex flex-col gap-4 p-4 text-neutral-950 dark:text-white">
             <div>
               <h4 class="m-0 text-base leading-5 font-normal">{{ guidesPanel.title }}</h4>
@@ -168,14 +179,20 @@ const linkCardClassName =
         :collision-avoidance="{ side: 'none' }"
         :style="{ '--duration': '0.35s', '--easing': 'cubic-bezier(0.22, 1, 0.36, 1)' }"
       >
-        <NavigationMenu.Popup
-          class="relative h-[var(--popup-height)] w-[var(--popup-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[opacity,transform,width,height,scale] duration-[var(--duration)] ease-[var(--easing)] data-ending-style:scale-90 data-ending-style:opacity-0 data-ending-style:duration-150 data-ending-style:ease-[ease] data-ending-style:transition-[opacity,scale] data-starting-style:scale-90 data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+        <Transition
+          enter-from-class="scale-90 opacity-0"
+          leave-to-class="scale-90 opacity-0 duration-150 ease-[ease] transition-[opacity,scale]"
+          appear
         >
-          <NavigationMenu.Arrow
-            class="relative block h-1.5 w-3 overflow-clip transition-[left,right] duration-[var(--duration)] ease-[var(--easing)] before:absolute before:bottom-0 before:left-1/2 before:block before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:border before:border-neutral-950 before:bg-white before:content-[''] data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 dark:before:border-white dark:before:bg-neutral-950"
-          />
-          <NavigationMenu.Viewport class="relative h-full w-full overflow-hidden" />
-        </NavigationMenu.Popup>
+          <NavigationMenu.Popup
+            class="relative h-[var(--popup-height)] w-[var(--popup-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[opacity,transform,width,height,scale] duration-[var(--duration)] ease-[var(--easing)] dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          >
+            <NavigationMenu.Arrow
+              class="relative block h-1.5 w-3 overflow-clip transition-[left,right] duration-[var(--duration)] ease-[var(--easing)] before:absolute before:bottom-0 before:left-1/2 before:block before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:border before:border-neutral-950 before:bg-white before:content-[''] data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 dark:before:border-white dark:before:bg-neutral-950"
+            />
+            <NavigationMenu.Viewport class="relative h-full w-full overflow-hidden" />
+          </NavigationMenu.Popup>
+        </Transition>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>

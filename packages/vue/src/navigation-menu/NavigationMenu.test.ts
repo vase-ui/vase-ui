@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, inject, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { NavigationMenuRootChangeEventDetails } from '@vase-ui/vue/navigation-menu';
@@ -603,21 +603,26 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(tabs[1]);
   });
 
-  test('ArrowDown moves the focus between two router links in a content', async () => {
-    mount(NavigationMenuRouterLinks);
-    await nextTick();
-    await placed();
-    const links = await waitFor(() => {
-      const found = document.querySelectorAll<HTMLAnchorElement>('[data-testid="popup"] a');
-      expect(found).toHaveLength(2);
-      return found;
-    });
-    await waitFor(() => expect(links[0]).toHaveAttribute('aria-current', 'page'));
-    expect(links[1]).not.toHaveAttribute('aria-current');
-    links[0]!.focus();
-    await userEvent.keyboard('{ArrowDown}');
-    expect(document.activeElement).toBe(links[1]);
-  });
+  // `RouterLink` is a virtual DOM component, and a Vapor app renders one only with the interop
+  // plugin.
+  test.skipIf(inject('app') === 'vapor')(
+    'ArrowDown moves the focus between two router links in a content',
+    async () => {
+      mount(NavigationMenuRouterLinks);
+      await nextTick();
+      await placed();
+      const links = await waitFor(() => {
+        const found = document.querySelectorAll<HTMLAnchorElement>('[data-testid="popup"] a');
+        expect(found).toHaveLength(2);
+        return found;
+      });
+      await waitFor(() => expect(links[0]).toHaveAttribute('aria-current', 'page'));
+      expect(links[1]).not.toHaveAttribute('aria-current');
+      links[0]!.focus();
+      await userEvent.keyboard('{ArrowDown}');
+      expect(document.activeElement).toBe(links[1]);
+    },
+  );
 });
 
 describe('the Tab order', () => {

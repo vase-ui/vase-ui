@@ -72,7 +72,7 @@ Each `Portal` part renders its content in a `Teleport`, in another place of the 
 
 <<< ../examples/styling/ScopedPortal.vue
 
-`NavigationMenu.Content` in a viewport also renders its element in a `Teleport`. Bind `props` on your element in its `#render` slot.
+The default element of `NavigationMenu.Content` is in a `<Teleport>`, so a scoped rule does not reach it. Render your element in its `element` slot, and bind `props` and `elementRef` on it.
 
 ## Tailwind CSS
 
