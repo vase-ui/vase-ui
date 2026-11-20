@@ -132,15 +132,20 @@ describe('prop: as', () => {
   test('with no `as`, a part renders its own element, also when the app registers a component of that name', async () => {
     const root = document.body.appendChild(document.createElement('div'));
     const parts = createAppOf(AsParts, {}, false);
-    // eslint-disable-next-line vue/no-reserved-component-names -- An app can register a component with the name of an HTML element.
-    parts.component('Button', MeasureRegisteredButton);
+    // `<component :is="'span'">` resolves a component that the app registers as `Span`.
+    for (const tag of new Set(Object.values(TAGS))) {
+      parts.component(tag[0]!.toUpperCase() + tag.slice(1), MeasureRegisteredButton);
+    }
     parts.mount(root);
     onTestFinished(() => {
       parts.unmount();
       root.remove();
     });
-    await nextTick();
-    expect(partElement(root, 'Tabs.Tab').localName).toBe('button');
+    await waitFor(() => expect(partElement(root, 'ScrollArea.Corner')).not.toBeNull());
+    for (const [part, tag] of Object.entries(TAGS)) {
+      expect(partElement(root, part).localName, part).toBe(tag);
+    }
+    expect(root.querySelector('[data-registered-button]')).toBeNull();
   });
 
   test('the element slot wins over `as`', async () => {
