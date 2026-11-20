@@ -184,7 +184,7 @@ export type SliderRootCommitEventDetails = VaseUIGenericEventDetails<SliderRootC
 <script setup lang="ts" generic="Value extends number | readonly number[] = number">
 // vue-tsc resolves `Value` before it checks a listener of a template.
 // With no `modelValue` and no `defaultValue`, the value is `min`, so the default is `number`.
-import { computed, inject, provide, shallowReactive, shallowRef, watch } from 'vue';
+import { computed, inject, provide, shallowReactive, shallowRef, useAttrs, watch } from 'vue';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
@@ -283,15 +283,14 @@ if (field) useDeferredServerRender();
 const { labelId: localLabelId, registerLabelId } = createLabelIdRegistry();
 const isHydrating = useIsHydrating();
 
-// The legend of a `Fieldset.Root` names a slider that is the element of the root.
-const fieldset = inject(fieldsetKey, null);
-const labelId = computed(
-  () =>
-    given('aria-labelledby', props.ariaLabelledby) ??
-    field?.labelId ??
-    localLabelId.value ??
-    fieldset?.legendId,
+// The `props` function of `useRenderElement` gets no blank attribute.
+const developerAttrs = useAttrs();
+const ownLabelId = computed(
+  () => given('aria-labelledby', props.ariaLabelledby) ?? field?.labelId ?? localLabelId.value,
 );
+// The legend of a `Fieldset.Root` names a slider in the root that nothing else names.
+const fieldset = inject(fieldsetKey, null);
+const labelId = computed(() => ownLabelId.value ?? fieldset?.legendId);
 
 const fieldsetDisabled = useInDisabledFieldset(() => element.value);
 const isDisabled = computed(() => !!field?.disabled || fieldsetDisabled.value || props.disabled);
@@ -571,7 +570,11 @@ const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div'
       // A server writes the attributes of the root before the `setup` of `Slider.Label`, so the
       // root assumes that label until it is mounted.
       'aria-labelledby':
-        labelId.value ??
+        // An `aria-label` or `aria-labelledby` of the developer, also a blank one, replaces the
+        // name of a legend.
+        (props.ariaLabelledby === undefined && developerAttrs['aria-label'] == null
+          ? labelId.value
+          : ownLabelId.value) ??
         (isHydrating.value && typeof attrs['aria-label'] !== 'string'
           ? rootLabelId.value
           : undefined),
