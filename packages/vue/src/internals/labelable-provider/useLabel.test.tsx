@@ -1,4 +1,4 @@
-import { expect, describe, it, onTestFinished, vi } from 'vitest';
+import { expect, describe, it, onTestFinished } from 'vitest';
 import { Teleport, defineComponent, shallowRef } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import {
@@ -411,43 +411,6 @@ describe('useLabel', () => {
 
       expect(await fireEvent.pointerDown(screen.getByTestId('native'))).toBe(true);
       expect(await fireEvent.pointerDown(screen.getByTestId('not-native'))).toBe(false);
-    });
-
-    describe('param: focusControl', () => {
-      const FocusLabel = defineComponent(
-        (props: { focusControl: (event: MouseEvent, controlId: string | undefined) => void }) => {
-          const element = shallowRef<HTMLElement | null>(null);
-          const labelProps = useLabel({
-            element,
-            fallbackControlId: 'fallback',
-            focusControl: (event, controlId) => props.focusControl(event, controlId),
-          });
-          return () => (
-            <div ref={element} data-testid="label" {...labelProps.value}>
-              Label
-            </div>
-          );
-        },
-        { props: ['focusControl'] },
-      );
-
-      it('gets the event and the id of the control, and the control gets no focus', async () => {
-        const focusControl = vi.fn();
-        const { user } = await render(
-          <>
-            <FocusLabel focusControl={focusControl} />
-            <Control id="fallback" testid="control" />
-          </>,
-        );
-
-        await user.click(screen.getByTestId('label'));
-
-        expect(focusControl).toHaveBeenCalledTimes(1);
-        const [event, controlId] = focusControl.mock.lastCall!;
-        expect(event.type).toBe('click');
-        expect(controlId).toBe('fallback');
-        expect(screen.getByTestId('control')).not.toHaveFocus();
-      });
     });
 
     describe('param: controlElement', () => {

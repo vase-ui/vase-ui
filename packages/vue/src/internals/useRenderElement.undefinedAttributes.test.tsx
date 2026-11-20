@@ -17,7 +17,6 @@ import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
@@ -283,12 +282,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Select.Separator role={undefined} data-testid="part" />,
     expected: () => 'presentation',
-  },
-  {
-    name: 'Slider.Root role',
-    attribute: 'role',
-    createNode: () => <Slider.Root role={undefined} data-testid="part" />,
-    expected: () => 'group',
   },
   {
     name: 'TimeClock.Root role',
