@@ -5,8 +5,7 @@ import { Menu } from '@vase-ui/vue/menu';
 const menu = useTemplateRef('menu');
 
 function close() {
-  const actions: Menu.Root.Actions | null = menu.value;
-  actions?.close();
+  menu.value?.close();
 }
 </script>
 

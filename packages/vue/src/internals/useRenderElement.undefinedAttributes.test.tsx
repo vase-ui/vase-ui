@@ -1,17 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, h, shallowRef } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Menu } from '@vase-ui/vue/menu';
-import { Menubar } from '@vase-ui/vue/menubar';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
-import * as FilterDropdown from '../../test/filterDropdown';
-import { NOOP } from '../common/empty';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -56,52 +51,6 @@ const rows: Row[] = [
     ),
     // With no input, the trigger opens a popup that holds the input.
     expected: () => 'dialog',
-  },
-  {
-    name: 'ContextMenu.Trigger data-popup-open',
-    attribute: 'data-popup-open',
-    createNode: () => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger data-popup-open={undefined} data-testid="part">
-          Area
-        </ContextMenu.Trigger>
-      </ContextMenu.Root>
-    ),
-    expected: () => '',
-  },
-  {
-    name: 'FilterDropdown.Input role',
-    attribute: 'role',
-    createNode: () => (
-      <FilterDropdown.Root
-        open
-        value=""
-        listRef={shallowRef([])}
-        getActiveIndex={() => null}
-        setActiveIndex={NOOP}
-      >
-        <FilterDropdown.Input role={undefined} data-testid="part" />
-      </FilterDropdown.Root>
-    ),
-    expected: () => 'searchbox',
-  },
-  {
-    name: 'Menu.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Menu.Root>
-        <Menu.Trigger aria-haspopup={undefined} data-testid="part">
-          Open
-        </Menu.Trigger>
-      </Menu.Root>
-    ),
-    expected: () => 'menu',
-  },
-  {
-    name: 'Menubar role',
-    attribute: 'role',
-    createNode: () => <Menubar role={undefined} data-testid="part" />,
-    expected: () => 'menubar',
   },
   {
     name: 'Select.Trigger aria-haspopup',

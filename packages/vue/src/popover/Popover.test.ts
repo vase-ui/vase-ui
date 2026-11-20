@@ -771,6 +771,29 @@ describe('the dismissal (L4)', () => {
   });
 
   test.skipIf(server.browser !== 'chromium')(
+    'a touch outside that opens the menu of the system closes nothing at its end, also before 1 s',
+    async () => {
+      const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');
+      try {
+        await mountPopover({ root: { defaultOpen: true }, popup: { initialFocus: false } });
+        await placed();
+        // Chromium on Android sends `contextmenu` at a long press of about 650 ms. The protocol
+        // injects no long press, so the case sends the event at the press.
+        other.addEventListener(
+          'pointerdown',
+          () => other.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true })),
+          { once: true },
+        );
+        await touchDrag(centerOf(other), centerOf(other), 0, 300);
+        await nextTick();
+        expect(popup()).not.toBe(null);
+      } finally {
+        other.remove();
+      }
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
     'a touch outside closes at its end after a tap or a drag of more than 5 px, and at a move of more than 10 px; a touch that rests more than 1 s closes nothing',
     async () => {
       const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');

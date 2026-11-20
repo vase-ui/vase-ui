@@ -1,3 +1,3 @@
-import { Menubar } from '@vase-ui/vue/menubar';
+import { TimePicker } from '@vase-ui/vue/time-picker';
 
-console.log(Menubar);
+console.log(TimePicker);

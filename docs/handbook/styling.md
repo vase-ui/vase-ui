@@ -19,7 +19,7 @@ A part that renders an HTML element accepts a `class` attribute. Use it to style
 
 The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
 
-<<< ../examples/styling/SlotClass.vue{9}
+<<< ../examples/styling/SlotClass.vue{11}
 
 ### Data attributes
 
@@ -51,7 +51,7 @@ A part that renders an HTML element accepts a `style` attribute. Use it to style
 
 For a style that depends on state, bind `:style` on the element in the render slot.
 
-<<< ../examples/styling/SlotStyle.vue{9}
+<<< ../examples/styling/SlotStyle.vue{14}
 
 If the part controls the same property, put your style before `v-bind="props"` to give the part priority.
 For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.
@@ -92,6 +92,6 @@ An imported `*.module.css` file works in the same way, as the demos of this site
 
 A library that gives you a class name can give it to the `class` attribute.
 
-The entry point of a component also exports the names of its data attributes and CSS variables, such as `MenuItemDataAttributes` and `MenuPositionerCssVariables`. Use them in code that writes CSS in script. In this sample, `MenuPositionerCssVariables.availableHeight` is `--available-height`:
+The entry point of a component that has no `element` slot also exports the names of its data attributes and CSS variables, such as `SelectItemDataAttributes` and `SelectPositionerCssVariables`. Use them in code that writes CSS in script. In this sample, `SelectPositionerCssVariables.availableHeight` is `--available-height`:
 
 <<< ../examples/styling/StyleNames.vue

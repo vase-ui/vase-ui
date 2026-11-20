@@ -18,12 +18,14 @@ const CaretDownIcon: FunctionalComponent = () =>
 
 const itemClass =
   "flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white";
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
   <Menu.Root>
     <Menu.Trigger
-      class="flex h-8 items-center justify-center gap-1.5 rounded-none border border-neutral-950 bg-white pl-3 pr-2 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 data-pressed:bg-neutral-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 dark:data-pressed:bg-neutral-800 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex h-8 items-center justify-center gap-1.5 rounded-none border border-neutral-950 bg-white pl-3 pr-2 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-disabled:bg-neutral-100 active:not-disabled:bg-neutral-200 data-pressed:bg-neutral-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-disabled:bg-neutral-800 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 dark:data-pressed:bg-neutral-800 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
       Song
       <CaretDownIcon />
@@ -33,21 +35,23 @@ const itemClass =
         class="outline-hidden"
         :side-offset="({ side }) => (side === 'top' ? 12 : 8)"
       >
-        <Menu.Popup
-          class="relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-        >
-          <Menu.Arrow
-            class="relative block h-1.5 w-3 overflow-clip data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 before:absolute before:bottom-0 before:left-1/2 before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:[transform:translate(-50%,50%)_rotate(45deg)] before:border before:border-neutral-950 before:bg-white before:content-[''] dark:before:border-white dark:before:bg-neutral-950"
-          />
-          <Menu.Item :class="itemClass">Add to Library</Menu.Item>
-          <Menu.Item :class="itemClass">Add to Playlist</Menu.Item>
-          <Menu.Separator class="m-1 h-px bg-neutral-950 dark:bg-white" />
-          <Menu.Item :class="itemClass">Play Next</Menu.Item>
-          <Menu.Item :class="itemClass">Play Last</Menu.Item>
-          <Menu.Separator class="m-1 h-px bg-neutral-950 dark:bg-white" />
-          <Menu.Item :class="itemClass">Favorite</Menu.Item>
-          <Menu.Item :class="itemClass">Share</Menu.Item>
-        </Menu.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup
+            class="relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          >
+            <Menu.Arrow
+              class="relative block h-1.5 w-3 overflow-clip data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 before:absolute before:bottom-0 before:left-1/2 before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:[transform:translate(-50%,50%)_rotate(45deg)] before:border before:border-neutral-950 before:bg-white before:content-[''] dark:before:border-white dark:before:bg-neutral-950"
+            />
+            <Menu.Item :class="itemClass">Add to Library</Menu.Item>
+            <Menu.Item :class="itemClass">Add to Playlist</Menu.Item>
+            <Menu.Separator class="m-1 h-px bg-neutral-950 dark:bg-white" />
+            <Menu.Item :class="itemClass">Play Next</Menu.Item>
+            <Menu.Item :class="itemClass">Play Last</Menu.Item>
+            <Menu.Separator class="m-1 h-px bg-neutral-950 dark:bg-white" />
+            <Menu.Item :class="itemClass">Favorite</Menu.Item>
+            <Menu.Item :class="itemClass">Share</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

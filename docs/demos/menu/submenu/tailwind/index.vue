@@ -34,58 +34,68 @@ const CaretRightIcon: FunctionalComponent = () =>
   );
 
 const popupClass =
-  'relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none';
+  'relative origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none';
 const itemClass =
-  "flex cursor-default py-2 pr-6 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] data-disabled:text-neutral-500 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white dark:data-disabled:text-neutral-400";
+  "flex cursor-default py-2 pr-6 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] aria-disabled:text-neutral-500 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white dark:aria-disabled:text-neutral-400";
 const submenuTriggerClass =
-  "flex cursor-default items-center justify-between gap-4 py-2 pr-2 pl-4 text-sm leading-4 outline-hidden select-none data-popup-open:relative data-popup-open:z-0 data-popup-open:before:absolute data-popup-open:before:inset-x-1 data-popup-open:before:inset-y-0 data-popup-open:before:z-[-1] data-popup-open:before:bg-neutral-100 data-popup-open:before:content-[''] data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] data-highlighted:data-popup-open:before:bg-neutral-950 data-disabled:text-neutral-500 dark:data-popup-open:before:bg-neutral-800 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white dark:data-highlighted:data-popup-open:before:bg-white dark:data-disabled:text-neutral-400";
+  "flex cursor-default items-center justify-between gap-4 py-2 pr-2 pl-4 text-sm leading-4 outline-hidden select-none data-popup-open:relative data-popup-open:z-0 data-popup-open:before:absolute data-popup-open:before:inset-x-1 data-popup-open:before:inset-y-0 data-popup-open:before:z-[-1] data-popup-open:before:bg-neutral-100 data-popup-open:before:content-[''] data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-x-1 data-highlighted:before:inset-y-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 data-highlighted:before:content-[''] data-highlighted:data-popup-open:before:bg-neutral-950 aria-disabled:text-neutral-500 dark:data-popup-open:before:bg-neutral-800 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white dark:data-highlighted:data-popup-open:before:bg-white dark:aria-disabled:text-neutral-400";
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
   <Menu.Root>
     <Menu.Trigger
-      class="flex h-8 items-center justify-center gap-1.5 rounded-none border border-neutral-950 bg-white pl-3 pr-2 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 data-pressed:bg-neutral-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 dark:data-pressed:bg-neutral-800 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+      class="flex h-8 items-center justify-center gap-1.5 rounded-none border border-neutral-950 bg-white pl-3 pr-2 text-sm leading-none whitespace-nowrap font-normal text-neutral-950 select-none hover:not-disabled:bg-neutral-100 active:not-disabled:bg-neutral-200 data-pressed:bg-neutral-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-disabled:bg-neutral-800 dark:active:not-disabled:bg-neutral-700 disabled:border-neutral-500 disabled:text-neutral-500 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 dark:data-pressed:bg-neutral-800 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     >
       Song
       <CaretDownIcon />
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner class="outline-hidden" :side-offset="8" align="start">
-        <Menu.Popup :class="popupClass">
-          <Menu.Item :class="itemClass">Add to Library</Menu.Item>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="popupClass">
+            <Menu.Item :class="itemClass">Add to Library</Menu.Item>
 
-          <Menu.SubmenuRoot>
-            <Menu.SubmenuTrigger :class="submenuTriggerClass">
-              Add to Playlist
-              <CaretRightIcon />
-            </Menu.SubmenuTrigger>
-            <Menu.Portal>
-              <Menu.Positioner
-                class="outline-hidden"
-                :side-offset="getOffset"
-                :align-offset="getOffset"
-              >
-                <Menu.Popup :class="popupClass">
-                  <Menu.Item :class="itemClass">Add to Library</Menu.Item>
-                  <Menu.Item :class="itemClass">Add to Playlist</Menu.Item>
-                  <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
-                  <Menu.Item :class="itemClass">Play Next</Menu.Item>
-                  <Menu.Item :class="itemClass">Play Last</Menu.Item>
-                  <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
-                  <Menu.Item :class="itemClass">Favorite</Menu.Item>
-                  <Menu.Item :class="itemClass">Share</Menu.Item>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.SubmenuRoot>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger :class="submenuTriggerClass">
+                Add to Playlist
+                <CaretRightIcon />
+              </Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner
+                  class="outline-hidden"
+                  :side-offset="getOffset"
+                  :align-offset="getOffset"
+                >
+                  <Transition
+                    :enter-from-class="popupHiddenClass"
+                    :leave-to-class="popupHiddenClass"
+                    appear
+                  >
+                    <Menu.Popup :class="popupClass">
+                      <Menu.Item :class="itemClass">Add to Library</Menu.Item>
+                      <Menu.Item :class="itemClass">Add to Playlist</Menu.Item>
+                      <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
+                      <Menu.Item :class="itemClass">Play Next</Menu.Item>
+                      <Menu.Item :class="itemClass">Play Last</Menu.Item>
+                      <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
+                      <Menu.Item :class="itemClass">Favorite</Menu.Item>
+                      <Menu.Item :class="itemClass">Share</Menu.Item>
+                    </Menu.Popup>
+                  </Transition>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
 
-          <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
-          <Menu.Item :class="itemClass">Play Next</Menu.Item>
-          <Menu.Item :class="itemClass">Play Last</Menu.Item>
-          <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
-          <Menu.Item :class="itemClass">Favorite</Menu.Item>
-          <Menu.Item :class="itemClass">Share</Menu.Item>
-        </Menu.Popup>
+            <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
+            <Menu.Item :class="itemClass">Play Next</Menu.Item>
+            <Menu.Item :class="itemClass">Play Last</Menu.Item>
+            <Menu.Separator class="mx-1 my-1 h-px bg-neutral-950 dark:bg-white" />
+            <Menu.Item :class="itemClass">Favorite</Menu.Item>
+            <Menu.Item :class="itemClass">Share</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

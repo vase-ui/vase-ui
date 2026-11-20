@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import WrapperCast from './WrapperCast.test.vue';
 
-defineProps<{ modal?: boolean }>();
+defineProps<{ open?: boolean }>();
 </script>
 
 <template>
-  <WrapperCast :modal="modal" :loop-focus="false"><slot /></WrapperCast>
+  <WrapperCast :open="open" :close-on-select="false"><slot /></WrapperCast>
 </template>

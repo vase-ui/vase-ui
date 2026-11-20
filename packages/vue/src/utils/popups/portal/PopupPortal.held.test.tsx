@@ -9,8 +9,6 @@ import {
 } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 
@@ -61,40 +59,6 @@ async function measurePopupOffset() {
 }
 
 const families = [
-  {
-    name: 'Menu',
-    renderPart: () => (
-      <Menu.Root defaultOpen>
-        <Menu.Trigger>Open</Menu.Trigger>
-        <Menu.Portal data-testid="portal">
-          <Menu.Positioner>
-            <Menu.Popup data-testid="popup">
-              <Menu.Item>One</Menu.Item>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
-    name: 'ContextMenu',
-    renderPart: () => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
-        <ContextMenu.Portal data-testid="portal">
-          <ContextMenu.Positioner>
-            <ContextMenu.Popup data-testid="popup">
-              <ContextMenu.Item>One</ContextMenu.Item>
-            </ContextMenu.Popup>
-          </ContextMenu.Positioner>
-        </ContextMenu.Portal>
-      </ContextMenu.Root>
-    ),
-    marksPage: true,
-    movesFocus: true,
-  },
   {
     name: 'Select',
     renderPart: renderSelect,

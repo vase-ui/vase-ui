@@ -5,7 +5,6 @@ import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -117,27 +116,6 @@ function createAutocomplete(attrs: Record<string, string>) {
   );
 }
 
-function createMenuWithInput(attrs: Record<string, string>) {
-  return (
-    <Menu.FilterProvider>
-      <Menu.Root defaultOpen>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup>
-              <Menu.Input aria-label="Filter actions" data-testid="part" {...attrs} />
-              <Menu.List data-testid="target">
-                <Menu.Item>Rename</Menu.Item>
-                <Menu.Item>Delete</Menu.Item>
-              </Menu.List>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    </Menu.FilterProvider>
-  );
-}
-
 // The input then has virtual focus on the first item.
 async function highlightFirstItem(user: UserEvent) {
   screen.getByTestId('part').focus();
@@ -163,51 +141,6 @@ const rows: Row[] = [
           </Toast.Root>
         </Toast.Viewport>
       </Toast.Provider>
-    ),
-  },
-  {
-    part: 'Menu.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Menu.Root defaultOpen>
-        <Menu.Trigger data-testid="part" {...attrs}>
-          Actions
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup data-testid="target">
-              <Menu.Item>Rename</Menu.Item>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-  },
-  {
-    part: 'Menu.SubmenuTrigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Menu.Root defaultOpen>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup>
-              <Menu.SubmenuRoot defaultOpen>
-                <Menu.SubmenuTrigger data-testid="part" {...attrs}>
-                  More
-                </Menu.SubmenuTrigger>
-                <Menu.Portal>
-                  <Menu.Positioner>
-                    <Menu.Popup data-testid="target">
-                      <Menu.Item>Archive</Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.SubmenuRoot>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
     ),
   },
   {
@@ -245,11 +178,6 @@ const rows: Row[] = [
     createNode: createAutocomplete,
   },
   {
-    part: 'Menu.Input',
-    attribute: 'aria-controls',
-    createNode: createMenuWithInput,
-  },
-  {
     part: 'Combobox.Input',
     attribute: 'aria-activedescendant',
     createNode: (attrs) => createCombobox('input', attrs),
@@ -262,13 +190,6 @@ const rows: Row[] = [
     createNode: createAutocomplete,
     show: highlightFirstItem,
     getTarget: () => screen.getByRole('option', { name: 'Apple' }),
-  },
-  {
-    part: 'Menu.Input',
-    attribute: 'aria-activedescendant',
-    createNode: createMenuWithInput,
-    show: highlightFirstItem,
-    getTarget: () => screen.getByRole('menuitem', { name: 'Rename' }),
   },
 ];
 

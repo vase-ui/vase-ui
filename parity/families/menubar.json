@@ -4,7 +4,25 @@
     "docs/src/app/(docs)/react/components/menubar/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/menubar/MenubarDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. It writes no `data-modal`, which repeats a prop, and no `data-has-submenu-open`: `:has([aria-expanded=\"true\"])` selects a bar with an open menu (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menubar/Menubar.test.ts",
+      "reason": "`Menubar.test.ts` tests the bar: its role and its one tab stop, the keys of the bar, a disabled trigger, the open of a menu with the key across the bar, the move to another menu at a pointer move, at a tap and at an arrow key, the outside press, and the modal state."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menubar/types.md",
+      "entry": "MenubarDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. It writes no `data-modal`, which repeats a prop, and no `data-has-submenu-open`: `:has([aria-expanded=\"true\"])` selects a bar with an open menu (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    }
+  ],
   "surfaceAdditions": [
     {
       "entry": "Menubar",
@@ -13,5 +31,14 @@
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/menubar/MenubarContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menubar/menu.ts",
+      "behavior": "What a menubar gives to its menus and their triggers.",
+      "witness": "packages/vue/src/menubar/Menubar.test.ts"
+    }
+  ]
 }

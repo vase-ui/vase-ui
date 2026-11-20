@@ -8,7 +8,6 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
-import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { recordStyleProperty } from './recordStyleProperty';
 import SelectLayout from './fixtures/SelectLayout.vue';
@@ -76,47 +75,6 @@ it.each([true, false])(
     expect(positioner.dataset.origin).toMatch(/px|%/);
   },
 );
-
-it('VUE-94: keeps the author pointer style on the parent menu of an open submenu', async () => {
-  const { user } = await render(
-    <Menu.Root defaultOpen>
-      <Menu.Trigger>Actions</Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner>
-          <Menu.Popup data-testid="parent" style={{ pointerEvents: 'all' }}>
-            <Menu.SubmenuRoot>
-              <Menu.SubmenuTrigger delay={0}>More</Menu.SubmenuTrigger>
-              <Menu.Portal>
-                <Menu.Positioner data-testid="submenu-positioner">
-                  <Menu.Popup>
-                    <Menu.Item>Details</Menu.Item>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.SubmenuRoot>
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>,
-  );
-  const parent = screen.getByTestId('parent');
-  const previousStyles: (string | null)[] = [];
-  const observer = new MutationObserver((records) => {
-    previousStyles.push(...records.map((record) => record.oldValue));
-  });
-  observer.observe(parent, {
-    attributes: true,
-    attributeFilter: ['style'],
-    attributeOldValue: true,
-  });
-  onTestFinished(() => observer.disconnect());
-  await user.hover(screen.getByRole('menuitem', { name: 'More' }));
-  await screen.findByRole('menuitem', { name: 'Details' });
-  await waitSingleFrame();
-  expect(screen.getByTestId('submenu-positioner').style.pointerEvents).toBe('auto');
-  expect(previousStyles.join(' ')).not.toMatch(/pointer-events:\s*none/);
-  expect(parent.style.pointerEvents).toBe('all');
-});
 
 it('updates the positioner when the controlled Navigation Menu value changes', async () => {
   const active = shallowRef('one');

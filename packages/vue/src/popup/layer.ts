@@ -25,8 +25,11 @@ export interface Layer {
   readonly outsidePress: boolean;
   /** A move of the focus to an element outside closes the popup. */
   readonly focusOut: boolean;
-  /** An outside press of a mouse or a pen closes the popup at `pointerdown`. */
-  readonly pressStart: boolean;
+  /**
+   * An outside press of a mouse or a pen closes the popup at `pointerdown`: of the main button, or
+   * of each button with `'each-button'`, as a native menu does.
+   */
+  readonly pressStart: boolean | 'each-button';
   /** The portal renders a fixed element that takes each pointer from the page. */
   readonly block: boolean;
   /** The attribute that the layer writes on the rest of the page. */
@@ -45,10 +48,15 @@ export interface Layer {
    */
   readonly touchDrag: boolean;
   /**
-   * More elements inside the layer, for the outside press and the focus out. Escape on them closes
-   * the popup as on the popup element.
+   * The element that the block leaves free, in the place of the active trigger of `triggerInUse`.
+   * `null` leaves none.
    */
-  readonly inside?: readonly (Element | null)[];
+  readonly hole?: Element | null | undefined;
+  /**
+   * More elements inside the layer, such as the triggers of a menubar, for the outside press and
+   * the focus out. Escape on them closes the popup as on the popup element.
+   */
+  readonly inside?: readonly (Element | null)[] | undefined;
 }
 
 export type LayerRules = Omit<Layer, 'root'>;
@@ -165,6 +173,9 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     get touchDrag() {
       return current.value.touchDrag;
     },
+    get hole() {
+      return current.value.hole;
+    },
     get inside() {
       return current.value.inside;
     },
@@ -236,6 +247,7 @@ function listen(node: Document | ShadowRoot) {
         addEventListener(node, 'pointermove', onPointermove as EventListener, true),
         addEventListener(node, 'pointerup', onPointerup as EventListener, true),
         addEventListener(node, 'pointercancel', onPointerup as EventListener, true),
+        addEventListener(node, 'contextmenu', onContextmenu, true),
         addEventListener(node, 'click', onClick as EventListener, true),
         addEventListener(node, 'focusout', onFocusout as EventListener),
         addEventListener(node, 'keydown', onKeydown as EventListener),
@@ -376,16 +388,19 @@ function onPointerdown(event: PointerEvent) {
     }
     return;
   }
-  if (event.button !== 0) return;
-  pressing = true;
   const outside = isScrollbarPress(event) ? [] : outsideEntries(event);
-  for (const entry of stack) {
-    entry.pressOutside = outside.includes(entry);
-    entry.releaseOutside = undefined;
+  if (event.button === 0) {
+    pressing = true;
+    for (const entry of stack) {
+      entry.pressOutside = outside.includes(entry);
+      entry.releaseOutside = undefined;
+    }
   }
   closeOutside(
     event,
-    outside.filter((entry) => entry.layer.pressStart),
+    outside.filter(
+      ({ layer }) => layer.pressStart === 'each-button' || (layer.pressStart && event.button === 0),
+    ),
   );
 }
 
@@ -398,6 +413,14 @@ function onPointermove(event: PointerEvent) {
     touch = null;
     closeOutside(event, entries);
   }
+}
+
+// Chromium on Android opens the menu of the system at a long press of about 650 ms, with
+// `contextmenu`, and sends no `click`. That touch then closes nothing at its end.
+function onContextmenu() {
+  if (!touch) return;
+  touch = null;
+  for (const entry of stack) entry.pressOutside = undefined;
 }
 
 function onPointerup(event: PointerEvent) {

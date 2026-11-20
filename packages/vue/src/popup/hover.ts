@@ -62,6 +62,15 @@ export function usePopupHover(
     inner?: (event: PointerEvent) => boolean;
     /** A pointer that leaves closes the popup. */
     closes?: () => boolean;
+    /**
+     * The delay starts at the first `pointermove` that the check accepts, and the open comes at its
+     * end, also while the pointer moves.
+     */
+    startOnMove?: (event: PointerEvent) => boolean;
+    /** The caller closes the popup for a pointer on this element outside the triangle. */
+    passOn?: (element: Element) => boolean;
+    /** After the pointer was in the popup, a pointer that leaves closes nothing. */
+    stayAfterEnter?: boolean;
   },
 ) {
   const openTimer = useTimeout();
@@ -144,6 +153,7 @@ export function usePopupHover(
     entered = event;
     if (!afterCrossing) last = { x: event.clientX, y: event.clientY };
     if (
+      options.startOnMove ||
       !current ||
       !options.enabled() ||
       event.pointerType === 'touch' ||
@@ -160,7 +170,13 @@ export function usePopupHover(
   function onPointermove(event: PointerEvent) {
     last = { x: event.clientX, y: event.clientY };
     const current = root();
-    if (current && openTimer.isStarted()) startOpen(event, current);
+    if (!current) return;
+    if (!options.startOnMove) {
+      if (openTimer.isStarted()) startOpen(event, current);
+      return;
+    }
+    if (openTimer.isStarted() || !options.enabled() || event.pointerType === 'touch') return;
+    if (options.startOnMove(event)) startOpen(event, current);
   }
 
   function onPointerleave() {
@@ -200,6 +216,9 @@ export function usePopupHover(
   // document of the trigger after the render.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
+  let enteredPopup = false;
+  let following = false;
+  const inTriangle = shallowRef(false);
   watch(
     closedBy,
     (by, _, onCleanup) => {
@@ -209,15 +228,22 @@ export function usePopupHover(
       // The pointer of a popup that no hover opened can be anywhere.
       over = byHover ? 'trigger' : 'outside';
       from = null;
+      enteredPopup = false;
+      following = true;
       const current = root();
       if (current) approaches.set(current, approach);
       onCleanup(
         mergeCleanups(
           addEventListener(doc, 'pointermove', (event) => follow(event, byHover), true),
-          byHover && addEventListener(doc.documentElement, 'pointerleave', close),
+          byHover &&
+            addEventListener(doc.documentElement, 'pointerleave', () => {
+              if (!enteredPopup || !options.stayAfterEnter) close();
+            }),
           closeTimer.clear,
           restTimer.clear,
           () => setCrossing(false),
+          () => (inTriangle.value = false),
+          () => (following = false),
           () => {
             if (current && approaches.get(current) === approach) approaches.delete(current);
           },
@@ -238,10 +264,11 @@ export function usePopupHover(
       return false;
     }
     const apex = over === 'trigger' ? last : from;
-    if (!apex || !inTriangle(point, apex, trigger, popup)) return false;
+    if (!apex || !isInTriangle(point, apex, trigger, popup)) return false;
     from = apex;
     over = 'outside';
     setCrossing(true);
+    inTriangle.value = true;
     restTimer.start(REST_IN_TRIANGLE, () => {
       setCrossing(false);
       close();
@@ -259,6 +286,7 @@ export function usePopupHover(
     const target = event.target as Element;
     const point = { x: event.clientX, y: event.clientY };
     restTimer.clear();
+    inTriangle.value = false;
     if (trigger?.contains(target)) {
       over = 'trigger';
       setCrossing(false);
@@ -267,6 +295,7 @@ export function usePopupHover(
     }
     if (options.inside(target)) {
       over = 'popup';
+      enteredPopup = true;
       setCrossing(false);
       closeTimer.clear();
       if (!byHover) from = null;
@@ -275,20 +304,22 @@ export function usePopupHover(
     if (over === 'trigger') from = point;
     over = 'outside';
     if (!byHover && !from) return;
+    if (enteredPopup && options.stayAfterEnter) return;
     const popup = root()?.popup;
     const crosses = options.hoverablePopup?.() ?? true;
-    if (crosses && from && trigger && popup && inTriangle(point, from, trigger, popup)) {
+    if (crosses && from && trigger && popup && isInTriangle(point, from, trigger, popup)) {
       setCrossing(true);
+      inTriangle.value = true;
       restTimer.start(REST_IN_TRIANGLE, () => {
         setCrossing(false);
-        close();
+        if (!options.passOn?.(target)) close();
       });
       return;
     }
     from = null;
     // Another trigger under the pointer starts its open before this close.
     setCrossing(false);
-    close();
+    if (!options.passOn?.(target)) close();
   }
 
   function close() {
@@ -307,6 +338,17 @@ export function usePopupHover(
 
   return {
     listeners: { onPointerenter, onPointermove, onPointerleave, onPointerover },
+    /** The pointer moves in the triangle toward the popup that a hover opened. */
+    get inTriangle() {
+      return inTriangle.value;
+    },
+    /**
+     * The point is in the triangle to the popup that this trigger keeps open, as for the triggers of
+     * its root: a trigger of another root, such as a sibling submenu, asks at its own event.
+     */
+    approaches(point: Point) {
+      return following && approach(point);
+    },
     /** A press closes the open popup: it came more than 500 ms after the hover open. */
     closesAtPress(event: Event) {
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);
@@ -424,7 +466,7 @@ function opensAtOnce(root: PopupRoot) {
 }
 
 // The triangle from the point where the pointer left the trigger to the near edge of the popup.
-function inTriangle(point: Point, from: Point, trigger: Element, popup: Element) {
+function isInTriangle(point: Point, from: Point, trigger: Element, popup: Element) {
   const anchor = trigger.getBoundingClientRect();
   const box = popup.getBoundingClientRect();
   let edge: [Point, Point];

@@ -23,14 +23,10 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
           </ContextMenu.Group>
 
           <ContextMenu.RadioGroup>
-            <ContextMenu.RadioItem value="">
-              <ContextMenu.RadioItemIndicator />
-            </ContextMenu.RadioItem>
+            <ContextMenu.RadioItem value="" />
           </ContextMenu.RadioGroup>
 
-          <ContextMenu.CheckboxItem>
-            <ContextMenu.CheckboxItemIndicator />
-          </ContextMenu.CheckboxItem>
+          <ContextMenu.CheckboxItem />
         </ContextMenu.Popup>
       </ContextMenu.Positioner>
     </ContextMenu.Portal>

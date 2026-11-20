@@ -11,20 +11,26 @@ import { Menu } from '@vase-ui/vue/menu';
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner class="outline-hidden" :side-offset="8">
-        <Menu.Popup
-          class="origin-(--transform-origin) border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden transition data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white"
+        <Transition
+          enter-from-class="scale-95 opacity-0"
+          leave-to-class="scale-95 opacity-0"
+          appear
         >
-          <Menu.Item
-            class="flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+          <Menu.Popup
+            class="origin-(--transform-origin) border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden transition dark:border-white dark:bg-neutral-950 dark:text-white"
           >
-            Add to Library
-          </Menu.Item>
-          <Menu.Item
-            class="flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
-          >
-            Add to Playlist
-          </Menu.Item>
-        </Menu.Popup>
+            <Menu.Item
+              class="flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+            >
+              Add to Library
+            </Menu.Item>
+            <Menu.Item
+              class="flex cursor-default py-2 pr-8 pl-4 text-sm leading-4 outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+            >
+              Add to Playlist
+            </Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

@@ -52,9 +52,9 @@ The namespace of a part also exports the types of the custom events.
 
 A part or a utility can also export other types. The list below is not complete. Each type is documented where it is needed.
 
-- A popup root exposes methods, and you read them through a template ref. `Menu.Root.Actions` is the type of the methods that `Menu.Root` exposes.
+- A popup root exposes methods, and you read them through a template ref. `useTemplateRef` gives the ref of `Menu.Root` the type of its `close` method.
 
-  <<< ../examples/typescript/Actions.vue{5-10,15}
+  <<< ../examples/typescript/Actions.vue{5-9,14}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `Toast.Root.ToastObject` gives access to this interface.
 - Most parts that render an element accept `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).

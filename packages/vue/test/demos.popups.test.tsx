@@ -201,7 +201,7 @@ function portals() {
 
 // A closed popup that stays in the DOM is `hidden`. A popup of the popup layer can be a child of
 // `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
-// whole document. The older popups have `data-open`. A tooltip popup has no role: it is the element
+// whole document, and a menu. The older popups have `data-open`. A tooltip popup has no role: it is the element
 // with a side in its positioner. A preview card has no role and no attribute of its open state, so
 // its positioner in `<body>` counts while a link of the demo has `data-popup-open`. The content of an
 // open item of a navigation menu is the element that its trigger names in `aria-controls`, also in
@@ -221,7 +221,7 @@ function openPopups(family: string | undefined) {
         ),
       ),
       ...document.querySelectorAll<HTMLElement>(
-        `[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])${tooltip}`,
+        `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden])${tooltip}`,
       ),
       ...[...document.querySelectorAll('nav [aria-expanded="true"][aria-controls]')].flatMap(
         (trigger) => document.getElementById(trigger.getAttribute('aria-controls')!) ?? [],
@@ -267,16 +267,6 @@ function triggersAt(
 
 // What axe reports and a user does not meet. Each row is a rule and the elements that are correct.
 const ACCEPTED: Record<string, (element: Element) => boolean> = {
-  // In WebKit on an Apple system, a focus guard is a button. A menu has the guards of its submenu
-  // triggers as children, and a menubar has the guards of its menus.
-  'aria-required-children': (element) => {
-    const buttons = [...element.querySelectorAll('[role="button"]')];
-    return (
-      element.matches('[role="menu"], [role="menubar"]') &&
-      buttons.length > 0 &&
-      buttons.every((button) => button.matches('[data-vase-ui-focus-guard]'))
-    );
-  },
   // In WebKit, VoiceOver needs `aria-selected` on the highlighted item of a menu that has an input.
   'aria-allowed-attr': (element) => element.matches('[role="menuitem"][aria-selected="true"]'),
   // The arrow keys of the input move the highlight of a list, and the list scrolls to it.
@@ -383,6 +373,8 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
 
         await expectNoViolationsInOpenState(frame);
         for (const portal of portals().filter((element) => !frame.contains(element))) {
+          // The parts of a popup that closed leave `<body>` after their leave transition.
+          if (!portal.isConnected) continue;
           await expectNoViolationsInOpenState(portal);
           cut.push(...optionsWithCutText(portal));
         }

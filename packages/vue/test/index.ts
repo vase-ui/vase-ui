@@ -25,7 +25,6 @@ export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
-export { fieldsetDisabledTests } from './fieldsetDisabledTests';
 export { heldMountFormResetTests } from './heldMountFormResetTests';
 export { heldMountListTests } from './heldMountListTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';

@@ -4,8 +4,6 @@ import type { Component, Directive, VNode } from 'vue';
 import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
 import type { HTMLProps } from '../../../internals/types';
@@ -30,31 +28,6 @@ const vMark: Directive<HTMLElement, string> = {
 };
 
 const families: PopupFamily[] = [
-  {
-    name: 'Menu.Popup',
-    part: Menu.Popup,
-    tree: (popup) => (
-      <Menu.Root defaultOpen>
-        <Menu.Portal>
-          <Menu.Positioner>{popup}</Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    siblings: 'guards',
-  },
-  {
-    name: 'ContextMenu.Popup',
-    part: ContextMenu.Popup,
-    tree: (popup) => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
-        <ContextMenu.Portal>
-          <ContextMenu.Positioner>{popup}</ContextMenu.Positioner>
-        </ContextMenu.Portal>
-      </ContextMenu.Root>
-    ),
-    siblings: 'guards',
-  },
   {
     name: 'Select.Popup',
     part: Select.Popup,

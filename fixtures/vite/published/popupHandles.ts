@@ -10,34 +10,21 @@ interface Payload {
   label: string;
 }
 
-interface PopupHandle {
-  readonly isOpen: boolean;
-  open(triggerId: string): void;
-  close(): void;
-  readonly store: {
-    readonly state: { readonly payload: Payload | undefined };
-    select(key: 'isOpenedByTrigger', triggerId: string): boolean;
-    set(key: 'payload', value: Payload): void;
-    update(state: { payload: Payload; activeTriggerId: string }): void;
-  };
-}
-
-function check(handle: PopupHandle) {
-  const payload = { label: 'Second' };
-  handle.store.set('payload', payload);
-  handle.store.update({ payload, activeTriggerId: 'second' });
-  return handle.store.select('isOpenedByTrigger', 'second');
-}
-
-const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
-check(menu);
-check(new Menu.Handle<Payload>());
-// A handle of Popover, Preview Card, Dialog, Alert Dialog, Drawer and Tooltip has no store.
-const handles: (Popover.Handle<Payload> | PreviewCard.Handle<Payload>)[] = [
+// No handle has a store.
+const handles: (
+  | Menu.Handle<Payload>
+  | Popover.Handle<Payload>
+  | PreviewCard.Handle<Payload>
+  | Tooltip.Handle<Payload>
+)[] = [
+  Menu.createHandle<Payload>(),
+  new Menu.Handle<Payload>(),
   Popover.createHandle<Payload>(),
   new Popover.Handle<Payload>(),
   PreviewCard.createHandle<Payload>(),
   new PreviewCard.Handle<Payload>(),
+  Tooltip.createHandle<Payload>(),
+  new Tooltip.Handle<Payload>(),
 ];
 for (const handle of handles) {
   const open: boolean = handle.isOpen;
@@ -57,13 +44,4 @@ for (const dialog of dialogs) {
   if (open) dialog.close();
   else if (dialog instanceof AlertDialog.Handle) dialog.open(null);
   else dialog.openWithPayload({ label: 'Second' });
-}
-const tooltips: Tooltip.Handle<Payload>[] = [
-  Tooltip.createHandle<Payload>(),
-  new Tooltip.Handle<Payload>(),
-];
-for (const tooltip of tooltips) {
-  const open: boolean = tooltip.isOpen;
-  if (open) tooltip.close();
-  else tooltip.open('second');
 }

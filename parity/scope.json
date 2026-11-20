@@ -3,7 +3,7 @@
     {
       "what": "`filter-dropdown` as a public entry",
       "upstream": ["packages/react/src/filter-dropdown/**"],
-      "reason": "Base UI has no package export, no index file and no docs page for it. Vase UI ports it only as the internal dependency of Menu."
+      "reason": "Base UI has no package export, no index file and no docs page for it. Vase UI has the filter in `menu/filter.ts`: the items that match by their text, and the input, the clear button and the empty message of a filterable menu."
     },
     {
       "what": "the 35 `./internals/*` entry points",
