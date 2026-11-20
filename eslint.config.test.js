@@ -1388,7 +1388,7 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
   {
     name: 'a code file that a page shows',
     file: PAGE,
-    code: page('<<< ./examples/quick-start/ButtonExample.vue'),
+    code: page('<<< ./examples/quick-start/PopoverExample.vue'),
   },
   {
     name: 'a page that has no text',
