@@ -1,4 +1,4 @@
-import { nextTick, onUnmounted, shallowRef, watch, type CSSProperties, type ShallowRef } from 'vue';
+import { nextTick, onUnmounted, shallowRef, watch, type ShallowRef } from 'vue';
 import type { PopupRoot } from './root';
 
 type Size = { width: number; height: number };

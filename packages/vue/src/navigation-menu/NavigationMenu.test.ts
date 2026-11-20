@@ -1093,7 +1093,9 @@ describe('the placement', () => {
       configurable: true,
       value: Object.assign(new EventTarget(), visual),
     });
-    onTestFinished(() => Object.defineProperty(window, 'visualViewport', descriptor));
+    onTestFinished(() => {
+      Object.defineProperty(window, 'visualViewport', descriptor);
+    });
     await mountMenu({
       root: { defaultValue: 'one' },
       list: { style: 'display: flex; margin: 0 0 0 250px; padding: 0; list-style: none' },
