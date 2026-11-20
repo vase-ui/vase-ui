@@ -81,6 +81,9 @@ provide(
   }),
 );
 
+const label = computed(() =>
+  new Intl.DisplayNames(picker.locale, { type: 'dateTimeField' }).of(props.unit),
+);
 // A 24-hour cycle has no day period.
 const rendered = computed(() => props.unit !== 'dayPeriod' || picker.hourCycle === 12);
 const state = computed<TimePickerColumnState>(() => ({
@@ -93,7 +96,7 @@ function elementProps() {
   return mergeProps(
     {
       role: 'listbox',
-      'aria-label': new Intl.DisplayNames(picker.locale, { type: 'dateTimeField' }).of(props.unit),
+      'aria-label': label.value,
       'aria-disabled': state.value.disabled ? 'true' : undefined,
       'aria-readonly': state.value.readonly ? 'true' : undefined,
       // A server with other `Intl` data has another name (test/measurements/picker.test.ts).
@@ -107,8 +110,8 @@ function elementProps() {
 
 // Vue keeps the attribute of the server while it hydrates, so the column writes its name again.
 onMounted(() => {
-  const label = elementProps()['aria-label'];
-  if (typeof label === 'string') element.value?.setAttribute('aria-label', label);
+  const name = elementProps()['aria-label'];
+  if (typeof name === 'string') element.value?.setAttribute('aria-label', name);
 });
 
 defineExpose({ element });

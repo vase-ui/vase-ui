@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Value extends DatePickerRootValue = DatePickerRootValue">
-import { mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
+import { mergeProps, provide, shallowRef, useAttrs } from 'vue';
 import { displayCalendar } from '../common/date-time/displayCalendar';
 import { assertTemporal, sameTemporal } from '../common/date-time/temporal';
 import { mergeGetters, usePicker } from '../common/picker/root';
@@ -51,12 +51,6 @@ const { picker, readClock } = usePicker<DatePickerRootValue>(props, {
   fallback: (today) => props.referenceDate ?? templateOf(props.granularity, props.calendar, today),
   closes: (template) => !hasTime(template),
 });
-watch(
-  () => props.open,
-  (open) => {
-    if (open) readClock();
-  },
-);
 provide(
   datePickerKey,
   mergeGetters(picker, {

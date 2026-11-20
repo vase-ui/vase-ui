@@ -80,7 +80,7 @@ export function useListbox(options: {
   function onKeydown(event: KeyboardEvent) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     const elements = items
-      .filter((item) => enabled(item.key) && !item.element.matches(':disabled'))
+      .filter((item) => enabled(item.key))
       .map((item) => item.element)
       .sort(byDocumentOrder);
     const target =

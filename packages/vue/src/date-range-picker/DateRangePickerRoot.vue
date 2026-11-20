@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Value extends DateValue = DateValue">
-import { computed, mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
+import { computed, mergeProps, provide, shallowRef, useAttrs } from 'vue';
 import { displayCalendar } from '../common/date-time/displayCalendar';
 import { assertTemporal, type DateValue } from '../common/date-time/temporal';
 import { mergeGetters, usePicker } from '../common/picker/root';
@@ -66,12 +66,6 @@ const { picker, field, readClock } = usePicker<Range, DateValue>(props, {
       : today.toPlainDateTime()),
   closes: () => true,
 });
-watch(
-  () => props.open,
-  (open) => {
-    if (open) readClock();
-  },
-);
 const range = computed(() => picker.value ?? EMPTY);
 const control = useRangeControl(field, () => range.value, {
   disabled: () => picker.disabled,

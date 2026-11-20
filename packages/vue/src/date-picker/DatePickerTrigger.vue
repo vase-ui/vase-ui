@@ -24,7 +24,7 @@ defineSlots<{
 const picker = injectDatePicker('Trigger');
 const attrs = useAttrs();
 const locale = useLocale(() => picker.props.locale);
-const trigger = usePickerTrigger(picker);
+const trigger = usePickerTrigger(picker, () => props.disabled);
 
 const text = computed(() => {
   const value = picker.value;
@@ -41,10 +41,7 @@ const text = computed(() => {
 });
 
 function triggerProps() {
-  return mergeProps(attrs, {
-    disabled: props.disabled || picker.disabled || picker.readonly,
-    ...trigger.keptOut,
-  });
+  return mergeProps(attrs, trigger.owned());
 }
 
 defineExpose({ element: trigger.element });

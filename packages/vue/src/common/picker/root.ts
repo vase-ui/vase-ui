@@ -22,10 +22,9 @@ export interface PickerForPart<Value, Template = Value> {
   readonly firstTrigger: HTMLElement | undefined;
   /**
    * A change of the user. The root emits `valueChange` with `details`, and then takes the value.
-   * Returns `false` when a listener cancels the change. A change of a field root (`fromField`)
-   * reaches the `Field` through the field root.
+   * Returns `false` when a listener cancels the change.
    */
-  commit(value: Value | null, details: ChangeEventDetails<string>, fromField?: boolean): boolean;
+  commit(value: Value | null, details: ChangeEventDetails<string>): boolean;
   /** Takes the value with `update:modelValue` only, as `clear()` of a field part. */
   set(value: Value | null): void;
   /** A native reset of a form: the root takes its first value, one time for each event. */
@@ -37,6 +36,7 @@ export interface PickerForPart<Value, Template = Value> {
 export interface PickerProps<Value> {
   modelValue?: Value | null | undefined;
   defaultValue?: Value | null | undefined;
+  open?: boolean | undefined;
   closeOnSelect?: boolean | undefined;
   disabled?: boolean | undefined;
   readonly?: boolean | undefined;
@@ -90,6 +90,13 @@ export function usePicker<Value, Template = Value>(
     today.value = Temporal.Now.plainDateISO(props.timeZone ?? zone);
   }
   onMounted(readClock);
+  // A parent that writes `true` opens the popup with no `update:open` of `Popover.Root`.
+  watch(
+    () => props.open,
+    (open) => {
+      if (open) readClock();
+    },
+  );
 
   const fields = shallowReactive<HTMLElement[]>([]);
   const triggers = shallowReactive<HTMLElement[]>([]);
@@ -107,15 +114,16 @@ export function usePicker<Value, Template = Value>(
 
   let lastReset: Event | undefined;
 
-  function commit(next: Value | null, details: ChangeEventDetails<string>, fromField = false) {
+  function commit(next: Value | null, details: ChangeEventDetails<string>) {
     // A listener of the developer on the part cancelled the change.
     if (details.isCanceled) return false;
     options.emitChange(next, details);
     if (details.isCanceled) return false;
     model.setOwn(next);
     options.emitModel(next);
-    // A controlled parent answers in its next render.
-    if (field && !fromField) void nextTick(() => field.onEdit());
+    // A controlled parent answers in its next render. A field root also calls `onEdit` for its own
+    // change, and a second call changes nothing.
+    if (field) void nextTick(() => field.onEdit());
     return true;
   }
 
@@ -168,7 +176,7 @@ export function usePicker<Value, Template = Value>(
   return {
     picker,
     field,
-    /** Reads today again, at each open. */
+    /** Reads today again. A root calls it at each `update:open` with `true`. */
     readClock,
   };
 }

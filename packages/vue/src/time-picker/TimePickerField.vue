@@ -34,7 +34,7 @@ function fieldProps() {
     name: root.name,
     form: root.form,
     onValueChange: (value: TimePickerRootValue | null, details: DateTimeFieldChangeEventDetails) =>
-      picker.commit(value, details, true),
+      picker.commit(value, details),
     onKeydown: field.onKeydown,
   });
 }

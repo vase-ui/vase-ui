@@ -44,7 +44,7 @@ export function usePopupFocusTargets(
   const first = () =>
     [...targets]
       .map((target) => target())
-      .filter((element): element is HTMLElement => !!element?.isConnected)
+      .filter((element): element is HTMLElement => !!element)
       .sort(byDocumentOrder)[0] ?? true;
   const resolve = (target: HTMLElement | boolean | null | undefined | void) =>
     target === true || target === null ? first() : target;
@@ -90,9 +90,9 @@ export function usePickerPopup(part: string) {
 
 /**
  * What the triggers of the pickers share: the element in the root, and the props of
- * `Popover.Trigger` that a picker keeps out. The part binds `setTrigger` as the ref of its trigger.
+ * `Popover.Trigger` that a picker owns. The part binds `setTrigger` as the ref of its trigger.
  */
-export function usePickerTrigger(picker: PickerForPart<unknown>) {
+export function usePickerTrigger(picker: PickerForPart<unknown>, disabled: () => boolean) {
   const { setPart, element } = usePickerPart();
   watch(
     element,
@@ -104,14 +104,18 @@ export function usePickerTrigger(picker: PickerForPart<unknown>) {
   return {
     setTrigger: setPart,
     element,
-    /** The trigger belongs to the picker root: no handle, no payload, no open on hover. */
-    keptOut: {
+    /**
+     * A disabled or read-only picker disables the trigger. The trigger belongs to the picker root:
+     * no handle, no payload, no open on hover.
+     */
+    owned: () => ({
+      disabled: disabled() || picker.disabled || picker.readonly,
       handle: undefined,
       payload: undefined,
       openOnHover: undefined,
       delay: undefined,
       closeDelay: undefined,
-    },
+    }),
   };
 }
 
