@@ -2,6 +2,7 @@
 import { useTemplateRef, type PropType } from 'vue';
 import { DateField } from '../../src/date-field';
 import { DatePicker } from '../../src/date-picker';
+import ErrorsForm from './ErrorsForm.vue';
 import { Popover } from '../../src/popover';
 import { Form } from '../../src/form';
 import { TimeField } from '../../src/time-field';
@@ -26,6 +27,8 @@ defineProps({
   formAttrs: Object as PropType<Props>,
   /** Renders `Form` in place of a native form. */
   vaseForm: Boolean,
+  /** Renders a `Form` with these errors, which the form removes at an edit. */
+  formErrors: Object as PropType<Record<string, string>>,
   /** Renders `DatePicker.TimeField` beside the field, with these props. */
   inlineTimeField: Object as PropType<Props>,
   noField: Boolean,
@@ -46,7 +49,10 @@ defineExpose({
 </script>
 
 <template>
-  <component :is="vaseForm ? Form : 'form'" v-bind="formAttrs">
+  <component
+    :is="formErrors ? ErrorsForm : vaseForm ? Form : 'form'"
+    v-bind="formErrors ? { errors: formErrors } : formAttrs"
+  >
     <input id="before" aria-label="Before" />
     <fieldset :disabled="fieldsetDisabled">
       <TestField :field="fieldRoot">

@@ -2,7 +2,7 @@
 import { computed, mergeProps, provide, shallowRef, useAttrs } from 'vue';
 import { hourCycleOf } from '../common/date-time/format';
 import { assertTemporal, sameTemporal, toPlainTime } from '../common/date-time/temporal';
-import { extendPicker, usePicker } from '../common/picker/root';
+import { mergeGetters, usePicker } from '../common/picker/root';
 import { useLocale } from '../locale-provider/part';
 import PopoverRoot from '../popover/PopoverRoot.vue';
 import { timePickerKey } from './root';
@@ -58,7 +58,7 @@ const time = computed(() => {
 });
 provide(
   timePickerKey,
-  extendPicker(picker, {
+  mergeGetters(picker, {
     props,
     get locale() {
       return shownLocale.value;

@@ -2,7 +2,7 @@
 import { computed, mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
 import { displayCalendar } from '../common/date-time/displayCalendar';
 import { assertTemporal, type DateValue } from '../common/date-time/temporal';
-import { extendPicker, usePicker } from '../common/picker/root';
+import { mergeGetters, usePicker } from '../common/picker/root';
 import { useLocale } from '../locale-provider/part';
 import PopoverRoot from '../popover/PopoverRoot.vue';
 import { dateRangePickerKey, sameRange, useRangeControl } from './root';
@@ -79,7 +79,7 @@ const control = useRangeControl(field, () => range.value, {
 });
 provide(
   dateRangePickerKey,
-  extendPicker(extendPicker(picker, control), {
+  mergeGetters(mergeGetters(picker, control), {
     props,
     get calendar() {
       return displayCalendar(props.calendar, picker.template, shownLocale.value);

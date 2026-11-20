@@ -2,7 +2,7 @@
 import { computed, mergeProps, onMounted, provide, useAttrs, watchEffect } from 'vue';
 import { useElement } from '../common/element';
 import { toPlainTime } from '../common/date-time/temporal';
-import { extendPicker } from '../common/picker/root';
+import { mergeGetters } from '../common/picker/root';
 import { warn } from '../common/warn';
 import { isValidStep } from '../time-clock/views';
 import {
@@ -70,7 +70,7 @@ const listbox = useListbox({
 });
 provide(
   columnKey,
-  extendPicker(listbox.forItem, {
+  mergeGetters(listbox.forItem, {
     get unit() {
       return props.unit;
     },

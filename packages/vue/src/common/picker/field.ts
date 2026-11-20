@@ -42,8 +42,6 @@ export function usePickerField(picker: PickerForPart<unknown>, part: string) {
       event.shiftKey ||
       event.ctrlKey ||
       event.defaultPrevented ||
-      popup.open ||
-      picker.disabled ||
       picker.readonly
     ) {
       return;

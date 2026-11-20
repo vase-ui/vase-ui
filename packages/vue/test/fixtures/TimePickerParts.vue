@@ -28,6 +28,8 @@ defineProps({
   fieldRoot: Object as PropType<Props>,
   vaseForm: Boolean,
   listBefore: Boolean,
+  /** The times of the items of the list that have `disabled`. */
+  disabledTimes: Array as PropType<string[]>,
   noField: Boolean,
   fieldsetDisabled: Boolean,
 });
@@ -54,7 +56,20 @@ defineExpose({ root: rootPart, field: fieldPart });
               <TimePicker.Popup data-testid="popup" aria-label="Choose a time" v-bind="popup">
                 <template v-for="part in parts" :key="part">
                   <TimePicker.List
-                    v-if="part === 'list'"
+                    v-if="part === 'list' && disabledTimes"
+                    data-testid="list"
+                    aria-label="Times"
+                    v-bind="list"
+                  >
+                    <template #item="{ time }">
+                      <TimePicker.Item
+                        :time="time"
+                        :disabled="disabledTimes.includes(time.toString())"
+                      />
+                    </template>
+                  </TimePicker.List>
+                  <TimePicker.List
+                    v-else-if="part === 'list'"
                     data-testid="list"
                     aria-label="Times"
                     v-bind="list"

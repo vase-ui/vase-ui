@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
@@ -222,6 +222,53 @@ describe('the list', () => {
     expect(root).toBeTruthy();
   });
 
+  test('a key with Alt, Control or Meta does not move the focus in a list', async () => {
+    await mountPicker({ root: { locale: 'en-US', defaultOpen: true } });
+    await opened();
+    const [first] = options('list');
+    await waitFor(() => expect(first).toHaveFocus());
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}{Control>}{End}{/Control}');
+    expect(first).toHaveFocus();
+  });
+
+  test('an item that the developer disables is no tab stop, and the keys go over a disabled item', async () => {
+    await mountPicker({
+      root: {
+        locale: 'en-US',
+        defaultOpen: true,
+        hourCycle: 24,
+        min: time('02:00'),
+        max: time('20:00'),
+      },
+      parts: ['list', 'hour'],
+      disabledTimes: ['02:00:00'],
+    });
+    await opened();
+    const [first, second] = options('list');
+    expect(first).toBeDisabled();
+    await waitFor(() => expect(second).toHaveFocus());
+    expect(second).toHaveAttribute('tabindex', '0');
+    option('hour', '02').focus();
+    await userEvent.keyboard('{ArrowUp}');
+    expect(option('hour', '20')).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(option('hour', '02')).toHaveFocus();
+  });
+
+  test('the list scrolls no element around its popup', async () => {
+    const target = document.body.appendChild(document.createElement('div'));
+    target.style.cssText = 'position: relative; height: 100px; overflow: auto';
+    onTestFinished(() => target.remove());
+    const { trigger } = await mountPicker({
+      root: { locale: 'en-US', defaultValue: time('22:00') },
+      portal: { to: target },
+    });
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(option('list', '10:00 PM')).toHaveFocus());
+    expect(target.scrollTop).toBe(0);
+  });
+
   test('a list that scrolls shows its selected item after the open, and the page does not scroll', async () => {
     const { trigger } = await mountPicker({
       root: { locale: 'en-US', defaultValue: time('20:00') },
@@ -366,6 +413,21 @@ describe('the clock', () => {
     ]);
   });
 
+  test('a clock in a popup that stays mounted shows its first view again at each open', async () => {
+    const props = reactive<Props>({ locale: 'en-US', open: true, defaultValue: time('09:30') });
+    await mountPicker({ root: props, parts: ['clock'], portal: { keepMounted: true } });
+    await opened();
+    const face = byTestId('face').querySelector('input')!;
+    await waitFor(() => expect(face).toHaveFocus());
+    await userEvent.keyboard('{Enter}');
+    expect(face).toHaveAccessibleName('minute');
+    props.open = false;
+    await nextTick();
+    props.open = true;
+    await waitFor(() => expect(face).toHaveFocus());
+    expect(face).toHaveAccessibleName('hour');
+  });
+
   test('valueCommitted and viewChange reach the clock, and details.cancel() keeps the view', async () => {
     const log: string[] = [];
     await mountPicker({
@@ -404,6 +466,26 @@ describe('the first focus', () => {
         ? byTestId('face').querySelector('input')!
         : byTestId(first).querySelector('[tabindex="0"]')!;
     await waitFor(() => expect(target).toHaveFocus());
+  });
+
+  test('goes to the first part in the document, also when it mounted after another part', async () => {
+    const props = reactive<Props>({ locale: 'en-US', open: true });
+    const parts = reactive(['hour']);
+    mount(TimePickerParts, { root: props, parts, portal: { keepMounted: true } });
+    await opened();
+    parts.unshift('list');
+    await nextTick();
+    props.open = false;
+    await nextTick();
+    props.open = true;
+    await waitFor(() => expect(options('list')[0]).toHaveFocus());
+  });
+
+  test('a list with a step that is not valid warns, and uses 30 minutes', async () => {
+    await mountPicker({ root: { locale: 'en-US', defaultOpen: true }, list: { step: 0 } });
+    await opened();
+    expect(options('list')).toHaveLength(48);
+    expect(takeReportedMessages().join()).toMatch('TimePicker.List `step` must be a whole number');
   });
 
   test('the tab stop of a column with a disabled first item is the first enabled item', async () => {

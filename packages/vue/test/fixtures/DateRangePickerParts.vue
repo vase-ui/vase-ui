@@ -2,6 +2,7 @@
 import { useTemplateRef, type PropType } from 'vue';
 import { DateField } from '../../src/date-field';
 import { DateRangePicker } from '../../src/date-range-picker';
+import { Field } from '../../src/field';
 import { Form } from '../../src/form';
 import { Popover } from '../../src/popover';
 import PickerCalendarGrid from './PickerCalendarGrid.vue';
@@ -22,6 +23,8 @@ defineProps({
   calendar: Object as PropType<Props>,
   fieldRoot: Object as PropType<Props>,
   vaseForm: Boolean,
+  /** Renders a `Field.Error` with this `match`. */
+  match: String as PropType<'badInput' | 'rangeUnderflow'>,
   noFields: Boolean,
   fieldsetDisabled: Boolean,
 });
@@ -58,6 +61,7 @@ defineExpose({ root: rootPart, start: startPart, end: endPart });
             </DateRangePicker.Positioner>
           </Popover.Portal>
         </DateRangePicker.Root>
+        <Field.Error v-if="match" :match="match" data-testid="match">Check the dates.</Field.Error>
       </TestField>
     </fieldset>
     <button type="submit">Submit</button>

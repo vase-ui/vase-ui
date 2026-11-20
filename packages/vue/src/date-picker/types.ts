@@ -253,7 +253,6 @@ type CalendarOwned = OwnedKeys<
   | 'multiple'
   | 'minDays'
   | 'maxDays'
-  | 'autofocus'
 >;
 
 /** The events of `Calendar.Root` that reach it from the part. */
@@ -269,10 +268,10 @@ interface CalendarListeners {
   'onUpdate:view'?: ((view: CalendarRootView) => void) | undefined;
 }
 
-export interface DatePickerCalendarProps
-  /* @vue-ignore */
-  extends
-    Omit<CalendarRootProps<DatePickerRootValue>, CalendarOwned>,
-    /* @vue-ignore */ CalendarListeners {}
+/** The props of `Calendar.Root` that the picker does not own, and the events that reach it. */
+type CalendarProps = Omit<CalendarRootProps<DatePickerRootValue>, CalendarOwned> &
+  CalendarListeners;
+
+export interface DatePickerCalendarProps extends /* @vue-ignore */ CalendarProps {}
 
 export interface DatePickerCalendarState extends CalendarRootState {}

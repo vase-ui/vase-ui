@@ -28,7 +28,7 @@ export interface PickerForPart<Value, Template = Value> {
   commit(value: Value | null, details: ChangeEventDetails<string>, fromField?: boolean): boolean;
   /** Takes the value with `update:modelValue` only, as `clear()` of a field part. */
   set(value: Value | null): void;
-  /** A native reset of a form. The root acts one time for each event. */
+  /** A native reset of a form: the root takes its first value, one time for each event. */
   reset(event: Event): void;
   addField(element: HTMLElement): () => void;
   addTrigger(element: HTMLElement): () => void;
@@ -153,6 +153,8 @@ export function usePicker<Value, Template = Value>(
     commit,
     set,
     reset(event: Event) {
+      // The two fields of a range call it for one reset. A controlled value changes only at the
+      // next render, so a second call would emit again.
       if (event === lastReset) return;
       lastReset = event;
       // The field roots give the `Field` the same first value, so the `Field` sees no change.
@@ -171,13 +173,10 @@ export function usePicker<Value, Template = Value>(
   };
 }
 
-/** The picker with the shared props of a family. The getters of both stay reactive. */
-export function extendPicker<Picker extends object, Shared extends object>(
-  picker: Picker,
-  shared: Shared,
-): Picker & Shared {
+/** One object with the properties of `a` and of `b`. A getter stays a getter, so it stays reactive. */
+export function mergeGetters<A extends object, B extends object>(a: A, b: B): A & B {
   return Object.defineProperties(
     {},
-    { ...Object.getOwnPropertyDescriptors(picker), ...Object.getOwnPropertyDescriptors(shared) },
-  ) as Picker & Shared;
+    { ...Object.getOwnPropertyDescriptors(a), ...Object.getOwnPropertyDescriptors(b) },
+  ) as A & B;
 }

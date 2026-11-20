@@ -54,7 +54,6 @@ function calendarProps() {
     disabled: picker.disabled,
     readonly: root.readonly,
     today: (attrs.today as DateValue | undefined) ?? picker.today ?? undefined,
-    autofocus: undefined,
     onValueChange: (
       value: RangeCalendarRootValue<DateValue>,
       details: RangeCalendarRootChangeEventDetails,

@@ -313,14 +313,23 @@ describe('the fields', () => {
     expect(log).toEqual(['update 2026-11-18 2026-11-20']);
   });
 
-  test('the positioner holds the box around the two fields', async () => {
-    const { start } = await mountPicker({ root: { locale: 'en-US', defaultOpen: true } });
+  test('the positioner holds the box around the two fields, also when the trigger opens the popup', async () => {
+    const { start, end, trigger } = await mountPicker({ root: { locale: 'en-US' } });
+    await userEvent.click(trigger);
     await opened();
+    // The fields stand one above the other, and the trigger below them.
     await waitFor(() =>
-      expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(
-        start.getBoundingClientRect().left,
+      expect(positioner()!.getBoundingClientRect().top).toBeCloseTo(
+        end.getBoundingClientRect().bottom,
         0,
       ),
+    );
+    expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(
+      start.getBoundingClientRect().left,
+      0,
+    );
+    expect(trigger.getBoundingClientRect().bottom).toBeGreaterThan(
+      end.getBoundingClientRect().bottom,
     );
   });
 });
@@ -384,6 +393,23 @@ describe('in a Field', () => {
     expect(error()).toBe(null);
     await leave(segments('end')[0]!);
     await waitFor(() => expect(error()).not.toBe(null));
+  });
+
+  test('a submit gives the focus to the first field that fails, and a partial end is badInput', async () => {
+    const { root, segments } = await mountPicker({
+      root: { locale: 'en-US', required: true, defaultValue: range('2026-11-18', null) },
+      fieldRoot: { name: 'trip' },
+      match: 'badInput',
+      vaseForm: true,
+    });
+    root.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await settle();
+    expect(segments('end')[0]).toHaveFocus();
+    expect(root.querySelector('[data-testid="match"]')).toBe(null);
+    await userEvent.keyboard('11');
+    root.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await settle();
+    expect(root.querySelector('[data-testid="match"]')).toHaveTextContent('Check the dates.');
   });
 
   describe.each([

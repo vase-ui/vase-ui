@@ -55,9 +55,6 @@ function calendarProps() {
     readonly: root.readonly,
     today: (attrs.today as DateValue | undefined) ?? picker.today ?? undefined,
     multiple: undefined,
-    minDays: undefined,
-    maxDays: undefined,
-    autofocus: undefined,
     onValueChange: (value: DatePickerRootValue, details: CalendarRootChangeEventDetails) =>
       picker.commit(value, details),
   });

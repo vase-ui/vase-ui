@@ -2,7 +2,7 @@
 import { mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
 import { displayCalendar } from '../common/date-time/displayCalendar';
 import { assertTemporal, sameTemporal } from '../common/date-time/temporal';
-import { extendPicker, usePicker } from '../common/picker/root';
+import { mergeGetters, usePicker } from '../common/picker/root';
 import { useLocale } from '../locale-provider/part';
 import PopoverRoot from '../popover/PopoverRoot.vue';
 import { datePickerKey } from './root';
@@ -59,7 +59,7 @@ watch(
 );
 provide(
   datePickerKey,
-  extendPicker(picker, {
+  mergeGetters(picker, {
     props,
     get calendar() {
       return displayCalendar(props.calendar, picker.template, shownLocale.value);

@@ -247,13 +247,11 @@ type CalendarOwned = OwnedKeys<
   | 'calendar'
   | 'disabled'
   | 'readonly'
-  | 'autofocus'
 >;
 
-export interface DateRangePickerCalendarProps
-  /* @vue-ignore */
-  extends
-    Omit<RangeCalendarRootProps<DateValue>, CalendarOwned>,
-    /* @vue-ignore */ CalendarListeners {}
+/** The props of `RangeCalendar.Root` that the picker does not own, and the events that reach it. */
+type CalendarProps = Omit<RangeCalendarRootProps<DateValue>, CalendarOwned> & CalendarListeners;
+
+export interface DateRangePickerCalendarProps extends /* @vue-ignore */ CalendarProps {}
 
 export interface DateRangePickerCalendarState extends RangeCalendarRootState {}

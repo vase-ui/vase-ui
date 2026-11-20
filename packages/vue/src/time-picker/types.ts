@@ -296,9 +296,10 @@ type ClockOwned = OwnedKeys<
   | 'readonly'
 >;
 
-export interface TimePickerClockProps
-  /* @vue-ignore */
-  extends Omit<TimeClockRootProps, ClockOwned>, /* @vue-ignore */ ClockListeners {
+/** The props of `TimeClock.Root` that the picker does not own, and the events that reach it. */
+type ClockProps = Omit<TimeClockRootProps, ClockOwned> & ClockListeners;
+
+export interface TimePickerClockProps extends /* @vue-ignore */ ClockProps {
   /** The unit that the face shows. `v-model:view` binds it. */
   view?: TimeClockView | undefined;
   /**

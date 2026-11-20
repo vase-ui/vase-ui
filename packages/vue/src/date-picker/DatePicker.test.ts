@@ -123,30 +123,42 @@ describe('the parts', () => {
   });
 
   test.each([
-    { name: 'multiple', part: 'calendar', attrs: { multiple: '' } },
-    { name: 'min-days', part: 'calendar', attrs: { 'min-days': 2, minDays: 2 } },
-    { name: 'autofocus', part: 'calendar', attrs: { autofocus: '' } },
-    { name: 'handle', part: 'trigger', attrs: { handle: {}, 'open-on-hover': '' } },
+    { name: 'multiple', attrs: { multiple: '' } },
+    { name: 'in kebab case', attrs: { multiple: '', 'min-days': 2 } },
   ])(
-    'an attribute $name with the name of a prop that the picker keeps out does not reach the inner part',
-    async ({ part, attrs }) => {
+    'an attribute $name of a prop that the picker keeps out does not reach the calendar',
+    async ({ attrs }) => {
       mockToday('2026-11-18');
-      const { trigger } = await mountPicker({
-        root: { locale: 'en-US', defaultOpen: true, defaultValue: day('2026-11-18') },
-        [part]: attrs,
+      await mountPicker({
+        root: {
+          locale: 'en-US',
+          defaultOpen: true,
+          closeOnSelect: false,
+          defaultValue: day('2026-11-18'),
+        },
+        calendar: attrs,
       });
       const element = await opened();
-      // One value: `multiple` and `minDays` would keep two days.
       await userEvent.click(dayButton('2026-11-20'));
       expect(element.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
-      expect(trigger).not.toHaveAttribute('handle');
     },
   );
+
+  test('an attribute handle of the trigger does not reach Popover.Trigger, so the trigger opens the picker', async () => {
+    const { trigger } = await mountPicker({
+      root: { locale: 'en-US' },
+      trigger: { handle: {}, 'open-on-hover': '' },
+    });
+    await userEvent.click(trigger);
+    await opened();
+  });
 
   test('an attribute name on the time field does not reach the form', async () => {
     const { form } = await mountPicker({
       root: { locale: 'en-US', open: true, name: 'when', defaultValue: at('2026-11-18T10:30') },
       timeField: { name: 'time' },
+      // The popup is in the form.
+      portal: { disabled: true },
     });
     await opened();
     expect(new FormData(form).has('time')).toBe(false);
@@ -352,6 +364,42 @@ describe('today and the first focus', () => {
     spy.mockRestore();
   });
 
+  test('the root reads the clock again when the user opens the popup', async () => {
+    const spy = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(day('2026-11-18'));
+    const { trigger } = await mountPicker({ root: { locale: 'en-US' } });
+    spy.mockReturnValue(day('2026-12-02'));
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(dayButton('2026-12-02')).toHaveFocus());
+    spy.mockRestore();
+  });
+
+  test('the root reads today in the zone of timeZone, and gives it to the calendar', async () => {
+    const spy = vi
+      .spyOn(Temporal.Now, 'plainDateISO')
+      .mockImplementation((zone) => day(zone === 'Asia/Tokyo' ? '2026-11-19' : '2026-11-18'));
+    await mountPicker({ root: { locale: 'en-US', timeZone: 'Asia/Tokyo', defaultOpen: true } });
+    await opened();
+    await waitFor(() => expect(dayButton('2026-11-19')).toHaveFocus());
+    expect(cell('2026-11-19')).toHaveAttribute('data-today');
+    spy.mockRestore();
+  });
+
+  test('a time typed with no value takes the day of today, which the root reads at its mount', async () => {
+    mockToday('2026-11-18');
+    const log: string[] = [];
+    const { root } = await mountPicker({
+      root: logged(log, { granularity: 'minute' }),
+      inlineTimeField: { 'aria-label': 'Time' },
+    });
+    const [hour] = root.querySelectorAll<HTMLInputElement>(
+      '[aria-label="Time"] [role="spinbutton"]',
+    );
+    hour!.focus();
+    await userEvent.keyboard('0930a');
+    expect(log.at(-1)).toBe('update 2026-11-18T09:30:00');
+  });
+
   test('the selected day, and the today prop of the calendar', async () => {
     mockToday('2026-11-18');
     const props = reactive<Props>({ locale: 'en-US', defaultValue: day('2026-11-04'), open: true });
@@ -458,6 +506,17 @@ describe('the popup', () => {
     await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
     await settle();
     expect(popup()).toBe(null);
+  });
+
+  test('Alt+ArrowDown does nothing while the popup is open', async () => {
+    const log: string[] = [];
+    const props = logged(log, { open: true });
+    const { segments } = await mountPicker({ root: props });
+    await opened();
+    segments()[0]!.focus();
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await settle();
+    expect(log).toEqual([]);
   });
 
   test('Alt+ArrowDown with no trigger opens the popup, and the focus returns to the segment', async () => {
@@ -773,6 +832,35 @@ describe('the form', () => {
     await userEvent.click(dayButton('2026-11-20'));
     await settle();
     expect(error()).toBe(null);
+  });
+
+  test('in a Form with an error for the field, a press on a day removes the error', async () => {
+    mockToday('2026-11-18');
+    const { error, trigger } = await mountPicker({
+      root: { locale: 'en-US' },
+      fieldRoot: { name: 'when' },
+      formErrors: { when: 'Server error' },
+    });
+    expect(error()).toHaveTextContent('Server error');
+    await userEvent.click(trigger);
+    await opened();
+    await userEvent.click(dayButton('2026-11-20'));
+    await settle();
+    expect(error()).toBe(null);
+  });
+
+  test('in a Field, a required picker with a time field in the popup shows its error at a submit', async () => {
+    const { root, error } = await mountPicker({
+      root: { locale: 'en-US', open: true, required: true, granularity: 'minute' },
+      fieldRoot: { name: 'when' },
+      timeField: {},
+      vaseForm: true,
+    });
+    await opened();
+    await settle();
+    root.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await settle();
+    expect(error()).not.toBe(null);
   });
 
   test('in a Field, the field is the control: the label names it, and the time field of the popup is none', async () => {

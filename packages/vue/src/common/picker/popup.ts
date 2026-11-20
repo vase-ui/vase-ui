@@ -75,7 +75,7 @@ export function usePickerPopup(part: string) {
     },
     /** Opens the popup for a key, as a press of `trigger` does. */
     openByKey(event: KeyboardEvent, trigger: Element | undefined) {
-      if (!root.open) root.request(true, 'trigger-press', event, trigger ?? null);
+      root.request(true, 'trigger-press', event, trigger ?? null);
     },
     /** Closes the popup after a pick. */
     closeAfterPick(event: Event) {
