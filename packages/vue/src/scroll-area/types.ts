@@ -39,7 +39,8 @@ export interface ScrollAreaScrollbarProps
    */
   orientation?: 'vertical' | 'horizontal';
   /**
-   * The scrollbar renders also while its axis has no overflow.
+   * The scrollbar renders also while its axis has no overflow, in the server HTML too. Hide such a
+   * scrollbar with `:not([data-has-overflow-y])` or `:not([data-has-overflow-x])`.
    * @default false
    */
   keepMounted?: boolean;

@@ -20,7 +20,13 @@ export type { ProgressStatus as Status } from './types';
 
 /**
  * Groups all parts of the progress bar and provides the task completion status to screen readers.
+ * Without a `Progress.Label`, give it `aria-label` or `aria-labelledby`. With the `element` slot,
+ * put text in your element, such as a `Progress.Label`: NVDA and JAWS can need text in a progress
+ * bar to say its name.
  * Renders a `<div>` element with the role `progressbar`.
+ * @selector `[data-indeterminate]` The progress has no value.
+ * @selector `[data-progressing]` The value is less than `max`.
+ * @selector `[data-complete]` The value is `max`.
  */
 export const Root: typeof ProgressRoot = ProgressRoot;
 export namespace Root {
@@ -31,6 +37,9 @@ export namespace Root {
 /**
  * Contains the progress bar indicator.
  * Renders a `<div>` element.
+ * @selector `[data-indeterminate]` The progress has no value.
+ * @selector `[data-progressing]` The value is less than `max`.
+ * @selector `[data-complete]` The value is `max`.
  */
 export const Track: typeof ProgressTrack = ProgressTrack;
 export namespace Track {
@@ -39,8 +48,13 @@ export namespace Track {
 }
 
 /**
- * Visualizes the completion status of the task.
+ * Visualizes the completion status of the task. It has the inline style `inset-inline-start: 0`,
+ * `height: inherit` and a `width` with the percent of the range, except while the progress is
+ * indeterminate.
  * Renders a `<div>` element.
+ * @selector `[data-indeterminate]` The progress has no value.
+ * @selector `[data-progressing]` The value is less than `max`.
+ * @selector `[data-complete]` The value is `max`.
  */
 export const Indicator: typeof ProgressIndicator = ProgressIndicator;
 export namespace Indicator {
@@ -51,6 +65,9 @@ export namespace Indicator {
 /**
  * A text element that shows the current value.
  * Renders a `<span>` element.
+ * @selector `[data-indeterminate]` The progress has no value.
+ * @selector `[data-progressing]` The value is less than `max`.
+ * @selector `[data-complete]` The value is `max`.
  */
 export const Value: typeof ProgressValue = ProgressValue;
 export namespace Value {
@@ -59,8 +76,11 @@ export namespace Value {
 }
 
 /**
- * An accessible label for the progress bar.
+ * An accessible label for the progress bar. Use one in each progress bar.
  * Renders a `<span>` element.
+ * @selector `[data-indeterminate]` The progress has no value.
+ * @selector `[data-progressing]` The value is less than `max`.
+ * @selector `[data-complete]` The value is `max`.
  */
 export const Label: typeof ProgressLabel = ProgressLabel;
 export namespace Label {

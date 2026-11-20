@@ -67,7 +67,7 @@
       "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state of the root is `{}`, so a state type and a `state` slot prop give the developer nothing. The default of `locale` is the locale of the nearest `LocaleProvider`, else `en-US`, and not the locale of the browser, so that the server HTML and the first render of the browser agree (VUE-170)."
+      "reason": "The state of the root is `{}`, so a state type and a `state` slot prop give the developer nothing. With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`, and not the locale of the browser, so that the server HTML and the first render of the browser agree."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/meter/types.md",

@@ -23,8 +23,11 @@ export namespace Root {
 }
 
 /**
- * The image to be displayed in the avatar.
+ * The image to be displayed in the avatar. It has `alt=""` when you give no `alt`. Give an `alt`
+ * when no text beside the avatar names the person.
  * Renders an `<img>` element.
+ * @selector `[data-loading]` The picture loads, and `keepMounted` keeps the image in the DOM.
+ * @selector `[data-error]` The picture failed to load, and `keepMounted` keeps the image in the DOM.
  */
 export const Image: typeof AvatarImage = AvatarImage;
 export namespace Image {

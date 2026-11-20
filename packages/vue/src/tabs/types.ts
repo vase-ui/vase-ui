@@ -33,7 +33,10 @@ export interface TabsRootProps<Value = any>
    * that is not disabled is active. With `null`, no tab is active.
    */
   defaultValue?: Value | null;
-  /** The direction in which the tabs follow each other. */
+  /**
+   * The direction in which the tabs follow each other.
+   * @default 'horizontal'
+   */
   orientation?: TabsRootOrientation;
 }
 
@@ -57,9 +60,15 @@ export interface TabsRootChangeEventDetails extends ChangeEventDetails<TabsRootC
 }
 
 export interface TabsListProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
-  /** An arrow key, Home and End also make the tab that gets the focus active. */
+  /**
+   * An arrow key, Home and End also make the tab that gets the focus active.
+   * @default false
+   */
   activateOnFocus?: boolean;
-  /** An arrow key moves the focus from the last tab to the first, and from the first to the last. */
+  /**
+   * An arrow key moves the focus from the last tab to the first, and from the first to the last.
+   * @default true
+   */
   loopFocus?: boolean;
 }
 
@@ -71,8 +80,13 @@ export interface TabsTabProps<Value = any>
     /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id' | 'value'> {
   /** The value that the root gets when the user chooses this tab. */
   value: Value;
-  /** The user cannot choose the tab. The tab can still get the focus. */
+  /**
+   * The user cannot choose the tab. The tab can still get the focus, so the arrow keys reach it. A
+   * `click` listener on it does not run.
+   * @default false
+   */
   disabled?: boolean;
+  /** The panel names the tab by this id in `aria-labelledby`. */
   id?: string;
 }
 
@@ -87,8 +101,14 @@ export interface TabsPanelProps<Value = any>
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /** The value of the tab that opens the panel. */
   value: Value;
-  /** A closed panel stays in the DOM, with `hidden` and `inert`. */
+  /**
+   * A closed panel stays in the DOM, with `hidden` and `inert`, so its content keeps its state, and
+   * find-in-page and the server HTML have it. `<Transition>` does not animate such a panel: animate
+   * it with CSS on `[hidden]`.
+   * @default false
+   */
   keepMounted?: boolean;
+  /** The tab names the panel by this id in `aria-controls`. */
   id?: string;
 }
 
@@ -100,7 +120,9 @@ export interface TabsPanelState extends TabsRootState {
 export interface TabsIndicatorProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The server HTML has a script that places the indicator before the app starts. Use it when the
-   * page shows the server HTML for some time.
+   * page shows the server HTML for some time. The script has the nonce of the nearest
+   * `CSPProvider`.
+   * @default false
    */
   renderBeforeHydration?: boolean;
 }

@@ -12,7 +12,9 @@ import type {
 } from './types';
 
 /**
- * Groups all parts of the meter and provides the value for screen readers.
+ * Groups all parts of the meter and provides the value for screen readers. Without a
+ * `Meter.Label`, give it `aria-label` or `aria-labelledby`. With the `element` slot, put text in
+ * your element, such as a `Meter.Label`: NVDA and JAWS can need text in a meter to say its name.
  * Renders a `<div>` element with the role `meter`.
  */
 export const Root: typeof MeterRoot = MeterRoot;
@@ -21,7 +23,7 @@ export namespace Root {
 }
 
 /**
- * An accessible label for the meter.
+ * An accessible label for the meter. Use one in each meter.
  * Renders a `<span>` element.
  */
 export const Label: typeof MeterLabel = MeterLabel;
@@ -48,7 +50,8 @@ export namespace Track {
 }
 
 /**
- * Visualizes the position of the value along the range.
+ * Visualizes the position of the value along the range. It has the inline style
+ * `inset-inline-start: 0`, `height: inherit` and a `width` with the percent of the range.
  * Renders a `<div>` element.
  */
 export const Indicator: typeof MeterIndicator = MeterIndicator;

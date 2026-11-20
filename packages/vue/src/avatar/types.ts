@@ -36,7 +36,8 @@ export interface AvatarImageProps extends /* @vue-ignore */ Omit<
   referrerpolicy?: ReferrerPolicy;
   /**
    * Whether the image element stays in the DOM and loads the picture in place. Supports
-   * `loading="lazy"` and an image component that renders its own `<img>`.
+   * `loading="lazy"` and an image component that renders its own `<img>`. Until the picture loads,
+   * the image has `aria-hidden="true"`, so the fallback names the avatar.
    * @default false
    */
   keepMounted?: boolean;

@@ -24,6 +24,7 @@ import type {
 /**
  * Groups all parts of the accordion.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The accordion is disabled.
  */
 export const Root: typeof AccordionRoot = AccordionRoot;
 export namespace Root {
@@ -37,6 +38,8 @@ export namespace Root {
 /**
  * Groups an accordion header with the corresponding panel.
  * Renders a `<div>` element.
+ * @selector `[data-open]` The panel of the item is open.
+ * @selector `[data-disabled]` The item or the accordion is disabled.
  */
 export const Item: typeof AccordionItem = AccordionItem;
 export namespace Item {
@@ -47,8 +50,10 @@ export namespace Item {
 }
 
 /**
- * A heading that labels the corresponding panel.
+ * A heading that labels the corresponding panel. Give it another heading level with `as`.
  * Renders an `<h3>` element.
+ * @selector `[data-open]` The panel of the item is open.
+ * @selector `[data-disabled]` The item or the accordion is disabled.
  */
 export const Header: typeof AccordionHeader = AccordionHeader;
 export namespace Header {
@@ -59,6 +64,9 @@ export namespace Header {
 /**
  * A button that opens and closes the corresponding panel.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The panel is open.
+ * @selector `:disabled` The trigger is a native button, and the trigger, the item, the accordion or a fieldset around it is disabled.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and the trigger, the item or the accordion is disabled.
  */
 export const Trigger: typeof AccordionTrigger = AccordionTrigger;
 export namespace Trigger {
@@ -67,8 +75,13 @@ export namespace Trigger {
 }
 
 /**
- * A collapsible panel with the accordion item contents.
- * Renders a `<div>` element.
+ * A collapsible panel with the accordion item contents. With more than about six panels that can
+ * be open at one time, give each panel another `role`, such as `group`.
+ * Renders a `<div>` element with the role `region`.
+ * @selector `[hidden]` The panel is closed, and `keepMounted` or `hiddenUntilFound` keeps it in the DOM.
+ * @selector `[data-disabled]` The item or the accordion is disabled.
+ * @cssVariable `--accordion-panel-height` The height of the content of the panel, in pixels. The panel writes it before each open and each close.
+ * @cssVariable `--accordion-panel-width` The width of the content of the panel, in pixels. The panel writes it before each open and each close.
  */
 export const Panel: typeof AccordionPanel = AccordionPanel;
 export namespace Panel {
