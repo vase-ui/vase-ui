@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
@@ -63,6 +63,26 @@ describe('<DateRangePicker.Calendar />', () => {
       expect(screen.getByTestId('calendar')).toHaveAttribute(
         'aria-label',
         formatText(month, { month: 'long', year: 'numeric' }, 'fa-IR'),
+      );
+    });
+  });
+
+  it('shows the locale of the browser with no locale, as the fields do', async () => {
+    const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    // The browser of the test has the locale `fr`.
+    const spy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions')
+      .mockImplementation(function (this: Intl.DateTimeFormat) {
+        return { ...resolvedOptions.call(this), locale: 'fr' };
+      });
+    onTestFinished(() => spy.mockRestore());
+    await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20'), locale: undefined });
+    const month = Temporal.PlainYearMonth.from('2026-11');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('calendar')).toHaveAttribute(
+        'aria-label',
+        formatText(month, { month: 'long', year: 'numeric' }, 'fr'),
       );
     });
   });
