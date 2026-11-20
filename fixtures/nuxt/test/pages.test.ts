@@ -1375,29 +1375,18 @@ async function expectHydratedPreviewCardPage(page: Page) {
   );
 }
 
-// A server renders no popup and no portal. The trigger of an open root has the open state and
-// names no popup, because a server renders no popup.
+// A server renders no popup. The trigger of an open root has the open state and names no popup,
+// because a server renders no popup.
 async function expectAlertDialogPageOnServer(page: Page) {
-  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
-  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+  const read = (testId: string) =>
+    readAttributes(page.getByTestId(testId), ['aria-haspopup', 'aria-expanded']);
+  const closed = { 'aria-haspopup': 'dialog', 'aria-expanded': 'false' };
 
-  expect(await read('closed')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'false',
-    'data-popup-open': null,
-  });
-  expect(await read('open')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'true',
-    'data-popup-open': '',
-  });
-  expect(await read('detached')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'false',
-    'data-popup-open': null,
-  });
+  expect(await read('closed')).toEqual(closed);
+  expect(await read('open')).toEqual({ ...closed, 'aria-expanded': 'true' });
+  expect(await read('detached')).toEqual(closed);
   expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeNull();
-  expect(await page.locator('[data-vase-ui-portal], [role="alertdialog"]').count()).toBe(0);
+  expect(await page.locator('[role="alertdialog"]').count()).toBe(0);
 }
 
 // After the mount, the open root renders its popup in `<body>`. The title and the description
@@ -1405,14 +1394,10 @@ async function expectAlertDialogPageOnServer(page: Page) {
 async function expectHydratedAlertDialogPage(page: Page) {
   const popup = page.getByTestId('open-popup');
   expect(await popup.count()).toBe(1);
-  expect(
-    await popup.evaluate(
-      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
-    ),
-  ).toBe('body');
-  expect(await readAttributes(popup, ['role', 'data-open'])).toEqual({
+  expect(await popup.evaluate((element) => element.parentElement?.localName)).toBe('body');
+  expect(await readAttributes(popup, ['role', 'aria-modal'])).toEqual({
     role: 'alertdialog',
-    'data-open': '',
+    'aria-modal': 'true',
   });
   expect(await popup.getAttribute('aria-labelledby')).toBe(
     await page.getByTestId('open-title').getAttribute('id'),
@@ -1520,11 +1505,8 @@ async function expectDialogInPlacePageOnServer(page: Page) {
   const panel = page.getByTestId('panel');
   expect(await panel.getAttribute('role')).toBe('dialog');
   expect(await page.getByTestId('panel-title').textContent()).toBe('Panel title');
-  expect(await page.locator('main [data-testid="panel"]').count()).toBe(1);
-  expect(await page.locator('main > [data-vase-ui-portal] > [data-testid="panel"]').count()).toBe(
-    1,
-  );
-  expect(await page.locator('body > [data-vase-ui-portal]').count()).toBe(0);
+  expect(await page.locator('main > [data-testid="panel"]').count()).toBe(1);
+  expect(await page.locator('body > [role="dialog"]').count()).toBe(0);
 }
 
 async function expectHydratedDialogInPlacePage(page: Page) {
@@ -1534,28 +1516,17 @@ async function expectHydratedDialogInPlacePage(page: Page) {
   expect(await page.getByTestId('panel').getAttribute('aria-labelledby')).toBe(titleId);
 }
 
-// A server renders no popup and no portal. The trigger of an open root has the open state. The
-// trigger of a handle has the closed form, because a server attaches no store to a handle.
+// A server renders no popup. The trigger of an open root has the open state. The trigger of a
+// handle is closed, because a server gives no root to a handle.
 async function expectDialogPageOnServer(page: Page) {
-  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
-  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+  const read = (testId: string) =>
+    readAttributes(page.getByTestId(testId), ['aria-haspopup', 'aria-expanded']);
+  const closed = { 'aria-haspopup': 'dialog', 'aria-expanded': 'false' };
 
-  expect(await read('closed')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'false',
-    'data-popup-open': null,
-  });
-  expect(await read('open')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'true',
-    'data-popup-open': '',
-  });
-  expect(await read('detached')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'false',
-    'data-popup-open': null,
-  });
-  expect(await page.locator('[data-vase-ui-portal], [role="dialog"]').count()).toBe(0);
+  expect(await read('closed')).toEqual(closed);
+  expect(await read('open')).toEqual({ ...closed, 'aria-expanded': 'true' });
+  expect(await read('detached')).toEqual(closed);
+  expect(await page.locator('[role="dialog"]').count()).toBe(0);
 }
 
 // After the mount, the open root renders its popup in `<body>`, named and described by its title
@@ -1563,13 +1534,8 @@ async function expectDialogPageOnServer(page: Page) {
 async function expectHydratedDialogPage(page: Page) {
   const popup = page.getByTestId('open-popup');
   expect(await popup.count()).toBe(1);
-  expect(
-    await popup.evaluate(
-      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
-    ),
-  ).toBe('body');
+  expect(await popup.evaluate((element) => element.parentElement?.localName)).toBe('body');
   expect(await popup.getAttribute('role')).toBe('dialog');
-  expect(await popup.getAttribute('data-open')).toBe('');
   expect(await popup.getAttribute('aria-labelledby')).toBe(
     await page.getByTestId('open-title').getAttribute('id'),
   );
@@ -3045,7 +3011,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     await page.mouse.click(1, 1);
     await waitForTwoFrames(page);
-    expect(await openPopup.getAttribute('data-open')).toBe('');
+    expect(await openPopup.count()).toBe(1);
 
     await page.getByTestId('open-close').click();
     await openPopup.waitFor({ state: 'detached' });
