@@ -10,7 +10,7 @@ import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
 import MeasureTransitionReopen from '../fixtures/MeasureTransitionReopen.vue';
 import { createScrollDocument } from '../fixtures/scrollDocument';
-import { touchDrag } from '../pointer';
+import { holdPress, touchDrag } from '../pointer';
 import { mount } from '../render';
 import { tabbables } from '../../src/popup/focus';
 
@@ -198,12 +198,8 @@ describe('a press (M7)', () => {
     html(`<div id="outside" style="position: fixed; left: 0; top: 0; width: 100px; height: 100px"></div>
       <div id="popup" style="position: fixed; left: 200px; top: 0; width: 100px; height: 100px"></div>`);
     const log = record(document, ['pointerdown', 'pointerup', 'click']);
-    await userEvent.pointer([
-      { coords: centerOf(element('popup')) },
-      '[MouseLeft>]',
-      { coords: centerOf(element('outside')) },
-      '[/MouseLeft]',
-    ]);
+    const { release } = await holdPress(element('popup'));
+    await release(centerOf(element('outside')));
     expect(log).toEqual(['pointerdown popup', 'pointerup outside', 'click div']);
   });
 
