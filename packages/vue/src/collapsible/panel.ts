@@ -65,7 +65,13 @@ export function useCollapsiblePanel(
     },
   );
   // A new element, and a kept element that shows, get the size that they have at their closed style.
-  watch([options.element, () => part.open], writeSize, { flush: 'post' });
+  watch(
+    [options.element, () => part.open],
+    ([element, open]) => {
+      if (element && open) writeSize();
+    },
+    { flush: 'post' },
+  );
 
   function writeSize() {
     const element = options.element.value;
