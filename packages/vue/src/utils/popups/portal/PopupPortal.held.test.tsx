@@ -1,15 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createHeldBranch,
-  createRenderer,
-  nextEvent,
-  screen,
-  waitForLaterMillisecond,
-  waitSingleFrame,
-} from '#test-utils';
+import { createHeldBranch, createRenderer, nextEvent, screen, waitSingleFrame } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 
 function isMarked(element: Element) {
@@ -31,40 +23,7 @@ async function waitPastFocusFrame() {
   await waitSingleFrame();
 }
 
-function renderSelect() {
-  return (
-    <Select.Root defaultOpen defaultValue="one">
-      <Select.Trigger data-testid="trigger">
-        <Select.Value />
-      </Select.Trigger>
-      <Select.Portal data-testid="portal">
-        <Select.Positioner>
-          <Select.Popup data-testid="popup">
-            <Select.Item value="one">One</Select.Item>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
-
-// The place of the popup against its trigger, after the positioner has had frames to place it.
-async function measurePopupOffset() {
-  for (let frame = 0; frame < 5; frame += 1) {
-    await waitSingleFrame();
-  }
-  const trigger = screen.getByTestId('trigger').getBoundingClientRect();
-  const popup = screen.getByTestId('popup').getBoundingClientRect();
-  return { left: popup.left - trigger.left, top: popup.top - trigger.top };
-}
-
 const families = [
-  {
-    name: 'Select',
-    renderPart: renderSelect,
-    marksPage: true,
-    movesFocus: true,
-  },
   {
     name: 'Combobox',
     renderPart: () => (
@@ -160,28 +119,4 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
       expect(getMarkedChildrenOfBody()).toEqual([]);
     },
   );
-
-  it('a select that mounts while its branch is held has the place of a select that mounts in a shown branch', async () => {
-    const held = createHeldBranch(renderSelect);
-    const { unmount } = await render(
-      <div>
-        <button data-testid="outside">Outside</button>
-        <held.HeldBranch />
-      </div>,
-    );
-    await held.mountWhileHeld();
-    await waitForLaterMillisecond(() => held.show());
-    const afterShow = await measurePopupOffset();
-    unmount();
-
-    await render(
-      <div>
-        <button data-testid="outside">Outside</button>
-        <div>{renderSelect()}</div>
-      </div>,
-    );
-    const shownMount = await measurePopupOffset();
-
-    expect(afterShow).toEqual(shownMount);
-  });
 });

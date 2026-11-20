@@ -26,8 +26,10 @@ it.each([true, false])(
     });
     const open = shallowRef(false);
     const width = shallowRef(160);
-    await render(() => <SelectLayout open={open.value} aligned={aligned} width={width.value} />);
-    const positioner = screen.getByTestId('positioner');
+    await render(() => (
+      <SelectLayout open={open.value} aligned={aligned} width={width.value} inPlace />
+    ));
+    const positioner = () => screen.getByTestId('positioner');
 
     function expectPlacement() {
       const trigger = screen.getByTestId('trigger').getBoundingClientRect();
@@ -37,42 +39,44 @@ it.each([true, false])(
         expect(Math.abs(item.right - value.right)).toBeLessThan(1);
         expect(Math.abs(item.top + item.height / 2 - value.top - value.height / 2)).toBeLessThan(1);
       } else {
-        const box = positioner.getBoundingClientRect();
+        const box = positioner().getBoundingClientRect();
         expect(Math.abs(box.right - trigger.right)).toBeLessThan(1);
         expect(Math.abs(box.top - trigger.bottom)).toBeLessThan(1);
       }
     }
 
     open.value = true;
-    await waitSingleFrame();
+    // The positioner is hidden until its first place.
+    await waitFor(() => expect(positioner().style.visibility).toBe(''));
 
     expectPlacement();
-    expect(positioner.dataset.side).toBe(aligned ? 'none' : 'bottom');
-    expect(parseFloat(positioner.dataset.width ?? '')).toBeGreaterThan(100);
-    expect(positioner.dataset.width).toBe(positioner.style.getPropertyValue('--anchor-width'));
-    expect(positioner.dataset.origin).toMatch(/px|%/);
-    expect(positioner.dataset.origin).toBe(positioner.style.getPropertyValue('--transform-origin'));
+    expect(positioner().dataset.side).toBe(aligned ? 'none' : 'bottom');
+    expect(parseFloat(positioner().dataset.width ?? '')).toBeGreaterThan(100);
+    expect(positioner().dataset.width).toBe(positioner().style.getPropertyValue('--anchor-width'));
+    expect(positioner().dataset.origin).toMatch(/px|%/);
+    expect(positioner().dataset.origin).toBe(
+      positioner().style.getPropertyValue('--transform-origin'),
+    );
     if (aligned) {
-      expect(positioner.dataset.height).toMatch(/px$/);
-      expect(parseFloat(positioner.dataset.height ?? '')).toBeCloseTo(
-        parseFloat(positioner.style.height),
+      expect(positioner().dataset.height).toMatch(/px$/);
+      expect(parseFloat(positioner().dataset.height ?? '')).toBeCloseTo(
+        parseFloat(positioner().style.height),
         3,
       );
     }
 
     open.value = false;
     await nextTick();
-    expect(positioner).toHaveAttribute('hidden');
-    expect(positioner.style.height).toBe('');
-    expect(screen.getByTestId('popup').style.getPropertyValue('--transform-origin')).toBe('');
+    expect(screen.getByTestId('popup')).not.toBeVisible();
+    expect(positioner().style.pointerEvents).toBe('none');
     width.value = 240;
     open.value = true;
     await waitSingleFrame();
     expectPlacement();
-    expect(positioner).not.toHaveAttribute('hidden');
-    expect(parseFloat(positioner.dataset.width ?? '')).toBeGreaterThan(200);
-    expect(positioner.dataset.width).toBe(positioner.style.getPropertyValue('--anchor-width'));
-    expect(positioner.dataset.origin).toMatch(/px|%/);
+    expect(screen.getByTestId('popup')).toBeVisible();
+    expect(parseFloat(positioner().dataset.width ?? '')).toBeGreaterThan(200);
+    expect(positioner().dataset.width).toBe(positioner().style.getPropertyValue('--anchor-width'));
+    expect(positioner().dataset.origin).toMatch(/px|%/);
   },
 );
 

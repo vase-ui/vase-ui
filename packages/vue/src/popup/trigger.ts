@@ -1,7 +1,17 @@
-import { computed, onMounted, watch, type Ref } from 'vue';
+import { computed, onMounted, shallowRef, watch, type Ref } from 'vue';
+import { addEventListener } from '../common/addEventListener';
 import { useButton } from '../common/button';
 import { useIsHydrated } from '../common/hydration';
-import { rootOfHandle, type PopupHandle, type PopupRoot, type PopupTrigger } from './root';
+import { mergeCleanups } from '../common/mergeCleanups';
+import { ownerDocument } from '../common/owner';
+import {
+  interactionOf,
+  rootOfHandle,
+  type InteractionType,
+  type PopupHandle,
+  type PopupRoot,
+  type PopupTrigger,
+} from './root';
 
 /**
  * The root of the handle of a trigger. The trigger reads it after its own mount, so its first render
@@ -52,10 +62,16 @@ export function usePopupTrigger(
     /** The disabled trigger keeps the focus, with `aria-disabled`. */
     focusableWhenDisabled?: () => boolean;
     /**
-     * A press of the main mouse button acts at `pointerdown`, and its `click` does nothing. A
-     * touch, a pen, a key and a script act at `click`.
+     * A press of the main mouse button opens or closes the popup at `pointerdown`, and the `click`
+     * of that press does nothing. A touch, a pen, a key and a script act at `click`.
      */
     pressStart?: () => boolean;
+    /**
+     * The trigger knows a key click by the Enter or Space `keydown` before it, and not by `detail`.
+     * The `click` of a native label has `detail` 0 in WebKit only
+     * (test/measurements/select.test.ts), so each other click is a pointer click.
+     */
+    keyClickByKeydown?: boolean;
   },
 ) {
   const button = useButton({
@@ -88,30 +104,67 @@ export function usePopupTrigger(
   });
   const open = computed(() => active.value && !!root()?.open);
 
-  function toggle(event: MouseEvent) {
+  let pressed = false;
+  let keyed = false;
+  // The trigger of a press that acted at `pointerdown`, until the release. The `click` of the press
+  // comes to the trigger only after a release on it. After a release at another place, the next
+  // `click`, such as that of a native label, is no click of the press.
+  const press = shallowRef<Element | null>(null);
+  watch(
+    press,
+    (trigger, _, onCleanup) => {
+      if (!trigger) return;
+      const release = (event: PointerEvent) => {
+        press.value = null;
+        pressed = event.type === 'pointerup' && trigger.contains(event.composedPath()[0] as Node);
+      };
+      const doc = ownerDocument(trigger);
+      onCleanup(
+        mergeCleanups(
+          addEventListener(doc, 'pointerup', release, true),
+          addEventListener(doc, 'pointercancel', release, true),
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
+
+  function toggle(event: MouseEvent, interaction?: InteractionType) {
     const current = root();
     if (!current) return;
-    if (open.value && (options.closesAtPress?.(event) ?? true)) {
-      current.request(false, 'trigger-press', event, options.element.value);
-    } else {
-      current.request(true, 'trigger-press', event, options.element.value);
-    }
-  }
-
-  let pressed = false;
-  function onPointerdown(event: PointerEvent) {
-    pressed = !!options.pressStart?.() && event.pointerType === 'mouse' && event.button === 0;
-    if (pressed && !button.disabled.value) toggle(event);
+    const close = open.value && (options.closesAtPress?.(event) ?? true);
+    current.request(!close, 'trigger-press', event, options.element.value, interaction);
   }
 
   function onClick(event: MouseEvent) {
+    const wasPressed = pressed;
+    const wasKeyed = keyed;
+    pressed = false;
+    keyed = false;
     // A key and a script give a click with no press.
-    if (pressed && event.detail !== 0) {
-      pressed = false;
+    if (wasPressed && event.detail !== 0) return;
+    if (!options.keyClickByKeydown) {
+      toggle(event);
       return;
     }
-    toggle(event);
+    const interaction = interactionOf(event);
+    toggle(event, wasKeyed ? 'keyboard' : interaction === 'keyboard' ? '' : interaction);
   }
 
-  return { button, active, open, onClick, onPointerdown };
+  function onPointerdown(event: PointerEvent) {
+    pressed = false;
+    press.value = null;
+    if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (button.disabled.value) return;
+    pressed = true;
+    toggle(event);
+    press.value = event.currentTarget as Element;
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    pressed = false;
+    keyed = event.key === 'Enter' || event.key === ' ';
+  }
+
+  return { button, active, open, onClick, onPointerdown, onKeydown };
 }

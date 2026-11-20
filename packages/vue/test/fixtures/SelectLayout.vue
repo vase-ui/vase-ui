@@ -1,29 +1,28 @@
 <script setup lang="ts">
-import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Select } from '@vase-ui/vue/select';
 import { normalizeStyle } from 'vue';
 import type { StyleValue } from 'vue';
 
-defineProps<{ open: boolean; aligned: boolean; width: number }>();
+defineProps<{ open: boolean; aligned: boolean; width: number; inPlace?: boolean }>();
 
-function property(style: StyleValue, key: string) {
-  const normalized = normalizeStyle(style);
+function property(style: unknown, key: string) {
+  const normalized = normalizeStyle(style as StyleValue);
   return typeof normalized === 'object' ? normalized[key] : undefined;
 }
 </script>
 
 <template>
-  <DirectionProvider direction="rtl">
-    <div dir="rtl" style="position: absolute; top: 150px; left: 100px">
-      <Select.Root :open="open" default-value="two" :modal="false">
-        <Select.Trigger data-testid="trigger" :style="{ width: width + 'px' }">
-          <Select.Value data-testid="value" />
-        </Select.Trigger>
-        <Select.Positioner :align-item-with-trigger="aligned" align="start">
-          <template #render="{ props }">
+  <div dir="rtl" style="position: absolute; top: 150px; left: 100px">
+    <Select.Root :open="open" default-value="two" :modal="false">
+      <Select.Trigger data-testid="trigger" :style="{ width: width + 'px' }">
+        <Select.Value data-testid="value" />
+      </Select.Trigger>
+      <Select.Portal :disabled="inPlace">
+        <Select.Positioner :align-item-with-trigger="aligned" align="start" dir="rtl">
+          <template #element="{ props, elementRef }">
             <div
               v-bind="props"
-              :ref="props.ref"
+              :ref="elementRef"
               data-testid="positioner"
               :data-width="property(props.style, '--anchor-width')"
               :data-origin="property(props.style, '--transform-origin')"
@@ -40,7 +39,7 @@ function property(style: StyleValue, key: string) {
             </div>
           </template>
         </Select.Positioner>
-      </Select.Root>
-    </div>
-  </DirectionProvider>
+      </Select.Portal>
+    </Select.Root>
+  </div>
 </template>

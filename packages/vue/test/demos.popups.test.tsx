@@ -199,13 +199,13 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`. A popup of the popup layer can be a child of
-// `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
-// whole document, and a menu. The older popups have `data-open`. A tooltip popup has no role: it is the element
-// with a side in its positioner. A preview card has no role and no attribute of its open state, so
-// its positioner in `<body>` counts while a link of the demo has `data-popup-open`. The content of an
-// open item of a navigation menu is the element that its trigger names in `aria-controls`, also in
-// a viewport in place.
+// A closed popup that stays in the DOM is `hidden`, or `inert` as the list of a select. A popup of
+// the popup layer can be a child of `<body>`, and a portal can move it to a container in the demo,
+// so the case reads the dialogs, the menus and the lists of the whole document. The older popups
+// have `data-open`. A tooltip popup has no role: it is the element with a side in its positioner. A
+// preview card has no role and no attribute of its open state, so its positioner in `<body>` counts
+// while a link of the demo has `data-popup-open`. The content of an open item of a navigation menu
+// is the element that its trigger names in `aria-controls`, also in a viewport in place.
 function openPopups(family: string | undefined) {
   const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
   const cards =
@@ -221,7 +221,7 @@ function openPopups(family: string | undefined) {
         ),
       ),
       ...document.querySelectorAll<HTMLElement>(
-        `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden])${tooltip}`,
+        `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden]), [role="listbox"]:not([inert], [inert] *)${tooltip}`,
       ),
       ...[...document.querySelectorAll('nav [aria-expanded="true"][aria-controls]')].flatMap(
         (trigger) => document.getElementById(trigger.getAttribute('aria-controls')!) ?? [],

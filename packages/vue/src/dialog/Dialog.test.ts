@@ -15,6 +15,7 @@ import DialogStack from '../../test/fixtures/DialogStack.vue';
 import DialogTitles from '../../test/fixtures/DialogTitles.vue';
 import DialogWithPopovers from '../../test/fixtures/DialogWithPopovers.vue';
 import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
+import DialogWithSelect from '../../test/fixtures/DialogWithSelect.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
@@ -1431,6 +1432,18 @@ describe('the portal', () => {
     expect(byTestId('field')).toHaveFocus();
     await userEvent.keyboard('{Escape}');
     await closed();
+  });
+
+  test('a select in a modal dialog with a disabled portal is free of inert, and a press on its option keeps the dialog open', async () => {
+    mount(DialogWithSelect);
+    await opened('select-popup');
+    const option = byTestId('option')!;
+    expect(inert(option)).toBe(false);
+    expect(hidden(option)).toBe(false);
+    await userEvent.click(option);
+    await waitFor(() => expect(byTestId('trigger')).toHaveAttribute('aria-expanded', 'false'));
+    expect(byTestId('value')).toHaveTextContent('a');
+    expect(popup()).not.toBe(null);
   });
 
   test('`to` puts the content in a container; `null` renders nothing', async () => {

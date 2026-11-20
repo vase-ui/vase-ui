@@ -19,7 +19,6 @@ import { Select } from '@vase-ui/vue/select';
           <Select.List>
             <Select.Item>
               <Select.ItemText />
-              <Select.ItemIndicator />
             </Select.Item>
             <Select.Separator />
             <Select.Group>

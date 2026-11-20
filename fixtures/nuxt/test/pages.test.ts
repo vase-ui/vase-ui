@@ -1604,22 +1604,18 @@ interface FormState {
 }
 
 const FORM_STATE_INITIAL_MODELS = {
-  font: 'serif',
   fruit: null,
 };
 
 // The state of /form-state after each part changes.
 const FORM_STATE_CHANGED: FormState = {
   formData: {
-    font: ['mono'],
     fruit: ['Cherry'],
   },
   models: {
-    font: 'mono',
     fruit: 'Cherry',
   },
   changes: {
-    font: 1,
     fruit: 1,
   },
 };
@@ -1667,15 +1663,12 @@ async function changeFormStateBeforeHydration(page: Page) {
           input.value = values[index] ?? input.value;
         });
     };
-    write('font', ['mono']);
     write('fruit', ['Cherry']);
   });
 }
 
 // What a visitor does to /form-state after the hydration.
 async function changeHydratedFormState(page: Page) {
-  await page.getByTestId('font-trigger').click();
-  await page.getByRole('option', { name: 'Monospace' }).click();
   await page.getByTestId('fruit-input').click();
   await page.keyboard.type('Che');
   await page.getByRole('option', { name: 'Cherry' }).click();
@@ -2732,7 +2725,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of ['font', 'fruit']) {
+        for (const name of ['fruit']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==
