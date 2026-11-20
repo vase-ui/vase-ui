@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, computed, defineComponent, h, onMounted, provide, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
 import {
@@ -28,17 +28,9 @@ import {
 import { createSlotHost } from '../../../test/fixtures/slotHost';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
-import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import { Toolbar } from '../../toolbar';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import MenuPopupReplace from './MenuPopupReplace.test.vue';
-
-const ToolbarProvider = defineComponent((_, { slots }) => {
-  provide(ToolbarRootContext, {
-    disabled: computed(() => false),
-    orientation: computed(() => 'horizontal' as const),
-  });
-  return () => slots.default?.();
-});
 
 // Each render of the popup reads the id of the trigger, and the popup renders again after the
 // open. A case that changes the id of the trigger waits for these renders first. Only the change
@@ -200,42 +192,42 @@ describe('<Menu.Popup />', () => {
   });
 
   it('stops toolbar navigation keys without blocking ordinary key events', async () => {
-    const onParentKeyDown = vi.fn();
+    const onToolbarKeyDown = vi.fn();
     const container = shallowRef<HTMLElement | null>(null);
     const setContainer = (element: unknown) => {
       container.value = element as HTMLElement | null;
     };
 
-    // The popup is in a container inside the element that listens, as in a toolbar. Vue sends an
-    // event to the DOM parents only, so a popup in `<body>` would not reach the listener.
+    // The popup is in a container inside the toolbar. The toolbar acts only on a key of its items.
     await render(
-      <ToolbarProvider>
-        <div onKeydown={onParentKeyDown}>
-          <div ref={setContainer} />
-          <Menu.Root>
-            <Menu.Portal keepMounted to={container.value}>
-              <Menu.Positioner>
-                <Menu.Popup data-testid="popup" />
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        </div>
-      </ToolbarProvider>,
+      <Toolbar.Root onKeydown={onToolbarKeyDown}>
+        <Toolbar.Button>First</Toolbar.Button>
+        <div ref={setContainer} />
+        <Menu.Root>
+          <Menu.Portal keepMounted to={container.value}>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup" />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+        <Toolbar.Button>Last</Toolbar.Button>
+      </Toolbar.Root>,
     );
 
     const popup = screen.getByTestId('popup');
+    const first = screen.getByRole('button', { name: 'First' });
+    first.focus();
     await fireEvent(
       popup,
       new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'ArrowRight' }),
     );
-    expect(onParentKeyDown).not.toHaveBeenCalled();
+    expect(first).toHaveFocus();
 
     await fireEvent(
       popup,
       new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key: 'F1' }),
     );
-    expect(onParentKeyDown).toHaveBeenCalled();
-    expect(onParentKeyDown.mock.calls.every(([event]) => event.key === 'F1')).toBe(true);
+    expect(onToolbarKeyDown.mock.calls.map(([event]) => event.key)).toEqual(['ArrowRight', 'F1']);
   });
 
   it('enters the items at the list boundary when an arrow key leaves custom popup content', async () => {

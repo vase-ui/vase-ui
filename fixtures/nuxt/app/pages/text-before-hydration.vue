@@ -2,17 +2,11 @@
 import { shallowRef } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 
 const fruits = ['Apple', 'Banana', 'Cherry'];
 
 const fruitText = shallowRef('');
 const search = shallowRef('');
-const toolbarText = shallowRef('');
-
-function handleToolbarInput(event: Event) {
-  toolbarText.value = (event.currentTarget as HTMLInputElement).value;
-}
 </script>
 
 <template>
@@ -26,15 +20,5 @@ function handleToolbarInput(event: Event) {
       <Autocomplete.Input aria-label="Search" data-testid="autocomplete-input" />
     </Autocomplete.Root>
     <output data-testid="autocomplete-value">{{ search }}</output>
-
-    <Toolbar.Root>
-      <Toolbar.Input
-        :value="toolbarText"
-        aria-label="Filter"
-        data-testid="toolbar-input"
-        @input="handleToolbarInput"
-      />
-    </Toolbar.Root>
-    <output data-testid="toolbar-value">{{ toolbarText }}</output>
   </main>
 </template>

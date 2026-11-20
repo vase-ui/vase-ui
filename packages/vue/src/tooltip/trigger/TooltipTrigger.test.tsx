@@ -301,13 +301,19 @@ describe('<Tooltip.Trigger />', () => {
       const { user } = await render(
         <Toolbar.Root>
           <Tooltip.Root>
-            <Tooltip.Trigger
-              delay={20}
+            <Toolbar.Button
+              disabled
               v-slots={{
-                render: ({ props }: { props: HTMLProps }) => (
-                  <Toolbar.Button {...props} disabled data-testid="trigger">
+                element: ({
+                  props,
+                  elementRef,
+                }: {
+                  props: Record<string, unknown>;
+                  elementRef: (target: unknown) => void;
+                }) => (
+                  <Tooltip.Trigger delay={20} {...props} ref={elementRef} data-testid="trigger">
                     Push
-                  </Toolbar.Button>
+                  </Tooltip.Trigger>
                 ),
               }}
             />

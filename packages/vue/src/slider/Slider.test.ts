@@ -459,11 +459,16 @@ describe('the keys', () => {
     },
   );
 
-  test('the toolbar around the slider does not take the arrow keys of a thumb; a button in the root stays an item of the toolbar', async () => {
+  test('the toolbar around the slider ignores the keys of a thumb, which bubble through it; a button in the root stays an item of the toolbar', async () => {
     const { root } = mount(SliderInToolbar);
     await nextTick();
+    const keys: string[] = [];
+    root.querySelector('[role=toolbar]')!.addEventListener('keydown', (event) => {
+      keys.push((event as KeyboardEvent).key);
+    });
     const input = root.querySelector<HTMLInputElement>('input[type=range]')!;
     await press(input, '{ArrowRight}{End}');
+    expect(keys).toEqual(['ArrowRight', 'End']);
     expect(document.activeElement).toBe(input);
     expect(input.value).toBe('100');
     root.querySelector<HTMLElement>('#first')!.focus();
@@ -480,13 +485,13 @@ describe('the keys', () => {
     expect(focused().id).toBe('after');
   });
 
-  test('Page Up and Page Down bubble from the input', async () => {
+  test('the keys of the input bubble from it', async () => {
     const keys: string[] = [];
     const { root, input, values } = await mountSlider({ root: { defaultValue: 50 } });
     root.addEventListener('keydown', (event) => keys.push(event.key));
     await press(input(), '{ArrowRight}{Home}{End}{PageDown}{PageUp}');
     expect(values()).toEqual([100]);
-    expect(keys).toEqual(['PageDown', 'PageUp']);
+    expect(keys).toEqual(['ArrowRight', 'Home', 'End', 'PageDown', 'PageUp']);
   });
 });
 

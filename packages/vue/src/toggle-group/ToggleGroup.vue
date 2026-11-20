@@ -1,12 +1,13 @@
 <script setup lang="ts" generic="Value extends string = any">
 // vue-tsc resolves `Value` before it checks a listener of a template. With the default `any`, that
 // check accepts `(value: ('a' | 'b')[]) => void`.
-import { computed, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
+import { computed, inject, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
+import { arrowKeyTarget } from '../common/arrowKeyTarget';
 import { byDocumentOrder, useElement } from '../common/element';
 import { useModel } from '../common/model';
+import { ownerWindow } from '../common/owner';
 import { useInDisabledFieldset } from '../fieldset/part';
-import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
-import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
+import { toolbarKey } from '../toolbar/item';
 import { toggleGroupKey, type GroupToggle } from './toggle';
 import type { ToggleGroupChangeEventDetails, ToggleGroupProps, ToggleGroupState } from './types';
 
@@ -35,10 +36,8 @@ defineSlots<{
   }): unknown;
 }>();
 
-// The Toolbar family replaces the toolbar lines of this file with the item contract of its toolbar.
-// Until then, a toolbar holds the tab stop and the keys of the toggles.
-const toolbar = useToolbarRootContext(true);
-const toolbarGroup = useToolbarGroupContext();
+// A toolbar holds the tab stop and the keys of the toggles. Each toggle is an item of the toolbar.
+const toolbar = inject(toolbarKey, null);
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
@@ -49,9 +48,7 @@ const { value, setOwn } = useModel<readonly Value[]>(model, model() ?? props.def
 const toggles = shallowReactive<GroupToggle[]>([]);
 const focused = shallowRef<GroupToggle>();
 
-const disabledForToggles = computed(
-  () => props.disabled || !!toolbar?.disabled.value || !!toolbarGroup?.disabled.value,
-);
+const disabledForToggles = computed(() => props.disabled || !!toolbar?.disabled);
 const state = computed<ToggleGroupState>(() => ({
   disabled: disabledForToggles.value || inDisabledFieldset.value,
   multiple: props.multiple,
@@ -130,34 +127,25 @@ function onFocusin(event: FocusEvent) {
   if (toggle) focused.value = toggle;
 }
 
-type Step = 'first' | 'last' | 'next' | 'previous' | 'right' | 'left';
-
-const steps: Record<string, Record<string, Step>> = {
-  horizontal: { Home: 'first', End: 'last', ArrowRight: 'right', ArrowLeft: 'left' },
-  vertical: { Home: 'first', End: 'last', ArrowDown: 'next', ArrowUp: 'previous' },
-};
-
 function onKeydown(event: KeyboardEvent) {
-  const step = steps[props.orientation]?.[event.key];
   const current = toggles.find((toggle) => toggle.element === event.target);
-  if (!step || !current || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  if (!current || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+  const enabled = enabledToggles().map((toggle) => toggle.element);
+  const group = event.currentTarget as HTMLElement;
+  // A focused toggle can be disabled, and the keys still move on from it.
+  const next =
+    event.key === 'Home'
+      ? enabled[0]
+      : event.key === 'End'
+        ? enabled.at(-1)
+        : arrowKeyTarget(event.key, current.element, enabled, {
+            orientation: props.orientation,
+            rtl: ownerWindow(group).getComputedStyle(group).direction === 'rtl',
+            loop: props.loopFocus,
+          });
+  if (event.key !== 'Home' && event.key !== 'End' && !next) return;
   event.preventDefault();
-  const enabled = enabledToggles();
-  let next: GroupToggle | undefined;
-  if (step === 'first') next = enabled[0];
-  else if (step === 'last') next = enabled.at(-1);
-  else {
-    const rtl = getComputedStyle(event.currentTarget as Element).direction === 'rtl';
-    const forward = step === 'next' || step === (rtl ? 'left' : 'right');
-    // A focused toggle can be disabled, and the keys still move on from it.
-    const choices = current.disabled
-      ? [...enabled, current].sort((a, b) => byDocumentOrder(a.element, b.element))
-      : enabled;
-    const index = choices.indexOf(current) + (forward ? 1 : -1);
-    // `at(-1)` is the last toggle.
-    next = props.loopFocus ? choices.at(index % choices.length) : choices[index];
-  }
-  next?.element.focus();
+  next?.focus();
 }
 </script>
 

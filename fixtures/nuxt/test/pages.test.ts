@@ -271,15 +271,17 @@ function readToolbarTabindexes(page: Page, toolbar: string) {
     .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('tabindex')));
 }
 
-// A server runs the `setup` of the first button of the toolbar `async` after the `setup` of the
-// buttons that follow it. The server HTML then has the tab stop on the second button.
+// A toolbar writes its tab stop after the mount of its items, so each button of the server HTML is
+// in the order of the Tab key.
 async function expectToolbarPage(page: Page) {
-  expect(await readToolbarTabindexes(page, 'plain')).toEqual(['0', '-1', '-1']);
-  expect(await readToolbarTabindexes(page, 'disabled-first')).toEqual(['-1', '0', '-1']);
-  expect(await readToolbarTabindexes(page, 'async')).toEqual(['-1', '0', '-1']);
+  for (const toolbar of TOOLBARS) {
+    expect(await readToolbarTabindexes(page, toolbar.toolbar)).toEqual([null, null, null]);
+  }
+  expect(await page.getByTestId('disabled-first-1').getAttribute('disabled')).toBe('');
 }
 
-// After the mount, the tab stop is the first button that can get focus.
+// After the mount, the tab stop is the first button that can get focus. A server runs the `setup`
+// of the first button of the toolbar `async` after the `setup` of the buttons that follow it.
 async function expectHydratedToolbarPage(page: Page) {
   expect(await readToolbarTabindexes(page, 'plain')).toEqual(['0', '-1', '-1']);
   expect(await readToolbarTabindexes(page, 'disabled-first')).toEqual(['-1', '0', '-1']);
@@ -296,14 +298,14 @@ function readButtons(page: Page, testId: string, attributeName: string) {
     );
 }
 
-// A group writes its tab stop at the mount, so each button of its server HTML is in the order of
-// the Tab key. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
+// A group and a toolbar write their tab stop at the mount, so each button of the server HTML is in
+// the order of the Tab key. In a toolbar, the toggles are items of the toolbar.
 async function expectToggleGroupPage(page: Page) {
   expect(await page.getByTestId('alone').getAttribute('role')).toBe('group');
   expect(await readButtons(page, 'alone', 'tabindex')).toEqual([null, null, null]);
   expect(await readButtons(page, 'alone', 'aria-pressed')).toEqual(['false', 'true', 'false']);
   expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual([null, null]);
-  expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual([null, null, null]);
   expect(await readButtons(page, 'in-toolbar', 'aria-pressed')).toEqual([null, 'true', 'false']);
   expect(await readAttributes(page.getByTestId('single'), ['tabindex', 'aria-pressed'])).toEqual({
     tabindex: null,
@@ -312,10 +314,11 @@ async function expectToggleGroupPage(page: Page) {
 }
 
 // The tab stop of a group is its first toggle that is not disabled, also when another toggle is
-// pressed.
+// pressed. The tab stop of a toolbar is its first item.
 async function expectHydratedToggleGroupPage(page: Page) {
   expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
   expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
+  expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['0', '-1', '-1']);
 }
 
 function readDisableScrollbarStyles(page: Page) {
@@ -1649,6 +1652,7 @@ async function expectHydratedComboboxPage(page: Page) {
 // control and the model of the page have after hydration.
 const TEXT_BEFORE_HYDRATION = [
   { control: 'combobox-input', text: 'Ban', value: 'Ban', output: 'combobox-value', model: 'Ban' },
+  // The last control keeps the focus.
   {
     control: 'autocomplete-input',
     text: 'Che',
@@ -1656,8 +1660,6 @@ const TEXT_BEFORE_HYDRATION = [
     output: 'autocomplete-value',
     model: 'Che',
   },
-  // The last control keeps the focus.
-  { control: 'toolbar-input', text: 'red', value: 'red', output: 'toolbar-value', model: 'red' },
 ];
 
 // Nobody typed, so each control and each model is empty.
@@ -1675,26 +1677,21 @@ interface FormState {
 }
 
 const FORM_STATE_INITIAL_MODELS = {
-  filter: '',
   font: 'serif',
   fruit: null,
 };
 
-// The state of /form-state after a visitor types into the text control and writes each hidden
-// input.
+// The state of /form-state after each part changes.
 const FORM_STATE_CHANGED: FormState = {
   formData: {
-    filter: ['typed'],
     font: ['mono'],
     fruit: ['Cherry'],
   },
   models: {
-    filter: 'typed',
     font: 'mono',
     fruit: 'Cherry',
   },
   changes: {
-    filter: 1,
     font: 1,
     fruit: 1,
   },
@@ -1730,10 +1727,11 @@ async function readFormState(page: Page): Promise<FormState> {
   });
 }
 
-// What a visitor and a program do to /form-state before its scripts run. A program writes a
-// hidden input with no event, as a browser restores it.
+// What a program does to /form-state before its scripts run: it writes each hidden input with no
+// event, as a browser restores it.
 async function changeFormStateBeforeHydration(page: Page) {
-  await page.getByTestId('filter').fill('typed');
+  // The page can still parse its HTML. The link comes after the form.
+  await page.getByTestId('away').waitFor();
   await page.evaluate(() => {
     const write = (name: string, values: string[]) => {
       document
@@ -1749,7 +1747,6 @@ async function changeFormStateBeforeHydration(page: Page) {
 
 // What a visitor does to /form-state after the hydration.
 async function changeHydratedFormState(page: Page) {
-  await page.getByTestId('filter').fill('typed');
   await page.getByTestId('font-trigger').click();
   await page.getByRole('option', { name: 'Monospace' }).click();
   await page.getByTestId('fruit-input').click();
@@ -2749,7 +2746,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expect.poll(() => page.getByTestId(control).inputValue()).toBe(value);
     }
     expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
-      'toolbar-input',
+      'autocomplete-input',
     );
     expect(messages).toEqual([]);
   });
@@ -2789,7 +2786,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of ['filter', 'font', 'fruit']) {
+        for (const name of ['font', 'fruit']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

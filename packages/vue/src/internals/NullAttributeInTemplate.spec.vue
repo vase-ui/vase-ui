@@ -6,7 +6,6 @@ import * as DateRangePicker from '../date-range-picker/index.parts';
 import * as Dialog from '../dialog/index.parts';
 import * as Menu from '../menu/index.parts';
 import * as TimePicker from '../time-picker/index.parts';
-import * as Toolbar from '../toolbar/index.parts';
 </script>
 
 <template>
@@ -18,7 +17,6 @@ import * as Toolbar from '../toolbar/index.parts';
 
   <Combobox.Input :autocomplete="null" />
   <Menu.Input :autocomplete="null" />
-  <Toolbar.Input :autocomplete="null" />
 
   <!-- @vue-expect-error `aria-labelledby` takes no `null` -->
   <DatePicker.Field :aria-labelledby="null" />
