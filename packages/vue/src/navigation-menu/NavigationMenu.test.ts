@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, inject, test } from 'vitest';
+import { afterEach, describe, expect, inject, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { NavigationMenuRootChangeEventDetails } from '@vase-ui/vue/navigation-menu';
@@ -270,6 +270,22 @@ describe('a popup root', () => {
     expect(log.at(-2)).toBe('valueChange null escape-key');
   });
 
+  test('VUE-92: a v-if that removes the portal in the update of the close returns the focus in the popup to the trigger', async () => {
+    const withPortal = reactive({ shown: true });
+    await mountMenu({
+      withPortal,
+      root: { onValueChange: (value: unknown) => (withPortal.shown = value !== null) },
+    });
+    await userEvent.click(get('trigger-one'));
+    await shows('one');
+    await placed();
+    get('link-one-a').focus();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(byTestId('positioner')).toBe(null);
+    expect(document.activeElement).toBe(get('trigger-one'));
+  });
+
   test('Escape on a trigger closes the menu, also when an element above the root stops the event', async () => {
     await mountMenu({ root: { defaultValue: 'one' } });
     await shows('one');
@@ -393,7 +409,7 @@ describe('an inline root', () => {
     ]);
   });
 
-  test('closes by close(), and the focus in its viewport goes to the trigger', async () => {
+  test('VUE-98: closes by close(), and the focus in its viewport goes to the trigger', async () => {
     const { exposed } = await mountMenu({ inline: true, root: { defaultValue: 'one' } });
     await shows('one');
     get('link-one-a').focus();
@@ -498,6 +514,40 @@ describe('the hover', () => {
       await waitFor(() => expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'true'));
     },
   );
+});
+
+describe('the names of the content', () => {
+  test('VUE-73: an open trigger with no content in the document has no aria-controls', async () => {
+    await mountMenu({ noViewport: true });
+    get('trigger-one').click();
+    await opened();
+    expect(get('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    expect(get('trigger-one')).not.toHaveAttribute('aria-controls');
+  });
+
+  test('VUE-86: an open trigger follows the id of its content in aria-controls', async () => {
+    const content = reactive<Props>({ id: 'first' });
+    await mountMenu({ contents: { one: content } });
+    get('trigger-one').click();
+    await waitFor(() => expect(get('trigger-one')).toHaveAttribute('aria-controls', 'first'));
+    content.id = 'second';
+    await waitFor(() => expect(get('trigger-one')).toHaveAttribute('aria-controls', 'second'));
+    expect(document.getElementById('second')).toBe(get('content-one'));
+  });
+
+  test('VUE-112: a trigger in a disabled fieldset is disabled as a native button, and opens nothing', async () => {
+    const fieldset = document.body.appendChild(document.createElement('fieldset'));
+    fieldset.disabled = true;
+    onTestFinished(() => fieldset.remove());
+    mount(NavigationMenuParts, {}, fieldset);
+    await nextTick();
+    await waitFor(() => expect(get('trigger-one')).toBeDisabled());
+    expect(get('trigger-one')).not.toHaveAttribute('aria-disabled');
+    expect(get('trigger-one')).not.toHaveAttribute('data-disabled');
+    get('trigger-one').click();
+    await wait(20);
+    expect(byTestId('popup')).toBe(null);
+  });
 });
 
 describe('the keys', () => {
@@ -675,7 +725,7 @@ describe('the Tab order', () => {
     expect(document.activeElement).toBe(byId('after'));
   });
 
-  test('with no viewport, Tab on the active trigger goes to the next tab stop', async () => {
+  test('VUE-132: with no viewport, Tab on the active trigger goes to the next tab stop', async () => {
     await mountMenu({ noViewport: true });
     await userEvent.click(get('trigger-one'));
     await opened();
@@ -812,7 +862,7 @@ describe('the content', () => {
     }
   });
 
-  test('a scoped style of the developer reaches the element of the `element` slot', async () => {
+  test('VUE-60: a scoped style of the developer reaches the element of the `element` slot', async () => {
     mount(NavigationMenuScoped);
     await nextTick();
     const element = await waitFor(() => {
@@ -915,7 +965,7 @@ describe('the placement', () => {
     ).toBeLessThanOrEqual(1);
   });
 
-  test('the popup has the id of the shown trigger in aria-labelledby, and an aria-label of the developer wins', async () => {
+  test('VUE-105, VUE-109: the popup has the id of the shown trigger in aria-labelledby, also an id of the developer', async () => {
     await mountMenu({ root: { defaultValue: 'one' }, triggers: { two: { id: 'given' } } });
     await shows('one');
     expect(get('popup')).toHaveAttribute('aria-labelledby', get('trigger-one').id);
@@ -925,7 +975,7 @@ describe('the placement', () => {
     expect(get('trigger-two').id).toBe('given');
   });
 
-  test('an aria-label of the developer takes the place of the name of the trigger', async () => {
+  test('VUE-105: an aria-label of the developer takes the place of the name of the trigger', async () => {
     await mountMenu({ root: { defaultValue: 'one' }, popup: { 'aria-label': 'Main' } });
     await shows('one');
     expect(get('popup')).not.toHaveAttribute('aria-labelledby');
@@ -965,6 +1015,22 @@ describe('nested roots', () => {
     expect(get('icon-one')).toHaveAttribute('data-popup-open');
     await userEvent.click(get('trigger-two'));
     await waitFor(() => expect(get('icon-one')).not.toHaveAttribute('data-popup-open'));
+  });
+});
+
+describe('a popover in a content', () => {
+  test('a press in the popover keeps the menu open: the popover is a layer above it', async () => {
+    mount(NavigationMenuWithDialog);
+    await nextTick();
+    await userEvent.click(get('trigger'));
+    await waitFor(() => expect(byTestId('content')).not.toBe(null));
+    await placed();
+    await userEvent.click(get('popover-trigger'));
+    await waitFor(() => expect(byTestId('popover-popup')).not.toBe(null));
+    await userEvent.click(get('popover-button'));
+    await wait(50);
+    expect(get('trigger')).toHaveAttribute('aria-expanded', 'true');
+    expect(byTestId('popover-popup')).not.toBe(null);
   });
 });
 

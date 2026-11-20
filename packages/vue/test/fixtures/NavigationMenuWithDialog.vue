@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Dialog } from '../../src/dialog';
 import { NavigationMenu } from '../../src/navigation-menu';
+import { Popover } from '../../src/popover';
 
-// A dialog in the content of a menu.
+// A dialog and a popover in the content of a menu.
 </script>
 
 <template>
@@ -19,6 +20,16 @@ import { NavigationMenu } from '../../src/navigation-menu';
               </Dialog.Popup>
             </Dialog.Portal>
           </Dialog.Root>
+          <Popover.Root>
+            <Popover.Trigger data-testid="popover-trigger">Open popover</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup data-testid="popover-popup">
+                  <button type="button" data-testid="popover-button">Popover button</button>
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
         </NavigationMenu.Content>
       </NavigationMenu.Item>
     </NavigationMenu.List>

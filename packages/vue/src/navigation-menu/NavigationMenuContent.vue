@@ -33,7 +33,7 @@ const onKeydown = useKeyGroup({ orientation: () => 'both' });
 // A portal in the content goes where the portal of the root goes.
 providePortalTarget((inherited) => root.portalTarget ?? inherited);
 
-const id = computed(() => givenId(props.id) ?? generatedId);
+const contentId = computed(() => givenId(props.id) ?? generatedId);
 const shown = computed(
   () => root.shown != null && root.shown === item.value && root.target !== null,
 );
@@ -44,7 +44,7 @@ const state = computed<NavigationMenuContentState>(() => {
 });
 
 watch(
-  [element, id],
+  [element, contentId],
   ([current, value]) => {
     item.contentId = current ? value : null;
   },
@@ -67,7 +67,7 @@ function onBeforeLeave(leaving: Element) {
   if (!contains(target, activeElement(ownerDocument(target)))) target.setAttribute('inert', '');
 }
 
-const transition = computed<TransitionProps>(() => {
+const transitionProps = computed<TransitionProps>(() => {
   const given = props.transition;
   // At a close the content does not leave: it stays in the popup, and goes with it.
   if (!given || !root.target || !root.popup.open) return { css: false, onBeforeLeave };
@@ -81,7 +81,7 @@ const transition = computed<TransitionProps>(() => {
 function elementProps() {
   return mergeProps(
     {
-      id: id.value,
+      id: contentId.value,
       hidden: shown.value ? undefined : true,
       'data-activation-direction': state.value.activationDirection ?? undefined,
       onKeydown,
@@ -95,7 +95,7 @@ defineExpose({ element });
 
 <template>
   <Teleport :to="root.target" :disabled="!root.target">
-    <Transition v-bind="transition">
+    <Transition v-bind="transitionProps">
       <slot
         v-if="rendered && $slots.element"
         name="element"

@@ -6,40 +6,74 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrowDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContentDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/icon/NavigationMenuIconDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLinkDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopupCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
       "upstream": "packages/react/src/navigation-menu/utils/setSharedFixedSize.ts",
       "kind": "not-applicable",
-      "reason": "The popup and positioner bind the dimensions from their root. Vue applies both styles."
+      "reason": "`NavigationMenu.Popup` takes its sizes in steps from `usePopupSizes` of the popup layer, and the positioner binds the size of the popup. Vue writes both styles."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
-      "describe": ["<NavigationMenu.Content />", "server-side rendering"],
-      "kind": "replaced",
-      "test": "packages/vue/src/navigation-menu/content/NavigationMenuContent.node.test.tsx",
-      "reason": "Each case of the block renders on a server with no hydration, so each case is in the Node file of the folder."
+      "upstream": "packages/react/src/navigation-menu/utils/constants.ts",
+      "kind": "not-applicable",
+      "reason": "The file holds the marker of the triggers for the outside press of Base UI. The popup layer takes the root element as inside, so a trigger needs no marker."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
-      "describe": ["<NavigationMenu.Trigger />"],
-      "title": "handles focus and positioner height",
-      "kind": "replaced",
-      "test": "packages/vue/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
-      "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
+      "upstream": "packages/react/src/navigation-menu/utils/isOutsideMenuEvent.ts",
+      "kind": "not-applicable",
+      "reason": "The focus-out rule of the popup layer reads the inside elements of each layer: the popup, the root element and each layer above. A part needs no check of its own."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
-      "describe": ["<NavigationMenu.Trigger />"],
-      "title": "handles positioner width correctly",
-      "kind": "replaced",
-      "test": "packages/vue/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
-      "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "nested menus", "inline nested viewport"],
-      "title": "does not animate popup sizing when kept nested default content first moves into the portal",
-      "kind": "replaced",
-      "test": "packages/vue/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "reason": "The upstream case supplies a shell height on the first read after the click. The kept Vue content moves into the portal before that mock can be installed. The replacement records the fixed popup heights from mount and compares each nonzero height with the open panel."
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuDismissContext.ts",
+      "kind": "not-applicable",
+      "reason": "The dismissal is the layer of the root, which listens on the document and on the root element. The list gives no handlers to the triggers."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",
@@ -47,37 +81,369 @@
       "reason": "The cases assert the `displayName` of a React context. A Vue injection key has no such name."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
-      "entry": "Root",
-      "prop": "render",
-      "kind": "not-applicable",
-      "reason": "The default tag is `nav`, or `div` when the root is nested. The part decides it in `setup`, so the prop `as` has no static default."
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the root through the parts: the value with each reason, `v-model`, `cancel()`, the falsy values, `close()`, the hover with `delay` and `closeDelay`, the triangle to the popup, the patient press, the keys, the Tab order, the return of the focus, the nested roots, the content, the size steps and the placement. The parts render no transition status and no unmount action: `<Transition>` animates the popup and the backdrop, `transition` animates a content, and the hooks of `<Transition>` replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete` (rule 8.9). A triangle flag of the hover replaces the `pointer-events` styles of the safe polygon."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "nested popups"],
-      "title": "keeps the menu open when interacting with a nested popover",
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "The cases mock the engine for a branch of the `pointer-events` styles of the safe polygon. The parts write no such style, and no code reads the engine. `NavigationMenu.test.ts` runs the triangle cases in WebKit."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the trigger: its element and attributes, `aria-expanded` and `aria-controls` of the content, the press, the open key of each orientation and direction, a nested trigger, `disabled` with `aria-disabled`, the hover, the activation direction, the Tab order and the size of the new content. The focus guards beside the trigger and the owner element with `aria-owns` are gone."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the content: the content of the open item in the viewport, the arrow keys, `keepMounted` in its item, in the viewport and in a kept portal, `transition` with the enter and leave classes, the close with the popup, and the scoped rule through the `element` slot. `NavigationMenu.hydration.test.ts` tests the kept content in the server HTML and after the hydration."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuList.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the list: the arrow keys of the orientation with no loop, the stop of the keys at the list, a nested list, an item that leaves, Escape, an outside press, a press in the list, a press on a trigger of another menu, and the error of a list with no root."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the link: `closeOnClick` with the reason `link-press` through each level, a link with no `closeOnClick`, no `tabindex`, a link that loses the focus with no related target, and a router link in the `element` slot with `aria-current`. `active` is cut: the developer writes `aria-current=\"page\"`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the positioner: its place below the trigger with insets, the side `top`, `data-instant` while the window changes its size, and the error of a positioner with no portal. The shift keeps the layout viewport as its root boundary."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the popup: its element, `tabindex`, the name of the shown trigger in `aria-labelledby`, a name of the developer, the `id` of the trigger, and a press on the popup with no control."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the portal: `keepMounted`, the target of a portal in a content, and the content in the popup of a kept portal."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the viewport: the content of the open item in it, and the Tab order of an inline viewport with its two sentinels."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the arrow: its element with `aria-hidden`, and the error of an arrow with no positioner."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/icon/NavigationMenuIcon.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` tests the icon: its element with `aria-hidden`, the default arrow and `data-popup-open`, and the error of an icon with no item."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/item/NavigationMenuItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` renders each item as an `<li>` element in the list."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",
+      "reason": "`NavigationMenu.test.ts` renders the backdrop with `role=\"presentation\"`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.spec.ts",
+      "reason": "`NavigationMenu.spec.ts` tests the types of the value of the root and the item, the details, the props of a content and the state of the parts."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.spec.ts",
+      "reason": "`NavigationMenu.spec.ts` tests the types of the value of the root and the item, the details, the props of a content and the state of the parts."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
       "kind": "not-applicable",
-      "reason": "The case nests a Popover and a NavigationMenu of the older popup code. Popover moved to the popup layer, and the two do not share a stack until NavigationMenu moves to it. The change that moves NavigationMenu to the popup layer ports the case again."
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the JavaScript hooks of the `<Transition>` of the popup keep it in the DOM until `done` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Trigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` or exposed element. The developer writes an element in the portal."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the backdrop has no `data-starting-style` and `data-ending-style`: the classes of `<Transition>` animate it (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style` and `data-ending-style`: the classes of `<Transition>` animate it (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Content",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the content has no `data-starting-style` and `data-ending-style`: the classes of its `transition` animate it (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Link",
+      "kind": "not-applicable",
+      "reason": "`active` and its state are cut. The developer gives the link `aria-current=\"page\"` (rule 8.2), and CSS selects `[aria-current=\"page\"]` (rule 8.15). With a router, `isExactActive` of `<RouterLink custom>` gives it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuContentDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuIconDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuLinkDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPopupCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
     {
-      "entry": "Popup",
-      "prop": "id",
-      "reason": "The part reads `id` to replace an absent id with a generated id, which the active trigger names in `aria-controls`. It is thus a declared prop. Base UI reads it from the native attributes of the popup, and `types.md` has no row for a native attribute."
-    },
-    {
-      "entry": "Viewport",
-      "prop": "id",
-      "reason": "The part reads `id` to replace an absent id with a generated id, which the owner element of the active trigger names in `aria-owns`. It is thus a declared prop. Base UI reads it from the native attributes of the viewport, and `types.md` has no row for a native attribute."
-    },
-    {
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
+    },
+    {
+      "entry": "Trigger",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names it in `aria-labelledby` (rule 8.4)."
+    },
+    {
+      "entry": "Content",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The trigger names it in `aria-controls` (rule 8.4)."
+    },
+    {
+      "entry": "Content",
+      "prop": "transition",
+      "reason": "The root of the part is a `<Teleport>`, and Vue animates a `<Transition>` around such a part only from Vue 3.5.41. The part renders the `<Transition>` with these props, so a content animates with each Vue that the package supports."
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuRoot.vue",
+      "behavior": "The root holds the value of the open item, and renders a `<nav>`, or a `<div>` in a root.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root.ts",
+      "behavior": "What the root gives to its parts: the popup root, the layer, the value, the shown value, the direction and the target of the contents.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/item/NavigationMenuItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuItem.vue",
+      "behavior": "The item gives its value to its trigger, its icon and its content.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/item/NavigationMenuItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root.ts",
+      "behavior": "What the item gives to its parts.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuTrigger.vue",
+      "behavior": "The trigger opens, closes or changes the item at a press, at a hover and at its open key.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuList.vue",
+      "behavior": "The list moves the focus between its items with the arrow keys.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuLink.vue",
+      "behavior": "The link closes the menu and each menu above it with `closeOnClick`.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/icon/NavigationMenuIcon.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuIcon.vue",
+      "behavior": "The icon shows the open state of its item.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuContent.vue",
+      "behavior": "The content teleports into the viewport and animates with `transition`.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuPortal.vue",
+      "behavior": "The portal renders its content in a `<Teleport>` after its mount, between two sentinels.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root.ts",
+      "behavior": "The portal marks the parts in it.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuBackdrop.vue",
+      "behavior": "The backdrop is in the DOM while the menu is open.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuPositioner.vue",
+      "behavior": "The positioner places the popup at the active trigger with insets.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/root.ts",
+      "behavior": "What the positioner gives to the popup and the arrow.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuPopup.vue",
+      "behavior": "The popup takes the name of its trigger and the sizes of its content in steps.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuArrow.vue",
+      "behavior": "The arrow points to the active trigger.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/NavigationMenuViewport.vue",
+      "behavior": "The viewport holds the content of the open item, in the popup or in place.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/navigation-menu/parts.ts",
+      "behavior": "The parts of the family and their namespace types.",
+      "witness": "packages/vue/src/navigation-menu/NavigationMenu.test.ts"
+    }
+  ]
 }

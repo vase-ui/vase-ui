@@ -22,6 +22,8 @@ defineProps({
   /** The props of a `<Transition>` around the popup. */
   popupTransition: Object as PropType<Props>,
   inline: Boolean,
+  /** The portal is in the root while its value is `true`. */
+  withPortal: { type: Object as PropType<{ shown: boolean }>, default: () => ({ shown: true }) },
   /** The item `one` is in the list while its value is `true`. */
   items: { type: Object as PropType<{ one: boolean }>, default: () => ({ one: true }) },
   noViewport: Boolean,
@@ -116,7 +118,7 @@ defineExpose({ root: rootPart });
       </NavigationMenu.Item>
     </NavigationMenu.List>
     <NavigationMenu.Viewport v-if="inline" data-testid="viewport" v-bind="viewport" />
-    <NavigationMenu.Portal v-else v-bind="portal">
+    <NavigationMenu.Portal v-else-if="withPortal.shown" v-bind="portal">
       <NavigationMenu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <NavigationMenu.Positioner data-testid="positioner" v-bind="positioner">
         <Transition v-bind="popupTransition ?? { css: false }" appear>
