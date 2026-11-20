@@ -89,9 +89,9 @@ const MESSAGES = {
   resourceManagement:
     'No browser that the build supports has `Symbol.dispose`, and the build adds no polyfill. Call the cleanup in a `finally` block.',
   temporalInstanceof:
-    'Another realm and a polyfill have other `Temporal` classes. Use `kindOf` or `isKind` of `internals/date-time/temporal`.',
+    'Another realm and a polyfill have other `Temporal` classes. Use `kindOf` or `isKind` of `common/date-time/temporal`.',
   toLocaleString:
-    '`Intl` must get a number, a zone and a calendar, and never a `Temporal` object. Format a date or a time with `formatter()` of `internals/date-time/format`, and a number with `formatNumber` of `common/formatNumber`.',
+    '`Intl` must get a number, a zone and a calendar, and never a `Temporal` object. Format a date or a time with `formatter()` of `common/date-time/format`, and a number with `formatNumber` of `common/formatNumber`.',
   actInRef:
     'Vue can run a function ref before the element is in the document, so this call can do nothing. Act in `onMounted`, or in `onVnodeMounted` in a slot function.',
   vendorStyleKey:

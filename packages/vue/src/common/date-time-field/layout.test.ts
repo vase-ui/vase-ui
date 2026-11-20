@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatter } from '../../internals/date-time/format';
+import { formatter } from '../date-time/format';
 import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './layout';
 import type { SegmentLayoutOptions, SegmentType } from './layout';
 

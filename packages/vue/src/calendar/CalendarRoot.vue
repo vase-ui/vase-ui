@@ -9,7 +9,7 @@
 import { computed, mergeProps, provide, shallowRef, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { useModel } from '../common/model';
-import { assertTemporal, compareDates, withDate } from '../internals/date-time/temporal';
+import { assertTemporal, compareDates, withDate } from '../common/date-time/temporal';
 import { calendarKey, useCalendar } from './root';
 import type {
   CalendarRootChangeEventDetails,
@@ -89,15 +89,17 @@ const createValue = (date: Temporal.PlainDate) =>
 
 function commit(next: CalendarValue | CalendarValue[], details: CalendarRootChangeEventDetails) {
   emit('valueChange', next as Output, details);
-  if (details.isCanceled) return;
+  if (details.isCanceled) return false;
   model.setOwn(next);
   emit('update:modelValue', next as Output);
+  return true;
 }
 
 function add(date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) {
-  if (values.value.length < (props.maxDays ?? Infinity)) {
-    commit([...values.value, createValue(date)], details);
-  }
+  return (
+    values.value.length < (props.maxDays ?? Infinity) &&
+    commit([...values.value, createValue(date)], details)
+  );
 }
 
 const {
@@ -123,16 +125,15 @@ const {
     range: null,
     isSelected,
     press(date, details) {
-      if (!props.multiple) {
-        if (!isSelected(date)) commit(createValue(date), details);
-      } else if (!isSelected(date)) {
-        add(date, details);
-      } else if (values.value.length > (props.minDays ?? 0)) {
+      if (!props.multiple) return isSelected(date) || commit(createValue(date), details);
+      if (!isSelected(date)) return add(date, details);
+      return (
+        values.value.length > (props.minDays ?? 0) &&
         commit(
           values.value.filter((value) => compareDates(value, date) !== 0),
           details,
-        );
-      }
+        )
+      );
     },
     extend(date, details) {
       if (!isSelected(date)) add(date, details);

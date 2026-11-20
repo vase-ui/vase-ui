@@ -1,5 +1,5 @@
-import { compareDates, isSameDay } from '../internals/date-time/temporal';
-import type { DayOfWeek } from '../internals/date-time/temporal';
+import { compareDates, isSameDay } from '../common/date-time/temporal';
+import type { DayOfWeek } from '../common/date-time/temporal';
 import { getYearPageStart, startOfWeek } from './pages';
 
 /**

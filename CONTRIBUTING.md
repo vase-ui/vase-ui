@@ -492,10 +492,6 @@ Rules:
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
 - The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
 - A Boolean prop with the default `true` cannot tell an absent prop from `true`. A check of Base UI for a prop that is set thus runs only for `false`.
-- A part that has a Boolean prop with the default `true` or `undefined` calls `useCastBooleanWarning` of `src/internals` in `setup`, inside `if (process.env.NODE_ENV !== 'production')`. For such a prop, an absent prop and `false` can give different results.
-- The helper warns when a wrapper component gives the part `false` only because Vue cast an absent Boolean prop of the wrapper. Its `except` list names each prop for which an absent prop and `false` have the same effect, as `invalid` of `Field.Root`.
-- `src/internals/useCastBooleanWarning.coverage.node.test.ts` fails for such a part with no call. Its table names each exception. A part that has no other such prop, as `Field.Error`, has no call.
-- Add each new such prop that is not an exception to the lists of [Wrap a part](docs/handbook/composition.md#wrap-a-part).
 - Declare a required prop that can be `null` as `x: T | null`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `ContextMenuPositioner.vue` is the example.
 - Do not give a top-level declaration or an import of `<script>` or `<script setup>` the name of a prop. The bindings of the SFC compiler then have no prop with that name, and the API reference does not list the prop. `pnpm parity:check` fails for such a name in each SFC of `packages/vue/src` that has no `.test` or `.spec` before its extension. `FieldsetLegend.vue` declares the prop `id`, so its constant is `elementId`.
@@ -623,7 +619,7 @@ The change event carries these details:
 - `lib` and `target` of the package are ES2024, so the compiler accepts each built-in of ES2024. The browsers that the build supports have fewer built-ins.
 - The build has the target `baseline-widely-available`. tsdown gives that name a fixed list: Chrome 111, Edge 111, Firefox 114, Safari 16.4 and iOS 16.4. The build changes only the syntax for that list. It adds no polyfill.
 - In the source of the package, use only a JavaScript built-in that each browser of that list has. The compatibility table on the MDN page of the built-in gives the versions. `Temporal` is the exception: the bullet below gives its rule.
-- `Temporal` is the one API above ES2024 that the source needs. Only the date and time families and `internals/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `internals/date-time/temporal.ts`.
+- `Temporal` is the one API above ES2024 that the source needs. Only the date and time families and `common/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `common/date-time/temporal.ts`.
 - Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`.
 - ESLint refuses `toSorted`, `toReversed` and `toSpliced` in the source of the package. It does not refuse `with`, because the source calls the method `with` of `Temporal`.
 - The scripts and the tests are not in the built package. A file that runs in Node.js, such as a script or a `.node.test` file, can use each built-in of the Node.js version in `.node-version`. A test file that runs in the browsers can use only a built-in that each of the three engines of Playwright has. In both cases, the `lib` of the project must have the types of the built-in.
@@ -1001,7 +997,7 @@ A root gives values to its parts with `provide` and `inject`. A refactored famil
 
 ### Dates and times
 
-The date and time families call `Temporal` and `Intl` directly, through the functions of `internals/date-time`. They have no adapter and no provider.
+The date and time families call `Temporal` and `Intl` directly, through the functions of `common/date-time`. They have no adapter and no provider.
 
 - Tell the kind of a value with `kindOf` or `isKind`.
 - Format a value only through `formatter()`. `Intl` gets a number, a zone and a calendar, and never a `Temporal` object.
@@ -1866,7 +1862,7 @@ The helpers are in `packages/vue/test`. `#test-utils` is `packages/vue/test/inde
   - `removedPartHydrationTests`: the test of a part that binds an `aria-*` value or a state attribute that a later part gives.
   - `popupFocusPropsTests`: the test of a popup that has `initialFocus` and `finalFocus`.
   - `popupAnatomyTests`: the test of a popup root with no popup part (`VUE-72`), and of a modal root whose positioner has not mounted (`VUE-61`). It also presses the Tab key past the open root in both directions (`VUE-132`), so each popup family has that case. Each family supplies `held` with its root and popup for the cases under `KeepAlive` (`VUE-137`).
-- `internals/date-time/temporal.polyfill.node.test.ts` runs the cases of the `.test` files of the date and time helpers on `temporal-polyfill`. It calls `useTemporalPolyfill()` of `test/temporalPolyfill.ts` and then imports those files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`.
+- `common/date-time/temporal.polyfill.node.test.ts` runs the cases of the `.test` files of the date and time helpers on `temporal-polyfill`. It calls `useTemporalPolyfill()` of `test/temporalPolyfill.ts` and then imports those files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`.
 - A `.polyfill.node.test` file does not import a file that has a case with `vi.unstubAllGlobals()`, because that call removes the polyfill. To compare the server HTML of the native `Temporal` with the HTML of the polyfill, the file renders the native HTML before it calls `useTemporalPolyfill()`. `date-field/DateField.node.test.tsx` does this.
 - The `.node.test.tsx` file of `DateField`, `TimeField` and `TimeClock` makes this comparison in its last case before the case with no `Temporal`. Each other date or time family has a `.polyfill.node.test` file beside its `.node.test.tsx` file.
 - `test/animation.ts` has the helpers for a test of a transition or an animation. [Test rules](#test-rules) gives the rules for a case that uses them.

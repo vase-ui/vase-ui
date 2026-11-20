@@ -1,24 +1,5 @@
-import * as DatePicker from '../src/date-picker/index.parts';
-import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import { Resizable } from '../src/resizable';
-import * as TimePicker from '../src/time-picker/index.parts';
 import { Slider } from '@vase-ui/vue/slider';
-
-<DatePicker.Field aria-labelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<DatePicker.Field aria-labelledby={5} />;
-
-<DatePicker.TimeField aria-labelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<DatePicker.TimeField aria-labelledby={5} />;
-
-<DateRangePicker.StartField aria-labelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<DateRangePicker.StartField aria-labelledby={5} />;
-
-<DateRangePicker.EndField aria-labelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<DateRangePicker.EndField aria-labelledby={5} />;
 
 <Slider.Root aria-labelledby="id" />;
 // @ts-expect-error `aria-labelledby` is a string
@@ -37,7 +18,3 @@ import { Slider } from '@vase-ui/vue/slider';
 <Resizable.Handle aria-valuetext="x" />;
 // @ts-expect-error `aria-valuetext` is a string
 <Resizable.Handle aria-valuetext={5} />;
-
-<TimePicker.Field aria-labelledby="id" />;
-// @ts-expect-error `aria-labelledby` is a string
-<TimePicker.Field aria-labelledby={5} />;

@@ -106,15 +106,10 @@ export function injectDateTimeField(): DateTimeFieldForPart {
   return field;
 }
 
-/**
- * What a picker part that renders a field root gives to the root.
- * TODO(pickers): the refactor of the pickers removes it.
- */
+/** What a picker part that renders a field root gives to the root. */
 export interface DateTimeFieldHost {
   /** The `id` of the group, which `aria-labelledby` of the group can name. */
   groupId: string;
-  /** The form input of the end field of a range, which a `Field` around the range validates too. */
-  endInput?: () => HTMLInputElement | null;
 }
 
 export const dateTimeFieldHostKey: InjectionKey<DateTimeFieldHost> = Symbol('date time field host');

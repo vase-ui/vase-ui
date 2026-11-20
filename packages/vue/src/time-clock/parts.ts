@@ -1,4 +1,4 @@
-import type { TimeValue } from '../internals/date-time/temporal';
+import type { TimeValue } from '../common/date-time/temporal';
 import TimeClockDayPeriod from './TimeClockDayPeriod.vue';
 import TimeClockFace from './TimeClockFace.vue';
 import TimeClockHand from './TimeClockHand.vue';

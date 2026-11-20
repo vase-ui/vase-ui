@@ -2,7 +2,7 @@
 import { shallowRef, useAttrs } from 'vue';
 import { useDateTimeFieldRoot } from '../common/date-time-field/root';
 import { useElement } from '../common/element';
-import { assertTemporal } from '../internals/date-time/temporal';
+import { assertTemporal } from '../common/date-time/temporal';
 import type {
   DateFieldRootChangeEventDetails,
   DateFieldRootProps,

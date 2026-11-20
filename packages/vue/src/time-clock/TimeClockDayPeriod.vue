@@ -3,7 +3,7 @@ import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useAsTag, useElement } from '../common/element';
-import { dayPeriodText } from '../internals/date-time/format';
+import { dayPeriodText } from '../common/date-time/format';
 import { clockAttributes, injectClock } from './clock';
 import type { TimeClockDayPeriodProps, TimeClockDayPeriodState } from './types';
 

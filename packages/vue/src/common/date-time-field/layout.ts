@@ -1,12 +1,12 @@
-import { dayPeriodText, formatter } from '../../internals/date-time/format';
+import { dayPeriodText, formatter } from '../date-time/format';
 import {
   isKind,
   toPlainDate,
   toPlainTime,
   withDate,
   withTime,
-} from '../../internals/date-time/temporal';
-import type { DateValue, TemporalValue } from '../../internals/date-time/temporal';
+} from '../date-time/temporal';
+import type { DateValue, TemporalValue } from '../date-time/temporal';
 
 export type EditableSegmentType =
   'year' | 'month' | 'day' | 'hour' | 'minute' | 'second' | 'dayPeriod';

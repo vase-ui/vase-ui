@@ -1,7 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { CalendarBaseProps, CalendarRootState } from '../calendar/types';
-import type { DateValue } from '../internals/date-time/temporal';
+import type { DateValue } from '../common/date-time/temporal';
 
 /** The first and the last day of a range. A range in progress has its first day and `null`. */
 export type RangeCalendarRootValue<Value extends DateValue = Temporal.PlainDate> = [

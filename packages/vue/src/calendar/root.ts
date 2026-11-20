@@ -11,20 +11,17 @@ import {
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useModel } from '../common/model';
-import { formatRangeText, formatText } from '../internals/date-time/calendar/formatText';
-import { isTemporalCalendar } from '../internals/date-time/format';
-import {
-  PickerCalendarOwner,
-  usePickerControl,
-} from '../internals/date-time/picker/PickerControlContext';
+import { formatRangeText, formatText } from '../common/date-time/text';
+import { isTemporalCalendar } from '../common/date-time/format';
+import { usePickerControl } from '../common/picker/control';
 import {
   compareDates,
   isKind,
   isSameDay,
   toPlainDate,
   yearMonthInCalendar,
-} from '../internals/date-time/temporal';
-import type { DateValue, DayOfWeek } from '../internals/date-time/temporal';
+} from '../common/date-time/temporal';
+import type { DateValue, DayOfWeek } from '../common/date-time/temporal';
 import { useLocale } from '../locale-provider/part';
 import { assertModifierNames, canFocus, canSelect, getDayState, getTabStop } from './days';
 import type { DayRules } from './days';
@@ -146,7 +143,8 @@ export interface CalendarSelection {
   /** The days of the range of a range root, with its preview. */
   readonly range: { start: Temporal.PlainDate; end: Temporal.PlainDate } | null;
   isSelected(date: Temporal.PlainDate): boolean;
-  press(date: Temporal.PlainDate, details: CalendarRootChangeEventDetails): void;
+  /** Returns `true` when the press completed a pick, also with no change of the value. */
+  press(date: Temporal.PlainDate, details: CalendarRootChangeEventDetails): boolean;
   /** Shift with an arrow key moved the focus from `from` to `date`. */
   extend(
     date: Temporal.PlainDate,
@@ -582,9 +580,7 @@ export function useCalendar(
     });
   }
 
-  const onPickerSelect = usePickerControl(PickerCalendarOwner, () =>
-    tabStop.value ? elementOf(tabStop.value) : null,
-  );
+  const picker = usePickerControl(() => (tabStop.value ? elementOf(tabStop.value) : null));
 
   function moveFocus(
     date: Temporal.PlainDate,
@@ -671,10 +667,8 @@ export function useCalendar(
 
   function press(date: Temporal.PlainDate, event: MouseEvent) {
     const state = stateOf(date);
-    if (!props.readonly && canSelect(state)) {
-      const details = create('day-press', event);
-      selection.press(date, details);
-      if (!details.isCanceled) onPickerSelect?.(event);
+    if (!props.readonly && canSelect(state) && selection.press(date, create('day-press', event))) {
+      picker?.onPick(event);
     }
     // A day that no page owns shows as an outside day. A press on it shows its page.
     if (canFocus(state) && !isOwned(date)) {
@@ -828,10 +822,8 @@ export function useCalendar(
     if (!month || isCellDisabled(cell, unit)) return;
     if (unit === 'month' && isMonthValue.value) {
       // A month of a value that is a year and month is a value.
-      if (!props.readonly) {
-        const details = create('month-press', event);
-        selection.press(cellDate(cell), details);
-        if (!details.isCanceled) onPickerSelect?.(event);
+      if (!props.readonly && selection.press(cellDate(cell), create('month-press', event))) {
+        picker?.onPick(event);
       }
       return;
     }
