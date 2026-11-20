@@ -1,3 +1,3 @@
-import { Accordion } from '@vase-ui/vue/accordion';
+import { Menubar } from '@vase-ui/vue/menubar';
 
-console.log(Accordion);
+console.log(Menubar);

@@ -6,18 +6,89 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx",
-      "describe": ["<Collapsible.Panel />", "server-side rendering"],
+      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanelCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanelDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/CollapsibleRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/trigger/CollapsibleTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/stateAttributesMapping.ts",
+      "kind": "not-applicable",
+      "reason": "Each part writes its own attributes from the state of the root. No mapping of the state to attributes is shared."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/CollapsibleRoot.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/collapsible/panel/CollapsiblePanel.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The two cases are in the test file that the Node project runs, with the same titles."
+      "test": "packages/vue/src/collapsible/Collapsible.test.ts",
+      "reason": "`Collapsible.test.ts` tests the ARIA attributes, the details and the two cancels, the controlled and the uncontrolled root, `v-model:open`, a disabled root, the keys and axe, with the native elements of the parts."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/trigger/CollapsibleTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/collapsible/Collapsible.test.ts",
+      "reason": "`Collapsible.test.ts` tests the `disabled` attribute, a disabled root, an element that is not a button, a disabled fieldset and the keys. `Collapsible.hydration.test.ts` tests `aria-controls` after the hydration."
+    },
+    {
+      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/collapsible/Collapsible.test.ts",
+      "reason": "`Collapsible.test.ts` tests one root node, `keepMounted` with `hidden` and `inert`, `hiddenUntilFound` with find-in-page, the ids, `<Transition>` and the size variables. `Collapsible.hydration.test.ts` tests the server HTML. A `<Transition>` around the panel replaces `data-starting-style`, `data-ending-style` and `transitionStatus` (rule 8.9). Vue has no `Activity`, and a part keeps no state about `KeepAlive` (rule 5)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "Trigger",
+      "kind": "not-applicable",
+      "reason": "The trigger reads the element that it renders, so it has no `nativeButton` (rule 8.3). The state has no `transitionStatus`: `<Transition>` around the panel animates it (rule 8.9). The trigger has no `data-panel-open` and no `data-disabled`: CSS selects `[aria-expanded=\"true\"]` and `:disabled` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the root has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The root has no `data-closed`: CSS selects `:not([data-open])` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
       "entry": "Panel",
-      "prop": "keepMounted",
       "kind": "not-applicable",
-      "reason": "The part must tell an absent `keepMounted` from `keepMounted={false}`, because only the explicit `false` gets a warning when `hiddenUntilFound` is set. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. The part uses `false` for an absent prop, which is the default that Base UI documents."
+      "reason": "The state has no `transitionStatus`, and the panel has no `data-starting-style` and no `data-ending-style`: `<Transition>` around the panel animates it (rule 8.9). The panel has no `data-open` and no `data-closed`: CSS selects `:not([hidden])` and `[hidden]` (rule 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "CollapsibleRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "CollapsibleTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "CollapsiblePanelDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "CollapsiblePanelCssVariables",
+      "kind": "not-applicable",
+      "reason": "The panel writes the variable names that the docs list, and CSS reads them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
@@ -36,18 +107,60 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/react/src/collapsible/root/stateAttributesMapping.ts",
+      "upstream": "packages/react/src/collapsible/root/CollapsibleRoot.tsx",
       "relation": "merged-into",
-      "destination": "packages/vue/src/collapsible/root/CollapsibleRootContext.ts",
-      "member": "collapsibleStateAttributesMapping",
-      "witness": "packages/vue/src/collapsible/root/CollapsibleRoot.test.tsx"
+      "destination": "packages/vue/src/collapsible/CollapsibleRoot.vue",
+      "behavior": "The root holds the open state, emits the change events and gives the panels to the trigger.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
     },
     {
       "upstream": "packages/react/src/collapsible/root/useCollapsibleRoot.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/collapsible/root/CollapsibleRootContext.ts",
-      "member": "useCollapsibleRoot",
-      "witness": "packages/vue/src/collapsible/root/CollapsibleRoot.test.tsx"
+      "destination": "packages/vue/src/collapsible/CollapsibleRoot.vue",
+      "behavior": "The open state, its change and the panel id of the root.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/CollapsibleRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/part.ts",
+      "behavior": "What a root or an accordion item gives to its trigger and its panel.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/trigger/CollapsibleTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/trigger.ts",
+      "behavior": "The button of the trigger, its ARIA attributes and its press.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/CollapsiblePanel.vue",
+      "behavior": "The panel renders its element while it is open or kept.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/panel/useCollapsiblePanel.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/panel.ts",
+      "behavior": "The id, the wait for a leave, `hidden`, `beforematch` and the size variables of a panel.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/collapsible/parts.ts",
+      "behavior": "The parts of the namespace `Collapsible` and their namespace types.",
+      "witness": "packages/vue/src/collapsible/Collapsible.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/collapsible/root/CollapsibleRoot.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/collapsible/Collapsible.spec.tsx",
+      "behavior": "The types of the parts, of the namespace and of the change details.",
+      "witness": "packages/vue/src/collapsible/Collapsible.spec.tsx"
     }
   ]
 }

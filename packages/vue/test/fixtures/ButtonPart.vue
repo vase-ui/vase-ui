@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAttrs, type PropType } from 'vue';
-import { useButton } from '../../src/button/button';
+import { useButton } from '../../src/common/button';
 import { useElement } from '../../src/common/element';
 
 defineOptions({ inheritAttrs: false });

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Accordion } from '@vase-ui/vue/accordion';
+import { Menubar } from '@vase-ui/vue/menubar';
 
-const props = withDefaults(defineProps<{ keepMounted?: boolean }>(), { keepMounted: false });
+const props = withDefaults(defineProps<{ modal?: boolean }>(), { modal: false });
 </script>
 
 <template>
-  <Accordion.Panel v-bind="props"><slot /></Accordion.Panel>
+  <Menubar v-bind="props"><slot /></Menubar>
 </template>
