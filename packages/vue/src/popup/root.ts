@@ -379,7 +379,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     addPortalElement: (element) => add(portalElements, element),
     addLabel(kind, label) {
       labels[kind] = label;
-      return () => (labels[kind] = undefined);
+      // A template can mount the new title before it unmounts the old one (CONTRIBUTING.md).
+      return () => {
+        if (labels[kind] === label) labels[kind] = undefined;
+      };
     },
   };
 

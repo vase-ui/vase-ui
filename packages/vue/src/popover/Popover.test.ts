@@ -1711,6 +1711,18 @@ describe('more behaviors of the parts', () => {
     expect(await opened()).toHaveAttribute('aria-labelledby', 'own');
   });
 
+  test('the popup is named by a title that replaces another one', async () => {
+    const title = reactive({ key: 'a', id: 'title-a' });
+    await mountPopover({ root: { defaultOpen: true }, title });
+    const element = await opened();
+    expect(element).toHaveAttribute('aria-labelledby', 'title-a');
+    Object.assign(title, { key: 'b', id: 'title-b' });
+    await nextTick();
+    await nextTick();
+    expect(element.querySelector('h2')).toHaveAttribute('id', 'title-b');
+    expect(element).toHaveAttribute('aria-labelledby', 'title-b');
+  });
+
   test('a press on Close closes with `close-press`; a disabled Close closes nothing', async () => {
     const log: string[] = [];
     const close = reactive<Props>({ disabled: true });
