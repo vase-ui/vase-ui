@@ -591,12 +591,21 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   );
 
   // A `<label>` names no segment, because each segment has an `aria-label`. The labels of the first
-  // segment thus name the group. The server HTML has no such name.
+  // segment thus name the group. The server HTML has no such name. WebKit keeps the old `labels` of
+  // an input whose `id` changes (test/measurements/date-time-field.test.ts), so the root looks for
+  // the labels itself.
   const nativeLabelIds = shallowRef<string>();
   watch(
     [firstSegment, id],
     ([segment]) => {
-      const labels = [...(segment?.labels ?? [])];
+      const scope = segment?.getRootNode() as Document | ShadowRoot | undefined;
+      const candidates = [
+        segment?.closest('label'),
+        ...(scope?.querySelectorAll<HTMLLabelElement>('label[for]') ?? []),
+      ];
+      const labels = [...new Set(candidates)].filter(
+        (label): label is HTMLLabelElement => !!segment && label?.control === segment,
+      );
       labels.forEach((label, index) => {
         label.id ||= index === 0 ? `${id.value}-label` : `${id.value}-label-${index + 1}`;
       });

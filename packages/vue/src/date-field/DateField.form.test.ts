@@ -383,9 +383,21 @@ describe('a native label', () => {
       const element = root.querySelector('label')!;
       expect(element.id).toBe('day-label');
       expect(group).toHaveAttribute('aria-labelledby', 'day-label');
-      expect(segments[0]!.labels).toContain(element);
+      expect(element.control).toBe(segments[0]);
     },
   );
+
+  test('a change of `id` names the group with the label of the new id', async () => {
+    const date = reactive<Record<string, unknown>>({ id: 'day' });
+    const { root, group } = await mountInField({ date });
+    root.insertAdjacentHTML(
+      'beforeend',
+      '<label for="day" id="day-name">Day</label><label for="arrival" id="arrival-name">Arrival</label>',
+    );
+    date.id = 'arrival';
+    await settle();
+    expect(group).toHaveAttribute('aria-labelledby', 'arrival-name');
+  });
 
   test('`aria-label` of the developer and the label of a Field win', async () => {
     const named = await mountInField({ label: 'for', date: { id: 'day', 'aria-label': 'Day' } });

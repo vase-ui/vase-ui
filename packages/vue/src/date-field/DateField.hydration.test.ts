@@ -1,8 +1,11 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { nextTick } from 'vue';
 import DateTimeFieldsOnServer from '../../test/fixtures/DateTimeFieldsOnServer.vue';
 import { hydrate, renderOnServer } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+
+// The parts compile as Vapor components in these setups of `vitest.vue-3.6.config.ts`.
+const isVaporParts = ['vapor', 'vdom-interop'].includes(inject('app'));
 
 const segmentsOf = (root: Element) => [...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')];
 const layoutOf = (root: Element) =>
@@ -49,7 +52,9 @@ describe('server render and hydration', () => {
     expect(takeReportedMessages()).toEqual([]);
   });
 
-  test('a server with another count of items: the layout of the browser, and one message of Vue', async () => {
+  // A virtual DOM part logs one message for a list with another count, also under
+  // `data-allow-mismatch` (test/measurements/date-time-field.test.ts). A Vapor part logs none.
+  test('a server with another count of items: the layout of the browser, and one message of a virtual DOM part', async () => {
     const root = await renderOnServer('DateTimeFieldsOnServer', {
       family: 'date',
       value: '2026-11-14T15:04',
@@ -71,8 +76,8 @@ describe('server render and hydration', () => {
       '" "',
       'dayPeriod AM/PM',
     ]);
-    expect(takeReportedMessages()).toEqual([
-      'console.error: Hydration completed but contains mismatches.',
-    ]);
+    expect(takeReportedMessages()).toEqual(
+      isVaporParts ? [] : ['console.error: Hydration completed but contains mismatches.'],
+    );
   });
 });
