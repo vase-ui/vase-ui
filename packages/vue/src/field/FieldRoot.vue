@@ -43,6 +43,10 @@ const emit = defineEmits<{
   'update:touched': [touched: boolean];
 }>();
 defineSlots<{
+  /**
+   * The content of the field. `validity` has a flag for each failure and `valid`, and `errors` has
+   * the messages. `value` and `initialValue` are the value of the control and its first value.
+   */
   default?(scope: {
     state: FieldRootState;
     validity: FieldValidity;
@@ -273,7 +277,14 @@ provide(fieldPartsKey, {
   },
 });
 
-defineExpose({ element, validate: validateAtOnce });
+defineExpose({
+  element,
+  /**
+   * Validates the field at once. A required control with no value is invalid, also when the user
+   * did not change it. It does not wait for a promise of `validate`.
+   */
+  validate: validateAtOnce,
+});
 
 function elementProps() {
   return mergeProps(fieldStateAttributes(state.value, isDisabled.value), attrs);

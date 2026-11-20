@@ -16,11 +16,23 @@ export interface RadioProps<Value = any> extends /* @vue-ignore */ Omit<
 > {
   /** The value that the group gets when the user selects this radio. */
   value: Value;
+  /** The `id` of the radio. With no `id`, the radio has an id of its own. */
   id?: string;
+  /**
+   * Disables the radio. The arrow keys skip it. A disabled group, field or fieldset also disables
+   * it.
+   * @default false
+   */
   disabled?: boolean;
-  /** The user can reach the radio and cannot select it. */
+  /**
+   * The user can reach the radio and cannot select it.
+   * @default false
+   */
   readonly?: boolean;
-  /** Makes the group required, as `required` on one native radio does. */
+  /**
+   * Makes the group required, as `required` on one native radio does.
+   * @default false
+   */
   required?: boolean;
 }
 

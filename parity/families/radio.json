@@ -10,22 +10,22 @@
     {
       "upstream": "packages/react/src/radio/indicator/RadioIndicator.tsx",
       "kind": "not-applicable",
-      "reason": "`Radio.Indicator` is cut. CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
+      "reason": "CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
     },
     {
       "upstream": "packages/react/src/radio/indicator/RadioIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/radio/root/RadioRootContext.ts",
       "kind": "not-applicable",
-      "reason": "The context gives the state of the radio to `Radio.Indicator`, which is cut. The `element` slot gives the state."
+      "reason": "The `element` slot gives the state of the radio, so no part needs the context."
     },
     {
       "upstream": "packages/react/src/radio/root/RadioRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/radio/utils/stateAttributesMapping.ts",
@@ -35,7 +35,7 @@
     {
       "upstream": "packages/react/src/radio/indicator/RadioIndicator.test.tsx",
       "kind": "not-applicable",
-      "reason": "The file tests `Radio.Indicator`, which is cut."
+      "reason": "The file tests `Radio.Indicator`. CSS on the input or an element of the developer gives the mark."
     },
     {
       "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
@@ -47,25 +47,25 @@
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Radio` is the part: one `<input type=\"radio\">` (rules 8.1, 8.3). The types of the part are `Radio.Props` and `Radio.State`, also with the flat names `RadioProps` and `RadioState`. `readonly` replaces `readOnly`. The `element` of the template ref replaces `inputRef`. CSS selects `:checked`, `:disabled` and `:required`."
+      "reason": "`Radio` is the part: one native `<input type=\"radio\">`, so it needs no `nativeButton`. Its types are `Radio.Props` and `Radio.State`, and the flat names `RadioProps` and `RadioState`. `readonly` is in place of `readOnly`. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required` and `:focus`, so the radio has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-filled` and `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "Indicator",
       "kind": "not-applicable",
-      "reason": "`Radio.Indicator` is cut. CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
+      "reason": "CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "RadioIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
       "entry": "RadioRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

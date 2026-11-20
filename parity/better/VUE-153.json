@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L269-L279",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox-group/useCheckboxGroupParent.ts#L56-L66"
   ],
-  "behavior": "When a checkbox unmounts, CheckboxGroup retains the disabled state of a remaining child with the same value. A press on the parent leaves that disabled child unchanged. Base UI removes the shared value from its disabled map when either child unmounts.",
+  "behavior": "When one of two checkboxes with the same value unmounts, `CheckboxGroup` keeps the disabled state of the other. A press on the parent checkbox then leaves that disabled checkbox as it is. Base UI removes the shared value from its disabled map when either checkbox unmounts.",
   "dueWith": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts"
 }

@@ -1,10 +1,11 @@
 ---
 order: 1
-description: An unstyled Vue checkbox group component that provides shared state to a series of checkboxes.
+description: An unstyled Vue checkbox group component that holds the shared state of a series of checkboxes.
 ---
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoCheckboxGroupHero from '../demos/checkbox-group/hero/css-modules/index.vue';
@@ -15,7 +16,7 @@ import DemoCheckboxGroupParent from '../demos/checkbox-group/parent/css-modules/
 
 # Checkbox Group
 
-Provides shared state to a series of checkboxes.
+A group that holds the shared state of a series of checkboxes.
 
 <DemoFrame>
   <DemoCheckboxGroupHero />
@@ -52,23 +53,9 @@ Provides shared state to a series of checkboxes.
 
 ## Anatomy
 
-Checkbox Group works with [Checkbox](/components/checkbox). Import the components and assemble their parts:
+Import the components and assemble their parts:
 
 <<< ./checkbox-group/Anatomy.vue
-
-Give each `Checkbox` a `value`. The `modelValue` of the group is an array of the values of the checked checkboxes. Bind it with `v-model`. A press adds the value at the end, or removes it. The group follows a change that you make in place to a reactive `modelValue`, such as `push` or `splice`. A value with no mounted checkbox stays.
-
-A checkbox with no `value` keeps its own state. The group does not list it.
-
-A press emits `checkedChange` on the checkbox, then `valueChange` and `update:modelValue` on the group. `checkedChange` and `valueChange` get the same `details`. To stop the change, call `details.cancel()` in one of them.
-
-A native reset of the form puts an uncontrolled group back to its first value, and emits only `update:*`.
-
-A form gets one entry for each checked checkbox that has a name and is enabled. In a `Field`, the name is the `name` of the field. The values of a `Form` have the array of the checked, mounted and enabled checkboxes.
-
-## Styling
-
-Select the states of the group with `[data-disabled]`, `[aria-invalid="true"]`, `[data-valid]`, `[data-touched]`, `[data-dirty]` and `[data-filled]`. Select the states of each checkbox as the [Checkbox](/components/checkbox#styling) page says.
 
 ## Examples
 
@@ -90,14 +77,10 @@ A `Fieldset.Legend` names the group in its `Fieldset.Root`. Put each checkbox in
 
 To make a checkbox that controls the other checkboxes of a `CheckboxGroup`:
 
-1. Pass an array of all the child checkbox values to the `allValues` prop of `CheckboxGroup`.
-2. Add the `parent` prop to the parent `Checkbox`.
+1. Give the values of all the child checkboxes to the `allValues` prop of `CheckboxGroup`.
+2. Give the `parent` prop to the parent `Checkbox`.
 
-The parent checkbox works with a controlled group and with an uncontrolled group. The group sets the [indeterminate](/components/checkbox#anatomy) state of the parent checkbox when some, but not all, child checkboxes are checked.
-
-When some children, but not all, are checked, the first click on the parent checks all of them. The second click unchecks them. The third click restores the selection that the children had before the first click. A disabled child keeps its state.
-
-The parent has `aria-controls` with the ids of its children. It has no name, so a form gets no value from the parent. In the server HTML, the parent has no `aria-controls`, because each child gives its id after the mount.
+The group can be controlled or uncontrolled. The parent checkbox is indeterminate while some, but not all, child checkboxes are checked. Then the first click on the parent checks all of them, and the second click clears them. The third click checks the same children as before the first click. A disabled child keeps its state.
 
 <DemoFrame>
   <DemoCheckboxGroupParent />
@@ -130,3 +113,7 @@ The demo nests a `CheckboxGroup` in another `CheckboxGroup`. Each group has its 
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

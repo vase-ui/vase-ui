@@ -11,10 +11,10 @@ const props = withDefaults(defineProps<FormProps<Values>>(), { validationMode: '
 // listener gets only the submits that pass.
 const emit = defineEmits<{
   /**
-   * A submit with each field valid. `values` has the value of each named field of the form. The
-   * form prevents the native submit while it has a `submit` listener. With no listener, the browser
-   * submits the form. Give `@submit` a function, because the form can miss a listener that you add
-   * or remove after the mount.
+   * A submit with each field valid. `values` has the value of each named field of the form that is
+   * not disabled. The form prevents the native submit while it has a `submit` listener. With no
+   * listener, the browser submits the form. Give `@submit` a function, because the form can miss a
+   * listener that you add or remove after the mount.
    */
   submit: [event: SubmitEvent, values: Values];
   /** An edit or a reset removes the errors of a field. `v-model:errors` uses it. */
@@ -66,7 +66,14 @@ watch(
   { deep: true },
 );
 
-defineExpose({ element, validate });
+defineExpose({
+  element,
+  /**
+   * Validates each field of the form, or each field with the name `name`. Returns `true` when they
+   * are valid. It does not wait for a promise of `validate`.
+   */
+  validate,
+});
 
 function validate(name?: string) {
   const fields = [...fieldsOfForm()].filter((field) => name === undefined || field.name === name);

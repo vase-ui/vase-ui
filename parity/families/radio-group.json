@@ -10,35 +10,35 @@
       "describe": ["<RadioGroup />"],
       "title": "supports inputRef as a function",
       "kind": "not-applicable",
-      "reason": "The case gives `inputRef` as a ref callback. Vue has no `inputRef` prop. The part exposes `inputElement`."
+      "reason": "The case gives `inputRef` as a ref callback. Vue has no `inputRef` prop. The `element` of the template ref of each `Radio` is its input."
     },
     {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
       "describe": ["<RadioGroup />"],
       "title": "does not detach a stable inputRef callback on unrelated re-renders",
       "kind": "not-applicable",
-      "reason": "The case tests that a ref callback stays attached when the parent renders again. Vue has no `inputRef` prop. The part exposes `inputElement`."
+      "reason": "The case tests that a ref callback stays attached when the parent renders again. Vue has no `inputRef` prop. The `element` of the template ref of each `Radio` is its input."
     },
     {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
       "describe": ["<RadioGroup />"],
       "title": "transfers the current input when the object inputRef changes",
       "kind": "not-applicable",
-      "reason": "The case changes the `inputRef` prop from one ref object to another. Vue has no `inputRef` prop. The part exposes `inputElement`."
+      "reason": "The case changes the `inputRef` prop from one ref object to another. Vue has no `inputRef` prop. The `element` of the template ref of each `Radio` is its input."
     },
     {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
       "describe": ["<RadioGroup />"],
       "title": "detaches the previous callback inputRef when it changes (cleanup: %s)",
       "kind": "not-applicable",
-      "reason": "The case changes the `inputRef` prop between ref callbacks, with and without a cleanup function. Vue has no `inputRef` prop. The part exposes `inputElement`."
+      "reason": "The case changes the `inputRef` prop between ref callbacks, with and without a cleanup function. Vue has no `inputRef` prop. The `element` of the template ref of each `Radio` is its input."
     },
     {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
       "describe": ["<RadioGroup />"],
       "title": "cleans up inputRef bindings when selecting, clearing, and unmounting",
       "kind": "not-applicable",
-      "reason": "The case counts the cleanups of a ref callback. Vue has no `inputRef` prop. The cases \"points inputRef to the checked radio input when present\", \"keeps inputRef pointing to the first radio when the value is cleared\" and \"detaches inputRef when its current radio unmounts\" test the same changes of `inputElement`."
+      "reason": "The case counts the cleanups of a ref callback. Vue has no `inputRef` prop. The `element` of the template ref of each `Radio` is its input."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
@@ -67,7 +67,7 @@
     {
       "upstream": "packages/react/src/radio-group/RadioGroupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
@@ -79,13 +79,13 @@
       "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
       "entry": "RadioGroup",
       "kind": "not-applicable",
-      "reason": "`readonly` replaces `readOnly`, in the props and in the state. The state has no `focused` (rule 8.15). A template ref on a `Radio` has its input, so the group has no `inputRef`. A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` and `required` have no default of their own."
+      "reason": "`readonly` is in place of `readOnly`, in the props and in the state. The `element` of the template ref of each `Radio` is its input, so the group has no `inputRef`. CSS selects `:focus-within`, so the state has no `focused`. Vue gives an absent Boolean prop the value `false`, so `disabled` and `required` need no default."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
       "entry": "RadioGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

@@ -11,6 +11,10 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<FieldErrorProps>();
 const slots = defineSlots<{
+  /**
+   * The content of the error. With no content, the error shows the messages of the field: one
+   * message as text, and more as a list.
+   */
   default?(scope: { state: FieldErrorState }): unknown;
   element?(
     scope: ElementSlotProps<FieldErrorState> & {
