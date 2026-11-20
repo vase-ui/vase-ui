@@ -112,7 +112,7 @@ Load the items from a remote source when the text changes, and show the status o
 
 ### Inline autocomplete
 
-The `mode` prop fills the input with the text of the item that the arrow keys highlight. It takes the values of `aria-autocomplete`: `list`, `both`, `inline` or `none`.
+Set `mode` to `both` or `inline` to show the text of the item that the arrow keys highlight in the input. `mode` takes the values of `aria-autocomplete`: `list`, `both`, `inline` or `none`.
 
 <DemoFrame>
   <DemoAutocompleteInline />
@@ -215,7 +215,7 @@ A fuzzy match finds relevant items also when the query is not the same as the te
 
 ### Limit results
 
-The `limit` prop sets the largest number of visible items. `<Autocomplete.Status>` tells the user to make the query more specific.
+The `limit` prop sets the largest number of visible items. Use `<Autocomplete.Status>` to tell the user to make the query more specific.
 
 <DemoFrame>
   <DemoAutocompleteLimit />
@@ -248,7 +248,7 @@ The `limit` prop sets the largest number of visible items. `<Autocomplete.Status
 
 ### Auto highlight
 
-The `autoHighlight` prop of `<Autocomplete.Root>` gives the highlight to the first item that matches the typed text. Set it to `"always"` to keep a highlight at each time, such as for a list in place in a dialog.
+The `autoHighlight` prop of `<Autocomplete.Root>` gives the highlight to the first item that matches the typed text. Set it to `"always"` to also highlight the first item while the text is empty and at each open, such as for an inline list in a dialog.
 
 Use it with the `keepHighlight` and `highlightItemOnHover` props to set the highlight for the pointer.
 
