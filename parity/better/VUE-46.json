@@ -7,5 +7,5 @@
   ],
   "behavior": "A key that the list of a child popup does not stop goes to the list of the parent popup one time, also when `Teleport` moved the child popup. A close key of the child list that is also a navigation key of the parent list then closes the child list and moves the highlight of the parent list. A filterable parent takes the next highlight from the registered child trigger, including when the submenu is in another document or the consumer sets `aria-controls`.",
   "dueWith": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-  "families": ["menu"]
+  "families": ["menu", "context-menu"]
 }
