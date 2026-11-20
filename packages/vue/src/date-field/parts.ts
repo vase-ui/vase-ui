@@ -21,6 +21,10 @@ import type {
   DateFieldSegmentState,
 } from './types';
 
+/**
+ * Groups the parts of a date field and holds its value.
+ * Renders a `<div>` element with a hidden form `<input>` element in it.
+ */
 export const Root: typeof DateFieldRoot = DateFieldRoot;
 export namespace Root {
   export type Props<Value extends DateFieldRootValue = DateFieldRootValue> =
@@ -32,6 +36,10 @@ export namespace Root {
   export type ChangeEventDetails = DateFieldRootChangeEventDetails;
 }
 
+/**
+ * Holds the segments and the literals of the field.
+ * Renders a `<div>` element.
+ */
 export const Input: typeof DateFieldInput = DateFieldInput;
 export namespace Input {
   export type Props = DateFieldInputProps;
@@ -39,18 +47,30 @@ export namespace Input {
   export type Segment = DateFieldInputSegment;
 }
 
+/**
+ * Edits one unit of the value.
+ * Renders an `<input>` element.
+ */
 export const Segment: typeof DateFieldSegment = DateFieldSegment;
 export namespace Segment {
   export type Props = DateFieldSegmentProps;
   export type State = DateFieldSegmentState;
 }
 
+/**
+ * Shows a separator, an era or the name of a time zone.
+ * Renders a `<span>` element.
+ */
 export const Literal: typeof DateFieldLiteral = DateFieldLiteral;
 export namespace Literal {
   export type Props = DateFieldLiteralProps;
   export type State = DateFieldLiteralState;
 }
 
+/**
+ * Empties the field.
+ * Renders a `<button>` element.
+ */
 export const Clear: typeof DateFieldClear = DateFieldClear;
 export namespace Clear {
   export type Props = DateFieldClearProps;
