@@ -81,8 +81,7 @@ export interface DialogPortalProps extends PopupPortalProps {}
 
 export interface DialogPortalState {}
 
-export interface DialogBackdropProps
-  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
+export interface DialogBackdropProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The backdrop of a nested dialog renders its element.
    * @default false

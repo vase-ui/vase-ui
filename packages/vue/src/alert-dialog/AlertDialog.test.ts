@@ -3,8 +3,10 @@ import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import { AlertDialog, type AlertDialogRootChangeEventDetails } from '@vase-ui/vue/alert-dialog';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
+import DialogPartAlone from '../../test/fixtures/DialogPartAlone.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
-import { mount } from '../../test/render';
+import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -98,9 +100,11 @@ describe('Alert Dialog', () => {
     expect(handle.isOpen).toBe(true);
   });
 
+  // The case throws in `setup`, so it is the last of the file.
   test('its trigger with no root and no handle throws an error that names it', async () => {
-    const { mountError } = await import('../../test/render');
-    const error = mountError(AlertDialog.Trigger);
+    const error = mountError(DialogPartAlone, { part: 'Trigger', alert: true });
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
     expect((error as Error).message).toBe(
       'Vase UI: <AlertDialog.Trigger> must be inside <AlertDialog.Root>, or it must have a `handle`. Without a root the trigger has no dialog to open. Put the trigger inside <AlertDialog.Root>, or pass a `handle`.',
     );

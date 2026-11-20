@@ -11,8 +11,7 @@ type Props = Record<string, unknown>;
 // trigger with the key `t`. Text inputs stand before and after the root. The input after it and the
 // outside button are at the bottom right of the view. The popup holds a text field and a button,
 // and the parts that their props name. With `alert`, the root and the triggers are those of Alert
-// Dialog. `nested` puts a second dialog in the popup, and `inTree` puts one beside the triggers,
-// outside the portal. The popup is fixed at the top left of the view, above the fixed element of
+// Dialog. `nested` puts a second dialog in the popup, and `inTree` puts one after the portal. The popup is fixed at the top left of the view, above the fixed element of
 // a modal dialog.
 defineProps({
   alert: Boolean,
@@ -51,7 +50,6 @@ defineExpose({ root: rootPart, popup: popupPart });
       >
         {{ trigger.key }}
       </component>
-      <DialogNested v-if="inTree" v-bind="inTree" />
       <Dialog.Portal v-if="!noPortal" v-bind="portal">
         <Dialog.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
         <Dialog.Viewport v-if="viewport" data-testid="viewport" v-bind="viewport">
@@ -91,6 +89,7 @@ defineExpose({ root: rootPart, popup: popupPart });
           <DialogNested v-if="nested && scene.nested !== false" v-bind="nested" />
         </Dialog.Popup>
       </Dialog.Portal>
+      <DialogNested v-if="inTree" v-bind="inTree" />
     </template>
   </component>
   <input id="after" aria-label="After" style="position: fixed; right: 0; bottom: 30px" />
