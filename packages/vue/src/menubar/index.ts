@@ -3,6 +3,7 @@ import type { MenubarProps, MenubarState } from './Menubar.vue';
 
 /**
  * The container for menus.
+ * Renders a `<div>` element.
  */
 export const Menubar: typeof MenubarComponent = MenubarComponent;
 export namespace Menubar {

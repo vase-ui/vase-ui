@@ -213,6 +213,7 @@ export namespace Link {
 
 /**
  * An icon that indicates that the trigger button opens a menu.
+ * Renders a `<span>` element.
  */
 export const Icon: typeof NavigationMenuIcon = NavigationMenuIcon;
 export namespace Icon {

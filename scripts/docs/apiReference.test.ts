@@ -480,6 +480,15 @@ test('each prop and each event of each family page has a type, and each event ha
   assert.deepEqual(missing, []);
 });
 
+test('each part of each family page has a description with a line that says what the part renders', () => {
+  const missing = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).flatMap(({ family }) =>
+    read(family).parts.flatMap(({ name, description }) =>
+      /^(Renders |Doesn't render )/m.test(description) ? [] : [name],
+    ),
+  );
+  assert.deepEqual(missing, []);
+});
+
 test('the reference of a family page does not change with the families that the reader read before', () => {
   const families = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).map(({ family }) => family);
   const readBackward = createApiReferenceReader(REPOSITORY_ROOT);
