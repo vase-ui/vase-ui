@@ -15,7 +15,8 @@ const REST_IN_TRIANGLE = 40;
 /**
  * Opens a popup when a mouse rests on its trigger, and closes it when the pointer leaves the
  * trigger and the popup. The pointer can cross the space between them in the triangle from the
- * point where it left the trigger to the near edge of the popup.
+ * point where it left the trigger to the near edge of the popup. A popup that no hover and no press
+ * opened closes only when the pointer leaves its trigger.
  */
 export function usePopupHover(
   root: () => PopupRoot | null,
@@ -33,13 +34,20 @@ export function usePopupHover(
   const restTimer = useTimeout();
   let openedAt = -Infinity;
 
-  const hoverOpen = () => {
+  // The pointer closes a popup that is open for this trigger, unless a press opened or kept it.
+  const closedBy = () => {
     const current = root();
-    return (
-      !!current?.open &&
-      current.reason === 'trigger-hover' &&
-      current.activeTrigger === options.trigger.value
-    );
+    const trigger = options.trigger.value;
+    if (
+      !options.enabled() ||
+      !trigger ||
+      !current?.open ||
+      current.reason === 'trigger-press' ||
+      current.activeTrigger !== trigger
+    ) {
+      return null;
+    }
+    return current.reason === 'trigger-hover' ? 'hover' : 'trigger';
   };
 
   watch(
@@ -47,19 +55,21 @@ export function usePopupHover(
     () => openTimer.clear(),
   );
 
+  function open(event: PointerEvent) {
+    const element = options.trigger.value;
+    const current = root();
+    // A toolbar item keeps the focus with `aria-disabled`, and a fieldset can disable the trigger
+    // in the delay.
+    if (!element || !current || !options.enabled()) return;
+    if (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true') return;
+    current.request(true, 'trigger-hover', event, element);
+    if (current.open && current.reason === 'trigger-hover') {
+      openedAt = ownerWindow(element).performance.now();
+    }
+  }
+
   function startOpen(event: PointerEvent) {
-    openTimer.start(options.delay(), () => {
-      const element = options.trigger.value;
-      const current = root();
-      // A toolbar item keeps the focus with `aria-disabled`, and a fieldset can disable the
-      // trigger in the delay.
-      if (!element || !current || !options.enabled()) return;
-      if (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true') return;
-      current.request(true, 'trigger-hover', event, element);
-      if (current.open && current.reason === 'trigger-hover') {
-        openedAt = ownerWindow(element).performance.now();
-      }
-    });
+    openTimer.start(options.delay(), () => open(event));
   }
 
   // A touch that rests for the delay would open the popup, and the click at its end would close it.
@@ -73,7 +83,8 @@ export function usePopupHover(
     ) {
       return;
     }
-    startOpen(event);
+    if (current && opensAtOnce(current)) open(event);
+    else startOpen(event);
   }
 
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
@@ -85,20 +96,25 @@ export function usePopupHover(
     openTimer.clear();
   }
 
-  // While the hover keeps the popup open, one listener of the document follows the pointer.
+  // While the popup is open for this trigger, one listener of the document follows the pointer.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
+  let byHover = true;
   watch(
-    hoverOpen,
-    (open, _, onCleanup) => {
-      if (!open) return;
+    closedBy,
+    (by, _, onCleanup) => {
+      if (!by) return;
       const doc = ownerDocument(options.trigger.value);
-      over = 'trigger';
+      byHover = by === 'hover';
+      // The pointer of a popup that no hover opened can be anywhere.
+      over = byHover ? 'trigger' : 'outside';
       from = null;
       onCleanup(
         mergeCleanups(
           addEventListener(doc, 'pointermove', follow, true),
-          addEventListener(doc.documentElement, 'pointerleave', close),
+          addEventListener(doc.documentElement, 'pointerleave', () => {
+            if (byHover) close();
+          }),
           closeTimer.clear,
           restTimer.clear,
         ),
@@ -120,10 +136,12 @@ export function usePopupHover(
     if (options.inside(target)) {
       over = 'popup';
       closeTimer.clear();
+      if (!byHover) from = null;
       return;
     }
     if (over === 'trigger') from = point;
     over = 'outside';
+    if (!byHover && !from) return;
     const popup = root()?.popup;
     if (from && trigger && popup && inTriangle(point, from, trigger, popup)) {
       restTimer.start(REST_IN_TRIANGLE, close);
@@ -154,6 +172,20 @@ export function usePopupHover(
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);
     },
   };
+}
+
+/**
+ * A hover opens the popup with no delay while the popup is open for another trigger, and while it
+ * leaves after a hover close. A kept popup leaves while an animation of its element runs. An
+ * animation that ended and fills forwards does not run (test/measurements/preview-card.test.ts).
+ */
+function opensAtOnce(root: PopupRoot) {
+  if (root.open) return true;
+  if (root.reason !== 'trigger-hover') return false;
+  return (
+    root.leaving ||
+    !!root.popup?.getAnimations().some((animation) => animation.playState === 'running')
+  );
 }
 
 // The triangle from the point where the pointer left the trigger to the near edge of the popup.

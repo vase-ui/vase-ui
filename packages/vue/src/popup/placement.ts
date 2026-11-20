@@ -168,6 +168,8 @@ export function usePlacement(
     positioner: Readonly<Ref<HTMLElement | null>>;
     /** Places the positioner with insets from the edge that faces the anchor. */
     insets: () => boolean;
+    /** A middleware that runs first, before `flip()`: it can reset the rectangle of the anchor. */
+    inline?: Middleware;
   },
 ) {
   const rtl = shallowRef(false);
@@ -260,6 +262,7 @@ export function usePlacement(
         ? [shifting, flipping]
         : [flipping, shifting];
     return [
+      ...(options.inline ? [options.inline] : []),
       offset((state) => {
         const along = readOffset(props.alignOffset, state);
         return {

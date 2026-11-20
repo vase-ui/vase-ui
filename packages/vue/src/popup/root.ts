@@ -25,7 +25,7 @@ export interface PopupChangeEventDetails<
    */
   allowPropagation(): void;
   readonly isPropagationAllowed: boolean;
-  /** The element that the action is on. With no such element, the active trigger. */
+  /** The element of the action. With no such element, the active trigger in the document. */
   trigger: Element | undefined;
 }
 
@@ -257,10 +257,23 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     { flush: 'sync' },
   );
   const activeTrigger = computed(() => activeEntry.value?.element ?? lastTrigger.value);
+  // The popup keeps its payload while its active trigger is out of the DOM.
+  const lastPayload = shallowRef<{ id: string; payload: unknown }>();
+  watch(
+    () => activeEntry.value && { id: activeEntry.value.id, payload: activeEntry.value.payload },
+    (entry) => {
+      if (entry) lastPayload.value = entry;
+    },
+    { flush: 'sync' },
+  );
 
   function change(next: boolean, why: string, event: Event, entry: PopupTrigger | undefined) {
     const element = entry?.element ?? activeTrigger.value;
-    const details = createPopupChangeEventDetails(why, event, element ?? undefined);
+    const details = createPopupChangeEventDetails(
+      why,
+      event,
+      element?.isConnected ? element : undefined,
+    );
     const nextId = next && entry ? entry.id : activeTriggerId.value;
     if (next === open.value && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
@@ -353,7 +366,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return activeTriggerId.value;
     },
     get payload() {
-      return activeEntry.value?.payload as Payload | undefined;
+      const entry = activeEntry.value ?? lastPayload.value;
+      return (entry?.id === activeTriggerId.value ? entry?.payload : undefined) as
+        | Payload
+        | undefined;
     },
     get popup() {
       return popup.value;
