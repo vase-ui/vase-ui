@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, mergeProps, useAttrs, useId } from 'vue';
+import { computed, mergeProps, useAttrs, useId, useSlots } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupHover } from '../popup/hover';
@@ -25,6 +25,7 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
+const slots = useSlots();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const context = useTriggerRoot(() => props.handle as PopoverHandle | undefined);
@@ -43,6 +44,8 @@ const trigger = usePopupTrigger(root, {
   id: () => elementId.value,
   payload: () => props.payload,
   disabled: () => props.disabled,
+  // A tag in `as` is known at the render. The element of the `element` slot is known after the mount.
+  tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
   closesAtPress: (event) => !props.openOnHover || hover.closesAtPress(event),
 });
 

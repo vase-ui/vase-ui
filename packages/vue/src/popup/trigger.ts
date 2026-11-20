@@ -13,6 +13,8 @@ export function usePopupTrigger(
     id: () => string;
     payload: () => unknown;
     disabled: () => boolean;
+    /** The tag of the element before the mount, where the part knows it (a tag in `as`). */
+    tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;
   },
@@ -21,6 +23,7 @@ export function usePopupTrigger(
     element: options.element,
     disabled: options.disabled,
     type: 'button',
+    tag: options.tag,
   });
 
   const entry = {

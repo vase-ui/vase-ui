@@ -30,6 +30,24 @@ describe('server render and hydration', () => {
     expect(trigger).toHaveAttribute('aria-controls', popupOf(document.body)!.id);
   });
 
+  test('a trigger and a close with a tag in `as` have the attributes of that tag in the server HTML', async () => {
+    const root = await renderOnServer('PopoverParts', {
+      root: { defaultOpen: true },
+      triggers: [{ key: 't', attrs: { as: 'span' } }],
+      portal: { disabled: true },
+      close: { as: 'span', 'data-testid': 'close' },
+    });
+    for (const element of [
+      root.querySelector('[data-key="t"]'),
+      root.querySelector('[data-testid="close"]'),
+    ]) {
+      expect(element!.localName).toBe('span');
+      expect(element).toHaveAttribute('role', 'button');
+      expect(element).toHaveAttribute('tabindex', '0');
+      expect(element).not.toHaveAttribute('type');
+    }
+  });
+
   test('a disabled portal renders the popup in place in the server HTML, hidden until its first place', async () => {
     const props = { root: { defaultOpen: true }, portal: { disabled: true } };
     const root = await renderOnServer('PopoverParts', props);

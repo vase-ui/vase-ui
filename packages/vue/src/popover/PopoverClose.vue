@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, useAttrs } from 'vue';
+import { computed, onUnmounted, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { useElement } from '../common/element';
 import { injectPopoverRoot } from './root';
@@ -19,8 +19,15 @@ defineSlots<{
 
 const context = injectPopoverRoot('Close');
 const attrs = useAttrs();
+const slots = useSlots();
 const { element, setElement } = useElement<HTMLElement>();
-const button = useButton({ element, disabled: () => props.disabled, type: 'button' });
+const button = useButton({
+  element,
+  disabled: () => props.disabled,
+  type: 'button',
+  // A tag in `as` is known at the render. The element of the `element` slot is known after the mount.
+  tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
+});
 const state = computed<PopoverCloseState>(() => ({ disabled: button.disabled.value }));
 
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part
