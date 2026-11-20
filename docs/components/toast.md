@@ -80,7 +80,7 @@ Import the component and assemble its parts:
 
 ## Lifetime
 
-`toasts` holds the open toasts only. `close` removes a toast from the list at once and calls its `onClose`. `<TransitionGroup>` keeps the element of the closed toast for its leave, and `onRemove` runs when the element is out of the document. A toast with no `<TransitionGroup>` leaves at once. To change the element of a root or a positioner in the group, use `as`: Vue animates no root that renders its element in the `element` slot.
+`toasts` holds the open toasts only. `close` removes a toast from the list at once and calls its `onClose`. `<TransitionGroup>` keeps the element of the closed toast for its leave, and `onRemove` runs when the element is out of the document. A toast with no `<TransitionGroup>` leaves at once. To change the element of a root or a positioner in the group, use `as`. With the `element` slot, Vue 3.5.12 gives the element no classes, and later versions warn in development.
 
 ## Under a modal popup
 
