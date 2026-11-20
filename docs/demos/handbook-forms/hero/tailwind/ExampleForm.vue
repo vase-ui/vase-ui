@@ -108,7 +108,7 @@ const protocols = ['http', 'https', 'ssh'];
 </script>
 
 <template>
-  <Form aria-label="Launch new cloud server" @submit.prevent="onSubmit">
+  <Form aria-label="Launch new cloud server" @submit="onSubmit">
     <Field.Root name="serverName">
       <Field.Label>Server name</Field.Label>
       <Input

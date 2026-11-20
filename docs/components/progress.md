@@ -60,7 +60,7 @@ A root with no `Progress.Label` needs `aria-label` or `aria-labelledby`. That at
 
 The element of `Progress.Root` holds a visually hidden text after its content, also with `as`, because NVDA and JAWS can need text in a progress bar to say its name. When the `element` slot replaces the element, put text in your element. A `Progress.Label` is such text.
 
-The text of `Progress.Value` and the `aria-valuetext` of the root are the percent of the range, or the value in `format`. With no `locale`, the text has the locale `en-US`, on the server and in the browser. Give `locale` with the locale of the page.
+The text of `Progress.Value` and the `aria-valuetext` of the root are the percent of the range, or the value in `format`. The text has the `locale` prop of the root, else the locale of the nearest [`LocaleProvider`](/utils/locale-provider), else `en-US`. The server and the browser use the same locale. Give the locale of the page to a `LocaleProvider`, so that the text has the language of the page.
 
 While the progress is indeterminate, the root has no `aria-valuetext`, and a screen reader says the state in the language of the user. To give a text, use `getAriaValueText` or `aria-valuetext`, in the language of the page.
 

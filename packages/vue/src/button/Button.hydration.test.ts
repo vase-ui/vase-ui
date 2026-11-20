@@ -62,15 +62,20 @@ describe('server render and hydration', () => {
     expect(input.getAttributeNames().sort()).toEqual(attributes);
   });
 
-  test('the server HTML has the state of a disabled Fieldset.Root; a native disabled fieldset gives it after the mount', async () => {
+  test('the server HTML has the state of a disabled Fieldset.Root, also in Fieldset.Legend; a native disabled fieldset and a native legend give theirs after the mount', async () => {
     const rootScene = reactive({ kind: 'root', disabled: true, ownDisabled: false });
     const root = await renderOnServer('ButtonsInFieldset', { scene: rootScene });
     expect(root.querySelector('.Native')).toHaveTextContent('Native true');
     expect(root.querySelector('.Native')).toHaveAttribute('disabled');
-    expect(root.querySelector('.InLegend')).toHaveTextContent('Legend false');
+    expect(root.querySelector('.InLegend')).toHaveTextContent('Legend true');
+    expect(root.querySelector('.InNativeLegend')).toHaveTextContent('Native legend true');
     hydrate(ButtonsInFieldset, { scene: rootScene }, root);
     await settle();
     expect(root.querySelector('.Native')).toHaveTextContent('Native true');
+    expect(root.querySelector('.InLegend')).toHaveTextContent('Legend true');
+    await waitFor(() =>
+      expect(root.querySelector('.InNativeLegend')).toHaveTextContent('Native legend false'),
+    );
 
     const scene = reactive({ kind: 'fieldset', disabled: true, ownDisabled: false });
     const native = await renderOnServer('ButtonsInFieldset', { scene });

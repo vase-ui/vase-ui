@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
-import { useElement, type AsProps } from '../common/element';
+import { mergeProps, useAttrs } from 'vue';
+import { useElement } from '../common/element';
 import { injectMeterRoot } from './root';
+import type { MeterValueProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
+defineProps<MeterValueProps>();
 defineSlots<{
   default?(scope: { formattedValue: string; value: number }): unknown;
   element?(scope: {

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useAttrs, type HTMLAttributes } from 'vue';
-import { useElement, type AsProps } from '../common/element';
+import { useAttrs } from 'vue';
+import { useElement } from '../common/element';
+import type { MeterTrackProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
+defineProps<MeterTrackProps>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {

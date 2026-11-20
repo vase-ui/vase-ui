@@ -18,6 +18,8 @@ import { RadioGroup } from '../../src/radio-group';
 import { ScrollArea } from '../../src/scroll-area';
 import { Separator } from '../../src/separator';
 import { Tabs } from '../../src/tabs';
+import { Toggle } from '../../src/toggle';
+import { ToggleGroup } from '../../src/toggle-group';
 import ExposedInner from './ExposedInner.vue';
 import LateElement from './LateElement.vue';
 import VaporTargetWithElement from './VaporTargetWithElement.vue';
@@ -219,6 +221,13 @@ function setter(name: string) {
       <button v-bind="elementProps" :ref="elementRef">Send</button>
     </template>
   </Button>
+  <Toggle :as="is('Toggle')" v-bind="attrs('Toggle')" :ref="setter('Toggle')">Bold</Toggle>
+  <ToggleGroup
+    :as="is('ToggleGroup')"
+    v-bind="attrs('ToggleGroup')"
+    :ref="setter('ToggleGroup')"
+    aria-label="Format"
+  />
   <Separator :as="is('Separator')" v-bind="attrs('Separator')" :ref="setter('Separator')" />
   <Separator as="section" data-part="slot-wins">
     <template #element="{ props: elementProps, elementRef }">

@@ -31,7 +31,7 @@ function readEmail(event: SubmitEvent) {
       <Input data-testid="label-last-control" />
       <Field.Label data-testid="label-last-label">Name</Field.Label>
     </Field.Root>
-    <Form data-testid="form" @submit.prevent="readEmail">
+    <Form data-testid="form" @submit="readEmail">
       <Field.Root name="email">
         <Field.Label>Email</Field.Label>
         <Input required data-testid="required-control" />

@@ -53,3 +53,5 @@ export interface AvatarFallbackProps extends AsProps, /* @vue-ignore */ Omit<HTM
 }
 
 export type AvatarFallbackState = AvatarRootState;
+
+export interface AvatarRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}

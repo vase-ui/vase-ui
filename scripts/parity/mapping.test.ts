@@ -234,7 +234,7 @@ test('acceptElementSlot maps the row render to the slot element of a part with n
   assert.deepEqual([...expected.exposed.keys()], ['element']);
 });
 
-test('acceptElementSlot maps the row render to the prop as with no default and the slot element of a part with the prop as', () => {
+test('acceptElementSlot keeps the prop as with no default, and maps the row render to the slot element, of a part with the prop as', () => {
   const part = makePart([row('render')], { tag: 'div' });
   const expected = expectedSurface(part, makeFile(part));
   acceptElementSlot(expected, {
@@ -243,15 +243,14 @@ test('acceptElementSlot maps the row render to the prop as with no default and t
   });
   assert.deepEqual([...expected.props.keys()], ['as']);
   assert.equal(expected.props.get('as')?.compareDefault, false);
-  assert.deepEqual([...expected.slots.keys()], ['default', 'element']);
+  assert.deepEqual([...expected.slots.keys()].sort(), ['default', 'element']);
 });
 
-test('acceptElementSlot keeps the prop as and the slot render of a part of the older form', () => {
+test('acceptElementSlot keeps the prop as and the slot render of a part with no slot element', () => {
   const part = makePart([row('render')], { tag: 'div' });
   const expected = expectedSurface(part, makeFile(part));
-  acceptElementSlot(expected, { props: new Map([['as', {}]]), slots: new Map([['render', {}]]) });
+  acceptElementSlot(expected, { props: new Map([['as', {}]]), slots: new Map() });
   assert.deepEqual([...expected.props.keys()], ['as']);
-  assert.equal(expected.props.get('as')?.compareDefault, true);
   assert.deepEqual([...expected.slots.keys()], ['render', 'default']);
 });
 

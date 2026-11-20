@@ -56,3 +56,15 @@ export interface ScrollAreaThumbState {
   scrolling: boolean;
   orientation: 'vertical' | 'horizontal';
 }
+
+export interface ScrollAreaViewportProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaContentProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaThumbProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface ScrollAreaCornerProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}

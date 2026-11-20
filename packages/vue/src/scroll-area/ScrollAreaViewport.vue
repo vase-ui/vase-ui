@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import {
-  mergeProps,
-  onMounted,
-  onUnmounted,
-  provide,
-  useAttrs,
-  watch,
-  type HTMLAttributes,
-} from 'vue';
-import { useElement, type AsProps } from '../common/element';
+import { mergeProps, onMounted, onUnmounted, provide, useAttrs, watch } from 'vue';
+import { useElement } from '../common/element';
 import { styleDisableScrollbar } from '../utils/styles';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
-import type { ScrollAreaViewportState } from './types';
+import type { ScrollAreaViewportProps, ScrollAreaViewportState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
+defineProps<ScrollAreaViewportProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaViewportState }): unknown;
   element?(scope: {

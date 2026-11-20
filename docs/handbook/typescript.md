@@ -9,12 +9,16 @@ A guide to using TypeScript with Vase UI.
 
 ## Namespaces
 
-Vase UI uses namespaces to organize types. Each part has two core interfaces:
+Vase UI uses namespaces to organize types. The namespace of a part holds its types. The two core types are:
 
 - `Props` (such as `Tooltip.Root.Props`)
 - `State` (such as `Tooltip.Root.State`)
 
+A part with no props of its own has no `Props`. A part with no state has no `State`.
+
 Each type also has a flat name, such as `TooltipRootProps` and `TooltipRootState`. The entry point of the component exports both names.
+
+A component with one part has its types on the component, such as `Checkbox.Props` and `CheckboxProps`.
 
 ### Props
 

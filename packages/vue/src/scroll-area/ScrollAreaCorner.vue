@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, onUnmounted, useAttrs, type HTMLAttributes } from 'vue';
-import { useElement, type AsProps } from '../common/element';
+import { mergeProps, onUnmounted, useAttrs } from 'vue';
+import { useElement } from '../common/element';
 import { injectScrollArea } from './root';
+import type { ScrollAreaCornerProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
+defineProps<ScrollAreaCornerProps>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {

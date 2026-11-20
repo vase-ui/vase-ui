@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, type HTMLAttributes } from 'vue';
-import { useElement, type AsProps } from '../common/element';
+import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
+import { useElement } from '../common/element';
 import { dragPosition } from './geometry';
 import { injectScrollArea, injectScrollbar, readTrack } from './root';
-import type { ScrollAreaThumbState } from './types';
+import type { ScrollAreaThumbProps, ScrollAreaThumbState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<AsProps & /* @vue-ignore */ Omit<HTMLAttributes, 'as'>>();
+defineProps<ScrollAreaThumbProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaThumbState }): unknown;
   element?(scope: {

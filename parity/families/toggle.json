@@ -4,7 +4,32 @@
     "docs/src/app/(docs)/react/components/toggle/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/toggle/ToggleDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The part writes no `data-pressed` and no `data-disabled`. CSS selects the states on the same element: `[aria-pressed='true']`, `:disabled`, and `[aria-disabled='true']` on an element that is not a native button (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toggle/Toggle.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle/Toggle.test.ts",
+      "reason": "`Toggle.test.ts` tests the element and the attributes of the developer, `as` and the `element` slot, the pressed state with `v-model`, the events and `details.cancel()`, the disabled states and the fieldset. The cancel of a toggle in a group is in `ToggleGroup.test.ts`. The part reads its element, so the cases of `nativeButton` render a `<span>` in `as` or in the `element` slot. A `type` and a `form` of the developer reach the element and win, as each attribute of the developer does (rules 6.3 and 8.2). Base UI takes the two out. A developer who writes `type=\"submit\"` asks for it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toggle/types.md",
+      "entry": "Toggle",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and `as` or the `element` slot renders another element."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toggle/types.md",
+      "entry": "ToggleDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The part writes no `data-pressed` and no `data-disabled`: `[aria-pressed='true']`, `:disabled` and `[aria-disabled='true']` select the states on the same element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

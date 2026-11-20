@@ -17,6 +17,7 @@ defineProps({
         :is="tag"
         v-bind="props"
         :ref="elementRef"
+        :role="tag === 'div' ? 'group' : undefined"
         class="Group"
         :data-state-disabled="state.disabled || undefined"
       >

@@ -246,7 +246,7 @@ describe('the text', () => {
     expect(root).toHaveAttribute('aria-valuetext', text);
   });
 
-  test('with no locale, the text is en-US also for a browser in another language', async () => {
+  test('with no locale and no LocaleProvider, the text is en-US, also in a browser with another locale', async () => {
     mockRuntimeLocale('de-DE');
     const format = { maximumFractionDigits: 1 };
     const { value } = await mountParts({ root: { value: 1234.5, max: 2000, format } });

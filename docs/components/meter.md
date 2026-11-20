@@ -54,7 +54,7 @@ Import the component and assemble its parts:
 
 The element of `Meter.Root` holds a visually hidden text after its content, also with `as`, because NVDA and JAWS can need text in a meter to say its name. When the `element` slot replaces the element, put text in your element. A `Meter.Label` is such text.
 
-The default `locale` is `en-US`, on the server and in the browser. Give `locale` the locale of the page, so that the text of the value has the language of the page.
+The text of the value has the `locale` prop of the root, else the locale of the nearest [`LocaleProvider`](/utils/locale-provider), else `en-US`. The server and the browser use the same locale. Give the locale of the page to a `LocaleProvider`, so that the text has the language of the page.
 
 ## API reference
 

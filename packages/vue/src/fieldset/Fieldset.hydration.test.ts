@@ -1,23 +1,28 @@
 import { describe, expect, test } from 'vitest';
+import { expectNoAxeViolations } from '../../test/axe';
 import FieldsetElementReplaced from '../../test/fixtures/FieldsetElementReplaced.vue';
+import FieldsetGroupRoot from '../../test/fixtures/FieldsetGroupRoot.vue';
+import FieldsetLegends from '../../test/fixtures/FieldsetLegends.vue';
+import FieldsetParts from '../../test/fixtures/FieldsetParts.vue';
 import NestedFieldsets from '../../test/fixtures/NestedFieldsets.vue';
 import PartsInFieldset from '../../test/fixtures/PartsInFieldset.vue';
 import { hydrate, renderOnServer, settle } from '../../test/render';
 
 describe('server render and hydration', () => {
-  test('the server HTML of a disabled root has disabled and the disabled state of its parts; the legend keeps its id', async () => {
+  test('the server HTML of a disabled root has disabled and the disabled state of its parts, also in its legend; the legend keeps its id', async () => {
     const props = { scene: { disabled: true } };
     const root = await renderOnServer('PartsInFieldset', props);
     expect(root.querySelector('fieldset')).toHaveAttribute('disabled');
-    const legendId = root.querySelector('legend')!.id;
+    const legendId = root.querySelector('fieldset > div')!.id;
     expect(legendId).not.toBe('');
     expect(root.querySelector('#company')!.parentElement).toHaveAttribute('data-disabled');
-    expect(root.querySelector('#in-legend')!.parentElement).not.toHaveAttribute('data-disabled');
+    expect(root.querySelector('#in-legend')!.parentElement).toHaveAttribute('data-disabled');
     expect(root.querySelector('#alone')).toHaveAttribute('data-state-disabled');
     hydrate(PartsInFieldset, props, root);
     await settle();
-    expect(root.querySelector('legend')!.id).toBe(legendId);
+    expect(root.querySelector('fieldset > div')!.id).toBe(legendId);
     expect(root.querySelector('#company')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('#in-legend')!.parentElement).toHaveAttribute('data-disabled');
   });
 
   test('in a native disabled fieldset, data-disabled comes after the mount', async () => {
@@ -49,4 +54,92 @@ describe('server render and hydration', () => {
     for (const input of inputs) expect(input).toBeDisabled();
     expect(root.querySelector('#in-field')!.parentElement).toHaveAttribute('data-disabled');
   });
+});
+
+describe('the name in the server HTML', () => {
+  test.each(['wrapped', 'native', 'as', 'two'] as const)(
+    'VUE-89: the server HTML of the root names its first legend, and the client keeps the name (legend: %s)',
+    async (legend) => {
+      const props = { scene: { legend } };
+      const root = await renderOnServer('FieldsetLegends', props);
+      const fieldset = root.querySelector('fieldset')!;
+      const legendId = fieldset.getAttribute('aria-labelledby');
+      const legendElement = root.querySelector(`#${legendId}`);
+      expect(legendElement).toHaveTextContent('Billing');
+      expect(legendElement!.localName).toBe(
+        legend === 'native' || legend === 'as' ? 'legend' : 'div',
+      );
+      expect(fieldset).toHaveAccessibleName('Billing');
+      hydrate(FieldsetLegends, props, root);
+      await settle();
+      expect(fieldset).toHaveAttribute('aria-labelledby', legendId);
+    },
+  );
+
+  test('a legend with an id names the root from the mount on', async () => {
+    const props = { legend: { id: 'own' } };
+    const root = await renderOnServer('FieldsetParts', props);
+    const fieldset = root.querySelector('fieldset')!;
+    expect(fieldset.getAttribute('aria-labelledby')).not.toBe('own');
+    hydrate(FieldsetParts, props, root);
+    await settle();
+    expect(fieldset).toHaveAttribute('aria-labelledby', 'own');
+  });
+
+  test('a root with no legend has the generated id and no axe violation in the server HTML, and no aria-labelledby after the mount', async () => {
+    const props = { scene: { legend: 'none' } };
+    const root = await renderOnServer('FieldsetLegends', props);
+    const fieldset = root.querySelector('fieldset')!;
+    expect(fieldset.getAttribute('aria-labelledby')).not.toBeNull();
+    await expectNoAxeViolations(root);
+    hydrate(FieldsetLegends, props, root);
+    await settle();
+    expect(fieldset).not.toHaveAttribute('aria-labelledby');
+  });
+
+  test.each([
+    ['aria-label', 'Invoice'],
+    ['aria-label', ''],
+    ['aria-labelledby', 'heading'],
+    ['aria-labelledby', ''],
+  ])(
+    'an attribute of the developer wins over the legend on both sides: %s="%s"',
+    async (name, value) => {
+      const props = { root: { [name]: value } };
+      const root = await renderOnServer('FieldsetParts', props);
+      const fieldset = root.querySelector('fieldset')!;
+      const expectNamedByDeveloper = () => {
+        expect(fieldset.getAttribute(name)).toBe(value);
+        if (name === 'aria-label') expect(fieldset).not.toHaveAttribute('aria-labelledby');
+      };
+      expectNamedByDeveloper();
+      hydrate(FieldsetParts, props, root);
+      await settle();
+      expectNamedByDeveloper();
+    },
+  );
+
+  test.each(['radio', 'checkbox', 'slider'] as const)(
+    'the server HTML of a %s group that the element slot renders has the name of the legend once, and an aria-label of the developer wins',
+    async (group) => {
+      const named = await renderOnServer('FieldsetGroupRoot', { group });
+      const element = named.querySelector('.Group')!;
+      const legendId = element.getAttribute('aria-labelledby');
+      expect(named.querySelector(`#${legendId}`)).toHaveTextContent('Storage');
+      hydrate(FieldsetGroupRoot, { group }, named);
+      await settle();
+      expect(element).toHaveAttribute('aria-labelledby', legendId);
+
+      const props = { group, root: { 'aria-label': 'Disks' } };
+      const labelled = await renderOnServer('FieldsetGroupRoot', props);
+      const labelledElement = labelled.querySelector('.Group')!;
+      const labelledLegendId = labelled.querySelector('.Group > div')!.id;
+      expect(labelledElement).not.toHaveAttribute('aria-labelledby', labelledLegendId);
+      expect(labelledElement).toHaveAccessibleName('Disks');
+      hydrate(FieldsetGroupRoot, props, labelled);
+      await settle();
+      expect(labelledElement).not.toHaveAttribute('aria-labelledby', labelledLegendId);
+      expect(labelledElement).toHaveAccessibleName('Disks');
+    },
+  );
 });
