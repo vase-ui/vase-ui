@@ -29,13 +29,10 @@ function check(handle: PopupHandle) {
   return handle.store.select('isOpenedByTrigger', 'second');
 }
 
-const drawer: Drawer.Handle<Payload> = Drawer.createHandle<Payload>();
-check(drawer);
-check(new Drawer.Handle<Payload>());
 const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
 check(menu);
 check(new Menu.Handle<Payload>());
-// A handle of Popover, Dialog and Alert Dialog has no store.
+// A handle of Popover, Dialog, Alert Dialog and Drawer has no store.
 const popovers: Popover.Handle<Payload>[] = [
   Popover.createHandle<Payload>(),
   new Popover.Handle<Payload>(),
@@ -50,6 +47,8 @@ const dialogs: Dialog.Handle<Payload>[] = [
   new Dialog.Handle<Payload>(),
   AlertDialog.createHandle<Payload>(),
   new AlertDialog.Handle<Payload>(),
+  Drawer.createHandle<Payload>(),
+  new Drawer.Handle<Payload>(),
 ];
 for (const dialog of dialogs) {
   const open: boolean = dialog.isOpen;
