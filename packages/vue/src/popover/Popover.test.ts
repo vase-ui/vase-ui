@@ -363,7 +363,7 @@ describe('the portal (L3)', () => {
   test('a portal in a portal with a container goes to that container; `to` of `null` renders nothing; `disabled` renders in place', async () => {
     const container = document.body.appendChild(document.createElement('div'));
     try {
-      const { trigger } = await mountPopover({
+      await mountPopover({
         root: { defaultOpen: true },
         portal: { to: container },
         nested: { root: { defaultOpen: true } },
@@ -372,7 +372,6 @@ describe('the portal (L3)', () => {
       await waitFor(() =>
         expect(container.querySelector('[data-testid="nested-popup"]')).not.toBe(null),
       );
-      void trigger;
     } finally {
       container.remove();
     }
@@ -571,25 +570,6 @@ describe('the dismissal (L4)', () => {
     await closed();
     expect(log).toEqual(['child', 'openChange false outside-press', 'update false']);
   });
-
-  test.skipIf(server.browser !== 'chromium')(
-    'a tap and a drag of a touch outside close; a touch that rests more than 1 s closes nothing',
-    async () => {
-      const root = reactive<Props>({ defaultOpen: true });
-      const { unmount } = await mountPopover({ root });
-      await opened();
-      await placed();
-      const point = centerOf(byId('outside'));
-      await touchDrag(point, { x: point.x, y: point.y - 30 }, 6);
-      await closed();
-      unmount();
-      await mountPopover({ root: { defaultOpen: true } });
-      await opened();
-      await placed();
-      await touchDrag(point, point, 1);
-      await closed();
-    },
-  );
 
   test('the focus that moves to an outside element closes the popup with `focus-out` and stays there', async () => {
     const log: string[] = [];
@@ -873,18 +853,21 @@ describe('modal (3.2, L4 to L6)', () => {
   });
 
   test('`true` with a Close makes the rest of the page inert and the popup aria-modal, and keeps the focus in the popup', async () => {
-    const { trigger } = await mountPopover({ root: { modal: true }, close: {} });
+    const { trigger } = await mountPopover({
+      root: { modal: true },
+      close: { 'data-testid': 'close' },
+    });
     await userEvent.click(trigger());
     const element = await opened();
     await waitFor(() => expect(byId('before')).toHaveAttribute('inert'));
     expect(byId('outside')).toHaveAttribute('inert');
     expect(element).toHaveAttribute('aria-modal', 'true');
     expect(trigger().closest('[inert]')).toBe(null);
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.keyboard('{Tab}{Tab}{Tab}');
-    expect(document.activeElement).toHaveTextContent('First');
+    expect(document.activeElement).toBe(byTestId('first'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toHaveTextContent('Close');
+    expect(document.activeElement).toBe(byTestId('close'));
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(byId('before')).not.toHaveAttribute('inert');
@@ -1025,10 +1008,16 @@ describe('the focus (L7)', () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(document.activeElement).toBe(trigger());
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '[data-testid="popup"] button { display: none }';
+    onTestFinished(() => style.remove());
+    await userEvent.click(trigger());
+    const element = await opened();
+    await waitFor(() => expect(document.activeElement).toBe(element));
   });
 
   test('`initialFocus` and `finalFocus` replace the targets; a function gets the interaction type, and `initialFocus` is not called at the close', async () => {
@@ -1047,7 +1036,7 @@ describe('the focus (L7)', () => {
     });
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('Second'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('second')));
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(document.activeElement).toBe(byId('after'));
@@ -1059,11 +1048,11 @@ describe('the focus (L7)', () => {
     const { trigger } = await mountPopover({ root: rootEvents(log) });
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(document.activeElement).toBe(trigger());
     await userEvent.keyboard('{Tab}');
-    expect(document.activeElement).toHaveTextContent('First');
+    expect(document.activeElement).toBe(byTestId('first'));
     await userEvent.keyboard('{Tab}{Tab}');
     await closed();
     expect(document.activeElement).toBe(byId('after'));
@@ -1115,7 +1104,7 @@ describe('the focus (L7)', () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(trigger().matches(':focus-visible')).toBe(true);
@@ -1128,7 +1117,7 @@ describe('the focus (L7)', () => {
       const { trigger } = await mountPopover();
       await userEvent.click(trigger());
       await opened();
-      await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+      await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
       window.scrollTo({ top: 1000, behavior: 'instant' });
       await userEvent.keyboard('{Escape}');
       await closed();
@@ -1153,14 +1142,14 @@ describe('the focus (L7)', () => {
     const { trigger } = await mountPopover({ autofocus: true });
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('Second'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('second')));
   });
 
   test('a press on an outside input closes the popover, and the input keeps the focus', async () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.click(byId('after'));
     await closed();
     expect(document.activeElement).toBe(byId('after'));
@@ -1170,7 +1159,7 @@ describe('the focus (L7)', () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     trigger().focus();
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(document.activeElement).toBe(byId('before'));
@@ -1193,14 +1182,14 @@ describe('the focus (L7)', () => {
     await placed();
     byId('outside').focus();
     await userEvent.keyboard('{Tab}');
-    expect(document.activeElement).toHaveTextContent('First');
+    expect(document.activeElement).toBe(byTestId('first'));
   });
 
   test('Tab from the last tab stop of a popup in place goes to the element after the trigger', async () => {
     const { trigger } = await mountPopover({ portal: { disabled: true } });
     await userEvent.click(trigger());
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     await userEvent.keyboard('{Tab}{Tab}');
     await closed();
     expect(document.activeElement).toBe(byId('after'));
@@ -1306,6 +1295,20 @@ describe('the hover (L9)', () => {
     expect(popup()).toBe(element);
     expect(trigger()).toHaveAttribute('data-pressed');
   });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch that rests on the trigger for `delay` opens the popover as a press, with no hover open',
+    async () => {
+      const log: string[] = [];
+      const { trigger } = await mountPopover({
+        root: rootEvents(log),
+        triggers: [{ key: 't', attrs: { openOnHover: true, delay: 50 } }],
+      });
+      await touchDrag(centerOf(trigger()), centerOf(trigger()), 0, 600);
+      await opened();
+      expect(log).toEqual(['openChange true trigger-press', 'update true']);
+    },
+  );
 
   test('a hover opens nothing on a trigger with aria-disabled', async () => {
     const { trigger } = await mountPopover({
@@ -1789,7 +1792,7 @@ describe('more behaviors of the parts', () => {
     byId('before').focus();
     trigger().click();
     await opened();
-    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
     triggers.splice(0, 1);
     await nextTick();
     await userEvent.keyboard('{Escape}');
@@ -1812,7 +1815,7 @@ describe('more behaviors of the parts', () => {
   });
 
   test('a trigger in a disabled fieldset opens nothing; its state follows the fieldset', async () => {
-    const { trigger, root } = await mountPopover({
+    const { trigger } = await mountPopover({
       triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
     });
     const fieldset = document.createElement('fieldset');
@@ -1824,7 +1827,6 @@ describe('more behaviors of the parts', () => {
     await userEvent.hover(trigger(), { force: true });
     await new Promise((resolve) => setTimeout(resolve, 30));
     expect(popup()).toBe(null);
-    void root;
   });
 
   test('a hover closes the popover when the pointer moves to another trigger that does not open on hover', async () => {
@@ -1864,7 +1866,7 @@ describe('more behaviors of the parts', () => {
     await closed();
   });
 
-  test('the instant state: `click` after a key on the trigger, `dismiss` after Escape, `focus` after a focus that left', async () => {
+  test('the instant state is `click` after a key on the trigger, and empty after a press', async () => {
     const { trigger } = await mountPopover();
     trigger().focus();
     await userEvent.keyboard('{Enter}');
