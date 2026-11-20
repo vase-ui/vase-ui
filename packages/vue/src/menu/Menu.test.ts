@@ -1224,6 +1224,20 @@ describe('the layer', () => {
     expect(document.elementFromPoint(centerOf(trigger).x, centerOf(trigger).y)).toBe(trigger);
   });
 
+  test.skipIf(server.browser !== 'chromium').each([
+    { width: undefined, locked: false },
+    { width: '100vw', locked: true },
+  ])(
+    'after a tap, the scroll locks only when the popup covers the width of the view: $width',
+    async ({ width, locked }) => {
+      const { trigger } = await mountMenu({ popup: { style: width && { width } } });
+      await touchDrag(centerOf(trigger), centerOf(trigger), 0);
+      await placed();
+      await waitFor(() => expect(document.querySelector(BLOCK)).not.toBe(null));
+      expect(isScrollLocked()).toBe(locked);
+    },
+  );
+
   test('`modal` false blocks nothing', async () => {
     const { trigger } = await mountMenu({ root: { modal: false } });
     await userEvent.click(trigger);
