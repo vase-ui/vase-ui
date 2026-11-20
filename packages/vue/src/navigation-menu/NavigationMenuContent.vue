@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch, type TransitionProps } from 'vue';
 import { useElement } from '../common/element';
+import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
 import { ownerDocument } from '../common/owner';
 import { activeElement, contains } from '../common/shadowDom';
@@ -33,10 +34,11 @@ const onKeydown = useKeyGroup({ orientation: () => 'both' });
 // A portal in the content goes where the portal of the root goes.
 providePortalTarget((inherited) => root.portalTarget ?? inherited);
 
-// With no viewport, the `<Teleport>` is disabled, and the content is in its item. The server render
-// of a component with no `ssrRender`, such as one of the package in Nuxt, drops a `<Teleport>` with
-// no target, so `to` holds a selector that selects no element.
-const NO_TARGET = ':not(*)';
+// The server and the hydration render a kept content in its item with no `<Teleport>`: the server
+// render of a component with no `ssrRender`, such as one of the package in Nuxt, drops a
+// `<Teleport>` with no target, and Vue 3.5.12 cannot hydrate one. The `<Teleport>` comes after the
+// mount, disabled while no viewport is there.
+const mounted = useIsHydrated();
 const contentId = computed(() => givenId(props.id) ?? generatedId);
 const shown = computed(
   () => root.shown != null && root.shown === item.value && root.target !== null,
@@ -98,7 +100,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Teleport :to="root.target ?? NO_TARGET" :disabled="!root.target">
+  <Teleport v-if="mounted" :to="root.target" :disabled="!root.target">
     <Transition v-bind="transitionProps">
       <slot
         v-if="rendered && $slots.element"
@@ -115,4 +117,19 @@ defineExpose({ element });
       </div>
     </Transition>
   </Teleport>
+  <template v-else-if="keepMounted">
+    <slot
+      v-if="$slots.element"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+    <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+      <slot :state="state" />
+    </component>
+    <div v-else v-bind="elementProps()" :ref="setElement">
+      <slot :state="state" />
+    </div>
+  </template>
 </template>
