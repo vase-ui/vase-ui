@@ -31,7 +31,6 @@ const completes = ref(0);
 function count(name: string) {
   changes[name] = (changes[name] ?? 0) + 1;
 }
-
 </script>
 
 <template>

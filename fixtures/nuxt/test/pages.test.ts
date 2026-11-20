@@ -2866,15 +2866,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
         // Firefox restores each value. The other engines restore some of them.
         const state = await readFormState(page);
-        for (const name of [
-          'font',
-          'fruit',
-          'quantity',
-          'volume',
-          'range',
-          'when',
-          'alarm',
-        ]) {
+        for (const name of ['font', 'fruit', 'quantity', 'volume', 'range', 'when', 'alarm']) {
           const model = state.models[name];
           const isRestored =
             JSON.stringify(model) !==

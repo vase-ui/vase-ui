@@ -387,7 +387,11 @@ describe('a text input', () => {
     const input = item<HTMLInputElement>('text');
     input.focus();
     input.setSelectionRange(3, 3);
-    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    });
     // The init dictionary has no key code, so the case gives the key code of WebKit to the event.
     Object.defineProperty(event, 'keyCode', { value: 229 });
     input.dispatchEvent(event);
@@ -473,7 +477,10 @@ describe('the tab stop', () => {
     Object.assign(items[1]!.attrs!, off);
     await nextTick();
     expect(tabindexes('a', 'b', 'c')).toEqual(['-1', '-1', '0']);
-    Object.assign(items[2]!.attrs ?? (items[2]!.attrs = {}), { disabled: true });
+    items.unshift({ key: 'text', kind: 'input', attrs: off });
+    await settle();
+    expect(tabindexes('text', 'c')).toEqual(['-1', '0']);
+    Object.assign(items[3]!.attrs ?? (items[3]!.attrs = {}), { disabled: true });
     await nextTick();
     expect(tabindexes('a', 'b', 'c')).toEqual(['-1', '-1', '0']);
   });
@@ -593,7 +600,9 @@ describe('disabled items', () => {
       },
     };
     const attrs = reactive({ disabled: true, ...recordEvents(log, 'item', ['click']) });
-    const { item } = await mountToolbar({}, [{ key: 'g', group: [{ key: 'b', attrs }], attrs: group }]);
+    const { item } = await mountToolbar({}, [
+      { key: 'g', group: [{ key: 'b', attrs }], attrs: group },
+    ]);
     await userEvent.click(item('b'), { force: true });
     attrs.disabled = false;
     await nextTick();

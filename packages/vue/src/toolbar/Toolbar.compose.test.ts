@@ -34,7 +34,9 @@ async function focusTrigger(trigger: HTMLElement, next = '{ArrowRight}') {
 
 // In a Vapor app with Vapor parts, Vue 3.6 runs no portal of the popup families: the portal returns a
 // render function, and a Vapor component must return a block.
-describe.skipIf(inject('app') === 'vapor').each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
+describe
+  .skipIf(inject('app') === 'vapor')
+  .each(['menu', 'popover', 'dialog', 'alert-dialog'] as const)('a trigger: %s', (kind) => {
   const popupRole = {
     menu: 'menu',
     popover: 'dialog',
