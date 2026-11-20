@@ -3,16 +3,16 @@ import { provide, type PropType } from 'vue';
 import MeasureInjectedChild from './MeasureInjectedChild.vue';
 
 // A `<Transition>` around a component that renders its root element while the injected
-// `scene.open` is true.
+// `scene.open` is true. A change of `scene.version` renders the `<Transition>` again.
 const props = defineProps({
-  scene: { type: Object as PropType<{ open: boolean }>, required: true },
+  scene: { type: Object as PropType<{ open: boolean; version?: number }>, required: true },
 });
 provide('measure scene', props.scene);
 </script>
 
 <template>
   <Transition name="measure-panel">
-    <MeasureInjectedChild />
+    <MeasureInjectedChild :data-version="scene.version" />
   </Transition>
 </template>
 

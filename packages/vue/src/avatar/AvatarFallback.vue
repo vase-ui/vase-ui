@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef, useAttrs, watchEffect } from 'vue';
 import { useElement } from '../common/element';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectAvatarRoot } from './root';
 import type { AvatarFallbackProps, AvatarFallbackState } from './types';
 
@@ -20,7 +21,9 @@ const root = injectAvatarRoot('Fallback');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLSpanElement>();
 const waited = shallowRef(false);
-const shows = computed(() => waited.value && root.state.imageLoadingStatus !== 'loaded');
+const needed = computed(() => waited.value && root.state.imageLoadingStatus !== 'loaded');
+const { waiting } = useEnterAfterLeave(() => needed.value, element);
+const shown = computed(() => needed.value && !waiting.value);
 
 // A server stops the effect after its first run, and the cleanup clears the timer.
 watchEffect((onCleanup) => {
@@ -41,16 +44,16 @@ function elementProps() {
 
 <template>
   <slot
-    v-if="shows && $slots.element"
+    v-if="shown && $slots.element"
     name="element"
     :props="elementProps()"
     :elementRef="setElement"
     :state="root.state"
   />
-  <component :is="as" v-else-if="shows && as" v-bind="elementProps()" :ref="setElement">
+  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
     <slot :state="root.state" />
   </component>
-  <span v-else-if="shows" v-bind="elementProps()" :ref="setElement">
+  <span v-else-if="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="root.state" />
   </span>
 </template>

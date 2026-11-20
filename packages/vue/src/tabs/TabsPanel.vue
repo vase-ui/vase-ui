@@ -2,6 +2,7 @@
 import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectTabsRoot, rootStateAttributes } from './root';
 import type { TabsPanelProps, TabsPanelState } from './types';
 
@@ -24,7 +25,8 @@ const { element, setElement } = useElement<HTMLElement>();
 
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 const open = computed(() => root.value === props.value);
-const shown = computed(() => open.value || props.keepMounted);
+const { waiting } = useEnterAfterLeave(() => open.value, element);
+const shown = computed(() => (open.value && !waiting.value) || props.keepMounted);
 const state = computed<TabsPanelState>(() => ({ ...root.state, hidden: !open.value }));
 
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part

@@ -622,13 +622,45 @@ describe('Field.Error', () => {
     root.invalid = true;
     await nextTick();
     const error = element.firstElementChild!.querySelector(':scope > div')!;
-    expect(error).toHaveClass('v-enter-from', 'v-enter-active');
+    expect(error).toHaveClass('error-enter-from', 'error-enter-active');
     expect(error).not.toHaveAttribute('role');
     root.invalid = false;
     await nextTick();
-    expect(error).toHaveClass('v-leave-active');
+    expect(error).toHaveClass('error-leave-active');
     expect(element.querySelector('input')).not.toHaveAttribute('aria-describedby');
   });
+
+  test.each([
+    { name: 'its own element', error: {}, tag: 'div' },
+    { name: 'an element of as', error: { as: 'p' }, tag: 'p' },
+  ])(
+    'in a <Transition>, a show during the leave renders one element at each moment; the new element enters after the old one goes, and the input names it: $name',
+    async ({ error, tag }) => {
+      const root = reactive({ invalid: true });
+      const { root: element } = mount(ErrorInTransition, { root, error });
+      await nextTick();
+      const field = element.firstElementChild!;
+      const errors = () => [...field.querySelectorAll(`:scope > ${tag}`)];
+      const input = field.querySelector('input')!;
+      const [old] = errors();
+      let most = 0;
+      const observer = new MutationObserver(() => (most = Math.max(most, errors().length)));
+      observer.observe(field, { childList: true });
+      root.invalid = false;
+      await nextTick();
+      root.invalid = true;
+      await nextTick();
+      expect(errors()).toEqual([old]);
+      await waitFor(() => {
+        expect(errors()).toHaveLength(1);
+        expect(errors()[0]).not.toBe(old);
+        expect(errors()[0]!.className).toBe('');
+      });
+      observer.disconnect();
+      expect(most).toBe(1);
+      expect(input).toHaveAttribute('aria-describedby', errors()[0]!.id);
+    },
+  );
 });
 
 describe('in a form', () => {

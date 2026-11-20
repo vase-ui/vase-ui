@@ -21,3 +21,15 @@ defineProps({ scene: { type: Object as PropType<{ height: number }>, required: t
     </Transition>
   </ScrollArea.Root>
 </template>
+
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 300ms linear;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+</style>

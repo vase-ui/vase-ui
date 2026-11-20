@@ -21,6 +21,16 @@ defineProps({ image: Object as PropType<Record<string, unknown>> });
   position: relative;
 }
 
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 200ms linear;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+
 .v-leave-active {
   position: absolute;
 }
