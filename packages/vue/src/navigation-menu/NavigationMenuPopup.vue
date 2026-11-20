@@ -3,6 +3,7 @@ import {
   computed,
   inject,
   mergeProps,
+  onBeforeUnmount,
   onUnmounted,
   useAttrs,
   watch,
@@ -41,11 +42,13 @@ const state = computed<NavigationMenuPopupState>(() => ({
 }));
 
 watch(element, (current) => popup.setPopup(current), { flush: 'sync' });
-const removeLeaving = popup.addLeaving(() => element.value);
-onUnmounted(() => {
-  removeLeaving();
+// Vue stops the watcher before it removes the element of the part, so the part clears the popup of
+// the root. The popup of a part that mounted first stays.
+onBeforeUnmount(() => {
   if (popup.popup === element.value) popup.setPopup(null);
 });
+const removeLeaving = popup.addLeaving(() => element.value);
+onUnmounted(removeLeaving);
 
 // The popup takes the size of its new content in steps: at a change of the item, and at a change
 // in the shown content, such as a nested menu that changes its item.
