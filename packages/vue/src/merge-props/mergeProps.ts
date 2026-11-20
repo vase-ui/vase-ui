@@ -28,8 +28,8 @@ type SetAttributes<T extends ElementType> =
 // Each element accepts the attributes of `div`. An element refuses `AttributesOfEachElement`:
 // its `type` is a string, and `button` accepts only three values.
 // A listener of the result gets the DOM event, as Vue types a listener of an element. A template
-// refuses a bound object whose listeners need a `VaseUIEvent`. The result has no `as`, as a set has
-// none: motion-v adds an `as` to the attributes of each element, and a part with `as` refuses it.
+// refuses a bound object whose listeners need a `VaseUIEvent`. The result has no `as`: motion-v adds
+// an `as` of each string to the attributes of each element, and the `as` of a part refuses it.
 type MergedProps<T extends ElementType> = Omit<
   IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T],
   'as'

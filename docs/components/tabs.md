@@ -142,7 +142,7 @@ Put each panel in a `<Transition>`. Its enter and leave classes animate the pane
 
 ### Links
 
-A tab renders a `<button>` by default. To render a link, render an `<a>` in the `element` slot, and bind `props` and `elementRef` on it. The tab reads its element: a link activates with a press, Enter and Space.
+A tab renders a `<button>` by default. To render a link, give `as` a link component, such as `RouterLink`. Or render an `<a>` in the `element` slot, and bind `props` and `elementRef` on it. The tab reads its element: a link activates with a press, Enter and Space.
 
 <<< ./tabs/Links.vue{9-11}
 

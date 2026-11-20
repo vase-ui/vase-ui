@@ -53,7 +53,7 @@ A part or a utility can also export other types. The list below is not complete.
   <<< ../examples/typescript/Actions.vue{5-10,15}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `Toast.Root.ToastObject` gives access to this interface.
-- A part that renders an element accepts `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).
+- Most parts that render an element accept `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).
 
 ## Generic components
 
@@ -68,4 +68,4 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `model-value` and no `default-value`.
 
-A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `#render` slot of the other part, and bind `props` on it.
+A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot or the `#render` slot of the other part, and bind `props` on it.

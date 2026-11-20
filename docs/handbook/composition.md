@@ -20,7 +20,7 @@ For example, a tab renders a `<button>` by default. The sample below gives a com
 
 <<< ../examples/composition/CustomTab.vue{9-14}
 
-A native form control, a form element and an image have only the `element` slot: `Input`, `Form`, `Fieldset.Root`, `Field.Label`, `Checkbox`, `Radio`, `Switch` and `Avatar.Image`.
+A native form control, a form element and an image have only the `element` slot, such as `Input`, `Checkbox`, `Form`, `Field.Label` and `Avatar.Image`.
 
 With `strictTemplates`, the attributes of a part have the types of its default element. The type check can refuse an attribute that this element does not have, such as `href` on `<Separator as="a">`. Give such an attribute on your element in the `element` slot.
 
@@ -28,7 +28,7 @@ The custom component needs one root element. Vue gives the attributes to that el
 
 Under the `element` slot, the part does not render its default slot. Put the content in your element. With `as`, the part keeps its content and its own nodes, such as the hidden text of `Progress.Root`.
 
-Avatar, Button, Checkbox, Checkbox Group, Field, Fieldset, Form, Input, Meter, Progress, Radio, Radio Group, Scroll Area, Separator, Switch and Tabs have this form. Each other family has `as` and [the `#render` slot](#the-render-slot) in place of the `element` slot.
+A family with the `element` slot has this form. Each other family has `as` and [the `#render` slot](#the-render-slot).
 
 ## Composing multiple components
 
