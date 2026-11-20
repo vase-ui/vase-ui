@@ -201,6 +201,24 @@ describe('Drawer', () => {
       );
     });
 
+    test('puts an uncontrolled value that a new list does not have at the default', async () => {
+      const root = reactive<Props>({
+        defaultOpen: true,
+        snapPoints: ['100px', 1],
+        defaultSnapPoint: '100px',
+      });
+      await mountDrawer({ root, ...sizes });
+      const popup = await opened();
+      await waitFor(() =>
+        expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('300px'),
+      );
+      root.defaultSnapPoint = 1;
+      root.snapPoints = ['150px', 1];
+      await waitFor(() =>
+        expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('0px'),
+      );
+    });
+
     test('goes back to the default point after the events of a close', async () => {
       const log: string[] = [];
       await mountDrawer({
@@ -252,6 +270,23 @@ describe('Drawer', () => {
       await waitFor(() => expect(popup.hasAttribute('data-nested-drawer-open')).toBe(false));
       expect(popup.style.getPropertyValue('--nested-drawers')).toBe('0');
       expect(popup.style.getPropertyValue('--drawer-height')).toBe('');
+    });
+
+    test('keep the height of the drawer above while its CSS stretches it', async () => {
+      const popup = reactive<Props>({ style: 'height: 300px' });
+      await mountDrawer({
+        root: { defaultOpen: true },
+        popup,
+        nested: { root: { defaultOpen: true } },
+      });
+      const parent = await opened();
+      await opened('nested-');
+      await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px'));
+      popup.style = 'height: 500px';
+      await waitFor(() => expect(parent.offsetHeight).toBe(500));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await nextTick();
+      expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px');
     });
 
     test('count a dialog in a drawer as a layer above it', async () => {

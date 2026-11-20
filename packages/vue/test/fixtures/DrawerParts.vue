@@ -8,7 +8,7 @@ type Props = Record<string, unknown>;
 // A drawer with one trigger, and the parts that their props name. The viewport covers the view,
 // and the popup is a sheet of 300 px at the edge of its swipe direction. The popup holds a text, a
 // text field, a button, a scroller of 600 px of content in 100 px, and the parts that their props
-// name, with a title and a description for `title`. A swipe area goes when its props have `removed`. With `transition`, the popup and the backdrop leave in 200 ms to their closed place.
+// name, with a title and a description for `title`. A swipe area goes when its props have `removed`. With `transition`, the popup and the backdrop leave in 200 ms to their closed place, and the popup enters from it, or from the place of `enterFromClass`.
 // `nested` puts a second drawer with the same parts in the popup, and `dialog` puts a modal dialog
 // there. `provider` puts the drawer in a provider, beside an indent and its background.
 const props = defineProps({
@@ -22,6 +22,7 @@ const props = defineProps({
   content: Object as PropType<Props>,
   close: Object as PropType<Props>,
   transition: Boolean,
+  enterFromClass: { type: String, default: undefined },
   nested: Object as PropType<Props>,
   dialog: Boolean,
   provider: Boolean,
@@ -50,7 +51,12 @@ const id = (name: string) => `${props.testPrefix}${name}`;
         v-bind="swipeArea"
       />
       <Drawer.Portal v-bind="portal">
-        <Transition name="drawer-test" :css="transition" :appear="transition">
+        <Transition
+          name="drawer-test"
+          :css="transition"
+          :appear="transition"
+          :enter-from-class="enterFromClass"
+        >
           <Drawer.Backdrop
             v-if="backdrop"
             :data-testid="id('backdrop')"
@@ -63,7 +69,12 @@ const id = (name: string) => `${props.testPrefix}${name}`;
           class="drawer-test-viewport"
           v-bind="viewport"
         >
-          <Transition name="drawer-test" :css="transition" :appear="transition">
+          <Transition
+            name="drawer-test"
+            :css="transition"
+            :appear="transition"
+            :enter-from-class="enterFromClass"
+          >
             <Drawer.Popup :data-testid="id('popup')" class="drawer-test-popup" v-bind="popup">
               <Drawer.Title v-if="title" :data-testid="id('title')">Title</Drawer.Title>
               <Drawer.Description v-if="title" :data-testid="id('description')">
@@ -141,6 +152,9 @@ const id = (name: string) => `${props.testPrefix}${name}`;
 .drawer-test-enter-from,
 .drawer-test-leave-to {
   transform: translateY(100%);
+}
+.drawer-test-peek {
+  transform: translateY(calc(100% - 50px));
 }
 .drawer-test-area {
   position: fixed;

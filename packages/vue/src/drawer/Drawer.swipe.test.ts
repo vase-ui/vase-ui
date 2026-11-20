@@ -98,6 +98,7 @@ function flick(
   from: Point,
   pointerId: number,
   moves: [y: number, time: number][],
+  { upEvent = true } = {},
 ) {
   const init = (y: number, time: number, buttons: number) => {
     const event = new PointerEvent('pointermove', {
@@ -125,6 +126,11 @@ function flick(
   target.dispatchEvent(down);
   for (const [y, time] of moves) target.dispatchEvent(init(y, time, 1));
   const [lastY, lastTime] = moves.at(-1)!;
+  if (!upEvent) {
+    // A fast flick on a trackpad sends a move with no button, and no `pointerup` before it.
+    target.dispatchEvent(init(lastY, lastTime + 4, 0));
+    return;
+  }
   const up = new PointerEvent('pointerup', {
     bubbles: true,
     composed: true,
@@ -135,6 +141,45 @@ function flick(
   });
   Object.defineProperty(up, 'timeStamp', { value: lastTime + 4 });
   target.dispatchEvent(up);
+}
+
+/**
+ * Sends a real touch through `points` (Chromium only), and runs `during` before the touch lifts. A
+ * point with `second` also has a second finger at that point.
+ */
+async function touchPath(
+  points: (Point & { second?: Point })[],
+  during: () => void | Promise<void> = () => {},
+) {
+  const { cdp } = await import('vitest/browser');
+  const session = cdp();
+  const frame = window.frameElement!.getBoundingClientRect();
+  const scale = frame.width / window.innerWidth || 1;
+  const toPage = (point: Point) => ({
+    x: frame.left + point.x * scale,
+    y: frame.top + point.y * scale,
+  });
+  const send = (
+    type: 'touchStart' | 'touchMove' | 'touchEnd',
+    point?: Point & { second?: Point },
+  ) =>
+    session.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints: point
+        ? [
+            { ...toPage(point), id: 1 },
+            ...(point.second ? [{ ...toPage(point.second), id: 2 }] : []),
+          ]
+        : [],
+    });
+  const [first, ...rest] = points;
+  await send('touchStart', first);
+  try {
+    for (const point of rest) await send('touchMove', point);
+    await during();
+  } finally {
+    await send('touchEnd');
+  }
 }
 
 describe('the swipe that closes', () => {
@@ -315,14 +360,14 @@ describe('the swipe that closes', () => {
     await release();
   });
 
-  test('ends when its popup goes', async () => {
+  test('ends when its popup goes, also when the portal keeps the closed popup', async () => {
     const shown = reactive({ open: true });
-    await mountDrawer({ root: shown });
+    await mountDrawer({ root: shown, portal: { keepMounted: true } });
     const release = await press(textOf(), { x: 0, y: 90 });
     shown.open = false;
-    await closed();
+    await waitFor(() => expect(get('popup').hidden).toBe(true));
     shown.open = true;
-    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await waitFor(() => expect(get('popup').hidden).toBe(false));
     await nextTick();
     expect(sample().y).toBe('0px');
     expect(get('popup').hasAttribute('data-swiping')).toBe(false);
@@ -344,6 +389,99 @@ describe('the swipe that closes', () => {
     await nextTick();
     expect(popup.hasAttribute('data-nested-drawer-swiping')).toBe(false);
     expect(popup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+  });
+
+  test('closes at a flick that ends with a move of no button', async () => {
+    await mountDrawer();
+    flick(
+      get('text'),
+      textOf(),
+      await mousePointerId(textOf()),
+      [
+        [10, 1010],
+        [25, 1020],
+        [40, 1030],
+      ],
+      { upEvent: false },
+    );
+    await closed();
+  });
+
+  test('ends with no release when another element takes the pointer', async () => {
+    const log: string[] = [];
+    await mountDrawer({ root: rootEvents(log) });
+    let pointerId = -1;
+    get('viewport').addEventListener('pointerdown', (event) => (pointerId = event.pointerId));
+    const from = textOf();
+    const release = await press(from, { x: 0, y: 100 });
+    const other = document.body.appendChild(document.createElement('div'));
+    onTestFinished(() => other.remove());
+    other.setPointerCapture(pointerId);
+    // The browser moves the capture at the next pointer event.
+    await userEvent.pointer({ coords: { ...from, y: from.y + 150 } });
+    await nextTick();
+    expect(sample().y).toBe('0px');
+    expect(get('popup').hasAttribute('data-swiping')).toBe(false);
+    await release();
+    expect(log).toEqual([]);
+  });
+
+  test('ends with no release when the main button goes up while another button is down', async () => {
+    const log: string[] = [];
+    await mountDrawer({ root: rootEvents(log) });
+    await press(textOf(), { x: 0, y: 60 });
+    await userEvent.pointer({ keys: '[MouseMiddle>]' });
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    await userEvent.pointer({ coords: { ...textOf(), y: textOf().y + 200 } });
+    await nextTick();
+    expect(sample().y).toBe('0px');
+    await userEvent.pointer({ keys: '[/MouseMiddle]' });
+    await nextTick();
+    expect(byTestId('popup')).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
+  test('removes a selection in the popup at the start of a mouse swipe', async () => {
+    await mountDrawer();
+    getSelection()!.selectAllChildren(get('text'));
+    const release = await press(textOf('scroller'), { x: 0, y: -1 }, 1);
+    await release();
+    await nextTick();
+    const rect = get('button').getBoundingClientRect();
+    getSelection()!.selectAllChildren(get('text'));
+    const drag = await press({ x: rect.right + 20, y: rect.top + 5 }, { x: 0, y: 40 });
+    expect(String(getSelection())).toBe('');
+    await wait(300);
+    await drag();
+  });
+
+  test('starts at the place of a popup whose enter runs', async () => {
+    // A slow enter is still at its start at the press.
+    await mountDrawer({
+      root: { defaultOpen: false },
+      transition: true,
+      popup: { style: { transitionDuration: '2s' } },
+    });
+    await userEvent.click(get('trigger'));
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await wait(100);
+    // A point at the bottom of the window is on the popup during the enter.
+    const release = await press({ x: 100, y: innerHeight - 10 }, { x: 0, y: 1 }, 1);
+    await nextTick();
+    expect(Number.parseFloat(sample().y)).toBeGreaterThan(100);
+    await release();
+  });
+
+  test('takes no swipe while a drawer in it is open, also for a nested drawer that is not modal', async () => {
+    await mountDrawer({
+      nested: { root: { defaultOpen: true, modal: false }, popup: { style: 'height: 100px' } },
+    });
+    await waitFor(() => expect(byTestId('nested-popup')).not.toBe(null));
+    const release = await press(textOf(), { x: 0, y: 120 });
+    await nextTick();
+    expect(sample().y).toBe('0px');
+    await release();
+    expect(byTestId('popup')).not.toBe(null);
   });
 
   test('stops for a `pointerdown` listener of the developer that stops the event', async () => {
@@ -542,6 +680,26 @@ describe('the swipe area', () => {
     expect(log).toEqual(['true']);
   });
 
+  test('follows a first move of a mouse that leaves the area', async () => {
+    const { log } = await mountArea();
+    const { x, y } = centerOf('swipe-area');
+    await userEvent.pointer({ coords: { x, y } });
+    await userEvent.pointer({ keys: '[MouseLeft>]' });
+    for (const step of [150, 160, 170]) await userEvent.pointer({ coords: { x, y: y - step } });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(log).toEqual(['openChange true swipe swipe-area']);
+  });
+
+  test('moves the popup from the place of its enter class', async () => {
+    await mountArea({ transition: true, enterFromClass: 'drawer-test-peek' });
+    const release = await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await nextTick();
+    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-y')).toBe('150px');
+    await release();
+  });
+
   test('opens nothing while disabled', async () => {
     const { log } = await mountArea({ swipeArea: { disabled: true } });
     expect(get('swipe-area').hasAttribute('data-disabled')).toBe(true);
@@ -657,6 +815,54 @@ describe.skipIf(!chromium)('a touch (Chromium)', () => {
     from = centerOf('button');
     await touchDrag(from, { x: from.x, y: from.y + 200 }, 10);
     await closed();
+  });
+
+  test('decides at 6 px, so a drag that turns to the other axis stays with the browser', async () => {
+    await mountDrawer();
+    const { x, y } = textOf();
+    await touchPath(
+      [
+        { x, y },
+        { x, y: y + 2 },
+        { x, y: y + 3 },
+        { x: x + 10, y: y + 4 },
+        { x: x + 30, y: y + 5 },
+        { x: x + 60, y: y + 6 },
+      ],
+      async () => {
+        await nextTick();
+        expect(sample().y).toBe('0px');
+      },
+    );
+  });
+
+  test('gives a move of two fingers to the browser in a swipe', async () => {
+    await mountDrawer();
+    const moves: number[] = [];
+    const listener = (event: TouchEvent) => moves.push(event.touches.length);
+    document.addEventListener('touchmove', listener);
+    onTestFinished(() => document.removeEventListener('touchmove', listener));
+    const { x, y } = textOf();
+    await touchPath([
+      { x, y },
+      { x, y: y + 10 },
+      { x, y: y + 20 },
+      { x, y: y + 30, second: { x: x + 100, y: y + 30 } },
+      { x, y: y + 40, second: { x: x + 120, y: y + 40 } },
+    ]);
+    expect(moves).toContain(2);
+    expect(moves).not.toContain(1);
+  });
+
+  test('moves the popup from the point where the touch comes in', async () => {
+    await mountDrawer();
+    const top = get('popup').getBoundingClientRect().top;
+    const points = Array.from({ length: 17 }, (_, index) => ({ x: 100, y: top - 60 + index * 10 }));
+    await touchPath(points, async () => {
+      await nextTick();
+      expect(Number.parseFloat(sample().y)).toBeGreaterThan(80);
+      expect(Number.parseFloat(sample().y)).toBeLessThan(120);
+    });
   });
 
   test('opens the drawer from the swipe area', async () => {
