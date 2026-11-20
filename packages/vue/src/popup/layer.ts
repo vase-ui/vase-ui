@@ -44,6 +44,11 @@ export interface Layer {
    * `click`.
    */
   readonly touchDrag: boolean;
+  /**
+   * More elements inside the layer, for the outside press and the focus out. Escape on them closes
+   * the popup as on the popup element.
+   */
+  readonly inside?: readonly (Element | null)[];
 }
 
 export type LayerRules = Omit<Layer, 'root'>;
@@ -160,6 +165,9 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     get touchDrag() {
       return current.value.touchDrag;
     },
+    get inside() {
+      return current.value.inside;
+    },
   };
   layersOfRoots.set(root, layer);
   const order = (roots += 1);
@@ -193,9 +201,14 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     // The Escape listener of the popup element runs before the listeners of the ancestors of an
     // in-place popup.
     watch(
-      () => (root.open ? root.popup : null),
-      (element, _, onCleanup) => {
-        if (element) onCleanup(addEventListener(element, 'keydown', onKeydown));
+      () => (root.open ? [root.popup, ...(layer.inside ?? [])] : []),
+      (elements, _, onCleanup) => {
+        const listening = elements.filter((element): element is Element => !!element);
+        onCleanup(
+          mergeCleanups(
+            ...listening.map((element) => addEventListener(element, 'keydown', onKeydown)),
+          ),
+        );
       },
       { immediate: true, flush: 'post' },
     );
@@ -265,6 +278,7 @@ function insideElements(entry: Entry) {
     root.popup,
     ...root.portalElements.filter(isSentinel),
     ...root.triggers.map((trigger) => trigger.element),
+    ...(entry.layer.inside ?? []),
   ].filter((element): element is Element => !!element?.isConnected);
   return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
 }

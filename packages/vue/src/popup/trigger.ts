@@ -49,11 +49,14 @@ export function usePopupTrigger(
     tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;
+    /** The disabled trigger keeps the focus, with `aria-disabled`. */
+    focusableWhenDisabled?: () => boolean;
   },
 ) {
   const button = useButton({
     element: options.element,
     disabled: options.disabled,
+    focusableWhenDisabled: options.focusableWhenDisabled,
     type: 'button',
     tag: options.tag,
   });

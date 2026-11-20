@@ -100,9 +100,25 @@ export interface PopupRoot<Payload = unknown> {
   endLeaving(): void;
 }
 
-export interface PopupRootOptions {
-  /** The family, for the text of an error. */
-  name: string;
+/**
+ * The state of a root that its family holds, such as the value of a navigation menu. `trigger` is
+ * the trigger of an open, `null` for an open with no trigger, and `undefined` for a close or an
+ * open that keeps the active trigger.
+ */
+export interface PopupRootState {
+  open(): boolean;
+  activeTriggerId(): string | null;
+  /** Emits the change event. Its listeners can cancel the change. */
+  emitChange(
+    open: boolean,
+    trigger: PopupTrigger | null | undefined,
+    details: PopupChangeEventDetails,
+  ): void;
+  /** Sets the state after a change that no listener cancelled. */
+  set(open: boolean, trigger: PopupTrigger | null | undefined): void;
+}
+
+interface PopupRootModels {
   open: () => boolean | undefined;
   defaultOpen: boolean;
   triggerId: () => string | null | undefined;
@@ -112,14 +128,19 @@ export interface PopupRootOptions {
   emitChange: (open: boolean, details: PopupChangeEventDetails) => void;
   emitOpen: (open: boolean) => void;
   emitTriggerId: (id: string | null) => void;
+}
+
+export type PopupRootOptions = {
+  /** The family, for the text of an error. */
+  name: string;
   /** The `instant` state of a change. */
   instantOf?: (open: boolean, reason: string, event: Event) => string | undefined;
   /**
-   * The root is closed for its parts while it is `true`, and the model keeps its value. After the
-   * mount, a disabled root with an open model asks for a close with the reason `'disabled'`.
+   * The root is closed for its parts while it is `true`, and the state keeps its value. After the
+   * mount, a disabled root with an open state asks for a close with the reason `'disabled'`.
    */
   disabled?: () => boolean;
-}
+} & (PopupRootModels | { state: PopupRootState });
 
 export function createPopupChangeEventDetails<Reason extends string>(
   reason: Reason,
@@ -233,16 +254,43 @@ export class PopupHandle<Payload = unknown> {
   }
 }
 
-export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
+// `v-model:open` and `v-model:trigger-id` of a root. With one trigger, it is the active trigger.
+function useModelState(options: PopupRootModels, triggers: readonly PopupTrigger[]) {
   const openModel = useModel(() => options.open(), options.open() ?? options.defaultOpen);
-  const modelOpen = openModel.value;
-  const open = computed(() => modelOpen.value && !options.disabled?.());
   const triggerIdModel = useModel(
     () => options.triggerId(),
     options.triggerId() ?? options.defaultTriggerId,
   );
-  const chosenTriggerId = triggerIdModel.value;
+  // An open with no trigger keeps the one trigger of the root inactive until the next open.
+  const withoutTrigger = shallowRef(false);
+  const activeTriggerId = () =>
+    triggerIdModel.value.value ??
+    (triggers.length === 1 && !withoutTrigger.value ? (triggers[0]?.id ?? null) : null);
+  const state: PopupRootState = {
+    open: () => openModel.value.value,
+    activeTriggerId,
+    emitChange: (open, _, details) => options.emitChange(open, details),
+    set(next, trigger) {
+      const nextId = !next || trigger === undefined ? activeTriggerId() : (trigger?.id ?? null);
+      if (next && trigger !== undefined) withoutTrigger.value = trigger === null;
+      // The trigger of an open stays active when another trigger mounts.
+      if (next && nextId !== triggerIdModel.value.value) {
+        triggerIdModel.setOwn(nextId);
+        options.emitTriggerId(nextId);
+      }
+      if (next !== openModel.value.value) {
+        openModel.setOwn(next);
+        options.emitOpen(next);
+      }
+    },
+  };
+  return state;
+}
+
+export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
   const triggers = shallowReactive<PopupTrigger[]>([]);
+  const state = 'state' in options ? options.state : useModelState(options, triggers);
+  const open = computed(() => state.open() && !options.disabled?.());
   const leavingElements = shallowReactive<(() => Element | null)[]>([]);
   const portalElements = shallowReactive<(() => Element | null)[]>([]);
   // The popup names the last mounted title and description. When it unmounts, the one before it.
@@ -259,14 +307,8 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const instant = shallowRef<string>();
   const closeRequests = shallowRef(0);
 
-  // An open with no trigger keeps the one trigger of the root inactive until the next open.
-  const withoutTrigger = shallowRef(false);
   const givenPayload = shallowRef<{ value: Payload }>();
-  const activeTriggerId = computed(
-    () =>
-      chosenTriggerId.value ??
-      (triggers.length === 1 && !withoutTrigger.value ? (triggers[0]?.id ?? null) : null),
-  );
+  const activeTriggerId = computed(() => state.activeTriggerId());
   const activeEntry = computed(() =>
     triggers.find((trigger) => trigger.id === activeTriggerId.value),
   );
@@ -310,32 +352,23 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       element?.isConnected ? element : undefined,
     );
     const nextId = !next || entry === undefined ? activeTriggerId.value : (entry?.id ?? null);
-    if (next === modelOpen.value && nextId === activeTriggerId.value) {
+    if (next === state.open() && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
       if (payload) givenPayload.value = payload;
       // A press keeps a popup open that a hover opened.
       if (next && why === 'trigger-press') reason.value = why;
       return details;
     }
-    options.emitChange(next, details);
+    state.emitChange(next, entry, details);
     if (details.isCanceled) return details;
     reason.value = why;
     if (next) interaction.value = interactionOf(event);
     else closeInteraction.value = interactionOf(event);
     instant.value = options.instantOf?.(next, why, event);
     if (next && entry !== undefined) {
-      withoutTrigger.value = entry === null;
       givenPayload.value = payload ?? (entry ? undefined : givenPayload.value);
     }
-    // The trigger of an open stays active when another trigger mounts.
-    if (next && nextId !== chosenTriggerId.value) {
-      triggerIdModel.setOwn(nextId);
-      options.emitTriggerId(nextId);
-    }
-    if (next !== modelOpen.value) {
-      openModel.setOwn(next);
-      options.emitOpen(next);
-    }
+    state.set(next, entry);
     if (!next && why !== 'trigger-hover') closeRequests.value += 1;
     return details;
   }
@@ -464,7 +497,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   onMounted(() => {
     onScopeDispose(trackPointerType(ownerDocument(null)));
     watch(
-      () => modelOpen.value && !!options.disabled?.(),
+      () => state.open() && !!options.disabled?.(),
       (closes) => {
         if (closes) change(false, 'disabled', new Event('vase-ui'), undefined);
       },
@@ -477,7 +510,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // before the new root takes it (test/measurements/dialog.test.ts). Of two mounted roots with one
   // handle, the last one holds it.
   watchPostEffect((onCleanup) => {
-    const handle = options.handle();
+    const handle = 'handle' in options ? options.handle() : undefined;
     const holder = handle && handleRoots.get(handle);
     if (!holder) return;
     holder.value = root;

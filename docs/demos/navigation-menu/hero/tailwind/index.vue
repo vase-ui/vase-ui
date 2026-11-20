@@ -62,15 +62,16 @@ const handbookLinks = [
 ] as const;
 
 const triggerClassName =
-  'flex h-8 items-center justify-center gap-1.5 bg-transparent px-2 text-sm font-normal text-neutral-950 no-underline select-none min-[501px]:px-3 hover:bg-neutral-100 data-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:bg-neutral-800 dark:data-pressed:bg-neutral-800';
+  'flex h-8 items-center justify-center gap-1.5 bg-transparent px-2 text-sm font-normal text-neutral-950 no-underline select-none min-[501px]:px-3 hover:bg-neutral-100 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:text-white dark:hover:bg-neutral-800 dark:aria-expanded:bg-neutral-800';
 const contentClassName =
   'h-full w-[calc(100vw-40px)] p-2 min-[500px]:w-max min-[500px]:max-w-[400px] ' +
-  'transition-[opacity,transform,translate] duration-[var(--duration)] ease-[var(--easing)] ' +
-  'data-starting-style:opacity-0 data-ending-style:opacity-0 ' +
-  'data-starting-style:data-[activation-direction=left]:translate-x-[-50%] ' +
-  'data-starting-style:data-[activation-direction=right]:translate-x-[50%] ' +
-  'data-ending-style:data-[activation-direction=left]:translate-x-[50%] ' +
-  'data-ending-style:data-[activation-direction=right]:translate-x-[-50%]';
+  'transition-[opacity,transform,translate] duration-[var(--duration)] ease-[var(--easing)]';
+const contentTransition = {
+  enterFromClass:
+    'opacity-0 data-[activation-direction=left]:translate-x-[-50%] data-[activation-direction=right]:translate-x-[50%]',
+  leaveToClass:
+    'opacity-0 data-[activation-direction=left]:translate-x-[50%] data-[activation-direction=right]:translate-x-[-50%]',
+};
 const linkCardClassName =
   'relative block h-full w-full border-0 bg-transparent p-2 text-left text-inherit no-underline hover:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:hover:bg-neutral-800';
 </script>
@@ -87,10 +88,10 @@ const linkCardClassName =
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="contentClassName">
+        <NavigationMenu.Content :class="contentClassName" :transition="contentTransition">
           <ul class="m-0 grid list-none grid-cols-2 p-0 max-[500px]:grid-cols-1">
             <li v-for="item in overviewLinks" :key="item.href">
-              <!-- To use the link of a router, such as RouterLink, give it to `as`. -->
+              <!-- For the link of a router, see the custom links of the docs. -->
               <NavigationMenu.Link :class="linkCardClassName" :href="item.href">
                 <h3 class="m-0 mb-1 text-sm leading-4 font-normal">{{ item.title }}</h3>
                 <p class="m-0 text-sm text-neutral-500 dark:text-neutral-400">
@@ -111,7 +112,7 @@ const linkCardClassName =
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="contentClassName">
+        <NavigationMenu.Content :class="contentClassName" :transition="contentTransition">
           <ul class="m-0 flex max-w-[400px] list-none flex-col justify-center p-0">
             <li v-for="item in handbookLinks" :key="item.href">
               <NavigationMenu.Link :class="linkCardClassName" :href="item.href">
@@ -140,14 +141,20 @@ const linkCardClassName =
         :collision-avoidance="{ side: 'none' }"
         :style="{ '--duration': '0.35s', '--easing': 'cubic-bezier(0.22, 1, 0.36, 1)' }"
       >
-        <NavigationMenu.Popup
-          class="relative h-[var(--popup-height)] w-[var(--popup-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[opacity,transform,width,height,scale] duration-[var(--duration)] ease-[var(--easing)] data-ending-style:scale-90 data-ending-style:opacity-0 data-ending-style:duration-150 data-ending-style:ease-[ease] data-starting-style:scale-90 data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+        <Transition
+          enter-from-class="scale-90 opacity-0"
+          leave-to-class="scale-90 opacity-0 duration-150 ease-[ease]"
+          appear
         >
-          <NavigationMenu.Arrow
-            class="relative block h-1.5 w-3 overflow-clip transition-[left,right] duration-[var(--duration)] ease-[var(--easing)] before:absolute before:bottom-0 before:left-1/2 before:block before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:border before:border-neutral-950 before:bg-white before:content-[''] data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 dark:before:border-white dark:before:bg-neutral-950"
-          />
-          <NavigationMenu.Viewport class="relative h-full w-full overflow-hidden" />
-        </NavigationMenu.Popup>
+          <NavigationMenu.Popup
+            class="relative h-[var(--popup-height)] w-[var(--popup-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[opacity,transform,width,height,scale] duration-[var(--duration)] ease-[var(--easing)] dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          >
+            <NavigationMenu.Arrow
+              class="relative block h-1.5 w-3 overflow-clip transition-[left,right] duration-[var(--duration)] ease-[var(--easing)] before:absolute before:bottom-0 before:left-1/2 before:block before:h-[calc(6px*sqrt(2))] before:w-[calc(6px*sqrt(2))] before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:border before:border-neutral-950 before:bg-white before:content-[''] data-[side=bottom]:top-[-6px] data-[side=left]:right-[-9px] data-[side=left]:rotate-90 data-[side=right]:left-[-9px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-6px] data-[side=top]:rotate-180 dark:before:border-white dark:before:bg-neutral-950"
+            />
+            <NavigationMenu.Viewport class="relative h-full w-full overflow-hidden" />
+          </NavigationMenu.Popup>
+        </Transition>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>

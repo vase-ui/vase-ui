@@ -56,7 +56,7 @@
     }
   }
 
-  &[data-pressed] {
+  &[aria-expanded='true'] {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -157,13 +157,13 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.EnterFrom,
+  &.LeaveTo {
     opacity: 0;
     transform: scale(0.9);
   }
 
-  &[data-ending-style] {
+  &.LeaveTo {
     transition-timing-function: ease;
     transition-duration: 0.15s;
   }
@@ -183,12 +183,12 @@
     max-width: 400px;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.EnterFrom,
+  &.LeaveTo {
     opacity: 0;
   }
 
-  &[data-starting-style] {
+  &.EnterFrom {
     &[data-activation-direction='left'] {
       transform: translateX(-50%);
     }
@@ -197,7 +197,7 @@
     }
   }
 
-  &[data-ending-style] {
+  &.LeaveTo {
     &[data-activation-direction='left'] {
       transform: translateX(50%);
     }
