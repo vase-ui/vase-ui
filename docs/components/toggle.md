@@ -70,6 +70,8 @@ Select the states of a toggle with these selectors:
 
 Give a tag or a component to `as`. Or render the element in the `element` slot, and bind `props` and `elementRef` to it. The slot also gives `state`. An element that is not a `<button>` gets `role="button"`, a tab stop, and the keys Enter and Space.
 
+The part reads the element of a component or of the slot at the mount. Until then, it gives the element the attributes of a `<button>`, such as `type="button"`. A tag in `as` gets its own attributes also in the server HTML.
+
 ## API reference
 
 <ApiReference />
