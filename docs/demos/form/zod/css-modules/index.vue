@@ -35,7 +35,7 @@ async function onSubmit(_event: SubmitEvent, formValues: FormValues) {
 </script>
 
 <template>
-  <Form :class="styles.Form" :errors="errors" @submit.prevent="onSubmit">
+  <Form :class="styles.Form" :errors="errors" @submit="onSubmit">
     <Field.Root name="name" :class="styles.Field">
       <Field.Label :class="styles.Label">Name</Field.Label>
       <Input placeholder="Enter name" :class="styles.Input" />

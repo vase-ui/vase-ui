@@ -22,8 +22,6 @@ import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
-import { Toggle } from '@vase-ui/vue/toggle';
-import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -353,28 +351,18 @@ const rows: Row[] = [
     expected: targetId,
   },
   {
-    name: 'Toggle type',
+    name: 'Dialog.Trigger type',
     attribute: 'type',
     createNode: () => (
       <form>
-        <Toggle type={undefined} data-testid="part">
-          Bold
-        </Toggle>
+        <Dialog.Root>
+          <Dialog.Trigger type={undefined} data-testid="part">
+            Open
+          </Dialog.Trigger>
+        </Dialog.Root>
       </form>
     ),
     expected: () => 'button',
-  },
-  {
-    name: 'Toggle aria-pressed',
-    attribute: 'aria-pressed',
-    createNode: () => <Toggle aria-pressed={undefined} data-testid="part" />,
-    expected: () => 'false',
-  },
-  {
-    name: 'ToggleGroup role',
-    attribute: 'role',
-    createNode: () => <ToggleGroup role={undefined} data-testid="part" />,
-    expected: () => 'group',
   },
   {
     name: 'Toolbar.Root role',

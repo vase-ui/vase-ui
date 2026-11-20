@@ -19,15 +19,15 @@ A part that renders an HTML element accepts a `class` attribute. Use it to style
 
 The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
 
-<<< ../examples/styling/SlotClass.vue{8}
+<<< ../examples/styling/SlotClass.vue{9}
 
 ### Data attributes
 
-A part sets data attributes for its states. For example, you can style [Toggle](/components/toggle) with its `[data-pressed]` attribute, among others. A part that is a native form control, such as [Checkbox](/components/checkbox), has the pseudo-classes of its element, such as `:checked`, in place of such attributes. Its page lists a selector for each state.
+A part sets data attributes for its states. For example, you can style [Toggle Group](/components/toggle-group) with its `[data-orientation]` attribute. A part whose element has a pseudo-class or an ARIA attribute for a state has no data attribute for that state. [Checkbox](/components/checkbox) has `:checked`, and [Toggle](/components/toggle) has `[aria-pressed='true']`. The page of a part lists a selector for each state.
 
 ```css
-.Toggle[data-pressed] {
-  background-color: green;
+.ToggleGroup[data-orientation='vertical'] {
+  flex-direction: column;
 }
 ```
 
@@ -51,7 +51,7 @@ A part that renders an HTML element accepts a `style` attribute. Use it to style
 
 For a style that depends on state, bind `:style` on the element in the render slot.
 
-<<< ../examples/styling/SlotStyle.vue{8}
+<<< ../examples/styling/SlotStyle.vue{9}
 
 If the part controls the same property, put your style before `v-bind="props"` to give the part priority.
 For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.

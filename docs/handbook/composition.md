@@ -33,7 +33,7 @@ In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` ren
 
 With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the component that you give to `as` or render in its slot. The toolbar then keeps the element in its keyboard navigation.
 
-An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Menu.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. The parts of Avatar, Input, Field, Fieldset, Form, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs and Button give each attribute to their element as it is, `undefined` too. `Avatar.Image` keeps `alt=""` for an `alt` that is `undefined` or `null`.
+An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Menu.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. A part with the `element` slot gives each attribute to its element as it is, `undefined` too. `Avatar.Image` keeps `alt=""` for an `alt` that is `undefined` or `null`.
 
 A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop.
 
@@ -75,7 +75,7 @@ Each Vase UI part renders the most appropriate element by default. In most cases
 
 The `#render` slot gives you `props` and `state`. Bind `props` on your element. In a Vapor template, also bind `:ref="props.ref"`. Use `state` for the content, class or style.
 
-<<< ../examples/composition/RenderSlot.vue{8-11}
+<<< ../examples/composition/RenderSlot.vue{9-12}
 
 The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Slider.Thumb` inside your element to keep its range input. A development build warns if the slot opens without those children.
 

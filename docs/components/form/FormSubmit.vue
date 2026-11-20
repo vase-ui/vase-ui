@@ -16,5 +16,5 @@ async function onSubmit(_event: SubmitEvent, formValues: { id: string; quantity:
 </script>
 
 <template>
-  <Form @submit.prevent="onSubmit" />
+  <Form @submit="onSubmit" />
 </template>

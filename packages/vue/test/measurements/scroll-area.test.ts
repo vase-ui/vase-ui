@@ -18,12 +18,6 @@ afterEach(() => {
   root = undefined;
 });
 
-async function frames(count: number) {
-  for (let frame = 0; frame < count; frame += 1) {
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-  }
-}
-
 function find(id: string) {
   return root!.querySelector<HTMLElement>(`#${id}`)!;
 }
@@ -154,14 +148,22 @@ describe('the end of an animation in a scroll container', () => {
       <div id="item" style="width: 100px; height: 50px"></div>
     </div>`;
 
+  /**
+   * Each observer gets a first report with the size at the start, so a case clears the log after
+   * it. In WebKit, `ready` of a script animation can resolve before that report, in the same frame.
+   */
   function watchViewport() {
     const viewport = find('viewport');
     const log: string[] = [];
-    const observer = new ResizeObserver(() => log.push('report'));
+    const firstReport = Promise.withResolvers<void>();
+    const observer = new ResizeObserver(() => {
+      log.push('report');
+      firstReport.resolve();
+    });
     observer.observe(viewport);
     onTestFinished(() => observer.disconnect());
     viewport.addEventListener('scroll', () => log.push('scroll'));
-    return { viewport, log };
+    return { viewport, log, firstReport: firstReport.promise };
   }
 
   test.each([
@@ -184,9 +186,8 @@ describe('the end of an animation in a scroll container', () => {
     '$name sends its end event to the container, with the new scroll size, and no report and no scroll',
     async ({ type, start }) => {
       html(CONTAINER);
-      const { viewport, log } = watchViewport();
-      // The first report of the observer comes in the first frame.
-      await frames(2);
+      const { viewport, log, firstReport } = watchViewport();
+      await firstReport;
       log.length = 0;
       let scrollWidth = 0;
       viewport.addEventListener(type, () => (scrollWidth = viewport.scrollWidth));
@@ -198,16 +199,16 @@ describe('the end of an animation in a scroll container', () => {
 
   test('a script animation sends no event to an element, and its finished promise resolves with the new scroll size', async () => {
     html(CONTAINER);
-    const { viewport, log } = watchViewport();
+    const { viewport, log, firstReport } = watchViewport();
     const events: string[] = [];
     for (const type of ['animationend', 'transitionend'])
       viewport.addEventListener(type, () => events.push(type));
+    await firstReport;
+    log.length = 0;
     const animation = find('item').animate(
       [{ transform: 'translateX(600px)' }, { transform: 'none' }],
       200,
     );
-    await animation.ready;
-    log.length = 0;
     await animation.finished;
     expect(viewport.scrollWidth).toBe(200);
     expect(events).toEqual([]);
