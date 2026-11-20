@@ -87,3 +87,9 @@
     box-shadow: none;
   }
 }
+
+/* The closed popup has `hidden`, and it stays shown while its exit animation plays. `inert` keeps
+   each pointer and the focus from it. */
+.Popup[hidden] {
+  display: block;
+}

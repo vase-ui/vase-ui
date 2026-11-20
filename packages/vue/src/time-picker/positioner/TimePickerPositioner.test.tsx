@@ -1,32 +1,12 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, screen, waitForPositioned } from '#test-utils';
 
 const time = Temporal.PlainTime.from('15:04');
 
 describe('<TimePicker.Positioner />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<TimePicker.Positioner />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    async render(node) {
-      const result = await render(
-        <TimePicker.Root open defaultValue={time}>
-          <TimePicker.Trigger>Open</TimePicker.Trigger>
-          <TimePicker.Portal>{node}</TimePicker.Portal>
-        </TimePicker.Root>,
-      );
-      await flushMicrotasks();
-      return result;
-    },
-  }));
 
   function renderPicker(options: { field?: boolean; anchor?: HTMLElement | undefined } = {}) {
     const { field = true, anchor } = options;

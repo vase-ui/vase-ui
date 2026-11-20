@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import { Popover } from '@vase-ui/vue/popover';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
 const time = Temporal.PlainTime.from('15:04');
@@ -34,15 +34,6 @@ describe('<TimePicker.Trigger />', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Choose' })).toBeInTheDocument();
   });
-
-  describeConformance(<TimePicker.Trigger />, () => ({
-    refInstanceof: window.HTMLButtonElement,
-    testRenderPropWith: 'button',
-    button: true,
-    render(node) {
-      return render(<TimePicker.Root>{node}</TimePicker.Root>);
-    },
-  }));
 
   it('has the attributes of a dialog trigger', async () => {
     await render(

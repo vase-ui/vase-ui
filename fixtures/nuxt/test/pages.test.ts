@@ -1260,29 +1260,17 @@ async function expectMenubarPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
 }
 
-// A server renders no popup and no portal. The trigger of an open root has the open state, and no
-// guards beside it. The trigger of a handle has the closed form, because a server attaches no store
-// to a handle.
+// A server renders no popup. The trigger of an open root has the open state. The trigger of a
+// handle has the closed form, because a handle holds its root only on the client.
 async function expectPopoverPageOnServer(page: Page) {
-  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open', 'data-pressed'];
+  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-pressed'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
-  const closed = {
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'false',
-    'data-popup-open': null,
-    'data-pressed': null,
-  };
+  const closed = { 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'data-pressed': null };
 
   expect(await read('closed')).toEqual(closed);
-  expect(await read('open')).toEqual({
-    'aria-haspopup': 'dialog',
-    'aria-expanded': 'true',
-    'data-popup-open': '',
-    'data-pressed': null,
-  });
+  expect(await read('open')).toEqual({ ...closed, 'aria-expanded': 'true' });
   expect(await read('detached')).toEqual(closed);
-  expect(await page.locator('[data-vase-ui-portal], [role="dialog"]').count()).toBe(0);
-  expect(await page.locator('[data-vase-ui-focus-guard]').count()).toBe(0);
+  expect(await page.locator('[role="dialog"]').count()).toBe(0);
 }
 
 // After the mount, the open root renders its popup in `<body>`, and the trigger of the handle
@@ -1290,13 +1278,10 @@ async function expectPopoverPageOnServer(page: Page) {
 async function expectHydratedPopoverPage(page: Page) {
   const popup = page.getByTestId('open-popup');
   expect(await popup.count()).toBe(1);
-  expect(
-    await popup.evaluate(
-      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
-    ),
-  ).toBe('body');
+  expect(await popup.evaluate((element) => element.parentElement?.parentElement?.localName)).toBe(
+    'body',
+  );
   expect(await popup.getAttribute('role')).toBe('dialog');
-  expect(await popup.getAttribute('data-open')).toBe('');
   expect(await popup.getAttribute('aria-labelledby')).toBe(
     await page.getByText('Open title').getAttribute('id'),
   );

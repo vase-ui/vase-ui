@@ -1,12 +1,9 @@
-import { computed, inject, onScopeDispose, provide, unref } from 'vue';
+import { computed, inject, onScopeDispose, provide } from 'vue';
 import type { ComputedRef } from 'vue';
-import { createChangeEventDetails } from '../../createVaseUIEventDetails';
-import { REASONS } from '../../reasons';
 import { ownerWindow } from '../../../common/owner';
-import type { InteractionType } from '../../../utils/popups/usePopupTrigger';
-import { usePopoverRootContext } from '../../../popover/root/PopoverRootContext';
-import type { FocusOption } from '../../../utils/popups/focus/usePopupFocus';
-import { createDefaultInitialFocus } from '../../../utils/popups/popupBindings';
+import { injectPopoverRoot } from '../../../popover/root';
+import type { FocusTarget } from '../../../popup/focus';
+import type { InteractionType } from '../../../popup/root';
 import { useKeepAliveState } from '../../useKeepAliveState';
 import { RegisterPickerFocusTarget } from './PickerControlContext';
 import type { PickerFocusTarget } from './PickerControlContext';
@@ -29,19 +26,18 @@ export interface PickerPopup {
  * `setup`.
  */
 export function usePickerPopup(): PickerPopup {
-  const { store } = usePopoverRootContext();
-  const open = computed(() => store.select('open'));
+  const { root } = injectPopoverRoot('Root');
+  const open = computed(() => root.open);
 
   function openByKey(event: KeyboardEvent) {
     if (open.value) {
       return;
     }
-    const [firstTrigger] = store.context.triggerElements.entries();
-    store.setOpen(true, createChangeEventDetails(REASONS.triggerPress, event, firstTrigger?.[1]));
+    root.request(true, 'trigger-press', event, root.triggers[0]?.element);
   }
 
   function closeAfterSelection(event: Event) {
-    store.setOpen(false, createChangeEventDetails(REASONS.imperativeAction, event));
+    root.request(false, 'imperative-action', event);
   }
 
   return { open, openByKey, closeAfterSelection };
@@ -73,12 +69,11 @@ export function getFirstInDocument<T extends Element>(
  * Gives `Popover.Popup` the initial focus for a picker. By default it uses the first connected
  * target in document order. Without a target it keeps the default of `Popover.Popup`.
  * @param initialFocus The `initialFocus` prop of the part. A value of the consumer replaces the
- * default, also `false`. `true`, `null`, an empty ref and no value ask for the default.
+ * default, also `false`. `true`, `null` and no value ask for the default.
  */
 export function usePickerInitialFocus(
-  initialFocus: () => FocusOption | undefined,
-): ComputedRef<FocusOption> {
-  const { store } = usePopoverRootContext();
+  initialFocus: () => FocusTarget | undefined,
+): ComputedRef<FocusTarget> {
   const targets = new Set<PickerFocusTarget>();
   provide(RegisterPickerFocusTarget, (target) => {
     const { isHeld } = useKeepAliveState();
@@ -87,9 +82,10 @@ export function usePickerInitialFocus(
     onScopeDispose(() => targets.delete(getElement));
   });
 
-  const popupDefault = createDefaultInitialFocus(store.context.popupRef);
-  const pickerDefault = (interactionType: InteractionType) =>
-    getFirstInDocument(Array.from(targets, (target) => target())) ?? popupDefault(interactionType);
+  // `true` asks for the default of the popover.
+  const pickerDefault = () =>
+    (getFirstInDocument(Array.from(targets, (target) => target())) as HTMLElement | undefined) ??
+    true;
 
   // `true` and `null` ask for the default behavior, and the default of a picker is its target. The
   // same holds for the result of a function.
@@ -98,11 +94,10 @@ export function usePickerInitialFocus(
     if (typeof option === 'function') {
       return (interactionType: InteractionType) => {
         const result = option(interactionType);
-        return result === true || result === null ? pickerDefault(interactionType) : result;
+        return result === true || result === null ? pickerDefault() : result;
       };
     }
-    const value = unref(option);
-    return value === undefined || value === null || value === true ? pickerDefault : value;
+    return option === undefined || option === null || option === true ? pickerDefault : option;
   });
 }
 

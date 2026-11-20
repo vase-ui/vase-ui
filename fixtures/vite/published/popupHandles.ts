@@ -41,9 +41,16 @@ check(new Drawer.Handle<Payload>());
 const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
 check(menu);
 check(new Menu.Handle<Payload>());
-const popover: Popover.Handle<Payload> = Popover.createHandle<Payload>();
-check(popover);
-check(new Popover.Handle<Payload>());
+// A Popover handle has no store.
+const popovers: Popover.Handle<Payload>[] = [
+  Popover.createHandle<Payload>(),
+  new Popover.Handle<Payload>(),
+];
+for (const popover of popovers) {
+  const open: boolean = popover.isOpen;
+  if (open) popover.close();
+  else popover.open('second');
+}
 const previewCard: PreviewCard.Handle<Payload> = PreviewCard.createHandle<Payload>();
 check(previewCard);
 check(new PreviewCard.Handle<Payload>());

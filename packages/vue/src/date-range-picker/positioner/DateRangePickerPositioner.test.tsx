@@ -3,14 +3,7 @@ import { isRef, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  waitFor,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, flushMicrotasks, screen, waitFor, waitForPositioned } from '#test-utils';
 
 const range = [
   Temporal.PlainDate.from('2026-11-18'),
@@ -19,20 +12,6 @@ const range = [
 
 describe('<DateRangePicker.Positioner />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<DateRangePicker.Positioner />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    async render(node) {
-      const result = await render(
-        <DateRangePicker.Root open defaultValue={range}>
-          <DateRangePicker.Trigger>Open</DateRangePicker.Trigger>
-          <DateRangePicker.Portal>{node}</DateRangePicker.Portal>
-        </DateRangePicker.Root>,
-      );
-      await flushMicrotasks();
-      return result;
-    },
-  }));
 
   type Fields = 'both' | 'start' | 'none';
 

@@ -103,6 +103,12 @@ describe('the style sheet of the Tailwind demos', () => {
       expected: { height: '32px', 'box-sizing': 'content-box' },
     },
     {
+      name: 'an element in <body> outside each frame gets utilities only',
+      vnode: () => h('div', { class: 'h-8' }),
+      selector: '.h-8',
+      expected: { height: '32px', 'box-sizing': 'content-box' },
+    },
+    {
       name: 'a CSS-module frame gets nothing',
       vnode: () => h('div', { 'data-demo': 'css-modules' }, h('div', { class: 'h-8' })),
       selector: '.h-8',

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { shallowRef, useTemplateRef } from 'vue';
-import { Popover } from '@vase-ui/vue/popover';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { motion } from 'motion-v';
 import type { MotionProps } from 'motion-v';
 
 const open = shallowRef(false);
 const root = useTemplateRef('root');
 
-function handleOpenChange(nextOpen: boolean, details: Popover.Root.ChangeEventDetails) {
+function handleOpenChange(nextOpen: boolean, details: Dialog.Root.ChangeEventDetails) {
   if (!nextOpen) {
     details.preventUnmountOnClose();
   }
@@ -21,27 +21,25 @@ function handleAnimationComplete() {
 </script>
 
 <template>
-  <Popover.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
-    <Popover.Trigger class="button">Open the popover</Popover.Trigger>
-    <Popover.Portal>
-      <Popover.Positioner :side-offset="8">
-        <Popover.Popup>
-          <template #render="{ props, state }">
-            <motion.div
-              v-bind="props as MotionProps"
-              class="popup"
-              :initial="{ height: 0 }"
-              :animate="{ height: state.open ? 160 : 0 }"
-              @animation-complete="handleAnimationComplete"
-            >
-              <Popover.Title>A popover with motion-v</Popover.Title>
-              <Popover.Close class="button">Close</Popover.Close>
-            </motion.div>
-          </template>
-        </Popover.Popup>
-      </Popover.Positioner>
-    </Popover.Portal>
-  </Popover.Root>
+  <Dialog.Root ref="root" v-model:open="open" @open-change="handleOpenChange">
+    <Dialog.Trigger class="button">Open the dialog</Dialog.Trigger>
+    <Dialog.Portal>
+      <Dialog.Popup>
+        <template #render="{ props, state }">
+          <motion.div
+            v-bind="props as MotionProps"
+            class="popup"
+            :initial="{ height: 0 }"
+            :animate="{ height: state.open ? 160 : 0 }"
+            @animation-complete="handleAnimationComplete"
+          >
+            <Dialog.Title>A dialog with motion-v</Dialog.Title>
+            <Dialog.Close class="button">Close</Dialog.Close>
+          </motion.div>
+        </template>
+      </Dialog.Popup>
+    </Dialog.Portal>
+  </Dialog.Root>
 </template>
 
 <style scoped>
@@ -55,6 +53,10 @@ function handleAnimationComplete() {
 }
 
 .popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   overflow: hidden;
   box-sizing: border-box;
   width: 20rem;

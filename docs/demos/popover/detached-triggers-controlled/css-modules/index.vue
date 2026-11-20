@@ -35,6 +35,8 @@ const XIcon: FunctionalComponent = (_, { attrs }) =>
     },
     [h('path', { d: 'm4.5 4.5 7 7m-7 0 7-7' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -64,17 +66,19 @@ const XIcon: FunctionalComponent = (_, { attrs }) =>
   >
     <Popover.Portal>
       <Popover.Positioner :class="styles.Positioner" :side-offset="8">
-        <Popover.Popup :class="styles.Popup">
-          <Popover.Arrow :class="styles.Arrow" />
-          <Popover.Title :class="styles.Title">Free shipping</Popover.Title>
-          <Popover.Description :class="styles.Description">
-            Orders over $50 arrive in 3–5 business days at no extra cost.
-          </Popover.Description>
-          <a href="#" :class="styles.Link">View shipping policy</a>
-          <Popover.Close aria-label="Close" :class="styles.Close">
-            <XIcon />
-          </Popover.Close>
-        </Popover.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Popover.Popup :class="styles.Popup">
+            <Popover.Arrow :class="styles.Arrow" />
+            <Popover.Title :class="styles.Title">Free shipping</Popover.Title>
+            <Popover.Description :class="styles.Description">
+              Orders over $50 arrive in 3–5 business days at no extra cost.
+            </Popover.Description>
+            <a href="#" :class="styles.Link">View shipping policy</a>
+            <Popover.Close aria-label="Close" :class="styles.Close">
+              <XIcon />
+            </Popover.Close>
+          </Popover.Popup>
+        </Transition>
       </Popover.Positioner>
     </Popover.Portal>
   </Popover.Root>

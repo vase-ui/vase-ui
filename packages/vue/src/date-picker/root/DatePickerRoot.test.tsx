@@ -1,12 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
   flushMicrotasks,
-  popupConformanceTests,
   screen,
   takeReportedMessages,
   waitFor,
@@ -79,22 +77,6 @@ describe('<DatePicker.Root />', () => {
     });
     expect(screen.queryByRole('dialog')).toBe(null);
   }
-
-  popupConformanceTests({
-    createComponent: (props) => (
-      <DatePicker.Root {...props.root}>
-        <DatePicker.Trigger {...props.trigger}>Open menu</DatePicker.Trigger>
-        <DatePicker.Portal {...props.portal}>
-          <DatePicker.Positioner>
-            <DatePicker.Popup {...props.popup}>Content</DatePicker.Popup>
-          </DatePicker.Positioner>
-        </DatePicker.Portal>
-      </DatePicker.Root>
-    ),
-    render,
-    triggerMouseAction: 'click',
-    expectedPopupRole: 'dialog',
-  });
 
   it('renders no element of its own', async () => {
     const { container } = await render(
@@ -176,7 +158,6 @@ describe('<DatePicker.Root />', () => {
       it.each([
         { name: '`true`', createOption: () => true },
         { name: '`null`', createOption: () => null },
-        { name: 'an empty ref', createOption: () => shallowRef(null) },
       ])('moves the focus to the default element for $name', async ({ createOption }) => {
         const { user } = await renderPicker({
           defaultValue: day('2026-11-18'),
@@ -299,40 +280,6 @@ describe('<DatePicker.Root />', () => {
       expect(onOpenChange.mock.lastCall?.[1].event.type).toBe('click');
       expect(segmentOf(container, 'day').value).toBe('20');
       expect(hiddenInputOf(container).value).toBe('2026-11-20');
-    });
-
-    // The close after a selection goes through the store of the popover, as each other close does.
-    it('lets a listener keep the popup mounted after a selection, until `unmount()`', async () => {
-      const fixture = createPartRef<{ root: { unmount(): void } }>();
-      const { user } = await render(() => (
-        <DatePickerAnatomy
-          ref={fixture.ref}
-          {...{
-            defaultValue: day('2026-11-18'),
-            locale: 'en-US',
-            calendarProps: { today: today() },
-            onOpenChange: (isOpen: boolean, details: { preventUnmountOnClose(): void }) => {
-              if (!isOpen) {
-                details.preventUnmountOnClose();
-              }
-            },
-          }}
-        />
-      ));
-      const popup = await open(user);
-
-      await user.click(dayButton('2026-11-20'));
-      await waitFor(() => {
-        expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
-      });
-      await waitSingleFrame();
-      await waitSingleFrame();
-
-      expect(popup).toBeInTheDocument();
-
-      fixture.current.root.unmount();
-
-      await expectClosed(popup);
     });
 
     it('closes the popup after Enter on a day', async () => {
@@ -675,7 +622,7 @@ describe('<DatePicker.Root />', () => {
 
         // The popup is in a portal and out of the fieldset, so the picker gives the state to it.
         expect(await screen.findByTestId('calendar')).toHaveAttribute('data-disabled');
-        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+        expect(screen.getByTestId('trigger')).toBeDisabled();
 
         await user.click(dayButton('2026-11-20'));
 

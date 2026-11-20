@@ -1,8 +1,5 @@
 <script lang="ts">
-import type {
-  PopoverTriggerProps,
-  PopoverTriggerState,
-} from '../../popover/trigger/PopoverTrigger.vue';
+import type { PopoverTriggerProps, PopoverTriggerState } from '../../popover/types';
 
 export interface DateRangePickerTriggerState extends PopoverTriggerState {}
 
@@ -10,10 +7,18 @@ export interface DateRangePickerTriggerState extends PopoverTriggerState {}
  * The props of `Popover.Trigger` that a date range picker needs. The trigger belongs to the root of
  * the picker, so it has no handle, no payload and no hover open.
  */
-export interface DateRangePickerTriggerProps extends Omit<
-  PopoverTriggerProps,
-  'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
-> {}
+export interface DateRangePickerTriggerProps
+  extends
+    Omit<
+      PopoverTriggerProps,
+      'as' | 'aria-label' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
+    >,
+    /* @vue-ignore */ NamedTrigger {}
+
+interface NamedTrigger {
+  /** The name of the trigger. With no name the trigger names its action and the value; `null` removes the name. */
+  'aria-label'?: string | null;
+}
 </script>
 
 <script setup lang="ts">
@@ -23,31 +28,31 @@ import { given } from '../../internals/givenAttributes';
 import { formatRangeText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
+import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DateRangePickerTriggerProps>(), {
-  as: 'button',
-  nativeButton: true,
   disabled: false,
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  useCastBooleanWarning('DateRangePicker.Trigger');
-}
-
 defineSlots<{
-  default(props: { state: DateRangePickerTriggerState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DateRangePickerTriggerState>;
+  default?(scope: { state: DateRangePickerTriggerState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: DateRangePickerTriggerState;
+  }): unknown;
 }>();
 
 const attrs = useAttrs();
+// Node and a browser can give another `Intl` text, and Vue keeps the text of the server while it
+// hydrates.
+const afterHydration = useAriaAfterHydration();
 const picker = useDateRangePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
 
@@ -81,9 +86,7 @@ function label() {
   return start === null || end === null ? 'Choose dates' : `Change dates, ${describe(start, end)}`;
 }
 
-// This part renders `Popover.Trigger` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Trigger` dynamic. Vue then renders `Popover.Trigger` again each time this part renders.
+// This part renders `Popover.Trigger` and makes no element of its own.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 
@@ -93,7 +96,7 @@ function triggerProps() {
   return {
     ...props,
     disabled: isDisabled.value,
-    'aria-label': label(),
+    'aria-label': afterHydration(label()) ?? undefined,
   };
 }
 
@@ -102,19 +105,12 @@ defineExpose({ element });
 
 <template>
   <PopoverTrigger
-    v-if="$slots.render"
     ref="trigger"
     v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
   >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+    <template v-if="$slots.element" #element="slotProps">
+      <slot name="element" v-bind="slotProps" />
     </template>
-  </PopoverTrigger>
-  <PopoverTrigger
-    v-else
-    ref="trigger"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
-  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

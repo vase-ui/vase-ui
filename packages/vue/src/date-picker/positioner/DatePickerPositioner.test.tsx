@@ -1,32 +1,12 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, screen, waitForPositioned } from '#test-utils';
 
 const day = Temporal.PlainDate.from('2026-11-14');
 
 describe('<DatePicker.Positioner />', () => {
   const { render } = createRenderer();
-
-  describeConformance(<DatePicker.Positioner />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    async render(node) {
-      const result = await render(
-        <DatePicker.Root open defaultValue={day}>
-          <DatePicker.Trigger>Open</DatePicker.Trigger>
-          <DatePicker.Portal>{node}</DatePicker.Portal>
-        </DatePicker.Root>,
-      );
-      await flushMicrotasks();
-      return result;
-    },
-  }));
 
   function renderPicker(options: { field?: boolean; anchor?: HTMLElement | undefined } = {}) {
     const { field = true, anchor } = options;

@@ -43,15 +43,15 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-
   &[data-instant] {
     transition: none;
   }
+}
+
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 .Viewport {
@@ -64,13 +64,11 @@
   height: 100%;
   padding: 0.5rem var(--viewport-inline-padding);
 
-  [data-previous],
-  [data-current] {
-    /* This freezes the width of the content while transitioning.
-       Width is set to the content area of the parent popup (--popup-width measures the border-box).
-       The 'previous` container receives the width of the previous content, while the `next` container
-        receives the width of the new content.
-    */
+  /* The content of a trigger. A `<Transition>` with the trigger id as the key keeps the old content
+     for its leave while the new content enters. */
+  .Content {
+    /* This freezes the width of the content while transitioning. --popup-width measures the
+       border-box of the popup. */
     width: calc(var(--popup-width) - 2 * var(--viewport-inline-padding));
     transform: translateX(0);
     opacity: 1;
@@ -79,23 +77,21 @@
       opacity calc(var(--animation-duration) / 2) var(--easing);
   }
 
-  &[data-activation-direction~='right'] [data-previous][data-ending-style] {
+  .ContentLeaving {
+    position: absolute;
+    top: 0.5rem;
+    left: var(--viewport-inline-padding);
+  }
+
+  &[data-activation-direction~='right'] .ContentLeaveTo,
+  &[data-activation-direction~='left'] .ContentEnterFrom {
     transform: translateX(-50%);
     opacity: 0;
   }
 
-  &[data-activation-direction~='right'] [data-current][data-starting-style] {
+  &[data-activation-direction~='right'] .ContentEnterFrom,
+  &[data-activation-direction~='left'] .ContentLeaveTo {
     transform: translateX(50%);
-    opacity: 0;
-  }
-
-  &[data-activation-direction~='left'] [data-previous][data-ending-style] {
-    transform: translateX(50%);
-    opacity: 0;
-  }
-
-  &[data-activation-direction~='left'] [data-current][data-starting-style] {
-    transform: translateX(-50%);
     opacity: 0;
   }
 }

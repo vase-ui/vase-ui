@@ -11,10 +11,9 @@ const Locked = defineComponent({
 });
 
 describe('useScrollLock on a server', () => {
-  it('renders its component and takes no lock, so it makes no registry', async () => {
+  it('renders its component and reads no document', async () => {
     const html = await renderToString(createSSRApp(Locked));
 
     expect(html).toBe('<div>content</div>');
-    expect(Symbol.for('vase-ui.scroll-lock') in globalThis).toBe(false);
   });
 });

@@ -69,7 +69,6 @@ function assertOpenChange(details: TimePicker.Root.OpenChangeEventDetails) {
     | 'none',
     TimePicker.Root.OpenChangeEventDetails['reason']
   >(details.reason);
-  expectType<() => void, typeof details.preventUnmountOnClose>(details.preventUnmountOnClose);
 }
 
 void assertOpenChange;
@@ -93,4 +92,3 @@ void value;
 // The actions are those of the popover.
 declare const actions: TimePicker.Root.Actions;
 expectType<() => void, typeof actions.close>(actions.close);
-expectType<() => void, typeof actions.unmount>(actions.unmount);

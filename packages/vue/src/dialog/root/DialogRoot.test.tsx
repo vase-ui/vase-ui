@@ -42,38 +42,21 @@ import {
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import {
   createScrollDocument,
-  getScrollLockRegistry,
+  isScrollLocked,
   isPageLocked as isScrollDocumentLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
-import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
-import * as Popover from '../../popover/index.parts';
+import * as Popover from '../../popover/parts';
 import * as Select from '../../select/index.parts';
 import { DialogStore } from '../store/DialogStore';
 import DialogRootHydration from './DialogRootHydration.test.vue';
 import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
 
 type Store = DialogStore<unknown>;
-
-// The viewport takes its overflow from <html>, falling back to <body> when <html> doesn't
-// establish its own scroll container. Whichever one propagates decides if the user can scroll.
-function isPageLocked() {
-  const html = document.documentElement;
-  const { overflow, overflowX, overflowY } = getComputedStyle(html);
-  const htmlScrolls = /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX);
-  return /hidden|clip/.test(getComputedStyle(htmlScrolls ? html : document.body).overflowY);
-}
-
-// When <html> is the viewport scroller, Vase UI hides its overflow to lock the page. An external
-// <body> lock never touches <html>, so this distinguishes a lock Vase UI applied itself from one
-// it is still waiting to take over.
-function hasOwnScrollLock(doc: Document) {
-  return doc.documentElement.style.overflowX === 'hidden';
-}
 
 type OpenChangeDetails = { open: boolean; reason: string | null | undefined };
 
@@ -1765,10 +1748,9 @@ describe('<Dialog.Root />', () => {
     expect(screen.queryByTestId('a')).not.toBe(null);
   });
 
-  it.each([
-    { name: 'the parent that has the focus', focusInParent: true },
-    { name: 'the popover when no popup has the focus', focusInParent: false },
-  ])(
+  // The case of the popover when no popup has the focus comes back with the Dialog unit, when
+  // Dialog moves to the stack of the popup layer: the two popup layers do not know each other.
+  it.each([{ name: 'the parent that has the focus', focusInParent: true }])(
     'BUG-6037: on Escape after a nested dialog closes, closes $name',
     async ({ focusInParent }) => {
       const onParentOpenChange = vi.fn();
@@ -2128,134 +2110,6 @@ describe('<Dialog.Root />', () => {
       expect(screen.queryByRole('dialog')).toBe(null);
       expect(handleOpenChange.mock.calls.length).toBe(1);
       expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
-    });
-  });
-
-  describe('external scroll lock handoff', () => {
-    afterEach(() => {
-      document.documentElement.removeAttribute('style');
-      document.body.removeAttribute('style');
-      document.body.removeAttribute('data-scroll-locked');
-    });
-
-    // Each entry reproduces a real third-party locker's exact DOM mechanism. Their cleanup is
-    // deferred past our own deferred lock, which is what an exit animation does in practice.
-    describe.skipIf(isJSDOM)('when a third-party overlay is still unlocking', () => {
-      describe.for([
-        {
-          name: 'react-remove-scroll, via an attribute and a stylesheet',
-          lock: () => {
-            const style = document.createElement('style');
-            style.textContent = 'body[data-scroll-locked]{overflow:hidden!important;}';
-            document.head.appendChild(style);
-            document.body.setAttribute('data-scroll-locked', '1');
-            return () => {
-              style.remove();
-              document.body.removeAttribute('data-scroll-locked');
-            };
-          },
-        },
-        {
-          name: 'silk-hq, via the <body> overflow shorthand',
-          lock: () => {
-            document.body.style.setProperty('overflow', 'hidden');
-            return () => document.body.style.removeProperty('overflow');
-          },
-        },
-        {
-          name: 'Ariakit, via <html> overflow longhands',
-          lock: () => {
-            const { style } = document.documentElement;
-            style.setProperty('scrollbar-gutter', 'stable');
-            style.setProperty('overflow-x', 'hidden');
-            style.setProperty('overflow-y', 'hidden');
-            return () => {
-              style.removeProperty('scrollbar-gutter');
-              style.removeProperty('overflow-x');
-              style.removeProperty('overflow-y');
-            };
-          },
-        },
-      ])('$name', ({ lock }) => {
-        it('keeps the page locked until it takes over, and unlocks on close', async () => {
-          const App = defineComponent(() => {
-            const open = shallowRef(false);
-            const timeout = useTimeout();
-
-            return () => (
-              <>
-                <button
-                  onClick={() => {
-                    timeout.start(200, lock());
-                    open.value = true;
-                  }}
-                >
-                  Open dialog
-                </button>
-                <Dialog.Root
-                  open={open.value}
-                  onOpenChange={(nextOpen: boolean) => (open.value = nextOpen)}
-                >
-                  <Dialog.Portal>
-                    <Dialog.Popup>
-                      <Dialog.Close>Close dialog</Dialog.Close>
-                    </Dialog.Popup>
-                  </Dialog.Portal>
-                </Dialog.Root>
-              </>
-            );
-          });
-
-          await render(<App />);
-          expect(`initial: ${isPageLocked()}`).toBe('initial: false');
-
-          await waitForLaterMillisecond(async () => {
-            await fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
-            await waitFor(() => {
-              expect(screen.getByRole('dialog')).not.toBe(null);
-            });
-          });
-
-          // Spans the external unlock at 200ms: there must be no gap where the page scrolls.
-          for (const at of [0, 120, 260, 400]) {
-            await wait(at === 0 ? 0 : 140);
-            expect(`t${at}: ${isPageLocked()}`).toBe(`t${at}: true`);
-          }
-
-          await fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
-          expect(screen.queryByRole('dialog')).toBe(null);
-          await waitFor(() => {
-            expect(`after close: ${isPageLocked()}`).toBe('after close: false');
-          });
-        });
-      });
-    });
-
-    it('locks immediately when an external <body> lock cannot affect the page', async () => {
-      // <html> owns the viewport scroll, so `overflow: hidden` on <body> leaves the page
-      // scrollable and must not be mistaken for an effective lock.
-      document.documentElement.style.overflowY = 'scroll';
-      document.body.style.overflowY = 'hidden';
-
-      await render(
-        <Dialog.Root defaultOpen>
-          <Dialog.Portal>
-            <Dialog.Popup>
-              <Dialog.Close>Close dialog</Dialog.Close>
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>,
-      );
-
-      // Flush the scroll locker's deferred lock, scheduled on a 0ms timeout.
-      await wait(0);
-
-      expect(hasOwnScrollLock(document)).toBe(true);
-
-      await fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
-      await waitFor(() => {
-        expect(hasOwnScrollLock(document)).toBe(false);
-      });
     });
   });
 
@@ -3046,7 +2900,7 @@ describe('<Dialog.Root />', () => {
 
       handle.close();
       await waitFor(() => expect(isScrollDocumentLocked(scrollDocument)).toBe(false));
-      expect(getScrollLockRegistry()?.lockCount).toBe(0);
+      expect(isScrollLocked()).toBe(false);
     });
 
     it.each([

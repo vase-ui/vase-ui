@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { Popover } from '@vase-ui/vue/popover';
-import { motion } from 'motion-v';
-import type { MotionProps } from 'motion-v';
+import { animate } from 'motion-v';
 import styles from './index.module.css';
+
+function enter(element: Element, done: () => void) {
+  void animate(element, { opacity: [0, 1], scale: [0.8, 1] }).then(done);
+}
+
+function leave(element: Element, done: () => void) {
+  void animate(element, { opacity: 0, scale: 0.8 }).then(done);
+}
 </script>
 
 <template>
@@ -10,17 +17,9 @@ import styles from './index.module.css';
     <Popover.Trigger :class="styles.Trigger">Trigger</Popover.Trigger>
     <Popover.Portal>
       <Popover.Positioner :class="styles.Positioner" :side-offset="8">
-        <Popover.Popup :class="styles.Popup" aria-label="Animated popover">
-          <template #render="{ props, state }">
-            <motion.div
-              v-bind="props as MotionProps"
-              :initial="{ opacity: 0, scale: 0.8 }"
-              :animate="{ opacity: state.open ? 1 : 0, scale: state.open ? 1 : 0.8 }"
-            >
-              Popup
-            </motion.div>
-          </template>
-        </Popover.Popup>
+        <Transition :css="false" appear @enter="enter" @leave="leave">
+          <Popover.Popup :class="styles.Popup" aria-label="Animated popover">Popup</Popover.Popup>
+        </Transition>
       </Popover.Positioner>
     </Popover.Portal>
   </Popover.Root>

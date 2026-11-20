@@ -62,11 +62,14 @@ describe('<DatePicker.Calendar />', () => {
         'true',
       );
     });
-    expect(
-      screen
-        .getAllByRole('gridcell')
-        .filter((cell) => cell.getAttribute('aria-selected') === 'true'),
-    ).toHaveLength(1);
+    // The popup is hidden until its first placement, and a role query skips a hidden element.
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByRole('gridcell')
+          .filter((cell) => cell.getAttribute('aria-selected') === 'true'),
+      ).toHaveLength(1);
+    });
   });
 
   it('gives a press on a day to the picker, with the reason of the calendar', async () => {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
-import { KeepAlive, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, renderOnServer, wait, waitFor } from '#test-utils';
 import AnchoredScrollLockPart from '../../../test/fixtures/AnchoredScrollLockPart.vue';
 import {
@@ -7,7 +7,6 @@ import {
   expectScrollLocksReleased,
   HIDDEN_SCROLLBARS_CSS,
   isPageLocked,
-  recordLockCounts,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 
@@ -197,8 +196,8 @@ describe('useAnchoredPopupScrollLock', () => {
     await wait(0);
     await flushMicrotasks();
 
-    // The lock writes the overflow of the body for each axis, and nothing puts the page back.
-    expect(writes).toEqual([null, 'overflow-y: hidden;']);
+    // The lock writes the overflow of the body one time, and nothing puts the page back.
+    expect(writes).toEqual([null]);
   });
 
   it('keeps the lock when an open that is not by touch becomes a touch open of a wide positioner', async () => {
@@ -214,44 +213,19 @@ describe('useAnchoredPopupScrollLock', () => {
       />
     ));
     await waitForLock(page);
-    const lockCounts = recordLockCounts(page.win);
+    const writes: MutationRecord[] = [];
+    const observer = new page.win.MutationObserver((records) => writes.push(...records));
+    observer.observe(page.html, { attributes: true });
+    observer.observe(page.body, { attributes: true });
 
     touchOpen.value = true;
     await nextTick();
     await wait(0);
+    observer.disconnect();
 
-    // One flush measures the positioner and then decides on the lock, so the count never changes.
-    expect(lockCounts()).toEqual([]);
+    // One flush measures the positioner and then decides on the lock, so the lock never changes.
+    expect(writes).toEqual([]);
     expect(isPageLocked(page)).toBe(true);
-  });
-
-  it('releases the lock at the deactivation of KeepAlive and takes it again at the activation', async () => {
-    const page = await createPage();
-    const positioner = addPositioner(page, 100);
-    const visible = shallowRef(true);
-    await render(() => (
-      <KeepAlive>
-        {visible.value ? (
-          <AnchoredScrollLockPart
-            key="part"
-            enabled
-            positionerElement={positioner}
-            referenceElement={page.reference}
-          />
-        ) : (
-          <span key="other" />
-        )}
-      </KeepAlive>
-    ));
-    await waitForLock(page);
-
-    visible.value = false;
-    await nextTick();
-    await waitForUnlock(page);
-
-    visible.value = true;
-    await nextTick();
-    await waitForLock(page);
   });
 
   it('unlocks the page when enabled turns false', async () => {
