@@ -39,7 +39,8 @@ const props = withDefaults(defineProps<ComboboxRootProps<Value, Multiple, Item>>
 const emit = defineEmits<{
   /**
    * The user changes the value. `details.cancel()` keeps the value as it was. An action that gives
-   * the value that the root has, such as a pick of the selected item, sends no event.
+   * the value that the root has sends no event, such as a pick of the selected item without
+   * `multiple`.
    */
   valueChange: [value: ValueChange, details: ComboboxRootChangeEventDetails];
   /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
