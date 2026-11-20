@@ -1,5 +1,5 @@
 ---
-order: 3
+order: 4
 description: The state of each Vase UI family against Base UI.
 ---
 
@@ -23,11 +23,11 @@ This page shows the state of each Vase UI family against Base UI. A family is on
 Each source file, test and API row of Base UI needs a counterpart in Vase UI, or an exception row. A row has a reason and one of four kinds:
 
 - `replaced`: another Vase UI test covers the thing. The row names that test.
-- `not-applicable`: the thing is for something that only React has. The kind also covers an upstream file that no Base UI component imports.
+- `not-applicable`: Vue or the browser gives the thing in another form, or the thing is for something that only React has. The reason names the other form, or why the thing does not apply. The kind also covers an upstream file that no Base UI component imports.
 - `engine`: the case does not run in one browser engine because of the browser. The row names the engine and links to a browser bug or an upstream issue.
 - `waits-on`: the thing waits for an upstream file or folder that Vase UI does not have yet. The row names that path. A row that names a source file waits for the file itself.
 
-A function that returns a different type from the type that Base UI documents has a row with the Vase UI type and the reason.
+A member that Vase UI adds to a Base UI part, such as the event of a `v-model`, has a row with the reason. A function that returns a different type from the type that Base UI documents has a row with the Vase UI type and the reason.
 
 <ParityFamilies />
 
