@@ -12,79 +12,75 @@ A guide to composing Vase UI components with your own Vue components.
 A part renders one element. Two ways replace it:
 
 - The `as` prop takes a tag or a component. The part gives it the attributes, the listeners and the content of its own element.
-- The `element` slot gets `props`, `elementRef` and `state`. Render your own element or component in it, with `v-bind="props"` and `:ref="elementRef"`. The slot gives full control: set a prop of a component, or make the content or a class from `state`.
+- The [`element` slot](#the-element-slot) gives full control: render your own element or component in it.
 
 When a part has `as` and the `element` slot, the slot wins.
 
-For example, a tab renders a `<button>` by default. The sample below gives a component to `as` for the first tab. The second tab sets the `size` prop of the component, so it uses the slot.
+For example, a tab renders a `<button>`. The first tab of the sample gives a component to `as`. The second tab sets the `size` prop of the component, so it uses the slot.
 
 <<< ../examples/composition/CustomTab.vue{9-14}
 
-A native form control, a form element and an image have only the `element` slot. Examples are `Input`, `Checkbox`, `Form`, `Field.Label` and `Avatar.Image`.
+A part that is a native form control, a form or an image has no `as`: `Input`, `Checkbox`, `Radio`, `Switch`, `Form`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. Use the `element` slot.
 
-With `strictTemplates`, the attributes of a part have the types of its default element. The type check can refuse an attribute that this element does not have, such as `href` on `<Separator as="a">`. Give such an attribute on your element in the `element` slot.
+The component needs one root element, and Vue gives the attributes to it. The part reads the element from the `element` that the component exposes, else from its root element. A component in [Vapor mode](#vapor-mode) has no root element for the part, so it must expose `element`. Expose `element` as a ref, so that the part sees each change of it.
 
-The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element, as for `RouterLink` and `NuxtLink`. The part cannot read the root element of a component in [Vapor mode](#vapor-mode), so that component must expose `element`. While the exposed `element` is `null`, the part has no element. If the component sets `element` after its mount, expose `element` as a ref so that the part sees the change.
-
-Under the `element` slot, the part does not render its default slot. Put the content in your element. With `as`, the part keeps its content and its own nodes, such as the hidden text of `Progress.Root`.
-
-The sample below sets the `size` prop of a component in the `element` slot of `Menu.Trigger`:
-
-<<< ../examples/composition/CustomTrigger.vue{9-11}
+With `as`, the part keeps its content and its own nodes, such as the hidden text of `Progress.Root`.
 
 ## Composing multiple components
 
-To compose more than one part with your own components, nest the slots as deeply as you need. Tooltip is a common example. Each trigger in the sample has the `element` slot.
+To compose more than one part, nest the `element` slots. In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, which renders `Menu.Trigger`, which renders `MyButton`:
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
-In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`.
+## How attributes are merged
 
-## How props are merged
+A part takes the props that it declares. It gives each other attribute and listener to its element, merged with its own by the rules of Vue:
 
-With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the component that you give to `as` or render in its slot. The toolbar then keeps the element in its keyboard navigation.
+- Vue joins the `class` values and merges the `style` values.
+- Vue calls each listener.
+- For each other attribute, the value that you give wins. A value of `undefined` or `null` also wins, and Vue then writes no attribute.
 
-An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Select.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. A part with the `element` slot gives each attribute to its element as it is, `undefined` too. `Avatar.Image` keeps `alt=""` for an `alt` that is `undefined` or `null`.
+Set a prop on the part, and not on the component in `as` or in the slot. For example, set `disabled` on `Toolbar.Button`: the toolbar then keeps the button in its keyboard navigation.
 
-A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop.
+In the `element` slot, the attributes that you write beside `v-bind="props"` follow the same rules, in the order of the template: the later value wins. To merge in a script or a render function, use [`mergeProps`](https://vuejs.org/api/render-function.html#mergeprops) of Vue. It merges in the order of its arguments.
 
-A blank ID reference attribute also counts as not set: `aria-describedby`, `aria-controls`, `aria-activedescendant`, `aria-owns`, `aria-details`, `aria-errormessage`, `aria-flowto` or `for`. Such a value refers to no element, so the part keeps its own value. A dialog thus keeps its description, and a trigger still names its popup in `aria-controls`. A click on `Field.Label` still moves the focus to the control. A part that declares `aria-describedby` as a prop, such as `TimeClock.Face`, follows the same rule.
+<<< ../examples/composition/MergedProps.vue{14-18,22-25}
 
-A part keeps its own id when the `id` prop or attribute is empty or contains only white space. A title can then still name its dialog, and a label can still refer to its control. HTML requires a nonempty id with no ASCII white space.
+The `<button>` gets:
 
-These rules apply to the props and attributes you give to a part. On the element in the `element` slot, an `id`, a name or an ID reference that you write after `v-bind="props"` wins even if it is blank or `undefined`. The same rule applies to those attributes in a later argument to `mergeProps`.
+- `class="menu-trigger toolbar-button"`.
+- `style="color: red; padding: 4px;"`: the last argument wins.
+- The two click listeners. `handleMenuClick` runs first, because it is in the first argument.
 
-The slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class and the style. Bind it on your element with `v-bind="props"`. The `element` slot gives the `ref` setter apart, as `elementRef`.
-
-Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
-
-A part can name another part by its `id`: a trigger names its panel, and a dialog names its title. When an `id` that you write in the slot wins, the part names that `id` after the named part mounts, and follows each change of it. An empty `id` in the slot gives the element no `id`, so no part names it. The server HTML names the `id` that the part gives. To make the server HTML name the element, give the `id` to the part and not to the slot.
-
-For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). To stop an event before the part gets it, see [Stop a native event before a part gets it](/handbook/customization#stop-a-native-event-before-a-part-gets-it). For example, this toolbar button renders a menu trigger in its `element` slot:
-
-<<< ../examples/composition/MergedProps.vue{14-18,22-26}
-
-The rendered `<button>` gets:
-
-- `class="menu-trigger toolbar-button"`: class names are combined, and the rightmost set comes first.
-- `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips the listeners of that element that run after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
-
-An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call the setter of the slot in a function ref: `:ref="(element) => { elementRef(element); own = element }"`.
+To stop an event before the part gets it, see [Stop a native event before a part gets it](/handbook/customization#stop-a-native-event-before-a-part-gets-it).
 
 ## Changing the default rendered element
 
-You can also use the `as` prop to change the element that a part renders.
-
-For example, `<Accordion.Header>` renders an `<h3>` element by default. The sample below renders it as an `<h2>` element, so that it fits the heading hierarchy of the page.
+The `as` prop also changes the tag of a part. For example, `Accordion.Header` renders an `<h3>`. The sample renders an `<h2>`, to fit the heading levels of the page:
 
 <<< ../examples/composition/HeadingLevel.vue{8}
 
-Each Vase UI part renders the most appropriate element by default. In most cases, render a different element only when you have a reason for it.
+Each part renders the most applicable element. Change it only when you have a reason.
 
-## Other slot props
+## The element slot
 
-Some parts give the `element` slot more props. `TimePicker.Item` gives `text`, its time in the locale of the picker:
+The `element` slot gets three props:
+
+- `props`: the attributes, the listeners, the class and the style of the part, merged with yours. Bind them with `v-bind="props"`.
+- `elementRef`: a function ref. Bind it with `:ref="elementRef"`, so that the part gets your element.
+- `state`: the state of the part. Use it for a class, a style or the content.
+
+The part does not render its default slot in the `element` slot. Put the content in your element.
+
+<<< ../examples/composition/CustomTrigger.vue{9-11}
+
+Your element can be a component: it exposes `element`, or its root element is the element of the part. For a router link, use the `custom` form of `RouterLink` or `NuxtLink`, and render a native `<a>` in the `element` slot. The [Navigation Menu](/components/navigation-menu) page shows this.
+
+An element takes one `ref`. To keep the ref of the part and add one of your own, call `elementRef` in a function ref: `:ref="(element) => { elementRef(element); own = element }"`.
+
+## Slots and template refs
+
+Some parts give more slot props. `TimePicker.Item` gives `text`, its time in the locale of the picker:
 
 <<< ../examples/composition/ElementSlotText.vue{10-14}
 
@@ -92,73 +88,57 @@ The `element` slot of `Slider.Thumb` gives its range input as `inputProps` and `
 
 <<< ../examples/composition/ThumbElementSlot.vue{10-14}
 
-## Element refs
-
-A template ref on a part gives you its public instance. For a part that renders an element, read `element` to get the DOM node.
-Some parts expose another element or an action. For example, `NumberField.Root` exposes its hidden input as `inputElement`.
-If the part removes its element, its exposed `element` becomes `null`.
+A template ref on a part gives the members that the part exposes. `element` is its DOM element, or `null` while the part renders no element. Some parts expose more, such as `close()` of `Menu.Root`.
 
 ## Wrap a part
 
-Declare only your own props in a wrapper. A prop of the part that you do not declare reaches the part as an attribute, and the part keeps its default or the value of its parent.
+Declare only your own props in a wrapper. Each prop of the part that you do not declare reaches the part as an attribute. The part then keeps its default, or the value of its parent.
 
-Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`. If you declare a Boolean prop or a model of the part, give it the default `undefined`. An explicit `false` still reaches the part. This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
+Vue sets an absent Boolean prop to `false`, unless you give it a default. If you declare a Boolean prop of the part, give it the default `undefined`. Else the wrapper changes the part: `modal` of `Dialog.Root` becomes `false`, and `Accordion.Panel` ignores the `keepMounted` of its root. An explicit `false` still reaches the part.
 
 <<< ../examples/composition/MyAccordionPanelDefaults.vue{11-14}
 
-An absent prop and `false` give different results in three cases.
+Do not bind an attribute that you declared and that can be `undefined`, such as `:aria-labelledby="labelledby"`. A value of `undefined` removes the value of the part, such as the title that names a dialog. Leave the attribute undeclared, and Vue passes it on only when the caller gives it.
 
-### Parent or internal state
+## Portals, Transition and KeepAlive
 
-- `Accordion.Panel`: `keepMounted` and `hiddenUntilFound` follow the root when absent. An explicit `false` overrides the root value of that prop.
-- `Menu.Trigger`: absent `openOnHover` lets the pointer open a menu while another menu in the menubar is open. An explicit `false` disables this behavior.
-- `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
-- `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
-- `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
-- `Calendar.Root` and `RangeCalendar.Root`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
-- `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
+A `Portal` part renders its content in a Vue [`<Teleport>`](https://vuejs.org/guide/built-ins/teleport.html), in another place of the document. It renders no element of its own, so an attribute on it reaches no element. Its props:
 
-`Field.Root` treats `invalid` the same when it is absent or `false`.
+- `to`: the target, a CSS selector, an element or a shadow root. With no `to`, the target of the nearest portal above, else `<body>`. While `to` is `null`, such as a template ref before its mount, the portal renders nothing. A change of `to` moves the content.
+- `disabled`: renders the content in its place, also on the server.
+- `defer`: moves the content after the other content of the same update mounts.
+- `keepMounted`: the closed popup stays in the DOM, with `hidden` and `inert`.
 
-### Controlled state
+```vue-html
+<Dialog.Portal to="#overlays">
+  <Dialog.Popup>Account settings</Dialog.Popup>
+</Dialog.Portal>
+```
 
-A value of `false` makes these props controlled:
+Put a `<Transition>` in the portal, around the part that it animates. See [Animation](/handbook/animation).
 
-- `open` on Collapsible, Dialog, Alert Dialog, Drawer, Popover, Tooltip, Preview Card, Menu, Context Menu, Select, Combobox, Autocomplete, Date Picker, Date Range Picker and Time Picker roots, and `Menu.SubmenuRoot`.
-- `modelValue` on `Checkbox`, `Switch`, `Menu.CheckboxItem` and `Toggle`.
+`KeepAlive` takes the elements of a held part out of the document. A part has no code for a hold:
 
-A defined model prop gives the parent control, even without an update listener. With `v-model:open`, a parent can take control after mount by setting its ref to `true` or `false`.
-
-When the parent sets one of these Boolean props to `undefined`, the part keeps the last value and accepts local changes. A wrapper can forward `undefined` with an update listener and still leave the part in control.
-
-Set a popup root’s `triggerId` to `null` to clear its active trigger. The popup can stay open.
-
-### A default of true
-
-`undefined` keeps the `true` default of the part. A wrapper with no default, or with the default `false`, disables it.
-
-- `modal` on Dialog, Drawer, Menu and Select roots, and `Menubar`.
-- `loopFocus` on Menu roots and submenus, Context Menu, Menubar, Combobox, Autocomplete, `Tabs.List`, Toggle Group and Toolbar.
-- `highlightItemOnHover` on Menu, Select, Combobox, Autocomplete and Context Menu roots, and `Menu.SubmenuRoot`.
-- `openOnInputClick` on `Combobox.Root`.
-- `closeOnClick` on `Menu.Item` and `Tooltip.Trigger`.
-- `openOnHover` on `Menu.SubmenuTrigger`.
-- `alignItemWithTrigger` on `Select.Positioner`.
-- `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
-- `pushPanels` on `Resizable.Root`.
-- `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
-- `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
+- A held part gets no event.
+- A held control has no form. It is not in the form data, it does not stop a submit, and a reset does not change it. When it comes back, it has the same value and belongs to its form again.
+- A toolbar moves its tab stop to an item that is in the document, so that <kbd>Tab</kbd> still reaches the toolbar.
 
 ## Vapor mode
 
-Vase UI parts are ordinary Vue components. An application in Vapor mode renders them with the `vaporInteropPlugin` of Vue.
+Vase UI parts are Vue components. An application in Vapor mode renders them with the `vaporInteropPlugin` of Vue.
 
-In a Vapor component (`<script setup vapor>`), bind the ref setter by name, beside `v-bind="props"`: `:ref="elementRef"` in the `element` slot. Vapor does not apply the `ref` key of a bound object. Vue shows no warning. Without `:ref`, the part gets no element.
+- In the `element` slot, bind `elementRef` with `:ref`. Vapor ignores a `ref` key in the object of `v-bind`.
+- A Vapor component that you give to `as`, or render in the `element` slot, must expose its element: `defineExpose({ element })`, with `element` a template ref of its root element. A Vapor component has no root element that the part can read. [useElement](/utils/use-element) gives such a component its `element`.
 
-The rule applies to each element and each component that gets `props`. With nested slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipRef">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="elementRef"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
+## Differences from Base UI
 
-A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to the slots, also when the component that renders the part is not in Vapor mode.
-
-A component that you build with [useElement](/utils/use-element) exposes `element`, and its template binds `setElement` by name on its element.
-
-In a Vapor wrapper, give each optional Boolean prop of the part that you declare the default `undefined`.
+| Base UI                                                                    | Vase UI                                                                                                                                                 |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `render` with an element, such as `render={<h2 />}`                        | The `as` prop, with a tag or a component.                                                                                                               |
+| `render` with a function of the props and the state                        | The `element` slot, with `props`, `elementRef` and `state`.                                                                                             |
+| A component in `render` takes a `ref` and spreads its props on its element | A component in `as` or in the `element` slot gets the attributes as fallthrough attributes. It exposes `element`, else its root element is the element. |
+| `ref` on a part gives its element                                          | A template ref on a part gives its exposed members. Read `element`.                                                                                     |
+| `mergeProps` and `mergePropsN`                                             | `mergeProps` of Vue: `import { mergeProps } from 'vue'`.                                                                                                |
+| `useRender`                                                                | [useElement](/utils/use-element) and the `element` slot in your template.                                                                               |
+| A `Portal` part renders a `<div>`                                          | A `Portal` part renders a `<Teleport>` and no element.                                                                                                  |
+| `container` of a `Portal` part: an element, a shadow root or a ref         | `to`: a CSS selector, an element or a shadow root. With no `to`, the target of the nearest portal above, else `<body>`.                                 |
