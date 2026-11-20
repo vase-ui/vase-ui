@@ -76,11 +76,31 @@ The `modal` prop of `Popover.Root` has three values:
 
 A modal popover keeps the focus only with a `Popover.Close`, because a user of a touch screen reader needs a way out. You can hide the close button with your own CSS. A popover that a hover opened is not modal until a press on its trigger.
 
-## Style hooks
+## Styling
 
-- `Popover.Trigger`: `[aria-expanded="true"]` while the popover is open for it, `data-pressed` when a press opened it, and `:disabled`.
-- `Popover.Positioner`, `Popover.Popup` and `Popover.Arrow`: `data-side` and `data-align`.
-- `Popover.Popup`: `data-instant` when an animation should not run: `click` (a key on the trigger), `dismiss` (Escape), `focus` (the focus left) and `trigger-change` (a move to another trigger).
+Select the states of the parts with these selectors:
+
+| Selector                      | On                       | State                                                                                                                                                      |
+| ----------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[aria-expanded="true"]`      | trigger                  | The popover is open for this trigger.                                                                                                                      |
+| `[data-pressed]`              | trigger                  | A press opened the popover.                                                                                                                                |
+| `:disabled`                   | trigger                  | The trigger is disabled. A trigger that is not a button has `[aria-disabled="true"]`.                                                                      |
+| `[data-side]`, `[data-align]` | positioner, popup, arrow | The side of the anchor and the alignment of the popup: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`, and `start`, `center` or `end`.   |
+| `[data-anchor-hidden]`        | positioner               | The anchor is out of view.                                                                                                                                 |
+| `[data-uncentered]`           | arrow                    | The arrow cannot point at the center of the anchor.                                                                                                        |
+| `[data-instant]`              | popup, viewport          | An animation should not run: `click` (a key on the trigger), `dismiss` (Escape), `focus` (the focus left) or `trigger-change` (a move to another trigger). |
+| `[data-activation-direction]` | viewport                 | The side of the new trigger from the old one, such as `right down`.                                                                                        |
+| `[hidden]`                    | popup, backdrop          | The popover is closed, with `keepMounted`.                                                                                                                 |
+
+These CSS variables give the sizes and the place:
+
+| Variable                                    | On         | Value                                                                      |
+| ------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `--anchor-width`, `--anchor-height`         | positioner | The size of the anchor.                                                    |
+| `--available-width`, `--available-height`   | positioner | The room from the anchor to the edge of the collision boundary.            |
+| `--transform-origin`                        | positioner | The point that the popup grows from: its arrow, or its edge at the anchor. |
+| `--positioner-width`, `--positioner-height` | positioner | The size of the popup, with a `Popover.Viewport`.                          |
+| `--popup-width`, `--popup-height`           | popup      | The old size, then the new size, while the popup moves to another trigger. |
 
 ## Server render
 
@@ -284,4 +304,4 @@ Creates a handle that connects a `<Popover.Root>` with detached `<Popover.Trigge
 
 <ApiReference name="Popover.Handle" :heading-level="4" />
 
-While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
+While a root is mounted, `open()` throws when the root has no trigger with that `id`.
