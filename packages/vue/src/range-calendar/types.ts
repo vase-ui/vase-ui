@@ -26,9 +26,10 @@ export interface RangeCalendarRootProps<
   Value extends DateValue = Temporal.PlainDate,
 > extends CalendarBaseProps {
   /**
-   * The first and the last day of the range. `v-model` binds it. A new end has the kind, the time,
-   * the zone and the calendar of the end that it replaces, else of the other end, else of
-   * `defaultValue`, else of the last end.
+   * The first and the last day of the range. `v-model` binds it. `[start, null]` is a range in
+   * progress, and `[null, null]` is no range. A new end has the kind, the time, the zone and the
+   * calendar of the end that it replaces, else of the other end, else of `defaultValue`, else of the
+   * last end. With none of them, it is a `Temporal.PlainDate`.
    */
   modelValue?: readonly [Value | null, Value | null] | undefined;
   /** The range at the mount of an uncontrolled calendar. It also gives the kind of a new end. */

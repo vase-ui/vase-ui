@@ -19,6 +19,7 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
         >&lsaquo;</Calendar.PreviousButton
       >
       <Calendar.ViewTrigger
+        aria-description="Shows the years, or the months again"
         class="h-8 cursor-pointer rounded-md px-3 font-semibold outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white"
       />
       <Calendar.NextButton

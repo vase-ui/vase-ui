@@ -1,6 +1,6 @@
 {
   "standard": ["https://www.w3.org/WAI/ARIA/apg/patterns/slider/"],
-  "reason": "Base UI has no clock face. A clock face is a common touch control for a time of day.",
+  "reason": "A clock face is a common touch control for a time of day. The WAI-ARIA Authoring Practices have no clock pattern, so the face is a slider.",
   "parts": ["Root", "Face", "Hand", "Number", "DayPeriod", "ViewTrigger"],
   "types": [
     "TimeClock.Root.ChangeEventReason",

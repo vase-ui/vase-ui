@@ -3,7 +3,7 @@
     "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/",
     "https://www.w3.org/WAI/ARIA/apg/patterns/grid/"
   ],
-  "reason": "Base UI has no calendar. A person selects a day, or a month, in a grid and moves in it with the keys of the date picker dialog pattern, and the calendar gives Temporal values to a form.",
+  "reason": "A person selects a day or a month in a grid, with the keys of the date picker dialog pattern. The value is a `Temporal` object.",
   "parts": [
     "Root",
     "PreviousButton",

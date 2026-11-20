@@ -86,6 +86,12 @@ import type {
 /**
  * Groups all parts of the calendar.
  * Renders a `<div>` element.
+ * @selector `[data-view]` What the grid shows: `day`, `month` or `year`.
+ * @selector `[data-navigation-direction]` The side of the last move of the page: `previous`, `next` or `none`.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Root: typeof CalendarRoot = CalendarRoot;
 export namespace Root {
@@ -100,8 +106,13 @@ export namespace Root {
 }
 
 /**
- * A button that shows the page before.
+ * A button that shows the page before. A hold of the button repeats the move.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button or the calendar is disabled, and the button is a native button.
+ * @selector `[aria-disabled="true"]` The page is at `min`, or the button is another element and is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const PreviousButton: typeof CalendarPreviousButton = CalendarPreviousButton;
 export namespace PreviousButton {
@@ -110,8 +121,13 @@ export namespace PreviousButton {
 }
 
 /**
- * A button that shows the page after.
+ * A button that shows the page after. A hold of the button repeats the move.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button or the calendar is disabled, and the button is a native button.
+ * @selector `[aria-disabled="true"]` The page is at `max`, or the button is another element and is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const NextButton: typeof CalendarNextButton = CalendarNextButton;
 export namespace NextButton {
@@ -120,8 +136,14 @@ export namespace NextButton {
 }
 
 /**
- * A button that shows the grid of months or of years, and the days again.
+ * A button that shows the grid of months or of years, and then the first view again.
  * Renders a `<button>` element.
+ * @selector `[data-active]` The grid shows the view of the trigger.
+ * @selector `:disabled` The trigger is a native button, and it is disabled: by its prop, by the calendar, or because the calendar shows days only.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and it is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const ViewTrigger: typeof CalendarViewTrigger = CalendarViewTrigger;
 export namespace ViewTrigger {
@@ -132,6 +154,11 @@ export namespace ViewTrigger {
 /**
  * Renders the months of the page, one for each item of its slot `month`.
  * Renders a `<div>` element, only in the view of days.
+ * @selector `[data-navigation-direction]` The side of the last move of the page: `previous`, `next` or `none`.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Months: typeof CalendarMonths = CalendarMonths;
 export namespace Months {
@@ -142,6 +169,10 @@ export namespace Months {
 /**
  * Groups the parts of one month of the page.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Month: typeof CalendarMonth = CalendarMonth;
 export namespace Month {
@@ -152,6 +183,10 @@ export namespace Month {
 /**
  * The name of the month. It names the grid of the month.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Caption: typeof CalendarCaption = CalendarCaption;
 export namespace Caption {
@@ -162,6 +197,10 @@ export namespace Caption {
 /**
  * A select of the month of the page.
  * Renders a `<select>` element.
+ * @selector `:disabled` The calendar is disabled, or the calendar shows no month.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const MonthSelect: typeof CalendarMonthSelect = CalendarMonthSelect;
 export namespace MonthSelect {
@@ -172,6 +211,10 @@ export namespace MonthSelect {
 /**
  * A select of the year of the page.
  * Renders a `<select>` element.
+ * @selector `:disabled` The calendar is disabled, or the calendar shows no month.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const YearSelect: typeof CalendarYearSelect = CalendarYearSelect;
 export namespace YearSelect {
@@ -182,6 +225,10 @@ export namespace YearSelect {
 /**
  * The grid of the days of a month.
  * Renders a `<table>` element.
+ * @selector `[aria-disabled="true"]` The calendar is disabled.
+ * @selector `[aria-readonly="true"]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Grid: typeof CalendarGrid = CalendarGrid;
 export namespace Grid {
@@ -192,6 +239,10 @@ export namespace Grid {
 /**
  * The head of the grid.
  * Renders a `<thead>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const GridHeader: typeof CalendarGridHeader = CalendarGridHeader;
 export namespace GridHeader {
@@ -202,6 +253,10 @@ export namespace GridHeader {
 /**
  * The row of the names of the days.
  * Renders a `<tr>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const GridHeaderRow: typeof CalendarGridHeaderRow = CalendarGridHeaderRow;
 export namespace GridHeaderRow {
@@ -212,6 +267,10 @@ export namespace GridHeaderRow {
 /**
  * The name of a day of the week.
  * Renders a `<th>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Weekday: typeof CalendarWeekday = CalendarWeekday;
 export namespace Weekday {
@@ -222,6 +281,10 @@ export namespace Weekday {
 /**
  * The head of the column of week numbers.
  * Renders a `<th>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const WeekNumberHeader: typeof CalendarWeekNumberHeader = CalendarWeekNumberHeader;
 export namespace WeekNumberHeader {
@@ -232,6 +295,10 @@ export namespace WeekNumberHeader {
 /**
  * The weeks of the grid.
  * Renders a `<tbody>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const GridBody: typeof CalendarGridBody = CalendarGridBody;
 export namespace GridBody {
@@ -242,6 +309,10 @@ export namespace GridBody {
 /**
  * A row of days.
  * Renders a `<tr>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Week: typeof CalendarWeek = CalendarWeek;
 export namespace Week {
@@ -252,6 +323,11 @@ export namespace Week {
 /**
  * The number of a week.
  * Renders a `<th>` element.
+ * @selector `[data-week-number]` The number of the week, such as `[data-week-number="1"]`.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const WeekNumber: typeof CalendarWeekNumber = CalendarWeekNumber;
 export namespace WeekNumber {
@@ -262,6 +338,16 @@ export namespace WeekNumber {
 /**
  * A cell of the grid for one day.
  * Renders a `<td>` element.
+ * @selector `[aria-selected="true"]` The day is selected.
+ * @selector `[data-disabled]` The day takes no focus and no selection: the calendar is disabled, or `min`, `max` or `disabledDates` disables the day.
+ * @selector `[data-unavailable]` `unavailableDates` matches the day.
+ * @selector `[data-hidden]` The day has no button.
+ * @selector `[data-today]` The day is today.
+ * @selector `[data-outside-month]` The day is in the month before or after the month of its page.
+ * @selector `[data-range-start]` The day is the first day of the range of `RangeCalendar.Root`.
+ * @selector `[data-range-end]` The day is the last day of the range of `RangeCalendar.Root`.
+ * @selector `[data-range-middle]` The day is between the two ends of the range of `RangeCalendar.Root`.
+ * @selector `[data-<modifier>]` A rule of `modifiers` matches the day, such as `[data-holiday]` for the rule `holiday`.
  */
 export const Day: typeof CalendarDay = CalendarDay;
 export namespace Day {
@@ -272,6 +358,16 @@ export namespace Day {
 /**
  * The button of a day, which selects it.
  * Renders a `<button>` element, and no element for a hidden day.
+ * @selector `[data-selected]` The day is selected.
+ * @selector `[aria-current="date"]` The day is today.
+ * @selector `:disabled` The button is a native button, and the day is disabled.
+ * @selector `[aria-disabled="true"]` The day is unavailable, or the button is another element and the day is disabled.
+ * @selector `[data-unavailable]` `unavailableDates` matches the day.
+ * @selector `[data-outside-month]` The day is in the month before or after the month of its page.
+ * @selector `[data-range-start]` The day is the first day of the range of `RangeCalendar.Root`.
+ * @selector `[data-range-end]` The day is the last day of the range of `RangeCalendar.Root`.
+ * @selector `[data-range-middle]` The day is between the two ends of the range of `RangeCalendar.Root`.
+ * @selector `[data-<modifier>]` A rule of `modifiers` matches the day, such as `[data-holiday]` for the rule `holiday`.
  */
 export const DayButton: typeof CalendarDayButton = CalendarDayButton;
 export namespace DayButton {
@@ -282,6 +378,10 @@ export namespace DayButton {
 /**
  * The grid of the months of a year.
  * Renders a `<div>` element, only in the view of months.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const MonthGrid: typeof CalendarMonthGrid = CalendarMonthGrid;
 export namespace MonthGrid {
@@ -292,6 +392,10 @@ export namespace MonthGrid {
 /**
  * A row of month cells.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const MonthGridRow: typeof CalendarMonthGridRow = CalendarMonthGridRow;
 export namespace MonthGridRow {
@@ -302,6 +406,10 @@ export namespace MonthGridRow {
 /**
  * A month of the grid of months.
  * Renders a `<button>` element.
+ * @selector `[aria-selected="true"]` A selected value is in the month.
+ * @selector `[aria-current="date"]` Today is in the month.
+ * @selector `:disabled` The cell is a native button, and the calendar, `min`, `max` or `disabledMonths` disables the month.
+ * @selector `[aria-disabled="true"]` The cell is another element, and the month is disabled.
  */
 export const MonthCell: typeof CalendarMonthCell = CalendarMonthCell;
 export namespace MonthCell {
@@ -312,6 +420,10 @@ export namespace MonthCell {
 /**
  * The grid of a page of years.
  * Renders a `<div>` element, only in the view of years.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const YearGrid: typeof CalendarYearGrid = CalendarYearGrid;
 export namespace YearGrid {
@@ -322,6 +434,10 @@ export namespace YearGrid {
 /**
  * A row of year cells.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const YearGridRow: typeof CalendarYearGridRow = CalendarYearGridRow;
 export namespace YearGridRow {
@@ -332,6 +448,10 @@ export namespace YearGridRow {
 /**
  * A year of the grid of years.
  * Renders a `<button>` element.
+ * @selector `[aria-selected="true"]` A selected value is in the year.
+ * @selector `[aria-current="date"]` Today is in the year.
+ * @selector `:disabled` The cell is a native button, and the calendar, `min`, `max` or `disabledYears` disables the year.
+ * @selector `[aria-disabled="true"]` The cell is another element, and the year is disabled.
  */
 export const YearCell: typeof CalendarYearCell = CalendarYearCell;
 export namespace YearCell {
@@ -342,6 +462,10 @@ export namespace YearCell {
 /**
  * A live region for text about the calendar.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day and no month is selected.
  */
 export const Footer: typeof CalendarFooter = CalendarFooter;
 export namespace Footer {
