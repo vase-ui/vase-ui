@@ -1,0 +1,10 @@
+{
+  "standard": [
+    "https://www.rfc-editor.org/info/bcp47",
+    "https://tc39.es/ecma402/#sec-defaultlocale",
+    "https://vuejs.org/guide/components/provide-inject.html",
+    "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch"
+  ],
+  "reason": "Base UI has no provider for the locale. A developer gives the locale of the page once, and each part below the provider formats its text in that locale, on the server and in the browser.",
+  "parts": ["LocaleProvider"]
+}
