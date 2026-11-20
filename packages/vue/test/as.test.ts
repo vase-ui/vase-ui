@@ -9,6 +9,7 @@ import { waitFor } from './waitFor';
 const TAGS = {
   'Avatar.Root': 'span',
   'Avatar.Fallback': 'span',
+  Button: 'button',
   CheckboxGroup: 'div',
   RadioGroup: 'div',
   'Field.Root': 'div',
@@ -92,6 +93,8 @@ describe('prop: as', () => {
     }
     expect(partElement(root, 'Tabs.Tab')).not.toHaveAttribute('type');
     expect(partElement(root, 'Tabs.Tab')).toHaveAttribute('role', 'tab');
+    expect(partElement(root, 'Button')).not.toHaveAttribute('type');
+    expect(partElement(root, 'Button')).toHaveAttribute('role', 'button');
     // NVDA and JAWS read the hidden text of a progress bar and of a meter.
     for (const part of ['Progress.Root', 'Meter.Root']) {
       expect(partElement(root, part).lastElementChild).toHaveAttribute('role', 'presentation');
@@ -142,27 +145,52 @@ describe('prop: as', () => {
 
   test('the element slot wins over `as`', async () => {
     const { root } = await mountParts();
-    const [separator, tab] = root.querySelectorAll('[data-part="slot-wins"]');
+    const [button, separator, tab] = root.querySelectorAll('[data-part="slot-wins"]');
+    expect(button!.localName).toBe('button');
+    expect(button).toHaveAttribute('type', 'button');
     expect(separator!.localName).toBe('span');
     expect(separator).toHaveAttribute('role', 'separator');
     expect(tab!.localName).toBe('button');
     expect(tab).toHaveAttribute('type', 'button');
   });
 
-  test('the server HTML has the tag, the hydration keeps each element with no message, and a tab in a <div> has no `type`', async () => {
-    const as = { ...SECTIONS, 'Tabs.Tab': 'div' };
+  test('a void element, such as <hr>, hydrates with no message', async () => {
+    const as = { Separator: 'hr' };
+    const root = await renderOnServer('AsParts', { as });
+    const separator = partElement(root, 'Separator');
+    expect(separator.localName).toBe('hr');
+    const exposed = hydrate(AsParts, { as }, root);
+    await nextTick();
+    expect(elementOf(exposed, 'Separator')).toBe(separator);
+  });
+
+  test('the server HTML has the tag and the attributes of the client, and the hydration keeps each element with no message', async () => {
+    const as = { ...SECTIONS, 'Tabs.Tab': 'div', Button: 'div' };
     const root = await renderOnServer('AsParts', { as });
     // The corner shows after the root measures the overflow.
     const parts = PARTS.filter((part) => part !== 'ScrollArea.Corner');
     const elements = parts.map((part) => partElement(root, part));
     expect(elements.map((element) => element.localName)).toEqual(
-      parts.map((part) => (part === 'Tabs.Tab' ? 'div' : 'section')),
+      parts.map((part) => as[part as keyof typeof as]),
     );
+    // A tab and a button in a <div> have no `type`, and the button has the role and the tab stop.
+    const read = (element: Element) =>
+      Object.fromEntries(
+        ['type', 'role', 'tabindex'].map((name) => [name, element.getAttribute(name)]),
+      );
     const tab = partElement(root, 'Tabs.Tab');
-    expect(tab).not.toHaveAttribute('type');
+    const button = partElement(root, 'Button');
+    const slotButton = root.querySelector('[data-part="slot-wins"]')!;
+    const expected = [
+      { type: null, role: 'tab', tabindex: '0' },
+      { type: null, role: 'button', tabindex: '0' },
+      // The slot wins over `as`, and the part knows its element after the mount.
+      { type: 'button', role: null, tabindex: null },
+    ];
+    expect([tab, button, slotButton].map(read)).toEqual(expected);
     const exposed = hydrate(AsParts, { as }, root);
     await nextTick();
     parts.forEach((part, index) => expect(elementOf(exposed, part), part).toBe(elements[index]));
-    expect(tab).not.toHaveAttribute('type');
+    expect([tab, button, slotButton].map(read)).toEqual(expected);
   });
 });

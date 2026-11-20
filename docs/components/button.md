@@ -61,15 +61,15 @@ Import the component:
 
 ### Rendering as another tag
 
-Render another element, such as a `<div>`, in the `element` slot. Bind `props` and `elementRef` to it. The part then gives the element `role="button"`, a tab stop, and the keys Enter and Space, so the button stays keyboard accessible.
+Give `as` another tag, such as `div`. The part then gives the element `role="button"`, a tab stop, and the keys Enter and Space, so the button stays keyboard accessible.
 
-<<< ./button/CustomTagButton.vue{7-9}
+<<< ./button/CustomTagButton.vue{6}
 
-The part reads its element after the mount. Until then, it gives the element the attributes of a native `<button>`, such as `type="button"`. The server HTML thus has no `role` and no `tabindex`. Write the two attributes on the element when the server HTML must have them.
+A tag in `as` is known before the mount, so the server HTML has the `role` and the `tabindex`. The part reads the element of a component in `as` or of the `element` slot after the mount. Until then, it gives that element the attributes of a native `<button>`, such as `type="button"`. The server HTML thus has no `role` and no `tabindex` for such an element. Write the two attributes on the element when the server HTML must have them.
 
 ### Rendering links as buttons
 
-Button has button semantics. The element of the `element` slot must be an element that can take button semantics (`role="button"` and the keys of a button). A link (`<a>`) has its own semantics. Do not render a link in the `element` slot of Button.
+Button has button semantics. The element of `as` or of the `element` slot must be an element that can take button semantics (`role="button"` and the keys of a button). A link (`<a>`) has its own semantics. Do not render a link as Button.
 
 To make a link look like a button, style the `<a>` element with CSS. Do not use Button for this.
 

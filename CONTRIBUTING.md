@@ -349,7 +349,7 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
 - Put the extra nodes in an internal SFC, `<Part>Children.vue`.
-- A part of a refactored family writes the extra nodes in its own template, in its own element and in the element of `as`. Its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot.
+- A part of a refactored family writes the extra nodes in its own template, in its own element and in the element of `as`. Its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot. A server writes no content in a void element, such as an `<hr>` in `as`, so a `Separator` with no default slot gives its `as` element no slot.
 - Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `SliderThumbChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
@@ -703,13 +703,13 @@ The element of a part:
 - Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element and an image take no `as`: `Input`, `Form`, `Fieldset.Root`, `Field.Label`, `Checkbox`, `Radio`, `Switch`, `Avatar.Image` and each hidden input. The part keeps its content, its own nodes and its attributes on the element of `as`.
 - The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part. The slot wins over `as`.
 - A component in `as` or in the slot gives its element as an exposed `element`, else as its `$el`. A Vapor component has no `$el`, so it exposes `element`. `useElement` of `src/common/element.ts` reads both.
-- A part that reads its element in its render reads a tag in `as` before the mount, so the server HTML has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`.
+- A part that reads its element in its render reads a tag in `as` before the mount, so the server HTML has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`, and `Button` gives the tag to the option `tag` of `useButton`.
 - The props type of a part extends `AsProps` and omits `as` from the attributes of its element, because motion-v adds an `as` to `HTMLAttributes`.
 - A template ref on a part has `element`.
 - The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
 - Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
 - `src/common/` holds only what two callers use.
-- A part that acts as a button takes `useButton` of `button/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
+- A part that acts as a button takes `useButton` of `button/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Before the mount, a tag in `as` is the element. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
 - A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. `Button` passes the option `type` of `useButton`, and `Tabs.Tab` writes the attribute. A `type` of the developer wins, `undefined` too.
 

@@ -8,6 +8,7 @@ import {
   routerKey,
 } from 'vue-router';
 import { Avatar } from '../../src/avatar';
+import { Button } from '../../src/button';
 import { CheckboxGroup } from '../../src/checkbox-group';
 import { Field } from '../../src/field';
 import { Fieldset } from '../../src/fieldset';
@@ -212,6 +213,12 @@ function setter(name: string) {
       :ref="setter('ScrollArea.Corner')"
     />
   </ScrollArea.Root>
+  <Button :as="is('Button')" v-bind="attrs('Button')" :ref="setter('Button')">Save</Button>
+  <Button as="div" data-part="slot-wins">
+    <template #element="{ props: elementProps, elementRef }">
+      <button v-bind="elementProps" :ref="elementRef">Send</button>
+    </template>
+  </Button>
   <Separator :as="is('Separator')" v-bind="attrs('Separator')" :ref="setter('Separator')" />
   <Separator as="section" data-part="slot-wins">
     <template #element="{ props: elementProps, elementRef }">

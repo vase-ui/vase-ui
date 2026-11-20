@@ -28,7 +28,7 @@ The custom component needs one root element. Vue gives the attributes to that el
 
 Under the `element` slot, the part does not render its default slot. Put the content in your element. With `as`, the part keeps its content and its own nodes, such as the hidden text of `Progress.Root`.
 
-Avatar, Checkbox, Checkbox Group, Field, Fieldset, Form, Input, Meter, Progress, Radio, Radio Group, Scroll Area, Separator, Switch and Tabs have this form. Each other family has `as` and [the `#render` slot](#the-render-slot) in place of the `element` slot.
+Avatar, Button, Checkbox, Checkbox Group, Field, Fieldset, Form, Input, Meter, Progress, Radio, Radio Group, Scroll Area, Separator, Switch and Tabs have this form. Each other family has `as` and [the `#render` slot](#the-render-slot) in place of the `element` slot.
 
 ## Composing multiple components
 

@@ -116,6 +116,18 @@ describe('<Toolbar.Separator />', () => {
         'vertical',
       );
     });
+
+    it('hydrates a separator in an <hr>, which has no content', async () => {
+      const props = { as: 'hr' };
+      const serverHtml = await renderOnServer(
+        'src/toolbar/separator/ToolbarSeparatorHydration.test.vue',
+        props,
+      );
+
+      const { container } = await hydrate(ToolbarSeparatorHydration, { serverHtml, props });
+
+      expect(within(container).getByRole('separator').tagName).toBe('HR');
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
