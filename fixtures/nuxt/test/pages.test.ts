@@ -1363,16 +1363,14 @@ async function expectPreviewCardLinks(page: Page) {
 // The portal renders after the mount, so the server HTML has no popup.
 async function expectPreviewCardPageOnServer(page: Page) {
   await expectPreviewCardLinks(page);
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+  expect(await page.getByTestId('open-popup').count()).toBe(0);
 }
 
 // After the mount, the card that is open by default shows the payload of its link in the viewport.
 async function expectHydratedPreviewCardPage(page: Page) {
   await expectPreviewCardLinks(page);
   expect(await page.getByTestId('closed-popup').count()).toBe(0);
-  expect(await page.getByTestId('open-viewport').locator('[data-current]').textContent()).toBe(
-    'Open preview',
-  );
+  expect(await page.getByTestId('open-viewport').textContent()).toBe('Open preview');
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state and

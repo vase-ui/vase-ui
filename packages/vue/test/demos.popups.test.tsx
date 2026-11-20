@@ -150,13 +150,14 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
   if (depth === 0 && family === 'preview-card') {
     return [...root.querySelectorAll<HTMLElement>('a')].map((element) => ({
       element,
-      // A preview card opens 600 ms after the focus. The case moves a fake clock by that time.
-      open: () => {
+      // A preview card opens 600 ms after a focus with `:focus-visible`, and `focus()` after a key
+      // has it. The case moves a fake clock by that time.
+      open: async (user: User) => {
+        await user.keyboard('{Shift}');
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         element.focus();
         vi.advanceTimersByTime(600);
         vi.useRealTimers();
-        return Promise.resolve();
       },
     }));
   }
@@ -191,13 +192,22 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`.
-function openPopups() {
-  return portals().flatMap((portal) => [
-    ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
-    ),
-  ]);
+// A closed popup that stays in the DOM is `hidden`. A preview card has no role and no attribute of
+// its open state, so its positioner in `<body>` counts while a link of the demo has
+// `data-popup-open`.
+function openPopups(name: string) {
+  const cards =
+    name.startsWith('preview-card/') && document.querySelector('.demo-frame [data-popup-open]')
+      ? portals().filter((portal) => portal.matches('[data-side]'))
+      : [];
+  return [
+    ...cards,
+    ...portals().flatMap((portal) => [
+      ...portal.querySelectorAll<HTMLElement>(
+        '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      ),
+    ]),
+  ];
 }
 
 /** The animations that run and that end. A demo can animate its popup with a script. */
@@ -329,13 +339,15 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
           portalElementsBeforeOpen = new Set(
             portals().flatMap((portal) => [...portal.querySelectorAll('*')]),
           );
-          const openBefore = new Set(openPopups());
+          const openBefore = new Set(openPopups(name));
           // The next open can click a trigger of this popup. Vue skips a listener for an event in
           // the millisecond in which Vue attached the listener.
           await waitForLaterMillisecond(async () => {
             await trigger.open(view.user);
             await waitFor(() => {
-              expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
+              expect(openPopups(name).filter((popup) => !openBefore.has(popup))).not.toHaveLength(
+                0,
+              );
             });
             // A popup has its starting style until the frame after its mount. A style sheet gives
             // that style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.

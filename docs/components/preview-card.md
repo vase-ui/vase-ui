@@ -61,7 +61,55 @@ Import the component and assemble its parts:
 
 <<< ./preview-card/Anatomy.vue
 
-`PreviewCard.Trigger` renders an `<a>` element. A click on it goes to its `href`, and the part adds no ARIA attribute, no `role` and no `tabindex`. A touch pointer does not open the card.
+`PreviewCard.Trigger` renders an `<a>` element. A click on it goes to its `href`, and the part adds no ARIA attribute, no `role` and no `tabindex`.
+
+## Keyboard and touch
+
+The card opens when a mouse rests on the link, and when the keyboard moves the focus to the link. A touch opens nothing. Tab does not go into the card, and the card moves no focus when it opens or closes. A press in the card moves the focus to the card, so the card stays open.
+
+When the link wraps over more lines, the card opens at the line under the pointer.
+
+## Animation
+
+The popup and the backdrop are in the DOM only while the card is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at the open, so `<Transition>` needs `appear` to run the enter of the first open.
+
+With `keepMounted` on `PreviewCard.Portal`, the closed popup and backdrop stay in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate them with CSS on `[hidden]`.
+
+To keep the popup in the DOM until an animation of JavaScript ends, use the JavaScript hooks of `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
+
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                      | On                       | State                                                                                                                                                    |
+| ----------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[data-popup-open]`           | trigger                  | The card is open for this link.                                                                                                                          |
+| `[data-side]`, `[data-align]` | positioner, popup, arrow | The side of the anchor and the alignment of the popup: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`, and `start`, `center` or `end`. |
+| `[data-anchor-hidden]`        | positioner               | The anchor is out of view.                                                                                                                               |
+| `[data-uncentered]`           | arrow                    | The arrow cannot point at the center of the anchor.                                                                                                      |
+| `[data-instant]`              | popup, viewport          | An animation should not run: `focus` (the focus opened the card) or `dismiss` (Escape).                                                                  |
+| `[data-activation-direction]` | viewport                 | The side of the new link from the old one, such as `right down`.                                                                                         |
+| `[hidden]`                    | popup, backdrop          | The card is closed, with `keepMounted`.                                                                                                                  |
+
+These CSS variables give the sizes and the place:
+
+| Variable                                    | On         | Value                                                                      |
+| ------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `--anchor-width`, `--anchor-height`         | positioner | The size of the anchor.                                                    |
+| `--available-width`, `--available-height`   | positioner | The room from the anchor to the edge of the collision boundary.            |
+| `--transform-origin`                        | positioner | The point that the popup grows from: its arrow, or its edge at the anchor. |
+| `--positioner-width`, `--positioner-height` | positioner | The size of the popup, with a `PreviewCard.Viewport`.                      |
+| `--popup-width`, `--popup-height`           | popup      | The old size, then the new size, while the card moves to another link.     |
+
+## Router links
+
+To use a link of Vue Router, render `RouterLink` with `custom`, and give its `href` and `navigate` to `PreviewCard.Trigger`:
+
+```vue-html
+<RouterLink v-slot="{ href, navigate }" to="/typography" custom>
+  <PreviewCard.Trigger :href="href" @click="navigate">typography</PreviewCard.Trigger>
+</RouterLink>
+```
 
 ## Examples
 
@@ -71,7 +119,7 @@ A trigger can be inside or outside `PreviewCard.Root`. For a simple interaction,
 
 When the content of the preview card cannot be next to its trigger, use a detached trigger. Put `PreviewCard.Trigger` outside `PreviewCard.Root`, and connect the two with a handle from `PreviewCard.createHandle()`.
 
-The methods of the handle, such as `open()` and `close()`, act only while a `PreviewCard.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts, and a development build shows a warning for that call. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `close()`, act only while a `PreviewCard.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./preview-card/DetachedTriggers.vue{4,8,10}
 
@@ -120,9 +168,9 @@ The type argument of `createHandle()` gives the type of the payload:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, give `open` to `PreviewCard.Root` and listen to its `openChange` event, or use `v-model:open`. With more than one trigger, also control the active trigger with the `triggerId` prop of the root and the `id` of each `PreviewCard.Trigger`.
+To control the open state, use `v-model:open` on `PreviewCard.Root`, or the `open` prop with the `openChange` event. With more than one trigger, control the active trigger with `v-model:trigger-id` on `PreviewCard.Root` and the `id` prop of each `PreviewCard.Trigger`.
 
-The root has no event for a change of the trigger id. The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
+The `openChange` event gives `eventDetails` as its second argument. Its `trigger` is the element of the trigger that started the change.
 
 <DemoFrame>
   <DemoPreviewCardDetachedTriggersControlled />
@@ -167,12 +215,7 @@ The content can also animate when the triggers show different content in the sam
 
 Put the content in `PreviewCard.Viewport`. The viewport renders a `<div>` with the attribute `data-activation-direction`. Its value gives the place of the new trigger relative to the old trigger. It has up to two tokens, one for each axis: `left` or `right`, and `up` or `down`, such as `right down`. Match one token with the `~=` selector: `[data-activation-direction~='right']`.
 
-The viewport puts the content in `<div>` elements with these attributes:
-
-- `data-current`: the content that shows, or the new content during a transition.
-- `data-previous`: the old content during a transition.
-
-Use these attributes to style the enter and exit animations.
+The default slot of `PreviewCard.Viewport` gets `triggerId`, the `id` of the active trigger. Put the content in a `<Transition>`, and give it the `triggerId` as its `key`. At a move, Vue keeps the old content for its leave while the new content enters. Select the old content with the leave classes, and the viewport while it has old content with `:has(> .x-leave-active)`.
 
 The viewport is optional. Use it only when more than one trigger opens one popup, the content changes with the trigger, and the change animates. With a viewport, set `width: var(--positioner-width)` and `height: var(--positioner-height)` on `PreviewCard.Positioner`. The positioner then keeps the measured size during the transition. Without these declarations, a change of the size of the content can make the popup flicker or move to another side.
 
@@ -207,7 +250,7 @@ The viewport is optional. Use it only when more than one trigger opens one popup
 
 ## Portal target
 
-Set `to` on `PreviewCard.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `PreviewCard.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal target](/components/popover#portal-target).
 
 ## API reference
 
