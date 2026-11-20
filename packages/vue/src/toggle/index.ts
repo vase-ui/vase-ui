@@ -6,6 +6,10 @@ import type {
   ToggleState,
 } from './types';
 
+/**
+ * A two-state button that can be on or off.
+ * Renders a `<button>` element.
+ */
 export const Toggle: typeof ToggleComponent = ToggleComponent;
 export namespace Toggle {
   export type Props<Value extends string = string> = ToggleProps<Value>;

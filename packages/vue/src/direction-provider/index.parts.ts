@@ -3,6 +3,7 @@ import type { DirectionProviderProps, DirectionProviderState } from './Direction
 
 /**
  * Enables RTL behavior for Vase UI components.
+ * Doesn't render its own HTML element.
  */
 export const Provider: typeof DirectionProvider = DirectionProvider;
 export namespace Provider {

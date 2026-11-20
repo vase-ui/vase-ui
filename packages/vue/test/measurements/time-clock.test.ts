@@ -2,6 +2,7 @@
 // what the browser does, so that a part has code only where it does not do it.
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
+import { holdPress } from '../pointer';
 
 let root: HTMLElement | undefined;
 
@@ -48,9 +49,9 @@ describe('pointer capture', () => {
     face.addEventListener('pointerdown', (event) =>
       face.setPointerCapture((event as PointerEvent).pointerId),
     );
-    await userEvent.pointer({ coords: center(face), keys: '[MouseLeft>]' });
+    const { release } = await holdPress(face);
     face.remove();
-    await userEvent.pointer({ coords: { x: 1, y: 1 }, keys: '[/MouseLeft]' });
+    await release({ x: 1, y: 1 });
     expect(events).toEqual([]);
   });
 });

@@ -8,6 +8,7 @@ export { mockBrowserToday, mockToday } from './mockBrowserToday';
 export { mockRuntimeDateTimeLocale, mockRuntimeLocale } from './mockRuntimeLocale';
 export {
   clientCenter,
+  dragAndDrop,
   enterWithMouse,
   firePointer,
   holdPress,

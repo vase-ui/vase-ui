@@ -55,10 +55,7 @@ export namespace Root {
 
 /**
  * The field that shows the value of the picker in segments.
- * Renders a `DateField.Root`, so it has a `<div>` element and a hidden `<input>` beside it.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `DateField.Root`: a `<div>` element with a hidden form `<input>` element in it.
  */
 export const Field: typeof DatePickerField = DatePickerField;
 export namespace Field {
@@ -98,10 +95,7 @@ export namespace Calendar {
 
 /**
  * A field for the time of a value that has a time.
- * Renders a `TimeField.Root`, so it has a `<div>` element and a hidden `<input>` beside it.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `TimeField.Root`: a `<div>` element with a hidden form `<input>` element in it.
  */
 export const TimeField: typeof DatePickerTimeField = DatePickerTimeField;
 export namespace TimeField {

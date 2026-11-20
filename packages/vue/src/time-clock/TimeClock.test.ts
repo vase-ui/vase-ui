@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, h, nextTick, reactive } from 'vue';
 import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
@@ -55,12 +55,25 @@ const at = (face: HTMLElement, angle: number, ratio?: number) => {
   return { x, y };
 };
 
+let isHeld = false;
+
+async function release(point: { x: number; y: number }) {
+  isHeld = false;
+  await userEvent.pointer({ coords: point, keys: '[/MouseLeft]' });
+}
+
+/** Presses the main button on the face and holds it. The case gets the release when it ends. */
 async function pressAt(face: HTMLElement, angle: number, ratio?: number) {
-  await userEvent.pointer({ coords: at(face, angle, ratio), keys: '[MouseLeft>]' });
+  const point = at(face, angle, ratio);
+  isHeld = true;
+  onTestFinished(async () => {
+    if (isHeld) await release(point);
+  });
+  await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
 }
 
 async function releaseAt(face: HTMLElement, angle: number, ratio?: number) {
-  await userEvent.pointer({ coords: at(face, angle, ratio), keys: '[/MouseLeft]' });
+  await release(at(face, angle, ratio));
 }
 
 describe('the parts', () => {
@@ -301,7 +314,6 @@ describe('press and drag', () => {
     scene.showFace = false;
     await nextTick();
     expect(group).not.toHaveAttribute('data-dragging');
-    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
   });
 });
 

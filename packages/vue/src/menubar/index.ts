@@ -2,7 +2,7 @@ import MenubarComponent from './Menubar.vue';
 import type { MenubarProps, MenubarState } from './types';
 
 /**
- * A bar of menu triggers, with one tab stop.
+ * The container for menus.
  * Renders a `<div>` element.
  */
 export const Menubar: typeof MenubarComponent = MenubarComponent;

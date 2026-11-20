@@ -203,6 +203,7 @@ export namespace Viewport {
 
 /**
  * Provides keyboard-aware focus and scroll handling for bottom-sheet drawers with form fields.
+ * Doesn't render its own HTML element.
  */
 export const VirtualKeyboardProvider: typeof DrawerVirtualKeyboardProvider =
   DrawerVirtualKeyboardProvider;

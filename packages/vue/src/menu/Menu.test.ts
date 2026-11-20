@@ -9,7 +9,7 @@ import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
 import MenuPartAlone from '../../test/fixtures/MenuPartAlone.vue';
 import MenuViewportParts from '../../test/fixtures/MenuViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { touchDrag } from '../../test/pointer';
+import { holdPress, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -436,11 +436,10 @@ describe('press, drag, release', () => {
       trigger: style,
       root: { onOpenChange: (open: boolean) => (style.style = `margin-left: ${open ? 200 : 0}px`) },
     });
-    const point = centerOf(trigger);
-    await userEvent.pointer([{ coords: point }, '[MouseLeft>]']);
+    const { point, release } = await holdPress(trigger);
     await placed();
     expect(document.elementFromPoint(point.x, point.y)).not.toBe(trigger);
-    await userEvent.pointer('[/MouseLeft]');
+    await release();
     expect(popup()).not.toBe(null);
   });
 

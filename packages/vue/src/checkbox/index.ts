@@ -6,6 +6,10 @@ import type {
   CheckboxState,
 } from './types';
 
+/**
+ * A box that the user can tick and clear.
+ * Renders an `<input>` element with the type `checkbox`.
+ */
 export const Checkbox: typeof CheckboxComponent = CheckboxComponent;
 export namespace Checkbox {
   export type Props = CheckboxProps;

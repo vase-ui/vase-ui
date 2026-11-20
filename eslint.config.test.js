@@ -750,6 +750,16 @@ const reported = [
       hint: WAIT_HINT,
     })),
   ]),
+  ...[
+    ['userEvent', 'userEvent'],
+    ['another name of userEvent', 'userEvent as browserUserEvent'],
+  ].map(([name, binding]) => ({
+    name: `dragAndDrop of ${name} in a test file`,
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: `import { ${binding} } from 'vitest/browser';\n\ndeclare const element: Element;\nexport const drag = ${binding.split(' ').at(-1)}.dragAndDrop(element, element);\n`,
+    ruleId: 'no-restricted-properties',
+    hint: 'test/pointer.ts',
+  })),
   ...WAIT_FILES.flatMap(([place, file]) =>
     [
       [
