@@ -12,23 +12,27 @@ import MotionSelect from '../demos/handbook-animation/animated-select-motion/css
 
 # Animation
 
-A guide to animating Vase UI components.
+Animate a component with CSS transitions, CSS animations or a JavaScript animation library.
 
-You can animate a component with CSS transitions, CSS animations or a JavaScript animation library. A part that shows and hides, such as a popup, a backdrop or a panel, renders its element only while it is shown. Put it in a Vue [`<Transition>`](https://vuejs.org/guide/built-ins/transition.html), and animate it with the classes and the hooks of `<Transition>`. The page of each component says where to put the `<Transition>`.
+A part that shows and hides, such as a popup, a backdrop or a panel, renders its element only while it is shown. Put the part in a Vue [`<Transition>`](https://vuejs.org/guide/built-ins/transition.html). Vue adds the classes of the `<Transition>` when the element enters and leaves, and it keeps the element in the DOM until its leave ends.
 
 ## CSS transitions
 
-Give the hidden style to the `enter-from` and the `leave-to` classes of the `<Transition>`, and the transition to the element.
+Give the hidden style to the `enter-from` and `leave-to` classes, and the transition to the element.
 
-Use a transition where you can. A transition can be canceled midway with no jump. For example, the user can close a popup before it is fully open. The popup then moves to its closed state from where it is.
+Use a transition where you can. A transition that stops midway goes back from where it is, with no jump. For example, the user can close a popup before it is fully open.
 
 ::: code-group
 
 ```vue [Popup.vue]
 <template>
-  <Transition name="popup" appear>
-    <Popover.Popup class="Popup">…</Popover.Popup>
-  </Transition>
+  <Popover.Portal>
+    <Popover.Positioner>
+      <Transition name="popup" appear>
+        <Popover.Popup class="Popup">…</Popover.Popup>
+      </Transition>
+    </Popover.Positioner>
+  </Popover.Portal>
 </template>
 ```
 
@@ -49,13 +53,19 @@ Use a transition where you can. A transition can be canceled midway with no jump
 
 :::
 
+Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. The `<Transition>` in it thus mounts at each open, so give it `appear` to run the enter. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal renders no element.
+
+While an element leaves, the element that takes its place can already be in the DOM. To remove the element that leaves from the flow, give the `leave-active` class `position: absolute`.
+
+When a panel opens again during its leave, the new panel enters after the leave ends.
+
+Do not put a `<Transition>` around a part that renders the `element` slot. The root of the part is then the fragment of the slot, and Vue warns that it cannot animate it. Give the part `keepMounted`, and animate your element from its `state`, as in [Animate a popup that stays in the DOM](#animate-a-popup-that-stays-in-the-dom).
+
 ## CSS animations
 
-Give the animations to the `enter-active` and the `leave-active` classes of the `<Transition>`.
+Give the animations to the `enter-active` and `leave-active` classes.
 
-::: code-group
-
-```css [popup.css]
+```css
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -76,15 +86,30 @@ Give the animations to the `enter-active` and the `leave-active` classes of the 
 }
 ```
 
-:::
+## Content that stays in the DOM
+
+With `keepMounted`, a closed popup or panel stays in the DOM with the `hidden` and `inert` attributes. Vue runs no `<Transition>` for it. Animate it with CSS on `[hidden]`. Give `[hidden]` a `display` value, so that the browser does not hide the element at once, and give it the closed style.
+
+```css
+.Popup {
+  transition: opacity 150ms;
+}
+
+.Popup[hidden] {
+  display: block;
+  opacity: 0;
+}
+```
+
+With `inert`, the user cannot reach the closed element with the pointer or the focus.
 
 ## JavaScript animations
 
-A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), runs in the JavaScript hooks of the `<Transition>`. With `:css="false"`, Vue keeps the element in the DOM until the `leave` hook calls `done`.
+A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), runs in the JavaScript hooks of the `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
 
-### Animate a popup with motion-v
+### Animate a popup that leaves the DOM
 
-The examples of this section and the next section use [Popover](/components/popover). Its popup is in the DOM only while the popover is open.
+The popup of [Popover](/components/popover) is in the DOM only while the popover is open.
 
 1. Put `Popover.Popup` in a `<Transition>` with `:css="false"` and `appear`.
 2. Run the enter animation in the `enter` hook, and the exit animation in the `leave` hook, with `animate` of `motion-v`.
@@ -102,15 +127,11 @@ The examples of this section and the next section use [Popover](/components/popo
 
 :::
 
-To use `<AnimatePresence>` in the place of `<Transition>`, see [AnimatePresence](#animatepresence).
-
-A popup of another family can take `motion.div` in the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
-
-<<< ../examples/animation/MotionAsProp.vue{10,15-17}
+`<AnimatePresence>` of `motion-v` renders a Vue `<Transition>` or `<TransitionGroup>`, so it takes the same place: in the portal, around the popup.
 
 ### Animate a popup that stays in the DOM
 
-A popup stays in the DOM while it is closed when its portal has `keepMounted`. Vue runs no transition for it. Give `motion.div` to the `element` slot of `Popover.Popup`, and compute `animate` from `state.open`. `initial` is `false`, because the popup mounts closed. The closed popup has `hidden` and `inert`. A rule of the style sheet keeps it shown while its exit plays.
+With `keepMounted` on `Popover.Portal`, the popup stays in the DOM. Render `motion.div` in the `element` slot of `Popover.Popup`, and compute `animate` from `state.open`. Give `initial` the value `false`, because the popup mounts closed. A rule of the style sheet keeps the closed popup visible while its exit runs.
 
 <DemoFrame>
   <MotionKeepMounted />
@@ -126,7 +147,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. V
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) stays in the DOM from the first focus of the trigger, the first open or the first fill of the browser, and it hides while the select is closed. Put a `<Transition>` around `Select.Popup`, with no `v-show` and no `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. For a JavaScript animation, give the `<Transition>` `:css="false"`, and call `done` in its `@enter` and `@leave` hooks when the animation ends. The popup shows until `@leave` calls `done`.
+The popup of [Select](/components/select) mounts at the first focus of the trigger, the first open or the first autofill. Then it stays in the DOM, and it shows and hides its own element. Put a `<Transition>` around `Select.Popup`, with no `appear`. The hooks of the `<Transition>` then run at each open and each close.
 
 <DemoFrame>
   <MotionSelect />
@@ -140,12 +161,20 @@ The popup of [Select](/components/select) stays in the DOM from the first focus 
 
 :::
 
-### Manual unmounting
+### End the exit yourself
 
-A popup in a `<Transition>` with `:css="false"` stays in the DOM until its `leave` hook calls `done`, as [Animate a popup with motion-v](#animate-a-popup-with-motion-v) shows. To end the exit yourself, such as after a `height` that `motion-v` runs in JavaScript, call `done` when the exit ends.
+With `:css="false"`, the element stays in the DOM until you call `done` of the `leave` hook. Call it when your animation ends.
 
-To wait for something before the popup closes, control `open` and keep it `true` while you wait. Then set it to `false`.
+To wait for something before the popup starts to close, call `cancel()` in your `openChange` listener at the close. When the wait ends, set the value of `v-model:open` to `false`.
 
-### AnimatePresence
+## Differences from Base UI
 
-`<AnimatePresence>` of `motion-v` renders a Vue `<Transition>`, so the rules of this page apply to it. A portal part renders a `<Teleport>` and no element of its own, so a `<Transition>` around a portal part animates nothing. Put the `<Transition>` in the portal, around the popup part.
+| Base UI                                                           | Vase UI                                                                                                                |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `data-starting-style`                                             | The `enter-from` class of `<Transition>`.                                                                              |
+| `data-ending-style`                                               | The `leave-to` class of `<Transition>`.                                                                                |
+| `transitionStatus` in the state                                   | The classes and the JavaScript hooks of `<Transition>`.                                                                |
+| The part keeps a closing popup mounted until its animations end   | `<Transition>` keeps the element in the DOM until its transition or animation ends.                                    |
+| `onOpenChangeComplete`                                            | `@after-enter` and `@after-leave` of `<Transition>`.                                                                   |
+| `actionsRef.unmount()` and `eventDetails.preventUnmountOnClose()` | `done` of the `leave` hook, with `:css="false"`.                                                                       |
+| `[data-open]` and `[data-closed]` for a CSS animation             | The `enter-active` and `leave-active` classes of `<Transition>`. With `keepMounted`, `[hidden]` on the closed element. |
