@@ -132,19 +132,33 @@ export function createPopupChangeEventDetails<Reason extends string>(
   };
 }
 
-// A click event of Safari has no `pointerType`. The `pointerdown` before it has one. One listener
-// of each document keeps the type of its last `pointerdown`.
-const pointerTypes = new WeakMap<Document, InteractionType>();
+// A click event of Safari before 18.2 has no `pointerType`. The `pointerdown` before it has one.
+// One listener of each document keeps the type of its last `pointerdown` while a root is mounted.
+const pointerTypes = new Map<Document, { type: InteractionType; roots: number; stop(): void }>();
 
 function trackPointerType(doc: Document) {
-  if (pointerTypes.has(doc)) return;
-  pointerTypes.set(doc, '');
-  addEventListener(
-    doc,
-    'pointerdown',
-    (event) => pointerTypes.set(doc, event.pointerType as InteractionType),
-    true,
-  );
+  let tracker = pointerTypes.get(doc);
+  if (!tracker) {
+    const created = {
+      type: '' as InteractionType,
+      roots: 0,
+      stop: addEventListener(
+        doc,
+        'pointerdown',
+        (event) => (created.type = event.pointerType as InteractionType),
+        true,
+      ),
+    };
+    tracker = created;
+    pointerTypes.set(doc, tracker);
+  }
+  tracker.roots += 1;
+  return () => {
+    tracker.roots -= 1;
+    if (tracker.roots > 0) return;
+    tracker.stop();
+    pointerTypes.delete(doc);
+  };
 }
 
 /** The input of an event: a pointer type, or `'keyboard'` for a key and a click with no press. */
@@ -154,7 +168,9 @@ export function interactionOf(event: Event): InteractionType {
   if (event.type === 'click' && event.detail === 0) return 'keyboard';
   const type = (event as Partial<PointerEvent>).pointerType;
   const target = event.target as Node | null;
-  return (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element)) ?? '');
+  return (
+    (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element))?.type ?? '')
+  );
 }
 
 const handleRoots = new WeakMap<PopupHandle, ShallowRef<PopupRoot | null>>();
@@ -389,7 +405,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // A handle holds its root only on the client. A handle in a module of a server would otherwise
   // hold the roots of each request.
   onMounted(() => {
-    trackPointerType(ownerDocument(null));
+    watch(
+      () => ownerDocument(null),
+      (doc, _, onCleanup) => onCleanup(trackPointerType(doc)),
+      { immediate: true },
+    );
     watch(
       () => options.handle(),
       (handle, _, onCleanup) => {

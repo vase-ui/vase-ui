@@ -1,4 +1,12 @@
-import { computed, effectScope, onMounted, onUnmounted, shallowReactive, watch } from 'vue';
+import {
+  computed,
+  effectScope,
+  onMounted,
+  onUnmounted,
+  shallowReactive,
+  watch,
+  type EffectScope,
+} from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
@@ -410,14 +418,15 @@ function onKeydown(event: KeyboardEvent) {
 
 // The top layer that asks for it writes `inert` or `aria-hidden` on each sibling of the path from
 // each element inside it to `<body>`.
-// One watcher of the stack writes the attributes. It starts at the first open, and it stays.
-let hiding = false;
+// One watcher of the stack writes the attributes, from the first open to the close of the last
+// layer.
+let hideScope: EffectScope | undefined;
 const written = new Map<Element, 'inert' | 'aria-hidden'>();
 
 function startHide() {
-  if (hiding) return;
-  hiding = true;
-  effectScope(true).run(() => {
+  if (hideScope) return;
+  hideScope = effectScope(true);
+  hideScope.run(() => {
     watch(
       () => {
         const top = stack.findLast((entry) => entry.layer.hide);
@@ -474,5 +483,9 @@ function writeHide(next: { hide: 'inert' | 'aria-hidden'; inside: (Element | nul
     if (written.has(element) || element.hasAttribute(attribute)) continue;
     element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
     written.set(element, attribute);
+  }
+  if (stack.length === 0) {
+    hideScope?.stop();
+    hideScope = undefined;
   }
 }
