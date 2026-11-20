@@ -1,4 +1,4 @@
-import { onScopeDispose, watch } from 'vue';
+import { onMounted, onScopeDispose, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -66,44 +66,52 @@ export function usePopupPress(
 
   watch(
     () => root.open,
-    (open, _, onCleanup) => {
-      if (!open) {
-        end();
-        return;
-      }
-      if (!options.laterPress) return;
-      const doc = ownerDocument(root.activeTrigger);
-      let pressed: Element | null | undefined;
-      onCleanup(
-        mergeCleanups(
-          addEventListener(
-            doc,
-            'pointerdown',
-            (event) => {
-              const target = event.composedPath()[0] as Element;
-              pressed =
-                event.pointerType === 'mouse' && event.button === 0 && options.inside(target)
-                  ? options.itemAt(target)
-                  : undefined;
-            },
-            true,
-          ),
-          addEventListener(
-            doc,
-            'pointerup',
-            (event) => {
-              if (pressed === undefined || stop) return;
-              const item = options.itemAt(event.composedPath()[0] as Element);
-              if (item && item !== pressed) release(item, event);
-              pressed = undefined;
-            },
-            true,
-          ),
-        ),
-      );
+    (open) => {
+      if (!open) end();
     },
-    { flush: 'sync', immediate: true },
+    { flush: 'sync' },
   );
+
+  // The listeners of the document start after the mount, so a server render adds none.
+  onMounted(() => {
+    if (!options.laterPress) return;
+    watch(
+      () => root.open,
+      (open, _, onCleanup) => {
+        if (!open) return;
+        const doc = ownerDocument(root.activeTrigger);
+        let pressed: Element | null | undefined;
+        onCleanup(
+          mergeCleanups(
+            addEventListener(
+              doc,
+              'pointerdown',
+              (event) => {
+                const target = event.composedPath()[0] as Element;
+                pressed =
+                  event.pointerType === 'mouse' && event.button === 0 && options.inside(target)
+                    ? options.itemAt(target)
+                    : undefined;
+              },
+              true,
+            ),
+            addEventListener(
+              doc,
+              'pointerup',
+              (event) => {
+                if (pressed === undefined || stop) return;
+                const item = options.itemAt(event.composedPath()[0] as Element);
+                if (item && item !== pressed) release(item, event);
+                pressed = undefined;
+              },
+              true,
+            ),
+          ),
+        );
+      },
+      { flush: 'sync', immediate: true },
+    );
+  });
 
   return {
     /** Starts the gesture at the `pointerdown` on the trigger that opened the popup. */

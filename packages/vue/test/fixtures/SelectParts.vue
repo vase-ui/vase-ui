@@ -11,6 +11,8 @@ type Item = { value: unknown; text: string; label?: string; disabled?: boolean }
 defineProps({
   root: Object as PropType<Props>,
   label: Object as PropType<Props>,
+  /** A label after the trigger. */
+  labelAfter: Object as PropType<Props>,
   trigger: Object as PropType<Props>,
   value: Object as PropType<Props>,
   portal: Object as PropType<Props>,
@@ -45,6 +47,7 @@ defineExpose({ root: rootPart, popup: popupPart });
       <Select.Value data-testid="value" v-bind="value" />
       <Select.Icon />
     </Select.Trigger>
+    <Select.Label v-if="labelAfter" data-testid="label" v-bind="labelAfter">Fruit</Select.Label>
     <Select.Portal v-if="!noPortal" v-bind="portal">
       <Select.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <Select.Positioner data-testid="positioner" v-bind="positioner">

@@ -806,6 +806,83 @@ describe('the layer', () => {
   });
 });
 
+describe('item alignment', () => {
+  function expectAligned(edge: 'left' | 'right') {
+    const value = byTestId('value').getBoundingClientRect();
+    const text = item('banana').firstElementChild!.getBoundingClientRect();
+    expect(Math.abs(text.top + text.height / 2 - (value.top + value.height / 2))).toBeLessThan(1);
+    expect(Math.abs(text[edge] - value[edge])).toBeLessThan(1);
+  }
+
+  test('puts the text of the selected item over the text of the value, with the side none', async () => {
+    await mountSelect({ ...aligned, root: { defaultValue: 'banana' }, arrow: {} });
+    await userEvent.click(trigger());
+    await opened();
+    expectAligned('left');
+    expect(byTestId('positioner')).toHaveAttribute('data-side', 'none');
+    expect(byTestId('positioner').style.position).toBe('fixed');
+    expect(byTestId('arrow')).toBe(null);
+    expect(isScrollLocked()).toBe(true);
+  });
+
+  test('aligns the inline end in a right-to-left popup', async () => {
+    await mountSelect({
+      ...aligned,
+      root: { defaultValue: 'banana', dir: 'rtl' },
+      positioner: { dir: 'rtl' },
+      trigger: { style: 'margin-top: 200px; width: 160px' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    expectAligned('right');
+  });
+
+  test('goes to the anchored place for an open whose trigger is near the top of the view', async () => {
+    await mountSelect({ root: { defaultValue: 'banana' }, positioner: {} });
+    await userEvent.click(trigger());
+    await opened();
+    expect(byTestId('positioner')).toHaveAttribute('data-side', 'bottom');
+  });
+
+  test('grows toward the free edge when the user scrolls the list', async () => {
+    const items = Array.from({ length: 40 }, (_, index) => ({ value: `i${index}`, text: `Item ${index}` }));
+    await mountSelect({
+      ...aligned,
+      items,
+      root: { defaultValue: 'i1' },
+      trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    const positioner = byTestId('positioner');
+    const before = positioner.getBoundingClientRect().height;
+    popup().scrollTop = 40;
+    await waitFor(() => expect(positioner.getBoundingClientRect().height).toBeGreaterThan(before));
+  });
+
+  test('a resize of the window closes the popup', async () => {
+    const log: string[] = [];
+    await mountSelect({ ...aligned, root: rootEvents(log, { defaultValue: 'banana' }) });
+    await userEvent.click(trigger());
+    await opened();
+    window.dispatchEvent(new UIEvent('resize'));
+    await closed();
+    expect(log).toContain('openChange false window-resize');
+  });
+
+  test('a reopen puts the text over the value again', async () => {
+    await mountSelect({ ...aligned, root: { defaultValue: 'banana' } });
+    await userEvent.click(trigger());
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    trigger().style.marginTop = '260px';
+    await userEvent.click(trigger());
+    await opened();
+    expectAligned('left');
+  });
+});
+
 describe('scroll arrows', () => {
   test('show while the list can scroll in their direction; a pointer move on one scrolls the list', async () => {
     const items = Array.from({ length: 30 }, (_, index) => ({ value: `i${index}`, text: `Item ${index}` }));
