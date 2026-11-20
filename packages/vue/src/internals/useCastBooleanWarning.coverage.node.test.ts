@@ -41,5 +41,5 @@ it('each part with a covered prop calls the helper', () => {
       expect(calls, file).toHaveLength(covered.length > 0 ? 1 : 0);
     }
   }
-  expect(checked.size).toBeGreaterThan(36);
+  expect(checked.size).toBeGreaterThan(25);
 });

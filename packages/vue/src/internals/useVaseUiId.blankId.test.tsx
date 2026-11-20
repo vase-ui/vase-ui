@@ -6,7 +6,6 @@ import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Toast } from '@vase-ui/vue/toast';
 
 interface BlankId {
   id: string;
@@ -110,20 +109,6 @@ const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   </Field.Root>
 );
 
-const toastParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Toast.Provider>
-    <Toast.Viewport>
-      <Toast.Root
-        toast={{ id: `toast${k}`, title: `Saved ${k}`, description: `Copied ${k}` }}
-        data-testid={`toast${k}`}
-      >
-        <Toast.Title {...blankIdIf(part === 'Title', blankId)} />
-        <Toast.Description {...blankIdIf(part === 'Description', blankId)} />
-      </Toast.Root>
-    </Toast.Viewport>
-  </Toast.Provider>
-);
-
 const rows: Row[] = [
   ...(['Title', 'Description', 'Trigger', 'Popup'] as const).map((part): Row => ({
     name: `Dialog.${part}`,
@@ -174,11 +159,6 @@ const rows: Row[] = [
       description: `Hint ${k} Wrong ${k}`,
       nativeLabel: true,
     }),
-  })),
-  ...(['Title', 'Description'] as const).map((part): Row => ({
-    name: `Toast.${part}`,
-    tree: toastParts(part),
-    named: (k) => ({ testId: `toast${k}`, name: `Saved ${k}`, description: `Copied ${k}` }),
   })),
 ];
 

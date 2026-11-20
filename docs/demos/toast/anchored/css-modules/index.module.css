@@ -28,8 +28,8 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  .Starting &,
+  .Ending & {
     opacity: 0;
     scale: 0.98;
   }

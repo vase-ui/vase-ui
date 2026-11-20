@@ -3,6 +3,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/utils/src/generateId.ts",
+      "kind": "not-applicable",
+      "reason": "The one caller, the manager of Toast, makes the id of a toast in `toast/manager.ts` from a count and a prefix of the library. No other part needs a random id."
+    },
+    {
       "upstream": "packages/utils/src/fastHooks.ts",
       "kind": "not-applicable",
       "reason": "The file joins the store subscriptions of one React component. A Vue component tracks each reactive read, so it needs no such wrapper."

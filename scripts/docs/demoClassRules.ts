@@ -35,6 +35,10 @@ export const CLASS_NAMES_WITHOUT_RULE: ReadonlySet<string> = new Set([
   // A marker of the demo. The leave of the drawer popup adds it, and the class `has-[>.leaving]` of
   // the viewport names it.
   'leaving',
+  // Markers of the Toast demos: `<TransitionGroup>` gives them in the enter and the leave, and the
+  // classes `[&.toast-starting]` and `[&.toast-ending]` of the toast name them.
+  'toast-starting',
+  'toast-ending',
   // The theme of the Base UI docs has no red other than `red-400` and `red-700`, so the item has no
   // red text there. The CSS-module demo has no red text on that item either.
   'text-red-600',

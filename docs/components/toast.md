@@ -67,14 +67,24 @@ Import the component and assemble its parts:
 
 <<< ./toast/Anatomy.vue
 
-`Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider, and render a `Toast.Root` for each toast of the list. Most demos have such a component, `ToastList.vue`.
+`Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider, and render a `Toast.Root` for each toast of the list in a `<TransitionGroup>`. Give each root `:key="toast.id"`. Most demos have such a component, `ToastList.vue`.
 
 ## General usage
 
 - `<Toast.Provider>` can be wrapped around your entire app, so that all toasts render in the same viewport.
+- The viewport is a landmark region. Give it a name with `aria-label`, in the language of your page.
 - <kbd>F6</kbd> moves the focus into the landmark region of the toast viewport, so that users can move between the toasts with the keyboard. Press <kbd>F6</kbd> again to move the focus back to where it was.
 - <kbd>Esc</kbd> closes the toast that has the focus. After <kbd>F6</kbd>, <kbd>Esc</kbd> elsewhere in the viewport moves the focus back to where it was. A popup under the toasts, such as a dialog, stays open for that press.
 - Add the `data-vase-ui-swipe-ignore` attribute to an element in a toast to stop the swipe to dismiss on that element. An interactive element does not start a swipe.
+- The root writes `touch-action` from its `swipeDirection`: `pan-y` for horizontal directions, `pan-x` for vertical directions, and `none` for both. A touch swipe then does not scroll the page.
+
+## Lifetime
+
+`toasts` holds the open toasts only. `close` removes a toast from the list at once and calls its `onClose`. `<TransitionGroup>` keeps the element of the closed toast for its leave, and `onRemove` runs when the element is out of the document. A toast with no `<TransitionGroup>` leaves at once. To change the element of a root or a positioner in the group, use `as`. With the `element` slot, Vue 3.5.12 gives the element no classes, and later versions warn in development.
+
+## Under a modal popup
+
+The toasts stay in use under a modal popup, such as a dialog, and a screen reader announces them. You need no setup for this.
 
 ## Global manager
 
@@ -137,10 +147,14 @@ The `--toast-swipe-movement-x` and `--toast-swipe-movement-y` CSS variables give
 }
 ```
 
-The `data-swipe-direction` attribute gives the direction of the swipe. Use it in a translation offset when the toast closes.
+`<TransitionGroup>` gives the classes of the enter and the leave. The `data-swipe-direction` attribute gives the direction of the swipe that closed the toast. Use it in a translation offset in the leave.
 
 ```css
-&[data-ending-style] {
+&.toast-enter-from {
+  transform: translateY(150%);
+}
+
+&.toast-leave-to {
   opacity: 0;
 
   &[data-swipe-direction='up'] {
@@ -160,7 +174,7 @@ The `data-swipe-direction` attribute gives the direction of the swipe. Use it in
 }
 ```
 
-The `data-limited` attribute shows that the toast is over the `limit` of the provider. A limited toast stays mounted with the HTML `inert` attribute. Use the attribute to hide such a toast or to animate it in a different way.
+A toast over the `limit` of the provider stays mounted with the HTML `inert` attribute. Use `[inert]` to hide such a toast or to animate it in a different way. Each toast moves to its place with its own transition, so the group needs no move class.
 
 The `updateKey` property of a toast increases when the toast is updated or added again with its `id`. Use it to play an animation again: change the animation name with it. When the toast can mount again, you can also put it in the `key` of the root.
 
@@ -217,7 +231,7 @@ Render the anchored toasts in a `<Toast.Provider>` of their own, apart from the 
 
 <<< ./toast/MixingManagers.vue
 
-Each viewport is a landmark region, and its default name is "Notifications". Give the viewport of the anchored toasts an `aria-label` of its own, such as "Anchored notifications".
+Each viewport is a landmark region. Give the viewport of the anchored toasts an `aria-label` of its own, such as "Anchored notifications". The positioner is the child of `<TransitionGroup>` and gets its classes. For a transition on the root in it, give `:duration` to the group.
 
 ### Custom position
 
@@ -364,7 +378,7 @@ To stack toasts of different heights, clamp the height of each toast to the heig
 
 ## Portal target
 
-Set `to` on `Toast.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `Toast.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. With `disabled`, the viewport renders in place, also on the server. With `defer`, the portal moves the viewport after the rest of the update mounts. The portal renders no element of its own. See [Portal targets](/components/dialog#portal-targets).
 
 ## API reference
 
@@ -412,7 +426,7 @@ The options replace the values of the toast. Custom `data` is also replaced as a
 
 ### `close` method
 
-Closes the toast. The toast goes from the list after its animations end.
+Closes the toast. The toast goes from the list at once, and its element leaves in the `<TransitionGroup>`.
 
 <<< ./toast/ManagerMethods.vue#close{ts}
 
