@@ -1,19 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
-import {
-  Combobox,
-  type ComboboxRootChangeEventDetails,
-  type ComboboxRootHighlightEventDetails,
+import type {
+  ComboboxRootChangeEventDetails,
+  ComboboxRootHighlightEventDetails,
 } from '@vase-ui/vue/combobox';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
 import ComboboxClearInTransition from '../../test/fixtures/ComboboxClearInTransition.vue';
 import { touchDrag } from '../../test/pointer';
 import ComboboxInline from '../../test/fixtures/ComboboxInline.vue';
 import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
+import ComboboxPartAlone from '../../test/fixtures/ComboboxPartAlone.vue';
 import TextareaCombobox from '../../test/fixtures/ComboboxTextarea.vue';
 import ComboboxVirtual from '../../test/fixtures/ComboboxVirtual.vue';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -104,11 +105,6 @@ describe('the parts', () => {
     expect(item('Apple')).toHaveAttribute('tabindex', '-1');
     expect(exposed.root.element.localName).toBe('div');
     expect(exposed.root.inputElement).toBe(exposed.root.element.lastElementChild);
-  });
-
-  test('a part outside its root throws an error that names the part', () => {
-    const error = mountError(Combobox.Item, {});
-    expect(String(error)).toContain('<Combobox.Item> must be inside <Combobox.Root>');
   });
 });
 
@@ -695,7 +691,7 @@ describe('the parts of the popup', () => {
     await nextTick();
     expect(trigger()).toHaveTextContent('Lemon');
     expect(trigger()).not.toHaveAttribute('data-placeholder');
-    const icon = mount(Combobox.Icon).root.firstElementChild!;
+    const icon = mount(ComboboxPartAlone, { part: 'Icon' }).root.firstElementChild!;
     expect(icon.localName).toBe('span');
     expect(icon).toHaveAttribute('aria-hidden', 'true');
     expect(icon).toHaveTextContent('▼');
@@ -951,5 +947,16 @@ describe('focus', () => {
     await userEvent.keyboard('{Tab}');
     await closed();
     expect(document.activeElement).not.toBe(input());
+  });
+});
+
+// The case throws in `setup`, so it is the last of the file.
+describe('a part outside its root', () => {
+  test('throws an error that names the part', () => {
+    expect(String(mountError(ComboboxPartAlone, { part: 'Item' }))).toContain(
+      '<Combobox.Item> must be inside <Combobox.Root>',
+    );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });

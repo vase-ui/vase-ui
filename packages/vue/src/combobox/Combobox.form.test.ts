@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import ComboboxInForm from '../../test/fixtures/ComboboxInForm.vue';
-import { mount, settle } from '../../test/render';
+import { mount, settle, submitsPrevented } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -69,19 +69,17 @@ describe('the form data', () => {
 
 describe('the constraint validation', () => {
   test('a required root with no value blocks the submit and gives the focus to the control', async () => {
-    let submits = 0;
-    await mountForm({ root: { required: true }, onSubmit: () => (submits += 1) });
+    await mountForm({ root: { required: true } });
     await userEvent.click(byTestId('submit'));
-    expect(submits).toBe(0);
+    expect(submitsPrevented).toEqual([]);
     expect(document.activeElement).toBe(byTestId('input'));
     expect(byTestId('input')).toHaveAttribute('aria-required', 'true');
   });
 
   test('a read-only, required root with no value submits', async () => {
-    let submits = 0;
-    await mountForm({ root: { required: true, readonly: true }, onSubmit: () => (submits += 1) });
+    await mountForm({ root: { required: true, readonly: true } });
     await userEvent.click(byTestId('submit'));
-    expect(submits).toBe(1);
+    await waitFor(() => expect(submitsPrevented).toEqual([false]));
   });
 
   test('a multiple root is required only while no value is selected', async () => {

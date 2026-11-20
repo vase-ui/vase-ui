@@ -148,11 +148,8 @@ describe('the form', () => {
     await mountAutocomplete({
       inputInPopup: true,
       root: { name: 'tag', submitOnItemClick: true },
-      onSubmit: (event: Event) => {
-        event.preventDefault();
-        values.push(new FormData(event.currentTarget as HTMLFormElement).get('tag'));
-      },
     });
+    form().addEventListener('submit', () => values.push(new FormData(form()).get('tag')));
     await userEvent.click(byTestId('trigger')!);
     await opened();
     await userEvent.click(byTestId('item-chore')!);

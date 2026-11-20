@@ -9,13 +9,12 @@ type Props = Record<string, unknown>;
 defineProps({
   root: Object as PropType<Props>,
   inputInPopup: Boolean,
-  onSubmit: Function as PropType<(event: Event) => void>,
 });
 const TAGS = ['feature', 'fix', 'docs', 'chore'];
 </script>
 
 <template>
-  <form data-testid="form" @submit="onSubmit?.($event)">
+  <form data-testid="form">
     <Autocomplete.Root :items="TAGS" v-bind="root">
       <template v-if="inputInPopup">
         <Autocomplete.Trigger data-testid="trigger">

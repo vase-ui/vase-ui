@@ -1,8 +1,4 @@
-<script
-  setup
-  lang="ts"
-  generic="Value = never, Multiple extends boolean | undefined = false, Item = Value"
->
+<script setup lang="ts" generic="Value = never, Multiple extends boolean = false, Item = Value">
 import { useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { useComboboxRoot } from './root';

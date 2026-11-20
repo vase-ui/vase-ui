@@ -13,13 +13,12 @@ defineProps({
   field: Object as PropType<Props>,
   disabledFieldset: Boolean,
   inputInPopup: Boolean,
-  onSubmit: Function as PropType<(event: Event) => void>,
 });
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 </script>
 
 <template>
-  <form data-testid="form" @submit="onSubmit?.($event)">
+  <form data-testid="form">
     <Fieldset.Root :disabled="disabledFieldset">
       <component :is="field ? Field.Root : 'div'" v-bind="field">
         <Combobox.Root :items="FRUITS" v-bind="root">
