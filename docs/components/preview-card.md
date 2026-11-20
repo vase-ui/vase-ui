@@ -111,9 +111,9 @@ One preview card can have more than one trigger. Give the same `handle` to more 
 
 <<< ./preview-card/MultipleDetachedTriggers.vue{8-9}
 
-The preview card can show a different content for each trigger. Give a `payload` to each `PreviewCard.Trigger`. The default slot of `PreviewCard.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
+The preview card can show different content for each trigger. Give a `payload` to each `PreviewCard.Trigger`. The default slot of `PreviewCard.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
 
-<<< ./preview-card/DetachedTriggersPayload.vue{4,8,11,16,20}
+<<< ./preview-card/DetachedTriggersPayload.vue{4,8,11,15,19}
 
 ### Controlled mode with multiple triggers
 
@@ -164,7 +164,7 @@ To animate the content, put it in `PreviewCard.Viewport`. The default slot of th
 
 The `data-activation-direction` attribute of the viewport gives the place of the new trigger from the old trigger. Its value has one or two tokens, one for each axis: `left` or `right`, and `up` or `down`, such as `right down`. Match one token with the `~=` selector, such as `[data-activation-direction~='right']`.
 
-Use a viewport only when one popup has more than one trigger, and an animation changes the content. With a viewport, give `PreviewCard.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
+Use a viewport only when one popup has more than one trigger, and the content changes with an animation at a move to another trigger. With a viewport, give `PreviewCard.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
 
 <DemoFrame>
   <DemoPreviewCardDetachedTriggersFull />

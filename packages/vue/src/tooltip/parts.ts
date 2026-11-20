@@ -99,14 +99,16 @@ export namespace Positioner {
 }
 
 /**
- * The container of the content of the tooltip.
+ * The container of the content of the tooltip. It has no `role` and does not describe the trigger.
+ * To describe the trigger with it, set `keepMounted` on `Tooltip.Portal`, give the popup
+ * `role="tooltip"` and an `id`, and give the trigger `aria-describedby` with that `id`.
  * Renders a `<div>` element.
  * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
  * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
- * @selector `[data-instant]` An animation must not run. The value says why: `delay` (the tooltip opened while another tooltip of its group was open or in the `timeout` after its close, or another tooltip of the group closed it), `focus` (the focus opened it) or `dismiss` (Escape or a press on the trigger closed it).
+ * @selector `[data-instant]` An animation must not run. The value says why: `delay` (the tooltip opened while another tooltip of its group was open or in the `timeout` after its close, or it closed because another tooltip of the group opened or its active trigger left the DOM), `focus` (the focus opened it) or `dismiss` (Escape or a press on the trigger closed it).
  * @selector `[hidden]` The tooltip is closed, and `keepMounted` keeps the popup in the DOM.
- * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger: first the old width, then the new width.
- * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger: first the old height, then the new height.
+ * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger with a `Tooltip.Viewport`: first the old width, then the new width.
+ * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger with a `Tooltip.Viewport`: first the old height, then the new height.
  */
 export const Popup: typeof TooltipPopup = TooltipPopup;
 export namespace Popup {
@@ -131,7 +133,7 @@ export namespace Arrow {
 /**
  * The container of content that changes when the tooltip moves to another trigger.
  * Renders a `<div>` element.
- * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: one or two tokens, `left` or `right` and `up` or `down`, such as `right down`.
+ * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: at most two tokens, `left` or `right` and `up` or `down`, such as `right down`.
  * @selector `[data-instant]` An animation must not run, with the values of the popup.
  */
 export const Viewport: typeof TooltipViewport = TooltipViewport;

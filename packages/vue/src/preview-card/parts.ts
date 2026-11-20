@@ -103,8 +103,8 @@ export namespace Positioner {
  * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
  * @selector `[data-instant]` An animation must not run. The value says why: `focus` (the focus opened the card) or `dismiss` (Escape closed it).
  * @selector `[hidden]` The preview card is closed, and `keepMounted` keeps the popup in the DOM.
- * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger: first the old width, then the new width.
- * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger: first the old height, then the new height.
+ * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger with a `PreviewCard.Viewport`: first the old width, then the new width.
+ * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger with a `PreviewCard.Viewport`: first the old height, then the new height.
  */
 export const Popup: typeof PreviewCardPopup = PreviewCardPopup;
 export namespace Popup {
@@ -128,7 +128,7 @@ export namespace Arrow {
 /**
  * The container of content that changes when the preview card moves to another trigger.
  * Renders a `<div>` element.
- * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: one or two tokens, `left` or `right` and `up` or `down`, such as `right down`.
+ * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: at most two tokens, `left` or `right` and `up` or `down`, such as `right down`.
  * @selector `[data-instant]` An animation must not run, with the values of the popup.
  */
 export const Viewport: typeof PreviewCardViewport = PreviewCardViewport;

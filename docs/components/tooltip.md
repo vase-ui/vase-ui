@@ -53,9 +53,8 @@ A popup that shows a hint for sighted users when the mouse rests on an element o
 
 ## Usage guidelines
 
-- **Use a tooltip only as a visual label**: A tooltip is a supplementary visual label for sighted users with a mouse or a keyboard. Touch users and screen reader users do not get it.
+- **Use a tooltip only as a visual label**: A tooltip is a supplementary visual label for sighted users with a mouse or a keyboard. Touch users and screen reader users do not get it. See [Alternatives to tooltips](#alternatives-to-tooltips).
 - **Give the trigger an accessible name**: A tooltip does not label its trigger. Give the trigger an `aria-label` that matches the text of the tooltip, so that screen reader users get the same information.
-- **Keep the popup in the DOM to describe the trigger**: The closed popup is not in the DOM. To describe the trigger with the tooltip, set `keepMounted` on `Tooltip.Portal`. Then give `Tooltip.Popup` `role="tooltip"` and an `id`, and give `Tooltip.Trigger` `aria-describedby` with that `id`.
 
 ## Anatomy
 
@@ -65,7 +64,7 @@ Import the component and assemble its parts:
 
 ## Alternatives to tooltips
 
-A tooltip gives clarity that is not necessary in a dense interface. A user who never sees a tooltip must not miss important information.
+Use a tooltip only to give extra clarity in a dense interface. A user who never sees a tooltip must not miss important information.
 
 A tooltip does not work well with touch input. A touch screen has no pointer that hovers, so a touch user cannot find a tooltip before a tap on its trigger. iOS has no standard tooltip gesture for touch. Android can show a tooltip on a long press, but on the web a long press usually opens the context menu of the browser. For this reason, a touch opens no tooltip.
 
@@ -136,7 +135,7 @@ One tooltip can have more than one trigger. Give the same `handle` to more than 
 
 <<< ./tooltip/MultipleDetachedTriggers.vue
 
-The tooltip can show a different content for each trigger. Give a `payload` to each `Tooltip.Trigger`. The default slot of `Tooltip.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
+The tooltip can show different content for each trigger. Give a `payload` to each `Tooltip.Trigger`. The default slot of `Tooltip.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
 
 <<< ./tooltip/DetachedTriggersPayload.vue{4,8,12,16,21}
 
@@ -191,7 +190,7 @@ To animate the content, put it in `Tooltip.Viewport`. The default slot of the vi
 
 The `data-activation-direction` attribute of the viewport gives the place of the new trigger from the old trigger. Its value has one or two tokens, one for each axis: `left` or `right`, and `up` or `down`, such as `right down`. Match one token with the `~=` selector, such as `[data-activation-direction~='right']`.
 
-Use a viewport only when one popup has more than one trigger, and an animation changes the content. With a viewport, give `Tooltip.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
+Use a viewport only when one popup has more than one trigger, and the content changes with an animation at a move to another trigger. With a viewport, give `Tooltip.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
 
 <DemoFrame>
   <DemoTooltipDetachedTriggersFull />

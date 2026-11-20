@@ -141,7 +141,7 @@ One popover can have more than one trigger. Give the same `handle` to more than 
 
 <<< ./popover/MultipleDetachedTriggers.vue
 
-The popover can show a different content for each trigger. Give a `payload` to each `Popover.Trigger`. The default slot of `Popover.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
+The popover can show different content for each trigger. Give a `payload` to each `Popover.Trigger`. The default slot of `Popover.Root` gets the `payload` of the active trigger. The type argument of `createHandle()` gives the payload its type:
 
 <<< ./popover/DetachedTriggersPayload.vue{4,8,12,16,22,23}
 
@@ -194,7 +194,7 @@ To animate the content, put it in `Popover.Viewport`. The default slot of the vi
 
 The `data-activation-direction` attribute of the viewport gives the place of the new trigger from the old trigger. Its value has one or two tokens, one for each axis: `left` or `right`, and `up` or `down`, such as `right down`. Match one token with the `~=` selector, such as `[data-activation-direction~='right']`.
 
-Use a viewport only when one popup has more than one trigger, and an animation changes the content. With a viewport, give `Popover.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
+Use a viewport only when one popup has more than one trigger, and the content changes with an animation at a move to another trigger. With a viewport, give `Popover.Positioner` the styles `width: var(--positioner-width)` and `height: var(--positioner-height)`. The positioner then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
 
 <DemoFrame>
   <DemoPopoverDetachedTriggersFull />

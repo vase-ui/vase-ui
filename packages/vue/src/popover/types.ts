@@ -48,7 +48,8 @@ export interface PopoverRootProps<Payload = unknown> {
   /**
    * The modal state of the open popover:
    * - `false`: the page stays in use.
-   * - `true`: the page does not scroll, and only the active trigger gets a pointer. With a
+   * - `true`: the page does not scroll, and only the popup and the active trigger get a pointer.
+   *   After a touch open, the page scrolls, unless the popup is about as wide as the view. With a
    *   `Popover.Close` in the popup, the focus stays in the popup, and the rest of the page is inert.
    * - `'trap-focus'`: with a `Popover.Close` in the popup, the focus stays in the popup, and screen
    *   readers do not read the rest of the page. The page stays in use.
