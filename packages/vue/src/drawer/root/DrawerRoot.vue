@@ -156,7 +156,7 @@ import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { useKeepAliveState } from '../../internals/useKeepAliveState';
-import { useDialogRoot } from '../../dialog/root/useDialogRoot';
+import { useDialogRoot } from '../dialog/root/useDialogRoot';
 import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
 import type { DrawerViewportContext } from '../viewport/DrawerViewportContext';
 import { DrawerRootContext, useDrawerRootContext } from './DrawerRootContext';

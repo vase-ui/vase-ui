@@ -3,7 +3,7 @@ import type { ComputedRef, Ref } from 'vue';
 import { getComputedStyle } from '@floating-ui/utils/dom';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useDialogRootContext } from '../dialog/root/DialogRootContext';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useDrawerRootContext } from './DrawerRootContext';
 import type { DrawerRootContext, DrawerSnapPoint } from './DrawerRootContext';

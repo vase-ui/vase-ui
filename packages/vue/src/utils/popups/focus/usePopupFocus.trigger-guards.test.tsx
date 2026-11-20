@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
-import * as Dialog from '../../../dialog/index.parts';
+import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import {
   createHeldBranch,
@@ -232,22 +232,26 @@ describe('useTriggerFocusGuards', () => {
         await render(() => (
           <div>
             <button>Outside dialog</button>
-            <Dialog.Root defaultOpen>
-              <Dialog.Portal>
-                <Dialog.Popup style={{ position: 'relative' }}>
-                  {direction === 'forward' && <button>Inside dialog</button>}
-                  {renderTestPopup({ tabindex: -1 })}
-                  {direction === 'backward' && <button>Inside dialog</button>}
-                </Dialog.Popup>
-              </Dialog.Portal>
-            </Dialog.Root>
+            <Drawer.Root defaultOpen>
+              <Drawer.Portal>
+                <Drawer.Viewport>
+                  <Drawer.Popup style={{ position: 'relative' }}>
+                    {direction === 'forward' && <button>Inside dialog</button>}
+                    {renderTestPopup({ tabindex: -1 })}
+                    {direction === 'backward' && <button>Inside dialog</button>}
+                  </Drawer.Popup>
+                </Drawer.Viewport>
+              </Drawer.Portal>
+            </Drawer.Root>
           </div>
         ));
 
+        // A drawer takes the focus on its popup.
         const destination = screen.getByRole('button', { name: 'Inside dialog' });
         await waitFor(() => {
-          expect(destination).toHaveFocus();
+          expect(screen.getAllByRole('dialog')[0]).toHaveFocus();
         });
+        destination.focus();
 
         await focusTabOrigin(await openPopup());
         const popup = screen.getByTestId('popup');

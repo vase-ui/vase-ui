@@ -10,9 +10,19 @@ import {
   type InjectionKey,
 } from 'vue';
 import { useIsHydrated } from '../common/hydration';
+import { ownerDocument } from '../common/owner';
 import { visuallyHidden } from '../common/visuallyHidden';
 import type { Layer } from './layer';
 import type { PopupRoot } from './root';
+
+/**
+ * A `mousedown` listener of an element that covers the page. A press on such an element moves the
+ * focus to `<body>`, and a double click selects text of the page in Firefox and WebKit. The default
+ * action of `mousedown` does both (test/measurements/dialog.test.ts, N9 of popup.test.ts).
+ */
+export function keepFocus(event: MouseEvent) {
+  if (event.target === event.currentTarget) event.preventDefault();
+}
 
 /** The target of a `<Teleport>`: a selector, an element or a shadow root. `null` renders nothing. */
 export type PortalTarget = string | Element | ShadowRoot | null;
@@ -38,6 +48,18 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   const inherited = inject(targetKey, () => 'body');
   const target = computed(() => (props.to === undefined ? inherited() : props.to));
   provide(targetKey, () => target.value);
+  // Vue 3.5.12 removes the first two nodes of the target when it unmounts a disabled `<Teleport>`
+  // that it hydrated. So a disabled portal gives Vue an element of its own, out of the document.
+  let inPlaceTarget: HTMLElement | undefined;
+  const teleportTarget = computed(() => {
+    // eslint-disable-next-line no-restricted-globals -- The typeof check tells a server from a client.
+    if (!props.disabled || typeof document === 'undefined') return target.value;
+    if (!inPlaceTarget) {
+      inPlaceTarget = ownerDocument(null).createElement('div');
+      inPlaceTarget.append('', '');
+    }
+    return inPlaceTarget;
+  });
 
   // The server HTML has no content of a teleport to `<body>`, and Vue cannot hydrate one. So the
   // portal renders its teleport after its mount (the Vue guide on server rendering, "Teleports").
@@ -56,14 +78,16 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
       (root.open || root.leaving || root.keepMounted),
   );
   // The server HTML of a disabled portal has no sentinels and no block, because the server has no
-  // popup element and no layer.
-  const sentinels = computed(() => mounted.value && root.open && !!root.popup);
+  // popup element and no layer. In place, a popup with no trap has the order of the document.
+  const sentinels = computed(
+    () => mounted.value && root.open && !!root.popup && (!props.disabled || layer.trap),
+  );
   const blocks = computed(() => mounted.value && root.open && layer.block);
 
   const blockElement = shallowRef<HTMLElement | null>(null);
   const hole = shallowRef<DOMRect>();
   watch(
-    [() => root.activeTrigger, blockElement],
+    [() => (layer.triggerInUse ? root.activeTrigger : null), blockElement],
     ([trigger, block], _, onCleanup) => {
       hole.value = undefined;
       if (!trigger || !block) return;
@@ -76,10 +100,6 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     return {
       position: 'fixed',
       inset: 0,
-      // A double click selects text of the page in Firefox and WebKit
-      // (test/measurements/popup.test.ts).
-      'user-select': 'none',
-      '-webkit-user-select': 'none',
       // The active trigger keeps its hover and its press.
       clipPath: rect
         ? `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rect.left}px ${rect.top}px,${rect.right}px ${rect.top}px,${rect.right}px ${rect.bottom}px,${rect.left}px ${rect.bottom}px,${rect.left}px ${rect.top}px)`
@@ -99,12 +119,14 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   });
 
   return {
-    target,
+    /** The target of the `<Teleport>`. */
+    target: teleportTarget,
     rendered,
     sentinels,
     blocks,
     blockStyle,
     sentinelStyle: visuallyHidden,
+    onBlockMousedown: keepFocus,
     setBlock: (element: unknown) => (blockElement.value = element as HTMLElement | null),
     setBefore: (element: unknown) => (before.value = element as HTMLElement | null),
     setAfter: (element: unknown) => (after.value = element as HTMLElement | null),

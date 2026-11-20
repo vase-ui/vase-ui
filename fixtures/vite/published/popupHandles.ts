@@ -29,19 +29,13 @@ function check(handle: PopupHandle) {
   return handle.store.select('isOpenedByTrigger', 'second');
 }
 
-const alertDialog: AlertDialog.Handle<Payload> = AlertDialog.createHandle<Payload>();
-check(alertDialog);
-check(new AlertDialog.Handle<Payload>());
-const dialog: Dialog.Handle<Payload> = Dialog.createHandle<Payload>();
-check(dialog);
-check(new Dialog.Handle<Payload>());
 const drawer: Drawer.Handle<Payload> = Drawer.createHandle<Payload>();
 check(drawer);
 check(new Drawer.Handle<Payload>());
 const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
 check(menu);
 check(new Menu.Handle<Payload>());
-// A Popover handle has no store.
+// A handle of Popover, Dialog and Alert Dialog has no store.
 const popovers: Popover.Handle<Payload>[] = [
   Popover.createHandle<Payload>(),
   new Popover.Handle<Payload>(),
@@ -50,6 +44,18 @@ for (const popover of popovers) {
   const open: boolean = popover.isOpen;
   if (open) popover.close();
   else popover.open('second');
+}
+const dialogs: Dialog.Handle<Payload>[] = [
+  Dialog.createHandle<Payload>(),
+  new Dialog.Handle<Payload>(),
+  AlertDialog.createHandle<Payload>(),
+  new AlertDialog.Handle<Payload>(),
+];
+for (const dialog of dialogs) {
+  const open: boolean = dialog.isOpen;
+  if (open) dialog.close();
+  else if (dialog instanceof AlertDialog.Handle) dialog.open(null);
+  else dialog.openWithPayload({ label: 'Second' });
 }
 const previewCard: PreviewCard.Handle<Payload> = PreviewCard.createHandle<Payload>();
 check(previewCard);

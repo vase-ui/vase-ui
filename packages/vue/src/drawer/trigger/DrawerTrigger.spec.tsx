@@ -1,5 +1,5 @@
 import { Drawer } from '@vase-ui/vue/drawer';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 
 const numberPayloadHandle = Drawer.createHandle<number>();
 const dialogHandle = Dialog.createHandle<number>();

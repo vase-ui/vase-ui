@@ -59,9 +59,23 @@ export function createAppOf(
     : hydrate
       ? vue.createSSRApp
       : vue.createApp;
-  const app = create(component, props);
+  const app = create(component, kind.startsWith('vapor') ? vaporRootProps(props) : props);
   if (kind.endsWith('interop')) app.use(vaporInteropPlugin);
   return app;
+}
+
+/**
+ * The props of a Vapor app. `createVaporApp` reads a function in a root prop as a getter of the
+ * value (`resolveSource` of runtime-vapor), so each function goes in a getter that gives it. The
+ * proxy keeps the reads of a reactive `props` tracked.
+ */
+function vaporRootProps(props: Record<string, unknown>): Record<string, unknown> {
+  return new Proxy(props, {
+    get(target, key) {
+      const value: unknown = Reflect.get(target, key);
+      return typeof value === 'function' ? () => value : value;
+    },
+  });
 }
 
 export function mount(

@@ -1,11 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
 import { defineAsyncComponent } from 'vue';
 import type { DefineComponent, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import * as AlertDialog from '../../../alert-dialog/index.parts';
 import * as Combobox from '../../../combobox/index.parts';
-import * as Dialog from '../../../dialog/index.parts';
 import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
@@ -55,35 +52,19 @@ const parents = {
       </Popover.Portal>
     </Popover.Root>
   ),
-  dialog: (record: Recorder, content: VNode) => (
-    <Dialog.Root defaultOpen modal={false} onOpenChange={record}>
-      <Dialog.Portal>
-        <Dialog.Popup initialFocus={false}>{content}</Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+  drawer: (record: Recorder, content: VNode) => (
+    <Drawer.Root defaultOpen modal={false} onOpenChange={record}>
+      <Drawer.Portal>
+        <Drawer.Viewport>
+          <Drawer.Popup initialFocus={false}>{content}</Drawer.Popup>
+        </Drawer.Viewport>
+      </Drawer.Portal>
+    </Drawer.Root>
   ),
 };
 
 // Each child is open at the mount. The cases press the parts that have a test id.
 const children = {
-  dialog: (record: Recorder) => (
-    <Dialog.Root defaultOpen onOpenChange={record}>
-      <Dialog.Portal>
-        <Dialog.Backdrop data-testid="backdrop" />
-        <Dialog.Viewport data-testid="viewport">
-          <Dialog.Popup data-testid="popup" initialFocus={false} />
-        </Dialog.Viewport>
-      </Dialog.Portal>
-    </Dialog.Root>
-  ),
-  alertDialog: (record: Recorder) => (
-    <AlertDialog.Root defaultOpen onOpenChange={record}>
-      <AlertDialog.Portal>
-        <AlertDialog.Backdrop data-testid="backdrop" />
-        <AlertDialog.Popup data-testid="popup" initialFocus={false} />
-      </AlertDialog.Portal>
-    </AlertDialog.Root>
-  ),
   drawer: (record: Recorder) => (
     <Drawer.Root defaultOpen onOpenChange={record}>
       <Drawer.Portal>
@@ -214,34 +195,6 @@ describe('a press on a part of a child popup that is outside its popup element',
 
   it.each<PressCase>([
     {
-      name: 'Dialog.Backdrop / popover',
-      parent: 'popover',
-      child: 'dialog',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'Dialog.Viewport / popover',
-      parent: 'popover',
-      child: 'dialog',
-      part: 'viewport',
-      closesChild: true,
-    },
-    {
-      name: 'Dialog internal backdrop / popover',
-      parent: 'popover',
-      child: 'dialog',
-      part: INTERNAL_BACKDROP,
-      closesChild: true,
-    },
-    {
-      name: 'AlertDialog.Backdrop / popover',
-      parent: 'popover',
-      child: 'alertDialog',
-      part: 'backdrop',
-      closesChild: false,
-    },
-    {
       name: 'Drawer.Backdrop / popover',
       parent: 'popover',
       child: 'drawer',
@@ -305,35 +258,33 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: true,
     },
     {
-      name: 'PreviewCard.Positioner / dialog',
-      parent: 'dialog',
+      name: 'PreviewCard.Positioner / drawer',
+      parent: 'drawer',
       child: 'previewCard',
       part: 'positioner',
       closesChild: false,
     },
     {
-      name: 'Tooltip.Positioner / dialog',
-      parent: 'dialog',
+      name: 'Tooltip.Positioner / drawer',
+      parent: 'drawer',
       child: 'tooltip',
       part: 'positioner',
       closesChild: false,
     },
     {
-      name: 'NavigationMenu.Backdrop / dialog',
-      parent: 'dialog',
+      name: 'NavigationMenu.Backdrop / drawer',
+      parent: 'drawer',
       child: 'navigationMenu',
       part: 'backdrop',
       closesChild: true,
     },
     {
-      name: 'NavigationMenu.Popup / dialog',
-      parent: 'dialog',
+      name: 'NavigationMenu.Popup / drawer',
+      parent: 'drawer',
       child: 'navigationMenu',
       part: 'popup',
       closesChild: false,
     },
-    // The case of a Popover above a Dialog comes back with the Dialog unit, when Dialog moves to
-    // the stack of the popup layer.
   ])('VUE-4: $name closes no popup above', async ({ parent, child, part, closesChild }) => {
     const parentChanges: Change[] = [];
     const childChanges: Change[] = [];
@@ -350,46 +301,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       child: closesChild ? OUTSIDE_PRESS : [],
     });
   });
-
-  // A real click has the order of events and the targets of the browser.
-  it.each([
-    { name: 'a modal dialog', modal: true },
-    { name: 'a dialog that is not modal', modal: false },
-  ])(
-    'VUE-4: a real click on the backdrop of $name in a popover closes only the dialog',
-    async ({ modal }) => {
-      const parentChanges: Change[] = [];
-      const childChanges: Change[] = [];
-      await render(
-        parents.popover(
-          recordInto(parentChanges),
-          <Dialog.Root defaultOpen modal={modal} onOpenChange={recordInto(childChanges)}>
-            <Dialog.Portal>
-              <Dialog.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: 0 }} />
-              <Dialog.Popup
-                data-testid="popup"
-                initialFocus={false}
-                style={{ position: 'fixed', left: '40%', top: '40%' }}
-              >
-                Dialog
-              </Dialog.Popup>
-            </Dialog.Portal>
-          </Dialog.Root>,
-        ),
-      );
-      await screen.findByTestId('popup');
-
-      // A modal dialog makes its own backdrop inert, so its internal backdrop gets the click.
-      const backdrop = modal ? findPart(INTERNAL_BACKDROP) : screen.getByTestId('backdrop');
-      await userEvent.click(backdrop, { position: { x: 5, y: 5 } });
-      await flushMicrotasks();
-
-      expect({ parent: parentChanges, child: childChanges }).toEqual({
-        parent: [],
-        child: OUTSIDE_PRESS,
-      });
-    },
-  );
 });
 
 const Pending = defineAsyncComponent(() => new Promise<DefineComponent>(() => {}));
@@ -466,19 +377,6 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
       ),
     },
     {
-      name: 'Dialog',
-      render: (record, onOpenChangeComplete) => (
-        <Dialog.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
-          <Dialog.Portal>
-            <Dialog.Backdrop data-testid="backdrop" />
-            <Pending>
-              <Dialog.Popup>Dialog</Dialog.Popup>
-            </Pending>
-          </Dialog.Portal>
-        </Dialog.Root>
-      ),
-    },
-    {
       name: 'Drawer',
       render: (record, onOpenChangeComplete) => (
         <Drawer.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
@@ -511,18 +409,6 @@ describe('a press on the internal backdrop of a modal dialog whose popup has not
   const { render } = createRenderer();
 
   it.each<{ name: string; render: (record: Recorder) => VNode }>([
-    {
-      name: 'Dialog',
-      render: (record) => (
-        <Dialog.Root defaultOpen onOpenChange={record}>
-          <Dialog.Portal>
-            <Pending>
-              <Dialog.Popup>Dialog</Dialog.Popup>
-            </Pending>
-          </Dialog.Portal>
-        </Dialog.Root>
-      ),
-    },
     {
       name: 'Drawer',
       render: (record) => (

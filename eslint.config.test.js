@@ -49,7 +49,9 @@ function page(body) {
   return `---\norder: 1\n---\n\n<script setup lang="ts">\nimport { data } from './parity.data.ts';\n</script>\n\n# Sample\n\n{{ data.title }}\n\n${body}\n`;
 }
 
-const SRC = 'packages/vue/src/dialog';
+// The rules of the older forms apply to a family with no `types.ts`. No family has this folder, so
+// a refactor of a family does not change the cases.
+const SRC = 'packages/vue/src/older-family';
 const PORTAL_PART = 'packages/vue/src/popover/portal/PopoverPortal.vue';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';

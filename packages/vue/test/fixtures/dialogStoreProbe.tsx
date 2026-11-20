@@ -1,7 +1,7 @@
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
-import { useDialogRootContext } from '../../src/dialog/root/DialogRootContext';
-import type { DialogStore } from '../../src/dialog/store/DialogStore';
+import { useDialogRootContext } from '../../src/drawer/dialog/root/DialogRootContext';
+import type { DialogStore } from '../../src/drawer/dialog/store/DialogStore';
 
 /**
  * A fixture part that gives the store of the root above it to the test, as each part of the

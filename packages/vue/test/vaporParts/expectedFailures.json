@@ -10,9 +10,6 @@
     }
   },
   "files": {
-    "src/alert-dialog/trigger/AlertDialogTrigger.test.tsx": {
-      "fails": {}
-    },
     "src/autocomplete/value/AutocompleteValue.test.tsx": {
       "fails": {}
     },

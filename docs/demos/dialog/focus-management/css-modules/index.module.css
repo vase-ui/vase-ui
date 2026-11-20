@@ -32,7 +32,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -41,7 +41,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -49,7 +49,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -85,11 +85,11 @@
   @media (prefers-color-scheme: dark) {
     opacity: 0.5;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.BackdropHidden {
+  opacity: 0;
 }
 
 .Popup {
@@ -119,12 +119,12 @@
     color: white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.98);
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.PopupHidden {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.98);
 }
 
 .Intro,

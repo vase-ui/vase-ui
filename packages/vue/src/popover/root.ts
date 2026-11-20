@@ -9,7 +9,8 @@ import {
 } from 'vue';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
-import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
+import { PopupHandle, usePopupRoot, type PopupRoot } from '../popup/root';
+import { useHandleRoot } from '../popup/trigger';
 import type { usePlacement } from '../popup/placement';
 import type { ViewportSizes } from '../popup/viewport';
 import type {
@@ -112,6 +113,8 @@ export function usePopoverRoot<Payload>(
       hide: trap.value ? (props.modal === true ? 'inert' : 'aria-hidden') : false,
       trap: trap.value,
       lockScroll: modal && (root.interaction !== 'touch' || fullWidth.value),
+      triggerInUse: true,
+      touchDrag: true,
     };
   });
 
@@ -181,10 +184,10 @@ export function useTriggerRoot(handle: () => PopoverHandle | undefined) {
       'Vase UI: <Popover.Trigger> must be inside <Popover.Root>, or it must have a `handle`. Without a root the trigger has no popover to open. Put the trigger inside <Popover.Root>, or pass a `handle`.',
     );
   }
+  const handleRoot = useHandleRoot(handle);
   return computed(() => {
-    const given = handle();
-    if (!given) return injected;
-    const root = rootOfHandle(given);
+    if (!handle()) return injected;
+    const root = handleRoot.value;
     return root ? (contexts.get(root) ?? null) : null;
   });
 }

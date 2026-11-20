@@ -7,8 +7,7 @@ import {
 } from '../../../../test/fixtures/scrollDocument';
 import PopupPortal from './PopupPortal.vue';
 import { Toast } from '@vase-ui/vue/toast';
-import { Dialog } from '@vase-ui/vue/dialog';
-import { AlertDialog } from '@vase-ui/vue/alert-dialog';
+import { Drawer } from '@vase-ui/vue/drawer';
 import { createRenderer, fireEvent, isVaporParts, screen, waitFor } from '#test-utils';
 
 describe('PopupPortal parts', () => {
@@ -27,13 +26,15 @@ describe('PopupPortal parts', () => {
     await render(() => (
       <main data-testid="source">
         <div id="public-portal-target" data-testid="target" />
-        <Dialog.Root defaultOpen modal={false}>
-          <Dialog.Portal to="#public-portal-target" data-testid="portal">
-            <Dialog.Popup>
-              <Child />
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>
+        <Drawer.Root defaultOpen modal={false}>
+          <Drawer.Portal to="#public-portal-target" data-testid="portal">
+            <Drawer.Viewport>
+              <Drawer.Popup>
+                <Child />
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
       </main>
     ));
 
@@ -87,22 +88,24 @@ describe('PopupPortal parts', () => {
     expect(second.reference.querySelector('[data-testid="nested"]')).toBe(nested);
   });
 
-  it('VUE-20: moves the modal marks with an open dialog when its portal changes target', async () => {
+  it('VUE-20: moves the modal marks with an open drawer when its portal changes target', async () => {
     const to = shallowRef('#first-target');
     await render(() => (
       <main>
         <div id="first-target" data-testid="first" />
         <div id="second-target" data-testid="second" />
-        <Dialog.Root defaultOpen>
-          <Dialog.Portal to={to.value}>
-            <Dialog.Popup>
-              <button>inside</button>
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>
+        <Drawer.Root defaultOpen>
+          <Drawer.Portal to={to.value}>
+            <Drawer.Viewport>
+              <Drawer.Popup>
+                <button>inside</button>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
       </main>
     ));
-    const popup = screen.getByRole('dialog');
+    const popup = screen.getAllByRole('dialog')[0]!;
     const first = screen.getByTestId('first');
     const second = screen.getByTestId('second');
     expect(second).toHaveAttribute('inert');
@@ -121,11 +124,13 @@ describe('PopupPortal parts', () => {
     const second = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
     const to = shallowRef(first.body);
     const { unmount } = await render(() => (
-      <Dialog.Root defaultOpen>
-        <Dialog.Portal to={to.value}>
-          <Dialog.Popup />
-        </Dialog.Portal>
-      </Dialog.Root>
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal to={to.value}>
+          <Drawer.Viewport>
+            <Drawer.Popup />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
     ));
     await waitFor(() => expect(isPageLocked(first)).toBe(true));
     const popup = first.body.querySelector<HTMLElement>('[role="dialog"]')!;
@@ -141,20 +146,22 @@ describe('PopupPortal parts', () => {
     await waitFor(() => expect(isPageLocked(second)).toBe(false));
   });
 
-  it('moves the Escape listener to the new document with the dialog', async () => {
+  it('moves the Escape listener to the new document with the drawer', async () => {
     const to = shallowRef<Element>();
     const close = vi.fn();
     await render(() => (
       <main>
         <iframe title="portal target" data-testid="frame" />
-        <Dialog.Root defaultOpen modal={false} onOpenChange={close}>
-          <Dialog.Portal to={to.value}>
-            <Dialog.Popup />
-          </Dialog.Portal>
-        </Dialog.Root>
+        <Drawer.Root defaultOpen modal={false} onOpenChange={close}>
+          <Drawer.Portal to={to.value}>
+            <Drawer.Viewport>
+              <Drawer.Popup />
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
       </main>
     ));
-    const popup = screen.getByRole('dialog');
+    const popup = screen.getAllByRole('dialog')[0]!;
     const frame = screen.getByTestId<HTMLIFrameElement>('frame').contentDocument!;
     to.value = frame.body;
     await nextTick();
@@ -167,31 +174,35 @@ describe('PopupPortal parts', () => {
     expect(close.mock.calls[0]?.[1].reason).toBe('escape-key');
   });
 
-  it('keeps the modal marks after a nested alert vetoes Escape and releases them on the last close', async () => {
+  it('keeps the modal marks after a nested drawer vetoes Escape and releases them on the last close', async () => {
     let veto = true;
     const { user } = await render(() => (
       <>
         <button data-testid="outside">outside</button>
-        <Dialog.Root defaultOpen>
-          <Dialog.Portal>
-            <Dialog.Popup>
-              <AlertDialog.Root
-                defaultOpen
-                onOpenChange={(open, details) => {
-                  if (!open && veto) {
-                    details.cancel();
-                  }
-                }}
-              >
-                <AlertDialog.Portal>
-                  <AlertDialog.Popup>
-                    <button>confirm</button>
-                  </AlertDialog.Popup>
-                </AlertDialog.Portal>
-              </AlertDialog.Root>
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>
+        <Drawer.Root defaultOpen>
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup>
+                <Drawer.Root
+                  defaultOpen
+                  onOpenChange={(open, details) => {
+                    if (!open && veto) {
+                      details.cancel();
+                    }
+                  }}
+                >
+                  <Drawer.Portal>
+                    <Drawer.Viewport>
+                      <Drawer.Popup data-testid="nested">
+                        <button>confirm</button>
+                      </Drawer.Popup>
+                    </Drawer.Viewport>
+                  </Drawer.Portal>
+                </Drawer.Root>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
       </>
     ));
     const outside = screen.getByTestId('outside');
@@ -199,9 +210,9 @@ describe('PopupPortal parts', () => {
       return !!outside.closest('[inert]') && !!outside.closest('[aria-hidden="true"]');
     }
     await waitFor(() => expect(marked()).toBe(true));
-    const alert = screen.getByRole('alertdialog');
+    const alert = screen.getByTestId('nested');
     await fireEvent.keyDown(alert, { key: 'Escape' });
-    expect(screen.getByRole('alertdialog')).toBe(alert);
+    expect(screen.getByTestId('nested')).toBe(alert);
     expect(marked()).toBe(true);
     veto = false;
     await user.keyboard('{Escape}');

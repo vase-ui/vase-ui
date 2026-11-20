@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computed, createSSRApp, defineComponent, provide } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { DialogPortalContext } from '../../dialog/portal/DialogPortalContext';
+import { DialogPortalContext } from '../dialog/portal/DialogPortalContext';
 import * as Drawer from '../index.parts';
 
 // The default `Drawer.Portal` renders its children only after the mount. This part gives the

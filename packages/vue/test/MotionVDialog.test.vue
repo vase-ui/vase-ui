@@ -1,76 +1,42 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
-import { motion } from 'motion-v';
-import type { MotionProps, VariantType } from 'motion-v';
-import * as Dialog from '../src/dialog/index.parts';
+import { animate } from 'motion-v';
+import { Dialog } from '../src/dialog';
 
+// A dialog whose popup enters and leaves with motion-v in the JavaScript hooks of `<Transition>`.
 const props = defineProps<{
   open: boolean;
-  /** How the popup gets the motion component: the `#render` slot or the `as` prop. */
-  form: 'render' | 'as';
-  closed: VariantType;
-  opened: VariantType;
   /** The duration of each animation, in seconds. */
   duration: number;
-  preventUnmountOnClose?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:open': [open: boolean];
-  openChangeComplete: [open: boolean];
-  exitComplete: [];
+  afterLeave: [];
 }>();
 
-const root = useTemplateRef('root');
-
-function handleOpenChange(open: boolean, details: Dialog.Root.ChangeEventDetails) {
-  if (!open && props.preventUnmountOnClose) {
-    details.preventUnmountOnClose();
-  }
-  emit('update:open', open);
+function enter(element: Element, done: () => void) {
+  void animate(element, { opacity: [0, 1] }, { duration: props.duration }).then(done);
 }
 
-function handleAnimationComplete() {
-  if (!props.open) {
-    emit('exitComplete');
-  }
+function leave(element: Element, done: () => void) {
+  void animate(element, { opacity: 0 }, { duration: props.duration, ease: 'linear' }).then(done);
 }
-
-defineExpose({ unmount: () => root.value?.unmount() });
 </script>
 
 <template>
-  <Dialog.Root
-    ref="root"
-    :open="open"
-    @open-change="handleOpenChange"
-    @open-change-complete="emit('openChangeComplete', $event)"
-  >
+  <Dialog.Root :open="open" @update:open="emit('update:open', $event)">
     <Dialog.Portal>
-      <Dialog.Popup
-        v-if="form === 'as'"
-        data-testid="popup"
-        :as="motion.div"
-        :initial="false"
-        :animate="open ? opened : closed"
-        :transition="{ duration, ease: 'linear' }"
-        @animation-complete="handleAnimationComplete"
+      <Transition
+        :css="false"
+        appear
+        @enter="enter"
+        @leave="leave"
+        @after-leave="emit('afterLeave')"
       >
-        <Dialog.Title>Title</Dialog.Title>
-      </Dialog.Popup>
-      <Dialog.Popup v-else data-testid="popup">
-        <template #render="{ props: popupProps, state }">
-          <motion.div
-            v-bind="popupProps as MotionProps"
-            :initial="false"
-            :animate="state.open ? opened : closed"
-            :transition="{ duration, ease: 'linear' }"
-            @animation-complete="handleAnimationComplete"
-          >
-            <Dialog.Title>Title</Dialog.Title>
-          </motion.div>
-        </template>
-      </Dialog.Popup>
+        <Dialog.Popup data-testid="popup">
+          <Dialog.Title>Title</Dialog.Title>
+        </Dialog.Popup>
+      </Transition>
     </Dialog.Portal>
   </Dialog.Root>
 </template>

@@ -106,7 +106,7 @@ The `#render` slot is mainly for composing event handlers and behavioral props. 
 
 To render a different tag with the `as` prop or the `#render` slot, take more care. Some default props are not valid on the new element. For example, `type="button"` is valid only on a `<button>`. `useRender` gives `type="button"` to a default `button` tag and `alt=""` to a default `img` tag. A different tag does not get them.
 
-A part cannot know which element the `as` prop or the `#render` slot gives. Give `nativeButton` to a part that has it, such as `Dialog.Trigger`, to tell it which defaults to apply.
+A part cannot know which element the `as` prop or the `#render` slot gives. Give `nativeButton` to a part that has it, such as `Menu.Trigger`, to tell it which defaults to apply.
 
 ## API reference
 

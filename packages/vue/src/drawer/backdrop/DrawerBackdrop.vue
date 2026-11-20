@@ -28,7 +28,7 @@ export interface DrawerBackdropState {
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useDialogRootContext } from '../dialog/root/DialogRootContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { createElementSetter } from '../../utils/popups/createElementSetter';

@@ -18,7 +18,7 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
-import * as Dialog from '../../dialog/index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   ContextMenuProvider,
   MenubarProvider,

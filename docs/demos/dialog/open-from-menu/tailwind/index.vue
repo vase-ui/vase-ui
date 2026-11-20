@@ -5,6 +5,8 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
 
 const dialogOpen = shallowRef(false);
+const backdropHiddenClass = 'opacity-0';
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 
 const CaretDownIcon: FunctionalComponent = () =>
   h(
@@ -48,22 +50,30 @@ const itemClass =
 
   <Dialog.Root v-model:open="dialogOpen">
     <Dialog.Portal>
-      <Dialog.Backdrop
-        class="fixed inset-0 bg-black opacity-20 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:opacity-50 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh"
-      />
-      <Dialog.Popup
-        class="fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0"
+      <Transition
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        appear
       >
-        <div class="flex flex-col gap-1">
-          <Dialog.Title class="text-base font-bold">Playlist details</Dialog.Title>
-          <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
-            This playlist contains 24 songs and was last updated today.
-          </Dialog.Description>
-        </div>
-        <div class="flex justify-end gap-3">
-          <Dialog.Close :class="buttonClass">Close</Dialog.Close>
-        </div>
-      </Dialog.Popup>
+        <Dialog.Backdrop
+          class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-150 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh"
+        />
+      </Transition>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Dialog.Popup
+          class="fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out"
+        >
+          <div class="flex flex-col gap-1">
+            <Dialog.Title class="text-base font-bold">Playlist details</Dialog.Title>
+            <Dialog.Description class="text-sm text-neutral-600 dark:text-neutral-400">
+              This playlist contains 24 songs and was last updated today.
+            </Dialog.Description>
+          </div>
+          <div class="flex justify-end gap-3">
+            <Dialog.Close :class="buttonClass">Close</Dialog.Close>
+          </div>
+        </Dialog.Popup>
+      </Transition>
     </Dialog.Portal>
   </Dialog.Root>
 </template>
