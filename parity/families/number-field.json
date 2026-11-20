@@ -8,42 +8,42 @@
     {
       "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrementDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/group/NumberFieldGroupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrementDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/input/NumberFieldInputDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
       "kind": "not-applicable",
-      "reason": "The part is cut. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The part is cut. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
@@ -53,7 +53,7 @@
     {
       "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
       "kind": "not-applicable",
-      "reason": "The file gives the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The file gives the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
@@ -106,17 +106,17 @@
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.gecko.test.tsx",
       "kind": "not-applicable",
-      "reason": "The file tests the release of the pointer lock in Firefox. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The file tests the release of the pointer lock in Firefox. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
       "kind": "not-applicable",
-      "reason": "The file tests the cut cursor part. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The file tests the cut cursor part. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/utils/getViewportRect.test.ts",
       "kind": "not-applicable",
-      "reason": "The file tests the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The file tests the rectangle where a locked pointer wraps. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/utils/parse.test.ts",
@@ -151,21 +151,21 @@
       "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
       "title": "does not mark the field focused when the focus default is prevented",
       "kind": "not-applicable",
-      "reason": "The browser cannot cancel `focus`, so `preventDefault()` has no native meaning there (rule 8.7). The family has no `focused` state (rule 8.15)."
+      "reason": "The browser cannot cancel `focus`, so `preventDefault()` has no native meaning there. The family has no `focused` state."
     },
     {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
       "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
       "title": "does not reformat, touch, or commit on blur when the blur default is prevented",
       "kind": "not-applicable",
-      "reason": "The browser cannot cancel `blur`, so `preventDefault()` has no native meaning there (rule 8.7). `details.cancel()` cancels a change."
+      "reason": "The browser cannot cancel `blur`, so `preventDefault()` has no native meaning there. `details.cancel()` cancels a change."
     },
     {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
       "describe": ["<NumberField.Input />", "consumer-prevented defaults"],
       "title": "ignores a change whose native default was already prevented",
       "kind": "not-applicable",
-      "reason": "The browser cannot cancel `input`, so `preventDefault()` has no native meaning there (rule 8.7). `details.cancel()` cancels a change."
+      "reason": "The browser cannot cancel `input`, so `preventDefault()` has no native meaning there. `details.cancel()` cancels a change."
     },
     {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
@@ -238,21 +238,21 @@
       "describe": ["<NumberField />", "Field"],
       "title": "adds [data-focused] attribute on every focus",
       "kind": "not-applicable",
-      "reason": "The family has no `focused` state and no `data-focused`: `:focus` on the input and `:focus-within` on the root (rule 8.15)."
+      "reason": "The family has no `focused` state and no `data-focused`: `:focus` on the input and `:focus-within` on the root."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "describe": ["<NumberField />", "Field", "[data-focused] without a blur event"],
       "title": "is removed when the focused input becomes disabled",
       "kind": "not-applicable",
-      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus (rule 8.15)."
+      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "describe": ["<NumberField />", "Field", "[data-focused] without a blur event"],
       "title": "is removed when the focused input unmounts",
       "kind": "not-applicable",
-      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus (rule 8.15)."
+      "reason": "The family has no `data-focused`: `:focus` and `:focus-within` follow the focus."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
@@ -260,7 +260,7 @@
       "title": "validates the autofilled value even when the change is canceled",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.field.test.ts",
-      "reason": "A cancelled fill changes nothing and tells the field nothing (`_shared.md` section 1). The case \"a fill of a disabled or read-only field, and a cancelled fill, change nothing\" tests it."
+      "reason": "A cancelled fill changes nothing and tells the field nothing. The case \"a fill of a disabled or read-only field, and a cancelled fill, change nothing\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
@@ -276,7 +276,7 @@
       "title": "should use the default locale if no locale is provided",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.test.ts",
-      "reason": "With no `locale` prop, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser (rule 8.14). The case \"the text has the locale prop, else the locale of the nearest LocaleProvider, and never the locale of the visitor\" tests it."
+      "reason": "With no `locale` prop, the text has the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The case \"the text has the locale prop, else the locale of the nearest LocaleProvider, and never the locale of the visitor\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
@@ -290,105 +290,105 @@
       "describe": ["<NumberField.ScrubArea />"],
       "title": "tracks visual viewport scale and removes scrub listeners after pointer lock exits",
       "kind": "not-applicable",
-      "reason": "The case tests the end of the pointer lock. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The case tests the end of the pointer lock. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
       "describe": ["<NumberField.ScrubArea />", "prop: teleportDistance"],
       "title": "wraps the virtual cursor around the allowed bounds",
       "kind": "not-applicable",
-      "reason": "The case tests `teleportDistance`, which wraps a locked pointer. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The case tests `teleportDistance`, which wraps a locked pointer. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
     },
     {
       "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
       "describe": ["<NumberField.ScrubArea />", "React.Activity"],
       "title": "does not resume scrubbing when a hidden scrub area is revealed again",
       "kind": "not-applicable",
-      "reason": "Vue has no `<Activity>`. A part keeps no state about a hold of `KeepAlive` (`_shared.md` section 5), and an unmount of the area ends the scrub with no commit."
+      "reason": "Vue has no `<Activity>`. A part keeps no state about a hold of `KeepAlive`, and an unmount of the area ends the scrub with no commit."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`v-model` (`modelValue`, `update:modelValue`) and `valueChange` replace `value` and `onValueChange`, and `valueCommitted` replaces `onValueCommitted`. `readonly` replaces `readOnly`, also in the state (rule 8.2). `step` has no default: with none, a step is 1 and the hidden input has `step=\"any\"`, so the form accepts each number, and `:step=\"1\"` gives the constraint. `locale` has no default: the nearest `LocaleProvider`, else `en-US` (rule 8.14). `inputElement` on the template ref replaces `inputRef`. The `id` prop of `NumberField.Input` names the element that has the role (rule 8.4). `as` replaces `render`: the root keeps its hidden input as its last child, so it has no `element` slot. The state has no `focused`: `:focus-within` (rule 8.15). The change details have no `allowPropagation`, `isPropagationAllowed` and `trigger`: the family stops no propagation and has no trigger (rule 8.6)."
+      "reason": "`v-model` and `valueChange` replace `value` and `onValueChange`, and `valueCommitted` replaces `onValueCommitted`. `readonly` replaces `readOnly`, also in the state. With no `step`, a step is 1 and the hidden input has `step=\"any\"`, so the form accepts each number. `:step=\"1\"` gives the constraint that Base UI has by default. With no `locale`, the text has the locale of the nearest `LocaleProvider`, else `en-US`. `inputElement` on the template ref replaces `inputRef`. The `id` prop of `NumberField.Input` names the element that has the role. The hidden input stays the last child of the root, so the root has no `element` slot. CSS selects `:focus-within`, so the state has no `focused`. The family stops no event and has no trigger, so the change details have no `allowPropagation`, `isPropagationAllowed` and `trigger`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Group",
       "kind": "not-applicable",
-      "reason": "The `element` slot and `as` replace `render`, and `class` and `style` replace `className` and `style`. The group has no `data-focused`: `:focus-within` (rule 8.15)."
+      "reason": "CSS selects `:focus-within`, so the group has no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Input",
       "kind": "not-applicable",
-      "reason": "The `element` slot replaces `render`; the input is the native form control, so it has no `as` (rule 6.1). The input has `role=\"spinbutton\"` and no default `aria-roledescription`: the role says what it is in the language of the screen reader (rule 8.13), and an `aria-roledescription` of the developer is a plain attribute. It has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`: `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus` (rule 8.15)."
+      "reason": "The input is the native form control, so it has no `as`. The role `spinbutton` says what the input is in the language of the screen reader, so the input has no default `aria-roledescription`. An `aria-roledescription` of the developer is a plain attribute. CSS selects `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus`, so the input has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Increment",
       "kind": "not-applicable",
-      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). The `element` slot and `as` replace `render`. The button has no default `aria-label`: the developer gives a text or an `aria-label` (rule 8.13). It has no `data-disabled` and no `data-focused`: `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` of the root (rule 8.15)."
+      "reason": "The button reads the element that it renders, so it has no `nativeButton`. The developer gives the button a text or an `aria-label`, so it has no default `aria-label`. CSS selects `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` on the root, so the button has no `data-disabled` and no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Decrement",
       "kind": "not-applicable",
-      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). The `element` slot and `as` replace `render`. The button has no default `aria-label`: the developer gives a text or an `aria-label` (rule 8.13). It has no `data-disabled` and no `data-focused`: `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` of the root (rule 8.15)."
+      "reason": "The button reads the element that it renders, so it has no `nativeButton`. The developer gives the button a text or an `aria-label`, so it has no default `aria-label`. CSS selects `:disabled`, or `[aria-disabled=\"true\"]` on an element that is not a button, and `:focus-within` on the root, so the button has no `data-disabled` and no `data-focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "ScrubArea",
       "kind": "not-applicable",
-      "reason": "`orientation` replaces `direction`: on the web, `direction` is the direction of text, and Slider and Toolbar name this value set `orientation`. `teleportDistance` is cut: The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser. The `element` slot and `as` replace `render`."
+      "reason": "`orientation` replaces `direction`: on the web, `direction` is the direction of text, and Slider and Toolbar name this value set `orientation`. The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser. So the area asks for no pointer lock and has no `teleportDistance`: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "ScrubAreaCursor",
       "kind": "not-applicable",
-      "reason": "The part is cut. The scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior rests only on a feature that is \"Widely available\" (rule 11). The native cursor stays at the pointer, and CSS `cursor` on the area and on `html:has([data-scrubbing])` styles it in each browser."
+      "reason": "The native cursor stays at the pointer, and CSS `cursor` on the scrub area and on `html:has([data-scrubbing])` styles it in each browser. So the family has no cursor part, and the scrub area asks for no pointer lock: MDN marks `requestPointerLock()` \"Limited availability\", and a behavior of a part rests only on Baseline Widely Available features."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldGroupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldInputDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldIncrementDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldDecrementDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldScrubAreaDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldScrubAreaCursorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

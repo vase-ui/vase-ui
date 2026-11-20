@@ -5,6 +5,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L265-L276",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L183-L206"
   ],
-  "behavior": "An edge-aligned thumb and its indicator follow the new axis when the orientation changes and the elements keep their size. After alignment changes to center, a track press uses the full control width or height. A control with no travel distance keeps its current value.",
+  "behavior": "With `thumbAlignment=\"edge\"`, a thumb and its indicator follow the new axis when `orientation` changes and the elements keep their size. After a change to `thumbAlignment=\"center\"`, a press on the control uses its full width or height. A press on a control with no room to move keeps the value.",
   "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
 }

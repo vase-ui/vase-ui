@@ -118,7 +118,7 @@ export function dragThumb(
     return { values: push(next, index, target, grid, distance, disabled), index };
   }
   if (behavior === 'swap') {
-    // At the value of a neighbour, the drag goes on with that neighbour. The thumb that it leaves
+    // At the value of a neighbor, the drag goes on with that neighbor. The thumb that it leaves
     // stops at its limit.
     const up = target > next[moving]!;
     const down = target < next[moving]!;

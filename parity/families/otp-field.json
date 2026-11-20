@@ -8,12 +8,12 @@
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInputDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/otp-field/utils/stateAttributesMapping.ts",
@@ -66,21 +66,21 @@
       "describe": ["<OTPField.Input />"],
       "title": "allows a composed focus handler to prevent internal focus state",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within`."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
       "describe": ["<OTPField.Input />"],
       "title": "allows a composed blur handler to preserve internal focus state",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within`."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
       "describe": ["<OTPField.Input />"],
       "title": "allows a composed mousedown handler to prevent focus",
       "kind": "not-applicable",
-      "reason": "`event.preventDefault()` on a native listener has its native meaning only, so a listener of the developer does not stop the code of the part (rule 8.7)."
+      "reason": "`event.preventDefault()` on a native listener has its native meaning only, so a listener of the developer does not stop the code of the part."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -124,7 +124,7 @@
       "title": "adds disabled and readonly state attributes to each slot",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "A slot has no `data-disabled` and no `data-readonly`: CSS selects `:disabled` and `:read-only` on the same input (rule 8.15)."
+      "reason": "A slot has no `data-disabled` and no `data-readonly`: CSS selects `:disabled` and `:read-only` on the same input."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -139,7 +139,7 @@
       "title": "keeps the shared label on the first slot even if an aria-label is provided",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -147,7 +147,7 @@
       "title": "warns when aria-label is provided on the first slot without an associated label",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -155,7 +155,7 @@
       "title": "does not warn for a first-slot aria-label when a native label is associated",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning."
     },
     {
       "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
@@ -163,7 +163,7 @@
       "title": "does not warn for a first-slot aria-label when Field.Label is associated",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning (rule 8.2)."
+      "reason": "The `aria-label` of the developer wins on each slot, the first one too, and the part gives no warning."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
@@ -188,7 +188,7 @@
       "title": "omits the hidden validation pattern when set to `none`",
       "kind": "replaced",
       "test": "packages/vue/src/otp-field/OTPField.test.ts",
-      "reason": "The form input of the type `none` has the pattern `.{length}`, so an incomplete code fails the native validation of each type (rule 8.11)."
+      "reason": "The form input of the type `none` has the pattern `.{length}`, so an incomplete code fails the native validation of each type."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
@@ -215,20 +215,20 @@
       "describe": ["<OTPField.Root />", "prop: readOnly"],
       "title": "tracks focus state when a readonly slot receives focus",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within`."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
       "describe": ["<OTPField.Root />", "[data-focused] without a blur event"],
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within`."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
       "describe": ["<OTPField.Root />"],
       "title": "updates standalone filled and focused state on the root",
       "kind": "not-applicable",
-      "reason": "The case asserts the focused state of the root, which is cut (rule 8.15). The cases of the filled state test `data-filled`."
+      "reason": "The case asserts the focused state of the root, which is cut. The cases of the filled state test `data-filled`."
     },
     {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
@@ -288,31 +288,31 @@
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`v-model` replaces `value` and `onValueChange`. `autocomplete`, `inputmode` and `readonly` replace `autoComplete`, `inputMode` and `readOnly`, also in the state (rule 8.2). `mask` is cut: `type=\"password\"` on each `OTPField.Input` is the native attribute on the element that it changes. The state has no `focused`, and the group has no `data-focused`: CSS selects `:focus-within` (rule 8.15). The details of a change have no `allowPropagation`, `isPropagationAllowed` or `trigger`: the part stops no event, and `details.event.target` is the element (rule 8.6). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "`v-model` replaces `value` and `onValueChange`. `autocomplete`, `inputmode` and `readonly` replace `autoComplete`, `inputMode` and `readOnly`, also in the state. `type=\"password\"` on each `OTPField.Input` is the native attribute on the element that it changes, so the root has no `mask`. CSS selects `:focus-within`, so the state has no `focused`, and the group has no `data-focused`. The part stops no event, and `details.event.target` is the element, so the details of a change have no `allowPropagation`, `isPropagationAllowed` or `trigger`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "Input",
       "kind": "not-applicable",
-      "reason": "The input has no props: the attributes of an input type it, so the part has no props type. It has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`: CSS selects `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus` on the same input (rule 8.15). `readonly` replaces `readOnly` in the state, and the state has no `focused`. `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "The attributes of an input type the part, so it has no props type. CSS selects `:disabled`, `:read-only`, `:required`, `[aria-invalid=\"true\"]` and `:focus` on the same input, so it has no `data-disabled`, `data-readonly`, `data-required`, `data-invalid` and `data-focused`. `readonly` replaces `readOnly` in the state, and the state has no `focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "OTPFieldRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "OTPFieldInputDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
       "entry": "OTPFieldSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation`. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],
