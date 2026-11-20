@@ -204,12 +204,14 @@ test('a part that another family ports has the rows of that family, and the page
     reference([
       { part: 'SampleGroup', family: 'sample-group' },
       { part: 'Root', family: 'sample' },
+      { part: 'Trigger', family: 'sample' },
     ]),
     { ...INPUT, families: [...INPUT.families, page] },
   );
   assert.deepEqual(differences.api, [
     { baseUi: 'SampleGroup', prop: null, vaseUi: 'The group has no `focused`.' },
     { baseUi: 'Sample.Root', prop: null, vaseUi: 'The root has no `data-closed`.' },
+    { baseUi: 'Sample.Trigger', prop: 'nativeButton', vaseUi: 'The trigger reads its element.' },
   ]);
   assert.deepEqual(
     differences.added.map(({ part, member }) => `${part} ${member}`),

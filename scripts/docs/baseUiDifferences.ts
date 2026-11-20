@@ -45,7 +45,7 @@ export function pagesOfBetterRow(row: BetterRow, families: readonly FamilyFiles[
   const due = families.flatMap(({ name, family }) =>
     family && matchesAny(row.dueWith, family.upstreamPaths) ? [name] : [],
   );
-  return [...new Set([...due, ...(row.families ?? [])])];
+  return [...due, ...(row.families ?? [])];
 }
 
 /**
@@ -81,10 +81,9 @@ export function buildBaseUiDifferences(
 
   const entryRows = (family: string, entry: string) => {
     const files = byName.get(family);
-    const typesFile = files?.extract?.surface[0]?.file;
     const namespace = namespaceOf(files, family);
     return (files?.family?.exceptions ?? []).flatMap((row) =>
-      row.entry === entry && row.upstream === typesFile
+      row.entry === entry
         ? [{ baseUi: nameIn(namespace, entry), prop: row.prop ?? null, vaseUi: row.reason }]
         : [],
     );
