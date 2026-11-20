@@ -14,34 +14,36 @@ import MotionSelect from '../demos/handbook-animation/animated-select-motion/css
 
 A guide to animating Vase UI components.
 
-You can animate a component with CSS transitions, CSS animations or a JavaScript animation library. Each component has data attributes for its states. Some attributes exist only for animation.
+You can animate a component with CSS transitions, CSS animations or a JavaScript animation library. A part that shows and hides, such as a popup, a backdrop or a panel, renders its element only while it is shown. Put it in a Vue [`<Transition>`](https://vuejs.org/guide/built-ins/transition.html), and animate it with the classes and the hooks of `<Transition>`. The page of each component says where to put the `<Transition>`.
 
 ## CSS transitions
 
-Use these attributes to make a transition when a component becomes visible or hidden:
-
-- `[data-starting-style]` is the style that the transition starts from.
-- `[data-ending-style]` is the style that the transition ends at.
+Give the hidden style to the `enter-from` and the `leave-to` classes of the `<Transition>`, and the transition to the element.
 
 Use a transition where you can. A transition can be canceled midway with no jump. For example, the user can close a popup before it is fully open. The popup then moves to its closed state from where it is.
 
 ::: code-group
 
-```css{10-14} [menu.css]
+```vue [Popup.vue]
+<template>
+  <Transition name="popup" appear>
+    <Popover.Popup class="Popup">…</Popover.Popup>
+  </Transition>
+</template>
+```
+
+```css [popup.css]
 .Popup {
-  box-sizing: border-box;
-  padding: 1rem 1.5rem;
-  background-color: canvas;
   transform-origin: var(--transform-origin);
   transition:
     transform 150ms,
     opacity 150ms;
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.9);
-  }
+.popup-enter-from,
+.popup-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
 }
 ```
 
@@ -49,14 +51,11 @@ Use a transition where you can. A transition can be canceled midway with no jump
 
 ## CSS animations
 
-Use these attributes to make a CSS animation when a component becomes visible or hidden:
-
-- `[data-open]` is on the component while it is open.
-- `[data-closed]` is on the component while it is closed.
+Give the animations to the `enter-active` and the `leave-active` classes of the `<Transition>`.
 
 ::: code-group
 
-```css [menu.css]
+```css [popup.css]
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -68,23 +67,12 @@ Use these attributes to make a CSS animation when a component becomes visible or
   }
 }
 
-@keyframes scaleOut {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-.Popup[data-open] {
+.popup-enter-active {
   animation: scaleIn 250ms ease-out;
 }
 
-.Popup[data-closed] {
-  animation: scaleOut 250ms ease-in;
+.popup-leave-active {
+  animation: scaleIn 250ms ease-in reverse;
 }
 ```
 
@@ -92,13 +80,7 @@ Use these attributes to make a CSS animation when a component becomes visible or
 
 ## JavaScript animations
 
-A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), needs the popup in the DOM while its exit animation plays. Vase UI must also know when that animation ends.
-
-When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, and with no positioner, on the backdrop. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
-
-When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`. A [Select](#animate-a-select-popup) takes the hooks of a `<Transition>` in place of this.
-
-Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting).
+A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), runs in the JavaScript hooks of the `<Transition>`. With `:css="false"`, Vue keeps the element in the DOM until the `leave` hook calls `done`.
 
 ### Animate a popup with motion-v
 
@@ -120,7 +102,7 @@ The examples of this section and the next section use [Popover](/components/popo
 
 :::
 
-Do not use `<AnimatePresence>` and the `exit` prop for the close of a popup. For the reasons, see [AnimatePresence](#animatepresence).
+To use `<AnimatePresence>` in the place of `<Transition>`, see [AnimatePresence](#animatepresence).
 
 A popup of another family can take `motion.div` in the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
@@ -166,20 +148,4 @@ To wait for something before the popup closes, control `open` and keep it `true`
 
 ### AnimatePresence
 
-`<AnimatePresence>` renders a Vue `<Transition>` or `<TransitionGroup>`. Both keep the element of the portal part in the DOM during the exit, but the parts in that element unmount. Thus the `exit` prop does not fit the close of a popup:
-
-- With `v-if="open"` on the portal part, the parts in the portal unmount when the popup closes. The root emits `openChangeComplete` with `false` when the animations of the popup element end. The popup keeps `data-open` during the exit. The page under a modal dialog takes no pointer input until the exit ends.
-- With no `v-if`, the parts in the portal unmount after Vase UI ends the close, if Vase UI removes the popup. The `exit` animation starts only then. The root thus emits `openChangeComplete` with `false` before the exit plays.
-- With no `v-if`, the parts stay mounted if Vase UI hides the popup at the end of the close. The `exit` animation does not play.
-
-In the first two cases, a popup that opens again during the exit is a second popup in the page. The two popups have the same `id`.
-
-A `<Transition>` or `<TransitionGroup>` can animate the element of a portal part only with Vue 3.5.41 or later. In Vue 3.6, it needs 3.6.0-rc.3 or later. With an earlier version, an `exit` animation does not play. A development build of Vue then writes this warning for each `<AnimatePresence>` around a portal part:
-
-```txt
-Component inside <Transition> renders non-element root node that cannot be animated.
-```
-
-With the `#render` slot on the portal part, a development build of Vue writes the warning in each version.
-
-The examples on this page use no `<AnimatePresence>` and no `<Transition>`. They work with each Vue version that Vase UI supports.
+`<AnimatePresence>` of `motion-v` renders a Vue `<Transition>`, so the rules of this page apply to it. A portal part renders a `<Teleport>` and no element of its own, so a `<Transition>` around a portal part animates nothing. Put the `<Transition>` in the portal, around the popup part.
