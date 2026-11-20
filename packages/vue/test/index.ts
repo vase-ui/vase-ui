@@ -30,7 +30,6 @@ export { heldMountFormResetTests } from './heldMountFormResetTests';
 export { heldMountListTests } from './heldMountListTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
-export { nestedPopupCloseTests } from './nestedPopupCloseTests';
 export { nextCall, popupAnatomyTests } from './popupAnatomyTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';

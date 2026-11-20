@@ -70,9 +70,10 @@ function textControlOf(target: EventTarget | null): HTMLElement | null {
   return control && isTextControl(control) ? control : null;
 }
 
-function contains(container: Node, node: Node | null) {
-  for (let current = node; current; current = current.parentNode ?? (current as ShadowRoot).host) {
-    if (current === container) return true;
+/** The container holds the node, also in a shadow root in it. */
+function contains(container: Element, node: Node | null) {
+  for (let current = node; current; current = (current.getRootNode() as ShadowRoot).host) {
+    if (container.contains(current)) return true;
   }
   return false;
 }
