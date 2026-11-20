@@ -35,7 +35,7 @@ export interface HydrateAfterOptions extends HydrateOptions {
 /**
  * Renders a component on a server and returns its HTML.
  * The server render runs in Node with no DOM, through a Vitest browser command.
- * @param file The path of a Vue file from the root of the package: `test/fixtures/PlainPart.vue`.
+ * @param file The path of a Vue file from the root of the package: `test/fixtures/PartForm.vue`.
  * Its default export is the component.
  */
 export async function renderOnServer(

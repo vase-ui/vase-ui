@@ -1,6 +1,3 @@
-// There is no jsdom here. The constant keeps the `skipIf(isJSDOM)` call of each ported test.
-export const isJSDOM = false;
-
 // https://stackoverflow.com/questions/53807517/how-to-test-if-two-types-are-exactly-the-same
 export type IfEquals<T, U, Y = unknown, N = never> =
   (<G>() => G extends T ? 1 : 2) extends <G>() => G extends U ? 1 : 2 ? Y : N;

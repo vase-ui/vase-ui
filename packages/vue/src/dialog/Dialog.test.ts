@@ -1024,9 +1024,7 @@ describe('the focus', () => {
     await openFrom('popover');
   });
 
-  // The menu is on the older popup code, which gives the focus back to its trigger after the dialog
-  // takes the focus. The Menu unit ports the case again.
-  test.skip('a dialog that an item of a menu opens gives the focus back to the trigger of the menu', async () => {
+  test('a dialog that an item of a menu opens gives the focus back to the trigger of the menu', async () => {
     await openFrom('menu');
   });
 
