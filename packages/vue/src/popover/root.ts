@@ -1,4 +1,12 @@
-import { computed, inject, provide, shallowRef, watch, type InjectionKey, type ShallowRef } from 'vue';
+import {
+  computed,
+  inject,
+  provide,
+  shallowRef,
+  watch,
+  type InjectionKey,
+  type ShallowRef,
+} from 'vue';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
@@ -41,7 +49,8 @@ export interface PopoverRootContext<Payload = unknown> {
 
 const popoverRootKey: InjectionKey<PopoverRootContext> = Symbol('popover root');
 /** The placement that `Popover.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol('popover positioner');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
+  Symbol('popover positioner');
 const portalKey: InjectionKey<true> = Symbol('popover portal');
 const contexts = new WeakMap<PopupRoot, PopoverRootContext>();
 
@@ -85,7 +94,8 @@ export function usePopoverRoot<Payload>(
     fullWidth.value =
       isPlaced &&
       !!element &&
-      element.offsetWidth >= element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
+      element.offsetWidth >=
+        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
   });
 
   const hoverOpen = computed(() => root.reason === 'trigger-hover');
@@ -140,7 +150,11 @@ export function usePopoverRoot<Payload>(
     root,
     /** Asks for a close with the reason `'imperative-action'`. */
     close() {
-      root.request(false, 'imperative-action' satisfies PopoverRootChangeEventReason, new Event('vase-ui'));
+      root.request(
+        false,
+        'imperative-action' satisfies PopoverRootChangeEventReason,
+        new Event('vase-ui'),
+      );
     },
   };
 }

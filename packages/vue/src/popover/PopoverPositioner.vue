@@ -64,7 +64,10 @@ const state = computed<PopoverPositionerState>(() => ({
 function elementProps() {
   return mergeProps(
     {
-      style: [placement.style.value, sizeVariables('positioner', context.viewport.value?.positioner)],
+      style: [
+        placement.style.value,
+        sizeVariables('positioner', context.viewport.value?.positioner),
+      ],
       'data-side': state.value.side,
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,

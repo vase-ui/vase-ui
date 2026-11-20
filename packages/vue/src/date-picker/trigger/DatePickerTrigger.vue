@@ -101,7 +101,10 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverTrigger ref="trigger" v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }">
+  <PopoverTrigger
+    ref="trigger"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
+  >
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

@@ -14,11 +14,9 @@ describe('withoutPropsOf', () => {
   });
 
   it('drops handle and trigger-id from the attributes of a generic part', () => {
-    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, DialogRoot)).toEqual(
-      {
-        id: 'picker',
-      },
-    );
+    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, DialogRoot)).toEqual({
+      id: 'picker',
+    });
   });
 
   it('keeps the values of attributes that the portal does not declare', () => {

@@ -1,11 +1,7 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
-import {
-  createRenderer,
-  screen,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, screen, waitForPositioned } from '#test-utils';
 
 const day = Temporal.PlainDate.from('2026-11-14');
 

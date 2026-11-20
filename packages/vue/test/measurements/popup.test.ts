@@ -38,7 +38,8 @@ function record(target: EventTarget, types: string[]) {
   for (const type of types) {
     target.addEventListener(
       type,
-      (event) => log.push(`${type} ${(event.target as Element).id || (event.target as Element).localName}`),
+      (event) =>
+        log.push(`${type} ${(event.target as Element).id || (event.target as Element).localName}`),
       true,
     );
   }
@@ -69,7 +70,9 @@ describe('Tab after a key listener moved the focus (M1)', () => {
 
 describe('inert (M2)', () => {
   test('a press on inert content has the element under it that is not inert as its target, and no listener of the content runs', async () => {
-    html(`<div id="page" inert style="height: 200px"><button id="covered" style="width: 100px; height: 40px">Covered</button></div>`);
+    html(
+      `<div id="page" inert style="height: 200px"><button id="covered" style="width: 100px; height: 40px">Covered</button></div>`,
+    );
     root!.id = 'under';
     const log = record(document, ['pointerdown', 'pointerup', 'click']);
     const covered: string[] = [];
@@ -98,7 +101,11 @@ describe('a press in a same-origin frame (M3)', () => {
       <iframe id="frame" style="width: 200px; height: 100px" srcdoc="<button style='width: 150px; height: 60px'>In</button>"></iframe>`);
     const frame = element<HTMLIFrameElement>('frame');
     await new Promise((resolve) => {
-      if (frame.contentDocument?.readyState === 'complete' && frame.contentDocument.body?.firstChild) resolve(null);
+      if (
+        frame.contentDocument?.readyState === 'complete' &&
+        frame.contentDocument.body?.firstChild
+      )
+        resolve(null);
       else frame.addEventListener('load', resolve, { once: true });
     });
     const log: string[] = [];
@@ -118,7 +125,9 @@ describe('a press in a same-origin frame (M3)', () => {
 
 describe('a focused element that leaves (M4)', () => {
   test('leaves the focus on <body>; only Chromium sends `focusout` at the removal; the next Tab goes on after its place', async () => {
-    html(`<input id="first" aria-label="First"><div id="list"><input id="a" aria-label="A"><input id="b" aria-label="B"><input id="c" aria-label="C"></div><input id="last" aria-label="Last">`);
+    html(
+      `<input id="first" aria-label="First"><div id="list"><input id="a" aria-label="A"><input id="b" aria-label="B"><input id="c" aria-label="C"></div><input id="last" aria-label="Last">`,
+    );
     const log: string[] = [];
     element('list').addEventListener('focusout', () => log.push('focusout'));
     element('b').focus();
@@ -140,7 +149,11 @@ describe('the scroll of the page (M5, N4)', () => {
   });
 
   test('`overflow: hidden` removes a scrollbar that takes room, and the content gets wider by its width', async () => {
-    const { win, html: page, body } = await createScrollDocument({
+    const {
+      win,
+      html: page,
+      body,
+    } = await createScrollDocument({
       css: '::-webkit-scrollbar { width: 12px; height: 12px }',
     });
     const scrollbar = win.innerWidth - page.clientWidth;
@@ -224,13 +237,16 @@ describe('a <Transition> that mounts in the update of the open (M9)', () => {
   test.each([
     { appear: false, classes: '' },
     { appear: true, classes: 'm-enter-from m-enter-active' },
-  ])('with appear=$appear gives its element the classes "$classes"', async ({ appear, classes }) => {
-    const scene = reactive({ open: false });
-    mount(MeasureTransitionMount, { scene, appear });
-    scene.open = true;
-    await nextTick();
-    expect(element('popup').className).toBe(classes);
-  });
+  ])(
+    'with appear=$appear gives its element the classes "$classes"',
+    async ({ appear, classes }) => {
+      const scene = reactive({ open: false });
+      mount(MeasureTransitionMount, { scene, appear });
+      scene.open = true;
+      await nextTick();
+      expect(element('popup').className).toBe(classes);
+    },
+  );
 });
 
 describe('the first frame after an open (N1)', () => {
@@ -316,7 +332,9 @@ describe('a double click on a fixed element over text (N9)', () => {
 });
 
 describe('a mouse press on a scrollbar that takes room (N10)', () => {
-  test('sends `pointerdown`, `mousedown`, `pointerup`, in WebKit also `mouseup`, with a point outside the client box of the element that scrolls, and no `click`', async ({ skip }) => {
+  test('sends `pointerdown`, `mousedown`, `pointerup`, in WebKit also `mouseup`, with a point outside the client box of the element that scrolls, and no `click`', async ({
+    skip,
+  }) => {
     html(`<style>#scroller::-webkit-scrollbar { width: 12px }</style>
       <div id="scroller" style="width: 200px; height: 100px; overflow: auto"><div style="height: 400px"></div></div>`);
     const scroller = element('scroller');
@@ -331,7 +349,10 @@ describe('a mouse press on a scrollbar that takes room (N10)', () => {
       );
     }
     const box = scroller.getBoundingClientRect();
-    await userEvent.pointer({ coords: { x: box.right - width / 2, y: box.top + 50 }, keys: '[MouseLeft]' });
+    await userEvent.pointer({
+      coords: { x: box.right - width / 2, y: box.top + 50 },
+      keys: '[MouseLeft]',
+    });
     expect(log).toEqual([
       'pointerdown true',
       'mousedown true',
@@ -381,8 +402,12 @@ describe('a mouse that moves from a trigger across a gap to a popup (N7)', () =>
       <div id="popup" style="position: fixed; left: 0; top: 80px; width: 200px; height: 100px"></div>`);
     root!.id = 'gap';
     const log: string[] = [];
-    element('trigger').addEventListener('pointerleave', (event) => log.push(`leave trigger ${event.pointerType}`));
-    element('popup').addEventListener('pointerenter', (event) => log.push(`enter popup ${event.pointerType}`));
+    element('trigger').addEventListener('pointerleave', (event) =>
+      log.push(`leave trigger ${event.pointerType}`),
+    );
+    element('popup').addEventListener('pointerenter', (event) =>
+      log.push(`enter popup ${event.pointerType}`),
+    );
     document.addEventListener('pointermove', (event) => {
       const id = (event.target as Element).id || (event.target as Element).localName;
       if (log.at(-1) !== `move ${id}`) log.push(`move ${id}`);
@@ -404,7 +429,11 @@ describe('a mouse that moves from a trigger across a gap to a popup (N7)', () =>
 
 /** The first and the last column of dark pixels in a row of a picture of the element. */
 async function darkColumns(target: Element, y: number) {
-  const picture = (await page.screenshot({ element: target, base64: true, save: false } as never)) as unknown as string;
+  const picture = (await page.screenshot({
+    element: target,
+    base64: true,
+    save: false,
+  } as never)) as unknown as string;
   const image = new Image();
   image.src = `data:image/png;base64,${picture}`;
   await image.decode();

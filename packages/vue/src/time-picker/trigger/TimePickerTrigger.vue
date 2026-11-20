@@ -104,14 +104,21 @@ const element = computed(() => trigger.value?.element ?? null);
 usePickerPartElement(picker.triggers, element);
 
 function triggerProps() {
-  return { ...props, disabled: isDisabled.value, 'aria-label': afterHydration(label.value) ?? undefined };
+  return {
+    ...props,
+    disabled: isDisabled.value,
+    'aria-label': afterHydration(label.value) ?? undefined,
+  };
 }
 
 defineExpose({ element });
 </script>
 
 <template>
-  <PopoverTrigger ref="trigger" v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }">
+  <PopoverTrigger
+    ref="trigger"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
+  >
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

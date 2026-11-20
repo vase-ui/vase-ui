@@ -109,7 +109,8 @@ export interface PopoverPortalProps extends PopupPortalProps {}
 
 export interface PopoverPortalState {}
 
-export interface PopoverBackdropProps extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface PopoverBackdropProps
+  extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface PopoverBackdropState {
   open: boolean;
@@ -128,7 +129,8 @@ export interface PopoverPositionerState {
   instant: string | undefined;
 }
 
-export interface PopoverPopupProps extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface PopoverPopupProps
+  extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
   /**
    * The element that gets the focus at the open. By default: the element with `autofocus`, else the
@@ -153,7 +155,8 @@ export interface PopoverPopupState {
   instant: string | undefined;
 }
 
-export interface PopoverArrowProps extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface PopoverArrowProps
+  extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface PopoverArrowState {
   open: boolean;
@@ -163,7 +166,8 @@ export interface PopoverArrowState {
   uncentered: boolean;
 }
 
-export interface PopoverTitleProps extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface PopoverTitleProps
+  extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
 }
 
@@ -189,7 +193,8 @@ export interface PopoverCloseState {
   disabled: boolean;
 }
 
-export interface PopoverViewportProps extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface PopoverViewportProps
+  extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
 export interface PopoverViewportState {
   /** The side of the new trigger from the old one, such as `'right down'`. */

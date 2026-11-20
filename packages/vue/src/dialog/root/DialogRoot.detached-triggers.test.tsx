@@ -132,48 +132,6 @@ describe('<Dialog.Root />', () => {
     });
   });
 
-  // A Dialog in a Popover: the two popup layers do not know each other. The case comes back with
-  // the Dialog unit, when Dialog moves to the stack of the popup layer.
-  it.skip('closes a nonmodal dialog on Escape from an inactive trigger inside a popover on every open', async () => {
-    const dialog = Dialog.createHandle();
-    const { user } = await render(
-      <Popover.Root defaultOpen>
-        <Popover.Trigger>Popover trigger</Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup data-testid="popover">
-              <Dialog.Root handle={dialog} modal={false}>
-                <Dialog.Trigger handle={dialog}>Dialog trigger 1</Dialog.Trigger>
-                <Dialog.Trigger handle={dialog}>Dialog trigger 2</Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Popup data-testid="dialog">Dialog</Dialog.Popup>
-                </Dialog.Portal>
-              </Dialog.Root>
-            </Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>,
-    );
-
-    async function openThenEscapeFromInactiveTrigger() {
-      await waitForLaterMillisecond(async () => {
-        await user.click(screen.getByRole('button', { name: 'Dialog trigger 1' }));
-        expect(await screen.findByTestId('dialog')).not.toBe(null);
-      });
-
-      screen.getByRole('button', { name: 'Dialog trigger 2' }).focus();
-      await flushMicrotasks();
-      await user.keyboard('[Escape]');
-
-      expect(screen.queryByTestId('dialog')).toBe(null);
-      expect(screen.queryByTestId('popover')).not.toBe(null);
-    }
-
-    await openThenEscapeFromInactiveTrigger();
-    await openThenEscapeFromInactiveTrigger();
-    await openThenEscapeFromInactiveTrigger();
-  });
-
   it('opens a handle-backed dialog as topmost over a dialog that opened while it was closed', async () => {
     const help = Dialog.createHandle();
 

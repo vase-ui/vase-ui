@@ -11,10 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import {
-  createScrollDocument,
-  isPageLocked,
-} from '../../../test/fixtures/scrollDocument';
+import { createScrollDocument, isPageLocked } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
@@ -414,7 +411,6 @@ describe('<Select.Positioner />', () => {
         expect(isPageLocked(page)).toBe(locks > 0);
       },
     );
-
   });
 
   describe('VUE-61: the positioner of a modal select has one root node', () => {

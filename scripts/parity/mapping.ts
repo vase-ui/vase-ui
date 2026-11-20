@@ -186,19 +186,24 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
 }
 
 /**
- * A part of the refactored form takes the slot `element` in place of the prop `as` and the slot
- * `render`. The part has the slot `element` and no prop `as`. The check accepts both forms until
- * each family has the new one.
+ * A part of the refactored form takes the slot `element` in place of the slot `render`. Its prop
+ * `as`, when it has one, has no default: with no value, the part renders its own element. The check
+ * accepts both forms until each family has the new one.
  */
 export function acceptElementSlot(
   expected: ExpectedSurface,
   actual: { props: ReadonlyMap<string, unknown>; slots: ReadonlyMap<string, unknown> },
 ): void {
   const row = expected.slots.get('render');
-  if (row === undefined || !actual.slots.has('element') || actual.props.has('as')) {
+  if (row === undefined || !actual.slots.has('element')) {
     return;
   }
-  expected.props.delete('as');
+  const as = expected.props.get('as');
+  if (as && actual.props.has('as')) {
+    expected.props.set('as', { ...as, default: null, compareDefault: false });
+  } else {
+    expected.props.delete('as');
+  }
   expected.slots.delete('render');
   expected.slots.set('element', row);
 }

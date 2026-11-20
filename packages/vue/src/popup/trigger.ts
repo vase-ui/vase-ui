@@ -17,7 +17,11 @@ export function usePopupTrigger(
     closesAtPress?: (event: MouseEvent) => boolean;
   },
 ) {
-  const button = useButton({ element: options.element, disabled: options.disabled, type: 'button' });
+  const button = useButton({
+    element: options.element,
+    disabled: options.disabled,
+    type: 'button',
+  });
 
   const entry = {
     get id() {

@@ -153,18 +153,31 @@ function inTriangle(point: Point, from: Point, trigger: Element, popup: Element)
   const box = popup.getBoundingClientRect();
   let edge: [Point, Point];
   if (box.top >= anchor.bottom) {
-    edge = [{ x: box.left, y: box.top }, { x: box.right, y: box.top }];
+    edge = [
+      { x: box.left, y: box.top },
+      { x: box.right, y: box.top },
+    ];
   } else if (box.bottom <= anchor.top) {
-    edge = [{ x: box.left, y: box.bottom }, { x: box.right, y: box.bottom }];
+    edge = [
+      { x: box.left, y: box.bottom },
+      { x: box.right, y: box.bottom },
+    ];
   } else if (box.left >= anchor.right) {
-    edge = [{ x: box.left, y: box.top }, { x: box.left, y: box.bottom }];
+    edge = [
+      { x: box.left, y: box.top },
+      { x: box.left, y: box.bottom },
+    ];
   } else if (box.right <= anchor.left) {
-    edge = [{ x: box.right, y: box.top }, { x: box.right, y: box.bottom }];
+    edge = [
+      { x: box.right, y: box.top },
+      { x: box.right, y: box.bottom },
+    ];
   } else {
     return false;
   }
   const [a, b] = edge;
-  const side = (p: Point, q: Point, r: Point) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const side = (p: Point, q: Point, r: Point) =>
+    (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
   const d1 = side(from, a, point);
   const d2 = side(a, b, point);
   const d3 = side(b, from, point);

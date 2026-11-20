@@ -55,19 +55,29 @@ describe('useScrollLock', () => {
 
   it.each([
     { name: 'the body, when html has no overflow', css: '', locked: 'body', other: 'html' },
-    { name: 'html, when it has an overflow', css: 'html { overflow: auto }', locked: 'html', other: 'body' },
-  ] as const)('hides the overflow of $name with overlay scrollbars, and restores it', async ({ css, locked, other }) => {
-    const page = await createScrollDocument({ css: `${HIDDEN_SCROLLBARS_CSS} ${css}` });
-    const enabled = await lock(page);
-    expect(isPageLocked(page)).toBe(true);
-    expect(inline(page[locked])).toEqual({ 'overflow-x': 'hidden', 'overflow-y': 'hidden' });
-    expect(inline(page[other])).toEqual({});
-    enabled.value = false;
-    await nextTick();
-    expect(inline(page[locked])).toEqual({});
-  });
+    {
+      name: 'html, when it has an overflow',
+      css: 'html { overflow: auto }',
+      locked: 'html',
+      other: 'body',
+    },
+  ] as const)(
+    'hides the overflow of $name with overlay scrollbars, and restores it',
+    async ({ css, locked, other }) => {
+      const page = await createScrollDocument({ css: `${HIDDEN_SCROLLBARS_CSS} ${css}` });
+      const enabled = await lock(page);
+      expect(isPageLocked(page)).toBe(true);
+      expect(inline(page[locked])).toEqual({ 'overflow-x': 'hidden', 'overflow-y': 'hidden' });
+      expect(inline(page[other])).toEqual({});
+      enabled.value = false;
+      await nextTick();
+      expect(inline(page[locked])).toEqual({});
+    },
+  );
 
-  it('keeps the scrollbar of html and the place of the content when the scrollbars take room', async ({ skip }) => {
+  it('keeps the scrollbar of html and the place of the content when the scrollbars take room', async ({
+    skip,
+  }) => {
     const { page, inset } = await createInsetDocument();
     skip(!inset, 'The scrollbars of this browser take no room.');
     page.win.scrollTo({ left: 30, top: 200, behavior: 'instant' });
@@ -85,7 +95,9 @@ describe('useScrollLock', () => {
     expect(inline(page.body)).toEqual({});
   });
 
-  it('puts the scroll position back at once on a page with a smooth `scroll-behavior`', async ({ skip }) => {
+  it('puts the scroll position back at once on a page with a smooth `scroll-behavior`', async ({
+    skip,
+  }) => {
     const { page, inset } = await createInsetDocument('html { scroll-behavior: smooth }');
     skip(!inset, 'The scrollbars of this browser take no room.');
     page.win.scrollTo({ top: 200, behavior: 'instant' });

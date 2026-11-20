@@ -133,9 +133,7 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
       () => (root.open ? root.popup : null),
       (popup, _, onCleanup) => {
         if (!popup) return;
-        onCleanup(
-          followRootNode(popup, (node) => (isShadowRoot(node) ? listen(node) : undefined)),
-        );
+        onCleanup(followRootNode(popup, (node) => (isShadowRoot(node) ? listen(node) : undefined)));
       },
       { flush: 'post' },
     );
@@ -273,8 +271,7 @@ function closeOutside(event: Event, entries: Entry[]) {
 function outsideEntries(event: Event) {
   const path = event.composedPath();
   return fromTop().filter(
-    (entry) =>
-      entry.layer.outsidePress && !isInside(entry, path) && !isAddedElement(entry, path),
+    (entry) => entry.layer.outsidePress && !isInside(entry, path) && !isAddedElement(entry, path),
   );
 }
 
@@ -460,9 +457,7 @@ function startHide() {
   });
 }
 
-function writeHide(
-  next: { hide: 'inert' | 'aria-hidden'; inside: (Element | null)[] } | null,
-) {
+function writeHide(next: { hide: 'inert' | 'aria-hidden'; inside: (Element | null)[] } | null) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next) {
     const kept = new Set<Node>();
@@ -472,7 +467,8 @@ function writeHide(
       for (
         let node: Node | null = element;
         node && node !== body;
-        node = node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
+        node =
+          node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
       ) {
         kept.add(node);
       }

@@ -63,7 +63,10 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPopup ref="popup" v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }">
+  <PopoverPopup
+    ref="popup"
+    v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }"
+  >
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

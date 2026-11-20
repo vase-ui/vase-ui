@@ -397,6 +397,5 @@ describe('<Combobox.Positioner />', () => {
 
       expect(isScrollLocked()).toBe(false);
     });
-
   });
 });

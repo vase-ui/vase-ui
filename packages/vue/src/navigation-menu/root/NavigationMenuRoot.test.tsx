@@ -4505,32 +4505,6 @@ describe('<NavigationMenu.Root />', () => {
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
-
-    // A Popover in a navigation menu: the two popup layers do not know each other. The case comes
-    // back with the NavigationMenu unit, when NavigationMenu moves to the stack of the popup layer.
-    it.skip('keeps the menu open when interacting with a nested popover', async () => {
-      const { user } = await render(<TestNavigationMenuWithPopover />);
-      const trigger = screen.getByTestId('trigger-1');
-
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup-1')).not.toBe(null);
-      });
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      const popoverTrigger = screen.getByTestId('popover-trigger');
-      await user.click(popoverTrigger);
-
-      expect(await screen.findByTestId('popover-popup')).not.toBe(null);
-
-      await user.click(screen.getByTestId('popover-button'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('popup-1')).not.toBe(null);
-      });
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    });
   });
 
   describe('tag', () => {

@@ -1,11 +1,7 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import {
-  createRenderer,
-  screen,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, screen, waitForPositioned } from '#test-utils';
 
 const time = Temporal.PlainTime.from('15:04');
 

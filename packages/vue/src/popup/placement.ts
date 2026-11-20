@@ -202,7 +202,9 @@ export function usePlacement(
       : { top: 0, right: 0, bottom: 0, left: 0, ...value };
   });
   const boundary = computed<'clippingAncestors' | Element | Element[] | Rect>(() =>
-    props.collisionBoundary === 'clipping-ancestors' ? 'clippingAncestors' : props.collisionBoundary,
+    props.collisionBoundary === 'clipping-ancestors'
+      ? 'clippingAncestors'
+      : props.collisionBoundary,
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
@@ -260,7 +262,11 @@ export function usePlacement(
     return [
       offset((state) => {
         const along = readOffset(props.alignOffset, state);
-        return { mainAxis: readOffset(props.sideOffset, state), crossAxis: along, alignmentAxis: along };
+        return {
+          mainAxis: readOffset(props.sideOffset, state),
+          crossAxis: along,
+          alignmentAxis: along,
+        };
       }),
       ...collision.filter((item): item is Middleware => !!item),
       size({
@@ -299,11 +305,16 @@ export function usePlacement(
     // The popup stays at its place while its anchor is out of the document: after the trigger left
     // the DOM, and before an app in a detached element joins the document.
     whileElementsMounted: (anchor, element, update) =>
-      autoUpdate(anchor, element, () => ('isConnected' in anchor && !anchor.isConnected ? undefined : update()), {
-        ancestorScroll: !props.disableAnchorTracking,
-        elementResize: !props.disableAnchorTracking,
-        layoutShift: !props.disableAnchorTracking,
-      }),
+      autoUpdate(
+        anchor,
+        element,
+        () => ('isConnected' in anchor && !anchor.isConnected ? undefined : update()),
+        {
+          ancestorScroll: !props.disableAnchorTracking,
+          elementResize: !props.disableAnchorTracking,
+          layoutShift: !props.disableAnchorTracking,
+        },
+      ),
   });
 
   // The first placement of each open. An earlier open placed the popup at another anchor.
@@ -401,9 +412,7 @@ function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
       const axis = getAlignmentAxis(placement);
       const length = getAxisLength(axis);
       const coords = { x, y };
-      const arrowSize = element
-        ? await platform.getDimensions(element)
-        : { width: 0, height: 0 };
+      const arrowSize = element ? await platform.getDimensions(element) : { width: 0, height: 0 };
       const minProp = axis === 'y' ? 'top' : 'left';
       const maxProp = axis === 'y' ? 'bottom' : 'right';
       const clientSize =
@@ -464,8 +473,15 @@ function transformOrigin(
       let cross: string;
       // An aligned popup with no arrow grows from its aligned edge, until a shift of more than
       // 1 px breaks the alignment.
-      if (!arrowElement && align && Math.abs(vertical ? data.shift?.x || 0 : data.shift?.y || 0) <= 1) {
-        cross = (align === 'start') === (vertical && platform.isRTL?.(elements.floating) === true) ? '100%' : '0%';
+      if (
+        !arrowElement &&
+        align &&
+        Math.abs(vertical ? data.shift?.x || 0 : data.shift?.y || 0) <= 1
+      ) {
+        cross =
+          (align === 'start') === (vertical && platform.isRTL?.(elements.floating) === true)
+            ? '100%'
+            : '0%';
       } else {
         const at = vertical ? data.arrow?.x || 0 : data.arrow?.y || 0;
         const length = vertical ? arrowElement?.clientWidth || 0 : arrowElement?.clientHeight || 0;

@@ -3,13 +3,7 @@ import { isRef, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import {
-  createRenderer,
-  flushMicrotasks,
-  screen,
-  waitFor,
-  waitForPositioned,
-} from '#test-utils';
+import { createRenderer, flushMicrotasks, screen, waitFor, waitForPositioned } from '#test-utils';
 
 const range = [
   Temporal.PlainDate.from('2026-11-18'),

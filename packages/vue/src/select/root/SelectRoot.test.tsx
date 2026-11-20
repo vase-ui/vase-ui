@@ -3111,8 +3111,6 @@ describe('<Select.Root />', () => {
     );
   });
 
-  // A Select in a Popover: the two popup layers do not know each other. The skipped cases come back
-  // with the Select unit, when Select moves to the stack of the popup layer.
   describe.skipIf(isJSDOM)('select inside popover', () => {
     async function fireHeldPress(target: Element) {
       await fireEvent.pointerDown(target, {
@@ -3140,50 +3138,6 @@ describe('<Select.Root />', () => {
         button: 0,
       });
     }
-
-    it.skip('dismisses the popover with one outside press after reopening an aligned select', async () => {
-      const { user } = await render(
-        <div>
-          <Popover.Root defaultOpen>
-            <Popover.Trigger>Open popover</Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Popover.Popup data-testid="popover-popup">
-                  <Select.Root defaultValue="gala">
-                    <Select.Trigger data-testid="select-trigger">
-                      <Select.Value placeholder="Pick one" />
-                    </Select.Trigger>
-                    <Select.Portal>
-                      <Select.Positioner alignItemWithTrigger>
-                        <Select.Popup>
-                          <Select.Item value="gala">Gala</Select.Item>
-                          <Select.Item value="fuji">Fuji</Select.Item>
-                        </Select.Popup>
-                      </Select.Positioner>
-                    </Select.Portal>
-                  </Select.Root>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
-        </div>,
-      );
-
-      const gala = await waitForLaterMillisecond(async () => {
-        await user.pointer({ keys: '[MouseLeft>]', target: screen.getByTestId('select-trigger') });
-        return screen.findByRole('option', { name: 'Gala' });
-      });
-      await user.pointer({ keys: '[/MouseLeft]', target: gala });
-      await user.click(await screen.findByRole('option', { name: 'Fuji' }));
-
-      expect(screen.queryByRole('listbox')).toBe(null);
-
-      expect(screen.queryByTestId('popover-popup')).not.toBe(null);
-
-      await fireHeldPress(document.body);
-
-      expect(screen.queryByTestId('popover-popup')).toBe(null);
-    });
 
     it('dismisses the popover after reopening a selected aligned select', async () => {
       const { user } = await render(
@@ -3243,43 +3197,6 @@ describe('<Select.Root />', () => {
       expect(screen.queryByTestId('popover-popup')).toBe(null);
     });
 
-    it.skip('keeps a modal popover open when choosing a non-modal aligned select item', async () => {
-      const { user } = await render(
-        <Popover.Root defaultOpen modal>
-          <Popover.Trigger>Open popover</Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Positioner>
-              <Popover.Popup data-testid="popover-popup">
-                <Select.Root modal={false}>
-                  <Select.Trigger data-testid="select-trigger">
-                    <Select.Value placeholder="Pick one" />
-                  </Select.Trigger>
-                  <Select.Portal>
-                    <Select.Positioner alignItemWithTrigger>
-                      <Select.Popup>
-                        <Select.Item value="one">One</Select.Item>
-                        <Select.Item value="two">Two</Select.Item>
-                      </Select.Popup>
-                    </Select.Positioner>
-                  </Select.Portal>
-                </Select.Root>
-              </Popover.Popup>
-            </Popover.Positioner>
-          </Popover.Portal>
-        </Popover.Root>,
-      );
-
-      await waitForLaterMillisecond(async () => {
-        await user.click(screen.getByTestId('select-trigger'));
-        await screen.findByRole('listbox');
-      });
-
-      await user.click(screen.getByRole('option', { name: 'Two' }));
-
-      expect(screen.queryByRole('listbox')).toBe(null);
-      expect(screen.queryByTestId('popover-popup')).not.toBe(null);
-    });
-
     it('does not bubble Escape from a non-modal select to the popover', async () => {
       const { user } = await render(
         <Popover.Root defaultOpen>
@@ -3312,68 +3229,6 @@ describe('<Select.Root />', () => {
       await user.keyboard('{Escape}');
 
       expect(screen.queryByRole('listbox')).toBe(null);
-      expect(screen.queryByTestId('popover-popup')).not.toBe(null);
-    });
-
-    it.skip('returns focus to the opener when a select is opened programmatically inside a popover', async () => {
-      const Test = defineComponent(() => {
-        const selectOpen = shallowRef(false);
-
-        return () => (
-          <Popover.Root defaultOpen>
-            <Popover.Trigger>Open popover</Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Popover.Popup data-testid="popover-popup">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      selectOpen.value = true;
-                    }}
-                  >
-                    Open select programmatically
-                  </button>
-                  <Select.Root
-                    open={selectOpen.value}
-                    onOpenChange={(nextOpen: boolean) => {
-                      selectOpen.value = nextOpen;
-                    }}
-                  >
-                    <Select.Trigger data-testid="select-trigger">
-                      <Select.Value placeholder="Pick one" />
-                    </Select.Trigger>
-                    <Select.Portal>
-                      <Select.Positioner>
-                        <Select.Popup>
-                          <Select.Item value="one">One</Select.Item>
-                          <Select.Item value="two">Two</Select.Item>
-                        </Select.Popup>
-                      </Select.Positioner>
-                    </Select.Portal>
-                  </Select.Root>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
-        );
-      });
-
-      const { user } = await render(<Test />);
-
-      const selectOpener = screen.getByRole('button', {
-        name: 'Open select programmatically',
-      });
-      await waitForLaterMillisecond(async () => {
-        await user.click(selectOpener);
-        await waitFor(() => {
-          expect(screen.getByRole('listbox')).not.toBe(null);
-        });
-      });
-
-      await user.click(screen.getByRole('option', { name: 'Two' }));
-
-      expect(screen.queryByRole('listbox')).toBe(null);
-      expect(selectOpener).toHaveFocus();
       expect(screen.queryByTestId('popover-popup')).not.toBe(null);
     });
 

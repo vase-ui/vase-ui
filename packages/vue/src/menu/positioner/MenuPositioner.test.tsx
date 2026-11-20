@@ -25,10 +25,7 @@ import {
   createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import {
-  createScrollDocument,
-  isPageLocked,
-} from '../../../test/fixtures/scrollDocument';
+import { createScrollDocument, isPageLocked } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE, POPUP_COLLISION_AVOIDANCE } from '../../internals/constants';
@@ -1167,7 +1164,6 @@ describe('<Menu.Positioner />', () => {
       expect(probe.store.select('modal')).toBe(false);
       expect(isPageLocked(page)).toBe(locks === 1);
     });
-
   });
 
   describe('VUE-61: the positioner of a modal menu has one root node', () => {

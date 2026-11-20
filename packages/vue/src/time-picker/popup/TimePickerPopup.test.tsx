@@ -19,7 +19,11 @@ describe('<TimePicker.Popup />', () => {
               element: ({ props, elementRef }: Scope) => (
                 <section {...props} ref={elementRef} data-testid="positioner">
                   <TimePicker.Popup aria-label="Choose">
-                    {{ element: ({ props, elementRef }: Scope) => <article {...props} ref={elementRef} /> }}
+                    {{
+                      element: ({ props, elementRef }: Scope) => (
+                        <article {...props} ref={elementRef} />
+                      ),
+                    }}
                   </TimePicker.Popup>
                 </section>
               ),

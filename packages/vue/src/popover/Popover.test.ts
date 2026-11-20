@@ -95,8 +95,12 @@ describe('the parts', () => {
   });
 
   test('throw an error that names the part with no root, and Positioner with no Portal', () => {
-    expect(String(mountError(Popover.Popup))).toContain('<Popover.Popup> must be inside <Popover.Root>');
-    expect(String(mountError(Popover.Trigger))).toContain('<Popover.Trigger> must be inside <Popover.Root>');
+    expect(String(mountError(Popover.Popup))).toContain(
+      '<Popover.Popup> must be inside <Popover.Root>',
+    );
+    expect(String(mountError(Popover.Trigger))).toContain(
+      '<Popover.Trigger> must be inside <Popover.Root>',
+    );
   });
 });
 
@@ -238,7 +242,10 @@ describe('in the DOM (L2)', () => {
   test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until the leave ends', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const log: string[] = [];
-    mount(PopoverInTransition, { root: { defaultOpen: true }, log: { add: (entry: string) => log.push(entry) } });
+    mount(PopoverInTransition, {
+      root: { defaultOpen: true },
+      log: { add: (entry: string) => log.push(entry) },
+    });
     const element = await opened();
     await waitFor(() => expect(log).toEqual(['after-enter']));
     await userEvent.keyboard('{Escape}');
@@ -296,7 +303,9 @@ describe('the portal (L3)', () => {
         nested: { root: { defaultOpen: true } },
       });
       await opened();
-      await waitFor(() => expect(container.querySelector('[data-testid="nested-popup"]')).not.toBe(null));
+      await waitFor(() =>
+        expect(container.querySelector('[data-testid="nested-popup"]')).not.toBe(null),
+      );
       void trigger;
     } finally {
       container.remove();
@@ -336,7 +345,8 @@ describe('the dismissal (L4)', () => {
       nested: {
         root: {
           defaultOpen: true,
-          onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) => details.allowPropagation(),
+          onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) =>
+            details.allowPropagation(),
         },
       },
     });
@@ -350,16 +360,20 @@ describe('the dismissal (L4)', () => {
   test('an Escape that a listener of the developer prevented closes nothing; an Escape of a text composition closes nothing', async () => {
     await mountPopover({
       root: { defaultOpen: true },
-      popup: { onKeydown: (event: KeyboardEvent) => event.key === 'Escape' && event.preventDefault() },
+      popup: {
+        onKeydown: (event: KeyboardEvent) => event.key === 'Escape' && event.preventDefault(),
+      },
     });
     const element = await opened();
     element.querySelector('button')!.focus();
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(popup()).not.toBe(null);
-    element.querySelector('button')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, isComposing: true }),
-    );
+    element
+      .querySelector('button')!
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, isComposing: true }),
+      );
     expect(popup()).not.toBe(null);
   });
 
@@ -369,8 +383,18 @@ describe('the dismissal (L4)', () => {
     const element = await opened();
     await placed();
     const outside = byId('outside');
-    await userEvent.pointer([{ coords: centerOf(element) }, '[MouseLeft>]', { coords: centerOf(outside) }, '[/MouseLeft]']);
-    await userEvent.pointer([{ coords: centerOf(outside) }, '[MouseLeft>]', { coords: centerOf(element) }, '[/MouseLeft]']);
+    await userEvent.pointer([
+      { coords: centerOf(element) },
+      '[MouseLeft>]',
+      { coords: centerOf(outside) },
+      '[/MouseLeft]',
+    ]);
+    await userEvent.pointer([
+      { coords: centerOf(outside) },
+      '[MouseLeft>]',
+      { coords: centerOf(element) },
+      '[/MouseLeft]',
+    ]);
     expect(popup()).not.toBe(null);
     await userEvent.click(outside);
     await closed();
@@ -574,7 +598,9 @@ describe('the focus (L7)', () => {
 
 describe('the trigger (L8)', () => {
   test('a disabled trigger opens nothing; Enter and Space open a trigger that is not a button', async () => {
-    const { trigger, unmount } = await mountPopover({ triggers: [{ key: 't', attrs: { disabled: true } }] });
+    const { trigger, unmount } = await mountPopover({
+      triggers: [{ key: 't', attrs: { disabled: true } }],
+    });
     await userEvent.click(trigger(), { force: true });
     await nextTick();
     expect(popup()).toBe(null);
@@ -669,7 +695,10 @@ describe('the hover (L9)', () => {
 
 describe('the placement (L10)', () => {
   test('writes the side, the alignment and the variables; `inline-end` follows the direction of the positioner', async () => {
-    await mountPopover({ root: { defaultOpen: true }, positioner: { side: 'inline-end', align: 'start', dir: 'rtl' } });
+    await mountPopover({
+      root: { defaultOpen: true },
+      positioner: { side: 'inline-end', align: 'start', dir: 'rtl' },
+    });
     await opened();
     await placed();
     const element = positioner()!;
@@ -739,7 +768,9 @@ describe('more behaviors of the parts', () => {
     await opened();
     await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
     await placed();
-    const block = [...document.querySelectorAll<HTMLElement>('body > div[role="presentation"]')].at(-1)!;
+    const block = [...document.querySelectorAll<HTMLElement>('body > div[role="presentation"]')].at(
+      -1,
+    )!;
     await waitFor(() => expect(block.style.clipPath).toContain('polygon'));
     await userEvent.click(block, { position: { x: 2, y: 2 } });
     await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
@@ -784,7 +815,9 @@ describe('more behaviors of the parts', () => {
   });
 
   test('a trigger in a disabled fieldset opens nothing; its state follows the fieldset', async () => {
-    const { trigger, root } = await mountPopover({ triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }] });
+    const { trigger, root } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
+    });
     const fieldset = document.createElement('fieldset');
     fieldset.disabled = true;
     trigger().before(fieldset);
@@ -847,7 +880,10 @@ describe('more behaviors of the parts', () => {
   });
 
   test('the transform origin is the edge that faces the anchor, and the aligned edge of a popup with no arrow', async () => {
-    await mountPopover({ root: { defaultOpen: true }, positioner: { align: 'start', sideOffset: 4 } });
+    await mountPopover({
+      root: { defaultOpen: true },
+      positioner: { align: 'start', sideOffset: 4 },
+    });
     await opened();
     await placed();
     expect(positioner()!.style.getPropertyValue('--transform-origin')).toBe('0% -4px');
@@ -862,7 +898,9 @@ describe('the viewport (L11)', () => {
     await userEvent.click(byId('one'));
     const element = await opened();
     await userEvent.click(byId('two'));
-    await waitFor(() => expect(byTestId('viewport')).toHaveAttribute('data-activation-direction', 'right '));
+    await waitFor(() =>
+      expect(byTestId('viewport')).toHaveAttribute('data-activation-direction', 'right '),
+    );
     await waitFor(() => expect(element.querySelectorAll('.content')).toHaveLength(1));
     expect(element.querySelector('.content')).toHaveTextContent('Two');
     expect(log).toContain('leave');

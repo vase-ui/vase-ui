@@ -19,7 +19,11 @@ describe('<DateRangePicker.Popup />', () => {
               element: ({ props, elementRef }: Scope) => (
                 <section {...props} ref={elementRef} data-testid="positioner">
                   <DateRangePicker.Popup aria-label="Choose">
-                    {{ element: ({ props, elementRef }: Scope) => <article {...props} ref={elementRef} /> }}
+                    {{
+                      element: ({ props, elementRef }: Scope) => (
+                        <article {...props} ref={elementRef} />
+                      ),
+                    }}
                   </DateRangePicker.Popup>
                 </section>
               ),

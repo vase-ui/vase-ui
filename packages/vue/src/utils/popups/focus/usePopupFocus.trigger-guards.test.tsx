@@ -680,128 +680,131 @@ describe('useTriggerFocusGuards', () => {
     reasons.length = 0;
   }
 
-  describe.each([{ name: 'Menu', renderOpen: renderOpenMenu }])('VUE-63: $name that stays open', ({ renderOpen }) => {
-    it.each([
-      { name: 'beside the trigger', placement: 'beside' as const },
-      { name: 'detached', placement: 'detached' as const },
-    ])(
-      'skips a popup with no tabbable element for Tab from the trigger ($name)',
-      async ({ placement }) => {
-        const { trigger, reasons } = await renderOpen({ placement, after: true });
+  describe.each([{ name: 'Menu', renderOpen: renderOpenMenu }])(
+    'VUE-63: $name that stays open',
+    ({ renderOpen }) => {
+      it.each([
+        { name: 'beside the trigger', placement: 'beside' as const },
+        { name: 'detached', placement: 'detached' as const },
+      ])(
+        'skips a popup with no tabbable element for Tab from the trigger ($name)',
+        async ({ placement }) => {
+          const { trigger, reasons } = await renderOpen({ placement, after: true });
+          trigger.focus();
+          const focus = trackFocus();
+
+          await pressTab();
+
+          expect(screen.getByTestId('after')).toHaveFocus();
+          expect(reasons).toEqual([REASONS.focusOut]);
+          expectNoReentry(focus);
+        },
+      );
+
+      it.each([
+        { name: 'beside the trigger', placement: 'beside' as const },
+        { name: 'detached', placement: 'detached' as const },
+      ])(
+        'goes through the popup to the element after the trigger for Tab ($name)',
+        async ({ placement }) => {
+          const { trigger, reasons } = await renderOpen({
+            content: 'button',
+            placement,
+            after: true,
+          });
+          trigger.focus();
+          const focus = trackFocus();
+
+          await pressTab();
+          expect(screen.getByTestId('inside')).toHaveFocus();
+          expect(reasons).toEqual([]);
+
+          await pressTab();
+          expect(screen.getByTestId('after')).toHaveFocus();
+          expect(reasons).toEqual([REASONS.focusOut]);
+          expectNoReentry(focus);
+        },
+      );
+
+      it.each([
+        { name: 'before the trigger', placement: 'before' as const },
+        { name: 'detached', placement: 'detached' as const },
+      ])(
+        'goes to the element before the trigger for Shift+Tab from the trigger ($name)',
+        async ({ placement }) => {
+          const { trigger, reasons } = await renderOpen({ placement, before: true });
+          trigger.focus();
+          const focus = trackFocus();
+
+          await pressTab(true);
+
+          expect(screen.getByTestId('before')).toHaveFocus();
+          expect(reasons).toEqual([REASONS.focusOut]);
+          expectNoReentry(focus);
+        },
+      );
+
+      // The portal makes its content untabbable when the focus leaves it, and tabbable again when the
+      // focus comes back. The second pass must be the same as the first.
+      it('passes a popup with no tabbable element in both directions, and again', async () => {
+        const { trigger, reasons } = await renderOpen({ after: true });
+        const after = screen.getByTestId('after');
         trigger.focus();
         const focus = trackFocus();
 
         await pressTab();
-
-        expect(screen.getByTestId('after')).toHaveFocus();
-        expect(reasons).toEqual([REASONS.focusOut]);
-        expectNoReentry(focus);
-      },
-    );
-
-    it.each([
-      { name: 'beside the trigger', placement: 'beside' as const },
-      { name: 'detached', placement: 'detached' as const },
-    ])(
-      'goes through the popup to the element after the trigger for Tab ($name)',
-      async ({ placement }) => {
-        const { trigger, reasons } = await renderOpen({
-          content: 'button',
-          placement,
-          after: true,
-        });
-        trigger.focus();
-        const focus = trackFocus();
-
-        await pressTab();
-        expect(screen.getByTestId('inside')).toHaveFocus();
-        expect(reasons).toEqual([]);
-
-        await pressTab();
-        expect(screen.getByTestId('after')).toHaveFocus();
-        expect(reasons).toEqual([REASONS.focusOut]);
-        expectNoReentry(focus);
-      },
-    );
-
-    it.each([
-      { name: 'before the trigger', placement: 'before' as const },
-      { name: 'detached', placement: 'detached' as const },
-    ])(
-      'goes to the element before the trigger for Shift+Tab from the trigger ($name)',
-      async ({ placement }) => {
-        const { trigger, reasons } = await renderOpen({ placement, before: true });
-        trigger.focus();
-        const focus = trackFocus();
+        expect(after).toHaveFocus();
 
         await pressTab(true);
+        expect(trigger).toHaveFocus();
 
-        expect(screen.getByTestId('before')).toHaveFocus();
-        expect(reasons).toEqual([REASONS.focusOut]);
-        expectNoReentry(focus);
-      },
-    );
+        await pressTab();
+        expect(after).toHaveFocus();
+        expect(reasons).toEqual([REASONS.focusOut, REASONS.focusOut]);
+        expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
+      });
 
-    // The portal makes its content untabbable when the focus leaves it, and tabbable again when the
-    // focus comes back. The second pass must be the same as the first.
-    it('passes a popup with no tabbable element in both directions, and again', async () => {
-      const { trigger, reasons } = await renderOpen({ after: true });
-      const after = screen.getByTestId('after');
-      trigger.focus();
-      const focus = trackFocus();
+      // The trigger is the only element that the Tab key reaches outside the popup. The search goes
+      // round the document, so it meets the content of the popup too.
+      it.each([
+        { name: 'Tab, trigger tabindex 0', shift: false, tabindex: 0 },
+        { name: 'Tab, trigger tabindex -1', shift: false, tabindex: -1 },
+        { name: 'Shift+Tab, trigger tabindex 0', shift: true, tabindex: 0 },
+        { name: 'Shift+Tab, trigger tabindex -1', shift: true, tabindex: -1 },
+        {
+          name: 'Shift+Tab, popup with a button',
+          shift: true,
+          tabindex: 0,
+          content: 'button' as const,
+        },
+      ])(
+        'keeps the focus on the trigger when no other element is tabbable ($name)',
+        async ({ shift, tabindex, content }) => {
+          const { trigger, reasons } = await renderOpen({ tabindex, content });
+          trigger.focus();
+          const focus = trackFocus();
 
-      await pressTab();
-      expect(after).toHaveFocus();
+          await pressTab(shift);
 
-      await pressTab(true);
-      expect(trigger).toHaveFocus();
+          expect(trigger).toHaveFocus();
+          expect(reasons).toEqual([REASONS.focusOut]);
+          expectNoReentry(focus);
+        },
+      );
 
-      await pressTab();
-      expect(after).toHaveFocus();
-      expect(reasons).toEqual([REASONS.focusOut, REASONS.focusOut]);
-      expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
-    });
-
-    // The trigger is the only element that the Tab key reaches outside the popup. The search goes
-    // round the document, so it meets the content of the popup too.
-    it.each([
-      { name: 'Tab, trigger tabindex 0', shift: false, tabindex: 0 },
-      { name: 'Tab, trigger tabindex -1', shift: false, tabindex: -1 },
-      { name: 'Shift+Tab, trigger tabindex 0', shift: true, tabindex: 0 },
-      { name: 'Shift+Tab, trigger tabindex -1', shift: true, tabindex: -1 },
-      {
-        name: 'Shift+Tab, popup with a button',
-        shift: true,
-        tabindex: 0,
-        content: 'button' as const,
-      },
-    ])(
-      'keeps the focus on the trigger when no other element is tabbable ($name)',
-      async ({ shift, tabindex, content }) => {
-        const { trigger, reasons } = await renderOpen({ tabindex, content });
-        trigger.focus();
+      it('gives the focus to the trigger for Tab from the end of the popup when no other element is tabbable', async () => {
+        const { trigger, reasons } = await renderOpen({ content: 'button' });
+        screen.getByTestId('inside').focus();
         const focus = trackFocus();
 
-        await pressTab(shift);
+        await pressTab();
 
         expect(trigger).toHaveFocus();
         expect(reasons).toEqual([REASONS.focusOut]);
         expectNoReentry(focus);
-      },
-    );
-
-    it('gives the focus to the trigger for Tab from the end of the popup when no other element is tabbable', async () => {
-      const { trigger, reasons } = await renderOpen({ content: 'button' });
-      screen.getByTestId('inside').focus();
-      const focus = trackFocus();
-
-      await pressTab();
-
-      expect(trigger).toHaveFocus();
-      expect(reasons).toEqual([REASONS.focusOut]);
-      expectNoReentry(focus);
-    });
-  });
+      });
+    },
+  );
 
   const PLACEMENTS_AND_CONTENTS = [
     { name: 'beside the trigger', placement: 'beside' as const },

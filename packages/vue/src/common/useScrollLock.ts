@@ -39,8 +39,10 @@ function lock(doc: Document) {
   const { scrollTop, scrollLeft } = html;
   const htmlStyle = getStyle(html);
   const bodyStyle = getStyle(body);
-  const marginY = Number.parseFloat(bodyStyle.marginTop) + Number.parseFloat(bodyStyle.marginBottom);
-  const marginX = Number.parseFloat(bodyStyle.marginLeft) + Number.parseFloat(bodyStyle.marginRight);
+  const marginY =
+    Number.parseFloat(bodyStyle.marginTop) + Number.parseFloat(bodyStyle.marginBottom);
+  const marginX =
+    Number.parseFloat(bodyStyle.marginLeft) + Number.parseFloat(bodyStyle.marginRight);
   const scrollbarY = win.innerHeight - html.clientHeight;
   const restoreHtml = saveStyle(html, ['overflow-x', 'overflow-y', 'scroll-behavior']);
   const restoreBody = saveStyle(body, ['position', 'width', 'height', 'box-sizing', 'overflow']);

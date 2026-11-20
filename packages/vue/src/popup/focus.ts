@@ -157,13 +157,7 @@ export function usePopupFocus(
     if (target === false) return;
     const trigger = root.activeTrigger as HTMLElement | null;
     const element =
-      target !== true
-        ? target
-        : trigger?.isConnected
-          ? trigger
-          : isShown(before)
-            ? before
-            : null;
+      target !== true ? target : trigger?.isConnected ? trigger : isShown(before) ? before : null;
     focus(element, root.closeInteraction === 'keyboard');
   }
 
