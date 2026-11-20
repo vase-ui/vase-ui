@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import type { OutputHTMLAttributes } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderValueState } from './types';
 
@@ -18,13 +18,12 @@ defineSlots<{
     values: readonly number[];
     formattedValues: readonly string[];
   }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderValueState;
-    values: readonly number[];
-    formattedValues: readonly string[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<SliderValueState> & {
+      values: readonly number[];
+      formattedValues: readonly string[];
+    },
+  ): unknown;
 }>();
 
 const slider = injectSlider('Value');

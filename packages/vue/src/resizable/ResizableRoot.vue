@@ -13,7 +13,7 @@ import {
   watch,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
 import { tabbable } from '../utils/popups/focus/tabbable';
@@ -84,11 +84,7 @@ defineSlots<{
     /** The size of each mounted panel in percent, from the mount. */
     sizes: Readonly<Record<string, number>>;
   }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ResizableRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ResizableRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

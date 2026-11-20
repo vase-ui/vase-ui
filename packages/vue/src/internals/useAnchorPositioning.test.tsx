@@ -14,7 +14,7 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
-import { DirectionProvider } from '../direction-provider';
+import TextDirectionProvider from './direction-context/TextDirectionProvider.test.vue';
 import PlainPart from '../../test/fixtures/PlainPart.vue';
 import PositionerPart from '../../test/fixtures/PositionerPart.vue';
 import { useAnchorPositioning } from './useAnchorPositioning';
@@ -742,14 +742,14 @@ describe('useAnchorPositioning', () => {
         const props = shallowRef(before);
         const direction = shallowRef<'ltr' | 'rtl'>('ltr');
         await render(() => (
-          <DirectionProvider direction={direction.value}>
+          <TextDirectionProvider direction={direction.value}>
             <PositionerPart
               trigger={trigger}
               disableAnchorTracking
               {...popupProps}
               {...props.value}
             />
-          </DirectionProvider>
+          </TextDirectionProvider>
         ));
         const popup = screen.getByTestId('popup');
         await waitForPosition(popup);

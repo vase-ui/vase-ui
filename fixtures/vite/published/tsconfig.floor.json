@@ -2,5 +2,5 @@
   "extends": "../tsconfig.json",
   "compilerOptions": { "skipLibCheck": false, "types": [] },
   "vueCompilerOptions": { "strictTemplates": true },
-  "include": ["App.vue", "popupHandles.ts"]
+  "include": ["App.vue", "MyToggle.vue", "popupHandles.ts"]
 }

@@ -518,20 +518,34 @@ async function expectInputPage(page: Page) {
   ).toEqual({ 'data-invalid': null, 'aria-invalid': 'true' });
 }
 
-async function expectProvidersPage(page: Page) {
-  expect(await page.getByTestId('outside').textContent()).toBe('ltr');
-  expect(await page.getByTestId('inside').textContent()).toBe('rtl');
-  expect(await page.getByTestId('button').getAttribute('type')).toBe('button');
-  // A provider renders its slot and no element.
-  expect(
-    await page
-      .getByTestId('providers')
-      .locator(':scope > *')
-      .evaluateAll((elements) => elements.map((element) => element.getAttribute('data-testid'))),
-  ).toEqual(['inside', 'button']);
+// The provider renders its slot and no element.
+async function readProvidersChildren(page: Page) {
+  return page
+    .getByTestId('providers')
+    .locator(':scope > *')
+    .evaluateAll((elements) => elements.map((element) => element.getAttribute('data-testid')));
 }
 
-async function expectUseRenderPage(page: Page) {
+// The style element of the scroll area and the script of the tab indicator have the nonce of the
+// provider.
+async function expectCSPProviderPage(page: Page) {
+  expect(await readProvidersChildren(page)).toEqual(['scroll-area', 'tabs']);
+  expect(await readDisableScrollbarStyles(page)).toEqual([
+    { nonce: 'test-nonce', parent: 'div', parentTestId: 'scroll-area', isFirstChild: true },
+  ]);
+  expect(await page.locator('[role="tablist"] script').getAttribute('nonce')).toBe('test-nonce');
+}
+
+// After the mount, the scroll area uses one style element in the head, and the script is gone.
+async function expectHydratedCSPProviderPage(page: Page) {
+  expect(await readProvidersChildren(page)).toEqual(['scroll-area', 'tabs']);
+  const styles = await readDisableScrollbarStyles(page);
+  expect(styles).toHaveLength(1);
+  expect(styles[0]).toMatchObject({ nonce: 'test-nonce', parent: 'head' });
+  expect(await page.locator('[role="tablist"] script').count()).toBe(0);
+}
+
+async function expectUseElementPage(page: Page) {
   const attributeNames = ['role', 'data-tone', 'class', 'href'];
 
   expect(await readElement(page.getByTestId('default-tag'), attributeNames)).toEqual({
@@ -539,24 +553,25 @@ async function expectUseRenderPage(page: Page) {
     text: 'Default tag',
     attributes: { role: 'note', 'data-tone': 'info', class: 'highlight', href: null },
   });
-  expect(await readElement(page.getByTestId('as-tag'), attributeNames)).toEqual({
-    tag: 'section',
-    text: 'As tag',
-    attributes: { role: 'note', 'data-tone': 'warning', class: null, href: null },
-  });
-  expect(await readElement(page.getByTestId('render-slot'), attributeNames)).toEqual({
+  expect(await readElement(page.getByTestId('link'), attributeNames)).toEqual({
     tag: 'a',
-    text: 'Render slot',
+    text: 'Link',
+    attributes: { role: 'note', 'data-tone': 'warning', class: null, href: '/button' },
+  });
+  expect(await readElement(page.getByTestId('nuxt-link'), attributeNames)).toEqual({
+    tag: 'a',
+    text: 'Nuxt link',
     attributes: { role: 'note', 'data-tone': 'info', class: null, href: '/button' },
   });
-  expect(await page.getByTestId('merged').getAttribute('class')).toBe('second first');
-  expect(await page.getByTestId('calls').locator('li').allTextContents()).toEqual([]);
 }
 
-// The server renders `defaultMatches`. The default screen of the browser is wider than the query,
-// so the value stays `true` after the mount.
-async function expectMediaQueryPage(page: Page) {
-  expect(await page.getByTestId('wide').textContent()).toBe('true');
+// `dir="rtl"` of the root places the thumb in the server HTML, and the place stays after the
+// hydration.
+async function expectRtlPage(page: Page) {
+  expect(await page.locator('html').getAttribute('dir')).toBe('rtl');
+  expect(
+    await page.getByTestId('thumb').evaluate((element) => (element as HTMLElement).style.translate),
+  ).toBe('50% -50%');
 }
 
 async function readSwitchPage(page: Page) {
@@ -907,8 +922,8 @@ function readSelected(calendar: Locator) {
     .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
 }
 
-// The server HTML has the field with the value, the hidden input and the trigger with its name. It
-// has no popup, because the portal renders after the mount.
+// The server HTML has the field with the value, the hidden input and the trigger with the name of
+// the developer. It has no popup, because the portal renders after the mount.
 async function expectDatePickerPage(page: Page) {
   expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
   expect(await readDateFieldValues(page, 'when')).toEqual(['11', '10', '2026']);
@@ -917,20 +932,12 @@ async function expectDatePickerPage(page: Page) {
   const trigger = page.getByTestId('when-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await trigger.getAttribute('aria-label')).toBe('Change date, Tuesday, November 10, 2026');
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose date');
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
-// The name of the trigger has a range with spaces that depend on the data of `Intl`.
-function readTriggerName(page: Page) {
-  return page
-    .getByTestId('when-trigger')
-    .getAttribute('aria-label')
-    .then((name) => name?.replace(/\s+/g, ' '));
-}
-
-// The server HTML has the two fields with the range, the two hidden inputs and the trigger with its
-// name. It has no popup, because the portal renders after the mount.
+// The server HTML has the two fields with the range, the two hidden inputs and the trigger with the
+// name of the developer. It has no popup, because the portal renders after the mount.
 async function expectDateRangePickerPage(page: Page) {
   expect(await page.getByTestId('from').getAttribute('role')).toBe('group');
   expect(await page.getByTestId('to').getAttribute('role')).toBe('group');
@@ -941,13 +948,11 @@ async function expectDateRangePickerPage(page: Page) {
   const trigger = page.getByTestId('when-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await readTriggerName(page)).toBe(
-    'Change dates, Tuesday, November 10 – Thursday, November 12, 2026',
-  );
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose dates');
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
-// The text that a time picker gives to the name of its trigger, as `Intl` makes it in Node.js.
+// The text of a time of a list, as `Intl` makes it in Node.js.
 function formatTime(hour: number) {
   return new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
@@ -957,8 +962,8 @@ function formatTime(hour: number) {
   }).format(Date.UTC(1970, 0, 1, hour));
 }
 
-// The server HTML has the field with the value, the hidden input and the trigger with its name. It
-// has no popup, because the portal renders after the mount.
+// The server HTML has the field with the value, the hidden input and the trigger with the name of
+// the developer. It has no popup, because the portal renders after the mount.
 async function expectTimePickerPage(page: Page) {
   expect(await page.getByTestId('start').getAttribute('role')).toBe('group');
   expect(await readDateFieldValues(page, 'start')).toEqual(['3', '00', 'PM']);
@@ -967,7 +972,7 @@ async function expectTimePickerPage(page: Page) {
   const trigger = page.getByTestId('start-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await trigger.getAttribute('aria-label')).toBe(`Change time, ${formatTime(15)}`);
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose time');
   expect(await page.getByTestId('start-popup').count()).toBe(0);
 }
 
@@ -1724,9 +1729,13 @@ const PAGES: PageCase[] = [
   { path: '/date-range-picker', expectPage: expectDateRangePickerPage },
   { path: '/time-picker', expectPage: expectTimePickerPage },
   { path: '/number-field', expectPage: expectNumberFieldPage },
-  { path: '/providers', expectPage: expectProvidersPage },
-  { path: '/use-render', expectPage: expectUseRenderPage },
-  { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
+  {
+    path: '/csp-provider',
+    expectPage: expectCSPProviderPage,
+    expectHydratedPage: expectHydratedCSPProviderPage,
+  },
+  { path: '/use-element', expectPage: expectUseElementPage },
+  { path: '/rtl', expectPage: expectRtlPage },
   {
     path: '/portal',
     expectPage: expectPortalPageOnServer,
@@ -2191,9 +2200,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-12');
     expect(await readDateFieldValues(page, 'when')).toEqual(['11', '12', '2026']);
     expect(await readFormData(page)).toEqual(['when=2026-11-12']);
-    expect(await page.getByTestId('when-trigger').getAttribute('aria-label')).toBe(
-      'Change date, Thursday, November 12, 2026',
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2229,9 +2235,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readDateFieldValues(page, 'from')).toEqual(['11', '14', '2026']);
     expect(await readDateFieldValues(page, 'to')).toEqual(['11', '18', '2026']);
     expect(await readFormData(page)).toEqual(['from=2026-11-14', 'to=2026-11-18']);
-    expect(await readTriggerName(page)).toBe(
-      'Change dates, Saturday, November 14 – Wednesday, November 18, 2026',
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2256,9 +2259,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('start-value').textContent()).toBe('16:00:00');
     expect(await readDateFieldValues(page, 'start')).toEqual(['4', '00', 'PM']);
     expect(await readFormData(page)).toEqual(['start=16:00']);
-    expect(await page.getByTestId('start-trigger').getAttribute('aria-label')).toBe(
-      `Change time, ${formatTime(16)}`,
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2614,15 +2614,21 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
-  it('shows the media query of the visitor after hydration', async () => {
-    // The screen is narrower than the query, so the real value differs from `defaultMatches`.
-    const page = await createPage(undefined, { viewport: { width: 400, height: 800 } });
+  it('moves the focus of /rtl to the next tab with ArrowLeft, and raises the slider with ArrowLeft after hydration', async () => {
+    const page = await createPage('/rtl');
     const messages = collectMessages(page);
 
-    await page.goto(url('/unstable-use-media-query'), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
+    await page.getByRole('tab', { name: 'A' }).focus();
+    await page.keyboard.press('ArrowLeft');
+    expect(await page.evaluate(() => document.activeElement?.textContent)).toBe('B');
 
-    expect(await page.getByTestId('wide').textContent()).toBe('false');
+    const input = page.getByTestId('thumb').locator('input');
+    await input.focus();
+    await page.keyboard.press('ArrowLeft');
+    expect(await input.inputValue()).toBe('31');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    expect(await input.inputValue()).toBe('29');
     expect(messages).toEqual([]);
   });
 
@@ -2737,14 +2743,5 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.keyboard.press('Escape');
     await detachedPopup.waitFor({ state: 'detached' });
     expect(messages).toEqual([]);
-  });
-
-  it('runs the handlers of mergeProps from the rightmost set after hydration', async () => {
-    const page = await createPage('/use-render');
-    const calls = page.getByTestId('calls').locator('li');
-
-    expect(await calls.allTextContents()).toEqual([]);
-    await page.getByTestId('merged').click();
-    expect(await calls.allTextContents()).toEqual(['second', 'first']);
   });
 });

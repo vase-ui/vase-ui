@@ -3,10 +3,13 @@ import { useId } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import styles from '../../_index.module.css';
 
 const id = useId();
 const defaultValue = Temporal.PlainTime.from('10:30');
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -26,7 +29,7 @@ const defaultValue = Temporal.PlainTime.from('10:30');
             </template>
           </TimeField.Input>
         </TimePicker.Field>
-        <TimePicker.Trigger :class="styles.Trigger">
+        <TimePicker.Trigger aria-label="Choose time" :class="styles.Trigger">
           <svg
             aria-hidden="true"
             width="16"
@@ -41,27 +44,33 @@ const defaultValue = Temporal.PlainTime.from('10:30');
           </svg>
         </TimePicker.Trigger>
       </div>
-      <TimePicker.Portal>
+      <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <TimePicker.Popup aria-label="Choose a reminder time" :class="styles.Popup">
-            <TimePicker.Clock :class="styles.Clock">
-              <div :class="styles.Header">
-                <TimeClock.ViewTrigger view="hour" :class="styles.ViewTrigger" />
-                <span aria-hidden="true" :class="styles.Separator">:</span>
-                <TimeClock.ViewTrigger view="minute" :class="styles.ViewTrigger" />
-                <TimeClock.DayPeriod value="am" :class="styles.DayPeriod" />
-                <TimeClock.DayPeriod value="pm" :class="styles.DayPeriod" />
-              </div>
-              <TimeClock.Face :class="styles.Face">
-                <TimeClock.Hand :class="styles.Hand" />
-                <template #number="{ number }">
-                  <TimeClock.Number :number="number" :class="styles.Number" />
-                </template>
-              </TimeClock.Face>
-            </TimePicker.Clock>
-          </TimePicker.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <TimePicker.Popup aria-label="Choose a reminder time" :class="styles.Popup">
+              <TimePicker.Clock :class="styles.Clock">
+                <div :class="styles.Header">
+                  <TimeClock.ViewTrigger view="hour" :class="styles.ViewTrigger" />
+                  <span aria-hidden="true" :class="styles.Separator">:</span>
+                  <TimeClock.ViewTrigger view="minute" :class="styles.ViewTrigger" />
+                  <TimeClock.DayPeriod value="am" :class="styles.DayPeriod" />
+                  <TimeClock.DayPeriod value="pm" :class="styles.DayPeriod" />
+                </div>
+                <TimeClock.Face :class="styles.Face">
+                  <TimeClock.Hand :class="styles.Hand" />
+                  <template #number="{ number }">
+                    <TimeClock.Number :number="number" :class="styles.Number" />
+                  </template>
+                </TimeClock.Face>
+              </TimePicker.Clock>
+            </TimePicker.Popup>
+          </Transition>
         </TimePicker.Positioner>
-      </TimePicker.Portal>
+      </Popover.Portal>
     </TimePicker.Root>
   </div>
 </template>

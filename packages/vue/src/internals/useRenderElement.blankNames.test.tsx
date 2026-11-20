@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -23,10 +22,10 @@ const Part = defineComponent(
 
 const Note = defineComponent(
   (props: VaseUIComponentProps<object> & WithVaseUIEvent<HTMLAttributes>) => {
-    const { elementProps, tag } = useRender(props, {
+    const { elementProps } = useRenderElement('div', props, {
       props: (attrs) => [{ role: 'note', 'aria-label': 'Note' }, attrs],
     });
-    return () => h(tag.value, elementProps());
+    return () => h('div', elementProps());
   },
   { props: ['as'], inheritAttrs: false },
 );
@@ -55,7 +54,7 @@ const WHITE_SPACE: Blank = { name: 'white space', value: '\n\t ' };
 
 const rows: Row[] = [
   {
-    name: 'useRender',
+    name: 'a note',
     attribute: 'aria-label',
     createNode: (attrs) => <Note data-testid="part" {...attrs} />,
     expected: 'Note',

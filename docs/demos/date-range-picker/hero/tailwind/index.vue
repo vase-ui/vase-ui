@@ -3,6 +3,7 @@ import { useId } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Calendar } from '@vase-ui/vue/calendar';
+import { Popover } from '@vase-ui/vue/popover';
 
 const id = useId();
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
@@ -19,6 +20,8 @@ const segmentClassName =
 const literalClassName = 'whitespace-pre text-neutral-600 dark:text-neutral-400';
 const inputClassName =
   'flex items-center text-sm font-normal tabular-nums any-pointer-coarse:text-base';
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -28,7 +31,7 @@ const inputClassName =
       <div
         class="box-border flex h-8 items-center border border-neutral-950 bg-white text-neutral-950 focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-neutral-950 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-within:outline-white"
       >
-        <DateRangePicker.StartField :id="id" class="flex items-center px-2">
+        <DateRangePicker.StartField aria-label="Start date" :id="id" class="flex items-center px-2">
           <DateField.Input :class="inputClassName">
             <template #segment="{ segment }">
               <DateField.Segment
@@ -43,7 +46,7 @@ const inputClassName =
         <span aria-hidden="true" class="text-neutral-600 select-none dark:text-neutral-400"
           >&ndash;</span
         >
-        <DateRangePicker.EndField class="flex items-center px-2">
+        <DateRangePicker.EndField aria-label="End date" class="flex items-center px-2">
           <DateField.Input :class="inputClassName">
             <template #segment="{ segment }">
               <DateField.Segment
@@ -56,7 +59,8 @@ const inputClassName =
           </DateField.Input>
         </DateRangePicker.EndField>
         <DateRangePicker.Trigger
-          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-data-disabled:bg-neutral-100 data-disabled:text-neutral-500 data-popup-open:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-data-disabled:bg-neutral-800 dark:data-disabled:text-neutral-400 dark:data-popup-open:bg-neutral-800 dark:focus-visible:outline-white"
+          aria-label="Choose dates"
+          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-disabled:bg-neutral-100 disabled:text-neutral-500 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-disabled:bg-neutral-800 dark:disabled:text-neutral-400 dark:aria-expanded:bg-neutral-800 dark:focus-visible:outline-white"
         >
           <svg
             aria-hidden="true"
@@ -72,53 +76,59 @@ const inputClassName =
           </svg>
         </DateRangePicker.Trigger>
       </div>
-      <DateRangePicker.Portal>
+      <Popover.Portal>
         <DateRangePicker.Positioner :side-offset="4">
-          <DateRangePicker.Popup
-            aria-label="Choose trip dates"
-            class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
           >
-            <DateRangePicker.Calendar class="relative box-border text-sm">
-              <div class="absolute top-0 right-0 flex gap-1">
-                <Calendar.PreviousButton :class="buttonClassName">
-                  &lsaquo;
-                </Calendar.PreviousButton>
-                <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
-              </div>
-              <Calendar.Months>
-                <template #month="{ month }">
-                  <Calendar.Month :month="month">
-                    <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
-                    <Calendar.Grid class="border-collapse">
-                      <Calendar.GridHeader>
-                        <Calendar.GridHeaderRow>
-                          <template #weekday="{ weekday }">
-                            <Calendar.Weekday
-                              :weekday="weekday"
-                              class="h-8 w-9 p-0 text-xs font-normal text-neutral-600 dark:text-neutral-400"
-                            />
-                          </template>
-                        </Calendar.GridHeaderRow>
-                      </Calendar.GridHeader>
-                      <Calendar.GridBody>
-                        <template #week="{ week }">
-                          <Calendar.Week :week="week">
-                            <template #day="{ day }">
-                              <Calendar.Day :day="day" class="p-0 text-center">
-                                <Calendar.DayButton :class="dayButtonClassName" />
-                              </Calendar.Day>
+            <DateRangePicker.Popup
+              aria-label="Choose trip dates"
+              class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+            >
+              <DateRangePicker.Calendar class="relative box-border text-sm">
+                <div class="absolute top-0 right-0 flex gap-1">
+                  <Calendar.PreviousButton :class="buttonClassName">
+                    &lsaquo;
+                  </Calendar.PreviousButton>
+                  <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
+                </div>
+                <Calendar.Months>
+                  <template #month="{ month }">
+                    <Calendar.Month :month="month">
+                      <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
+                      <Calendar.Grid class="border-collapse">
+                        <Calendar.GridHeader>
+                          <Calendar.GridHeaderRow>
+                            <template #weekday="{ weekday }">
+                              <Calendar.Weekday
+                                :weekday="weekday"
+                                class="h-8 w-9 p-0 text-xs font-normal text-neutral-600 dark:text-neutral-400"
+                              />
                             </template>
-                          </Calendar.Week>
-                        </template>
-                      </Calendar.GridBody>
-                    </Calendar.Grid>
-                  </Calendar.Month>
-                </template>
-              </Calendar.Months>
-            </DateRangePicker.Calendar>
-          </DateRangePicker.Popup>
+                          </Calendar.GridHeaderRow>
+                        </Calendar.GridHeader>
+                        <Calendar.GridBody>
+                          <template #week="{ week }">
+                            <Calendar.Week :week="week">
+                              <template #day="{ day }">
+                                <Calendar.Day :day="day" class="p-0 text-center">
+                                  <Calendar.DayButton :class="dayButtonClassName" />
+                                </Calendar.Day>
+                              </template>
+                            </Calendar.Week>
+                          </template>
+                        </Calendar.GridBody>
+                      </Calendar.Grid>
+                    </Calendar.Month>
+                  </template>
+                </Calendar.Months>
+              </DateRangePicker.Calendar>
+            </DateRangePicker.Popup>
+          </Transition>
         </DateRangePicker.Positioner>
-      </DateRangePicker.Portal>
+      </Popover.Portal>
     </DateRangePicker.Root>
   </div>
 </template>

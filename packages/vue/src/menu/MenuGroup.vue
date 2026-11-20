@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useGroupItems } from './filter';
 import { useGroupLabel } from './group';
 import type { MenuGroupProps, MenuGroupState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<MenuGroupProps>();
 defineSlots<{
   default?(scope: { state: MenuGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuGroupState>): unknown;
 }>();
 
 const attrs = useAttrs();

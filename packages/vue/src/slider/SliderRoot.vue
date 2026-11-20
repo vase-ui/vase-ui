@@ -15,7 +15,7 @@ import {
   watch,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
 import { fieldKey } from '../field/control';
@@ -57,11 +57,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: SliderRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SliderRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

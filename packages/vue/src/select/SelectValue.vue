@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import {
   hasNullItemLabel,
   resolveMultipleLabels,
@@ -16,11 +16,7 @@ const props = defineProps<SelectValueProps>();
 defineSlots<{
   /** The content in place of the label of the value. */
   default?(scope: { value: any; state: SelectValueState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectValueState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectValueState>): unknown;
 }>();
 
 const context = injectSelectRoot('Value');

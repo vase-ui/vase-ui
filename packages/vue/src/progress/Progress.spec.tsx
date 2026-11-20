@@ -1,4 +1,5 @@
 import { expectType } from '#test-utils';
+import type { ElementSlotProps } from '@vase-ui/vue/types';
 import {
   Progress,
   type ProgressRootProps,
@@ -32,13 +33,7 @@ expectType<
   typeof defaultSlotProps
 >(defaultSlotProps);
 expectType<
-  {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ProgressValueState;
-    formattedValue: string | null;
-    value: number | null;
-  },
+  ElementSlotProps<ProgressValueState> & { formattedValue: string | null; value: number | null },
   typeof elementSlotProps
 >(elementSlotProps);
 

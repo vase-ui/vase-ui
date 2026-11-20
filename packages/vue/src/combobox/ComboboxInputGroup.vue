@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { fieldKey, fieldStateAttributes } from '../field/control';
 import { injectComboboxRoot, pressAroundInput } from './root';
 import type { ComboboxInputGroupProps, ComboboxInputGroupState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxInputGroupProps>();
 defineSlots<{
   default?(scope: { state: ComboboxInputGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxInputGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxInputGroupState>): unknown;
 }>();
 
 const context = injectComboboxRoot('InputGroup');

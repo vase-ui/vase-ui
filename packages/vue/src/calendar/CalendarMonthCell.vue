@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { formatText } from '../internals/date-time/calendar/formatText';
+import { formatText } from '../common/date-time/text';
+import type { ElementSlotProps } from '../common/element';
 import { useCell } from './cell';
 import { injectCalendar } from './root';
 import type { CalendarMonthCellProps, CalendarMonthCellState } from './types';
@@ -9,12 +10,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CalendarMonthCellProps>(), { format: 'long' });
 defineSlots<{
   default?(scope: { state: CalendarMonthCellState; text: string }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarMonthCellState;
-    text: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarMonthCellState> & {
+      text: string;
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

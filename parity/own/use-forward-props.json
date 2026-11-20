@@ -1,8 +1,0 @@
-{
-  "standard": [
-    "https://vuejs.org/guide/components/props.html#boolean-casting",
-    "https://vuejs.org/guide/components/attrs.html"
-  ],
-  "reason": "React gives an absent prop the value `undefined`, so Base UI needs no such utility. Vue casts an absent Boolean prop to `false`. A wrapper needs a way to forward only the props that its caller sets, plus its own defaults.",
-  "functions": ["useForwardProps", "useForwardPropsEmits"]
-}

@@ -1,22 +1,29 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
-import { mergeProps } from '@vase-ui/vue/merge-props';
-import { useRender } from '@vase-ui/vue/use-render';
+import { mergeProps, useAttrs } from 'vue';
+import type { ElementSlotProps } from '@vase-ui/vue/types';
+import { useElement } from '@vase-ui/vue/use-element';
 import styles from './index.module.css';
 
 defineOptions({ inheritAttrs: false });
+defineSlots<{
+  default?(): unknown;
+  element?(scope: ElementSlotProps<Record<string, never>>): unknown;
+}>();
 
-const props = defineProps<{ as?: string | Component | undefined }>();
-
-const { element, elementProps, setRef, tag, usesRenderSlot } = useRender(props, {
-  defaultTagName: 'p',
-  props: (attrs) => mergeProps<'p'>({ class: styles.Text }, attrs),
-});
+const attrs = useAttrs();
+const { element, setElement } = useElement();
+const elementProps = () => mergeProps({ class: styles.Text }, attrs);
 
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="{}" />
-  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef"><slot /></component>
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="{}"
+  />
+  <p v-else v-bind="elementProps()" :ref="setElement"><slot /></p>
 </template>

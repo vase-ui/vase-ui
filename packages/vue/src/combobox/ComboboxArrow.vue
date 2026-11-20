@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectComboboxRoot, injectPositioner } from './root';
 import type { ComboboxArrowProps, ComboboxArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxArrowProps>();
 defineSlots<{
   default?(scope: { state: ComboboxArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxArrowState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Arrow');

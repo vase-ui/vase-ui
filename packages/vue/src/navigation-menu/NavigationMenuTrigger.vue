@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
 import { usePopupHover } from '../popup/hover';
@@ -14,11 +14,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<NavigationMenuTriggerProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: NavigationMenuTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuTriggerState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Trigger');

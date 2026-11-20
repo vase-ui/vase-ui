@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
 import { arrowKeyTarget } from '../common/arrowKeyTarget';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { toolbarKey, type ToolbarItem } from './item';
 import type { ToolbarRootProps, ToolbarRootState } from './types';
@@ -15,11 +15,7 @@ const props = withDefaults(defineProps<ToolbarRootProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ToolbarRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

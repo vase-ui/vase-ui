@@ -1,7 +1,7 @@
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { shallowRef, toValue, watch, watchPostEffect } from 'vue';
+import { inject, shallowRef, toValue, watch, watchPostEffect } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { useCSPContext } from '../internals/csp-context/CSPContext';
+import { cspKey } from '../csp-provider/part';
 import { followRootNode, isDocumentOrShadowRoot } from '../internals/observeRootNode';
 
 const DISABLE_SCROLLBAR_CLASS_NAME = 'vase-ui-disable-scrollbar';
@@ -65,11 +65,11 @@ function takeSharedStyle(root: Document | ShadowRoot, nonce: string | undefined)
  * its element.
  */
 export function useStyleDisableScrollbar(element: MaybeRefOrGetter<Element | null>): void {
-  const csp = useCSPContext();
+  const csp = inject(cspKey, null);
   const root = shallowRef<Document | ShadowRoot | null>(null);
   watchPostEffect((onCleanup) => {
     const target = toValue(element);
-    if (!target || csp.value.disableStyleElements) {
+    if (!target || csp?.disableStyleElements) {
       root.value = null;
       return;
     }
@@ -86,7 +86,7 @@ export function useStyleDisableScrollbar(element: MaybeRefOrGetter<Element | nul
     root,
     (node, _previous, onCleanup) => {
       if (node) {
-        onCleanup(takeSharedStyle(node, csp.value.nonce));
+        onCleanup(takeSharedStyle(node, csp?.nonce));
       }
     },
     { flush: 'sync' },

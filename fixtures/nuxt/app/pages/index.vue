@@ -29,9 +29,9 @@
       <li><NuxtLink to="/date-range-picker">Date Range Picker</NuxtLink></li>
       <li><NuxtLink to="/time-picker">Time Picker</NuxtLink></li>
       <li><NuxtLink to="/number-field">Number Field</NuxtLink></li>
-      <li><NuxtLink to="/providers">Providers</NuxtLink></li>
-      <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
-      <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>
+      <li><NuxtLink to="/csp-provider">CSP Provider</NuxtLink></li>
+      <li><NuxtLink to="/use-element">useElement</NuxtLink></li>
+      <li><NuxtLink to="/rtl">Right to left</NuxtLink></li>
       <li><NuxtLink to="/portal">Portal</NuxtLink></li>
       <li><NuxtLink to="/toast">Toast</NuxtLink></li>
       <li><NuxtLink to="/select">Select</NuxtLink></li>

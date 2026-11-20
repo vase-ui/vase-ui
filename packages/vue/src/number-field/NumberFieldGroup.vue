@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldGroupProps, NumberFieldGroupState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NumberFieldGroupProps>();
 defineSlots<{
   default?(scope: { state: NumberFieldGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NumberFieldGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NumberFieldGroupState>): unknown;
 }>();
 
 const root = injectNumberFieldRoot('Group');

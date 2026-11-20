@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectMenu, injectPortal } from './root';
 import type { MenuBackdropProps, MenuBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<MenuBackdropProps>();
 defineSlots<{
   default?(scope: { state: MenuBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuBackdropState>): unknown;
 }>();
 
 const context = injectMenu('Backdrop');

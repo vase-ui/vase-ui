@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderTrackProps, SliderTrackState } from './types';
 
@@ -10,11 +10,7 @@ defineProps<SliderTrackProps>();
 
 defineSlots<{
   default?(scope: { state: SliderTrackState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderTrackState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SliderTrackState>): unknown;
 }>();
 
 const slider = injectSlider('Track');

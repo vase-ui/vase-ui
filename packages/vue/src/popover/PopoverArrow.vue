@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPopoverRoot, injectPositioner } from './root';
 import type { PopoverArrowProps, PopoverArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<PopoverArrowProps>();
 defineSlots<{
   default?(scope: { state: PopoverArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverArrowState>): unknown;
 }>();
 
 const { root } = injectPopoverRoot('Arrow');

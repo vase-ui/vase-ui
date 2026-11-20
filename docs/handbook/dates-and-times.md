@@ -100,11 +100,11 @@ A zone change can skip an hour, and a time in that hour does not exist. When a p
 
 ## Servers
 
-A server does not know the locale and the time zone of a visitor. With no `locale` prop, `DateField`, `TimeField` and `TimeClock` use the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. Each other component formats with `en-US` until it mounts. The server HTML and the first render of the browser are then equal.
+A server does not know the locale and the time zone of a visitor. With no `locale` prop, each date and time component uses the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The server HTML and the first render of the browser are then equal.
 
 `Calendar` reads today to mark the day and to pick its first month. With no `today` prop, it reads the clock only after the mount, so the server HTML marks no day as today. Give it `today` when the server knows the day of the visitor. The server HTML then has that day. `Calendar` uses `en-US`, or the `locale` prop, on the server and in the browser.
 
-A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
+A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. A picker reads today at its mount and at each open of its popup, and never in a render. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
 
 On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs, watch } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { platform } from '../common/platform';
 import { usePopupHover } from '../popup/hover';
 import { interactionOf } from '../popup/root';
@@ -18,11 +18,7 @@ const props = withDefaults(defineProps<MenuSubmenuTriggerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: MenuSubmenuTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuSubmenuTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuSubmenuTriggerState>): unknown;
 }>();
 
 const submenu = injectMenu('SubmenuTrigger');

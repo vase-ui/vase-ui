@@ -15,6 +15,16 @@ export interface AsProps {
 }
 
 /**
+ * The scope of the `element` slot of a part. Bind `props` on the element with `v-bind`, and give
+ * `elementRef` to its `ref`.
+ */
+export interface ElementSlotProps<State> {
+  props: Record<string, unknown>;
+  elementRef: (target: unknown) => void;
+  state: State;
+}
+
+/**
  * The tag in `as` of the part, known at the render, so that the server writes the attributes of that
  * element. The element of a component in `as`, or of the `element` slot, which wins over `as`, is
  * known after the mount.
@@ -28,10 +38,12 @@ export function useAsTag(as: () => unknown): () => string | undefined {
 }
 
 /**
- * The element that a part renders, from the function ref that the part binds to it. The part
- * renders it, or the developer renders it in the `element` slot and binds `elementRef`, because
- * Vapor ignores `ref` in `v-bind`. A component in the slot or in `as` gives its element as an
- * exposed `element`, else as its root element `$el`, which a Vapor component does not have.
+ * The native element of a component, from the function ref `setElement`. Bind `setElement` with
+ * `:ref`, because Vapor ignores `ref` in `v-bind`. `element` is the element that `setElement` got.
+ * For a component, it is the `element` that the component exposes, else its root element `$el`,
+ * which a Vapor component does not have. It is `null` on a server, before the mount and after the
+ * unmount. A part uses it, and a component of yours that exposes `element` can be the element of a
+ * part.
  */
 export function useElement<T extends Element>() {
   const target = shallowRef<unknown>(null);

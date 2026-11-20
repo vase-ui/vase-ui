@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'vue';
-import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { ChangeEventDetails, GenericEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 
@@ -125,21 +125,17 @@ export interface OTPFieldInputState extends OTPFieldRootState {
   index: number;
 }
 
-interface Details<Reason extends string, Of extends Event> extends ChangeEventDetails<Reason> {
-  event: Of;
-}
-
 export type OTPFieldRootChangeEventReason =
   'input-change' | 'input-clear' | 'input-paste' | 'keyboard';
 export type OTPFieldRootChangeEventDetails =
-  | Details<'input-change' | 'input-clear', InputEvent | Event>
-  | Details<'input-paste', ClipboardEvent>
-  | Details<'keyboard', KeyboardEvent>;
+  | ChangeEventDetails<'input-change' | 'input-clear', InputEvent | Event>
+  | ChangeEventDetails<'input-paste', ClipboardEvent>
+  | ChangeEventDetails<'keyboard', KeyboardEvent>;
 
 export type OTPFieldRootInvalidEventReason = 'input-change' | 'input-paste';
 export type OTPFieldRootInvalidEventDetails =
-  | { reason: 'input-change'; event: InputEvent | Event }
-  | { reason: 'input-paste'; event: ClipboardEvent };
+  | GenericEventDetails<'input-change', InputEvent | Event>
+  | GenericEventDetails<'input-paste', ClipboardEvent>;
 
 export type OTPFieldRootCompleteEventReason = OTPFieldRootInvalidEventReason;
 export type OTPFieldRootCompleteEventDetails = OTPFieldRootInvalidEventDetails;

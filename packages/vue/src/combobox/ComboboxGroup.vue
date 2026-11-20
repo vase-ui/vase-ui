@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, provide, shallowReactive, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { groupKey, injectComboboxRoot } from './root';
 import type { ComboboxGroupProps, ComboboxGroupState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxGroupProps>();
 defineSlots<{
   default?(scope: { state: ComboboxGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxGroupState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Group');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectDrawer } from './root';
 import type { DrawerContentProps, DrawerContentState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<DrawerContentProps>();
 defineSlots<{
   default?(scope: { state: DrawerContentState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerContentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerContentState>): unknown;
 }>();
 
 const drawer = injectDrawer('Content');

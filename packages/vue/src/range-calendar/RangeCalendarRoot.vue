@@ -1,10 +1,9 @@
 <script setup lang="ts" generic="Value extends DateValue = Temporal.PlainDate">
-import { computed, inject, mergeProps, provide, useAttrs } from 'vue';
+import { computed, mergeProps, provide, useAttrs } from 'vue';
 import { calendarKey, useCalendar } from '../calendar/root';
-import { useElement } from '../common/element';
-import { assertTemporal } from '../internals/date-time/temporal';
-import type { DateValue } from '../internals/date-time/temporal';
-import { rangeCalendarHostKey } from './host';
+import { useElement, type ElementSlotProps } from '../common/element';
+import { assertTemporal } from '../common/date-time/temporal';
+import type { DateValue } from '../common/date-time/temporal';
 import { useRange } from './range';
 import type {
   RangeCalendarRootChangeEventDetails,
@@ -40,11 +39,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: RangeCalendarRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: RangeCalendarRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<RangeCalendarRootState>): unknown;
 }>();
 
 const attrs = useAttrs();
@@ -52,7 +47,6 @@ const { element, setElement } = useElement<HTMLElement>();
 const range = useRange(
   props,
   emit as (event: 'valueChange' | 'update:modelValue', ...args: unknown[]) => void,
-  inject(rangeCalendarHostKey, null),
 );
 const {
   calendar: forParts,
@@ -80,7 +74,7 @@ defineExpose({ element, focus });
 
 // The root handles Escape for each element in it, such as a navigation button.
 function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && range.cancel(event)) event.preventDefault();
+  if (event.key === 'Escape') range.cancel(event);
 }
 
 function elementProps() {

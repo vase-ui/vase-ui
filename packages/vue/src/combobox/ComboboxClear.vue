@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { createComboboxDetails, injectComboboxRoot } from './root';
 import type { ComboboxClearProps, ComboboxClearState } from './types';
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<ComboboxClearProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ComboboxClearState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxClearState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxClearState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Clear');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarMonthsProps, CalendarMonthsState, CalendarPage } from './types';
@@ -11,12 +11,11 @@ defineProps<CalendarMonthsProps>();
 defineSlots<{
   /** One month of the page. The months render by their place, so a month part stays when the page moves. */
   month?(scope: { month: CalendarPage; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarMonthsState;
-    months: readonly CalendarPage[];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarMonthsState> & {
+      months: readonly CalendarPage[];
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

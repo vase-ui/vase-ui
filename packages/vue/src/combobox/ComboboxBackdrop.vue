@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectComboboxRoot, injectPortal } from './root';
 import type { ComboboxBackdropProps, ComboboxBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxBackdropProps>();
 defineSlots<{
   default?(scope: { state: ComboboxBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxBackdropState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Backdrop');

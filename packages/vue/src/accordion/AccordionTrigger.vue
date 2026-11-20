@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs, useId } from 'vue';
 import { useCollapsibleTrigger } from '../collapsible/trigger';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectAccordionItem } from './part';
 import type { AccordionTriggerProps, AccordionTriggerState } from './types';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<AccordionTriggerProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: AccordionTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AccordionTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AccordionTriggerState>): unknown;
 }>();
 
 const item = injectAccordionItem();

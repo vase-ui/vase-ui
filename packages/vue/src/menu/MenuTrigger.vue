@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
 import { useListItem } from '../list/list';
@@ -20,11 +20,7 @@ const props = withDefaults(defineProps<MenuTriggerProps<Payload>>(), {
 });
 defineSlots<{
   default?(scope: { state: MenuTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuTriggerState>): unknown;
 }>();
 
 const attrs = useAttrs();

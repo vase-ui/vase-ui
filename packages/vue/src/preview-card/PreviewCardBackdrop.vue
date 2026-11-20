@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPortal, injectPreviewCardRoot } from './root';
 import type { PreviewCardBackdropProps, PreviewCardBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<PreviewCardBackdropProps>();
 defineSlots<{
   default?(scope: { state: PreviewCardBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardBackdropState>): unknown;
 }>();
 
 const { root } = injectPreviewCardRoot('Backdrop');

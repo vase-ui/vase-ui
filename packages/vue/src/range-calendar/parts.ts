@@ -1,4 +1,4 @@
-import type { DateValue } from '../internals/date-time/temporal';
+import type { DateValue } from '../common/date-time/temporal';
 import RangeCalendarRoot from './RangeCalendarRoot.vue';
 import type {
   RangeCalendarRootChangeEventDetails,

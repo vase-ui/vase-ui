@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, HTMLAttributes } from 'vue';
-import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { ChangeEventDetails, GenericEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
-import type { TimeValue } from '../internals/date-time/temporal';
+import type { TimeValue } from '../common/date-time/temporal';
 import type { TimeClockDayPeriodValue, TimeClockFaceNumber, TimeClockView } from './views';
 
 export type { TimeClockDayPeriodValue, TimeClockFaceNumber, TimeClockView } from './views';
@@ -74,10 +74,7 @@ export type TimeClockRootChangeEventReason = 'drag' | 'keyboard' | 'input-change
 export type TimeClockRootChangeEventDetails = ChangeEventDetails<TimeClockRootChangeEventReason>;
 
 export type TimeClockRootCommitEventReason = 'drag' | 'keyboard';
-export interface TimeClockRootCommitEventDetails {
-  reason: TimeClockRootCommitEventReason;
-  event: Event;
-}
+export type TimeClockRootCommitEventDetails = GenericEventDetails<TimeClockRootCommitEventReason>;
 
 export type TimeClockRootViewChangeEventReason = 'trigger-press' | 'drag' | 'keyboard';
 export type TimeClockRootViewChangeEventDetails =

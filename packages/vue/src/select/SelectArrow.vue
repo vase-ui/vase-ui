@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSelectPositioner, injectSelectRoot } from './root';
 import type { SelectArrowProps, SelectArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<SelectArrowProps>();
 defineSlots<{
   default?(scope: { state: SelectArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectArrowState>): unknown;
 }>();
 
 const { root, aligned } = injectSelectRoot('Arrow');

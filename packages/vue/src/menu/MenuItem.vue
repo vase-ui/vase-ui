@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useMenuItem } from './item';
 import type { MenuItemProps, MenuItemState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<MenuItemProps>(), { disabled: false, closeOnClick: true });
 defineSlots<{
   default?(scope: { state: MenuItemState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuItemState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuItemState>): unknown;
 }>();
 
 const attrs = useAttrs();

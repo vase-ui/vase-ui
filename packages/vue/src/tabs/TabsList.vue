@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onMounted, provide, shallowRef, useAttrs, watch } from 'vue';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { tabsListKey } from './list';
 import { injectTabsRoot, type RootTab } from './root';
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<TabsListProps>(), {
 });
 defineSlots<{
   default?(scope: { state: TabsListState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TabsListState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TabsListState>): unknown;
 }>();
 
 const root = injectTabsRoot();

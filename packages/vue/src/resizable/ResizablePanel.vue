@@ -9,7 +9,7 @@ import {
   useId,
   watch,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { isCollapsed, isLength, isSize, parseSize } from './layout';
 import { injectRoot, type Size } from './root';
@@ -35,11 +35,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: ResizablePanelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ResizablePanelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ResizablePanelState>): unknown;
 }>();
 
 const root = injectRoot('Panel');

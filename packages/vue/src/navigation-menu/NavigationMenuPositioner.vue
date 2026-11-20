@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, reactive, shallowRef, toRefs, useAttrs, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
 import { usePlacement, type CollisionAvoidance } from '../popup/placement';
@@ -27,11 +27,7 @@ const props = withDefaults(defineProps<NavigationMenuPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: NavigationMenuPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuPositionerState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('Positioner');

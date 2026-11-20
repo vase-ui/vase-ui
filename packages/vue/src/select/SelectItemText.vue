@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSelectRoot, selectItemKey } from './root';
 import type { SelectItemTextProps, SelectItemTextState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<SelectItemTextProps>();
 defineSlots<{
   default?(scope: { state: SelectItemTextState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectItemTextState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectItemTextState>): unknown;
 }>();
 
 const context = injectSelectRoot('ItemText');

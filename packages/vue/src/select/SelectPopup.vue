@@ -10,7 +10,7 @@ import {
   useId,
   watch,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../utils/styles';
 import { scrollEdges } from './alignment';
@@ -22,11 +22,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<SelectPopupProps>(), { finalFocus: undefined });
 defineSlots<{
   default?(scope: { state: SelectPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectPopupState>): unknown;
 }>();
 
 const context = injectSelectRoot('Popup');

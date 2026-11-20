@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, shallowRef, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectToastProvider } from './provider';
 import { injectToastRoot } from './root';
 import type { ToastCloseProps, ToastCloseState } from './types';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ToastCloseProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: ToastCloseState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastCloseState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastCloseState>): unknown;
 }>();
 
 const provider = injectToastProvider('<Toast.Close>');

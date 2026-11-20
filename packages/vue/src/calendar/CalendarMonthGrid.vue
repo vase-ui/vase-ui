@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { gridKey } from './cell';
 import { formatFieldName, getRows } from './pages';
@@ -13,12 +13,11 @@ const props = withDefaults(defineProps<CalendarMonthGridProps>(), { columns: 3 }
 defineSlots<{
   /** One row of cells. */
   row?(scope: { months: Temporal.PlainYearMonth[]; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarMonthGridState;
-    rows: readonly Temporal.PlainYearMonth[][];
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarMonthGridState> & {
+      rows: readonly Temporal.PlainYearMonth[][];
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

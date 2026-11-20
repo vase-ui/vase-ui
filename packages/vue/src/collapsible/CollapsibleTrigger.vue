@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectCollapsible } from './part';
 import { useCollapsibleTrigger } from './trigger';
 import type { CollapsibleTriggerProps, CollapsibleTriggerState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CollapsibleTriggerProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: CollapsibleTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CollapsibleTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CollapsibleTriggerState>): unknown;
 }>();
 
 const collapsible = injectCollapsible();

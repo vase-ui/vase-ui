@@ -1,47 +1,31 @@
-<script lang="ts">
-import type {
-  UseRenderComponentProps,
-  UseRenderElementProps,
-  UseRenderRenderProp,
-} from '@vase-ui/vue/use-render';
+<script setup lang="ts">
+import { computed, mergeProps, useAttrs } from 'vue';
+import type { ElementSlotProps } from '@vase-ui/vue/types';
+import { useElement } from '@vase-ui/vue/use-element';
 
-export interface NoticeState {
+interface NoticeState {
   tone: 'info' | 'warning';
 }
-
-export interface NoticeProps
-  extends UseRenderComponentProps<NoticeState>, /* @vue-ignore */ UseRenderElementProps<'p'> {
-  tone?: NoticeState['tone'] | undefined;
-}
-</script>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useRender } from '@vase-ui/vue/use-render';
-
 defineOptions({ inheritAttrs: false });
-
-const props = withDefaults(defineProps<NoticeProps>(), { tone: 'info' });
-
+const { tone = 'info' } = defineProps<{ tone?: NoticeState['tone'] }>();
 defineSlots<{
-  default(props: { state: NoticeState }): unknown;
-  render: UseRenderRenderProp<NoticeState>;
+  default?(scope: { state: NoticeState }): unknown;
+  element?(scope: ElementSlotProps<NoticeState>): unknown;
 }>();
-
-const state = computed<NoticeState>(() => ({ tone: props.tone }));
-
-const { element, elementProps, setRef, tag, usesRenderSlot } = useRender(props, {
-  state,
-  defaultTagName: 'p',
-  props: (attrs) => [{ role: 'note' }, attrs],
-});
-
+const attrs = useAttrs();
+const { element, setElement } = useElement();
+const state = computed<NoticeState>(() => ({ tone }));
+const elementProps = () => mergeProps({ role: 'note', 'data-tone': tone }, attrs);
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="usesRenderSlot()" name="render" :props="elementProps()" :state="state" />
-  <component :is="tag" v-else v-bind="elementProps()" :ref="setRef">
-    <slot :state="state" />
-  </component>
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <p v-else v-bind="elementProps()" :ref="setElement"><slot :state="state" /></p>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupViewport } from '../popup/viewport';
 import { injectPositioner, injectPreviewCardRoot } from './root';
 import type { PreviewCardViewportProps, PreviewCardViewportState } from './types';
@@ -11,11 +11,7 @@ defineProps<PreviewCardViewportProps>();
 defineSlots<{
   /** Give the content the `triggerId` as its `key` in a `<Transition>`, so that it leaves and enters at a move. */
   default?(scope: { state: PreviewCardViewportState; triggerId: string | null }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardViewportState>): unknown;
 }>();
 
 const context = injectPreviewCardRoot('Viewport');

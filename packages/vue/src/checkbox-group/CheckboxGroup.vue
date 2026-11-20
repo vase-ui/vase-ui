@@ -2,7 +2,7 @@
 import { computed, mergeProps, provide, shallowReactive, useAttrs, watch } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { sameValue } from '../common/values';
 import { fieldStateAttributes } from '../field/control';
@@ -30,11 +30,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: CheckboxGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CheckboxGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CheckboxGroupState>): unknown;
 }>();
 
 const attrs = useAttrs();

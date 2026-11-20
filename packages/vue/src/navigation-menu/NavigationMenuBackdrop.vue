@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectNavigationMenuRoot, injectPortal } from './root';
 import type { NavigationMenuBackdropProps, NavigationMenuBackdropState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuBackdropProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuBackdropState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuBackdropState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuBackdropState>): unknown;
 }>();
 
 const { popup: root } = injectNavigationMenuRoot('Backdrop');

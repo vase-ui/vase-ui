@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onMounted, onUnmounted, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAvatarRoot } from './root';
 import type { AvatarImageProps, AvatarImageState, ImageLoadingStatus } from './types';
 
@@ -14,11 +14,7 @@ const emit = defineEmits<{
   loadingStatusChange: [status: ImageLoadingStatus];
 }>();
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: AvatarImageState;
-  }): unknown;
+  element?(scope: ElementSlotProps<AvatarImageState>): unknown;
 }>();
 
 // WebKit starts the request when `src` is set, before a later `loading`, `srcset` or request option

@@ -581,12 +581,10 @@ test('the reference of merge-props has mergeProps with a and b required, and c, 
   );
 });
 
-test('the reference of use-render has useRender.Parameters with defaultTagName and its default', () => {
-  const parameters = read('use-render').types.find(({ name }) => name === 'useRender.Parameters');
-  assert.equal(
-    parameters?.properties.find(({ name }) => name === 'defaultTagName')?.default,
-    "'div'",
-  );
+test('the reference of use-element has useElement with no parameter and the description of its source', () => {
+  const useElement = read('use-element').functions.find(({ name }) => name === 'useElement');
+  assert.deepEqual(useElement?.parameters, []);
+  assert.match(useElement?.description ?? '', /^The native element of a component/);
 });
 
 test('the reference of button has the prop disabled with the default false', () => {

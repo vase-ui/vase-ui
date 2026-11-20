@@ -2,6 +2,7 @@
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 </script>
 
 <template>
@@ -9,11 +10,11 @@ import { TimePicker } from '@vase-ui/vue/time-picker';
     <TimePicker.Field>
       <TimeField.Input />
     </TimePicker.Field>
-    <TimePicker.Trigger />
-    <TimePicker.Portal>
+    <TimePicker.Trigger aria-label="Choose time" />
+    <Popover.Portal>
       <TimePicker.Positioner>
-        <TimePicker.Popup>
-          <TimePicker.List>
+        <TimePicker.Popup aria-label="Choose a time">
+          <TimePicker.List aria-label="Times">
             <template #item="{ time }">
               <TimePicker.Item :time="time" />
             </template>
@@ -35,9 +36,9 @@ import { TimePicker } from '@vase-ui/vue/time-picker';
               </template>
             </TimeClock.Face>
           </TimePicker.Clock>
-          <TimePicker.Close />
+          <Popover.Close />
         </TimePicker.Popup>
       </TimePicker.Positioner>
-    </TimePicker.Portal>
+    </Popover.Portal>
   </TimePicker.Root>
 </template>

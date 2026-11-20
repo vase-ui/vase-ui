@@ -8,7 +8,7 @@ import {
   watch,
   type CSSProperties,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderIndicatorProps, SliderIndicatorState } from './types';
 import { percent } from './values';
@@ -19,11 +19,7 @@ defineProps<SliderIndicatorProps>();
 
 defineSlots<{
   default?(scope: { state: SliderIndicatorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderIndicatorState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SliderIndicatorState>): unknown;
 }>();
 
 const slider = injectSlider('Indicator');

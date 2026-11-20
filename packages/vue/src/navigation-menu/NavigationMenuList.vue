@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useKeyGroup } from './keys';
 import { injectNavigationMenuRoot } from './root';
 import type { NavigationMenuListProps, NavigationMenuListState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<NavigationMenuListProps>();
 defineSlots<{
   default?(scope: { state: NavigationMenuListState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NavigationMenuListState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NavigationMenuListState>): unknown;
 }>();
 
 const root = injectNavigationMenuRoot('List');

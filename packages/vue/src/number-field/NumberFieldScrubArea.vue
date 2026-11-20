@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldScrubAreaProps, NumberFieldScrubAreaState } from './types';
@@ -25,11 +25,7 @@ const props = withDefaults(defineProps<NumberFieldScrubAreaProps>(), {
 });
 defineSlots<{
   default?(scope: { state: NumberFieldScrubAreaState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NumberFieldScrubAreaState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NumberFieldScrubAreaState>): unknown;
 }>();
 
 const root = injectNumberFieldRoot('ScrubArea');

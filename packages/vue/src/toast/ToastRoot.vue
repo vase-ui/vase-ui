@@ -8,7 +8,7 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { isComposing } from '../popup/layer';
 import { injectToastProvider } from './provider';
 import { provideToastRoot, type ToastRootForParts } from './root';
@@ -22,11 +22,7 @@ const props = withDefaults(defineProps<ToastRootProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ToastRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastRootState>): unknown;
 }>();
 
 const provider = injectToastProvider('<Toast.Root>');

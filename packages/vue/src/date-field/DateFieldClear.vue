@@ -2,7 +2,7 @@
 import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
 import { injectDateTimeField, stateAttributes } from '../common/date-time-field/field';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import type { DateFieldClearProps, DateFieldClearState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<DateFieldClearProps>();
 defineSlots<{
   default?(scope: { state: DateFieldClearState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DateFieldClearState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DateFieldClearState>): unknown;
 }>();
 
 const attrs = useAttrs();

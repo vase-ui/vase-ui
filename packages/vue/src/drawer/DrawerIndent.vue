@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { providerKey } from './root';
 import type { DrawerIndentProps, DrawerIndentState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<DrawerIndentProps>();
 defineSlots<{
   default?(scope: { state: DrawerIndentState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerIndentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerIndentState>): unknown;
 }>();
 
 const provider = inject(providerKey, null);

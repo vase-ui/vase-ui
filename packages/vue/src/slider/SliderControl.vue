@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePointerPress } from '../common/pointerPress';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderControlProps, SliderControlState } from './types';
@@ -27,11 +27,7 @@ defineProps<SliderControlProps>();
 
 defineSlots<{
   default?(scope: { state: SliderControlState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SliderControlState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SliderControlState>): unknown;
 }>();
 
 const slider = injectSlider('Control');

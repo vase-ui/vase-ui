@@ -3,6 +3,7 @@ import { computed, shallowRef } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Calendar } from '@vase-ui/vue/calendar';
+import { Popover } from '@vase-ui/vue/popover';
 
 const today = Temporal.PlainDate.from('2026-11-14');
 const range = shallowRef<DateRangePicker.Root.Value<Temporal.PlainDate>>([
@@ -22,7 +23,7 @@ const text = computed(() => range.value.map((end) => end?.toString() ?? '').join
         locale="en-US"
         time-zone="UTC"
       >
-        <DateRangePicker.StartField data-testid="from">
+        <DateRangePicker.StartField data-testid="from" aria-label="Start date">
           <DateField.Input>
             <template #segment="{ segment }">
               <DateField.Segment
@@ -34,7 +35,7 @@ const text = computed(() => range.value.map((end) => end?.toString() ?? '').join
             </template>
           </DateField.Input>
         </DateRangePicker.StartField>
-        <DateRangePicker.EndField data-testid="to">
+        <DateRangePicker.EndField data-testid="to" aria-label="End date">
           <DateField.Input>
             <template #segment="{ segment }">
               <DateField.Segment
@@ -46,8 +47,10 @@ const text = computed(() => range.value.map((end) => end?.toString() ?? '').join
             </template>
           </DateField.Input>
         </DateRangePicker.EndField>
-        <DateRangePicker.Trigger data-testid="when-trigger">Open</DateRangePicker.Trigger>
-        <DateRangePicker.Portal>
+        <DateRangePicker.Trigger data-testid="when-trigger" aria-label="Choose dates"
+          >Open</DateRangePicker.Trigger
+        >
+        <Popover.Portal>
           <DateRangePicker.Positioner>
             <DateRangePicker.Popup aria-label="Choose dates" data-testid="when-popup">
               <DateRangePicker.Calendar :today="today" data-testid="when-calendar">
@@ -73,7 +76,7 @@ const text = computed(() => range.value.map((end) => end?.toString() ?? '').join
               </DateRangePicker.Calendar>
             </DateRangePicker.Popup>
           </DateRangePicker.Positioner>
-        </DateRangePicker.Portal>
+        </Popover.Portal>
       </DateRangePicker.Root>
     </form>
     <output data-testid="when-value">{{ text }}</output>

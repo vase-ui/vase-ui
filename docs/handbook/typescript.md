@@ -24,9 +24,9 @@ A component with one part has its types on the component, such as `Checkbox.Prop
 
 To make a component that wraps a part, use the `Props` type to accept all of the props of that part. The sample takes the flat name in `defineProps`.
 
-<<< ../examples/typescript/MyTooltip.vue{6-7}
+<<< ../examples/typescript/MyTooltip.vue{5-10}
 
-Vue changes an absent Boolean prop to `false`. The wrapper uses `useForwardProps` to omit that cast value, so the tooltip stays uncontrolled.
+Vue changes an absent Boolean prop to `false`. The wrapper gives each Boolean prop the default `undefined`, so the tooltip stays uncontrolled.
 
 See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that need this rule.
 
@@ -34,7 +34,7 @@ See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that 
 
 The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.
 
-The render slot passes its state to a typed function that selects the class of the positioner.
+The `element` slot passes its state to a typed function that selects the class of the positioner.
 
 <<< ../examples/typescript/PositionerState.vue{4-6,14-15,17-20}
 
@@ -57,7 +57,7 @@ A part or a utility can also export other types. The list below is not complete.
   <<< ../examples/typescript/Actions.vue{5-9,14}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `ToastObject` gives access to this interface.
-- Most parts that render an element accept `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).
+- `ElementSlotProps<State>` of `@vase-ui/vue/types` types the scope of the `element` slot. A component of yours can have the same slot. See [useElement](/utils/use-element).
 
 ## Generic components
 
@@ -72,4 +72,4 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `model-value` and no `default-value`.
 
-A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot or the `#render` slot of the other part, and bind `props` on it.
+A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot of the other part, and bind `props` on it.

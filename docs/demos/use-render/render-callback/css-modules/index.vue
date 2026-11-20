@@ -5,8 +5,8 @@ import styles from './index.module.css';
 
 <template>
   <Counter>
-    <template #render="{ props, state }">
-      <button v-bind="props">
+    <template #element="{ props, elementRef, state }">
+      <button v-bind="props" :ref="elementRef">
         Counter: <span :class="styles.count">{{ state.count }}</span>
         <span :class="styles.suffix">{{ state.odd ? '👎' : '👍' }}</span>
       </button>

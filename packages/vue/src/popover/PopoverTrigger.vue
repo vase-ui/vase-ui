@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, mergeProps, useAttrs, useId } from 'vue';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupHover } from '../popup/hover';
 import { usePopupTrigger } from '../popup/trigger';
@@ -17,11 +17,7 @@ const props = withDefaults(defineProps<PopoverTriggerProps<Payload>>(), {
 });
 defineSlots<{
   default?(scope: { state: PopoverTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PopoverTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PopoverTriggerState>): unknown;
 }>();
 
 const attrs = useAttrs();

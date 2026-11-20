@@ -12,7 +12,7 @@ import {
   useId,
   watch,
 } from 'vue';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { sameValue } from '../common/values';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { formKey, type FormField } from '../form/field';
@@ -50,11 +50,7 @@ defineSlots<{
     value: unknown;
     initialValue: unknown;
   }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: FieldRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<FieldRootState>): unknown;
 }>();
 
 const noFailures: Failures = {

@@ -17,7 +17,7 @@ A part that renders an HTML element accepts a `class` attribute. Use it to style
 
 <<< ../examples/styling/ClassAttribute.vue{6}
 
-The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the render slot.
+The class you give to the part comes before its own class. For a class that depends on state, bind `:class` on the element in the `element` slot.
 
 <<< ../examples/styling/SlotClass.vue{11}
 
@@ -49,7 +49,7 @@ A part that renders an HTML element accepts a `style` attribute. Use it to style
 
 <<< ../examples/styling/StyleAttribute.vue{6}
 
-For a style that depends on state, bind `:style` on the element in the render slot.
+For a style that depends on state, bind `:style` on the element in the `element` slot.
 
 <<< ../examples/styling/SlotStyle.vue{14}
 
@@ -68,11 +68,23 @@ In this sample, the rules `.root` and `.input` match `DateField.Root` and `DateF
 
 <<< ../examples/styling/ScopedStyle.vue
 
-Each `Portal` part renders its content in a `Teleport`, in another place of the document. `Popover.Portal` renders no element of its own: write an element of your own in it. Each other `Portal` part renders its element there. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach that element, and `:deep()` does not reach it either. Write the element in the `#render` slot of the part, bind `props` on it, and mount `children` in it. In both forms, the element is an element of your own template, so they apply to it:
+Each `Portal` part renders its content in a `Teleport`, in another place of the document. A `Portal` part renders no element of its own: write an element of your own in it. That element is an element of your own template, so a rule of `<style scoped>`, `v-show` and a custom directive apply to it:
 
 <<< ../examples/styling/ScopedPortal.vue
 
 The default element of `NavigationMenu.Content` is in a `<Teleport>`, so a scoped rule does not reach it. Render your element in its `element` slot, and bind `props` and `elementRef` on it.
+
+## Text direction
+
+Set the `dir` attribute on `<html>`, or on an element around the parts. Each part reads the text direction of its own element, as a native control does. Its arrow keys and its layout follow that direction.
+
+- In CSS, `:dir(rtl)` matches an element in right-to-left text.
+- In script, `getComputedStyle(element).direction` gives the direction of an element.
+- A popup in a portal is in `<body>`, so it has the direction of `<html>`. For another direction, give `dir` to its positioner.
+
+A server cannot read the direction of an element around a part. `Slider.Root` places its thumbs in the server HTML, so give it its own `dir`. Without it, the thumbs move when the page hydrates.
+
+<<< ../examples/styling/TextDirection.vue{7}
 
 ## Tailwind CSS
 
@@ -91,7 +103,3 @@ An imported `*.module.css` file works in the same way, as the demos of this site
 ## CSS-in-JS
 
 A library that gives you a class name can give it to the `class` attribute.
-
-The entry point of a component that has no `element` slot also exports the names of its data attributes, such as `TimePickerItemDataAttributes`. Use them in code that writes CSS in script. In this sample, `TimePickerItemDataAttributes.selected` is `data-selected`:
-
-<<< ../examples/styling/StyleNames.vue

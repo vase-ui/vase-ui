@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePlacement } from '../popup/placement';
 import { sizeVariables } from '../popup/viewport';
 import { lineMiddleware } from './line';
@@ -25,11 +25,7 @@ const props = withDefaults(defineProps<PreviewCardPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: PreviewCardPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardPositionerState>): unknown;
 }>();
 
 const context = injectPreviewCardRoot('Positioner');

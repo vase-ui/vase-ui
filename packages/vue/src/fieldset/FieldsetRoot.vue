@@ -10,7 +10,7 @@ import {
   useAttrs,
   useId,
 } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { fieldsetKey, useInDisabledFieldset } from './part';
 import { legendKey } from './root';
 import type { FieldsetRootProps, FieldsetRootState } from './types';
@@ -20,11 +20,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<FieldsetRootProps>();
 defineSlots<{
   default?(scope: { state: FieldsetRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: FieldsetRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<FieldsetRootState>): unknown;
 }>();
 
 const attrs = useAttrs();

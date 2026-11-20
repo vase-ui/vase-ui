@@ -2,18 +2,14 @@
 import { computed, mergeProps, useAttrs } from 'vue';
 import { injectDateTimeField, stateAttributes } from '../common/date-time-field/field';
 import { useAttributesAfterMount } from '../common/writeAttributes';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { TimeFieldLiteralProps, TimeFieldLiteralState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<TimeFieldLiteralProps>();
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeFieldLiteralState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeFieldLiteralState>): unknown;
 }>();
 
 const attrs = useAttrs();

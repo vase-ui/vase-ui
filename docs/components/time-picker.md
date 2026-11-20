@@ -53,7 +53,8 @@ Base UI has no time picker. This one follows the [dialog pattern](https://www.w3
 ## Usage guidelines
 
 - **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `TimePicker.Field` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
-- **The popup must have a name**: Give `TimePicker.Popup` an `aria-label`, or put a `TimePicker.Title` in it.
+- **The trigger and the list must have a name**: Give `TimePicker.Trigger` content or an `aria-label`, and give `TimePicker.List` an `aria-label` or an `aria-labelledby`, in the language of the page. The `text` of the slots of the trigger is the time in the locale.
+- **The popup must have a name**: Give `TimePicker.Popup` an `aria-label`, or put a `Popover.Title` in it.
 
 ## Anatomy
 
@@ -63,25 +64,25 @@ Import the component and assemble its parts:
 
 `TimePicker.Root` renders `Popover.Root` and no element of its own. It holds the value and shares it with its parts. `TimePicker.Field` renders `TimeField.Root`, and `TimePicker.Clock` renders `TimeClock.Root`. Write the parts of those components inside them, as the pages of [Time Field](/components/time-field) and [Time Clock](/components/time-clock) show.
 
-`TimePicker.Trigger`, `TimePicker.Positioner` and `TimePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `TimePicker.Portal`, `TimePicker.Arrow`, `TimePicker.Backdrop`, `TimePicker.Close`, `TimePicker.Title` and `TimePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
+`TimePicker.Trigger`, `TimePicker.Positioner` and `TimePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover) by their own names: `Popover.Portal`, `Popover.Arrow`, `Popover.Backdrop`, `Popover.Close`, `Popover.Title` and `Popover.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
 
 A popup has one of three ways to pick a time. Use the one that fits, or more than one:
 
-- `TimePicker.List` is a list of times. A press on a `TimePicker.Item` sets the time.
-- `TimePicker.Column` is a list of the values of one unit. A press on a `TimePicker.ColumnItem` sets that unit and keeps the other units.
+- `TimePicker.List` is a list of times. A press on a `TimePicker.Item`, a `<button>`, sets the time.
+- `TimePicker.Column` is a list of the values of one unit. A press on a `TimePicker.ColumnItem`, a `<button>`, sets that unit and keeps the other units.
 - `TimePicker.Clock` is a clock face. Its parts are the parts of `TimeClock`.
 
-`TimePicker.Field` has a hidden `<input>` after its element, so a rule of `<style scoped>` does not match it, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+A part that renders a part of another family takes each prop, attribute and event of that part that the picker does not own. The props that the picker owns, such as the value and the limits, are on `TimePicker.Root`.
 
 ## Value
 
 The value is a `Temporal` object, and `v-model` gives back the same kind: a `Temporal.PlainTime`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. A new value keeps the date and the time zone of the present value. It is `null` while the field has a segment with no number.
 
-The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minTime`, `maxTime`, `locale`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The list, the columns and the clock give no value to a form.
+The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `min`, `max`, `locale`, `disabled`, `readonly`, `required`, `name` and `form`. The default `locale` is the locale of the nearest `LocaleProvider`, else `en-US`. The field gives the value to a form through its hidden input. The list, the columns and the clock give no value to a form.
 
 With no value, the clock shows the time of `referenceDate`, or midnight, and a pick in a column sets one unit of that time. A new value has the kind, the date and the time zone of the default value, else of the last value that the picker had, else of `referenceDate`. With none of them, it is a `Temporal.PlainTime`.
 
-`minTime` and `maxTime` limit the time. The list starts at `minTime` and ends at `maxTime`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed. The `step` of `TimePicker.List` is in minutes. `TimePicker.Field` has its own `step`, the step of its hidden input in seconds, as in [Time Field](/components/time-field).
+`min` and `max` limit the time. The list starts at `min` and ends at `max`. The columns and the clock disable a value that has no time in the limits, and a pick moves the time into them. The hidden input of the field gives `rangeUnderflow` and `rangeOverflow` to a time that the user typed. The `step` of `TimePicker.List` is in minutes. `TimePicker.Field` has its own `step`, the step of its hidden input in seconds, as in [Time Field](/components/time-field).
 
 ### Close at a selection
 
@@ -170,7 +171,8 @@ The root emits `valueChange` and `update:modelValue` for each change of the valu
 | `input-clear`           | The user removes a digit with the text input.                      |
 | `input-paste`           | A paste in a segment.                                              |
 | `clear-press`           | A press on a clear button.                                         |
-| `none`                  | A reset of the form, or a call of `clear()`.                       |
+
+A reset of the form gives the picker its first value, and `clear()` of the field empties it. Both emit `update:modelValue` only, also for a controlled picker, so `v-model` follows.
 
 | Reason of `openChange` | When                                                  |
 | ---------------------- | ----------------------------------------------------- |
@@ -178,14 +180,14 @@ The root emits `valueChange` and `update:modelValue` for each change of the valu
 | `imperative-action`    | A selection closes the popup, or a call of `close()`. |
 | `escape-key`           | Escape closes the popup.                              |
 | `outside-press`        | A press outside the popup closes it.                  |
-| `close-press`          | A press on `TimePicker.Close`.                        |
+| `close-press`          | A press on `Popover.Close`.                           |
 | `focus-out`            | The focus leaves a popup that is not modal.           |
 
 ## Server render
 
-The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger with its name. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount. A list, a column or a clock that is outside a popup has the value in the server HTML.
+The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount. A list, a column or a clock that is outside a popup has the value and the tab stop in the server HTML.
 
-A server does not know the locale of the visitor. With no `locale` prop, the picker uses `en-US` until it mounts, and then the locale of the browser. See [Time Field](/components/time-field#server-render) and [Time Clock](/components/time-clock#server-render) for what a server and a browser can show in another way.
+The server and the browser use the same `locale`. A server can have other `Intl` data: the items allow another text, and a column writes the name of the browser after the mount. An element that shows the `text` of the trigger needs `data-allow-mismatch="text"`. See [Time Field](/components/time-field#server-render) and [Time Clock](/components/time-clock#server-render) for what a server and a browser can show in another way.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -206,16 +208,15 @@ A key goes over a disabled item.
 
 ## Accessibility
 
-- `TimePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose time`. With a value, its name is `Change time,` and the time. Give it an `aria-label` to change it.
-- `TimePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `TimePicker.Title`.
-- `TimePicker.List` and `TimePicker.Column` are listboxes, and each item is an option with `aria-selected`. The default name of the list is `Time`, and the default name of a column is the name of its unit in the locale. Give them an `aria-label` or an `aria-labelledby` to change it.
+- `TimePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose time`, or `Change time` with the `text` of its slots, as in the [sample of Date Picker](/components/date-picker#accessibility).
+- `TimePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `Popover.Title`.
+- `TimePicker.List` and `TimePicker.Column` are listboxes with one tab stop each, and each item is a `<button>` with the role `option` and `aria-selected`. The list has no name of its own. The name of a column is the name of its unit in the locale. Give them an `aria-label` or an `aria-labelledby` to change it.
 - When the popup opens, the focus goes to the first of these parts that the popup has: the selected item of the list or of a column, or the first item when no item is selected, or the clock face. When the popup closes, the focus goes back to the trigger. Give `initialFocus` to `TimePicker.Popup` to move the focus to another element, or `false` to move none.
-- A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing. A list and a column in a picker that the user cannot change have `aria-disabled` or `aria-readonly`, and their items do not select.
-- The default names of the trigger and of the list are in English, and the time in the name of the trigger follows the locale. The default name of a column is the name of its unit in the locale.
+- A picker that is `disabled` or `readonly` has a disabled trigger, and Alt and Down does nothing. A list and a column in a picker that the user cannot change have `aria-disabled` or `aria-readonly`, and their items do not select. Style them with `[aria-disabled="true"]`, `[aria-readonly="true"]`, and an item with `[aria-selected="true"]` and `:disabled`.
 
 ## Portal target
 
-Set `to` on `TimePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `Popover.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
 
 ## API reference
 
