@@ -21,9 +21,6 @@
     },
     "test/vaporParts/vaporParts.test.tsx": {
       "fails": {}
-    },
-    "test/withoutVaporAnchors.test.tsx": {
-      "fails": {}
     }
   }
 }

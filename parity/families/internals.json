@@ -444,6 +444,36 @@
       "upstream": "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
       "kind": "not-applicable",
       "reason": "`common/changeEventDetails.ts` creates the details of a change (rule 8.6). `types/types.spec.ts` tests its types."
+    },
+    {
+      "upstream": "packages/react/test/describeConformance.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/className.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/propForwarding.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/refForwarding.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/renderProp.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
+    },
+    {
+      "upstream": "packages/react/test/conformanceTests/utils.ts",
+      "kind": "not-applicable",
+      "reason": "The file is the shared conformance suite of Base UI. Each family tests its element, the slot `element`, the attributes of the developer and the template ref in its own test file (rules 6.1 to 6.3)."
     }
   ],
   "surfaceAdditions": [],
