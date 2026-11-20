@@ -162,16 +162,24 @@ function restoreWindowScrollYAfterTest() {
   });
 }
 
+// The case keeps its own scroll position. Firefox and WebKit can reveal a focused field with their
+// own scroll after the case set the position, also after `focus({ preventScroll: true })`.
 function setScrollSize(element: HTMLElement, clientHeight: number, scrollHeight: number) {
+  let scrollTop = 0;
   Object.defineProperties(element, {
     clientHeight: { configurable: true, value: clientHeight },
     scrollHeight: { configurable: true, value: scrollHeight },
+    scrollTop: {
+      configurable: true,
+      get: () => scrollTop,
+      set: (value: number) => {
+        scrollTop = Math.min(Math.max(value, 0), scrollHeight - clientHeight);
+      },
+    },
   });
 }
 
 // Applies the scroll of the provider at once, so that an assertion does not wait on a smooth scroll.
-// A case that reads the scroll position focuses its fields with `preventScroll`. Chromium reveals a
-// field in `focus()`, but Firefox and WebKit can reveal it after the case sets the position.
 function scrollInstantly(element: HTMLElement) {
   element.scrollTo = ((options?: ScrollToOptions | number) => {
     if (typeof options === 'object' && options?.top !== undefined) {
