@@ -1372,14 +1372,6 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     ),
   },
   {
-    name: 'filtered attributes in the props of a picker field',
-    file: 'packages/vue/src/date-picker/field/DatePickerField.vue',
-    code: docsSfc(
-      '',
-      '<DateFieldRoot v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))" />',
-    ),
-  },
-  {
     name: 'unfiltered attributes on a native backdrop element',
     file: 'packages/vue/src/utils/popups/InternalBackdrop.vue',
     code: docsSfc('', '<div v-bind="{ ...$attrs, style }" />'),

@@ -118,8 +118,6 @@ You can instead give each optional Boolean prop the default `undefined`. An expl
 
 You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
 
-In a development build, some parts warn when a wrapper gives them a cast `false` that replaces a default or parent value. `Accordion.Panel` does not warn. The message names the wrapper, the part, the prop and both corrections. See [the development warning](/utils/use-forward-props#the-development-warning) for its limits.
-
 An absent prop and `false` give different results in three cases.
 
 ### Parent or internal state
@@ -129,7 +127,7 @@ An absent prop and `false` give different results in three cases.
 - `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
 - `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
 - `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
-- `Calendar.Root`, `RangeCalendar.Root`, `DatePicker.Calendar` and `DateRangePicker.Calendar`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
+- `Calendar.Root` and `RangeCalendar.Root`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
 - `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
 
 `Field.Root` treats `invalid` the same when it is absent or `false`.

@@ -3,6 +3,7 @@ import { useId } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import styles from '../../_index.module.css';
 
 const id = useId();
@@ -26,7 +27,7 @@ const defaultValue = Temporal.PlainYearMonth.from('2026-11');
             </template>
           </DateField.Input>
         </DatePicker.Field>
-        <DatePicker.Trigger :class="styles.Trigger">
+        <DatePicker.Trigger aria-label="Choose date" :class="styles.Trigger">
           <svg
             aria-hidden="true"
             width="16"
@@ -41,43 +42,49 @@ const defaultValue = Temporal.PlainYearMonth.from('2026-11');
           </svg>
         </DatePicker.Trigger>
       </div>
-      <DatePicker.Portal>
+      <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
-          <DatePicker.Popup aria-label="Choose a billing month" :class="styles.Popup">
-            <DatePicker.Calendar :class="styles.Calendar">
-              <div :class="styles.Header">
-                <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
-                <Calendar.ViewTrigger :class="styles.Title" />
-                <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
-              </div>
-              <Calendar.MonthGrid :class="styles.MonthGrid">
-                <template #row="{ months }">
-                  <Calendar.MonthGridRow :class="styles.MonthRow">
-                    <Calendar.MonthCell
-                      v-for="month in months"
-                      :key="month.toString()"
-                      :month="month"
-                      :class="styles.MonthCell"
-                    />
-                  </Calendar.MonthGridRow>
-                </template>
-              </Calendar.MonthGrid>
-              <Calendar.YearGrid :class="styles.MonthGrid">
-                <template #row="{ years }">
-                  <Calendar.YearGridRow :class="styles.MonthRow">
-                    <Calendar.YearCell
-                      v-for="year in years"
-                      :key="year.toString()"
-                      :year="year"
-                      :class="styles.MonthCell"
-                    />
-                  </Calendar.YearGridRow>
-                </template>
-              </Calendar.YearGrid>
-            </DatePicker.Calendar>
-          </DatePicker.Popup>
+          <Transition
+            :enter-from-class="styles.PopupHidden"
+            :leave-to-class="styles.PopupHidden"
+            appear
+          >
+            <DatePicker.Popup aria-label="Choose a billing month" :class="styles.Popup">
+              <DatePicker.Calendar :class="styles.Calendar">
+                <div :class="styles.Header">
+                  <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
+                  <Calendar.ViewTrigger :class="styles.Title" />
+                  <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
+                </div>
+                <Calendar.MonthGrid :class="styles.MonthGrid">
+                  <template #row="{ months }">
+                    <Calendar.MonthGridRow :class="styles.MonthRow">
+                      <Calendar.MonthCell
+                        v-for="month in months"
+                        :key="month.toString()"
+                        :month="month"
+                        :class="styles.MonthCell"
+                      />
+                    </Calendar.MonthGridRow>
+                  </template>
+                </Calendar.MonthGrid>
+                <Calendar.YearGrid :class="styles.MonthGrid">
+                  <template #row="{ years }">
+                    <Calendar.YearGridRow :class="styles.MonthRow">
+                      <Calendar.YearCell
+                        v-for="year in years"
+                        :key="year.toString()"
+                        :year="year"
+                        :class="styles.MonthCell"
+                      />
+                    </Calendar.YearGridRow>
+                  </template>
+                </Calendar.YearGrid>
+              </DatePicker.Calendar>
+            </DatePicker.Popup>
+          </Transition>
         </DatePicker.Positioner>
-      </DatePicker.Portal>
+      </Popover.Portal>
     </DatePicker.Root>
   </div>
 </template>

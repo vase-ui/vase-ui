@@ -907,8 +907,8 @@ function readSelected(calendar: Locator) {
     .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('aria-label')));
 }
 
-// The server HTML has the field with the value, the hidden input and the trigger with its name. It
-// has no popup, because the portal renders after the mount.
+// The server HTML has the field with the value, the hidden input and the trigger with the name of
+// the developer. It has no popup, because the portal renders after the mount.
 async function expectDatePickerPage(page: Page) {
   expect(await page.getByTestId('when').getAttribute('role')).toBe('group');
   expect(await readDateFieldValues(page, 'when')).toEqual(['11', '10', '2026']);
@@ -917,20 +917,12 @@ async function expectDatePickerPage(page: Page) {
   const trigger = page.getByTestId('when-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await trigger.getAttribute('aria-label')).toBe('Change date, Tuesday, November 10, 2026');
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose date');
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
-// The name of the trigger has a range with spaces that depend on the data of `Intl`.
-function readTriggerName(page: Page) {
-  return page
-    .getByTestId('when-trigger')
-    .getAttribute('aria-label')
-    .then((name) => name?.replace(/\s+/g, ' '));
-}
-
-// The server HTML has the two fields with the range, the two hidden inputs and the trigger with its
-// name. It has no popup, because the portal renders after the mount.
+// The server HTML has the two fields with the range, the two hidden inputs and the trigger with the
+// name of the developer. It has no popup, because the portal renders after the mount.
 async function expectDateRangePickerPage(page: Page) {
   expect(await page.getByTestId('from').getAttribute('role')).toBe('group');
   expect(await page.getByTestId('to').getAttribute('role')).toBe('group');
@@ -941,13 +933,11 @@ async function expectDateRangePickerPage(page: Page) {
   const trigger = page.getByTestId('when-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await readTriggerName(page)).toBe(
-    'Change dates, Tuesday, November 10 – Thursday, November 12, 2026',
-  );
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose dates');
   expect(await page.getByTestId('when-popup').count()).toBe(0);
 }
 
-// The text that a time picker gives to the name of its trigger, as `Intl` makes it in Node.js.
+// The text of a time of a list, as `Intl` makes it in Node.js.
 function formatTime(hour: number) {
   return new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
@@ -957,8 +947,8 @@ function formatTime(hour: number) {
   }).format(Date.UTC(1970, 0, 1, hour));
 }
 
-// The server HTML has the field with the value, the hidden input and the trigger with its name. It
-// has no popup, because the portal renders after the mount.
+// The server HTML has the field with the value, the hidden input and the trigger with the name of
+// the developer. It has no popup, because the portal renders after the mount.
 async function expectTimePickerPage(page: Page) {
   expect(await page.getByTestId('start').getAttribute('role')).toBe('group');
   expect(await readDateFieldValues(page, 'start')).toEqual(['3', '00', 'PM']);
@@ -967,7 +957,7 @@ async function expectTimePickerPage(page: Page) {
   const trigger = page.getByTestId('start-trigger');
   expect(await trigger.getAttribute('aria-haspopup')).toBe('dialog');
   expect(await trigger.getAttribute('aria-expanded')).toBe('false');
-  expect(await trigger.getAttribute('aria-label')).toBe(`Change time, ${formatTime(15)}`);
+  expect(await trigger.getAttribute('aria-label')).toBe('Choose time');
   expect(await page.getByTestId('start-popup').count()).toBe(0);
 }
 
@@ -2191,9 +2181,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-12');
     expect(await readDateFieldValues(page, 'when')).toEqual(['11', '12', '2026']);
     expect(await readFormData(page)).toEqual(['when=2026-11-12']);
-    expect(await page.getByTestId('when-trigger').getAttribute('aria-label')).toBe(
-      'Change date, Thursday, November 12, 2026',
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2229,9 +2216,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readDateFieldValues(page, 'from')).toEqual(['11', '14', '2026']);
     expect(await readDateFieldValues(page, 'to')).toEqual(['11', '18', '2026']);
     expect(await readFormData(page)).toEqual(['from=2026-11-14', 'to=2026-11-18']);
-    expect(await readTriggerName(page)).toBe(
-      'Change dates, Saturday, November 14 – Wednesday, November 18, 2026',
-    );
     expect(messages).toEqual([]);
   });
 
@@ -2256,9 +2240,6 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('start-value').textContent()).toBe('16:00:00');
     expect(await readDateFieldValues(page, 'start')).toEqual(['4', '00', 'PM']);
     expect(await readFormData(page)).toEqual(['start=16:00']);
-    expect(await page.getByTestId('start-trigger').getAttribute('aria-label')).toBe(
-      `Change time, ${formatTime(16)}`,
-    );
     expect(messages).toEqual([]);
   });
 

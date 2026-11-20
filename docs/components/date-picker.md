@@ -55,7 +55,8 @@ Base UI has no date picker. This one follows the [Date Picker Dialog pattern](ht
 ## Usage guidelines
 
 - **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, or give `DatePicker.Field` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
-- **The popup must have a name**: Give `DatePicker.Popup` an `aria-label`, or put a `DatePicker.Title` in it.
+- **The trigger must have a name**: Give `DatePicker.Trigger` content or an `aria-label` in the language of the page. The `text` of its slots is the value in the locale.
+- **The popup must have a name**: Give `DatePicker.Popup` an `aria-label`, or put a `Popover.Title` in it.
 
 ## Anatomy
 
@@ -65,15 +66,15 @@ Import the component and assemble its parts:
 
 `DatePicker.Root` renders `Popover.Root` and no element of its own. It holds the value and shares it with its parts. `DatePicker.Field` renders `DateField.Root`, `DatePicker.Calendar` renders `Calendar.Root`, and `DatePicker.TimeField` renders `TimeField.Root`. Write the parts of those components inside them, as the pages of [Date Field](/components/date-field), [Calendar](/components/calendar) and [Time Field](/components/time-field) show.
 
-`DatePicker.Trigger`, `DatePicker.Positioner` and `DatePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `DatePicker.Portal`, `DatePicker.Arrow`, `DatePicker.Backdrop`, `DatePicker.Close`, `DatePicker.Title` and `DatePicker.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
+`DatePicker.Trigger`, `DatePicker.Positioner` and `DatePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover) by their own names: `Popover.Portal`, `Popover.Arrow`, `Popover.Backdrop`, `Popover.Close`, `Popover.Title` and `Popover.Description`. The positioner puts the popup against the field, and against the trigger when the picker has no field.
 
-`DatePicker.Field` and `DatePicker.TimeField` have a hidden `<input>` after their element, so a rule of `<style scoped>` does not match them, and `v-show` has no effect on them. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+A part that renders a part of another family takes each prop, attribute and event of that part that the picker does not own. The props that the picker owns, such as the value and the limits, are on `DatePicker.Root`.
 
 ## Value
 
 The value is a `Temporal` object, and `v-model` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime`, a `Temporal.ZonedDateTime` or a `Temporal.PlainYearMonth`. It is `null` while the field has a segment with no number.
 
-The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required`, `name` and `form`. The field gives the value to a form through its hidden input. The calendar and the time field give no value to a form.
+The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `min`, `max`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readonly`, `required`, `name` and `form`. The default `locale` is the locale of the nearest `LocaleProvider`, else `en-US`. The field gives the value to a form through its hidden input. The calendar and the time field give no value to a form.
 
 With no value, a new value has the kind that `granularity` and `referenceDate` give, as for [Date Field](/components/date-field#value). A day that the user presses in the calendar then makes a value at the time of `referenceDate`, or at midnight. A picker that the user empties keeps the kind of its last value.
 
@@ -116,7 +117,7 @@ To pick a date and a time, put a date picker and a [Time Picker](/components/tim
 
 </DemoSource>
 
-One picker can also hold a date and a time: with a `granularity` that has a time, or a value with a time, the field shows the time segments and a press on a day keeps the time. `DatePicker.TimeField` then is a time field for that value in the popup, which stays open after a selection, so use `DatePicker.Close` to close it.
+One picker can also hold a date and a time: with a `granularity` that has a time, or a value with a time, the field shows the time segments and a press on a day keeps the time. `DatePicker.TimeField` then is a time field for that value in the popup, which stays open after a selection, so use `Popover.Close` to close it.
 
 ### Month picker
 
@@ -153,7 +154,7 @@ A `Temporal.PlainYearMonth` value, or `granularity="month"`, makes a picker for 
 
 ### In a form
 
-Put the picker in a `Field` to show the errors of its validation. The hidden input of `DatePicker.Field` has the type of the value, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. The picker sets a `customError` for a date that `unavailableDates` matches, as the field does.
+Put the picker in a `Field` to show the errors of its validation. The hidden input of `DatePicker.Field` has the type of the value, so `min` and `max` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. The picker sets a `customError` for a date that `unavailableDates` matches, as the field does.
 
 <DemoFrame>
   <DemoDatePickerInAForm />
@@ -197,7 +198,8 @@ The root emits `valueChange` and `update:modelValue` for each change of the valu
 | `input-paste`           | A paste in a segment.                         |
 | `keyboard`              | A key changes a segment.                      |
 | `clear-press`           | A press on a clear button.                    |
-| `none`                  | A reset of the form, or a call of `clear()`.  |
+
+A reset of the form gives the picker its first value, and `clear()` of a field empties it. Both emit `update:modelValue` only, also for a controlled picker, so `v-model` follows.
 
 | Reason of `openChange` | When                                                  |
 | ---------------------- | ----------------------------------------------------- |
@@ -205,14 +207,14 @@ The root emits `valueChange` and `update:modelValue` for each change of the valu
 | `imperative-action`    | A selection closes the popup, or a call of `close()`. |
 | `escape-key`           | Escape closes the popup.                              |
 | `outside-press`        | A press outside the popup closes it.                  |
-| `close-press`          | A press on `DatePicker.Close`.                        |
+| `close-press`          | A press on `Popover.Close`.                           |
 | `focus-out`            | The focus leaves a popup that is not modal.           |
 
 ## Server render
 
-The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger with its name. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount.
+The picker renders with `renderToString`. The server HTML has the field with its segments and its hidden input, and the trigger. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount. A calendar that is not in a `Popover.Portal`, or is in a disabled one, is in the server HTML with the value. No render reads the clock: the picker reads today at its mount and at each open.
 
-A server does not know the locale of the visitor. With no `locale` prop, the picker uses `en-US` until it mounts, and then the locale of the browser. See [Date Field](/components/date-field#server-render) and [Calendar](/components/calendar#server-render) for what a server and a browser can show in another way.
+The server and the browser use the same `locale`. See [Date Field](/components/date-field#server-render) and [Calendar](/components/calendar#server-render) for what a server and a browser can show in another way. An element that shows the `text` of the trigger needs `data-allow-mismatch="text"`, because a server can have other `Intl` data.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -229,16 +231,15 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 
 ## Accessibility
 
-- `DatePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose date`. With a value, its name is `Change date,` and the full date. Give it an `aria-label` to change it.
-- `DatePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DatePicker.Title`.
+- `DatePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose date`, or `Change date` with the `text` of its slots.
+- `DatePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `Popover.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the selected day, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DatePicker.Popup` to move the focus to another element, or `false` to move none.
-- A picker that is `disabled` or `readOnly` has a disabled trigger, and Alt and Down does nothing.
+- A picker that is `disabled` or `readonly` has a disabled trigger, and Alt and Down does nothing.
 - `DatePicker.TimeField` is not a control of the `Field` that holds the picker. It has no label from that field, so give it an `aria-label`.
-- The default labels are in English. The dates in them follow the locale.
 
 ## Portal target
 
-Set `to` on `DatePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `Popover.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
 
 ## API reference
 

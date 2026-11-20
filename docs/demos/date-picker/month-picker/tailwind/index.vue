@@ -3,6 +3,7 @@ import { useId } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 
 const id = useId();
 const defaultValue = Temporal.PlainYearMonth.from('2026-11');
@@ -43,7 +44,8 @@ const cellClassName =
           </DateField.Input>
         </DatePicker.Field>
         <DatePicker.Trigger
-          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-data-disabled:bg-neutral-100 data-disabled:text-neutral-500 data-popup-open:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-data-disabled:bg-neutral-800 dark:data-disabled:text-neutral-400 dark:data-popup-open:bg-neutral-800 dark:focus-visible:outline-white"
+          aria-label="Choose date"
+          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-disabled:bg-neutral-100 disabled:text-neutral-500 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-disabled:bg-neutral-800 dark:disabled:text-neutral-400 dark:aria-expanded:bg-neutral-800 dark:focus-visible:outline-white"
         >
           <svg
             aria-hidden="true"
@@ -59,46 +61,54 @@ const cellClassName =
           </svg>
         </DatePicker.Trigger>
       </div>
-      <DatePicker.Portal>
+      <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
-          <DatePicker.Popup
-            aria-label="Choose a billing month"
-            class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          <Transition
+            enter-from-class="opacity-0 scale-[0.98]"
+            leave-to-class="opacity-0 scale-[0.98]"
+            appear
           >
-            <DatePicker.Calendar class="relative box-border w-68 text-sm">
-              <div class="mb-2 flex items-center justify-between">
-                <Calendar.PreviousButton :class="buttonClassName">&lsaquo;</Calendar.PreviousButton>
-                <Calendar.ViewTrigger :class="titleClassName" />
-                <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
-              </div>
-              <Calendar.MonthGrid class="flex flex-col gap-1">
-                <template #row="{ months }">
-                  <Calendar.MonthGridRow class="flex gap-1">
-                    <Calendar.MonthCell
-                      v-for="month in months"
-                      :key="month.toString()"
-                      :month="month"
-                      :class="cellClassName"
-                    />
-                  </Calendar.MonthGridRow>
-                </template>
-              </Calendar.MonthGrid>
-              <Calendar.YearGrid class="flex flex-col gap-1">
-                <template #row="{ years }">
-                  <Calendar.YearGridRow class="flex gap-1">
-                    <Calendar.YearCell
-                      v-for="year in years"
-                      :key="year.toString()"
-                      :year="year"
-                      :class="cellClassName"
-                    />
-                  </Calendar.YearGridRow>
-                </template>
-              </Calendar.YearGrid>
-            </DatePicker.Calendar>
-          </DatePicker.Popup>
+            <DatePicker.Popup
+              aria-label="Choose a billing month"
+              class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+            >
+              <DatePicker.Calendar class="relative box-border w-68 text-sm">
+                <div class="mb-2 flex items-center justify-between">
+                  <Calendar.PreviousButton :class="buttonClassName"
+                    >&lsaquo;</Calendar.PreviousButton
+                  >
+                  <Calendar.ViewTrigger :class="titleClassName" />
+                  <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
+                </div>
+                <Calendar.MonthGrid class="flex flex-col gap-1">
+                  <template #row="{ months }">
+                    <Calendar.MonthGridRow class="flex gap-1">
+                      <Calendar.MonthCell
+                        v-for="month in months"
+                        :key="month.toString()"
+                        :month="month"
+                        :class="cellClassName"
+                      />
+                    </Calendar.MonthGridRow>
+                  </template>
+                </Calendar.MonthGrid>
+                <Calendar.YearGrid class="flex flex-col gap-1">
+                  <template #row="{ years }">
+                    <Calendar.YearGridRow class="flex gap-1">
+                      <Calendar.YearCell
+                        v-for="year in years"
+                        :key="year.toString()"
+                        :year="year"
+                        :class="cellClassName"
+                      />
+                    </Calendar.YearGridRow>
+                  </template>
+                </Calendar.YearGrid>
+              </DatePicker.Calendar>
+            </DatePicker.Popup>
+          </Transition>
         </DatePicker.Positioner>
-      </DatePicker.Portal>
+      </Popover.Portal>
     </DatePicker.Root>
   </div>
 </template>

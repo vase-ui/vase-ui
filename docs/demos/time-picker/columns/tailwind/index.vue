@@ -2,6 +2,7 @@
 import { useId } from 'vue';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 
 const id = useId();
 const defaultValue = Temporal.PlainTime.from('14:30');
@@ -33,7 +34,8 @@ const defaultValue = Temporal.PlainTime.from('14:30');
           </TimeField.Input>
         </TimePicker.Field>
         <TimePicker.Trigger
-          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-data-disabled:bg-neutral-100 data-disabled:text-neutral-500 data-popup-open:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-data-disabled:bg-neutral-800 dark:data-disabled:text-neutral-400 dark:data-popup-open:bg-neutral-800 dark:focus-visible:outline-white"
+          aria-label="Choose time"
+          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-disabled:bg-neutral-100 disabled:text-neutral-500 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-disabled:bg-neutral-800 dark:disabled:text-neutral-400 dark:aria-expanded:bg-neutral-800 dark:focus-visible:outline-white"
         >
           <svg
             aria-hidden="true"
@@ -49,51 +51,57 @@ const defaultValue = Temporal.PlainTime.from('14:30');
           </svg>
         </TimePicker.Trigger>
       </div>
-      <TimePicker.Portal>
+      <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <TimePicker.Popup
-            aria-label="Choose a start time"
-            class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          <Transition
+            enter-from-class="opacity-0 scale-[0.98]"
+            leave-to-class="opacity-0 scale-[0.98]"
+            appear
           >
-            <div class="flex gap-2">
-              <TimePicker.Column
-                unit="hour"
-                class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
-              >
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem
-                    :value="value"
-                    class="box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-selected:bg-neutral-950 data-selected:text-white data-selected:focus-visible:outline-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950 dark:data-selected:focus-visible:outline-neutral-950"
-                  />
-                </template>
-              </TimePicker.Column>
-              <TimePicker.Column
-                unit="minute"
-                :step="5"
-                class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
-              >
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem
-                    :value="value"
-                    class="box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-selected:bg-neutral-950 data-selected:text-white data-selected:focus-visible:outline-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950 dark:data-selected:focus-visible:outline-neutral-950"
-                  />
-                </template>
-              </TimePicker.Column>
-              <TimePicker.Column
-                unit="dayPeriod"
-                class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
-              >
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem
-                    :value="value"
-                    class="box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-selected:bg-neutral-950 data-selected:text-white data-selected:focus-visible:outline-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950 dark:data-selected:focus-visible:outline-neutral-950"
-                  />
-                </template>
-              </TimePicker.Column>
-            </div>
-          </TimePicker.Popup>
+            <TimePicker.Popup
+              aria-label="Choose a start time"
+              class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+            >
+              <div class="flex gap-2">
+                <TimePicker.Column
+                  unit="hour"
+                  class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
+                >
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem
+                      :value="value"
+                      class="border-0 bg-transparent box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-disabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white aria-selected:focus-visible:outline-white dark:hover:not-disabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950 dark:aria-selected:focus-visible:outline-neutral-950"
+                    />
+                  </template>
+                </TimePicker.Column>
+                <TimePicker.Column
+                  unit="minute"
+                  :step="5"
+                  class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
+                >
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem
+                      :value="value"
+                      class="border-0 bg-transparent box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-disabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white aria-selected:focus-visible:outline-white dark:hover:not-disabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950 dark:aria-selected:focus-visible:outline-neutral-950"
+                    />
+                  </template>
+                </TimePicker.Column>
+                <TimePicker.Column
+                  unit="dayPeriod"
+                  class="box-border flex flex-col gap-0.5 overflow-y-auto text-sm tabular-nums max-h-56 w-14"
+                >
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem
+                      :value="value"
+                      class="border-0 bg-transparent box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-disabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white aria-selected:focus-visible:outline-white dark:hover:not-disabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950 dark:aria-selected:focus-visible:outline-neutral-950"
+                    />
+                  </template>
+                </TimePicker.Column>
+              </div>
+            </TimePicker.Popup>
+          </Transition>
         </TimePicker.Positioner>
-      </TimePicker.Portal>
+      </Popover.Portal>
     </TimePicker.Root>
   </div>
 </template>

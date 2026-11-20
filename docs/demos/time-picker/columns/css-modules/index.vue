@@ -2,6 +2,7 @@
 import { useId } from 'vue';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import styles from '../../_index.module.css';
 
 const id = useId();
@@ -25,7 +26,7 @@ const defaultValue = Temporal.PlainTime.from('14:30');
             </template>
           </TimeField.Input>
         </TimePicker.Field>
-        <TimePicker.Trigger :class="styles.Trigger">
+        <TimePicker.Trigger aria-label="Choose time" :class="styles.Trigger">
           <svg
             aria-hidden="true"
             width="16"
@@ -40,29 +41,35 @@ const defaultValue = Temporal.PlainTime.from('14:30');
           </svg>
         </TimePicker.Trigger>
       </div>
-      <TimePicker.Portal>
+      <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <TimePicker.Popup aria-label="Choose a start time" :class="styles.Popup">
-            <div :class="styles.Columns">
-              <TimePicker.Column unit="hour" :class="styles.Column">
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem :value="value" :class="styles.Item" />
-                </template>
-              </TimePicker.Column>
-              <TimePicker.Column unit="minute" :step="5" :class="styles.Column">
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem :value="value" :class="styles.Item" />
-                </template>
-              </TimePicker.Column>
-              <TimePicker.Column unit="dayPeriod" :class="styles.Column">
-                <template #item="{ value }">
-                  <TimePicker.ColumnItem :value="value" :class="styles.Item" />
-                </template>
-              </TimePicker.Column>
-            </div>
-          </TimePicker.Popup>
+          <Transition
+            :enter-from-class="styles.PopupHidden"
+            :leave-to-class="styles.PopupHidden"
+            appear
+          >
+            <TimePicker.Popup aria-label="Choose a start time" :class="styles.Popup">
+              <div :class="styles.Columns">
+                <TimePicker.Column unit="hour" :class="styles.Column">
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem :value="value" :class="styles.Item" />
+                  </template>
+                </TimePicker.Column>
+                <TimePicker.Column unit="minute" :step="5" :class="styles.Column">
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem :value="value" :class="styles.Item" />
+                  </template>
+                </TimePicker.Column>
+                <TimePicker.Column unit="dayPeriod" :class="styles.Column">
+                  <template #item="{ value }">
+                    <TimePicker.ColumnItem :value="value" :class="styles.Item" />
+                  </template>
+                </TimePicker.Column>
+              </div>
+            </TimePicker.Popup>
+          </Transition>
         </TimePicker.Positioner>
-      </TimePicker.Portal>
+      </Popover.Portal>
     </TimePicker.Root>
   </div>
 </template>

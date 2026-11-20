@@ -2,6 +2,7 @@
 import { shallowRef } from 'vue';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 
 const time = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('15:00'));
 </script>
@@ -22,14 +23,14 @@ const time = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('15:0
             </template>
           </TimeField.Input>
         </TimePicker.Field>
-        <TimePicker.Trigger data-testid="start-trigger">Open</TimePicker.Trigger>
-        <TimePicker.Portal>
+        <TimePicker.Trigger data-testid="start-trigger" aria-label="Choose time">Open</TimePicker.Trigger>
+        <Popover.Portal>
           <TimePicker.Positioner>
             <TimePicker.Popup aria-label="Choose time" data-testid="start-popup">
-              <TimePicker.List :step="60" data-testid="start-list" />
+              <TimePicker.List :step="60" aria-label="Times" data-testid="start-list" />
             </TimePicker.Popup>
           </TimePicker.Positioner>
-        </TimePicker.Portal>
+        </Popover.Portal>
       </TimePicker.Root>
     </form>
     <output data-testid="start-value">{{ time?.toString() ?? '' }}</output>

@@ -3,6 +3,7 @@ import { Calendar } from '@vase-ui/vue/calendar';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Field } from '@vase-ui/vue/field';
+import { Popover } from '@vase-ui/vue/popover';
 
 const defaultValue = Temporal.PlainDate.from('2026-12-01');
 const minDate = Temporal.PlainDate.from('2026-11-01');
@@ -24,8 +25,8 @@ const dayButtonClassName =
     <DatePicker.Root
       required
       :default-value="defaultValue"
-      :min-date="minDate"
-      :max-date="maxDate"
+      :min="minDate"
+      :max="maxDate"
       :unavailable-dates="unavailableDates"
       locale="en-US"
     >
@@ -51,7 +52,8 @@ const dayButtonClassName =
           </DateField.Input>
         </DatePicker.Field>
         <DatePicker.Trigger
-          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-data-disabled:bg-neutral-100 data-disabled:text-neutral-500 data-popup-open:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-data-disabled:bg-neutral-800 dark:data-disabled:text-neutral-400 dark:data-popup-open:bg-neutral-800 dark:focus-visible:outline-white"
+          aria-label="Choose date"
+          class="box-border flex h-full w-[1.875rem] items-center justify-center border-0 border-l border-neutral-950 bg-transparent p-0 select-none hover:not-disabled:bg-neutral-100 disabled:text-neutral-500 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:border-white dark:hover:not-disabled:bg-neutral-800 dark:disabled:text-neutral-400 dark:aria-expanded:bg-neutral-800 dark:focus-visible:outline-white"
         >
           <svg
             aria-hidden="true"
@@ -67,51 +69,59 @@ const dayButtonClassName =
           </svg>
         </DatePicker.Trigger>
       </div>
-      <DatePicker.Portal>
+      <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
-          <DatePicker.Popup
-            aria-label="Choose a check-in date"
-            class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-starting-style:scale-[0.98] data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          <Transition
+            enter-from-class="opacity-0 scale-[0.98]"
+            leave-to-class="opacity-0 scale-[0.98]"
+            appear
           >
-            <DatePicker.Calendar class="relative box-border w-68 text-sm">
-              <div class="absolute top-0 right-0 flex gap-1">
-                <Calendar.PreviousButton :class="buttonClassName">&lsaquo;</Calendar.PreviousButton>
-                <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
-              </div>
-              <Calendar.Months>
-                <template #month="{ month }">
-                  <Calendar.Month :month="month">
-                    <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
-                    <Calendar.Grid class="w-full table-fixed border-collapse">
-                      <Calendar.GridHeader>
-                        <Calendar.GridHeaderRow>
-                          <template #weekday="{ weekday }">
-                            <Calendar.Weekday
-                              :weekday="weekday"
-                              class="py-1 text-center text-xs font-medium text-neutral-600 dark:text-neutral-400"
-                            />
-                          </template>
-                        </Calendar.GridHeaderRow>
-                      </Calendar.GridHeader>
-                      <Calendar.GridBody>
-                        <template #week="{ week }">
-                          <Calendar.Week :week="week">
-                            <template #day="{ day }">
-                              <Calendar.Day :day="day" class="p-0 text-center">
-                                <Calendar.DayButton :class="dayButtonClassName" />
-                              </Calendar.Day>
+            <DatePicker.Popup
+              aria-label="Choose a check-in date"
+              class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+            >
+              <DatePicker.Calendar class="relative box-border w-68 text-sm">
+                <div class="absolute top-0 right-0 flex gap-1">
+                  <Calendar.PreviousButton :class="buttonClassName"
+                    >&lsaquo;</Calendar.PreviousButton
+                  >
+                  <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
+                </div>
+                <Calendar.Months>
+                  <template #month="{ month }">
+                    <Calendar.Month :month="month">
+                      <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
+                      <Calendar.Grid class="w-full table-fixed border-collapse">
+                        <Calendar.GridHeader>
+                          <Calendar.GridHeaderRow>
+                            <template #weekday="{ weekday }">
+                              <Calendar.Weekday
+                                :weekday="weekday"
+                                class="py-1 text-center text-xs font-medium text-neutral-600 dark:text-neutral-400"
+                              />
                             </template>
-                          </Calendar.Week>
-                        </template>
-                      </Calendar.GridBody>
-                    </Calendar.Grid>
-                  </Calendar.Month>
-                </template>
-              </Calendar.Months>
-            </DatePicker.Calendar>
-          </DatePicker.Popup>
+                          </Calendar.GridHeaderRow>
+                        </Calendar.GridHeader>
+                        <Calendar.GridBody>
+                          <template #week="{ week }">
+                            <Calendar.Week :week="week">
+                              <template #day="{ day }">
+                                <Calendar.Day :day="day" class="p-0 text-center">
+                                  <Calendar.DayButton :class="dayButtonClassName" />
+                                </Calendar.Day>
+                              </template>
+                            </Calendar.Week>
+                          </template>
+                        </Calendar.GridBody>
+                      </Calendar.Grid>
+                    </Calendar.Month>
+                  </template>
+                </Calendar.Months>
+              </DatePicker.Calendar>
+            </DatePicker.Popup>
+          </Transition>
         </DatePicker.Positioner>
-      </DatePicker.Portal>
+      </Popover.Portal>
     </DatePicker.Root>
     <Field.Description class="text-sm text-neutral-600 dark:text-neutral-400"
       >Choose a weekday in November 2026.</Field.Description

@@ -5,6 +5,7 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import styles from '../../_index.module.css';
 
 const labelId = useId();
@@ -36,7 +37,7 @@ const value = computed(() =>
               </template>
             </DateField.Input>
           </DatePicker.Field>
-          <DatePicker.Trigger :class="styles.Trigger">
+          <DatePicker.Trigger aria-label="Choose date" :class="styles.Trigger">
             <svg
               aria-hidden="true"
               width="16"
@@ -51,45 +52,53 @@ const value = computed(() =>
             </svg>
           </DatePicker.Trigger>
         </div>
-        <DatePicker.Portal>
+        <Popover.Portal>
           <DatePicker.Positioner :side-offset="4">
-            <DatePicker.Popup aria-label="Choose a meeting date" :class="styles.Popup">
-              <DatePicker.Calendar :class="styles.Calendar">
-                <div :class="styles.Nav">
-                  <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
-                  <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
-                </div>
-                <Calendar.Months>
-                  <template #month="{ month }">
-                    <Calendar.Month :month="month">
-                      <Calendar.Caption :class="styles.Caption" />
-                      <Calendar.Grid :class="styles.Grid">
-                        <Calendar.GridHeader>
-                          <Calendar.GridHeaderRow>
-                            <template #weekday="{ weekday }">
-                              <Calendar.Weekday :weekday="weekday" :class="styles.Weekday" />
-                            </template>
-                          </Calendar.GridHeaderRow>
-                        </Calendar.GridHeader>
-                        <Calendar.GridBody>
-                          <template #week="{ week }">
-                            <Calendar.Week :week="week">
-                              <template #day="{ day }">
-                                <Calendar.Day :day="day" :class="styles.Day">
-                                  <Calendar.DayButton :class="styles.DayButton" />
-                                </Calendar.Day>
+            <Transition
+              :enter-from-class="styles.PopupHidden"
+              :leave-to-class="styles.PopupHidden"
+              appear
+            >
+              <DatePicker.Popup aria-label="Choose a meeting date" :class="styles.Popup">
+                <DatePicker.Calendar :class="styles.Calendar">
+                  <div :class="styles.Nav">
+                    <Calendar.PreviousButton :class="styles.Button"
+                      >&lsaquo;</Calendar.PreviousButton
+                    >
+                    <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
+                  </div>
+                  <Calendar.Months>
+                    <template #month="{ month }">
+                      <Calendar.Month :month="month">
+                        <Calendar.Caption :class="styles.Caption" />
+                        <Calendar.Grid :class="styles.Grid">
+                          <Calendar.GridHeader>
+                            <Calendar.GridHeaderRow>
+                              <template #weekday="{ weekday }">
+                                <Calendar.Weekday :weekday="weekday" :class="styles.Weekday" />
                               </template>
-                            </Calendar.Week>
-                          </template>
-                        </Calendar.GridBody>
-                      </Calendar.Grid>
-                    </Calendar.Month>
-                  </template>
-                </Calendar.Months>
-              </DatePicker.Calendar>
-            </DatePicker.Popup>
+                            </Calendar.GridHeaderRow>
+                          </Calendar.GridHeader>
+                          <Calendar.GridBody>
+                            <template #week="{ week }">
+                              <Calendar.Week :week="week">
+                                <template #day="{ day }">
+                                  <Calendar.Day :day="day" :class="styles.Day">
+                                    <Calendar.DayButton :class="styles.DayButton" />
+                                  </Calendar.Day>
+                                </template>
+                              </Calendar.Week>
+                            </template>
+                          </Calendar.GridBody>
+                        </Calendar.Grid>
+                      </Calendar.Month>
+                    </template>
+                  </Calendar.Months>
+                </DatePicker.Calendar>
+              </DatePicker.Popup>
+            </Transition>
           </DatePicker.Positioner>
-        </DatePicker.Portal>
+        </Popover.Portal>
       </DatePicker.Root>
       <TimePicker.Root v-model="meetingTime" locale="en-US" :hour-cycle="12">
         <div :class="styles.Control">
@@ -105,7 +114,7 @@ const value = computed(() =>
               </template>
             </TimeField.Input>
           </TimePicker.Field>
-          <TimePicker.Trigger :class="styles.Trigger">
+          <TimePicker.Trigger aria-label="Choose time" :class="styles.Trigger">
             <svg
               aria-hidden="true"
               width="16"
@@ -120,17 +129,23 @@ const value = computed(() =>
             </svg>
           </TimePicker.Trigger>
         </div>
-        <TimePicker.Portal>
+        <Popover.Portal>
           <TimePicker.Positioner :side-offset="4">
-            <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">
-              <TimePicker.List :class="styles.List">
-                <template #item="{ time }">
-                  <TimePicker.Item :time="time" :class="styles.Item" />
-                </template>
-              </TimePicker.List>
-            </TimePicker.Popup>
+            <Transition
+              :enter-from-class="styles.PopupHidden"
+              :leave-to-class="styles.PopupHidden"
+              appear
+            >
+              <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">
+                <TimePicker.List aria-label="Times" :class="styles.List">
+                  <template #item="{ time }">
+                    <TimePicker.Item :time="time" :class="styles.Item" />
+                  </template>
+                </TimePicker.List>
+              </TimePicker.Popup>
+            </Transition>
           </TimePicker.Positioner>
-        </TimePicker.Portal>
+        </Popover.Portal>
       </TimePicker.Root>
     </div>
     <p :class="styles.Value">Value: {{ value?.toString() ?? 'none' }}</p>
