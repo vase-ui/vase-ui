@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowReactive, shallowRef, useTemplateRef, type PropType } from 'vue';
 import { Toggle } from '../../src/toggle';
-import LateElement from './LateElement.vue';
+import AwaitedElement from './AwaitedElement.vue';
 import PartForm from './PartForm.vue';
 import StyledButton from './StyledButton.vue';
 
@@ -89,7 +89,9 @@ defineExpose({ part, toggle, mine, parts });
       </Toggle>
       <PartForm v-else-if="scene === 'late'" ref="part">
         <template #element="{ props: elementProps, elementRef }">
-          <LateElement v-bind="elementProps" :ref="elementRef" :ready="ready">Late</LateElement>
+          <AwaitedElement v-bind="elementProps" :ref="elementRef" :ready="ready"
+            >Late</AwaitedElement
+          >
         </template>
       </PartForm>
       <template v-else>
