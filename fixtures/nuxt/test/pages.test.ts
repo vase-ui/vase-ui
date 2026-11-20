@@ -1152,29 +1152,30 @@ async function expectSelectPage(page: Page) {
 // A closed menu has the links of a kept content in its server HTML, and no links of another
 // content. An open item has no content before the mount, because its viewport has no target then.
 async function expectNavigationMenuPage(page: Page, { hydrated }: { hydrated: boolean }) {
-  const linkAttributes = ['href', 'aria-current', 'data-active'];
+  const linkAttributes = ['href', 'aria-current'];
   const countLinksInItem = (testId: string) =>
     page.getByTestId(testId).locator('xpath=ancestor::li[1]//a').count();
 
   expect(await page.getByTestId('kept-link').count()).toBe(1);
   expect(await page.getByTestId('kept-content').getAttribute('hidden')).toBe('');
   expect(await page.getByTestId('unkept-link').count()).toBe(0);
+  // The `<a>` of the current route has `aria-current="page"`.
   expect(await readElement(page.getByTestId('nuxt-link'), linkAttributes)).toEqual({
     tag: 'a',
-    text: 'Home',
-    attributes: { href: '/', 'aria-current': 'page', 'data-active': '' },
+    text: 'Menu',
+    attributes: { href: '/navigation-menu', 'aria-current': 'page' },
   });
   expect(await readElement(page.getByTestId('router-link'), linkAttributes)).toEqual({
     tag: 'a',
     text: 'Home',
-    attributes: { href: '/', 'aria-current': null, 'data-active': null },
+    attributes: { href: '/', 'aria-current': null },
   });
   expect(await countLinksInItem('nuxt-link')).toBe(1);
   expect(await countLinksInItem('router-link')).toBe(1);
   expect(await page.getByTestId('news-trigger').getAttribute('aria-expanded')).toBe('true');
   if (hydrated) {
     await page.getByTestId('news-content').waitFor({ state: 'attached', timeout: 5000 });
-    expect(await page.getByTestId('news-content').getAttribute('data-open')).toBe('');
+    expect(await page.getByTestId('news-content').getAttribute('hidden')).toBe(null);
   } else {
     expect(await page.getByTestId('news-content').count()).toBe(0);
   }

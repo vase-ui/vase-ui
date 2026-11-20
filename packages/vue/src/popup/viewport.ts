@@ -23,8 +23,70 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
 }
 
 /**
+ * The sizes of a popup whose content changes while it is open. At rest, the positioner has the
+ * size of the popup. Call `resize()` before or after the DOM update of the new content. It gives
+ * the popup its present size, then the positioner and the popup the size of the new content. When
+ * the animations of the popup end, the popup has no size.
+ */
+export function usePopupSizes(element: () => HTMLElement | null) {
+  const popup = shallowRef<Size>();
+  const positioner = shallowRef<Size>();
+  const transitioning = shallowRef(false);
+
+  watch(
+    () => (transitioning.value ? null : element()),
+    (current, _, onCleanup) => {
+      if (!current) return;
+      const measure = () => (positioner.value = sizeOf(current));
+      measure();
+      const observer = new ResizeObserver(measure);
+      observer.observe(current);
+      onCleanup(() => observer.disconnect());
+    },
+    { flush: 'post' },
+  );
+
+  let step = 0;
+  /** Gives `true` when the steps end, and `false` when a later call or a close stops them. */
+  async function resize() {
+    const current = element();
+    if (!current) return false;
+    const own = ++step;
+    // At rest, the size of the last layout: the DOM can have the new content already. During the
+    // steps, the size of the animation, so a new start goes on from it.
+    const from = (!transitioning.value && positioner.value) || sizeOf(current);
+    popup.value = from;
+    transitioning.value = true;
+    await nextTick();
+    if (own !== step) return false;
+    if (element() !== current) {
+      popup.value = undefined;
+      transitioning.value = false;
+      return false;
+    }
+    // The size of the new content, with no size of a variable.
+    current.style.setProperty('--popup-width', 'auto');
+    current.style.setProperty('--popup-height', 'auto');
+    const next = sizeOf(current);
+    current.style.setProperty('--popup-width', `${from.width}px`);
+    current.style.setProperty('--popup-height', `${from.height}px`);
+    positioner.value = next;
+    popup.value = next;
+    await nextTick();
+    // A cancelled animation rejects its promise.
+    await Promise.allSettled(current.getAnimations().map((animation) => animation.finished));
+    if (own !== step) return false;
+    popup.value = undefined;
+    transitioning.value = false;
+    return true;
+  }
+
+  return { popup, positioner, transitioning, resize };
+}
+
+/**
  * The viewport of a popup that moves between triggers. At a move, the popup gets its old size,
- * then its new size one frame later, then no size when its animations end.
+ * then its new size, then no size when its animations end.
  */
 export function usePopupViewport(
   root: PopupRoot,
@@ -34,22 +96,20 @@ export function usePopupViewport(
     triggerChange?: boolean;
   } = {},
 ) {
-  const popup = shallowRef<Size>();
-  const positioner = shallowRef<Size>();
+  const steps = usePopupSizes(() => (root.open ? root.popup : null));
   const direction = shallowRef<string>();
-  const transitioning = shallowRef(false);
   const sizes: ViewportSizes = {
     get popup() {
-      return popup.value;
+      return steps.popup.value;
     },
     get positioner() {
-      return positioner.value;
+      return steps.positioner.value;
     },
     get direction() {
       return direction.value;
     },
     get transitioning() {
-      return transitioning.value;
+      return steps.transitioning.value;
     },
   };
   slot.value = sizes;
@@ -57,48 +117,14 @@ export function usePopupViewport(
     if (slot.value === sizes) slot.value = null;
   });
 
-  // The positioner has the size of the popup, so that a style can animate a change of the content.
-  watch(
-    () => (root.open && !transitioning.value ? root.popup : null),
-    (element, _, onCleanup) => {
-      if (!element) return;
-      const measure = () => (positioner.value = sizeOf(element));
-      measure();
-      const observer = new ResizeObserver(measure);
-      observer.observe(element);
-      onCleanup(() => observer.disconnect());
-    },
-    { flush: 'post' },
-  );
-
-  let move = 0;
   // The default flush runs before the render of the new content, so the popup has its old size.
   watch(
     () => (root.open ? root.activeTrigger : null),
     async (trigger, previous) => {
-      const element = root.popup;
-      if (!trigger || !previous || !element) return;
-      const current = ++move;
+      if (!trigger || !previous || !root.popup) return;
       direction.value = directionBetween(previous, trigger);
-      popup.value = sizeOf(element);
-      transitioning.value = true;
-      await nextTick();
-      if (current !== move) return;
-      // The size of the new content, with no size of a variable.
-      element.style.setProperty('--popup-width', 'auto');
-      element.style.setProperty('--popup-height', 'auto');
-      const next = sizeOf(element);
-      element.style.setProperty('--popup-width', `${popup.value.width}px`);
-      element.style.setProperty('--popup-height', `${popup.value.height}px`);
-      positioner.value = next;
-      popup.value = next;
-      await nextTick();
-      // A cancelled animation rejects its promise.
-      await Promise.allSettled(element.getAnimations().map((animation) => animation.finished));
-      if (current !== move) return;
-      popup.value = undefined;
-      transitioning.value = false;
-      if (options.triggerChange) root.setInstant('trigger-change');
+      const ended = await steps.resize();
+      if (ended && options.triggerChange) root.setInstant('trigger-change');
     },
   );
 

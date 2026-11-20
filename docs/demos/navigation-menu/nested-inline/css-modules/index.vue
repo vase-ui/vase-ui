@@ -6,6 +6,8 @@ import { useMediaQuery } from '@vase-ui/vue/unstable-use-media-query';
 import { audienceMenus, guideLinks, guidesPanel } from '../data';
 import styles from './index.module.css';
 
+const transition = { enterFromClass: styles.EnterFrom, leaveToClass: styles.LeaveTo };
+
 const base = import.meta.env.BASE_URL;
 const isDesktop = useMediaQuery('(min-width: 700px)', { defaultMatches: true });
 
@@ -33,7 +35,10 @@ const CaretDownIcon: FunctionalComponent = () =>
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="[styles.Content, styles.ProductContent]">
+        <NavigationMenu.Content
+          :class="[styles.Content, styles.ProductContent]"
+          :transition="transition"
+        >
           <NavigationMenu.Root
             :class="styles.SubmenuRoot"
             :orientation="isDesktop ? 'vertical' : 'horizontal'"
@@ -50,14 +55,14 @@ const CaretDownIcon: FunctionalComponent = () =>
                     <span :class="styles.SubmenuLabel">{{ menu.label }}</span>
                     <span :class="styles.SubmenuHint">{{ menu.hint }}</span>
                   </NavigationMenu.Trigger>
-                  <NavigationMenu.Content :class="styles.SubmenuContent">
+                  <NavigationMenu.Content :class="styles.SubmenuContent" :transition="transition">
                     <div>
                       <h4 :class="styles.SubmenuTitle">{{ menu.title }}</h4>
                       <p :class="styles.SubmenuDescription">{{ menu.description }}</p>
                     </div>
                     <ul :class="styles.LinkList">
                       <li v-for="link in menu.links" :key="link.href">
-                        <!-- To use the link of a router, such as RouterLink, give it to `as`. -->
+                        <!-- For the link of a router, see the custom links of the docs. -->
                         <NavigationMenu.Link :class="styles.LinkCard" :href="link.href">
                           <h5 :class="styles.LinkTitle">{{ link.title }}</h5>
                           <p :class="styles.LinkDescription">{{ link.description }}</p>
@@ -81,7 +86,10 @@ const CaretDownIcon: FunctionalComponent = () =>
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="[styles.Content, styles.GuidesContent]">
+        <NavigationMenu.Content
+          :class="[styles.Content, styles.GuidesContent]"
+          :transition="transition"
+        >
           <div :class="styles.GuidesPanel">
             <div>
               <h4 :class="styles.SubmenuTitle">{{ guidesPanel.title }}</h4>
@@ -119,10 +127,12 @@ const CaretDownIcon: FunctionalComponent = () =>
         :collision-padding="{ top: 5, bottom: 5, left: 20, right: 20 }"
         :collision-avoidance="{ side: 'none' }"
       >
-        <NavigationMenu.Popup :class="styles.Popup">
-          <NavigationMenu.Arrow :class="styles.Arrow" />
-          <NavigationMenu.Viewport :class="styles.Viewport" />
-        </NavigationMenu.Popup>
+        <Transition :enter-from-class="styles.EnterFrom" :leave-to-class="styles.LeaveTo" appear>
+          <NavigationMenu.Popup :class="styles.Popup">
+            <NavigationMenu.Arrow :class="styles.Arrow" />
+            <NavigationMenu.Viewport :class="styles.Viewport" />
+          </NavigationMenu.Popup>
+        </Transition>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>

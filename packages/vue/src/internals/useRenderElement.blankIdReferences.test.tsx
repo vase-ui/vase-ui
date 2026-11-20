@@ -2,11 +2,10 @@ import type { UserEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -210,35 +209,6 @@ const rows: Row[] = [
         </Menu.Portal>
       </Menu.Root>
     ),
-  },
-  {
-    part: 'NavigationMenu.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <NavigationMenu.Root>
-        <NavigationMenu.List>
-          <NavigationMenu.Item value="products">
-            <NavigationMenu.Trigger data-testid="part" {...attrs}>
-              Products
-            </NavigationMenu.Trigger>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#products">All products</NavigationMenu.Link>
-            </NavigationMenu.Content>
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-        <NavigationMenu.Portal>
-          <NavigationMenu.Positioner>
-            <NavigationMenu.Popup data-testid="target">
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
-          </NavigationMenu.Positioner>
-        </NavigationMenu.Portal>
-      </NavigationMenu.Root>
-    ),
-    show: async () => {
-      await fireEvent.click(screen.getByTestId('part'));
-      await flushMicrotasks();
-    },
   },
   {
     part: 'Select.Trigger',

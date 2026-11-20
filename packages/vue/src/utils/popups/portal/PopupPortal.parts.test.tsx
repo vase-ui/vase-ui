@@ -3,7 +3,6 @@ import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Select from '../../../select/index.parts';
 import * as Toast from '../../../toast/index.parts';
 import PortalPartContent from './PortalPartContent.test.vue';
@@ -30,12 +29,6 @@ const open = { defaultOpen: true };
 const portalParts = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
-  {
-    name: 'NavigationMenu.Portal',
-    root: NavigationMenu.Root,
-    portal: NavigationMenu.Portal,
-    portalProps: { keepMounted: true },
-  },
   { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
   { name: 'Toast.Portal', root: Toast.Provider, portal: Toast.Portal },
 ];
@@ -51,7 +44,6 @@ describe('portal part of each family', () => {
         root={part.root}
         portal={part.portal}
         rootProps={part.rootProps}
-        portalProps={part.portalProps}
         hasRenderSlot={hasRenderSlot}
         active={false}
         onOuterRender={onOuterRender}

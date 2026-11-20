@@ -234,3 +234,37 @@ export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4) {
     await send('mouseMoved', { x: -10, y: -10 }, 0);
   }
 }
+
+function pathOf(element: Element | null) {
+  const path: Element[] = [];
+  for (let node = element; node; node = node.parentElement) path.push(node);
+  return path;
+}
+
+/**
+ * Moves a mouse pointer from `from` through the points, as a browser does: the boundary events of
+ * each element that the pointer leaves or enters, then `pointermove`.
+ */
+export async function movePointerThrough(from: ClientPoint, points: ClientPoint[]) {
+  let under = document.elementFromPoint(from.x, from.y);
+  for (const point of points) {
+    const target = document.elementFromPoint(point.x, point.y) ?? document.documentElement;
+    const init = { pointerType: 'mouse', clientX: point.x, clientY: point.y };
+    if (target !== under) {
+      const left = pathOf(under);
+      const entered = pathOf(target);
+      for (const element of left) {
+        if (!entered.includes(element))
+          element.dispatchEvent(new PointerEvent('pointerleave', init));
+      }
+      for (const element of entered.reverse()) {
+        if (!left.includes(element)) element.dispatchEvent(new PointerEvent('pointerenter', init));
+      }
+      under = target;
+    }
+    target.dispatchEvent(
+      new PointerEvent('pointermove', { ...init, bubbles: true, composed: true }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}

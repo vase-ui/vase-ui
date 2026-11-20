@@ -70,11 +70,7 @@ function click(element: HTMLElement) {
 
 /** The triggers of `root` that a part marks with an attribute and that have no open popup. */
 function markedTriggers(root: ParentNode): Trigger[] {
-  return [
-    ...root.querySelectorAll<HTMLElement>(
-      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger]',
-    ),
-  ]
+  return [...root.querySelectorAll<HTMLElement>('[aria-haspopup]')]
     .filter((element) =>
       element.matches(
         ':not(:disabled, [aria-disabled="true"], [data-disabled], [data-popup-open], [aria-expanded="true"])',
@@ -165,6 +161,13 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
       },
     }));
   }
+  // A trigger of a navigation menu is a button with `aria-expanded` in the `<nav>` of the root or of
+  // the popup.
+  if (family === 'navigation-menu') {
+    return [...root.querySelectorAll<HTMLElement>('nav button[aria-expanded="false"]')].map(
+      (element) => ({ element, open: click(element) }),
+    );
+  }
   if (depth === 0 && family === 'toast') {
     return [...root.querySelectorAll<HTMLElement>('button')].map((element) => ({
       element,
@@ -200,7 +203,9 @@ function portals() {
 // `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
 // whole document. The older popups have `data-open`. A tooltip popup has no role: it is the element
 // with a side in its positioner. A preview card has no role and no attribute of its open state, so
-// its positioner in `<body>` counts while a link of the demo has `data-popup-open`.
+// its positioner in `<body>` counts while a link of the demo has `data-popup-open`. The content of an
+// open item of a navigation menu is the element that its trigger names in `aria-controls`, also in
+// a viewport in place.
 function openPopups(family: string | undefined) {
   const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
   const cards =
@@ -217,6 +222,9 @@ function openPopups(family: string | undefined) {
       ),
       ...document.querySelectorAll<HTMLElement>(
         `[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])${tooltip}`,
+      ),
+      ...[...document.querySelectorAll('nav [aria-expanded="true"][aria-controls]')].flatMap(
+        (trigger) => document.getElementById(trigger.getAttribute('aria-controls')!) ?? [],
       ),
     ]),
   ];

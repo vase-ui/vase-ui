@@ -92,8 +92,6 @@ export interface HandleCloseContext {
   tree?: FloatingTreeType | null | undefined;
 }
 
-export type HandleCloseContextBase = Omit<HandleCloseContext, 'onClose' | 'tree' | 'x' | 'y'>;
-
 export function getDelay(
   value: MaybeRefOrGetter<Delay> | undefined,
   prop: 'open' | 'close',
@@ -134,7 +132,6 @@ interface HoverTriggerPolicy {
   mouseOnly: () => boolean;
   tree: () => FloatingTreeType | null;
   shouldOpen: () => boolean;
-  getHandleCloseContext?: (() => HandleCloseContextBase | null) | undefined;
 }
 
 type PointerEventsScopeElement = HTMLElement | SVGSVGElement;
@@ -459,8 +456,7 @@ export class PopupHoverSession {
     const doc = ownerDocument(anchorElement);
     this.#restTimeout.clear();
 
-    const handleCloseContextBase =
-      this.#store.context.positioning ?? options.getHandleCloseContext?.();
+    const handleCloseContextBase = this.#store.context.positioning;
 
     // A hover trigger takes the popup at its `mouseenter`. Another trigger takes nothing, so a leave
     // to it closes the popup as a leave to any element does.
@@ -769,7 +765,6 @@ export interface HoverTriggerOptions {
    * trigger of the popup (`PopupHoverSession.addHoverTrigger`).
    */
   triggerElement?: MaybeRefOrGetter<Element | null | undefined>;
-  getHandleCloseContext?: (() => HandleCloseContextBase | null) | undefined;
   /**
    * Called before each hover-driven open attempt (immediate, delayed, and rest-ms
    * paths). Return `false` to veto; any other return value permits the open.
@@ -817,7 +812,6 @@ function bindHoverTrigger(
     mouseOnly,
     tree: () => tree.value,
     shouldOpen: () => props.shouldOpen?.() !== false,
-    getHandleCloseContext: props.getHandleCloseContext,
   };
 
   // The first client render reads the active policy. Server requests can share an inert store.
@@ -938,7 +932,7 @@ export interface HoverPopupOptions {
   closeDelay?: MaybeRefOrGetter<number | undefined>;
   /**
    * Tree node id override for floating elements that participate in the tree
-   * without a `PopupPositioningContext`, such as inline nested navigation menus.
+   * without a `PopupPositioningContext`.
    */
   nodeId?: MaybeRefOrGetter<string | undefined>;
 }

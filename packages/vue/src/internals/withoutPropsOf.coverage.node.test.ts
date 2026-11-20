@@ -108,6 +108,6 @@ it('each wrapper filters the attributes it gives to another part', () => {
       }
     }
   }
-  expect(checked).toBeGreaterThanOrEqual(33);
+  expect(checked).toBeGreaterThanOrEqual(32);
   expect(failures).toEqual([]);
 });

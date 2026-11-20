@@ -338,8 +338,7 @@ export function useDismissLayer(
   // The portal of this popup can hold its backdrop and its other parts outside the popup element.
   // A press there is outside this popup and inside the popups above, so only they get the marker.
   // No popup records a press start there, because the backdrop can unmount before the release. A
-  // portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
-  // popup.
+  // portal below this popup that no popup owns is inside this popup.
   function markInsidePortal(portal: Element, event: Event) {
     if (ownsPortal(portal)) {
       parent?.markInsideComponentTree();
@@ -462,8 +461,8 @@ export function useDismissLayer(
 
     const target = getTarget(event) as Element | null;
 
-    // `NavigationMenu.List` puts the `floating` handlers on the list element, outside the
-    // positioner. A press on the list must not record a start for the popup.
+    // A part can put the `floating` handlers on an element outside the positioner. A press there
+    // records no start for the popup.
     if (
       !contains(getStore().select('positionerElement'), target) &&
       !someElementBelow((element) => contains(element, target))

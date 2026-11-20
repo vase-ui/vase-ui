@@ -11,7 +11,7 @@ import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import PopoverViewportParts from '../../test/fixtures/PopoverViewportParts.vue';
 import PopoverWithDialog from '../../test/fixtures/PopoverWithDialog.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { touchDrag } from '../../test/pointer';
+import { movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -1242,6 +1242,36 @@ describe('the trigger (L8)', () => {
 });
 
 describe('the hover (L9)', () => {
+  test('VUE-171: a pointer that crosses another hover trigger in the triangle to the popup moves nothing; one that rests there moves the popup', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [
+        { key: 'a', attrs: { id: 'a', openOnHover: true, delay: 0 } },
+        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 0 } },
+      ],
+      popup: { style: 'width: 400px; height: 100px' },
+    });
+    await userEvent.hover(trigger('a'));
+    const element = await opened();
+    await placed();
+    const start = centerOf(trigger('a'));
+    const box = element.getBoundingClientRect();
+    const to = { x: box.right - 10, y: box.top + 10 };
+    // From the trigger across the trigger `b`, toward the far corner of the popup.
+    const points = Array.from({ length: 12 }, (_, index) => {
+      const t = (index + 1) / 12;
+      return { x: start.x + (to.x - start.x) * t, y: start.y + (to.y - start.y) * t };
+    });
+    const crossed = points.find((point) =>
+      trigger('b').contains(document.elementFromPoint(point.x, point.y)),
+    );
+    expect(crossed).toBeDefined();
+    await movePointerThrough(start, points);
+    expect(trigger('a')).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger('b')).toHaveAttribute('aria-expanded', 'false');
+    await movePointerThrough(to, [crossed!]);
+    await waitFor(() => expect(trigger('b')).toHaveAttribute('aria-expanded', 'true'));
+  });
+
   test('a mouse that rests on the trigger opens after `delay` and takes no focus; it closes after the pointer leaves', async () => {
     const log: string[] = [];
     const { trigger } = await mountPopover({

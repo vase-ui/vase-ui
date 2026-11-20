@@ -5,7 +5,6 @@ import { createRenderer, screen } from '#test-utils';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
 import { usePortalFocus } from './usePortalFocus';
@@ -51,12 +50,6 @@ interface PortalPart {
 const portalParts: PortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
-  {
-    name: 'NavigationMenu.Portal',
-    root: NavigationMenu.Root,
-    portal: NavigationMenu.Portal,
-    portalProps: { keepMounted: true },
-  },
   { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
 ];
 
