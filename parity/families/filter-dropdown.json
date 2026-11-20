@@ -4,8 +4,112 @@
     "packages/react/test/filterDropdown.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/test/filterDropdown.tsx",
+      "kind": "not-applicable",
+      "reason": "The file holds the test parts of the filter dropdown. `MenuFilter.test.ts` mounts the parts of the filter of Menu through `test/fixtures/MenuFilterParts.vue`."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/clear/FilterDropdownClear.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests what `FilterDropdownClear.test.tsx` tests through the parts of the filter of Menu: the input, the clear button, the empty message, a group, the items that match, the highlight and the query."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests what `FilterDropdownRoot.test.tsx` tests through the parts of the filter of Menu: the input, the clear button, the empty message, a group, the items that match, the highlight and the query."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/filter-dropdown/clear/FilterDropdownClear.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/empty/FilterDropdownEmpty.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/group/FilterDropdownGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/group/useFilterDropdownGroup.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/input/FilterDropdownInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/item/useFilterDropdownItem.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/list/FilterDropdownList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/useFilterDropdownCloseQuery.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/store.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/utils/refocusOwner.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu: the query, the items that match by their text and hide, and the highlight.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    }
+  ]
 }

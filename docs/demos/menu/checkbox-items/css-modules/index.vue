@@ -34,6 +34,8 @@ const CheckIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'm2.5 8.5 4 4 7-9' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -44,26 +46,36 @@ const CheckIcon: FunctionalComponent = () =>
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Menu.Popup :class="styles.Popup">
-          <Menu.CheckboxItem v-model="showMinimap" :class="styles.CheckboxItem">
-            <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
-              <CheckIcon />
-            </Menu.CheckboxItemIndicator>
-            <span :class="styles.CheckboxItemText">Minimap</span>
-          </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model="showSearch" :class="styles.CheckboxItem">
-            <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
-              <CheckIcon />
-            </Menu.CheckboxItemIndicator>
-            <span :class="styles.CheckboxItemText">Search</span>
-          </Menu.CheckboxItem>
-          <Menu.CheckboxItem v-model="showSidebar" :class="styles.CheckboxItem">
-            <Menu.CheckboxItemIndicator :class="styles.CheckboxItemIndicator">
-              <CheckIcon />
-            </Menu.CheckboxItemIndicator>
-            <span :class="styles.CheckboxItemText">Sidebar</span>
-          </Menu.CheckboxItem>
-        </Menu.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="styles.Popup">
+            <Menu.CheckboxItem
+              v-model="showMinimap"
+              :class="styles.CheckboxItem"
+              v-slot="{ state }"
+            >
+              <span v-if="state.checked" :class="styles.CheckboxItemIndicator">
+                <CheckIcon />
+              </span>
+              <span :class="styles.CheckboxItemText">Minimap</span>
+            </Menu.CheckboxItem>
+            <Menu.CheckboxItem v-model="showSearch" :class="styles.CheckboxItem" v-slot="{ state }">
+              <span v-if="state.checked" :class="styles.CheckboxItemIndicator">
+                <CheckIcon />
+              </span>
+              <span :class="styles.CheckboxItemText">Search</span>
+            </Menu.CheckboxItem>
+            <Menu.CheckboxItem
+              v-model="showSidebar"
+              :class="styles.CheckboxItem"
+              v-slot="{ state }"
+            >
+              <span v-if="state.checked" :class="styles.CheckboxItemIndicator">
+                <CheckIcon />
+              </span>
+              <span :class="styles.CheckboxItemText">Sidebar</span>
+            </Menu.CheckboxItem>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

@@ -52,6 +52,8 @@ Import the component and assemble its parts:
 
 While a menu of the menubar is open, the pointer on another trigger opens the menu of that trigger. Give a [`Menu.Trigger` wrapper](/handbook/composition#wrap-a-part) the `openOnHover` default `undefined` to keep this behavior.
 
+The trigger of the open menu has `[aria-expanded="true"]`. Style the menubar while a menu is open with `:has([aria-expanded="true"])`, and its axis with `[aria-orientation]`.
+
 ## API reference
 
 <ApiReference />

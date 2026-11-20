@@ -30,9 +30,13 @@ Under the `element` slot, the part does not render its default slot. Put the con
 
 A family with the `element` slot has this form. Each other family has `as` and [the `#render` slot](#the-render-slot).
 
+The sample below sets the `size` prop of a component in the `element` slot of `Menu.Trigger`:
+
+<<< ../examples/composition/CustomTrigger.vue{9-11}
+
 ## Composing multiple components
 
-To compose more than one part with your own components, nest the slots as deeply as you need. Tooltip is a common example. `Tooltip.Trigger` and `Dialog.Trigger` have the `element` slot, and `Menu.Trigger` has the `#render` slot.
+To compose more than one part with your own components, nest the slots as deeply as you need. Tooltip is a common example. Each trigger in the sample has the `element` slot.
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
@@ -42,7 +46,7 @@ In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` ren
 
 With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the component that you give to `as` or render in its slot. The toolbar then keeps the element in its keyboard navigation.
 
-An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Menu.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. A part with the `element` slot gives each attribute to its element as it is, `undefined` too. `Avatar.Image` keeps `alt=""` for an `alt` that is `undefined` or `null`.
+An attribute with the value `undefined` counts as not set, as a prop does in Vue. The part keeps its own value, so a wrapper component can pass an optional prop on: `:aria-labelledby="labelledby"`. To remove an attribute of the part, give `null`: `<Select.GroupLabel :aria-hidden="null">`. A prop that the part declares keeps the rules of Vue: `undefined` gives its default, and its type says if it takes `null`. A part with the `element` slot gives each attribute to its element as it is, `undefined` too. `Avatar.Image` keeps `alt=""` for an `alt` that is `undefined` or `null`.
 
 A blank `aria-label` or `aria-labelledby` also counts as not set: an empty string, or a string of white space only. Such a value names nothing, so the part keeps its own name. A wrapper component can thus give its label prop the default `''`. This is also true for a part that declares one of them as a prop.
 
@@ -85,10 +89,6 @@ Each Vase UI part renders the most appropriate element by default. In most cases
 The families that the `element` slot does not replace yet have the `#render` slot. It gives you `props` and `state`. Bind `props` on your element. In a Vapor template, also bind `:ref="props.ref"`. Use `state` for the content, class or style.
 
 <<< ../examples/composition/RenderSlot.vue{9-12}
-
-The sample below sets the `size` prop of a component in the `#render` slot of `Menu.Trigger`:
-
-<<< ../examples/composition/CustomTrigger.vue{9-11}
 
 Under `#render`, the part does not render its default slot. Put the content in your element. The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Toast.Viewport` inside your element to keep its focus guards. A development build warns if the slot opens without those children.
 
@@ -160,7 +160,7 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 - `alignItemWithTrigger` on `Select.Positioner`.
 - `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
 - `pushPanels` on `Resizable.Root`.
-- `nativeButton` on button parts such as `Menu.Trigger`.
+- `nativeButton` on button parts such as `Select.Trigger`.
 - `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 
@@ -177,5 +177,3 @@ A custom component in Vapor mode must expose its element as `element`, with `def
 A component that you build with [useRender](/utils/use-render) exposes the `element` that `useRender` returns. Its template binds `setRef` by name on its element and calls `usesRenderSlot()` in the `v-if` of its `#render` slot, as the samples of that page do. In a Vapor component, a development build shows a warning when a native element has only the spread.
 
 In a Vapor wrapper, give each optional Boolean prop the default `undefined`, as [useForwardProps explains](/utils/use-forward-props#vapor-mode).
-
-In a filterable menu, an item in a Vapor component mounts its content a second time while the query hides the item. That mount is in an element outside the document, so the filter can read its text and follow changes from child components. The components in the content run while the item is hidden. Give the item a `label` to prevent that mount. The filter then matches the `label`.

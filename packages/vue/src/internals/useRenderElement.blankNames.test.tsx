@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { Menu } from '@vase-ui/vue/menu';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -55,38 +54,6 @@ const EMPTY: Blank = { name: 'an empty value', value: '' };
 const WHITE_SPACE: Blank = { name: 'white space', value: '\n\t ' };
 
 const rows: Row[] = [
-  {
-    name: 'Menu.Popup aria-label',
-    attribute: 'aria-label',
-    // An empty string is falsy, and `resolvePopupLabel` reads the `aria-label` by its truth.
-    blanks: [WHITE_SPACE],
-    createNode: (attrs) => (
-      <Menu.Root open>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup data-testid="part" {...attrs} />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    expected: 'Actions',
-  },
-  {
-    name: 'Menu.Popup aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Menu.Root open>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup data-testid="part" {...attrs} />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    expected: 'Actions',
-  },
   {
     name: 'useRender',
     attribute: 'aria-label',

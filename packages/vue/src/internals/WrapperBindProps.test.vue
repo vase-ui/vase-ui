@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Menubar } from '@vase-ui/vue/menubar';
+import { TimePicker } from '@vase-ui/vue/time-picker';
 
-const props = defineProps<{ modal?: boolean; loopFocus?: boolean }>();
+const props = defineProps<{ open?: boolean; closeOnSelect?: boolean }>();
 </script>
 
 <template>
-  <Menubar v-bind="props"><slot /></Menubar>
+  <TimePicker.Root v-bind="props"><slot /></TimePicker.Root>
 </template>

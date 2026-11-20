@@ -16,6 +16,8 @@ const CaretDownIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M12 6H4l4 4.5z' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -29,17 +31,19 @@ const CaretDownIcon: FunctionalComponent = () =>
         :class="styles.Positioner"
         :side-offset="({ side }) => (side === 'top' ? 12 : 8)"
       >
-        <Menu.Popup :class="styles.Popup">
-          <Menu.Arrow :class="styles.Arrow" />
-          <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
-          <Menu.Item :class="styles.Item">Add to Playlist</Menu.Item>
-          <Menu.Separator :class="styles.Separator" />
-          <Menu.Item :class="styles.Item">Play Next</Menu.Item>
-          <Menu.Item :class="styles.Item">Play Last</Menu.Item>
-          <Menu.Separator :class="styles.Separator" />
-          <Menu.Item :class="styles.Item">Favorite</Menu.Item>
-          <Menu.Item :class="styles.Item">Share</Menu.Item>
-        </Menu.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="styles.Popup">
+            <Menu.Arrow :class="styles.Arrow" />
+            <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
+            <Menu.Item :class="styles.Item">Add to Playlist</Menu.Item>
+            <Menu.Separator :class="styles.Separator" />
+            <Menu.Item :class="styles.Item">Play Next</Menu.Item>
+            <Menu.Item :class="styles.Item">Play Last</Menu.Item>
+            <Menu.Separator :class="styles.Separator" />
+            <Menu.Item :class="styles.Item">Favorite</Menu.Item>
+            <Menu.Item :class="styles.Item">Share</Menu.Item>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

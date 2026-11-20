@@ -50,6 +50,7 @@ A menu that appears at the pointer on right click or long press.
 
 - **Use context menus as an enhancement**: Do not make a context menu the only way to do an action. Users may not find or open a context menu, especially on touch devices or with assistive technology. Always show visible controls for the actions of the context menu.
 - **Keyboard**: The trigger has no key handler. A key opens the menu only when the browser sends a `contextmenu` event for that key, as some browsers do for the context menu key.
+- **Touch**: A long press of 500 ms on the trigger opens the menu, also where the browser sends no `contextmenu` event for it, as Safari on iOS does.
 
 ## Anatomy
 

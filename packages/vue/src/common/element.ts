@@ -51,7 +51,7 @@ export function useElement<T extends Element>() {
 
 // An element of another window, such as server HTML that hydrates in an `<iframe>`, has the
 // classes of that window.
-function isElement(value: unknown): value is Element {
+export function isElement(value: unknown): value is Element {
   return value != null && (value as Partial<Node>).nodeType === 1;
 }
 

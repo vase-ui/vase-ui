@@ -36,6 +36,8 @@ function openPlayback() {
   activeTrigger.value = 'menu-trigger-2';
   open.value = true;
 }
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -66,18 +68,20 @@ function openPlayback() {
   >
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Menu.Popup :class="styles.Popup">
-          <template v-if="payload">
-            <Menu.Item
-              v-for="item in itemGroups[payload]"
-              :key="item.label"
-              :class="styles.Item"
-              @click="item.onClick"
-            >
-              {{ item.label }}
-            </Menu.Item>
-          </template>
-        </Menu.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Menu.Popup :class="styles.Popup">
+            <template v-if="payload">
+              <Menu.Item
+                v-for="item in itemGroups[payload]"
+                :key="item.label"
+                :class="styles.Item"
+                @click="item.onClick"
+              >
+                {{ item.label }}
+              </Menu.Item>
+            </template>
+          </Menu.Popup>
+        </Transition>
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, type Component } from 'vue';
 import { DatePicker } from '../date-picker';
-import * as Menu from '../menu/index.parts';
-import { Menubar } from '../menubar';
+import * as Select from '../select/index.parts';
+import { TimePicker } from '../time-picker';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
@@ -27,10 +27,10 @@ function message(wrapper: string, part: string, prop: string) {
 // A wrapper that forwards its props with `useForwardProps`.
 const WrapperForward = defineComponent({
   name: 'WrapperForward',
-  props: { modal: Boolean, loopFocus: Boolean },
+  props: { open: Boolean, closeOnSelect: Boolean },
   setup(props, { slots }) {
     const forwarded = useForwardProps(props);
-    return () => <Menubar {...forwarded.value}>{slots.default?.()}</Menubar>;
+    return () => <TimePicker.Root {...forwarded.value}>{slots.default?.()}</TimePicker.Root>;
   },
 });
 
@@ -40,19 +40,19 @@ describe('useCastBooleanWarning', () => {
   it('VUE-126: warns for a wrapper that casts an absent Boolean prop', async () => {
     await render(() => <WrapperCast>Content</WrapperCast>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperCast.test', 'Menubar', 'modal'),
-      message('WrapperCast.test', 'Menubar', 'loopFocus'),
+      message('WrapperCast.test', 'TimePicker.Root', 'open'),
+      message('WrapperCast.test', 'TimePicker.Root', 'closeOnSelect'),
     ]);
     await render(() => <WrapperBindProps>Content</WrapperBindProps>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperBindProps.test', 'Menubar', 'modal'),
-      message('WrapperBindProps.test', 'Menubar', 'loopFocus'),
+      message('WrapperBindProps.test', 'TimePicker.Root', 'open'),
+      message('WrapperBindProps.test', 'TimePicker.Root', 'closeOnSelect'),
     ]);
   });
 
   it('gives no warning when the caller sets false', async () => {
     await render(() => (
-      <WrapperCast modal={false} loopFocus={false}>
+      <WrapperCast open={false} closeOnSelect={false}>
         Content
       </WrapperCast>
     ));
@@ -60,7 +60,7 @@ describe('useCastBooleanWarning', () => {
   });
 
   it('gives no warning for a caller value in kebab case', async () => {
-    await render(() => h(WrapperCast, { modal: false, 'loop-focus': false }));
+    await render(() => h(WrapperCast, { open: false, 'close-on-select': false }));
     expect(takeReportedMessages()).toEqual([]);
   });
 
@@ -82,7 +82,7 @@ describe('useCastBooleanWarning', () => {
 
   it('gives no warning for an undefined binding', async () => {
     const { container } = await render(() => (
-      <WrapperCast modal={undefined} loopFocus={undefined}>
+      <WrapperCast open={undefined} closeOnSelect={undefined}>
         Kept content
       </WrapperCast>
     ));
@@ -94,44 +94,50 @@ describe('useCastBooleanWarning', () => {
     await render(() => (
       <>
         {[1, 2, 3].map((key) => (
-          <WrapperCast key={key} loopFocus={false}>
+          <WrapperCast key={key} closeOnSelect={false}>
             Content
           </WrapperCast>
         ))}
       </>
     ));
-    expect(takeReportedMessages()).toEqual([message('WrapperCast.test', 'Menubar', 'modal')]);
+    expect(takeReportedMessages()).toEqual([
+      message('WrapperCast.test', 'TimePicker.Root', 'open'),
+    ]);
   });
 
   it('names the outer wrapper of two', async () => {
     await render(() => <WrapperOuter>Content</WrapperOuter>);
-    expect(takeReportedMessages()).toEqual([message('WrapperOuter.test', 'Menubar', 'modal')]);
+    expect(takeReportedMessages()).toEqual([
+      message('WrapperOuter.test', 'TimePicker.Root', 'open'),
+    ]);
   });
 
   it('finds the wrapper when the part is in the slot of another part', async () => {
     await render(() => <WrapperInSlot>Content</WrapperInSlot>);
-    expect(takeReportedMessages()).toEqual([message('WrapperInSlot.test', 'Menubar', 'modal')]);
+    expect(takeReportedMessages()).toEqual([
+      message('WrapperInSlot.test', 'TimePicker.Root', 'closeOnSelect'),
+    ]);
   });
 
   it('gives no warning for an explicit false in the slot of a component that declares the same prop', async () => {
     await render(() => <SlotHostUser />);
     await render(() => (
       <SlotHost>
-        <Menubar modal={false}>Content</Menubar>
+        <TimePicker.Root open={false}>Content</TimePicker.Root>
       </SlotHost>
     ));
-    await render(() => <SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
+    await render(() => <SlotHost>{{ default: () => <TimePicker.Root open={false} /> }}</SlotHost>);
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a vnode that no render made', async () => {
-    await render(<SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
-    await render(h(SlotHost, null, () => h(Menubar, { modal: false })));
+    await render(<SlotHost>{{ default: () => <TimePicker.Root open={false} /> }}</SlotHost>);
+    await render(h(SlotHost, null, () => h(TimePicker.Root as Component, { open: false })));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for array children', async () => {
-    await render(() => h(SlotHost, null, [h(Menubar, { modal: false })]));
+    await render(() => h(SlotHost, null, [h(TimePicker.Root as Component, { open: false })]));
     // Vue reports the array slot itself, independently of the Boolean check.
     expect(takeReportedMessages()).toEqual([
       expect.stringContaining('Non-function value encountered for default slot.'),
@@ -140,14 +146,14 @@ describe('useCastBooleanWarning', () => {
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
     const Wrapper = defineComponent({
-      name: 'MyMenu',
+      name: 'MySelect',
       props: { open: Boolean },
       setup(props) {
-        return () => <Menu.Root open={props.open} />;
+        return () => <Select.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyMenu', 'Menu.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([message('MySelect', 'Select.Root', 'open')]);
   });
 
   it('gives one warning for a part that gives the prop to another part', async () => {
@@ -173,63 +179,67 @@ describe('useCastBooleanWarning', () => {
     ]);
   });
 
-  it('warns for the default true of Menu.Root modal', async () => {
+  it('warns for the default true of Select.Root modal', async () => {
     const Wrapper = defineComponent({
-      name: 'MyMenu',
+      name: 'MySelect',
       props: { modal: Boolean },
       setup(props) {
-        return () => <Menu.Root modal={props.modal} />;
+        return () => <Select.Root modal={props.modal} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyMenu', 'Menu.Root', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('MySelect', 'Select.Root', 'modal')]);
   });
 
-  it('warns for Menu.Trigger nativeButton', async () => {
+  it('warns for Select.Trigger nativeButton', async () => {
     const Wrapper = defineComponent({
       name: 'MyTrigger',
       props: { nativeButton: Boolean },
       setup(props) {
         return () => (
-          <Menu.Root>
-            <Menu.Trigger as="span" nativeButton={props.nativeButton}>
+          <Select.Root>
+            <Select.Trigger as="span" nativeButton={props.nativeButton}>
               Action
-            </Menu.Trigger>
-          </Menu.Root>
+            </Select.Trigger>
+          </Select.Root>
         );
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyTrigger', 'Menu.Trigger', 'nativeButton')]);
+    expect(takeReportedMessages()).toEqual([
+      message('MyTrigger', 'Select.Trigger', 'nativeButton'),
+    ]);
   });
 
-  it('warns for the Boolean union of Menu.Popup finalFocus', async () => {
+  it('warns for the Boolean union of Select.Popup finalFocus', async () => {
     const Wrapper = defineComponent({
-      name: 'MyMenuPopup',
+      name: 'MySelectPopup',
       props: { finalFocus: Boolean },
       setup(props) {
-        return () => <Menu.Popup finalFocus={props.finalFocus} aria-label="Example" />;
+        return () => <Select.Popup finalFocus={props.finalFocus} aria-label="Example" />;
       },
     });
     await render(() => (
-      <Menu.Root>
-        <Menu.Portal keepMounted>
-          <Menu.Positioner>
+      <Select.Root defaultOpen>
+        <Select.Portal>
+          <Select.Positioner>
             <Wrapper />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
     ));
     await flushMicrotasks();
-    expect(takeReportedMessages()).toEqual([message('MyMenuPopup', 'Menu.Popup', 'finalFocus')]);
+    expect(takeReportedMessages()).toEqual([
+      message('MySelectPopup', 'Select.Popup', 'finalFocus'),
+    ]);
   });
 
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MyMenu',
+      name: 'MySelect',
       props: { open: Boolean },
       setup(props) {
-        return () => <Menu.Root open={props.open} />;
+        return () => <Select.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -241,12 +251,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <Menu.Root open={props.open} />;
+        return () => <Select.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <Menu.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <Select.Root>'),
     ]);
   });
 

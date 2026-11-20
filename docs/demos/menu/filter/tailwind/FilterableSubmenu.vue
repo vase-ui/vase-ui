@@ -51,6 +51,8 @@ const CaretRightIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M6 12V4l4.5 4z' })],
   );
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -66,20 +68,30 @@ const CaretRightIcon: FunctionalComponent = () =>
           :side-offset="getSubmenuOffset"
           :align-offset="getSubmenuOffset"
         >
-          <Menu.Popup :class="popupClass">
-            <div :class="inputContainerClass">
-              <Menu.Input :class="inputClass" :aria-label="inputLabel" :placeholder="placeholder" />
-              <Menu.Clear :class="clearClass">
-                <ClearIcon />
-              </Menu.Clear>
-            </div>
-            <Menu.Empty :class="emptyClass">{{ emptyText }}</Menu.Empty>
-            <Menu.List :class="submenuListClass">
-              <Menu.Item v-for="option in options" :key="option" :class="itemClass">
-                {{ option }}
-              </Menu.Item>
-            </Menu.List>
-          </Menu.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <Menu.Popup :class="popupClass">
+              <div :class="inputContainerClass">
+                <Menu.Input
+                  :class="inputClass"
+                  :aria-label="inputLabel"
+                  :placeholder="placeholder"
+                />
+                <Menu.Clear :class="clearClass">
+                  <ClearIcon />
+                </Menu.Clear>
+              </div>
+              <Menu.Empty :class="emptyClass">{{ emptyText }}</Menu.Empty>
+              <Menu.List :class="submenuListClass">
+                <Menu.Item v-for="option in options" :key="option" :class="itemClass">
+                  {{ option }}
+                </Menu.Item>
+              </Menu.List>
+            </Menu.Popup>
+          </Transition>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.SubmenuRoot>

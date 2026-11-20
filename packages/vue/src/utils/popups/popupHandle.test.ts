@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { watch } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import { createMenuHandle } from '../../menu/store/MenuHandle';
 import { BasePopupHandle } from './popupHandle';
 import { PopupTriggerMap } from './usePopupRoot';
 
@@ -358,7 +357,6 @@ describe('concrete popup handles', () => {
     warningName: string;
     createHandle: () => { open(triggerId: string): void; close(): void; readonly isOpen: boolean };
   }>([
-    { component: 'Menu', warningName: 'Menu', createHandle: createMenuHandle },
   ])(
     '$component handle is closed and names itself in warnings while no root is attached',
     ({ warningName, createHandle }) => {

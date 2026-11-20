@@ -30,14 +30,10 @@ import { Menu } from '@vase-ui/vue/menu';
 
               <Menu.RadioGroup>
                 <Menu.GroupLabel />
-                <Menu.RadioItem value="">
-                  <Menu.RadioItemIndicator />
-                </Menu.RadioItem>
+                <Menu.RadioItem value="" />
               </Menu.RadioGroup>
 
-              <Menu.CheckboxItem>
-                <Menu.CheckboxItemIndicator />
-              </Menu.CheckboxItem>
+              <Menu.CheckboxItem />
             </Menu.List>
 
             <Menu.Viewport />

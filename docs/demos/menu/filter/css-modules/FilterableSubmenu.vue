@@ -42,6 +42,8 @@ const CaretRightIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M6 12V4l4.5 4z' })],
   );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -57,24 +59,30 @@ const CaretRightIcon: FunctionalComponent = () =>
           :side-offset="getSubmenuOffset"
           :align-offset="getSubmenuOffset"
         >
-          <Menu.Popup :class="styles.Popup">
-            <div :class="styles.InputContainer">
-              <Menu.Input
-                :class="styles.Input"
-                :aria-label="inputLabel"
-                :placeholder="placeholder"
-              />
-              <Menu.Clear :class="styles.Clear">
-                <ClearIcon />
-              </Menu.Clear>
-            </div>
-            <Menu.Empty :class="styles.Empty">{{ emptyText }}</Menu.Empty>
-            <Menu.List :class="[styles.List, styles.SubmenuList]">
-              <Menu.Item v-for="option in options" :key="option" :class="styles.Item">
-                {{ option }}
-              </Menu.Item>
-            </Menu.List>
-          </Menu.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <Menu.Popup :class="styles.Popup">
+              <div :class="styles.InputContainer">
+                <Menu.Input
+                  :class="styles.Input"
+                  :aria-label="inputLabel"
+                  :placeholder="placeholder"
+                />
+                <Menu.Clear :class="styles.Clear">
+                  <ClearIcon />
+                </Menu.Clear>
+              </div>
+              <Menu.Empty :class="styles.Empty">{{ emptyText }}</Menu.Empty>
+              <Menu.List :class="[styles.List, styles.SubmenuList]">
+                <Menu.Item v-for="option in options" :key="option" :class="styles.Item">
+                  {{ option }}
+                </Menu.Item>
+              </Menu.List>
+            </Menu.Popup>
+          </Transition>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.SubmenuRoot>
