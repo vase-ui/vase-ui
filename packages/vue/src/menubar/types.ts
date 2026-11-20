@@ -2,6 +2,7 @@ import type { HTMLAttributes } from 'vue';
 import type { AsProps } from '../common/element';
 
 export interface MenubarProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the element. */
   id?: string | undefined;
   /**
    * The axis of the bar: its arrow keys move between the triggers.

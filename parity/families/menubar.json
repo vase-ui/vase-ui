@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/menubar/MenubarDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. It writes no `data-modal`, which repeats a prop, and no `data-has-submenu-open`: `:has([aria-expanded=\"true\"])` selects a bar with an open menu (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. CSS selects a bar with an open menu with `:has([aria-expanded=\"true\"])`, so the bar writes no `data-has-submenu-open`. It writes no `data-modal`, which repeats a prop. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
@@ -20,7 +20,7 @@
       "upstream": "docs/src/app/(docs)/react/components/menubar/types.md",
       "entry": "MenubarDataAttributes",
       "kind": "not-applicable",
-      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. It writes no `data-modal`, which repeats a prop, and no `data-has-submenu-open`: `:has([aria-expanded=\"true\"])` selects a bar with an open menu (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The bar writes `aria-orientation`, and CSS selects `[aria-orientation]`. CSS selects a bar with an open menu with `:has([aria-expanded=\"true\"])`, so the bar writes no `data-has-submenu-open`. It writes no `data-modal`, which repeats a prop. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [
@@ -28,7 +28,7 @@
       "entry": "Menubar",
       "prop": "id",
       "nativeAttribute": true,
-      "reason": "The part reads `id` to give it to the menus of the menubar as the id of their root, so it is a declared prop. Base UI reads it from the native attributes of the menubar, and `types.md` has no row for a native attribute."
+      "reason": "The part declares `id` and writes it on its element. Base UI reads it from the native attributes of the menubar, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],

@@ -46,8 +46,12 @@ export namespace Root {
 }
 
 /**
- * The area that opens the menu at a right press or at a long press.
+ * The area that opens the menu at a right press or at a long press. A long press of a touch or a
+ * pen opens the menu after 500 ms, also where the browser sends no `contextmenu` event. A key
+ * opens the menu only when the browser sends a `contextmenu` event for it.
  * Renders a `<div>` element.
+ * @selector `[data-popup-open]` The menu is open.
+ * @selector `[data-pressed]` The menu is open, as with `[data-popup-open]`.
  */
 export const Trigger: typeof ContextMenuTrigger = ContextMenuTrigger;
 export namespace Trigger {
@@ -58,6 +62,14 @@ export namespace Trigger {
 /**
  * Places the popup at the pointer.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows with a logical `side` prop, and for a submenu with no `side` prop.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The anchor is out of view.
+ * @cssVariable `--anchor-width` The width of the anchor, in pixels.
+ * @cssVariable `--anchor-height` The height of the anchor, in pixels.
+ * @cssVariable `--available-width` The width from the anchor to the edge of the collision boundary, in pixels.
+ * @cssVariable `--available-height` The height from the anchor to the edge of the collision boundary, in pixels.
+ * @cssVariable `--transform-origin` The point that the popup grows from.
  */
 export const Positioner: typeof ContextMenuPositioner = ContextMenuPositioner;
 export namespace Positioner {

@@ -94,6 +94,10 @@ export interface NavigationMenuItemState {}
 
 export interface NavigationMenuTriggerProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /**
+   * The popup names the trigger of the open item by this id in `aria-labelledby`. With no value, a
+   * generated id.
+   */
   id?: string | undefined;
   /**
    * The user cannot open the item. The trigger keeps the focus, with `aria-disabled`.
@@ -118,10 +122,12 @@ export interface NavigationMenuIconState {
 
 export interface NavigationMenuContentProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The trigger names the content by this id in `aria-controls`. With no value, a generated id. */
   id?: string | undefined;
   /**
    * The content stays in the DOM while its item is closed, with `hidden`. The server HTML then has
-   * it in its item.
+   * it in its item. After the hydration, Vue mounts it again in its `<Teleport>`, so a component in
+   * it mounts two times.
    * @default false
    */
   keepMounted?: boolean | undefined;

@@ -78,6 +78,9 @@ export namespace Item {
 /**
  * A button that opens the content of its item.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The item of the trigger is open.
+ * @selector `[aria-disabled="true"]` The trigger is disabled. It keeps the focus.
+ * @selector `:disabled` The trigger is a native button in a disabled fieldset.
  */
 export const Trigger: typeof NavigationMenuTrigger = NavigationMenuTrigger;
 export namespace Trigger {
@@ -88,6 +91,7 @@ export namespace Trigger {
 /**
  * An icon of the open state of the item.
  * Renders a `<span>` element.
+ * @selector `[data-popup-open]` The item of the icon is open.
  */
 export const Icon: typeof NavigationMenuIcon = NavigationMenuIcon;
 export namespace Icon {
@@ -96,8 +100,11 @@ export namespace Icon {
 }
 
 /**
- * The content of the item. It shows in the viewport.
+ * The content of the item. It shows in the viewport. Its root is a `<Teleport>`, so a scoped style
+ * of the parent does not reach its element: use a CSS module class, `:deep()` or the `element` slot.
  * Renders a `<div>` element.
+ * @selector `[data-activation-direction]` The side of the new trigger from the old one at the last change of the item: `left`, `right`, `up` or `down`.
+ * @selector `[hidden]` The item is closed, and `keepMounted` keeps the content in the DOM.
  */
 export const Content: typeof NavigationMenuContent = NavigationMenuContent;
 export namespace Content {
@@ -108,6 +115,7 @@ export namespace Content {
 /**
  * A link in the list or in a content.
  * Renders an `<a>` element.
+ * @selector `[aria-current="page"]` The link goes to the current page. Give the link this attribute.
  */
 export const Link: typeof NavigationMenuLink = NavigationMenuLink;
 export namespace Link {
@@ -128,6 +136,7 @@ export namespace Portal {
 /**
  * An overlay under the popup.
  * Renders a `<div>` element.
+ * @selector `[hidden]` The menu is closed, and `keepMounted` of the portal keeps the backdrop in the DOM.
  */
 export const Backdrop: typeof NavigationMenuBackdrop = NavigationMenuBackdrop;
 export namespace Backdrop {
@@ -138,6 +147,18 @@ export namespace Backdrop {
 /**
  * Places the popup at the active trigger.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the trigger that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`. A logical side shows only when the `side` prop is logical.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The trigger is out of view.
+ * @selector `[data-instant]` An animation should not run: the popup takes its first place at an open, or the window changes its size.
+ * @selector `[hidden]` The menu is closed, and `keepMounted` of the portal keeps the positioner in the DOM.
+ * @cssVariable `--anchor-width` The width of the trigger, in pixels.
+ * @cssVariable `--anchor-height` The height of the trigger, in pixels.
+ * @cssVariable `--available-width` The width from the trigger to the edge of the collision boundary, in pixels.
+ * @cssVariable `--available-height` The height from the trigger to the edge of the collision boundary, in pixels.
+ * @cssVariable `--transform-origin` The point that the popup grows from.
+ * @cssVariable `--positioner-width` The width of the popup, and at a change of the item the width of the new content, in pixels.
+ * @cssVariable `--positioner-height` The height of the popup, and at a change of the item the height of the new content, in pixels.
  */
 export const Positioner: typeof NavigationMenuPositioner = NavigationMenuPositioner;
 export namespace Positioner {
@@ -148,6 +169,12 @@ export namespace Positioner {
 /**
  * The container of the viewport.
  * Renders a `<nav>` element.
+ * @selector `[data-side]` The side of the trigger that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The trigger is out of view.
+ * @selector `[hidden]` The menu is closed, and `keepMounted` of the portal keeps the popup in the DOM.
+ * @cssVariable `--popup-width` The width of the popup, in pixels: the old width, then the new width, while the popup changes its item.
+ * @cssVariable `--popup-height` The height of the popup, in pixels: the old height, then the new height, while the popup changes its item.
  */
 export const Popup: typeof NavigationMenuPopup = NavigationMenuPopup;
 export namespace Popup {
@@ -158,6 +185,9 @@ export namespace Popup {
 /**
  * An element that points to the active trigger.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the trigger that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-uncentered]` The arrow cannot point to the center of the trigger.
  */
 export const Arrow: typeof NavigationMenuArrow = NavigationMenuArrow;
 export namespace Arrow {
