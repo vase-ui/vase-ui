@@ -539,7 +539,6 @@ describe('the hover', () => {
         { name: 't', root: rootEvents(log), transition: 'fade', triggers: [{ key: 't', attrs }] },
       ],
     });
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     await userEvent.hover(trigger());
     const first = await opened();
     attrs.delay = 10_000;
@@ -854,7 +853,6 @@ describe('the press', () => {
         },
       ],
     });
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     await userEvent.hover(trigger());
     const element = await opened();
     await userEvent.click(trigger());
@@ -970,7 +968,6 @@ describe('the group', () => {
   });
 
   test('one tooltip of a group is open at a time; the other closes with `none`; the new one has `data-instant="delay"` at its insert, and the old one before its leave', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const log: string[] = [];
     await mountTooltips({
       provider: { delay: 0 },
@@ -1005,7 +1002,6 @@ describe('the group', () => {
   test.each(['tip', 'spin'])(
     'a tooltip in a leave of 10 s (%s) is out of the document when a sibling opens, with no `[data-instant]` rule',
     async (transition) => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const log: string[] = [];
       await mountTooltips({
         provider: { delay: 0, timeout: 10_000 },
@@ -1564,7 +1560,7 @@ describe('the portal, the positioner and the popup', () => {
   });
 
   test('a kept popup that closed follows no anchor, and the first frame of the next open has the place of its new trigger', async () => {
-    const frames: number[] = [];
+    const frames: DOMRect[] = [];
     const first = reactive<Props>({ delay: 0, style: 'margin-left: 0' });
     await mountTooltips({
       tooltips: [
@@ -1573,9 +1569,7 @@ describe('the portal, the positioner and the popup', () => {
           root: {
             onOpenChange: (open: boolean) => {
               if (open) {
-                requestAnimationFrame(() =>
-                  frames.push(positioner()!.getBoundingClientRect().left),
-                );
+                requestAnimationFrame(() => frames.push(positioner()!.getBoundingClientRect()));
               }
             },
           },
@@ -1583,7 +1577,7 @@ describe('the portal, the positioner and the popup', () => {
           positioner: { side: 'bottom' },
           triggers: [
             { key: 'a', attrs: first },
-            { key: 'b', attrs: { delay: 0, style: 'margin-left: 300px' } },
+            { key: 'b', attrs: { delay: 0, style: 'display: block; margin-top: 100px' } },
           ],
         },
       ],
@@ -1592,17 +1586,19 @@ describe('the portal, the positioner and the popup', () => {
     await userEvent.hover(trigger('a'));
     await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
     await waitFor(() => expect(frames).toHaveLength(1));
-    const left = positioner()!.getBoundingClientRect().left;
+    const place = positioner()!.getBoundingClientRect();
     await hoverAway();
     await waitFor(() => expect(element).toHaveAttribute('hidden'));
     first.style = 'margin-left: 100px';
     await sleep(100);
-    expect(positioner()!.getBoundingClientRect().left).toBe(left);
+    expect(positioner()!.getBoundingClientRect().left).toBe(place.left);
     await userEvent.hover(trigger('b'));
     await waitFor(() => expect(frames).toHaveLength(2));
     await sleep(100);
-    expect(Math.abs(frames[1]! - positioner()!.getBoundingClientRect().left)).toBeLessThan(1);
-    expect(Math.abs(frames[1]! - left)).toBeGreaterThan(100);
+    const settled = positioner()!.getBoundingClientRect();
+    expect(Math.abs(frames[1]!.left - settled.left)).toBeLessThan(1);
+    expect(Math.abs(frames[1]!.top - settled.top)).toBeLessThan(1);
+    expect(frames[1]!.top - place.top).toBeGreaterThan(100);
   });
 
   test('a kept popup has `data-instant="delay"` after a close because its active trigger unmounted', async () => {
@@ -1643,7 +1639,6 @@ describe('the portal, the positioner and the popup', () => {
   });
 
   test('a popup with `transition: opacity` and no `<Transition>` starts no transition at its open', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     addStyle('[data-testid="popup-t"] { transition: opacity 1s; }');
     const started: string[] = [];
     const listener = (event: Event) => started.push(event.type);
