@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import { RadioGroup } from '@vase-ui/vue/radio-group';
+import { RadioGroup, type RadioGroupProps } from '@vase-ui/vue/radio-group';
 
 const values = ['a', 'b', 'c'];
 
@@ -55,3 +55,7 @@ const narrowedValue = narrowedValues[narrowedIndex];
     expectType<null, typeof value>(value);
   }}
 />;
+
+// The type parameter of the props reaches the type on the part.
+const numberProps = null as unknown as RadioGroup.Props<number>;
+expectType<RadioGroupProps<number>, typeof numberProps>(numberProps);

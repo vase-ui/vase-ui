@@ -67,7 +67,7 @@
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Checkbox` is the part: one `<input type=\"checkbox\">` (rules 8.1, 8.3). The flat types `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason` replace the namespace types. `readonly` replaces `readOnly`. `form` is a plain attribute, and the `element` of the template ref replaces `inputRef`. The input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-readonly` or `data-invalid`: CSS selects `:checked`, `:disabled`, `:required`, `[aria-readonly]` and `[aria-invalid]`."
+      "reason": "`Checkbox` is the part: one `<input type=\"checkbox\">` (rules 8.1, 8.3). The types of the part are `Checkbox.Props`, `Checkbox.State` and `Checkbox.ChangeEventReason`, also with the flat names `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason`. `readonly` replaces `readOnly`. `form` is a plain attribute, and the `element` of the template ref replaces `inputRef`. The input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-readonly` or `data-invalid`: CSS selects `:checked`, `:disabled`, `:required`, `[aria-readonly]` and `[aria-invalid]`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",

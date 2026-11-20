@@ -266,10 +266,28 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --user 1001 --ipc=host
-    timeout-minutes: 25
+    timeout-minutes: 15
     continue-on-error: true
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # An entry with `project` runs that project of `vitest.config.ts`. The project `vapor`
+        # mounts each test in a Vapor app. The entry `chromium` also runs the project `node`.
+        # The entries `vue-3.6` run the tests that mount with `test/render.ts` in four setups of
+        # Vue 3.6: a virtual DOM app or a Vapor app, with the parts compiled as virtual DOM or
+        # Vapor components. Each family in `REFACTORED_FOLDERS` adds to their time, so they run
+        # in shards. Add a shard when a shard takes more than two thirds of the time limit. The
+        # number after the slash is the number of shards. When you add or remove a shard, change
+        # that number in each shard.
+        include:
+          - project: chromium
+          - project: vapor
+          - config: vue-3.6
+            shard: 1/2
+          - config: vue-3.6
+            shard: 2/2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -281,25 +299,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
-      - uses: ./.github/actions/vitest
-        with:
-          command: ${{ needs.select.outputs.vitest-command }}
-          project: node
-      - uses: ./.github/actions/vitest
-        with:
-          command: ${{ needs.select.outputs.vitest-command }}
-          project: chromium
-      # The project `vapor` mounts each test in a Vapor app. It also runs when a step above
-      # fails, so that the job shows its result too.
-      - if: ${{ !cancelled() }}
+      - if: ${{ matrix.project == 'chromium' }}
         uses: ./.github/actions/vitest
         with:
           command: ${{ needs.select.outputs.vitest-command }}
-          project: vapor
-      # The tests that mount with `test/render.ts` run in four setups of Vue 3.6: a virtual DOM
-      # app or a Vapor app, with the parts compiled as virtual DOM or Vapor components.
-      - if: ${{ !cancelled() }}
-        run: pnpm --filter @vase-ui/vue test:vue-3.6
+          project: node
+      - if: ${{ matrix.project }}
+        uses: ./.github/actions/vitest
+        with:
+          command: ${{ needs.select.outputs.vitest-command }}
+          project: ${{ matrix.project }}
+      - if: ${{ matrix.config == 'vue-3.6' }}
+        env:
+          VITEST_SHARD: ${{ matrix.shard }}
+        run: pnpm --filter @vase-ui/vue test:vue-3.6 --shard="$VITEST_SHARD"
 
   # The project `vapor-parts` compiles each part as a Vapor component, with the Vue of `test-vue-rc`.
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
