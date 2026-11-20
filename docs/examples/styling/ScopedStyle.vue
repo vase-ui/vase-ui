@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { NumberField } from '@vase-ui/vue/number-field';
+import { DateField } from '@vase-ui/vue/date-field';
 </script>
 
 <template>
   <div class="field">
-    <NumberField.Root class="root">
-      <NumberField.Input class="input" aria-label="Amount" />
-    </NumberField.Root>
+    <DateField.Root class="root" aria-label="Date">
+      <DateField.Input class="input">
+        <template #segment="{ segment }">
+          <DateField.Segment v-if="segment.editable" :segment="segment" />
+          <DateField.Literal v-else :segment="segment" />
+        </template>
+      </DateField.Input>
+    </DateField.Root>
   </div>
 </template>
 

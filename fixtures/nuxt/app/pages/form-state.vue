@@ -3,7 +3,6 @@ import { reactive, ref, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
 import { Field } from '@vase-ui/vue/field';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
@@ -20,7 +19,6 @@ const THUMB_STYLE = 'width: 20px; height: 10px';
 const filter = ref('');
 const font = ref<string | null>('serif');
 const fruit = ref<string | null>(null);
-const quantity = ref<number | null>(1);
 const code = ref('');
 const volume = ref(50);
 const range = ref([20, 80]);
@@ -79,14 +77,6 @@ function handleFilterInput(event: Event) {
           </Combobox.Positioner>
         </Combobox.Portal>
       </Combobox.Root>
-      <NumberField.Root
-        v-model="quantity"
-        name="quantity"
-        locale="en-US"
-        @value-change="count('quantity')"
-      >
-        <NumberField.Input aria-label="Quantity" data-testid="quantity-input" />
-      </NumberField.Root>
       <Field.Root>
         <Field.Label>Code</Field.Label>
         <OTPField.Root
@@ -135,7 +125,6 @@ function handleFilterInput(event: Event) {
         filter,
         font,
         fruit,
-        quantity,
         code,
         volume,
         range,

@@ -432,7 +432,9 @@ describe('the number of a text', () => {
     });
 
     it('does not read parentheses as a negative without the accounting format', () => {
-      expect(parseNumber('($14.00)', 'en-US', { style: 'currency', currency: 'USD' })).toBe(undefined);
+      expect(parseNumber('($14.00)', 'en-US', { style: 'currency', currency: 'USD' })).toBe(
+        undefined,
+      );
     });
 
     // Irish uses `7 n-acra`, while the label for 1 is `acra`. Chromium's locale data uses `acres`.
@@ -798,8 +800,12 @@ describe('the characters that the input accepts', () => {
   it('accepts a letter, a currency and a unit only where the format writes them', () => {
     expect(createNumberText('en-US').accepts('a', true)).toBe(false);
     expect(createNumberText('en-US').accepts('$5', true)).toBe(false);
-    expect(createNumberText('en-US', { style: 'currency', currency: 'USD' }).accepts('$5', true)).toBe(true);
-    expect(createNumberText('en-US', { style: 'unit', unit: 'kilogram' }).accepts('5 kg', true)).toBe(true);
+    expect(
+      createNumberText('en-US', { style: 'currency', currency: 'USD' }).accepts('$5', true),
+    ).toBe(true);
+    expect(
+      createNumberText('en-US', { style: 'unit', unit: 'kilogram' }).accepts('5 kg', true),
+    ).toBe(true);
     expect(createNumberText('en-US', { notation: 'scientific' }).accepts('5E3', true)).toBe(true);
     expect(createNumberText('en-US').accepts('5E3', true)).toBe(false);
   });
@@ -874,33 +880,144 @@ describe('the rounding of the format', () => {
   it.each([
     ['roundingMode floor', 1.239, { maximumFractionDigits: 2, roundingMode: 'floor' }, 1.23],
     ['half-even at a tie up', 1.235, { maximumFractionDigits: 2, roundingMode: 'halfEven' }, 1.24],
-    ['half-even at a tie down', 1.245, { maximumFractionDigits: 2, roundingMode: 'halfEven' }, 1.24],
+    [
+      'half-even at a tie down',
+      1.245,
+      { maximumFractionDigits: 2, roundingMode: 'halfEven' },
+      1.24,
+    ],
     ['floor of a negative', -1.239, { maximumFractionDigits: 2, roundingMode: 'floor' }, -1.24],
     ['trunc of a negative', -1.239, { maximumFractionDigits: 2, roundingMode: 'trunc' }, -1.23],
     ['percent', 0.01236, { style: 'percent', maximumFractionDigits: 2 }, 0.0124],
-    ['percent floor', 0.01239, { style: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' }, 0.0123],
-    ['percent minimum digits', 0.01239, { style: 'percent', minimumFractionDigits: 2, roundingMode: 'floor' }, 0.0123],
+    [
+      'percent floor',
+      0.01239,
+      { style: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' },
+      0.0123,
+    ],
+    [
+      'percent minimum digits',
+      0.01239,
+      { style: 'percent', minimumFractionDigits: 2, roundingMode: 'floor' },
+      0.0123,
+    ],
     ['significant digits', 12345, { maximumSignificantDigits: 3, roundingMode: 'floor' }, 12300],
-    ['percent significant digits', 0.01239, { style: 'percent', maximumSignificantDigits: 3, roundingMode: 'floor' }, 0.0123],
-    ['percent significant noise', 0.009995, { style: 'percent', maximumSignificantDigits: 2, roundingMode: 'floor' }, 0.0099],
+    [
+      'percent significant digits',
+      0.01239,
+      { style: 'percent', maximumSignificantDigits: 3, roundingMode: 'floor' },
+      0.0123,
+    ],
+    [
+      'percent significant noise',
+      0.009995,
+      { style: 'percent', maximumSignificantDigits: 2, roundingMode: 'floor' },
+      0.0099,
+    ],
     ['tiny percent', 0.000001234, { style: 'percent', maximumSignificantDigits: 2 }, 0.0000012],
-    ['percent ceil', 0.01230000001, { style: 'percent', maximumFractionDigits: 2, roundingMode: 'ceil' }, 0.0124],
-    ['percent fraction digits', 0.001234567890123456, { style: 'percent', maximumFractionDigits: 16 }, 0.001234567890123456],
-    ['percent boundary', 0.0046, { style: 'percent', maximumFractionDigits: 16, roundingMode: 'floor' }, 0.0046],
+    [
+      'percent ceil',
+      0.01230000001,
+      { style: 'percent', maximumFractionDigits: 2, roundingMode: 'ceil' },
+      0.0124,
+    ],
+    [
+      'percent fraction digits',
+      0.001234567890123456,
+      { style: 'percent', maximumFractionDigits: 16 },
+      0.001234567890123456,
+    ],
+    [
+      'percent boundary',
+      0.0046,
+      { style: 'percent', maximumFractionDigits: 16, roundingMode: 'floor' },
+      0.0046,
+    ],
     ['21 fraction digits', 1e-21, { maximumFractionDigits: 21 }, 1e-21],
-    ['priority of percent', 0.0123456, { style: 'percent', maximumSignificantDigits: 3, roundingPriority: 'morePrecision' }, 0.0123],
-    ['priority', 1.2399, { minimumFractionDigits: 2, maximumSignificantDigits: 3, roundingMode: 'floor', roundingPriority: 'morePrecision' }, 1.239],
-    ['unit percent', 1.239, { style: 'unit', unit: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' }, 1.23],
-    ['currency', 1.239, { style: 'currency', currency: 'USD', maximumFractionDigits: 2, roundingMode: 'floor' }, 1.23],
-    ['scientific currency code', 12345, { style: 'currency', currency: 'EUR', currencyDisplay: 'code', notation: 'scientific', maximumFractionDigits: 2 }, 12300],
+    [
+      'priority of percent',
+      0.0123456,
+      { style: 'percent', maximumSignificantDigits: 3, roundingPriority: 'morePrecision' },
+      0.0123,
+    ],
+    [
+      'priority',
+      1.2399,
+      {
+        minimumFractionDigits: 2,
+        maximumSignificantDigits: 3,
+        roundingMode: 'floor',
+        roundingPriority: 'morePrecision',
+      },
+      1.239,
+    ],
+    [
+      'unit percent',
+      1.239,
+      { style: 'unit', unit: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' },
+      1.23,
+    ],
+    [
+      'currency',
+      1.239,
+      { style: 'currency', currency: 'USD', maximumFractionDigits: 2, roundingMode: 'floor' },
+      1.23,
+    ],
+    [
+      'scientific currency code',
+      12345,
+      {
+        style: 'currency',
+        currency: 'EUR',
+        currencyDisplay: 'code',
+        notation: 'scientific',
+        maximumFractionDigits: 2,
+      },
+      12300,
+    ],
     ['no sign display', -1.239, { maximumFractionDigits: 2, signDisplay: 'never' }, -1.24],
-    ['accounting', -1.239, { style: 'currency', currency: 'USD', currencySign: 'accounting', maximumFractionDigits: 2 }, -1.24],
+    [
+      'accounting',
+      -1.239,
+      { style: 'currency', currency: 'USD', currencySign: 'accounting', maximumFractionDigits: 2 },
+      -1.24,
+    ],
     ['roundingMode alone', 1.2399, { minimumIntegerDigits: 1, roundingMode: 'floor' }, 1.239],
-    ['roundingIncrement', 1.26, { minimumFractionDigits: 1, maximumFractionDigits: 1, roundingIncrement: 5 }, 1.5],
-    ['percent overflow', Number.MAX_VALUE, { style: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' }, Number.MAX_VALUE],
+    [
+      'roundingIncrement',
+      1.26,
+      { minimumFractionDigits: 1, maximumFractionDigits: 1, roundingIncrement: 5 },
+      1.5,
+    ],
+    [
+      'percent overflow',
+      Number.MAX_VALUE,
+      { style: 'percent', maximumFractionDigits: 2, roundingMode: 'floor' },
+      Number.MAX_VALUE,
+    ],
     ['scientific', 0.000123456, { notation: 'scientific', maximumFractionDigits: 2 }, 0.000123],
-    ['scientific zero bucket kept', 12345, { notation: 'scientific', minimumFractionDigits: 0, maximumFractionDigits: 0, roundingIncrement: 5 }, 12345],
-    ['scientific zero bucket', 1, { notation: 'scientific', minimumFractionDigits: 0, maximumFractionDigits: 0, roundingIncrement: 5 }, 0],
+    [
+      'scientific zero bucket kept',
+      12345,
+      {
+        notation: 'scientific',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        roundingIncrement: 5,
+      },
+      12345,
+    ],
+    [
+      'scientific zero bucket',
+      1,
+      {
+        notation: 'scientific',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        roundingIncrement: 5,
+      },
+      0,
+    ],
     ['minimum fraction digits', 1.234567, { minimumFractionDigits: 5 }, 1.23457],
   ] as [string, number, Intl.NumberFormatOptions, number][])(
     'rounds as the format shows: %s',

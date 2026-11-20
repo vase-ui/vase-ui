@@ -1,17 +1,19 @@
 import { afterEach, describe, expect, inject, test, vi } from 'vitest';
-import { cdp, page, server, userEvent } from 'vitest/browser';
+import { cdp, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import {
   NumberField,
   type NumberFieldRootChangeEventDetails,
   type NumberFieldRootCommitEventDetails,
 } from '@vase-ui/vue/number-field';
+import { platform } from '../common/platform';
 import { dataAttributes } from '../../test/field';
 import NumberFieldInLocaleProvider from '../../test/fixtures/NumberFieldInLocaleProvider.vue';
 import NumberFieldInputAlone from '../../test/fixtures/NumberFieldInputAlone.vue';
 import NumberFieldParts from '../../test/fixtures/NumberFieldParts.vue';
 import NumberFields from '../../test/fixtures/NumberFields.vue';
 import { mockRuntimeLocale } from '../../test/mockRuntimeLocale';
+import { screen } from '../../test/queries';
 import { mount, mountError, settle, typeAtEnd } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { fireTouch } from '../../test/touch';
@@ -152,7 +154,7 @@ describe('the parts', () => {
       expect(button).toHaveAttribute('aria-controls', 'amount');
       expect(noSelect(button)).toBe(true);
     }
-    await expect.element(page.getByRole('spinbutton', { name: 'Amount' })).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Amount' })).toBe(input);
   });
 
   test('with no number in step the hidden input has step any; a template ref reaches the root and the hidden input', async () => {
@@ -227,7 +229,10 @@ describe('the parts', () => {
     const { root } = mount(NumberFieldParts, { root: { defaultValue: 5 }, scene });
     await nextTick();
     const decrement = root.querySelector('button[aria-label=Decrease]')!;
-    expect(decrement).toHaveAttribute('aria-controls', root.querySelector('input[aria-label=First]')!.id);
+    expect(decrement).toHaveAttribute(
+      'aria-controls',
+      root.querySelector('input[aria-label=First]')!.id,
+    );
     scene.second = true;
     await nextTick();
     const second = root.querySelector<HTMLInputElement>('input[aria-label=Second]')!;
@@ -424,7 +429,8 @@ describe('the locale', () => {
     const provider = reactive({ locale: 'de-DE' });
     const { root } = mount(NumberFieldInLocaleProvider, { provider });
     await nextTick();
-    const text = (name: string) => root.querySelector<HTMLInputElement>(`[aria-label=${name}]`)!.value;
+    const text = (name: string) =>
+      root.querySelector<HTMLInputElement>(`[aria-label=${name}]`)!.value;
     expect(text('Provider')).toBe('1.234,5');
     expect(text('Own')).toBe(new Intl.NumberFormat('fr-FR').format(1234.5));
     provider.locale = 'en-US';
@@ -584,7 +590,8 @@ describe('paste and composition', () => {
     },
   );
 
-  test.runIf(server.browser === 'chromium')(
+  // Only Chromium has `Input.imeSetComposition` of the Chrome DevTools Protocol.
+  test.runIf(platform.engine.blink)(
     'in Chromium, the text of an open composition stays when the part renders again for another cause',
     async () => {
       const root = reactive<Attrs>({ defaultValue: 5 });
@@ -758,11 +765,41 @@ describe('steps', () => {
   test.each([
     { name: 'up with no snap', value: 1.5, key: '{ArrowUp}', attrs: {}, expected: '2.5' },
     { name: 'down with no snap', value: 1.5, key: '{ArrowDown}', attrs: {}, expected: '0.5' },
-    { name: 'up with a snap', value: 1.5, key: '{ArrowUp}', attrs: { snapOnStep: true }, expected: '2' },
-    { name: 'down with a snap', value: 1.5, key: '{ArrowDown}', attrs: { snapOnStep: true }, expected: '1' },
-    { name: 'down from min', value: 7, key: '{ArrowDown}', attrs: { snapOnStep: true, step: 5, min: 2 }, expected: '2' },
-    { name: 'up to max', value: 7, key: '{ArrowUp}', attrs: { snapOnStep: true, step: 5, max: 10 }, expected: '10' },
-    { name: 'small with a snap', value: 1.04, key: '{Alt>}{ArrowUp}{/Alt}', attrs: { snapOnStep: true }, expected: '1.1' },
+    {
+      name: 'up with a snap',
+      value: 1.5,
+      key: '{ArrowUp}',
+      attrs: { snapOnStep: true },
+      expected: '2',
+    },
+    {
+      name: 'down with a snap',
+      value: 1.5,
+      key: '{ArrowDown}',
+      attrs: { snapOnStep: true },
+      expected: '1',
+    },
+    {
+      name: 'down from min',
+      value: 7,
+      key: '{ArrowDown}',
+      attrs: { snapOnStep: true, step: 5, min: 2 },
+      expected: '2',
+    },
+    {
+      name: 'up to max',
+      value: 7,
+      key: '{ArrowUp}',
+      attrs: { snapOnStep: true, step: 5, max: 10 },
+      expected: '10',
+    },
+    {
+      name: 'small with a snap',
+      value: 1.04,
+      key: '{Alt>}{ArrowUp}{/Alt}',
+      attrs: { snapOnStep: true },
+      expected: '1.1',
+    },
   ])('snapOnStep: $name', async ({ value, key, attrs, expected }) => {
     const { input } = await mountField({ root: { defaultValue: value, ...attrs } });
     input.focus();
@@ -779,7 +816,11 @@ describe('steps', () => {
     input.focus();
     await userEvent.keyboard('{ArrowDown}{End}{Home}');
     await settle();
-    expect(commits(log)).toEqual(['commit 49 keyboard', 'commit 100 keyboard', 'commit 0 keyboard']);
+    expect(commits(log)).toEqual([
+      'commit 49 keyboard',
+      'commit 100 keyboard',
+      'commit 0 keyboard',
+    ]);
     input.addEventListener('keydown', (event) => prevented.push(event.defaultPrevented));
     await userEvent.keyboard('{PageUp}{PageDown}');
     root.min = undefined;
@@ -1010,7 +1051,9 @@ describe('the wheel', () => {
 
   test('a wheel with Ctrl, a horizontal wheel and a wheel with no distance do not step and are not cancelled; with Shift the larger axis gives the direction', async () => {
     const log: string[] = [];
-    const { input } = await mountField({ root: record(log, { defaultValue: 5, allowWheelScrub: true }) });
+    const { input } = await mountField({
+      root: record(log, { defaultValue: 5, allowWheelScrub: true }),
+    });
     input.focus();
     const ignored = [
       wheel(input, { deltaY: -100, ctrlKey: true }),
@@ -1152,19 +1195,19 @@ describe('the scrub area', () => {
     const root = reactive<Attrs>({ defaultValue: 0 });
     const { area } = await mountField({ root, area: {} });
     const point = { clientX: 1, clientY: 1 };
-    const start = (touches: number) => {
+    const start = async (touches: number) => {
       let prevented = false;
       area.addEventListener('touchstart', (event) => (prevented = event.defaultPrevented), {
         once: true,
       });
-      fireTouch.start(area, { touches: Array.from({ length: touches }, () => point) });
+      await fireTouch.start(area, { touches: Array.from({ length: touches }, () => point) });
       return prevented;
     };
-    expect(start(1)).toBe(true);
-    expect(start(2)).toBe(false);
+    expect(await start(1)).toBe(true);
+    expect(await start(2)).toBe(false);
     root.readonly = true;
     await nextTick();
-    expect(start(1)).toBe(false);
+    expect(await start(1)).toBe(false);
   });
 });
 

@@ -94,17 +94,20 @@ describe('server render and hydration', () => {
   test.each([
     { order: 'before the field', partsAfter: false },
     { order: 'after the field', partsAfter: true },
-  ])('a label and a description $order name and describe the input in the server HTML', async ({ partsAfter }) => {
-    const props = { partsAfter, root: { defaultValue: 1 } };
-    const root = await renderOnServer('NumberFieldInField', props);
-    const input = root.querySelector('[role=spinbutton]')!;
-    const serverId = input.id;
-    expect(serverId).not.toBe('');
-    expect(root.querySelector('label')).toHaveAttribute('for', serverId);
-    expect(input).toHaveAttribute('aria-describedby', 'description');
-    hydrate(NumberFieldInField, props, root);
-    await settle();
-    expect(input.id).toBe(serverId);
-    expect(input).toHaveAttribute('aria-describedby', 'description');
-  });
+  ])(
+    'a label and a description $order name and describe the input in the server HTML',
+    async ({ partsAfter }) => {
+      const props = { partsAfter, root: { defaultValue: 1 } };
+      const root = await renderOnServer('NumberFieldInField', props);
+      const input = root.querySelector('[role=spinbutton]')!;
+      const serverId = input.id;
+      expect(serverId).not.toBe('');
+      expect(root.querySelector('label')).toHaveAttribute('for', serverId);
+      expect(input).toHaveAttribute('aria-describedby', 'description');
+      hydrate(NumberFieldInField, props, root);
+      await settle();
+      expect(input.id).toBe(serverId);
+      expect(input).toHaveAttribute('aria-describedby', 'description');
+    },
+  );
 });

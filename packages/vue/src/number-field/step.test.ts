@@ -75,7 +75,13 @@ describe('snapOnStep', () => {
     ['0.01 + 0.01 to 0.02', 0.01, { amount: 0.01 }, {}, 0.02],
     ['3.2 + 0.2 to 3.4 from min 3', 3.2, { amount: 0.2 }, { min: 3 }, 3.4],
     ['a small step to the nearest', 0.05, { amount: 0.1, small: true }, {}, 0.2],
-    ['a small step down to the nearest', -0.05, { direction: -1, amount: 0.1, small: true }, {}, -0.2],
+    [
+      'a small step down to the nearest',
+      -0.05,
+      { direction: -1, amount: 0.1, small: true },
+      {},
+      -0.2,
+    ],
     ['13 to a max of 10', 10, { amount: 3 }, { min: 0, max: 10 }, 10],
     ['-13 to a min of -10', -10, { direction: -1, amount: 3 }, { min: -10, max: 0 }, -10],
   ] as [string, number, Partial<Step>, Partial<StepLimits>, number][])(

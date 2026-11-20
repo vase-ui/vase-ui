@@ -49,7 +49,7 @@ const field = inject(fieldKey, null);
 const { element, setElement } = useElement<HTMLElement>();
 const { element: hiddenInput, setElement: setHiddenInput } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
-const locale = useLocale(() => props.locale);
+const textLocale = useLocale(() => props.locale);
 
 const asValue = (value: number | null | undefined): Value =>
   value === null || value === undefined || Number.isNaN(value) ? null : value;
@@ -63,7 +63,7 @@ const { value, setOwn } = useModel(model, firstValue);
 // not format typed text again at each render.
 const formatKey = computed(() => JSON.stringify(props.format ?? {}));
 const numberText = computed(() =>
-  createNumberText(locale.value, JSON.parse(formatKey.value) as Intl.NumberFormatOptions),
+  createNumberText(textLocale.value, JSON.parse(formatKey.value) as Intl.NumberFormatOptions),
 );
 // The text that the user typed, and the value that it gave. It shows while that value is the value.
 const typed = shallowRef<{ text: string; value: Value } | null>(null);
@@ -74,13 +74,13 @@ const inputValue = computed(() =>
 );
 const input = shallowRef<{ readonly element: HTMLInputElement; readonly id: string }>();
 
-const disabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
+const isDisabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
 const scrubs = shallowRef(0);
 const state = computed<NumberFieldRootState>(() => ({
   value: value.value,
   inputValue: inputValue.value,
   required: props.required,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   readonly: props.readonly,
   scrubbing: scrubs.value > 0,
   touched: field?.state.touched ?? false,
@@ -198,7 +198,7 @@ provide(numberFieldKey, {
     committed = value.value;
   },
   endEdit,
-  step,
+  step: stepBy,
   change(next, reason, event) {
     typed.value = null;
     return change(next, reason, event);
@@ -229,7 +229,7 @@ function hiddenProps() {
     step: typeof props.step === 'number' ? props.step : 'any',
     required: props.required,
     readonly: props.readonly,
-    disabled: disabled.value,
+    disabled: isDisabled.value,
     // Vue writes the `value` attribute too, so the browser takes the step base from it when there
     // is no `min` (measured).
     value: asText(value.value),
@@ -287,7 +287,8 @@ function edit(text: string, reason: 'input-change' | 'input-paste', event: Event
   const parsed = numberText.value.parse(text);
   let next = value.value;
   if (parsed === null) next = null;
-  else if (parsed !== undefined) next = intoRange(parsed, typedRange.value.min, typedRange.value.max);
+  else if (parsed !== undefined)
+    next = intoRange(parsed, typedRange.value.min, typedRange.value.max);
   typed.value = { text, value: next };
   if (next !== value.value && !change(next, parsed === null ? 'input-clear' : reason, event)) {
     typed.value = null;
@@ -314,7 +315,7 @@ function endEdit(event: FocusEvent) {
   if (final !== committed) commit(final, final === null ? 'input-clear' : 'input-blur', event);
 }
 
-function step(
+function stepBy(
   direction: 1 | -1,
   keys: StepKeys,
   reason: NumberFieldRootChangeEventReason,
@@ -364,7 +365,7 @@ function onFill(event: Event) {
   const next = Number.isNaN(valueAsNumber)
     ? null
     : intoRange(valueAsNumber, typedRange.value.min, typedRange.value.max);
-  if (!disabled.value && !props.readonly && next !== value.value) {
+  if (!isDisabled.value && !props.readonly && next !== value.value) {
     typed.value = null;
     if (change(next, 'none', event)) commit(next, 'none', event);
   }

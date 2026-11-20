@@ -68,7 +68,7 @@ export function createNumberText(
     }
   }
   // A minus sign that the format writes in an exponent is text for each range.
-  const negativeOnly = new Set([...minusSigns].filter((sign) => !exponentSigns.has(sign)));
+  const negativeOnly = new Set(Array.from(minusSigns).filter((sign) => !exponentSigns.has(sign)));
   for (const part of formatter.formatToParts(-1111111.1)) {
     for (const character of part.value) {
       if (!positive.has(character)) negativeOnly.add(character);
@@ -76,20 +76,20 @@ export function createNumberText(
   }
   const percent = style === 'percent';
   const accepted = new Set([
-    ...'0123456789٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹０１２３４５６７８９',
-    ...hanDigits,
-    ...'.,．，٫٬',
+    ...Array.from('0123456789٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹０１２３４５６７８９'),
+    ...Array.from(hanDigits),
+    ...Array.from('.,．，٫٬'),
     decimal,
-    ...(group ?? ''),
+    ...Array.from(group ?? ''),
     // A locale that groups with a space character also takes a typed space.
-    ...(group && /\p{Zs}/u.test(group) ? ' ' : ''),
-    ...plusSigns,
+    ...(group && /\p{Zs}/u.test(group) ? [' '] : []),
+    ...Array.from(plusSigns),
     ...positive,
-    ...(percent ? percentSigns + permilleSigns : ''),
+    ...(percent ? Array.from(percentSigns + permilleSigns) : []),
   ]);
 
   const count = (text: string, test: (character: string) => boolean) =>
-    [...text].filter(test).length;
+    Array.from(text).filter(test).length;
   const isDecimal = (character: string) =>
     character === decimal ||
     '．٫'.includes(character) ||
@@ -100,7 +100,7 @@ export function createNumberText(
     format: (value) => (value === null ? '' : formatter.format(value)),
     parse,
     accepts(text, negative) {
-      return [...text.replace(controls, '')].every(
+      return Array.from(text.replace(controls, '')).every(
         (character) =>
           (accepted.has(character) && !negativeOnly.has(character)) ||
           (negative && negativeOnly.has(character)),
@@ -139,12 +139,12 @@ function createParser(locale: Intl.LocalesArgument, options: Intl.NumberFormatOp
   const decimal = decimalSeparator(locale, options.numberingSystem);
   // A `numberingSystem` option changes the separator, and a user can still type the usual one.
   const usualDecimal = decimalSeparator(locale);
-  const ownDigits = [
-    ...new Intl.NumberFormat(locale, {
+  const ownDigits = Array.from(
+    new Intl.NumberFormat(locale, {
       numberingSystem: options.numberingSystem,
       useGrouping: false,
     }).format(9876543210),
-  ].reverse();
+  ).reverse();
   // The longest first, so that a short label (`g`) does not cut into a longer one (`grame` in ak).
   const labels = [
     ...new Set(

@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, useAttrs, watch } from 'vue';
 import { useButton } from '../button/button';
 import { useElement } from '../common/element';
+import { ownerWindow } from '../common/owner';
 import { injectNumberFieldRoot, stateAttributes, type StepKeys } from './root';
 import type { NumberFieldRootState } from './types';
 
@@ -8,6 +9,7 @@ const firstRepeat = 460;
 const repeat = 60;
 
 interface Hold {
+  readonly window: Window;
   readonly pointerId: number;
   readonly start: number | null;
   readonly keys: StepKeys;
@@ -29,12 +31,13 @@ export function useStepButton(
   const reason = direction > 0 ? 'increment-press' : 'decrement-press';
   const attrs = useAttrs();
   const { element, setElement } = useElement<HTMLElement>();
-  const { disabled, mergeAttributes } = useButton({
+  const button = useButton({
     element,
     disabled: () =>
       props.disabled || root.state.disabled || root.state.readonly || root.atBound(direction),
     type: 'button',
   });
+  const { disabled } = button;
   const state = computed<NumberFieldRootState>(() => ({ ...root.state, disabled: disabled.value }));
   let hold: Hold | undefined;
   // The press stepped, so the click that follows its release does not step again.
@@ -55,7 +58,7 @@ export function useStepButton(
     // The text input is the one tab stop of the field.
     tabindex: -1,
     'aria-controls': root.inputId,
-    style: { userSelect: 'none', WebkitUserSelect: 'none' },
+    style: { userSelect: 'none', '-webkit-user-select': 'none' },
     ...stateAttributes(state.value, ['disabled']),
     onPointerdown,
     onPointerleave: () => hold && (hold.out = true),
@@ -78,6 +81,7 @@ export function useStepButton(
     }
     endHold();
     const current: Hold = {
+      window: ownerWindow(event.currentTarget),
       pointerId: event.pointerId,
       start: root.state.value,
       keys: { altKey: event.altKey, shiftKey: event.shiftKey },
@@ -97,13 +101,13 @@ export function useStepButton(
     };
     current.timer = setTimeout(next, firstRepeat);
     // An ancestor can stop `pointerup` before it gets to the button (measured).
-    window.addEventListener('pointerup', onRelease, true);
-    window.addEventListener('pointercancel', onCancel, true);
+    current.window.addEventListener('pointerup', onRelease, true);
+    current.window.addEventListener('pointercancel', onCancel, true);
   }
 
   function onRelease(event: PointerEvent) {
     const current = hold;
-    if (!current || event.pointerId !== current.pointerId) return;
+    if (event.pointerId !== current?.pointerId) return;
     endHold();
     // A tap that did not step steps at its click. The click of a press comes before a timer that
     // starts at its release (measured).
@@ -122,9 +126,9 @@ export function useStepButton(
   function endHold() {
     if (!hold) return;
     clearTimeout(hold.timer);
+    hold.window.removeEventListener('pointerup', onRelease, true);
+    hold.window.removeEventListener('pointercancel', onCancel, true);
     hold = undefined;
-    window.removeEventListener('pointerup', onRelease, true);
-    window.removeEventListener('pointercancel', onCancel, true);
   }
 
   function onClick(event: MouseEvent) {
@@ -140,6 +144,6 @@ export function useStepButton(
     element,
     setElement,
     state,
-    elementProps: () => mergeAttributes(ownProps.value, attrs),
+    elementProps: () => button.mergeAttributes(ownProps.value, attrs),
   };
 }

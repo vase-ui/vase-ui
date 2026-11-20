@@ -146,7 +146,7 @@ Each family has a file `parity/families/<family>.json`. `pnpm parity:check` requ
 - A row can name one constant: `{ "entry": "TooltipTriggerDataAttributes", "constant": "disabled", "reason": "…" }`. Its `entry` is the name of the export that holds the constant.
 - These rows accept only the named member. A row is stale when Base UI has the member, or Vase UI lacks it.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
-- A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. The part can give such an attribute a default, as `NumberField.Input` does for `aria-roledescription`. The part sets the default before the attributes of the consumer, so the attribute of the consumer wins.
+- A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. A part that gives such an attribute a default sets it before the attributes of the consumer, so the attribute of the consumer wins.
 - The extract reads the rows of the surface only from the `types.md` of the docs folder. Without that folder, `pnpm parity:check` does not compare the props, emits, slots, exposed members and return types of the family.
 - A family also names the folder of its context, where upstream has that folder under `internals`: `packages/react/src/internals/direction-context/**`. `pnpm parity:check` then checks the files of the context as part of the family that provides it.
 
@@ -383,7 +383,7 @@ A part of a component that Base UI does not have follows the same rules for its 
 
 Checkbox, Radio and Switch are the native input itself and have no hidden input. This section holds for each other family until its refactor.
 
-Some upstream parts render a hidden `<input>` beside their element. `NumberField.Root` is an example. The input gives the part the form behavior of a native control.
+Some upstream parts render a hidden `<input>` beside their element. `Select.Root` is an example. The input gives the part the form behavior of a native control.
 
 - The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
 - The template has the `#render` slot and the element of a part. The inputs come after them.
@@ -393,7 +393,7 @@ Some upstream parts render a hidden `<input>` beside their element. `NumberField
 - A part that keeps its focus guards beside its element with `useElementSiblings`, such as a trigger or a popup part, has one root node. See [Focus helpers](#focus-helpers).
 - `Combobox.Input` keeps its dismiss button before its element with `useElementSiblings`, so it has one root node. Its `#render` slot gets the element only.
 - `Combobox.Popup` gives its dismiss button to its focus manager, which keeps it after the element and before the last inside guard.
-- A root gives its input a `value` binding after `useHiddenValueBeforeHydration` allows it. In a number field, an edit in the visible input that changes the model during hydration also supplies the new value to the hidden input.
+- A root gives its input a `value` binding after `useHiddenValueBeforeHydration` allows it.
 - A part takes the state of its input into its model, with its change events one time, when the input changed with no event that the part handled. A press on a native label before the hydration does this. A form state that the browser restores after a move in the history or a reload does this too.
 - The part takes the input at two moments. At the hydration, the input differs from its server HTML. At a `pageshow` event that does not come from the back/forward cache, the input differs from the value that the part handled.
 - Firefox and WebKit restore the form state of a page during the parse, before the scripts run. Chromium restores it in a task after the parse or right after `load`, the earlier of the two, and always before `pageshow`. An app that mounts in its entry module, as `create-vue` makes it, is thus mounted before Chromium restores the inputs.
@@ -425,7 +425,7 @@ Some upstream parts render a hidden `<input>` beside their element. `NumberField
 - A root that clears its reset flag in the callback of `useValueChanged` sets the flag only when the reset changes the value that the callback watches. `useValueChanged` calls no callback for a value that stays, and a flag that stays set skips the validation of the next change. `Slider.Root` and `useDateTimeFieldRoot` compare that value before and after the reset. With `selectionMode: 'none'`, `useAriaCombobox` compares the text of the input before and after the reset. A date or time field root below a picker gets the value of a reset with the next render, so it sets the flag when the picker counts the reset. It compares the value after that flush, and it clears the flag when the value stayed.
 - A part that has one input for each item, such as `RadioGroup`, `CheckboxGroup` and `Slider.Root`, does not call `useFormReset` itself. The input that `RadioGroup` exposes changes with the value, and it can be absent. `CheckboxGroup` exposes no input. The composite list of `Slider.Root` has no thumb while `KeepAlive` holds the slider. `useFormReset` also drops a reset that waits when its input changes. Each item thus calls `useFormReset` with its own input. The part handles the first call for each `reset` event.
 - `CheckboxGroup` follows the reset of each form that has an input of one of its items. An uncontrolled item whose state the group does not hold goes back to its default value through its own change event. A checkbox with no `value`, and with no `name` of its own or of its field, is such an item. The group clears the error of the field, so such an item does not. When an uncontrolled group goes back to its default value, its parent checkbox goes back to the state that it has at the mount.
-- A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
+- A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. The root clears the error of the field itself.
 - A field counts `valueMissing` only after its value differs from its first value, after a submit, or after a call of `validate()` on the field or on the form. In `blur` mode, a leave also counts it for a control whose value the user picks (`BUG-1425`). Such a control gives `countsMissingAtLeave` to `field.setControl`: `RadioGroup`, `Select.Root`, and a combobox with a selection mode whose trigger is the control.
 
 ```vue
@@ -466,7 +466,7 @@ Rules:
 - Four rules decide what is not given: `undefined` for each attribute (`VUE-103`), a blank `id` (`VUE-93`), a blank `aria-label` or `aria-labelledby` (`VUE-106`), and a blank ID reference attribute (`VUE-110`).
 - The list `BLANK_IS_NOT_GIVEN` of that file has one entry for each attribute whose blank value is not given. A new such attribute needs a new entry.
 - `givenAttributes` does not get a declared prop, a value that a part reads with `useAttrs()` or a parameter of a composable. A part reads such a value through `given(attribute, value)` of the same file. `OTPFieldInput.vue` does this for the `aria-label` of its warning.
-- A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`, and `NumberField.Input` gives no `aria-describedby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
+- A part that reads an attribute of the consumer in `props` reads `null` as a removal of that attribute. `Menu.RadioGroup` then gives no `aria-labelledby`. `Calendar.Grid` then has no label, so it keeps the name of the month in `aria-label`.
 - `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - While Vue hydrates an element, it writes no attribute that a `v-bind` object gives, except a listener and the `value` of an input. It compares only `class`, `style` and the attributes of its lists of known attributes. `aria-*`, `role`, `abbr` and `data-*` are not in those lists.
 - An element thus keeps the server value of such an attribute until a render gives another value for the same key. A render after the mount that gives the value of the first client render writes nothing.
@@ -610,7 +610,7 @@ The change event carries these details:
 - Before the mount, the registered id is the id that the part binds. A server has no element, so the server HTML names that id. From the mount on, the registered id is the `id` that the element has now, and it follows each change (`VUE-118`, `VUE-119`, `VUE-121`). Base UI registers the id that the part binds, so a `render` element with another `id` leaves a reference that names no element.
 - A part has no registered id while `getId` gives `undefined`, and while `KeepAlive` holds the part. From the mount on, it also has none while it has no element, and while its element has an empty `id`. No part names it then.
 - `useReferencedId(getId, element)` gives the same id with no registration. `useRegisteredLabelId` reads it and registers a getter of that id together with the element of the label.
-- A reference that the server HTML has reads the id with `useReferencedId` when the named part has no id registry. `NumberField.Root` gives the steppers the id of the input in this way, and `Resizable.Panel` gives `Resizable.Handle` its id.
+- A reference that the server HTML has reads the id with `useReferencedId` when the named part has no id registry. `Resizable.Panel` gives `Resizable.Handle` its id in this way.
 - A reference that the server HTML does not have reads the `id` of the element with `useElementId`. The parent checkbox of a group and the owner element of a portal do this (`VUE-124`). A store copies the `id` of an element that it holds, as [Popup store](#popup-store) says.
 - No reference reads an `id` in `onMounted` or `onUpdated`. A component in a `#render` slot can change the `id` in a render of its own, and the hooks of the part do not run then.
 
@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Number Field, Scroll Area, Tabs, Button and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -943,7 +943,7 @@ The label, the control and the messages of a field:
 The state of a field:
 
 - The root of a field holds `touched`, `dirty`, `filled`, `focused` and the validity data in `shallowRef` values. A part changes one only through a function of the field context.
-- The field reads the getters of a registration inside its own computed values. The state of a part can include the state of the field, and the field then reads itself through the getter. A getter thus does not read such a state. It reads the sources of the state, as the getters of `NumberField.Input` read `value` and `disabled` of its root context. With a getter that reads the state, `data-focused` and `data-touched` stay stale.
+- The field reads the getters of a registration inside its own computed values. The state of a part can include the state of the field, and the field then reads itself through the getter. A getter thus does not read such a state. It reads the sources of the state, as the getters of `NumberField.Root` read its props. With a getter that reads the state, `data-touched` stays stale.
 - A control can call such a function in `setup` with a value that it knows from its props, such as `setFilled`. The server HTML of the control and of each part after it then has the attribute. The root and the parts before the control get it in the first flush on the client. Vue does not compare `data-*`.
 - A part below a control that defers runs its `setup` after a server wrote the parts that come after the control. The control thus sets the first state itself, as `RadioGroup` and `CheckboxGroup` do for `filled`.
 - A value that can add or remove an element does not come from `setup`. A lazy component runs its `setup` later in a browser than on a server, and Vue reports the difference as a hydration mismatch.
@@ -1583,7 +1583,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
-- A part that turns autocorrect off gives the key `autoCorrect`, and it takes `autocorrect` out of the attributes of the consumer. The comment in `NumberFieldInput.vue` gives the reason.
+- A part that turns autocorrect off gives the key `autoCorrect`, and it takes `autocorrect` out of the attributes of the consumer. The comment in `OTPFieldInput.vue` gives the reason.
 - Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it. `Toggle` does this for `type` and `form`: `const { form, type, ...elementAttrs } = attrs`.
 - Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - Bind `hidden="until-found"` on a closed searchable panel. An accepted page match clears the start style before the browser measures the text. If the panel stays closed, restore the matched element even if Vue has replaced it. A cached panel needs its closed attributes before the parent activation hook.
@@ -1596,19 +1596,18 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Menu.Input and Combobox.Input bind `focusin` and `focusout` on their input. Each handler checks that the event came from the current input.
 - Measure frame work and parent and child renders when a gesture changes a style each frame. Compare the binding with a native write for the same slot content.
 - The drawer popup, backdrop and indent read the current gesture sample when they render. For a dismiss gesture, native writes to the popup transform start after Vue patches the drag styles.
-- `NumberField.ScrubAreaCursor` keeps its last transform for a render during a scrub. Vue owns one measurement box for the active cursor. The box enters the cursor's parent only for a measurement. Slot and portal selectors keep their original matches between samples.
 
 #### Reconcile a native input
 
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` is the example.
 - A controlled input requests a render when an edit can leave the model unchanged. `useInputRender` gives the part a `valueProps` binding and a `renderValue` function. Vue compares that binding with the input's live value and restores the text in the same element.
 - Call `renderValue` after the change event. Vue renders a parent that accepts the edit before it renders the input. Move the caret or select a character after that flush.
-- A value write can stop an active composition. `NumberField.Input` delays a refused edit during composition. Its timer requests a render after WebKit sends the final `input` event.
+- A value write can stop an active composition. `NumberField.Input` gives the text of an open composition to its root, so a render for another cause writes the same text. It reads the text at `compositionend`, because WebKit sends the last `input` after that event.
 - Test the native value after accepted and refused edits, composition, autofill, reset and hydration. Restore the committed value only where it can differ from the browser value.
 - Vue writes `value` of an input when it hydrates. The range input of `Slider.Thumb` thus keeps a value of before the hydration with `useHiddenValueBeforeHydration`. It takes a value that the browser restores after the mount with `useFormRestoreAsInput`. See [Parts with a hidden input](#parts-with-a-hidden-input).
 - A part takes a pre-hydration edit after the mount flush because Vue writes the input value at hydration. A text input receives one `input` event. [Server render](#server-render) and [Parts with a hidden input](#parts-with-a-hidden-input) give the rules.
 - The listener of the element itself gets each of these events. A Vue listener of an ancestor can skip one, because of the rule for the millisecond of the attach in [`useRenderElement` and `useRender`](#userenderelement-and-userender).
-- A native reset of a form changes the value of an input and sends no `input` event. A part that holds state for that value follows the reset with `useFormReset` of `src/internals`. It tells its field with `field.onReset(value)`. [Parts with a hidden input](#parts-with-a-hidden-input) gives the rules. `NumberField.Root` is the example.
+- A native reset of a form changes the value of an input and sends no `input` event. A part that holds state for that value follows the reset with `useFormReset` of `src/internals`. It tells its field with `field.onReset(value)`. [Parts with a hidden input](#parts-with-a-hidden-input) gives the rules. `Select.Root` is the example.
 
 #### Release and restore work across a KeepAlive hold
 
@@ -2040,7 +2039,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - On a page that Vue hydrated, a second mount of a vnode hydrates each component of the vnode against the elements of the first mount. Vue then warns of a hydration mismatch in a case that hydrates nothing.
 - Do not put a vnode in a row of a table or in such a constant. Write a function that returns the vnode. Call the function in the case. `ListboxSeparator.test.tsx` is the model.
 - A type test can keep a vnode in a row or in a constant, because no test runner runs it.
-- A test file that needs a Vue custom element defines the element one time, at the top of the file. `customElements.define` throws for a name that is already defined, and `--repeats` runs each case again in the same page. `number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx` is the model.
+- A test file that needs a Vue custom element defines the element one time, at the top of the file. `customElements.define` throws for a name that is already defined, and `--repeats` runs each case again in the same page. `test/fixtures/slotHost.ts` is the model.
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
 - Do not assert the error `Hydration completed but contains mismatches.` Vue writes it one time for each page. A case that expects a hydration mismatch removes that error from the result of `takeReportedMessages()`. It asserts each other message.
@@ -2122,8 +2121,7 @@ A case that acts between the server render and the hydration calls `hydrateAfter
 - A hydration case of a calendar root that reads its clock calls `mockBrowserToday`. When the page moves in a fixture with a generated id, such as the id of `Calendar.Caption`, the case hydrates by hand, because the new month gets a new id.
 - Do not write a generated id in a test. The id holds a count of the earlier `useId` calls, so a new call in a part changes later ids. Read the id from the element or from the HTML.
 - A case of Vase UI's own that depends on the Vue version or on the browser probes for the behavior. A condition names no engine. Each outcome has a case with `runIf`, as in `collapsible/panel/CollapsiblePanel.node.test.tsx`.
-- One exception is a case that needs a command of the Chrome DevTools Protocol, such as `Input.imeSetComposition` for the input method editor. Only Chromium has that protocol, and no probe can do what the command does. Such a case has `it.runIf(platform.engine.blink)` and a comment that gives the reason. The cases of `a composition` in `number-field/input/NumberFieldInput.test.tsx` are the model.
-- A second exception is a case of a part that reads `platform.engine` and renders nothing in one engine. Such a case skips that engine with the flag of `platform.engine` that the part reads, and a comment that gives the reason. The scrub area cursor case of `test/demos.test.tsx` is the model.
+- One exception is a case that needs a command of the Chrome DevTools Protocol, such as `Input.imeSetComposition` for the input method editor. Only Chromium has that protocol, and no probe can do what the command does. Such a case has `it.runIf(platform.engine.blink)` and a comment that gives the reason. The Chromium composition case of `number-field/NumberField.test.ts` is the model.
 - The validation popup cases in `test/setup.test.tsx` select Firefox. The first case must fail if the popup does not take a press.
 - A query for the role `button` while a popup is open names the button: `screen.getByRole('button', { name: 'Open' })`. In WebKit on an Apple system, the focus guards are buttons too, as [Focus helpers](#focus-helpers) says.
 - A case that finds the focus guards selects `[data-vase-ui-focus-guard]`, not `[aria-hidden]`. In WebKit on an Apple system, a guard has no `aria-hidden`.

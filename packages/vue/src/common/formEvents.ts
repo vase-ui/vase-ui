@@ -16,6 +16,7 @@ export function useFormListener<Type extends keyof HTMLElementEventMap>(
     element,
     (el, _, onCleanup) => {
       if (!el) return;
+      // eslint-disable-next-line no-restricted-syntax -- The form of the element is read at each event. Only a move by `Teleport` into another root node goes unseen, and then the element leaves its form too.
       const root = el.getRootNode();
       const onEvent = (event: Event) => {
         // A form acts only on the controls that it owns at that moment: an element that

@@ -380,7 +380,9 @@ function recordTouch(element: Element) {
   const scroller = document.scrollingElement!;
   scroller.scrollTop = 0;
   // A fling goes on after the touch ends, so the next touch waits for its end.
-  const ended = new Promise((resolve) => document.addEventListener('scrollend', resolve, { once: true }));
+  const ended = new Promise((resolve) =>
+    document.addEventListener('scrollend', resolve, { once: true }),
+  );
   return {
     events,
     async scrolled() {
@@ -415,11 +417,9 @@ describe.runIf(server.browser === 'chromium')('a touch in Chromium', () => {
       <p><span id="inline" style="touch-action: pinch-zoom">inline</span></p>
       <p style="display: flex"><span id="item" style="touch-action: pinch-zoom">item</span></p>
       <p><span id="cancel">cancel</span></p></div>`);
-    container
-      .querySelector('#cancel')!
-      .addEventListener('touchstart', (event) => {
-        if ((event as TouchEvent).touches.length === 1) event.preventDefault();
-      });
+    container.querySelector('#cancel')!.addEventListener('touchstart', (event) => {
+      if ((event as TouchEvent).touches.length === 1) event.preventDefault();
+    });
     const results: Record<string, { events: string[]; scrolled: boolean }> = {};
     for (const id of ['inline', 'item', 'cancel']) {
       const span = container.querySelector(`#${id}`)!;
@@ -463,8 +463,7 @@ describe('a form reset', () => {
     const container = html('<div id="host"></div>');
     const host = container.querySelector('#host')!;
     const shadow = host.attachShadow({ mode: 'open' });
-    const markup =
-      '<form id="owner"><input id="inside"></form><input id="outside" form="owner">';
+    const markup = '<form id="owner"><input id="inside"></form><input id="outside" form="owner">';
     container.insertAdjacentHTML('beforeend', markup);
     shadow.innerHTML = markup;
     const heard: string[] = [];
@@ -474,13 +473,19 @@ describe('a form reset', () => {
         control.getRootNode().addEventListener(
           'reset',
           (event) => {
-            if (event.target === control.form) heard.push(`${rootNode === document ? 'document' : 'shadow'} ${id}`);
+            if (event.target === control.form)
+              heard.push(`${rootNode === document ? 'document' : 'shadow'} ${id}`);
           },
           true,
         );
       }
       (rootNode as ParentNode).querySelector('form')!.reset();
     }
-    expect(heard).toEqual(['document inside', 'document outside', 'shadow inside', 'shadow outside']);
+    expect(heard).toEqual([
+      'document inside',
+      'document outside',
+      'shadow inside',
+      'shadow outside',
+    ]);
   });
 });

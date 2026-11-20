@@ -201,7 +201,10 @@ describe('Enter', () => {
 
   test('does not submit when a listener of the input or of an ancestor prevents the key', async () => {
     const prevent = (event: KeyboardEvent) => event.key === 'Enter' && event.preventDefault();
-    const { input } = await mountField({ root: { defaultValue: 1 }, input: { onKeydown: prevent } });
+    const { input } = await mountField({
+      root: { defaultValue: 1 },
+      input: { onKeydown: prevent },
+    });
     input.focus();
     await userEvent.keyboard('{Enter}');
     const second = await mountField({ root: { defaultValue: 1 } });
@@ -284,7 +287,7 @@ describe('Field and Form', () => {
     expect(submits).toEqual([{ amount: 4 }]);
   });
 
-  test('a reset of the form removes the error and the value of the field', async () => {
+  test('VUE-21: a reset of the form removes the error and the value of the field', async () => {
     const { form, input, numberField } = await mountInField({
       field: { invalid: false, validationMode: 'change', validate: () => 'Wrong.' },
       root: { defaultValue: 1 },
@@ -300,7 +303,7 @@ describe('Field and Form', () => {
   });
 });
 
-describe('a disabled fieldset', () => {
+describe('VUE-112: a disabled fieldset', () => {
   test.each([
     { kind: 'a native fieldset', native: true },
     { kind: 'a Fieldset.Root with another element', native: false },

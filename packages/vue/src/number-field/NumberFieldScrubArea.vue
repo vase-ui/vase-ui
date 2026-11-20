@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
+import { ownerWindow } from '../common/owner';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldScrubAreaProps, NumberFieldScrubAreaState } from './types';
 
 interface Scrub {
+  readonly window: Window;
   readonly pointerId: number;
   readonly start: number | null;
   /** The end of the line is to the left. */
@@ -48,7 +50,7 @@ function elementProps() {
   return mergeProps(
     {
       role: 'presentation',
-      style: { userSelect: 'none', WebkitUserSelect: 'none' },
+      style: { userSelect: 'none', '-webkit-user-select': 'none' },
       ...stateAttributes(root.state),
       onPointerdown,
       onTouchstart,
@@ -66,19 +68,22 @@ function onPointerdown(event: PointerEvent) {
     root.focusInput();
   }
   end();
+  const area = event.currentTarget as Element;
+  const win = ownerWindow(area);
   scrub = {
+    window: win,
     pointerId: event.pointerId,
     start: state.value,
-    rtl: getComputedStyle(event.currentTarget as Element).direction === 'rtl',
+    rtl: win.getComputedStyle(area).direction === 'rtl',
     x: event.clientX,
     y: event.clientY,
     distance: 0,
   };
   root.setScrubbing(true);
-  window.addEventListener('pointermove', onMove);
+  win.addEventListener('pointermove', onMove);
   // An ancestor can stop `pointerup` before it gets to the area (measured).
-  window.addEventListener('pointerup', onRelease, true);
-  window.addEventListener('pointercancel', onCancel, true);
+  win.addEventListener('pointerup', onRelease, true);
+  win.addEventListener('pointercancel', onCancel, true);
 }
 
 // `touch-action` does not apply to an inline element, so the area cancels the touch to keep the
@@ -94,11 +99,7 @@ function onMove(event: PointerEvent) {
   // A move toward the end of the line, or up, steps up.
   const moveX = event.clientX - current.x;
   current.distance +=
-    props.orientation === 'horizontal'
-      ? current.rtl
-        ? -moveX
-        : moveX
-      : current.y - event.clientY;
+    props.orientation === 'horizontal' ? (current.rtl ? -moveX : moveX) : current.y - event.clientY;
   current.x = event.clientX;
   current.y = event.clientY;
   const size = props.pixelSensitivity > 0 ? props.pixelSensitivity : 1;
@@ -121,9 +122,9 @@ function end(release?: PointerEvent) {
   const current = scrub;
   if (!current) return;
   scrub = undefined;
-  window.removeEventListener('pointermove', onMove);
-  window.removeEventListener('pointerup', onRelease, true);
-  window.removeEventListener('pointercancel', onCancel, true);
+  current.window.removeEventListener('pointermove', onMove);
+  current.window.removeEventListener('pointerup', onRelease, true);
+  current.window.removeEventListener('pointercancel', onCancel, true);
   root.setScrubbing(false);
   const { value } = root.state;
   if (release && value !== current.start) root.commit(value, 'scrub', release);

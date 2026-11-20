@@ -19,7 +19,9 @@ defineExpose({ input, increment });
       <NumberField.Group>
         <template #element="{ props, elementRef, state: groupState }">
           <article v-bind="props" :ref="elementRef" :data-text="groupState.inputValue">
-            <NumberField.ScrubArea as="label" for="parts-input" class="Area">Amount</NumberField.ScrubArea>
+            <NumberField.ScrubArea as="label" for="parts-input" class="Area"
+              >Amount</NumberField.ScrubArea
+            >
             <NumberField.Decrement aria-label="Decrease">
               <template #default="{ state: buttonState }">{{
                 buttonState.disabled ? 'off' : '−'

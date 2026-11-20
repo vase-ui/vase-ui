@@ -140,7 +140,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 <<< ../examples/forms/ConstraintValidation.vue{8}
 
-A form component such as `Select` or `NumberField` uses a hidden input to take part in native form submission and validation. `Input`, `Checkbox`, `Radio` and `Switch` are native inputs, so the browser places their messages. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
+A form component such as `Select` or `NumberField` uses a hidden input to take part in native form submission and validation. `Input`, `Checkbox`, `Radio` and `Switch` are native inputs, so the browser places their messages. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the component in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport. The hidden input of `NumberField.Root` is its last child, and it is `position: absolute` with each `name`.
 
 `Select.Root` renders its hidden input after its children. Put the container around `Select.Root`, not only around `Select.Trigger`:
 

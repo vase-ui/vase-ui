@@ -124,11 +124,15 @@ function onBeforeinput(event: InputEvent) {
   const next =
     event.inputType === 'insertFromDrop'
       ? value + data
-      : value.slice(0, selectionStart ?? value.length) + data + value.slice(selectionEnd ?? value.length);
+      : value.slice(0, selectionStart ?? value.length) +
+        data +
+        value.slice(selectionEnd ?? value.length);
   const { text } = root;
   if (
     !text.accepts(next, root.negative) ||
-    (event.inputType === 'insertFromPaste' ? text.parse(next) === undefined : text.hasDuplicates(next))
+    (event.inputType === 'insertFromPaste'
+      ? text.parse(next) === undefined
+      : text.hasDuplicates(next))
   ) {
     event.preventDefault();
   }

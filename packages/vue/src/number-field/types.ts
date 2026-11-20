@@ -94,8 +94,10 @@ export type NumberFieldRootChangeEventReason =
   | 'scrub'
   | 'none';
 
-interface Details<Reason extends NumberFieldRootChangeEventReason, Of extends Event>
-  extends ChangeEventDetails<Reason> {
+interface Details<
+  Reason extends NumberFieldRootChangeEventReason,
+  Of extends Event,
+> extends ChangeEventDetails<Reason> {
   event: Of;
   /** `1` or `-1` for a step from a number. */
   direction?: 1 | -1;
