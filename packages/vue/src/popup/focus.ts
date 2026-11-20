@@ -96,6 +96,12 @@ export function usePopupFocus(
     placed: () => boolean;
     initialFocus: () => FocusTarget | undefined;
     finalFocus: () => FocusTarget | undefined;
+    /**
+     * The reasons of a close that move no focus. With this option, the return also runs for a popup
+     * that took no focus at its open.
+     * @default ['focus-out']
+     */
+    noReturn?: readonly string[];
   },
 ) {
   let before: Element | null = null;
@@ -136,11 +142,11 @@ export function usePopupFocus(
 
   function returnFocus() {
     const popup = root.popup;
-    if (!took || !popup) return;
+    if ((!took && !options.noReturn) || !popup) return;
     took = false;
     // The focus stays where it went: after a move out of the popup, and after a press outside.
     // During `focusout`, the active element is `<body>`.
-    if (root.reason === 'focus-out') return;
+    if ((options.noReturn ?? ['focus-out']).includes(root.reason ?? '')) return;
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
     if (active && active !== doc.body && !popup.contains(active)) return;
@@ -184,8 +190,8 @@ export function usePopupFocus(
   };
 }
 
-// The first tab stop after the trigger in the document, outside the elements of the popup.
-function nextTabStop(trigger: Element, popupElements: Element[]) {
+/** The first tab stop after the trigger in the document, outside the elements of the popup. */
+export function nextTabStop(trigger: Element, popupElements: Element[]) {
   return tabbables(ownerDocument(trigger).body).find(
     (stop) =>
       !popupElements.some((element) => element.contains(stop)) &&

@@ -34,6 +34,15 @@ export interface PopupPortalProps {
 // One key for each popup family, so that a popup in a popup has the target of its parent.
 const targetKey: InjectionKey<() => PortalTarget> = Symbol('portal target');
 
+/**
+ * Gives the portals below the component the target that the function gives from the inherited
+ * one, such as the target of a portal that is not above them in the component tree.
+ */
+export function providePortalTarget(target: (inherited: PortalTarget) => PortalTarget) {
+  const inherited = inject(targetKey, () => 'body');
+  provide(targetKey, () => target(inherited()));
+}
+
 export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
   const inherited = inject(targetKey, () => 'body');
   const target = computed(() => (props.to === undefined ? inherited() : props.to));
@@ -105,6 +114,8 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     blocks,
     blockStyle,
     sentinelStyle: visuallyHidden,
+    before,
+    after,
     setBlock: (element: unknown) => (blockElement.value = element as HTMLElement | null),
     setBefore: (element: unknown) => (before.value = element as HTMLElement | null),
     setAfter: (element: unknown) => (after.value = element as HTMLElement | null),

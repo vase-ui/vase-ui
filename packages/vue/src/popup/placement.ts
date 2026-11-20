@@ -168,6 +168,8 @@ export function usePlacement(
     positioner: Readonly<Ref<HTMLElement | null>>;
     /** Places the positioner with insets from the edge that faces the anchor. */
     insets: () => boolean;
+    /** The shift keeps the popup in the layout viewport, so a pinch zoom does not move it. */
+    shiftInLayoutViewport?: boolean;
   },
 ) {
   const rtl = shallowRef(false);
@@ -240,6 +242,7 @@ export function usePlacement(
         ? null
         : shift({
             ...common,
+            ...(options.shiftInLayoutViewport && { rootBoundary: 'layoutViewport' as const }),
             mainAxis: alignMode.value !== 'none',
             crossAxis: props.sticky || shiftsSide,
             limiter: props.sticky
@@ -368,6 +371,8 @@ export function usePlacement(
   return {
     style,
     side,
+    /** The side with the text direction applied: `top`, `bottom`, `left` or `right`. */
+    physicalSide: placedSide,
     align,
     anchorHidden,
     placed,

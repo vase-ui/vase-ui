@@ -1,4 +1,4 @@
-import { onScopeDispose, watch, type Ref } from 'vue';
+import { onScopeDispose, shallowRef, watch, type Ref, type ShallowRef } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
@@ -11,6 +11,19 @@ type Point = { x: number; y: number };
 const PATIENT_PRESS = 500;
 // The pointer that stops in the triangle to the popup for this time closes the popup.
 const REST_IN_TRIANGLE = 40;
+
+// For each root, the pointer moves in the triangle to its popup. No other trigger of the root opens
+// by hover in this time.
+const crossings = new WeakMap<PopupRoot, ShallowRef<boolean>>();
+
+function crossingOf(root: PopupRoot) {
+  let crossing = crossings.get(root);
+  if (!crossing) {
+    crossing = shallowRef(false);
+    crossings.set(root, crossing);
+  }
+  return crossing;
+}
 
 /**
  * Opens a popup when a mouse rests on its trigger, and closes it when the pointer leaves the
@@ -26,12 +39,16 @@ export function usePopupHover(
     closeDelay: () => number;
     /** The element is in the popup or in a popup above it. */
     inside: (element: Element) => boolean;
+    /** A pointer that leaves closes the popup. */
+    closes?: () => boolean;
   },
 ) {
   const openTimer = useTimeout();
   const closeTimer = useTimeout();
   const restTimer = useTimeout();
   let openedAt = -Infinity;
+  // The `pointerenter` of the pointer that is on the trigger.
+  let entered: PointerEvent | null = null;
 
   const hoverOpen = () => {
     const current = root();
@@ -55,6 +72,8 @@ export function usePopupHover(
       // trigger in the delay.
       if (!element || !current || !options.enabled()) return;
       if (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true') return;
+      // The watcher of the crossing opens it when the pointer leaves the triangle on the trigger.
+      if (crossingOf(current).value && current.activeTrigger !== element) return;
       current.request(true, 'trigger-hover', event, element);
       if (current.open && current.reason === 'trigger-hover') {
         openedAt = ownerWindow(element).performance.now();
@@ -66,6 +85,7 @@ export function usePopupHover(
   // A popup that is open for this trigger keeps the time of its open, for the press after it.
   function onPointerenter(event: PointerEvent) {
     const current = root();
+    entered = event;
     if (
       !options.enabled() ||
       event.pointerType === 'touch' ||
@@ -82,8 +102,20 @@ export function usePopupHover(
   }
 
   function onPointerleave() {
+    entered = null;
     openTimer.clear();
   }
+
+  watch(
+    () => {
+      const current = root();
+      return !!current && crossingOf(current).value;
+    },
+    (crossing) => {
+      if (!crossing && entered) onPointerenter(entered);
+    },
+    { flush: 'sync' },
+  );
 
   // While the hover keeps the popup open, one listener of the document follows the pointer.
   let from: Point | null = null;
@@ -101,11 +133,17 @@ export function usePopupHover(
           addEventListener(doc.documentElement, 'pointerleave', close),
           closeTimer.clear,
           restTimer.clear,
+          () => setCrossing(false),
         ),
       );
     },
     { flush: 'sync' },
   );
+
+  function setCrossing(crossing: boolean) {
+    const current = root();
+    if (current) crossingOf(current).value = crossing;
+  }
 
   function follow(event: PointerEvent) {
     const trigger = options.trigger.value;
@@ -114,11 +152,13 @@ export function usePopupHover(
     restTimer.clear();
     if (trigger?.contains(target)) {
       over = 'trigger';
+      setCrossing(false);
       closeTimer.clear();
       return;
     }
     if (options.inside(target)) {
       over = 'popup';
+      setCrossing(false);
       closeTimer.clear();
       return;
     }
@@ -126,15 +166,21 @@ export function usePopupHover(
     over = 'outside';
     const popup = root()?.popup;
     if (from && trigger && popup && inTriangle(point, from, trigger, popup)) {
-      restTimer.start(REST_IN_TRIANGLE, close);
+      setCrossing(true);
+      restTimer.start(REST_IN_TRIANGLE, () => {
+        setCrossing(false);
+        close();
+      });
       return;
     }
     from = null;
+    // Another trigger under the pointer starts its open before this close.
+    setCrossing(false);
     close();
   }
 
   function close() {
-    if (closeTimer.isStarted()) return;
+    if (closeTimer.isStarted() || options.closes?.() === false) return;
     // The timer stops when a press keeps the popup open or the popup moves to another trigger.
     closeTimer.start(options.closeDelay(), () =>
       root()?.request(false, 'trigger-hover', new Event('vase-ui')),
