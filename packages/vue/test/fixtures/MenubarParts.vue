@@ -5,7 +5,8 @@ import { Menubar } from '../../src/menubar';
 
 type Props = Record<string, unknown>;
 
-// A bar of three menus with two items each, and an input before and after it.
+// A bar of three menus with two items each, and an input before and after it. The bar shows its
+// slot state.
 defineProps({
   bar: Object as PropType<Props>,
   roots: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
@@ -15,7 +16,10 @@ defineProps({
 
 <template>
   <input id="before" aria-label="Before" />
-  <Menubar data-testid="bar" v-bind="bar">
+  <Menubar v-slot="{ state }" data-testid="bar" v-bind="bar">
+    <span data-testid="state"
+      >{{ state.hasSubmenuOpen }} {{ state.orientation }} {{ state.modal }}</span
+    >
     <Menu.Root v-for="key in ['file', 'edit', 'view']" :key="key" v-bind="roots[key]">
       <Menu.Trigger :data-key="key" v-bind="triggers[key]">{{ key }}</Menu.Trigger>
       <Menu.Portal>

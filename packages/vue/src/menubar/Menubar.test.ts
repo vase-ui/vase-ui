@@ -66,6 +66,14 @@ describe('the bar', () => {
     expect(active()).toBe(element('file'));
   });
 
+  test('a disabled bar disables each trigger and opens no menu', async () => {
+    await mountBar({ bar: { disabled: true } });
+    for (const key of ['file', 'edit', 'view']) expect(element(key)).toBeDisabled();
+    await userEvent.click(element('file'), { force: true });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popupOf('file')).toBe(null);
+  });
+
   test('a disabled trigger is out of the keys and is no tab stop', async () => {
     await mountBar({ triggers: { file: { disabled: true } } });
     expect(element('edit')).toHaveAttribute('tabindex', '0');
@@ -74,14 +82,16 @@ describe('the bar', () => {
     expect(active()).toBe(element('view'));
   });
 
-  test('ArrowDown opens the menu with its first item; ArrowUp opens nothing', async () => {
-    await mountBar();
+  test('ArrowDown opens the menu with its first item; ArrowUp opens nothing; the slot state says that a menu is open', async () => {
+    await mountBar({ bar: { modal: false } });
+    expect(byTestId('state')).toHaveTextContent('false horizontal false');
     element('file').focus();
     await userEvent.keyboard('{ArrowUp}');
     await nextTick();
     expect(popupOf('file')).toBe(null);
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(active()).toBe(element('file-1')));
+    expect(byTestId('state')).toHaveTextContent('true horizontal false');
   });
 
   test('a vertical bar opens a menu with the arrow key across it', async () => {
@@ -115,6 +125,19 @@ describe('while a menu of the bar is open', () => {
     await userEvent.pointer({ coords: { x: 5, y: 400 } });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(popupOf('edit')).not.toBe(null);
+  });
+
+  test('a menu that its `open` prop opens closes the open one with `sibling-open`', async () => {
+    const log: string[] = [];
+    const roots = logged(log);
+    roots.edit!.open = false;
+    await mountBar({ roots });
+    await userEvent.click(element('file'));
+    await waitFor(() => expect(popupOf('file')).not.toBe(null));
+    roots.edit!.open = true;
+    await waitFor(() => expect(popupOf('edit')).not.toBe(null));
+    await waitFor(() => expect(popupOf('file')).toBe(null));
+    expect(log).toEqual(['file true trigger-press', 'file false sibling-open']);
   });
 
   test('an arrow key of the bar that moves to the next menu prevents its default; with `loopFocus` false, the key at the end keeps the menu open', async () => {

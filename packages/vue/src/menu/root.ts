@@ -164,8 +164,10 @@ export function useMenuRoot<Payload>(
   const provider = place === 'context' ? null : inject(filterProviderKey, null);
   provide(filterProviderKey, null);
 
-  // The open closed another menu of the menubar.
+  // The open closes another menu of the menubar.
   let replacesSibling = false;
+  // The event of the last accepted open, for the close of the menu that it replaces.
+  let openEvent: Event | undefined;
   const root = usePopupRoot<Payload>({
     name: 'Menu',
     open: () => props.open,
@@ -187,7 +189,7 @@ export function useMenuRoot<Payload>(
       }
       const sibling = parent ? parent.openChild : (menubar.value?.openMenu ?? null);
       replacesSibling = !!sibling && sibling !== context;
-      if (replacesSibling) sibling?.root.request(false, 'sibling-open', event);
+      openEvent = event;
     },
     emitOpen: (open) => emit('update:open', open),
     emitTriggerId: (id) => emit('update:triggerId', id),
@@ -344,7 +346,14 @@ export function useMenuRoot<Payload>(
   watch(
     () => root.open,
     (open) => {
-      if (!open) {
+      if (open) {
+        // A parent and a menubar have one open menu, also after an open by the `open` prop.
+        const sibling = parent ? parent.openChild : (menubar.value?.openMenu ?? null);
+        if (sibling && sibling !== context) {
+          sibling.root.request(false, 'sibling-open', openEvent ?? new Event('vase-ui'));
+        }
+        openEvent = undefined;
+      } else {
         if (list.highlighted) list.highlight(null, 'none');
         // A parent that closes with no event of the user closes its submenu.
         openChild.value?.root.request(false, 'sibling-open', new Event('vase-ui'));
