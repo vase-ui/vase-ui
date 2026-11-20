@@ -1,6 +1,6 @@
-import { matches } from '../internals/date-time/matchers';
-import { compareDates, isSameDay } from '../internals/date-time/temporal';
-import type { DateValue } from '../internals/date-time/temporal';
+import { matches } from '../common/date-time/matchers';
+import { compareDates, isSameDay } from '../common/date-time/temporal';
+import type { DateValue } from '../common/date-time/temporal';
 import { isInMonth, ownsDay } from './pages';
 import type { CalendarDateMatcher, CalendarDayState, CalendarPage } from './types';
 

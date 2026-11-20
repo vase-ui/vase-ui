@@ -3,6 +3,7 @@ import { shallowRef } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 
 const today = Temporal.PlainDate.from('2026-11-14');
 const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-11-10'));
@@ -24,8 +25,10 @@ const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-
             </template>
           </DateField.Input>
         </DatePicker.Field>
-        <DatePicker.Trigger data-testid="when-trigger">Open</DatePicker.Trigger>
-        <DatePicker.Portal>
+        <DatePicker.Trigger data-testid="when-trigger" aria-label="Choose date"
+          >Open</DatePicker.Trigger
+        >
+        <Popover.Portal>
           <DatePicker.Positioner>
             <DatePicker.Popup aria-label="Choose date" data-testid="when-popup">
               <DatePicker.Calendar :today="today" data-testid="when-calendar">
@@ -51,7 +54,7 @@ const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-
               </DatePicker.Calendar>
             </DatePicker.Popup>
           </DatePicker.Positioner>
-        </DatePicker.Portal>
+        </Popover.Portal>
       </DatePicker.Root>
     </form>
     <output data-testid="when-value">{{ day?.toString() ?? '' }}</output>

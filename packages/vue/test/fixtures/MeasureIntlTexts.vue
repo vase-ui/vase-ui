@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { localeCalendar } from '../../src/internals/date-time/format';
+import { localeCalendar } from '../../src/common/date-time/format';
 
 // For each locale: the texts that the calendar parts take from `Intl` for a Gregorian date and a
 // range of years, then the calendar of the locale. A server render and a client render give the same HTML when the

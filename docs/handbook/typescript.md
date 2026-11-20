@@ -34,7 +34,7 @@ See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that 
 
 The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.
 
-The render slot passes its state to a typed function that selects the class of the positioner.
+The `element` slot passes its state to a typed function that selects the class of the positioner.
 
 <<< ../examples/typescript/PositionerState.vue{4-6,14-15,17-20}
 
@@ -72,4 +72,4 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `model-value` and no `default-value`.
 
-A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot or the `#render` slot of the other part, and bind `props` on it.
+A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot of the other part, and bind `props` on it.

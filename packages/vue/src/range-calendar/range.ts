@@ -1,13 +1,13 @@
-import { computed, shallowRef, watch } from 'vue';
+import { computed, inject, shallowRef, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
+import { pickerControlKey } from '../common/picker/control';
 import { useModel } from '../common/model';
 import { isDisabledDay } from '../calendar/days';
 import type { CalendarSelection } from '../calendar/root';
 import type { CalendarRootChangeEventDetails } from '../calendar/types';
-import { matches } from '../internals/date-time/matchers';
-import { compareDates, isSameDay, toPlainDate, withDate } from '../internals/date-time/temporal';
-import type { DateValue } from '../internals/date-time/temporal';
-import type { RangeCalendarHost } from './host';
+import { matches } from '../common/date-time/matchers';
+import { compareDates, isSameDay, toPlainDate, withDate } from '../common/date-time/temporal';
+import type { DateValue } from '../common/date-time/temporal';
 import type {
   RangeCalendarRootChangeEventDetails,
   RangeCalendarRootProps,
@@ -55,8 +55,8 @@ export function useRange(
     (event: 'valueChange', value: Value, details: RangeCalendarRootChangeEventDetails): void;
     (event: 'update:modelValue', value: Value): void;
   },
-  host: RangeCalendarHost | null,
 ) {
+  const picker = inject(pickerControlKey, null);
   const model = useModel<Ends>(() => props.modelValue, props.defaultValue ?? EMPTY);
   const values = computed(() =>
     model.value.value.filter((end: DateValue | null): end is DateValue => end !== null),
@@ -207,13 +207,15 @@ export function useRange(
     press(date, details) {
       if (skipClick && (details.event as MouseEvent).detail > 0) {
         skipClick = false;
-        return;
+        return false;
       }
       extension = null;
       const first = lone.value;
       const range = first && rangeBetween(first, date);
-      if (range) commitRange(range, toRange(details));
-      else startRange(date, toRange(details));
+      // Only the press that gives the second end completes a pick.
+      if (range) return commitRange(range, toRange(details));
+      startRange(date, toRange(details));
+      return false;
     },
     extend(date, details, from) {
       const anchor =
@@ -229,22 +231,28 @@ export function useRange(
     if (lone.value && !props.readonly && !isBlocked(date)) previewDate.value = date;
   }
 
-  /** Escape ends a drag, or puts back the range from before the first press of a range in progress. */
+  /**
+   * Escape ends a drag, or puts back the range from before the first press of a range in progress.
+   * Then the root prevents the key, and the picker around the calendar closes its popup.
+   */
   function cancel(event: KeyboardEvent) {
     if (drag.value) {
       drag.value = null;
       // The release after Escape still clicks the button that holds the pointer.
       skipClick = true;
-      return true;
+    } else {
+      const day = lone.value;
+      if (!day || props.readonly || props.disabled) return;
+      extension = null;
+      const before = pending && isSameDay(pending.anchor, day) ? pending.before : EMPTY;
+      // A listener that cancels the change keeps the range in progress, so the next Escape puts
+      // back the same range.
+      if (commit([before[0], before[1]], createChangeEventDetails('keyboard', event))) {
+        pending = null;
+      }
     }
-    const day = lone.value;
-    if (!day || props.readonly || props.disabled) return false;
-    extension = null;
-    const before = pending && isSameDay(pending.anchor, day) ? pending.before : EMPTY;
-    // A listener that cancels the change keeps the range in progress, so the next Escape puts
-    // back the same range.
-    if (commit([before[0], before[1]], createChangeEventDetails('keyboard', event))) pending = null;
-    return true;
+    event.preventDefault();
+    picker?.onCancel(event);
   }
 
   function dragTo(date: Temporal.PlainDate) {
@@ -267,8 +275,9 @@ export function useRange(
     const range = rangeBetween(dragged.anchor, dragged.current);
     if (!range) return;
     const details = createChangeEventDetails('drag', event);
-    // The drag picks the range that the value already has, so the host learns of it.
-    if (!commitRange(range, details) && !details.isCanceled) host?.onSameRange(event);
+    commitRange(range, details);
+    // A drag completes a pick, also on the range that the value has.
+    if (!details.isCanceled) picker?.onPick(event);
   }
 
   return {

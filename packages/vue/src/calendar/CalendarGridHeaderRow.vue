@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import type { DayOfWeek } from '../internals/date-time/temporal';
+import type { DayOfWeek } from '../common/date-time/temporal';
 import { injectMonth } from './month';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarGridHeaderRowProps, CalendarGridHeaderRowState } from './types';

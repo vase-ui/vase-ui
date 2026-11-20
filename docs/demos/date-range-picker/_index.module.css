@@ -143,7 +143,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -152,7 +152,7 @@
     }
   }
 
-  &[data-popup-open] {
+  &[aria-expanded='true'] {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -160,7 +160,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -200,12 +200,12 @@
     color: white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.98);
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .Calendar {

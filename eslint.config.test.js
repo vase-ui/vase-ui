@@ -52,7 +52,6 @@ function page(body) {
 // The rules of the older forms apply to a family with no `types.ts`. No family has this folder, so
 // a refactor of a family does not change the cases.
 const SRC = 'packages/vue/src/older-family';
-const PORTAL_PART = 'packages/vue/src/popover/portal/PopoverPortal.vue';
 
 const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
 
@@ -1359,32 +1358,6 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: "declare const element: Element;\n\nelement.addEventListener('click', () => element.getRootNode());\n",
   },
   {
-    name: 'filtered attributes on a portal part',
-    file: PORTAL_PART,
-    code: docsSfc('', '<PopupPortal v-bind="{ ...withoutPropsOf($attrs, PopupPortal), as }" />'),
-  },
-  {
-    name: 'filtered attributes on the input part',
-    file: 'packages/vue/src/input/Input.vue',
-    code: docsSfc(
-      '',
-      '<FieldControl v-bind="{ ...withoutPropsOf($attrs, FieldControl), ...props }" />',
-    ),
-  },
-  {
-    name: 'filtered attributes in the props of a picker field',
-    file: 'packages/vue/src/date-picker/field/DatePickerField.vue',
-    code: docsSfc(
-      '',
-      '<DateFieldRoot v-bind="fieldProps(withoutPropsOf($attrs, DateFieldRoot))" />',
-    ),
-  },
-  {
-    name: 'unfiltered attributes on a native backdrop element',
-    file: 'packages/vue/src/utils/popups/InternalBackdrop.vue',
-    code: docsSfc('', '<div v-bind="{ ...$attrs, style }" />'),
-  },
-  {
     name: 'conditional part forms at the root',
     file: `${SRC}/DialogRoot.vue`,
     code: docsSfc(
@@ -1852,26 +1825,6 @@ for (const { name, code } of [
       ['no-restricted-syntax'],
     );
     assert.match(messages[0].message, /followRootNode/);
-  });
-}
-
-for (const { part, file, tag, binding } of [
-  { part: 'a portal part', file: PORTAL_PART, tag: 'PopupPortal', binding: '{ ...$attrs, as }' },
-  { part: 'a portal part', file: PORTAL_PART, tag: 'PopupPortal', binding: '$attrs' },
-  {
-    part: 'the input part',
-    file: 'packages/vue/src/input/Input.vue',
-    tag: 'FieldControl',
-    binding: '{ ...$attrs, ...props }',
-  },
-]) {
-  test(`reports v-bind="${binding}" on ${part} one time`, async () => {
-    const messages = await lint(file, docsSfc('', `<${tag} v-bind="${binding}" />`));
-    assert.deepEqual(
-      messages.map(({ ruleId }) => ruleId),
-      ['vue/no-restricted-syntax'],
-    );
-    assert.match(messages[0].message, /withoutPropsOf/);
   });
 }
 

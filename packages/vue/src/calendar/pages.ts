@@ -1,6 +1,6 @@
-import { formatRangeText, formatText } from '../internals/date-time/calendar/formatText';
-import { compareDates } from '../internals/date-time/temporal';
-import type { DayOfWeek } from '../internals/date-time/temporal';
+import { formatRangeText, formatText } from '../common/date-time/text';
+import { compareDates } from '../common/date-time/temporal';
+import type { DayOfWeek } from '../common/date-time/temporal';
 import type { CalendarPage, CalendarVisibleDuration, CalendarWeek } from './types';
 
 const DAYS_OF_WEEK: readonly DayOfWeek[] = [1, 2, 3, 4, 5, 6, 7];

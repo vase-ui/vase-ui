@@ -2,20 +2,21 @@
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Calendar } from '@vase-ui/vue/calendar';
+import { Popover } from '@vase-ui/vue/popover';
 </script>
 
 <template>
   <DateRangePicker.Root>
-    <DateRangePicker.StartField>
+    <DateRangePicker.StartField aria-label="Start date">
       <DateField.Input />
     </DateRangePicker.StartField>
-    <DateRangePicker.EndField>
+    <DateRangePicker.EndField aria-label="End date">
       <DateField.Input />
     </DateRangePicker.EndField>
-    <DateRangePicker.Trigger />
-    <DateRangePicker.Portal>
+    <DateRangePicker.Trigger aria-label="Choose dates" />
+    <Popover.Portal>
       <DateRangePicker.Positioner>
-        <DateRangePicker.Popup>
+        <DateRangePicker.Popup aria-label="Choose dates">
           <DateRangePicker.Calendar>
             <Calendar.PreviousButton />
             <Calendar.NextButton />
@@ -47,9 +48,9 @@ import { Calendar } from '@vase-ui/vue/calendar';
               </template>
             </Calendar.Months>
           </DateRangePicker.Calendar>
-          <DateRangePicker.Close />
+          <Popover.Close />
         </DateRangePicker.Popup>
       </DateRangePicker.Positioner>
-    </DateRangePicker.Portal>
+    </Popover.Portal>
   </DateRangePicker.Root>
 </template>

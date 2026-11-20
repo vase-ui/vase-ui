@@ -2,6 +2,7 @@
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import { TimeField } from '@vase-ui/vue/time-field';
 </script>
 
@@ -10,10 +11,10 @@ import { TimeField } from '@vase-ui/vue/time-field';
     <DatePicker.Field>
       <DateField.Input />
     </DatePicker.Field>
-    <DatePicker.Trigger />
-    <DatePicker.Portal>
+    <DatePicker.Trigger aria-label="Choose date" />
+    <Popover.Portal>
       <DatePicker.Positioner>
-        <DatePicker.Popup>
+        <DatePicker.Popup aria-label="Choose a date">
           <DatePicker.Calendar>
             <Calendar.PreviousButton />
             <Calendar.NextButton />
@@ -45,12 +46,12 @@ import { TimeField } from '@vase-ui/vue/time-field';
               </template>
             </Calendar.Months>
           </DatePicker.Calendar>
-          <DatePicker.TimeField>
+          <DatePicker.TimeField aria-label="Time">
             <TimeField.Input />
           </DatePicker.TimeField>
-          <DatePicker.Close />
+          <Popover.Close />
         </DatePicker.Popup>
       </DatePicker.Positioner>
-    </DatePicker.Portal>
+    </Popover.Portal>
   </DatePicker.Root>
 </template>

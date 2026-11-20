@@ -12,17 +12,14 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
-import { hourCycleOf } from '../internals/date-time/format';
-import {
-  PickerClockOwner,
-  usePickerControl,
-} from '../internals/date-time/picker/PickerControlContext';
+import { hourCycleOf } from '../common/date-time/format';
+import { usePickerControl } from '../common/picker/control';
 import {
   assertTemporal,
   toPlainTime,
   withTime,
   type TimeValue,
-} from '../internals/date-time/temporal';
+} from '../common/date-time/temporal';
 import { useLocale } from '../locale-provider/part';
 import { clockAttributes, clockKey } from './clock';
 import type {
@@ -111,9 +108,7 @@ const dragging = shallowRef(false);
 const numberElements = shallowReactive(new Map<Element, () => TimeClockFaceNumber>());
 
 const rangeInput = shallowRef<HTMLInputElement | null>(null);
-// The time picker gives the focus to the range input of the face through it.
-// TODO(pickers): the refactor of the pickers removes it.
-usePickerControl(PickerClockOwner, () => rangeInput.value);
+usePickerControl(() => rangeInput.value);
 
 const shownHourCycle = computed(() => props.hourCycle ?? hourCycleOf(shownLocale.value));
 const grid = computed(() =>

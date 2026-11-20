@@ -140,7 +140,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -149,7 +149,7 @@
     }
   }
 
-  &[data-popup-open] {
+  &[aria-expanded='true'] {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -157,7 +157,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -197,12 +197,12 @@
     color: white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.98);
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.98);
 }
 
 .Calendar {
@@ -376,6 +376,11 @@
 
 .Item {
   box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
   display: flex;
   flex: none;
   align-items: center;
@@ -387,7 +392,7 @@
   cursor: pointer;
   user-select: none;
 
-  &:hover:not([data-selected]):not([data-disabled]) {
+  &:hover:not([aria-selected='true']):not(:disabled) {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -395,7 +400,7 @@
     }
   }
 
-  &[data-selected] {
+  &[aria-selected='true'] {
     background-color: oklch(14.5% 0 0deg);
     color: white;
 
@@ -405,7 +410,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     opacity: 0.4;
     cursor: default;
   }
@@ -419,7 +424,7 @@
     }
   }
 
-  &[data-selected]:focus-visible {
+  &[aria-selected='true']:focus-visible {
     outline-color: white;
 
     @media (prefers-color-scheme: dark) {

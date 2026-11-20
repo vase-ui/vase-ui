@@ -2,10 +2,13 @@
 import { useId } from 'vue';
 import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
+import { Popover } from '@vase-ui/vue/popover';
 import styles from '../../_index.module.css';
 
 const id = useId();
 const defaultValue = Temporal.PlainTime.from('09:30');
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -25,7 +28,7 @@ const defaultValue = Temporal.PlainTime.from('09:30');
             </template>
           </TimeField.Input>
         </TimePicker.Field>
-        <TimePicker.Trigger :class="styles.Trigger">
+        <TimePicker.Trigger aria-label="Choose time" :class="styles.Trigger">
           <svg
             aria-hidden="true"
             width="16"
@@ -40,17 +43,23 @@ const defaultValue = Temporal.PlainTime.from('09:30');
           </svg>
         </TimePicker.Trigger>
       </div>
-      <TimePicker.Portal>
+      <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">
-            <TimePicker.List :class="styles.List">
-              <template #item="{ time }">
-                <TimePicker.Item :time="time" :class="styles.Item" />
-              </template>
-            </TimePicker.List>
-          </TimePicker.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">
+              <TimePicker.List aria-label="Times" :class="styles.List">
+                <template #item="{ time }">
+                  <TimePicker.Item :time="time" :class="styles.Item" />
+                </template>
+              </TimePicker.List>
+            </TimePicker.Popup>
+          </Transition>
         </TimePicker.Positioner>
-      </TimePicker.Portal>
+      </Popover.Portal>
     </TimePicker.Root>
   </div>
 </template>

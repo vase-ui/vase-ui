@@ -41,7 +41,7 @@ A utility to merge multiple sets of Vue props.
 
 ### Preventing Vase UI's default behavior
 
-When you use the `#render` slot, you bind `props` on your own element. To add listeners of your own to `props`, use `mergeProps`. Your handlers run first, and `event.preventVaseUIHandler()` stops the handlers of the part.
+When you use the `element` slot, you bind `props` on your own element. To add listeners of your own to `props`, use `mergeProps`. Your handlers run first, and `event.preventVaseUIHandler()` stops the handlers of the part.
 
 A Toggle has no `#render` slot. To keep its state while `locked` is `true`, this demo calls `details.cancel()` in `pressedChange`:
 

@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { LayoutCase, LayoutResult } from '../../../test/server/printSegmentLayouts';
-import { formatter } from '../../internals/date-time/format';
-import type { TemporalValue } from '../../internals/date-time/temporal';
+import { formatter } from '../date-time/format';
+import type { TemporalValue } from '../date-time/temporal';
 import type { SegmentLayoutOptions } from './layout';
 
 const PRINT_SEGMENT_LAYOUTS = fileURLToPath(

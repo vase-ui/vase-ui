@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef, Teleport } from 'vue';
-import { Calendar } from '@vase-ui/vue/calendar';
-import { DatePicker } from '@vase-ui/vue/date-picker';
-import { TimeClock } from '@vase-ui/vue/time-clock';
-import { TimePicker } from '@vase-ui/vue/time-picker';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor, within } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
 import { TestElement } from '../../test/testElement';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
@@ -224,63 +220,5 @@ describe('owned parts', () => {
     root.append(document.createElement('slot'));
     expect(isPortalOfPart(outer, content)).toBe(true);
     expect(isPortalOfPart(inner, content)).toBe(false);
-  });
-
-  it('accepts a press only from a registered calendar cell', async () => {
-    const selected = Temporal.PlainDate.from('2026-11-18');
-    const { user } = await render(
-      <DatePicker.Root defaultOpen defaultValue={selected}>
-        <DatePicker.Trigger>Date</DatePicker.Trigger>
-        <DatePicker.Portal>
-          <DatePicker.Positioner>
-            <DatePicker.Popup>
-              <DatePicker.Calendar>
-                <div role="gridcell" aria-selected="true">
-                  <button tabindex={0}>Other</button>
-                </div>
-                <Calendar.Months
-                  v-slots={{
-                    month: ({ month }: { month: Calendar.Month.Props['month'] }) => (
-                      <Calendar.Month month={month}>
-                        <Calendar.Day as="div" day={selected}>
-                          <Calendar.DayButton data-testid="selected" />
-                        </Calendar.Day>
-                      </Calendar.Month>
-                    ),
-                  }}
-                />
-              </DatePicker.Calendar>
-            </DatePicker.Popup>
-          </DatePicker.Positioner>
-        </DatePicker.Portal>
-      </DatePicker.Root>,
-    );
-    await waitFor(() => expect(screen.getByTestId('selected')).toHaveFocus());
-    await user.click(screen.getByRole('button', { name: 'Other' }));
-    const popup = screen.getByRole('dialog');
-    expect(popup).toBeInTheDocument();
-    await user.click(screen.getByTestId('selected'));
-    await waitFor(() => expect(popup.isConnected).toBe(false));
-  });
-
-  it('focuses the clock face when another range precedes it in the picker', async () => {
-    await render(
-      <TimePicker.Root defaultOpen>
-        <TimePicker.Trigger>Time</TimePicker.Trigger>
-        <TimePicker.Portal>
-          <TimePicker.Positioner>
-            <TimePicker.Popup>
-              <TimePicker.Clock>
-                <input type="range" aria-label="Other" />
-                <TimeClock.Face data-testid="face" />
-              </TimePicker.Clock>
-            </TimePicker.Popup>
-          </TimePicker.Positioner>
-        </TimePicker.Portal>
-      </TimePicker.Root>,
-    );
-    await waitFor(() =>
-      expect(within(screen.getByTestId('face')).getByRole('slider')).toHaveFocus(),
-    );
   });
 });

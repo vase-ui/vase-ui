@@ -28,8 +28,6 @@ The custom component needs one root element. Vue gives the attributes to that el
 
 Under the `element` slot, the part does not render its default slot. Put the content in your element. With `as`, the part keeps its content and its own nodes, such as the hidden text of `Progress.Root`.
 
-A family with the `element` slot has this form. Each other family has `as` and [the `#render` slot](#the-render-slot).
-
 The sample below sets the `size` prop of a component in the `element` slot of `Menu.Trigger`:
 
 <<< ../examples/composition/CustomTrigger.vue{9-11}
@@ -54,9 +52,9 @@ A blank ID reference attribute also counts as not set: `aria-describedby`, `aria
 
 A part keeps its own id when the `id` prop or attribute is empty or contains only white space. A title can then still name its dialog, and a label can still refer to its control. HTML requires a nonempty id with no ASCII white space.
 
-These rules apply to the props and attributes you give to a part. On the element in the `element` slot or the `#render` slot, an `id`, a name or an ID reference that you write after `v-bind="props"` wins even if it is blank or `undefined`. The same rule applies to those attributes in a later argument to `mergeProps`.
+These rules apply to the props and attributes you give to a part. On the element in the `element` slot, an `id`, a name or an ID reference that you write after `v-bind="props"` wins even if it is blank or `undefined`. The same rule applies to those attributes in a later argument to `mergeProps`.
 
-The slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class and the style. Bind it on your element with `v-bind="props"`. The `element` slot gives the `ref` setter apart, as `elementRef`. In the `#render` slot, `props` also holds the `ref` setter. In [Vapor mode](#vapor-mode), bind that setter by name too.
+The slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class and the style. Bind it on your element with `v-bind="props"`. The `element` slot gives the `ref` setter apart, as `elementRef`.
 
 Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
 
@@ -72,7 +70,7 @@ The rendered `<button>` gets:
 - `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
 - Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips the listeners of that element that run after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
 
-An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call the setter of the slot in a function ref: `:ref="(element) => { elementRef(element); own = element }"`. In the `#render` slot, the setter is `props.ref`.
+An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call the setter of the slot in a function ref: `:ref="(element) => { elementRef(element); own = element }"`.
 
 ## Changing the default rendered element
 
@@ -84,13 +82,11 @@ For example, `<Accordion.Header>` renders an `<h3>` element by default. The samp
 
 Each Vase UI part renders the most appropriate element by default. In most cases, render a different element only when you have a reason for it.
 
-## The render slot
+## Other slot props
 
-The families that the `element` slot does not replace yet have the `#render` slot. It gives you `props` and `state`. Bind `props` on your element. In a Vapor template, also bind `:ref="props.ref"`. Use `state` for the content, class or style.
+Some parts give the `element` slot more props. `TimePicker.Item` gives `text`, its time in the locale of the picker:
 
-<<< ../examples/composition/RenderSlot.vue{10-14}
-
-Under `#render`, the part does not render its default slot. Put the content in your element. The default slot also gets `{ state }`. Some parts give `#render` another slot prop, such as the `text` of `TimePicker.Item`.
+<<< ../examples/composition/ElementSlotText.vue{10-14}
 
 The `element` slot of `Slider.Thumb` gives its range input as `inputProps` and `inputRef`. Render the input in your element, or in another place:
 
@@ -110,8 +106,6 @@ Vue sets an absent Boolean prop to `false` unless the wrapper declares a default
 
 <<< ../examples/composition/MyAccordionPanelDefaults.vue{11-14}
 
-In a development build, some parts warn when a wrapper gives them a cast `false` that replaces a default or parent value. `Accordion.Panel` does not warn. The message names the wrapper, the part and the prop.
-
 An absent prop and `false` give different results in three cases.
 
 ### Parent or internal state
@@ -121,7 +115,7 @@ An absent prop and `false` give different results in three cases.
 - `DatePicker.Root`: absent `closeOnSelect` closes the popup for a value with no time. A value with a time keeps it open.
 - `TimePicker.Root`: without `closeOnSelect`, a list selection or a commit in the last clock view closes the popup. A column selection keeps it open.
 - `Field.Root`: absent `dirty` and `touched` let the field track its state. An explicit `false` holds that state at `false`.
-- `Calendar.Root`, `RangeCalendar.Root`, `DatePicker.Calendar` and `DateRangePicker.Calendar`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
+- `Calendar.Root` and `RangeCalendar.Root`: absent `showOutsideDays` is `true` with `broadcastCalendar`. An explicit `false` overrides this.
 - `Toast.Positioner`: absent `sticky` and `disableAnchorTracking` take the values of the `positionerProps` of the toast. An explicit `false` overrides these values.
 
 `Field.Root` treats `invalid` the same when it is absent or `false`.
@@ -152,7 +146,6 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 - `alignItemWithTrigger` on `Select.Positioner`.
 - `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
 - `pushPanels` on `Resizable.Root`.
-- `nativeButton` on button parts such as `Select.Trigger`.
 - `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 
@@ -160,9 +153,9 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 
 Vase UI parts are ordinary Vue components. An application in Vapor mode renders them with the `vaporInteropPlugin` of Vue.
 
-In a Vapor component (`<script setup vapor>`), bind the ref setter by name, beside `v-bind="props"`: `:ref="elementRef"` in the `element` slot, and `:ref="props.ref"` in the `#render` slot. Vapor does not apply the `ref` key of a bound object. Vue shows no warning. Without `:ref`, the part gets no element. For a part with the `#render` slot, a development build then shows a warning that names this binding.
+In a Vapor component (`<script setup vapor>`), bind the ref setter by name, beside `v-bind="props"`: `:ref="elementRef"` in the `element` slot. Vapor does not apply the `ref` key of a bound object. Vue shows no warning. Without `:ref`, the part gets no element.
 
-The rule applies to each element and each component that gets `props`. With nested slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipRef">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="props.ref"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
+The rule applies to each element and each component that gets `props`. With nested slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipRef">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="elementRef"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
 
 A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to the slots, also when the component that renders the part is not in Vapor mode.
 

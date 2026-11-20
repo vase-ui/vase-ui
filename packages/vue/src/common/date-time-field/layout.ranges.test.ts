@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { digits as getDigits } from '../../internals/date-time/format';
+import { digits as getDigits } from '../date-time/format';
 import type { HourCycle } from './layout';
 import {
   dayPeriodOfLetter,

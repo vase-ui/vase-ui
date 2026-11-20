@@ -48,8 +48,9 @@ Base UI has no date range picker. This one follows the [Date Picker Dialog patte
 
 ## Usage guidelines
 
-- **Each field must have an accessible name**: A field has the default name `Start date` or `End date`. In a `Field`, the label of the `Field` joins the default name of each field, as in `Start date Trip dates`. The `aria-labelledby` of a field replaces its default name. See the [forms guide](/handbook/forms).
-- **The popup must have a name**: Give `DateRangePicker.Popup` an `aria-label`, or put a `DateRangePicker.Title` in it.
+- **Each field must have an accessible name**: Give each field an `aria-label` in the language of the page, such as `Start date`. In a `Field`, the label of the `Field` joins that name, as in `Start date Trip dates`. A field with no `aria-label` in a `Field` has the name of the label alone. The `aria-labelledby` of a field replaces both. See the [forms guide](/handbook/forms).
+- **The trigger must have a name**: Give `DateRangePicker.Trigger` content or an `aria-label`. The `text` of its slots is the range in the locale.
+- **The popup must have a name**: Give `DateRangePicker.Popup` an `aria-label`, or put a `Popover.Title` in it.
 
 ## Anatomy
 
@@ -59,15 +60,15 @@ Import the component and assemble its parts:
 
 `DateRangePicker.Root` renders `Popover.Root` and no element of its own. It holds the range and shares it with its parts. `DateRangePicker.StartField` and `DateRangePicker.EndField` render `DateField.Root`, and `DateRangePicker.Calendar` renders `RangeCalendar.Root`. Write the parts of those components inside them, as the pages of [Date Field](/components/date-field) and [Range Calendar](/components/range-calendar) show.
 
-`DateRangePicker.Trigger`, `DateRangePicker.Positioner` and `DateRangePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover): `DateRangePicker.Portal`, `DateRangePicker.Arrow`, `DateRangePicker.Backdrop`, `DateRangePicker.Close`, `DateRangePicker.Title` and `DateRangePicker.Description`. The positioner puts the popup against the box around the two fields, and against the trigger when the picker has no field.
+`DateRangePicker.Trigger`, `DateRangePicker.Positioner` and `DateRangePicker.Popup` render `Popover.Trigger`, `Popover.Positioner` and `Popover.Popup`. The other parts of the popup are the parts of [Popover](/components/popover) by their own names: `Popover.Portal`, `Popover.Arrow`, `Popover.Backdrop`, `Popover.Close`, `Popover.Title` and `Popover.Description`. The positioner puts the popup against the box around the two fields, and against the trigger when the picker has no field.
 
-Each field has a hidden `<input>` after its element. A rule of `<style scoped>` thus does not match the fields, and `v-show` has no effect on them. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+A part that renders a part of another family takes each prop, attribute and event of that part that the picker does not own. The props that the picker owns, such as the range and the limits, are on `DateRangePicker.Root`.
 
 ## Value
 
 The value is a range of two `Temporal` objects, the first day and the last day. `v-model` gives back the same kind: a `Temporal.PlainDate`, a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`. An end is `null` while it has no value, and `null` is the same as `[null, null]`. A range in progress has its first day and a `null` last day.
 
-The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `minDate`, `maxDate`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readOnly`, `required` and `form`. Give the props of the range calendar that the root does not own, such as `numberOfMonths`, `minDays`, `maxDays` and `allowNonContiguousRanges`, to `DateRangePicker.Calendar`.
+The root owns the props that its parts share: `granularity`, `referenceDate`, `hourCycle`, `forceLeadingZeros`, `hideTimeZone`, `min`, `max`, `unavailableDates`, `locale`, `calendar`, `timeZone`, `disabled`, `readonly`, `required` and `form`. The default `locale` is the locale of the nearest `LocaleProvider`, else `en-US`. Give the props of the range calendar that the root does not own, such as `numberOfMonths`, `minDays`, `maxDays` and `allowNonContiguousRanges`, to `DateRangePicker.Calendar`.
 
 With no value, a new end has the kind that `granularity` and `referenceDate` give, as for [Date Field](/components/date-field#value). With a `granularity` that has a time, or a range with a time, the fields show the time segments. A press on a day keeps the time of the end that it replaces. A picker that the user empties keeps the kind of its last range.
 
@@ -77,11 +78,11 @@ In a [wrapper of `DateRangePicker.Root`](/handbook/composition#wrap-a-part), giv
 
 ## In a form
 
-Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. As in [Date Field](/components/date-field), each field reports a field with some segments empty as `badInput`, a limit that the input type cannot check as `rangeUnderflow` or `rangeOverflow`, and a date that `unavailableDates` matches as `customError`.
+Each field gives its end to a form through its hidden input. Name them with `startName` and `endName`. The hidden inputs have the type of the ends, so `min` and `max` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing` for each empty end. As in [Date Field](/components/date-field), each field reports a field with some segments empty as `badInput`, a limit that the input type cannot check as `rangeUnderflow` or `rangeOverflow`, and a date that `unavailableDates` matches as `customError`.
 
-The end field is invalid when it is before the first end of the range, or before `minDate`. Its `min` is the later of the two, so its hidden input gives `rangeUnderflow`, also for a zoned value. A change of the first end to a later moment than the last end also makes the end field invalid. A field that shows a time compares the time too, so a time that is before the first time of the same day is invalid. A field that shows no time compares days. Two zoned ends compare by the moment, also when they are in two time zones.
+The end field is invalid when it is before the first end of the range, or before `min`. Its `min` is the later of the two, so its hidden input gives `rangeUnderflow`, also for a zoned value. A change of the first end to a later moment than the last end also makes the end field invalid. A field that shows a time compares the time too, so a time that is before the first time of the same day is invalid. A field that shows no time compares days. Two zoned ends compare by the moment, also when they are in two time zones.
 
-Put the picker in a `Field` to show the errors of its validation. Do not give a `name` to that `Field`: it replaces `startName` and `endName` for both fields. A reset of the form puts an uncontrolled picker back to its default range.
+Put the picker in a `Field` to show the errors of its validation. The picker is the one control of the `Field`, and the `Field` gets the range: a change of either end validates. Each form input keeps the name of `startName` or `endName`, and the name of the `Field` is the key of its errors. The `Field` counts a leave only when the focus leaves both fields. A reset of the form gives the picker its first range, also a controlled picker, with `update:modelValue` only.
 
 ## Events
 
@@ -96,7 +97,6 @@ The root emits `valueChange` and `update:modelValue` for each change of the rang
 | `input-clear`           | The user removes a digit with the text input.            |
 | `input-paste`           | A paste in a segment.                                    |
 | `clear-press`           | A press on a clear button.                               |
-| `none`                  | A reset of the form, or a call of `clear()` of a field.  |
 
 | Reason of `openChange` | When                                                                 |
 | ---------------------- | -------------------------------------------------------------------- |
@@ -104,14 +104,14 @@ The root emits `valueChange` and `update:modelValue` for each change of the rang
 | `imperative-action`    | The second press or a drag closes the popup, or a call of `close()`. |
 | `escape-key`           | Escape closes the popup.                                             |
 | `outside-press`        | A press outside the popup closes it.                                 |
-| `close-press`          | A press on `DateRangePicker.Close`.                                  |
+| `close-press`          | A press on `Popover.Close`.                                          |
 | `focus-out`            | The focus leaves a popup that is not modal.                          |
 
 ## Server render
 
-The picker renders with `renderToString`. The server HTML has the two fields with their segments and their hidden inputs, and the trigger with its name. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount.
+The picker renders with `renderToString`. The server HTML has the two fields with their segments and their hidden inputs, and the trigger. It has no popup, also for a picker that is open at the mount, because the portal renders after the mount. No render reads the clock: the picker reads today at its mount and at each open.
 
-A server does not know the locale of the visitor. With no `locale` prop, the picker uses `en-US` until it mounts, and then the locale of the browser. See [Date Field](/components/date-field#server-render) and [Range Calendar](/components/range-calendar#server-render) for what a server and a browser can show in another way.
+The server and the browser use the same `locale`. An element that shows the `text` of the trigger needs `data-allow-mismatch="text"`, because a server can have other `Intl` data. See [Date Field](/components/date-field#server-render) and [Range Calendar](/components/range-calendar#server-render) for what a server and a browser can show in another way.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -128,16 +128,15 @@ The segments, the trigger and the calendar keep their own keys: see [Date Field]
 
 ## Accessibility
 
-- `DateRangePicker.Trigger` has `aria-haspopup="dialog"`. Its default name is `Choose dates`. With a range that has two ends, its name is `Change dates,` and the range in full. Give it an `aria-label` to change it.
-- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"`. Their default names are `Start date` and `End date`. The `aria-labelledby` of a field replaces its name. The label of a `Field` joins the name of each field: the `aria-labelledby` of the group holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`.
-- `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `DateRangePicker.Title`.
+- `DateRangePicker.Trigger` has `aria-haspopup="dialog"` and no name of its own. Give it content or an `aria-label`, such as `Choose dates`, or `Change dates` with the `text` of its slots, as in the [sample of Date Picker](/components/date-picker#accessibility).
+- `DateRangePicker.StartField` and `DateRangePicker.EndField` have `role="group"` and no name of their own. The label of a `Field` joins the `aria-label` of each field: the `aria-labelledby` of the group holds the `id` of the group and the `id` of the label, so the name is `Start date Trip dates`. The `aria-labelledby` of a field replaces both.
+- `DateRangePicker.Popup` has `role="dialog"`. Give it a name with `aria-label` or `Popover.Title`.
 - When the popup opens, the focus goes to the day that has the tab stop: the first day of the range, else today. When it closes, the focus goes back to the trigger. Give `initialFocus` to `DateRangePicker.Popup` to move the focus to another element, or `false` to move none.
-- A picker that is `disabled`, in a disabled fieldset or `readOnly` has a disabled trigger, and Alt and Down does nothing.
-- The default labels are in English. The dates in them follow the locale.
+- A picker that is `disabled`, in a disabled fieldset or `readonly` has a disabled trigger, and Alt and Down does nothing.
 
 ## Portal target
 
-Set `to` on `DateRangePicker.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `Popover.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
 
 ## API reference
 
