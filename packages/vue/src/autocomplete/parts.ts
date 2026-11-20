@@ -96,7 +96,7 @@ export namespace Value {
 
 /**
  * The text input.
- * Renders a `<input>` element.
+ * Renders an `<input>` element.
  */
 export const Input: typeof ComboboxInput = ComboboxInput;
 export namespace Input {

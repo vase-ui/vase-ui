@@ -45,6 +45,7 @@ function elementProps() {
       'aria-multiselectable': context.mode === 'multiple' ? 'true' : undefined,
       // In a grid the attribute says that the cells cannot change.
       'aria-readonly': context.readonly && !context.grid ? 'true' : undefined,
+      'data-empty': context.empty ? '' : undefined,
       // A press in the list keeps the focus on the input (test/measurements/combobox.test.ts, C1).
       onMousedown: (event: MouseEvent) => event.preventDefault(),
     },

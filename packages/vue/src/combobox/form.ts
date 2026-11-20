@@ -7,8 +7,8 @@ import type { ComboboxRootContext } from './root';
 import { createComboboxDetails } from './root';
 
 /**
- * The form of a root (rule 8.11): the values in hidden inputs with the name, and one text input
- * with no name for the constraint validation and the autofill. The field of the control.
+ * The form of a root: the values in hidden inputs with the name, and one text input with no name
+ * for the constraint validation and the autofill. The field of the control.
  */
 export function useComboboxForm(
   context: ComboboxRootContext,
@@ -49,7 +49,8 @@ export function useComboboxForm(
     const multiple = context.mode === 'multiple';
     return {
       type: works.value ? 'text' : 'hidden',
-      id: `${context.controlId}-hidden-input`,
+      // The control has its id after its mount, so the server HTML and the first render agree.
+      id: `${context.control?.id || context.controlId}-hidden-input`,
       value: multiple || context.value == null ? '' : textOf(context.value),
       form: context.form,
       autocomplete: options.autocomplete(),

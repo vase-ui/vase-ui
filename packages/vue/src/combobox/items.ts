@@ -79,8 +79,6 @@ export interface ItemCollection<Item = any, Value = any> {
   /** The source items, flat or in groups. `undefined` while they load. */
   data: readonly Item[] | readonly Group<Item>[] | undefined;
   value(item: Item): Value;
-  /** The value is the value of an item of the data. */
-  hasValue(value: Value, isEqual: ItemEqualityComparer<Value>): boolean;
   itemLabel(item: Item): string;
   /** The label of the item with the value, else `fallback` of the value. */
   label(
@@ -139,7 +137,6 @@ export function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(
     // Data that has not loaded stays no data, not an empty list that the filter empties.
     data,
     value: (item) => (item == null ? (item as unknown as Value) : getValue(item)),
-    hasValue: (value, isEqual) => findItem(derived(), value, isEqual) !== undefined,
     itemLabel: getLabel,
     label(value, isEqual, fallback) {
       const item = findItem(derived(), value, isEqual);

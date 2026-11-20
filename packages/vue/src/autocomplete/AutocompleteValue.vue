@@ -8,7 +8,7 @@ defineSlots<{
   default?(scope: { value: string }): unknown;
 }>();
 
-const context = injectComboboxRoot('Value');
+const context = injectComboboxRoot('Value', 'Autocomplete');
 </script>
 
 <template>

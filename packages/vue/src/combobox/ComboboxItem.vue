@@ -33,7 +33,6 @@ const { element, setElement } = useElement<HTMLElement>();
 const isDisabled = computed(() => context.disabled || props.disabled);
 const selected = computed(() => context.isSelected(props.value));
 const { highlighted, attributes } = useListItem(context.list, element, {
-  label: () => undefined,
   disabled: () => isDisabled.value,
 });
 watch(

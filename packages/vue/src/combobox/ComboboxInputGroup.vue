@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { fieldKey, fieldStateAttributes } from '../field/control';
-import { injectComboboxRoot, pressAroundInput, useInPopup } from './root';
+import { injectComboboxRoot, pressAroundInput } from './root';
 import type { ComboboxInputGroupProps, ComboboxInputGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -21,11 +21,9 @@ const context = injectComboboxRoot('InputGroup');
 const field = inject(fieldKey, null);
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const inPopup = useInPopup();
-// A group in the popup is no anchor. A group outside it is inside the layer.
-const removals = inPopup
-  ? []
-  : [context.addInside(() => element.value), context.addInputGroup(() => element.value)];
+// The group is inside the layer. The group around the input that is the control is the anchor.
+// Nuxt removes `onUnmounted` from its server build, with its arguments.
+const removals = [context.addInside(() => element.value), context.addInputGroup(() => element.value)];
 onUnmounted(() => {
   for (const remove of removals) remove();
 });

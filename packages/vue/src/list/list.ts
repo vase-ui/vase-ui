@@ -9,8 +9,6 @@ import { isComposing } from '../popup/layer';
 /** An item of a list, while it is mounted. The properties are reactive. */
 export interface ListItem {
   readonly element: HTMLElement;
-  /** The `label` prop of the item. */
-  readonly label: string | undefined;
   /** The item keeps the highlight, and its part does no action. */
   readonly disabled: boolean;
 }
@@ -20,16 +18,10 @@ export type ListHighlightReason = 'keyboard' | 'pointer' | 'none';
 /** A list of items with one highlighted item. The properties are reactive. */
 export interface List {
   readonly highlighted: ListItem | null;
-  /** One other element keeps the focus, and names the highlighted item. */
-  readonly virtual: boolean;
   add(item: ListItem): () => void;
   /** The items that a key can reach, in the order of the document. */
   items(): ListItem[];
-  /** The `label` of the item, else its text, with no space at the ends. */
-  text(item: ListItem): string;
   highlight(item: ListItem | null, reason: ListHighlightReason, event?: Event): void;
-  /** The `pointermove` is a move of the pointer, not a move of the content under it. */
-  moved(event: PointerEvent): boolean;
   /** The list used the key and prevented its default. */
   onKeydown(event: KeyboardEvent): boolean;
 }
@@ -67,6 +59,8 @@ export function useList(options: ListOptions): List {
   };
   // The position of the pointer, while the list knows it.
   let pointer: { x: number; y: number } | null = null;
+  // The position of the last `pointerover`.
+  let over: { x: number; y: number } | null = null;
 
   watch(highlighted, (item) => options.onHighlight?.(item, last.reason, last.event), {
     flush: 'post',
@@ -76,6 +70,7 @@ export function useList(options: ListOptions): List {
     () => options.container(),
     (container, _, onCleanup) => {
       pointer = null;
+      over = null;
       if (!container) return;
       onCleanup(
         mergeCleanups(
@@ -85,6 +80,15 @@ export function useList(options: ListOptions): List {
             const item = isMove && hovers() ? itemOf(event.target) : undefined;
             if (item) highlight(item, 'pointer', event);
           }),
+          // Content that moves under a pointer at rest gets a second `pointerover` at the same
+          // position, and WebKit then sends a `pointermove` there. A move in one step sends its
+          // `pointerover` and its `pointermove` at one position, so one `pointerover` is no
+          // reference (test/measurements/combobox.test.ts, C2 and C7).
+          addEventListener(container, 'pointerover', (event) => {
+            const at = { x: event.clientX, y: event.clientY };
+            if (over?.x === at.x && over.y === at.y) pointer = at;
+            over = at;
+          }),
           addEventListener(container, 'pointerout', (event) => {
             const item = highlighted.value;
             if (!item || !hovers() || !item.element.contains(event.target as Node)) return;
@@ -92,7 +96,10 @@ export function useList(options: ListOptions): List {
             if (item.element.contains(to) || itemOf(to) || options.keepOnLeave?.(item)) return;
             highlight(null, 'pointer', event);
           }),
-          addEventListener(container, 'pointerleave', () => (pointer = null)),
+          addEventListener(container, 'pointerleave', () => {
+            pointer = null;
+            over = null;
+          }),
         ),
       );
     },
@@ -203,7 +210,6 @@ export function useList(options: ListOptions): List {
     get highlighted() {
       return highlighted.value;
     },
-    virtual: true,
     add(item) {
       added.push(item);
       return () => {
@@ -213,9 +219,7 @@ export function useList(options: ListOptions): List {
       };
     },
     items,
-    text: (item) => (item.label ?? item.element.textContent ?? '').trim(),
     highlight,
-    moved,
     onKeydown(event) {
       if (event.ctrlKey || event.altKey || event.metaKey) return false;
       if (event.defaultPrevented || isComposing(event)) return false;
@@ -232,7 +236,7 @@ export function useList(options: ListOptions): List {
 export function useListItem(
   list: List,
   element: Readonly<Ref<HTMLElement | null>>,
-  item: { label(): string | undefined; disabled(): boolean },
+  item: { disabled(): boolean },
 ): { highlighted: ComputedRef<boolean>; attributes: ComputedRef<Record<string, unknown>> } {
   watch(
     element,
@@ -241,9 +245,6 @@ export function useListItem(
       onCleanup(
         list.add({
           element: el,
-          get label() {
-            return item.label();
-          },
           get disabled() {
             return item.disabled();
           },

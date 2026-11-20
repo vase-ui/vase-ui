@@ -113,7 +113,7 @@ export namespace Label {
 
 /**
  * The text input that filters the items.
- * Renders a `<input>` element.
+ * Renders an `<input>` element.
  */
 export const Input: typeof ComboboxInput = ComboboxInput;
 export namespace Input {

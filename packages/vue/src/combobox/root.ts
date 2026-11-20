@@ -35,7 +35,7 @@ import { useList, type List, type ListItem } from '../list/list';
 import { useLocale } from '../locale-provider/part';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
-import type { Side, usePlacement } from '../popup/placement';
+import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
 import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
 import { isReleaseAtPressPoint } from '../utils/popups/isReleaseAtPressPoint';
@@ -127,7 +127,6 @@ export interface ComboboxRootContext {
   readonly form: string | undefined;
   readonly grid: boolean;
   readonly inline: boolean;
-  readonly virtualized: boolean;
   readonly openOnInputClick: boolean;
   readonly autoHighlight: boolean | 'always';
   /** The popup is open, or the list is in place. */
@@ -144,8 +143,6 @@ export interface ComboboxRootContext {
   readonly data: readonly unknown[] | undefined;
   /** The items that the filter keeps, in the form of `items`. */
   readonly filteredItems: readonly unknown[];
-  /** The values of the filtered items, with no groups. */
-  readonly filteredValues: readonly unknown[];
   /** The values of the items of `items`, with no groups. */
   readonly dataValues: readonly unknown[];
   /** The list has no item to show. */
@@ -178,8 +175,6 @@ export interface ComboboxRootContext {
   readonly labelFunction: ((value: unknown) => string) | undefined;
   /** The text of a value in the form data. */
   formTextOf(value: unknown): string;
-  /** The value of a mounted item. */
-  valueOf(item: ListItem): unknown;
   /** The mounted items, also those of a closed popup that stays in the DOM, in the order of the document. */
   mountedItems(): { value: unknown; disabled: boolean }[];
   /** Asks for a change of the open state. */
@@ -200,8 +195,6 @@ export interface ComboboxRootContext {
   openByKey(event: KeyboardEvent): void;
   /** A mouse press opened the popup: its release selects the item under it, or closes. */
   startDrag(press: PointerEvent): void;
-  /** Requests the submit of the form of the root. */
-  requestSubmit(): void;
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
@@ -224,9 +217,6 @@ export const comboboxKey: InjectionKey<ComboboxRootContext> = Symbol('combobox r
 export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
   Symbol('combobox positioner');
 const portalKey: InjectionKey<true> = Symbol('combobox portal');
-
-// A popup that covers the view leaves no room for a swipe outside, so a touch open locks the page.
-const FULL_WIDTH_TOLERANCE = 20;
 
 export function createComboboxDetails(
   reason: ComboboxRootChangeEventReason,
@@ -438,15 +428,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const positioner = shallowRef<HTMLElement | null>(null);
   const placed = shallowRef(false);
   const side = shallowRef<Side | null>(null);
-  const fullWidth = shallowRef(false);
-  watch(placed, (isPlaced) => {
-    const element = positioner.value;
-    fullWidth.value =
-      isPlaced &&
-      !!element &&
-      element.offsetWidth >=
-        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
-  });
+  const fullWidth = useFullWidth(positioner, placed);
   const layer = useLayer(root, () => {
     const modal = source.modal && !source.inline && !!positioner.value;
     return {
@@ -843,9 +825,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     get inline() {
       return source.inline;
     },
-    get virtualized() {
-      return source.virtualized;
-    },
     get openOnInputClick() {
       return source.openOnInputClick;
     },
@@ -875,9 +854,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
     get filteredItems() {
       return filteredItems.value;
-    },
-    get filteredValues() {
-      return filteredValues.value;
     },
     get dataValues() {
       return data.value ? flattenLeafItems(data.value as unknown[]).map(toValue) : EMPTY_ARRAY;
@@ -920,7 +896,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       return collection.value || source.itemToStringLabel ? labelOf : undefined;
     },
     formTextOf,
-    valueOf,
     mountedItems: () =>
       [...itemEntries]
         .filter(([element]) => element.isConnected)
@@ -935,7 +910,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     clickHighlighted,
     openByKey,
     startDrag: (press) => (dragPress.value = press),
-    requestSubmit,
     addInput: (input) => add(inputs, input),
     setTrigger(element) {
       triggerElement.value = element;
@@ -1007,16 +981,19 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   };
 }
 
-function missingRoot(family: string, part: string): never {
-  throw new Error(
-    `Vase UI: <${family}.${part}> must be inside <${family}.Root>. Without a root the part has no combobox. Put the part inside <${family}.Root>.`,
-  );
-}
-
-/** The root of the part. A part with no root throws an error that names it. */
-export function injectComboboxRoot(part: string) {
+/**
+ * The root of the part. A part with no root throws an error that names it. Autocomplete uses the
+ * parts of Combobox, so a part that is not `Autocomplete.Value` names the two families.
+ */
+export function injectComboboxRoot(part: string, family?: 'Autocomplete') {
   const context = inject(comboboxKey, null);
-  return context ?? missingRoot('Combobox', part);
+  if (context) return context;
+  const families = family ? [family] : ['Combobox', 'Autocomplete'];
+  const parts = families.map((name) => `<${name}.${part}>`).join(' or ');
+  const roots = families.map((name) => `<${name}.Root>`).join(' or ');
+  throw new Error(
+    `Vase UI: ${parts} must be inside ${roots}. Without a root the part has no combobox. Put the part inside its root.`,
+  );
 }
 
 /**
