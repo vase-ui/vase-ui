@@ -7,6 +7,7 @@ import {
   shallowReactive,
   shallowRef,
   watch,
+  watchPostEffect,
   type ShallowRef,
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
@@ -54,6 +55,7 @@ export interface PopupRoot<Payload = unknown> {
   readonly triggers: readonly PopupTrigger[];
   readonly activeTrigger: Element | null;
   readonly activeTriggerId: string | null;
+  /** The payload of the active trigger, or the payload of `openWithPayload`. */
   readonly payload: Payload | undefined;
   /** The popup element, while it is in the document. */
   readonly popup: HTMLElement | null;
@@ -72,7 +74,8 @@ export interface PopupRoot<Payload = unknown> {
   readonly closeRequests: number;
   /**
    * Asks for a change of the state after an action of the user. A request for the state that the
-   * root has, for the same trigger, emits nothing.
+   * root has, for the same trigger, emits nothing. An open with the `trigger` `null` has no active
+   * trigger, also when the root has one trigger.
    */
   request(
     open: boolean,
@@ -80,6 +83,11 @@ export interface PopupRoot<Payload = unknown> {
     event: Event,
     trigger?: Element | null,
   ): PopupChangeEventDetails;
+  /**
+   * Asks for an open with no active trigger. The parts get the payload until the next open by a
+   * trigger.
+   */
+  openWithPayload(payload: Payload, event: Event): PopupChangeEventDetails;
   addTrigger(trigger: PopupTrigger): () => void;
   setPopup(element: HTMLElement | null): void;
   setKeepMounted(keepMounted: boolean): void;
@@ -241,8 +249,13 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const instant = shallowRef<string>();
   const closeRequests = shallowRef(0);
 
+  // An open with no trigger keeps the one trigger of the root inactive until the next open.
+  const withoutTrigger = shallowRef(false);
+  const givenPayload = shallowRef<{ value: Payload }>();
   const activeTriggerId = computed(
-    () => chosenTriggerId.value ?? (triggers.length === 1 ? (triggers[0]?.id ?? null) : null),
+    () =>
+      chosenTriggerId.value ??
+      (triggers.length === 1 && !withoutTrigger.value ? (triggers[0]?.id ?? null) : null),
   );
   const activeEntry = computed(() =>
     triggers.find((trigger) => trigger.id === activeTriggerId.value),
@@ -258,12 +271,23 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   );
   const activeTrigger = computed(() => activeEntry.value?.element ?? lastTrigger.value);
 
-  function change(next: boolean, why: string, event: Event, entry: PopupTrigger | undefined) {
+  /**
+   * `entry` is the trigger of an open, `null` for an open with no trigger, and `undefined` for a
+   * close or an open that keeps the active trigger. `payload` replaces the payload of the trigger.
+   */
+  function change(
+    next: boolean,
+    why: string,
+    event: Event,
+    entry: PopupTrigger | null | undefined,
+    payload?: { value: Payload },
+  ) {
     const element = entry?.element ?? activeTrigger.value;
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
-    const nextId = next && entry ? entry.id : activeTriggerId.value;
+    const nextId = !next || entry === undefined ? activeTriggerId.value : (entry?.id ?? null);
     if (next === open.value && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
+      if (payload) givenPayload.value = payload;
       // A press keeps a popup open that a hover opened.
       if (next && why === 'trigger-press') reason.value = why;
       return details;
@@ -274,6 +298,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     if (next) interaction.value = interactionOf(event);
     else closeInteraction.value = interactionOf(event);
     instant.value = options.instantOf?.(next, why, event);
+    if (next && entry !== undefined) {
+      withoutTrigger.value = entry === null;
+      givenPayload.value = payload ?? (entry ? undefined : givenPayload.value);
+    }
     if (nextId !== activeTriggerId.value) {
       triggerIdModel.setOwn(nextId);
       options.emitTriggerId(nextId);
@@ -353,7 +381,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return activeTriggerId.value;
     },
     get payload() {
-      return activeEntry.value?.payload as Payload | undefined;
+      return givenPayload.value
+        ? givenPayload.value.value
+        : (activeEntry.value?.payload as Payload | undefined);
     },
     get popup() {
       return popup.value;
@@ -378,8 +408,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return closeRequests.value;
     },
     request(next, why, event, trigger) {
-      const entry = trigger ? triggers.find((each) => each.element === trigger) : undefined;
+      const entry = trigger ? triggers.find((each) => each.element === trigger) : trigger;
       return change(next, why, event, entry);
+    },
+    openWithPayload(payload, event) {
+      return change(true, 'imperative-action', event, null, { value: payload });
     },
     addTrigger: (trigger) => add(triggers, trigger),
     setPopup(element) {
@@ -402,20 +435,19 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
   };
 
-  // A handle holds its root only on the client. A handle in a module of a server would otherwise
-  // hold the roots of each request.
-  onMounted(() => {
-    onScopeDispose(trackPointerType(ownerDocument(null)));
-    watch(
-      () => options.handle(),
-      (handle, _, onCleanup) => {
-        const holder = handle && handleRoots.get(handle);
-        if (!holder) return;
-        holder.value = root;
-        onCleanup(() => (holder.value = null));
-      },
-      { immediate: true },
-    );
+  onMounted(() => onScopeDispose(trackPointerType(ownerDocument(null))));
+  // A post-flush effect runs only on the client, so a handle in a module of a server holds no root
+  // of a request. It runs before `onMounted` of the children, and not while a `<Suspense>` waits
+  // for the page of the root. When a `<Suspense>` replaces a page, the old root releases its handle
+  // before the new root takes it (test/measurements/dialog.test.ts).
+  watchPostEffect((onCleanup) => {
+    const handle = options.handle();
+    const holder = handle && handleRoots.get(handle);
+    if (!holder) return;
+    holder.value = root;
+    onCleanup(() => {
+      if (holder.value === root) holder.value = null;
+    });
   });
 
   return root;
