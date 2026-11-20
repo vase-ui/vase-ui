@@ -84,8 +84,7 @@ export function useCell(
           'aria-label': options.label?.(),
           'aria-selected': state.value.selected ? 'true' : 'false',
           'aria-current': state.value.current ? 'date' : undefined,
-          tabindex:
-            calendar.tabStop && isSameDay(calendar.tabStop, date.value) ? 0 : -1,
+          tabindex: calendar.tabStop && isSameDay(calendar.tabStop, date.value) ? 0 : -1,
           onClick: (event: MouseEvent) => calendar.pressCell(options.cell(), options.unit, event),
         },
         attrs,

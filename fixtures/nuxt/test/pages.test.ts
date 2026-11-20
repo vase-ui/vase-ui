@@ -793,7 +793,8 @@ function dateLayoutText() {
 
 // Node has `Intl` data for `is-IS`, and Chromium has none and uses `en-US`. The server HTML thus
 // has a clock of 24 hours and Icelandic names. The hydrated page has a clock of 12 hours and
-// English names. The grid of the calendar has the same days in the two.
+// English names. The grid of the calendar has the same days in the two. Vue writes the text of the
+// browser in a part that allows a text mismatch, and keeps the attributes of the server.
 async function expectDateLayoutPage(page: Page, { hydrated }: { hydrated: boolean }) {
   const text = hydrated ? await page.evaluate(dateLayoutText) : dateLayoutText();
   // With the same hour cycle in Node and in Chromium, the page tests nothing.
@@ -819,10 +820,11 @@ async function expectDateLayoutPage(page: Page, { hydrated }: { hydrated: boolea
   );
   expect(await page.getByTestId('time-value').textContent()).toBe('13:45:00');
 
+  const serverText = dateLayoutText();
   const calendar = page.getByTestId('calendar');
   const captionId = await page.getByTestId('caption').getAttribute('id');
   expect(captionId).toBeTruthy();
-  expect(await calendar.getAttribute('aria-label')).toBe(text.monthName);
+  expect(await calendar.getAttribute('aria-label')).toBe(serverText.monthName);
   expect(await page.getByTestId('caption').textContent()).toBe(text.monthName);
   expect(await calendar.getByRole('grid').getAttribute('aria-labelledby')).toBe(captionId);
   expect(
@@ -831,7 +833,9 @@ async function expectDateLayoutPage(page: Page, { hydrated }: { hydrated: boolea
       .evaluateAll((headers) =>
         headers.map((header) => ({ text: header.textContent, abbr: header.getAttribute('abbr') })),
       ),
-  ).toEqual(text.weekdays);
+  ).toEqual(
+    text.weekdays.map((weekday, index) => ({ ...weekday, abbr: serverText.weekdays[index]!.abbr })),
+  );
   const dates = Array.from({ length: 35 }, (_, index) =>
     Temporal.PlainDate.from('2026-11-01').add({ days: index }).toString(),
   );
@@ -846,7 +850,7 @@ async function expectDateLayoutPage(page: Page, { hydrated }: { hydrated: boolea
       .evaluateAll((cells) => cells.map((cell) => cell.getAttribute('data-date'))),
   ).toEqual(dates.filter((date) => Temporal.PlainDate.from(date).dayOfWeek >= 6));
   expect(await calendar.locator('[data-date="2026-11-10"] button').getAttribute('aria-label')).toBe(
-    text.dayName,
+    serverText.dayName,
   );
   expect(await calendar.locator('button[tabindex="0"]').evaluateAll(readDates)).toEqual([
     '2026-11-10',
@@ -2359,6 +2363,21 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await months.getByRole('gridcell', { name: 'November 2026' }).click();
     expect(await page.getByTestId('month-value').textContent()).toBe('2026-11');
     expect(await readSelected(months)).toEqual(['November 2026']);
+    expect(messages).toEqual([]);
+  });
+
+  it('keeps the text of /calendar in en-US for a visitor in de-DE after hydration', async () => {
+    const page = await createPage(undefined, { locale: 'de-DE' });
+    const messages = collectMessages(page);
+
+    await page.goto(url('/calendar'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    const days = page.getByTestId('days');
+    expect(await days.getAttribute('aria-label')).toBe('November 2026');
+    expect(await days.locator('[data-date="2026-11-10"] button').getAttribute('aria-label')).toBe(
+      'Tuesday, November 10, 2026',
+    );
     expect(messages).toEqual([]);
   });
 

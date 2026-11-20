@@ -24,7 +24,14 @@ const today = Temporal.PlainDate.from('2026-11-14');
     </TimeClock.Root>
     <output data-testid="time-value">{{ time?.toString() ?? '' }}</output>
 
-    <Calendar.Root v-model="date" :today="today" locale="is-IS" data-testid="calendar">
+    <Calendar.Root
+      v-model="date"
+      :today="today"
+      locale="is-IS"
+      :first-day-of-week="7"
+      :modifiers="{ weekend: { dayOfWeek: [6, 7] } }"
+      data-testid="calendar"
+    >
       <Calendar.Months>
         <template #month="{ month }">
           <Calendar.Month :month="month">
@@ -41,7 +48,9 @@ const today = Temporal.PlainDate.from('2026-11-14');
                 <template #week="{ week }">
                   <Calendar.Week :week="week">
                     <template #day="{ day }">
-                      <Calendar.Day :day="day"><Calendar.DayButton /></Calendar.Day>
+                      <Calendar.Day :day="day" :data-date="day.toString()"
+                        ><Calendar.DayButton
+                      /></Calendar.Day>
                     </template>
                   </Calendar.Week>
                 </template>

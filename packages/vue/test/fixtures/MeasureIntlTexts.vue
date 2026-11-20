@@ -8,14 +8,13 @@ defineProps<{ locales: string[] }>();
 
 const day = Date.UTC(2026, 10, 18);
 const format = (locale: string, options: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(locale, { timeZone: 'UTC', calendar: 'gregory', ...options }).format(
-    day,
-  );
+  new Intl.DateTimeFormat(locale, { timeZone: 'UTC', calendar: 'gregory', ...options }).format(day);
 const range = (locale: string) =>
-  new Intl.DateTimeFormat(locale, { timeZone: 'UTC', calendar: 'gregory', year: 'numeric' }).formatRange(
-    Date.UTC(2016, 0, 1),
-    day,
-  );
+  new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    calendar: 'gregory',
+    year: 'numeric',
+  }).formatRange(Date.UTC(2016, 0, 1), day);
 const texts = (locale: string) => [
   range(locale),
   format(locale, { month: 'long', year: 'numeric' }),

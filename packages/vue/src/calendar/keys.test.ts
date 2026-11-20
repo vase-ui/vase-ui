@@ -17,10 +17,13 @@ describe('getDayMove', () => {
     { key: 'PageDown', shiftKey: true, rtl: false, expected: { years: 1 }, extend: false },
     { key: 'ArrowRight', shiftKey: true, rtl: false, expected: { months: 1 }, extend: false },
     { key: 'ArrowUp', shiftKey: true, rtl: false, expected: { years: -1 }, extend: false },
-  ])('moves $expected for $key, Shift $shiftKey, rtl $rtl', ({ key, shiftKey, rtl, expected, extend }) => {
-    const action = getDayMove(key, shiftKey, { rtl, canExtend: false });
-    expect(action).toMatchObject({ move: { duration: expected }, extend });
-  });
+  ])(
+    'moves $expected for $key, Shift $shiftKey, rtl $rtl',
+    ({ key, shiftKey, rtl, expected, extend }) => {
+      const action = getDayMove(key, shiftKey, { rtl, canExtend: false });
+      expect(action).toMatchObject({ move: { duration: expected }, extend });
+    },
+  );
 
   it('extends a selection that can extend with Shift and an arrow key', () => {
     expect(getDayMove('ArrowRight', true, { rtl: false, canExtend: true })).toEqual({
@@ -280,7 +283,7 @@ describe('findCellTarget in a grid of months', () => {
       move: { rowEdge: 'end' },
       expected: null,
     },
-  ] satisfies { name: string; from: string; move: GridMove; expected: string | null }[])(
+  ] satisfies { name: string; from: string; move: CellMove; expected: string | null }[])(
     'gives $name',
     ({ from, move, expected }) => {
       expect(target(from, move)).toBe(expected);
@@ -326,7 +329,7 @@ describe('findCellTarget in a grid of months', () => {
       expected: '2026-02',
     },
     { name: 'a move from the first month', from: '2026-02', move: { cells: -1 }, expected: null },
-  ] satisfies { name: string; from: string; move: GridMove; expected: string | null }[])(
+  ] satisfies { name: string; from: string; move: CellMove; expected: string | null }[])(
     'stops at the limits: $name',
     ({ from, move, expected }) => {
       expect(target(from, move, { ...months, min: month('2026-02'), max: month('2026-12') })).toBe(
@@ -377,7 +380,7 @@ describe('findCellTarget in a grid of years', () => {
       expected: '2025-01',
     },
     { name: 'the end of the row', from: '2026-01', move: { rowEdge: 'end' }, expected: '2027-01' },
-  ] satisfies { name: string; from: string; move: GridMove; expected: string | null }[])(
+  ] satisfies { name: string; from: string; move: CellMove; expected: string | null }[])(
     'gives $name',
     ({ from, move, expected }) => {
       expect(target(from, move, years)).toBe(expected);

@@ -100,7 +100,12 @@ function add(date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) 
   }
 }
 
-const { calendar, rootState, focus, rootProps } = useCalendar(props, {
+const {
+  calendar: forParts,
+  rootState,
+  focus,
+  rootProps,
+} = useCalendar(props, {
   part: 'Calendar.Root',
   emit,
   element,
@@ -134,7 +139,7 @@ const { calendar, rootState, focus, rootProps } = useCalendar(props, {
     },
   },
 });
-provide(calendarKey, calendar);
+provide(calendarKey, forParts);
 
 defineExpose({ element, focus });
 

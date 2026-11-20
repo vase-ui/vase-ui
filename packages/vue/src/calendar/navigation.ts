@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { useElement } from '../common/element';
+import { ownerWindow } from '../common/owner';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarPreviousButtonProps, CalendarState } from './types';
 
@@ -40,7 +41,7 @@ function useHold(step: (event: Event) => boolean, canStart: () => boolean) {
     const element = event.currentTarget as Element;
     const current: Hold = {
       pointerId: event.pointerId,
-      window: element.ownerDocument.defaultView ?? window,
+      window: ownerWindow(element),
       out: false,
       stepped: false,
     };

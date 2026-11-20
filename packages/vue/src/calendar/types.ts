@@ -279,7 +279,8 @@ export interface CalendarMonthState extends CalendarState {
   index: number;
 }
 
-export interface CalendarCaptionProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface CalendarCaptionProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /** The grid of the month names itself by this id in `aria-labelledby`. */
   id?: string | undefined;
   /** The format of the text. The default is the month and the year in full. */
@@ -375,8 +376,10 @@ export type CalendarPreviousButtonState = CalendarState;
 export interface CalendarNextButtonProps extends CalendarPreviousButtonProps {}
 export type CalendarNextButtonState = CalendarState;
 
-export interface CalendarMonthSelectProps
-  extends /* @vue-ignore */ Omit<SelectHTMLAttributes, 'disabled' | 'value'> {
+export interface CalendarMonthSelectProps extends /* @vue-ignore */ Omit<
+  SelectHTMLAttributes,
+  'disabled' | 'value'
+> {
   /**
    * The length of the name of a month.
    * @default 'long'
@@ -385,8 +388,10 @@ export interface CalendarMonthSelectProps
 }
 export type CalendarMonthSelectState = CalendarState;
 
-export interface CalendarYearSelectProps
-  extends /* @vue-ignore */ Omit<SelectHTMLAttributes, 'disabled' | 'value'> {
+export interface CalendarYearSelectProps extends /* @vue-ignore */ Omit<
+  SelectHTMLAttributes,
+  'disabled' | 'value'
+> {
   /**
    * The form of a year.
    * @default 'numeric'

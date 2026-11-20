@@ -54,14 +54,11 @@ watch(
 
 defineExpose({ element });
 
-
 function elementProps() {
   const { state } = day;
   return button.mergeAttributes(
     {
       'aria-label': formatText(day.day, props.format ?? FULL_DATE, calendar.locale),
-      // A server and a browser can write another full date (test/measurements/calendar.test.ts).
-      'data-allow-mismatch': 'attribute',
       'aria-current': state.today ? 'date' : undefined,
       tabindex: calendar.tabStop && isSameDay(calendar.tabStop, day.day) ? 0 : -1,
       'data-selected': state.selected ? '' : undefined,

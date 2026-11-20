@@ -37,13 +37,14 @@ export interface DatePickerCalendarProps
 </script>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, useSlots, useTemplateRef } from 'vue';
 import CalendarRoot from '../../calendar/CalendarRoot.vue';
 import {
   PickerCalendarOwner,
   providePickerControl,
 } from '../../internals/date-time/picker/PickerControlContext';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { warnWithoutCalendarElement } from '../../internals/date-time/picker/warnWithoutCalendarElement';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { createChangeEventDetails as createPickerEventDetails } from '../../internals/createVaseUIEventDetails';
@@ -106,6 +107,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, DatePickerCalendarState>;
 }>();
 
+const slots = useSlots();
 const picker = useDatePickerRootContext();
 const popup = usePickerPopup();
 
@@ -116,12 +118,17 @@ const clockToday = Temporal.Now.plainDateISO(
   picker.props.timeZone ?? (isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined),
 );
 
-// This part renders `Calendar.Root`, and the `element` slot of the root renders `as` or `#render`.
+// This part renders `Calendar.Root` with `as`, or with `#render` in the `element` slot of the root.
+// A `v-if` on a slot template makes the slots of the root dynamic, so the template has two roots.
 const calendar = useTemplateRef<{
   element: HTMLElement | null;
   focus: (date?: DateValue) => void;
 }>('calendar');
 const element = computed(() => calendar.value?.element ?? null);
+warnWithoutCalendarElement(
+  () => element.value,
+  () => !!slots.render,
+);
 
 providePickerControl(PickerCalendarOwner, (event) => {
   if (picker.closeOnSelect.value && popup.open.value) {
@@ -130,7 +137,10 @@ providePickerControl(PickerCalendarOwner, (event) => {
 });
 
 // The listeners of the picker get the details of its own API.
-function handleValueChange(value: DatePickerRootValue | null, details: CalendarRootChangeEventDetails) {
+function handleValueChange(
+  value: DatePickerRootValue | null,
+  details: CalendarRootChangeEventDetails,
+) {
   const pickerDetails = createPickerEventDetails(
     details.reason,
     details.event,
@@ -163,7 +173,7 @@ const calendarHandlers = {
 // `Calendar.Root` has a type parameter for the kind of its value, and vue-tsc takes it from the
 // props. The picker has any kind, so the value and the default value have the type `any`. The
 // default value gives the kind of a new value, the same kind as for the field.
-function calendarProps(attributes: Record<string, unknown>) {
+function calendarProps(attributes: Record<string, unknown>): Record<string, unknown> {
   const root = picker.props;
   const valueProps: Record<string, any> = {
     modelValue: picker.value.value,
@@ -185,6 +195,9 @@ function calendarProps(attributes: Record<string, unknown>) {
   };
 }
 
+// An older part takes a component with a type parameter in `as`, and `Calendar.Root` renders it.
+const rootAs = () => props.as as CalendarRootProps['as'];
+
 defineExpose({
   element,
   /** Gives the focus to `date`, or to the day that has the tab stop. */
@@ -196,20 +209,24 @@ defineExpose({
 
 <template>
   <CalendarRoot
+    v-if="$slots.render"
     ref="calendar"
     v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
     @value-change="handleValueChange"
   >
     <template #element="{ props: elementProps, elementRef, state }">
-      <slot
-        v-if="$slots.render"
-        name="render"
-        :props="{ ...elementProps, ref: elementRef }"
-        :state="state"
-      />
-      <component :is="as" v-else v-bind="elementProps" :ref="elementRef">
-        <slot :state="state" />
-      </component>
+      <slot name="render" :props="{ ...elementProps, ref: elementRef }" :state="state" />
+    </template>
+  </CalendarRoot>
+  <CalendarRoot
+    v-else
+    ref="calendar"
+    v-bind="calendarProps(withoutPropsOf($attrs, CalendarRoot))"
+    :as="rootAs()"
+    @value-change="handleValueChange"
+  >
+    <template #default="{ state }">
+      <slot :state="state" />
     </template>
   </CalendarRoot>
 </template>

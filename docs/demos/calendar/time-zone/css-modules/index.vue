@@ -12,7 +12,13 @@ const summary = computed(() => {
 </script>
 
 <template>
-  <Calendar.Root v-model="call" locale="en-US" aria-label="Day of the call" :class="styles.Root">
+  <Calendar.Root
+    v-model="call"
+    locale="en-US"
+    :first-day-of-week="7"
+    aria-label="Day of the call"
+    :class="[styles.Root, styles.SixWeeks]"
+  >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>

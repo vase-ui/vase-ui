@@ -166,7 +166,11 @@ export function getWeekNumber(
 /** The months of the year of `month`, in its calendar. A year of some calendars has 13 months. */
 export function getMonthCells(month: Temporal.PlainYearMonth): Temporal.PlainYearMonth[] {
   return Array.from({ length: month.monthsInYear }, (_, index) =>
-    Temporal.PlainYearMonth.from({ year: month.year, month: index + 1, calendar: month.calendarId }),
+    Temporal.PlainYearMonth.from({
+      year: month.year,
+      month: index + 1,
+      calendar: month.calendarId,
+    }),
   );
 }
 

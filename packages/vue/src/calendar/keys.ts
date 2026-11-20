@@ -44,7 +44,9 @@ export function getDayMove(
     }
     case 'Home':
     case 'End':
-      return shiftKey ? null : { move: { weekEdge: key === 'Home' ? 'start' : 'end' }, extend: false };
+      return shiftKey
+        ? null
+        : { move: { weekEdge: key === 'Home' ? 'start' : 'end' }, extend: false };
     default:
       return null;
   }

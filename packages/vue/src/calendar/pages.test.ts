@@ -393,7 +393,9 @@ describe('getBroadcastPage', () => {
   });
 
   it('gives each day to one page of the months in a row', () => {
-    const pages = ['2026-10', '2026-11', '2026-12'].map((value) => getBroadcastPage(month(value), false));
+    const pages = ['2026-10', '2026-11', '2026-12'].map((value) =>
+      getBroadcastPage(month(value), false),
+    );
 
     expect(pages.map((page) => [text(page.first), text(page.last)])).toEqual([
       ['2026-09-28', '2026-10-25'],

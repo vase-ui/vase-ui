@@ -17,17 +17,14 @@ export type RangeCalendarRootValue<Value extends DateValue = DateValue> = [
  * - `none`: a day got the focus.
  */
 export type RangeCalendarRootChangeEventReason =
-  | 'day-press'
-  | 'drag'
-  | 'keyboard'
-  | 'month-change'
-  | 'none';
+  'day-press' | 'drag' | 'keyboard' | 'month-change' | 'none';
 
 export type RangeCalendarRootChangeEventDetails =
   ChangeEventDetails<RangeCalendarRootChangeEventReason>;
 
-export interface RangeCalendarRootProps<Value extends DateValue = Temporal.PlainDate>
-  extends CalendarBaseProps {
+export interface RangeCalendarRootProps<
+  Value extends DateValue = Temporal.PlainDate,
+> extends CalendarBaseProps {
   /**
    * The first and the last day of the range. `v-model` binds it. A new end has the kind, the time,
    * the zone and the calendar of the end that it replaces, else of the other end, else of

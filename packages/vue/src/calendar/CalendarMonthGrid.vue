@@ -23,12 +23,12 @@ defineSlots<{
 const calendar = injectCalendar();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const columns = computed(() => Math.max(1, Math.floor(props.columns)));
-const rows = computed(() => getRows(calendar.monthCells, columns.value));
+const columnCount = computed(() => Math.max(1, Math.floor(props.columns)));
+const rows = computed(() => getRows(calendar.monthCells, columnCount.value));
 
 provide(gridKey, {
   get columns() {
-    return columns.value;
+    return columnCount.value;
   },
 });
 

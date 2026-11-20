@@ -14,8 +14,9 @@ async function mountCalendar(setup: Record<string, unknown> = {}) {
   const root = reactive<Record<string, unknown>>({
     today,
     locale: 'en-US',
-    onMonthChange: (value: Temporal.PlainYearMonth) => log.push(`monthChange ${value}`),
-    'onUpdate:month': (value: Temporal.PlainYearMonth) => log.push(`update:month ${value}`),
+    onMonthChange: (value: Temporal.PlainYearMonth) => log.push(`monthChange ${value.toString()}`),
+    'onUpdate:month': (value: Temporal.PlainYearMonth) =>
+      log.push(`update:month ${value.toString()}`),
     ...(setup.root as object),
   });
   const { root: container } = mount(CalendarParts, { ...setup, root });
@@ -45,7 +46,11 @@ describe('the first page', () => {
   test.each([
     { name: 'month', root: { month: month('2027-03') }, expected: 'March 2027' },
     { name: 'defaultMonth', root: { defaultMonth: month('2027-04') }, expected: 'April 2027' },
-    { name: 'the focused day', root: { defaultFocusedDate: day('2027-05-02') }, expected: 'May 2027' },
+    {
+      name: 'the focused day',
+      root: { defaultFocusedDate: day('2027-05-02') },
+      expected: 'May 2027',
+    },
     { name: 'the value', root: { defaultValue: day('2027-06-02') }, expected: 'June 2027' },
     { name: 'today', root: {}, expected: 'November 2026' },
   ])('comes from $name', async ({ root, expected }) => {
@@ -95,7 +100,9 @@ describe('the form of a page', () => {
   });
 
   test('visibleDuration shows weeks, and the buttons move by them', async () => {
-    const { captions, move, days } = await mountCalendar({ root: { visibleDuration: { weeks: 2 } } });
+    const { captions, move, days } = await mountCalendar({
+      root: { visibleDuration: { weeks: 2 } },
+    });
     expect(days()[0]).toBe('2026-11-16');
     expect(days()).toHaveLength(14);
     expect(captions()).toEqual(['November 16 – 29, 2026']);

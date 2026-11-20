@@ -4,7 +4,7 @@ import styles from '../../_index.module.css';
 </script>
 
 <template>
-  <Calendar.Root locale="en-US" :class="styles.Root">
+  <Calendar.Root locale="en-US" :first-day-of-week="7" :class="[styles.Root, styles.SixWeeks]">
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>

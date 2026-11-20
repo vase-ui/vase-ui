@@ -48,8 +48,9 @@ function logged(log: string[], props: Record<string, unknown> = {}) {
       log.push(`valueChange ${String(value)} ${details.reason}`),
     'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
     onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) =>
-      log.push(`monthChange ${month} ${details.reason}`),
-    'onUpdate:month': (month: Temporal.PlainYearMonth) => log.push(`update:month ${month}`),
+      log.push(`monthChange ${month.toString()} ${details.reason}`),
+    'onUpdate:month': (month: Temporal.PlainYearMonth) =>
+      log.push(`update:month ${month.toString()}`),
     ...props,
   });
 }
@@ -79,7 +80,6 @@ describe('the elements', () => {
       root: { today, locale: 'en-US', readonly: true, invalid: true, numberOfMonths: 2 },
     });
     expect(dataAttributes(group)).toEqual([
-      'data-allow-mismatch',
       'data-empty',
       'data-invalid',
       'data-navigation-direction',
@@ -90,10 +90,10 @@ describe('the elements', () => {
     expect(group).toHaveAttribute('data-navigation-direction', 'none');
     const grid = query('[role=grid]')!;
     expect(grid).toHaveAttribute('aria-readonly', 'true');
-    expect(dataAttributes(grid)).toEqual(['data-allow-mismatch', 'data-empty', 'data-invalid']);
+    expect(dataAttributes(grid)).toEqual(['data-empty', 'data-invalid']);
     expect(dataAttributes(previous())).toEqual(['data-empty', 'data-invalid', 'data-readonly']);
     expect(dataAttributes(cell('2026-11-18'))).toEqual(['data-date', 'data-today']);
-    expect(dataAttributes(button('2026-11-18')!)).toEqual(['data-allow-mismatch']);
+    expect(dataAttributes(button('2026-11-18')!)).toEqual([]);
   });
 
   test('render the tag of `as`', async () => {

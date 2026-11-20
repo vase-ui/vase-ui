@@ -9,7 +9,7 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
 </script>
 
 <template>
-  <Calendar.Root v-model="selected" locale="en-US" :class="styles.Root">
+  <Calendar.Root v-model="selected" locale="en-US" :first-day-of-week="7" :class="styles.Root">
     <div :class="styles.Header">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
       <Calendar.ViewTrigger :class="styles.Title" />

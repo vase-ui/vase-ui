@@ -160,9 +160,17 @@ type ViewProps = Pick<
 >;
 
 interface CalendarEmit {
-  (event: 'monthChange', month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails): void;
+  (
+    event: 'monthChange',
+    month: Temporal.PlainYearMonth,
+    details: CalendarRootChangeEventDetails,
+  ): void;
   (event: 'update:month', month: Temporal.PlainYearMonth): void;
-  (event: 'focusedDateChange', date: Temporal.PlainDate, details: CalendarRootChangeEventDetails): void;
+  (
+    event: 'focusedDateChange',
+    date: Temporal.PlainDate,
+    details: CalendarRootChangeEventDetails,
+  ): void;
   (event: 'update:focusedDate', date: Temporal.PlainDate): void;
   (event: 'viewChange', view: CalendarRootView, details: CalendarRootChangeEventDetails): void;
   (event: 'update:view', view: CalendarRootView): void;
@@ -199,7 +207,8 @@ export function useCalendar(
     const own = template && template.calendarId !== 'iso8601' ? template.calendarId : undefined;
     let id = props.calendar ?? own ?? 'gregory';
     // A year and month shows in another calendar only where that calendar has the same months.
-    if (isKind(template, 'yearMonth') && !yearMonthInCalendar(template, id)) id = template.calendarId;
+    if (isKind(template, 'yearMonth') && !yearMonthInCalendar(template, id))
+      id = template.calendarId;
     return id === 'gregory' || !isTemporalCalendar(id) ? 'iso8601' : id;
   });
   const toGridDate = (date: DateValue | Temporal.PlainYearMonth) =>
@@ -221,9 +230,7 @@ export function useCalendar(
   const firstDay = computed<DayOfWeek>(() =>
     props.broadcastCalendar ? 1 : (props.firstDayOfWeek ?? 1),
   );
-  const minimalDays = computed(
-    () => props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1),
-  );
+  const minimalDays = computed(() => props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1));
   const monthCount = computed(() => Math.max(1, Math.floor(props.numberOfMonths ?? 1)));
   const duration = computed<CalendarVisibleDuration | undefined>(() => {
     const visible = props.visibleDuration;
@@ -284,7 +291,8 @@ export function useCalendar(
   }
 
   function clampPageStart(start: Temporal.PlainDate, visible: CalendarVisibleDuration) {
-    const min = props.min && alignPageStart(toGridDate(props.min), visible, firstDay.value, 'start');
+    const min =
+      props.min && alignPageStart(toGridDate(props.min), visible, firstDay.value, 'start');
     const max = props.max && alignPageStart(toGridDate(props.max), visible, firstDay.value, 'end');
     const first = min && compareDates(start, min) < 0 ? min : start;
     return max && compareDates(first, max) > 0 ? max : first;
@@ -327,12 +335,9 @@ export function useCalendar(
     const start = [requestedStart.value, durationStart.value].find(isOfVisibleMonth);
     if (start) return toGridDate(start.day);
     const given = !!monthModel.value.value;
-    const first = alignPageStart(
-      given ? month.toPlainDate({ day: 1 }) : toGridDate(anchor.value!),
-      visible,
-      firstDay.value,
-      'start',
-    );
+    const day = given ? month.toPlainDate({ day: 1 }) : anchor.value && toGridDate(anchor.value);
+    if (!day) return null;
+    const first = alignPageStart(day, visible, firstDay.value, 'start');
     return given ? first : clampPageStart(first, visible);
   });
 
@@ -354,7 +359,8 @@ export function useCalendar(
   watch(
     () => [pages.value[0]?.first.toString(), calendar.value, firstDay.value] as const,
     ([next, nextCalendar, nextDay], [previous, previousCalendar, previousDay]) => {
-      if (!next || !previous || nextCalendar !== previousCalendar || nextDay !== previousDay) return;
+      if (!next || !previous || nextCalendar !== previousCalendar || nextDay !== previousDay)
+        return;
       const order = compareDates(Temporal.PlainDate.from(next), Temporal.PlainDate.from(previous));
       if (order !== 0) navigationDirection.value = order < 0 ? 'previous' : 'next';
     },
@@ -465,7 +471,10 @@ export function useCalendar(
    * A move of the user gives `monthChange`, then `update:month`. A move with no user event, such
    * as for a write of the parent, gives `update:month` only.
    */
-  function setMonth(month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails | null) {
+  function setMonth(
+    month: Temporal.PlainYearMonth,
+    details: CalendarRootChangeEventDetails | null,
+  ) {
     if (details) {
       emit('monthChange', month, details);
       if (details.isCanceled) return false;
@@ -496,7 +505,10 @@ export function useCalendar(
     return true;
   }
 
-  function setFocusedDate(date: Temporal.PlainDate, details: CalendarRootChangeEventDetails | null) {
+  function setFocusedDate(
+    date: Temporal.PlainDate,
+    details: CalendarRootChangeEventDetails | null,
+  ) {
     if (details) {
       emit('focusedDateChange', date, details);
       if (details.isCanceled) return false;
@@ -604,7 +616,10 @@ export function useCalendar(
     date = dateOfCell(cell),
   ) {
     const target = clampDate(date);
-    if (!isOnCellPage(cell) && !setMonth(clampMonth(target.toPlainYearMonth(), 1), createDetails())) {
+    if (
+      !isOnCellPage(cell) &&
+      !setMonth(clampMonth(target.toPlainYearMonth(), 1), createDetails())
+    ) {
       return false;
     }
     if (!setFocusedDate(target, createDetails())) return false;
@@ -631,7 +646,8 @@ export function useCalendar(
     navigationDirection.value = 'none';
     // A grid of months or of years can show the month of `max`. The pages of days keep to the limits.
     const month = visibleMonth.value;
-    if (next === 'day' && month && !clampMonth(month).equals(month)) setMonth(clampMonth(month), null);
+    if (next === 'day' && month && !clampMonth(month).equals(month))
+      setMonth(clampMonth(month), null);
   });
 
   // The tab stop moves for a cause that is not a focus event, such as a write of the parent, a new
@@ -683,7 +699,12 @@ export function useCalendar(
     }
   }
 
-  function onCellKeydown(cell: Temporal.PlainYearMonth, columns: number, event: KeyboardEvent, rtl: boolean) {
+  function onCellKeydown(
+    cell: Temporal.PlainYearMonth,
+    columns: number,
+    event: KeyboardEvent,
+    rtl: boolean,
+  ) {
     if (event.shiftKey) return;
     const move = getCellMove(event.key, { rtl, columns });
     if (!move) return;
@@ -787,7 +808,12 @@ export function useCalendar(
     if (visible) {
       // The month of the root stays `target`, so that the select shows the month that the user
       // picked. The limits can move the start of the page to an earlier month.
-      const first = alignPageStart(target.toPlainDate({ day: 1 }), visible, firstDay.value, 'start');
+      const first = alignPageStart(
+        target.toPlainDate({ day: 1 }),
+        visible,
+        firstDay.value,
+        'start',
+      );
       setPageStart(clampPageStart(first, visible), details, target);
       return;
     }
@@ -823,7 +849,11 @@ export function useCalendar(
     const next = view.value === target ? (isMonthValue.value ? 'month' : 'day') : target;
     // A grid of months or of years can show the month of `max`. The pages of days keep to the limits.
     const clamped = clampMonth(month);
-    if (next === 'day' && !clamped.equals(month) && !setMonth(clamped, create('trigger-press', event))) {
+    if (
+      next === 'day' &&
+      !clamped.equals(month) &&
+      !setMonth(clamped, create('trigger-press', event))
+    ) {
       return;
     }
     setView(next, create('trigger-press', event));
@@ -947,9 +977,6 @@ export function useCalendar(
     rootProps: () => ({
       role: 'group',
       'aria-label': label.value || undefined,
-      // A server and a browser write a range of months with other spaces
-      // (test/measurements/calendar.test.ts).
-      'data-allow-mismatch': 'attribute',
       ...stateAttributes(state.value),
       'data-view': view.value,
       'data-navigation-direction': navigationDirection.value,

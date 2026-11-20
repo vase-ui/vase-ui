@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import * as Calendar from '../../calendar/index.parts';
+import { Calendar } from '../../calendar';
 import * as DateField from '../../date-field/index.parts';
 import * as TimeField from '../../time-field/index.parts';
 import * as DatePicker from '../index.parts';
@@ -64,7 +64,7 @@ defineExpose({ root, field, calendar });
                       <template #week="{ week }">
                         <Calendar.Week :week="week">
                           <template #day="{ day }">
-                            <Calendar.Day :day="day">
+                            <Calendar.Day :day="day" :data-date="day.toString()">
                               <Calendar.DayButton />
                             </Calendar.Day>
                           </template>

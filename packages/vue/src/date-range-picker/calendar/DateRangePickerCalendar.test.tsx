@@ -168,9 +168,9 @@ describe('<DateRangePicker.Calendar />', () => {
       expect(dayButton('2026-11-10')).not.toBe(null);
     });
 
-    expect(dayButton('2026-11-10')).toHaveAttribute('data-disabled');
-    expect(dayButton('2026-11-12')).not.toHaveAttribute('data-disabled');
-    expect(dayButton('2026-11-26')).toHaveAttribute('data-disabled');
+    expect(dayButton('2026-11-10')).toBeDisabled();
+    expect(dayButton('2026-11-12')).not.toBeDisabled();
+    expect(dayButton('2026-11-26')).toBeDisabled();
   });
 
   it('is disabled with the picker', async () => {

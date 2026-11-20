@@ -17,20 +17,13 @@ export interface HydrateOptions {
   /** The HTML that a server made for the component. */
   serverHtml: string;
   props?: Record<string, unknown> | undefined;
-  /**
-   * Compares the two DOMs with each generated id replaced by the order of its first use. Give it
-   * when a part mounts again after the mount, because Vue gives the new part a new id. An ID
-   * reference that names another element still fails the comparison.
-   */
-  renumberIds?: boolean | undefined;
 }
 
 export interface HydrateResult {
   container: HTMLElement;
 }
 
-// `hydrateAfter` makes no comparison, so it has no option for it.
-export interface HydrateAfterOptions extends Omit<HydrateOptions, 'renumberIds'> {
+export interface HydrateAfterOptions extends HydrateOptions {
   /**
    * Gets the container with the server HTML, before the app mounts. It does what a user or a
    * browser does before the scripts of a page run, such as a focus, a key press or a write of
@@ -108,14 +101,13 @@ async function mountAndSettle(app: App, container: HTMLElement) {
  */
 export async function hydrate(
   component: Component,
-  { serverHtml, props, renumberIds = false }: HydrateOptions,
+  { serverHtml, props }: HydrateOptions,
 ): Promise<HydrateResult> {
-  const compared = renumberIds ? renumberGeneratedIds : (dom: string) => dom;
-  const clientDom = compared(await renderOnClient(component, props));
+  const clientDom = await renderOnClient(component, props);
 
   const container = insertServerHtml(serverHtml);
   await mountServerHtml(component, props, container);
-  const hydratedDom = compared(serializeChildren(container));
+  const hydratedDom = serializeChildren(container);
 
   // Vue writes some hydration messages only to the console.
   const messages = takeReportedMessages();
@@ -260,16 +252,6 @@ async function renderOnClient(
 }
 
 // `useVaseUiId` gives `vase-ui-` and the id of Vue's `useId`, such as `v-0` or `v-1-2`.
-function renumberGeneratedIds(dom: string): string {
-  const order = new Map<string, number>();
-  return dom.replace(/vase-ui-v-[\d-]*\d/g, (id) => {
-    if (!order.has(id)) {
-      order.set(id, order.size);
-    }
-    return `generated-id-${order.get(id)}`;
-  });
-}
-
 function serializeChildren(element: Element): string {
   return Array.from(element.childNodes, serialize).join('');
 }

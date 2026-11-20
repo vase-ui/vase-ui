@@ -10,7 +10,12 @@ defineExpose({ value, changes });
 
 <template>
   <select aria-label="Letter" @change="changes++">
-    <option v-for="letter in ['a', 'b', 'c']" :key="letter" :value="letter" :selected="letter === value">
+    <option
+      v-for="letter in ['a', 'b', 'c']"
+      :key="letter"
+      :value="letter"
+      :selected="letter === value"
+    >
       {{ letter }}
     </option>
   </select>

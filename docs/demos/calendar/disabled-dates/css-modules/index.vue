@@ -15,12 +15,13 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 <template>
   <Calendar.Root
     v-model="selected"
-    :min-date="today"
-    :max-date="lastDay"
+    :min="today"
+    :max="lastDay"
     :disabled-dates="{ dayOfWeek: [6, 7] }"
     locale="en-US"
+    :first-day-of-week="7"
     aria-label="Delivery day"
-    :class="styles.Root"
+    :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>

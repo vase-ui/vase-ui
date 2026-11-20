@@ -78,9 +78,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
       const serverHtml = await renderOnServer(file);
       // A reader opens the site on another day than the day of its build.
       mockBrowserToday('month');
-      // A calendar page that follows the clock mounts again for the day of the browser, so Vue
-      // gives its caption a new id.
-      await hydrate(Demo, { serverHtml, renumberIds: serverHtml.includes('data-vase-ui-today') });
+      await hydrate(Demo, { serverHtml });
     });
   },
 );

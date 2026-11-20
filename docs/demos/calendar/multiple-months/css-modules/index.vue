@@ -16,10 +16,11 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     v-model="selected"
     :number-of-months="2"
     paged-navigation
-    :min-date="today"
+    :min="today"
     locale="en-US"
+    :first-day-of-week="7"
     aria-label="Departure day"
-    :class="[styles.Root, styles.WithMonths]"
+    :class="[styles.Root, styles.SixWeeks, styles.WithMonths]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>

@@ -39,9 +39,6 @@ function elementProps() {
       role: 'grid',
       'aria-labelledby': named ? undefined : month.captionId,
       'aria-label': attrs['aria-labelledby'] == null ? month.text : undefined,
-      // A server and a browser write a range of days with other spaces
-      // (test/measurements/calendar.test.ts).
-      'data-allow-mismatch': 'attribute',
       'aria-multiselectable': on(calendar.multiselectable),
       'aria-readonly': on(state.readonly),
       'aria-disabled': on(state.disabled),

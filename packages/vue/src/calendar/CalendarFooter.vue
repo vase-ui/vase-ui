@@ -23,7 +23,10 @@ const { element, setElement } = useElement<HTMLElement>();
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps({ role: 'status', 'aria-live': 'polite', ...stateAttributes(calendar.state) }, attrs);
+  return mergeProps(
+    { role: 'status', 'aria-live': 'polite', ...stateAttributes(calendar.state) },
+    attrs,
+  );
 }
 </script>
 

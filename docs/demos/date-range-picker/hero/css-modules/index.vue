@@ -2,7 +2,7 @@
 import { useId } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import { RangeCalendar } from '@vase-ui/vue/range-calendar';
+import { Calendar } from '@vase-ui/vue/calendar';
 import styles from '../../_index.module.css';
 
 const id = useId();
@@ -62,38 +62,36 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
           <DateRangePicker.Popup aria-label="Choose trip dates" :class="styles.Popup">
             <DateRangePicker.Calendar :class="styles.Calendar">
               <div :class="styles.Nav">
-                <RangeCalendar.PreviousButton :class="styles.Button">
-                  &lsaquo;
-                </RangeCalendar.PreviousButton>
-                <RangeCalendar.NextButton :class="styles.Button">&rsaquo;</RangeCalendar.NextButton>
+                <Calendar.PreviousButton :class="styles.Button"> &lsaquo; </Calendar.PreviousButton>
+                <Calendar.NextButton :class="styles.Button">&rsaquo;</Calendar.NextButton>
               </div>
-              <RangeCalendar.Months>
+              <Calendar.Months>
                 <template #month="{ month }">
-                  <RangeCalendar.Month :month="month">
-                    <RangeCalendar.Caption :class="styles.Caption" />
-                    <RangeCalendar.Grid :class="styles.Grid">
-                      <RangeCalendar.GridHeader>
-                        <RangeCalendar.GridHeaderRow>
+                  <Calendar.Month :month="month">
+                    <Calendar.Caption :class="styles.Caption" />
+                    <Calendar.Grid :class="styles.Grid">
+                      <Calendar.GridHeader>
+                        <Calendar.GridHeaderRow>
                           <template #weekday="{ weekday }">
-                            <RangeCalendar.Weekday :weekday="weekday" :class="styles.Weekday" />
+                            <Calendar.Weekday :weekday="weekday" :class="styles.Weekday" />
                           </template>
-                        </RangeCalendar.GridHeaderRow>
-                      </RangeCalendar.GridHeader>
-                      <RangeCalendar.GridBody>
+                        </Calendar.GridHeaderRow>
+                      </Calendar.GridHeader>
+                      <Calendar.GridBody>
                         <template #week="{ week }">
-                          <RangeCalendar.Week :week="week">
+                          <Calendar.Week :week="week">
                             <template #day="{ day }">
-                              <RangeCalendar.Day :day="day" :class="styles.Day">
-                                <RangeCalendar.DayButton :class="styles.DayButton" />
-                              </RangeCalendar.Day>
+                              <Calendar.Day :day="day" :class="styles.Day">
+                                <Calendar.DayButton :class="styles.DayButton" />
+                              </Calendar.Day>
                             </template>
-                          </RangeCalendar.Week>
+                          </Calendar.Week>
                         </template>
-                      </RangeCalendar.GridBody>
-                    </RangeCalendar.Grid>
-                  </RangeCalendar.Month>
+                      </Calendar.GridBody>
+                    </Calendar.Grid>
+                  </Calendar.Month>
                 </template>
-              </RangeCalendar.Months>
+              </Calendar.Months>
             </DateRangePicker.Calendar>
           </DateRangePicker.Popup>
         </DateRangePicker.Positioner>

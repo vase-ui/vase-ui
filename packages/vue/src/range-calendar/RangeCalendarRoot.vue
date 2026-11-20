@@ -54,7 +54,13 @@ const range = useRange(
   emit as (event: 'valueChange' | 'update:modelValue', ...args: unknown[]) => void,
   inject(rangeCalendarHostKey, null),
 );
-const { calendar, rootState, focus, rootProps, dayAt } = useCalendar(props, {
+const {
+  calendar: forParts,
+  rootState,
+  focus,
+  rootProps,
+  dayAt,
+} = useCalendar(props, {
   part: 'RangeCalendar.Root',
   emit,
   element,
@@ -63,7 +69,7 @@ const { calendar, rootState, focus, rootProps, dayAt } = useCalendar(props, {
   dayButtonProps: (day) => range.dayButtonProps(day, dayAt),
   onTargetRemoved: (target) => range.dropDragOf(target.element),
 });
-provide(calendarKey, calendar);
+provide(calendarKey, forParts);
 
 const state = computed<RangeCalendarRootState>(() => ({
   ...rootState.value,

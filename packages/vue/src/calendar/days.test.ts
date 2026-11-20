@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { assertModifierNames, canFocus, canSelect, dayAttributes, getDayState, getTabStop } from './days';
+import {
+  assertModifierNames,
+  canFocus,
+  canSelect,
+  dayAttributes,
+  getDayState,
+  getTabStop,
+} from './days';
 import type { DayRules } from './days';
 import { getBroadcastPage, getDurationPage, getMonthPage, ownsDay } from './pages';
 import type { CalendarDayState } from './types';
@@ -71,12 +78,31 @@ describe('getDayState', () => {
     const range = { start: day('2026-11-10'), end: day('2026-11-12') };
     const options = rules({ range, unavailableDates: day('2026-11-11') });
     const state = (date: string) => {
-      const { selected, rangeStart, rangeMiddle, rangeEnd } = getDayState(day(date), november(), options);
+      const { selected, rangeStart, rangeMiddle, rangeEnd } = getDayState(
+        day(date),
+        november(),
+        options,
+      );
       return { selected, rangeStart, rangeMiddle, rangeEnd };
     };
-    expect(state('2026-11-10')).toEqual({ selected: true, rangeStart: true, rangeMiddle: false, rangeEnd: false });
-    expect(state('2026-11-11')).toEqual({ selected: false, rangeStart: false, rangeMiddle: true, rangeEnd: false });
-    expect(state('2026-11-12')).toEqual({ selected: true, rangeStart: false, rangeMiddle: false, rangeEnd: true });
+    expect(state('2026-11-10')).toEqual({
+      selected: true,
+      rangeStart: true,
+      rangeMiddle: false,
+      rangeEnd: false,
+    });
+    expect(state('2026-11-11')).toEqual({
+      selected: false,
+      rangeStart: false,
+      rangeMiddle: true,
+      rangeEnd: false,
+    });
+    expect(state('2026-11-12')).toEqual({
+      selected: true,
+      rangeStart: false,
+      rangeMiddle: false,
+      rangeEnd: true,
+    });
     expect(state('2026-11-13').selected).toBe(false);
   });
 
@@ -358,19 +384,27 @@ describe('getTabStop', () => {
       expected: '2026-11-09',
     },
   ])('gives $name', ({ focusedDate, selected, today, expected }) => {
-    const tabStop = getTabStop(days(), focusedDate === null ? null : day(focusedDate), (date) => selected.includes(date.toString()), day(today));
+    const tabStop = getTabStop(
+      days(),
+      focusedDate === null ? null : day(focusedDate),
+      (date) => selected.includes(date.toString()),
+      day(today),
+    );
 
     expect(text(tabStop)).toBe(expected);
   });
 
   it('gives no day when no day can take focus', () => {
-    expect(
-      getTabStop([], day('2026-11-11'), none, day('2026-11-11')),
-    ).toBe(null);
+    expect(getTabStop([], day('2026-11-11'), none, day('2026-11-11'))).toBe(null);
   });
 
   it('compares a focused day in another calendar by the day', () => {
-    const tabStop = getTabStop(days(), day('2026-11-11').withCalendar('persian'), none, day('2026-11-09'));
+    const tabStop = getTabStop(
+      days(),
+      day('2026-11-11').withCalendar('persian'),
+      none,
+      day('2026-11-09'),
+    );
 
     expect(text(tabStop)).toBe('2026-11-11');
   });

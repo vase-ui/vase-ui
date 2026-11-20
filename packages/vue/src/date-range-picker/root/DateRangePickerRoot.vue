@@ -17,7 +17,8 @@ import type {
 export interface DateRangePickerRootState {}
 
 /** The first day and the last day of a range. An end is `null` while it has no value. */
-export type DateRangePickerRootValue<Value extends DateValue = DateValue> = RangeCalendarRootValue<Value>;
+export type DateRangePickerRootValue<Value extends DateValue = DateValue> =
+  RangeCalendarRootValue<Value>;
 
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 

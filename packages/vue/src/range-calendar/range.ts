@@ -50,7 +50,11 @@ function isSameEnd(a: DateValue | null, b: DateValue | null) {
 export function useRange(
   props: RangeCalendarRootProps<DateValue>,
   emit: {
-    (event: 'valueChange', value: RangeCalendarRootValue, details: RangeCalendarRootChangeEventDetails): void;
+    (
+      event: 'valueChange',
+      value: RangeCalendarRootValue,
+      details: RangeCalendarRootChangeEventDetails,
+    ): void;
     (event: 'update:modelValue', value: RangeCalendarRootValue): void;
   },
   host: RangeCalendarHost | null,
@@ -100,8 +104,7 @@ export function useRange(
       min: props.min,
       max: props.max,
       disabledDates: props.disabledDates,
-    }) ||
-    matches(date, props.unavailableDates);
+    }) || matches(date, props.unavailableDates);
 
   /** The last day from `anchor` toward `date` that ends a valid range with `anchor`, or `null`. */
   function lastValidEnd(anchor: Temporal.PlainDate, date: Temporal.PlainDate) {
@@ -149,7 +152,9 @@ export function useRange(
   /** The value before the range in progress started, or the value now. */
   function valueBefore(): Ends {
     const first = lone.value;
-    return first && pending && isSameDay(pending.anchor, first) ? pending.before : model.value.value;
+    return first && pending && isSameDay(pending.anchor, first)
+      ? pending.before
+      : model.value.value;
   }
 
   function createEnds(first: Temporal.PlainDate, second: Temporal.PlainDate | null) {
@@ -277,7 +282,10 @@ export function useRange(
       if (drag.value?.element === element) drag.value = null;
     },
     /** The listeners of a day button. `dayAt` finds the day of a button of the root. */
-    dayButtonProps(day: Temporal.PlainDate, dayAt: (element: Element | null) => Temporal.PlainDate | null) {
+    dayButtonProps(
+      day: Temporal.PlainDate,
+      dayAt: (element: Element | null) => Temporal.PlainDate | null,
+    ) {
       const dayAtPoint = (event: PointerEvent) => {
         const root = (event.currentTarget as Element).getRootNode() as Document | ShadowRoot;
         return dayAt(root.elementFromPoint(event.clientX, event.clientY));
@@ -291,8 +299,16 @@ export function useRange(
           extension = null;
           if (event.button !== 0 || props.readonly || isBlocked(day)) return;
           const element = event.currentTarget as Element;
-          drag.value = { pointerId: event.pointerId, element, anchor: day, current: day, moved: false };
-          element.setPointerCapture(event.pointerId);
+          drag.value = {
+            pointerId: event.pointerId,
+            element,
+            anchor: day,
+            current: day,
+            moved: false,
+          };
+          // The browser knows no pointer of an event that a script dispatches, and the method then
+          // throws. The drag goes on with the events of the button.
+          if (event.isTrusted) element.setPointerCapture(event.pointerId);
         },
         onPointermove(event: PointerEvent) {
           const date = isDragging(event) && dayAtPoint(event);

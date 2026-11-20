@@ -37,7 +37,9 @@ const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-
                           <template #week="{ week }">
                             <Calendar.Week :week="week">
                               <template #day="{ day: date }">
-                                <Calendar.Day :day="date"><Calendar.DayButton /></Calendar.Day>
+                                <Calendar.Day :day="date" :data-date="date.toString()"
+                                  ><Calendar.DayButton
+                                /></Calendar.Day>
                               </template>
                             </Calendar.Week>
                           </template>

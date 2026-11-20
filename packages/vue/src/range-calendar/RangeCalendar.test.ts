@@ -61,11 +61,7 @@ describe('the range', () => {
       defaultValue: [day('2026-11-10'), day('2026-11-12')],
     });
     expect(cell('2026-11-11')).toHaveAttribute('aria-selected', 'true');
-    expect(dataAttributes(button('2026-11-10'))).toEqual([
-      'data-allow-mismatch',
-      'data-range-start',
-      'data-selected',
-    ]);
+    expect(dataAttributes(button('2026-11-10'))).toEqual(['data-range-start', 'data-selected']);
     expect(button('2026-11-11').style.touchAction).toBe('none');
   });
 

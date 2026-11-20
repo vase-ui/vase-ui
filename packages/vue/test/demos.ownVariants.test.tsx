@@ -450,7 +450,7 @@ describe.each(demos)('%s', (demo) => {
     });
   }
 
-  if (hasPart('RangeCalendar.DayButton')) {
+  if (hasPart('RangeCalendar.Root') || hasPart('DateRangePicker.Calendar')) {
     // A grid that is narrower than its month leaves a blank at one side of the days.
     it.each(VARIANTS)('each grid is as wide as its month: %s', async (variant) => {
       const { frame } = await mount(variant, false);
@@ -502,7 +502,7 @@ describe.each(demos)('%s', (demo) => {
       });
     }
 
-    if (hasPart('RangeCalendar.DayButton')) {
+    if (hasPart('RangeCalendar.Root') || hasPart('DateRangePicker.Calendar')) {
       it.each([390, 1280])('the focus ring is above adjacent days at %i px', async (width) => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
         await inEachVariantAt(width, async (frame, variant) => {

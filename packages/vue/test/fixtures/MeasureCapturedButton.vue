@@ -4,7 +4,7 @@ import { onUnmounted, shallowRef } from 'vue';
 // Two buttons A and B in a box. A takes the capture of the pointer at `pointerdown`. `removeA()`
 // removes A with Vue. `log` gets the type, the target and the `detail` of each pointer event and
 // click that reaches the document.
-const props = defineProps<{ log: string[] }>();
+const props = defineProps<{ log: { add(entry: string): void } }>();
 const shownA = shallowRef(true);
 defineExpose({ removeA: () => (shownA.value = false) });
 
@@ -15,7 +15,9 @@ function capture(event: PointerEvent) {
 function record(event: Event) {
   const target = event.target as Element | Document;
   const name = target instanceof Element ? target.id || target.localName : 'document';
-  props.log.push(`${event.type} ${name}${event.type === 'click' ? ` ${(event as MouseEvent).detail}` : ''}`);
+  props.log.add(
+    `${event.type} ${name}${event.type === 'click' ? ` ${(event as MouseEvent).detail}` : ''}`,
+  );
 }
 
 const types = ['pointerup', 'lostpointercapture', 'click'];

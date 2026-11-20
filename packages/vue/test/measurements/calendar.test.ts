@@ -73,7 +73,9 @@ describe('a select whose options bind selected to a value that a change keeps', 
 describe('a drag of the real pointer from button A, which takes the capture, to button B', () => {
   test('ends with a click on A in the three browsers', async () => {
     const log: string[] = [];
-    const { root: container } = mount(MeasureCapturedButton, { log });
+    const { root: container } = mount(MeasureCapturedButton, {
+      log: { add: (entry: string) => log.push(entry) },
+    });
     const a = centerOf(container.querySelector('#A')!);
     const b = centerOf(container.querySelector('#B')!);
     await userEvent.pointer([
@@ -86,7 +88,9 @@ describe('a drag of the real pointer from button A, which takes the capture, to 
 
   test('gives the release outside the box to no element of the box when Vue removes A during the press', async () => {
     const log: string[] = [];
-    const { root: container, exposed } = mount(MeasureCapturedButton, { log });
+    const { root: container, exposed } = mount(MeasureCapturedButton, {
+      log: { add: (entry: string) => log.push(entry) },
+    });
     const box = container.querySelector('#box')!;
     const a = centerOf(container.querySelector('#A')!);
     await userEvent.pointer({ coords: a, keys: '[MouseLeft>]' });
@@ -116,7 +120,9 @@ describe('the data of Intl on the server and in the browser', () => {
     const { root: inBrowser } = mount(MeasureIntlTexts, { locales });
     const items = (element: Element) => [...element.querySelectorAll('li')];
     const texts = (element: Element) =>
-      items(element).map((item) => [...item.querySelectorAll('span')].map((span) => span.textContent));
+      items(element).map((item) =>
+        [...item.querySelectorAll('span')].map((span) => span.textContent),
+      );
     const calendars = (element: Element) =>
       items(element).map((item) => item.getAttribute('data-calendar'));
     return {
@@ -139,6 +145,8 @@ describe('the data of Intl on the server and in the browser', () => {
   // and Node.js resolves it to `islamic`, which `Temporal` refuses.
   test('gives the same calendar of each locale in Chromium, and others in Firefox and WebKit', async () => {
     const [onServer, inBrowser] = (await read()).calendars;
-    expect(JSON.stringify(inBrowser) === JSON.stringify(onServer)).toBe(server.browser === 'chromium');
+    expect(JSON.stringify(inBrowser) === JSON.stringify(onServer)).toBe(
+      server.browser === 'chromium',
+    );
   });
 });

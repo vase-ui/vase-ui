@@ -1017,7 +1017,7 @@ describe('<DateRangePicker.Root />', () => {
         expect(screen.getByTestId('calendar')).toHaveAttribute('data-disabled');
       });
       expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
-      expect(dayButton('2026-11-18')).toHaveAttribute('data-disabled');
+      expect(dayButton('2026-11-18')).toBeDisabled();
     });
 
     it('disables the trigger of a picker that has no field, in a disabled fieldset', async () => {

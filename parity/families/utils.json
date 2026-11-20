@@ -47,6 +47,19 @@
       "upstream": "packages/react/src/utils/collapsibleOpenStateMapping.ts",
       "kind": "not-applicable",
       "reason": "The parts of Collapsible and Accordion write their own attributes from their state. A trigger has `aria-expanded` and a panel has `hidden`, which CSS selects (rule 8.15), so no mapping of the open state to attributes is shared."
+    },
+    {
+      "upstream": "packages/react/src/utils/useRegisteredLabelId.ts",
+      "kind": "not-applicable",
+      "reason": "Each root and its label share their own contract, such as `Meter.Root`, `Progress.Root`, `Fieldset.Root` and `Calendar.Month`, and the root names its first label (`VUE-131`). No shared module of labels is left."
+    },
+    {
+      "upstream": "packages/react/src/utils/useRegisteredLabelId.test.tsx",
+      "describe": ["useRegisteredLabelId"],
+      "title": "does not let an older label cleanup clear a newer label",
+      "kind": "replaced",
+      "test": "packages/vue/src/fieldset/Fieldset.test.ts",
+      "reason": "A label removes only its own entry, and the root names the next label (`VUE-131`). The case of `Fieldset.test.ts` with that id tests it."
     }
   ],
   "surfaceAdditions": [],

@@ -16,11 +16,13 @@ async function mountCalendar(setup: Record<string, unknown> = {}) {
     today,
     locale: 'en-US',
     onMonthChange: (month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) =>
-      log.push(`monthChange ${month} ${details.reason}`),
-    'onUpdate:month': (month: Temporal.PlainYearMonth) => log.push(`update:month ${month}`),
+      log.push(`monthChange ${month.toString()} ${details.reason}`),
+    'onUpdate:month': (month: Temporal.PlainYearMonth) =>
+      log.push(`update:month ${month.toString()}`),
     onFocusedDateChange: (date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) =>
-      log.push(`focusedDateChange ${date} ${details.reason}`),
-    'onUpdate:focusedDate': (date: Temporal.PlainDate) => log.push(`update:focusedDate ${date}`),
+      log.push(`focusedDateChange ${date.toString()} ${details.reason}`),
+    'onUpdate:focusedDate': (date: Temporal.PlainDate) =>
+      log.push(`update:focusedDate ${date.toString()}`),
     ...(setup.root as object),
   });
   const { root: container, exposed } = mount(CalendarParts, { ...setup, root });
@@ -51,10 +53,18 @@ async function mountCalendar(setup: Record<string, unknown> = {}) {
 
 describe('the tab stop', () => {
   test.each([
-    { name: 'the focused day', root: { defaultFocusedDate: day('2026-11-03') }, expected: '2026-11-03' },
+    {
+      name: 'the focused day',
+      root: { defaultFocusedDate: day('2026-11-03') },
+      expected: '2026-11-03',
+    },
     { name: 'the selected day', root: { defaultValue: day('2026-11-05') }, expected: '2026-11-05' },
     { name: 'today', root: {}, expected: '2026-11-18' },
-    { name: 'the first day', root: { today: day('2026-12-24'), defaultMonth: Temporal.PlainYearMonth.from('2026-11') }, expected: '2026-11-01' },
+    {
+      name: 'the first day',
+      root: { today: day('2026-12-24'), defaultMonth: Temporal.PlainYearMonth.from('2026-11') },
+      expected: '2026-11-01',
+    },
   ])('is one day: $name', async ({ root, expected }) => {
     const { tabStops } = await mountCalendar({ root });
     expect(tabStops()).toEqual([expected]);
