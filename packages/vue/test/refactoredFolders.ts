@@ -5,10 +5,12 @@
  * older forms leave them out.
  */
 export const REFACTORED_FOLDERS = [
+  'accordion',
   'avatar',
   'button',
   'checkbox',
   'checkbox-group',
+  'collapsible',
   'field',
   'fieldset',
   'form',
