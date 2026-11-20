@@ -220,11 +220,22 @@ export interface ComboboxLabelState extends FieldState {
   disabled: boolean;
 }
 
+/**
+ * WAI-ARIA 1.3 defines `aria-description` for each element, and the types of Vue do not list it. A
+ * chip and the input take it, so that a screen reader tells how to reach and remove the chips.
+ */
+interface AriaDescriptionAttribute {
+  'aria-description'?: string | undefined;
+}
+
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
-type InputAttributes = Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'> & {
-  autocomplete?: string | null | undefined;
-};
+type InputAttributes = Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'> &
+  AriaDescriptionAttribute & {
+    autocomplete?: string | null | undefined;
+  };
+
+type ChipAttributes = Omit<HTMLAttributes, 'as'> & AriaDescriptionAttribute;
 
 export interface ComboboxInputProps extends /* @vue-ignore */ InputAttributes {
   id?: string | undefined;
@@ -305,7 +316,7 @@ export interface ComboboxChipsProps extends AsProps, /* @vue-ignore */ Omit<HTML
 
 export interface ComboboxChipsState {}
 
-export interface ComboboxChipProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+export interface ComboboxChipProps extends AsProps, /* @vue-ignore */ ChipAttributes {}
 
 export interface ComboboxChipState {
   disabled: boolean;
