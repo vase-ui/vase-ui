@@ -36,8 +36,8 @@ export interface AlertDialogRootProps<Payload = unknown> extends Omit<
   'modal' | 'disablePointerDismissal' | 'handle'
 > {
   /**
-   * Connects the root to triggers outside it and to code. A handle from `Dialog.createHandle()` does
-   * not fit.
+   * Connects the root to triggers outside it and to code. The type refuses a handle from
+   * `Dialog.createHandle()`.
    */
   handle?: AlertDialogHandle<Payload> | undefined;
 }
@@ -56,7 +56,8 @@ export interface AlertDialogTriggerProps<Payload = unknown>
   /** The payload that the alert dialog gets when this trigger opens it. */
   payload?: Payload | undefined;
   /**
-   * Connects the trigger to a root outside it. A handle from `Dialog.createHandle()` does not fit.
+   * Connects the trigger to a root outside it. The type refuses a handle from
+   * `Dialog.createHandle()`.
    */
   handle?: AlertDialogHandle<Payload> | undefined;
 }

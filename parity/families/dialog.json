@@ -205,7 +205,7 @@
     {
       "entry": "Portal",
       "prop": "defer",
-      "reason": "The portal is a `<Teleport>`. With `defer`, it moves its content after the rest of the update mounted, so its target can come later in the same template."
+      "reason": "The portal is a `<Teleport>`. With `defer`, it moves its content after the rest of the update mounts, so its target can come later in the same template."
     },
     {
       "entry": "Trigger",
