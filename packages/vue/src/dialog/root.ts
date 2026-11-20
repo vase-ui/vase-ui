@@ -20,8 +20,8 @@ import type { DialogRootChangeEventDetails, DialogRootProps, DialogTriggerState 
 /** Opens and closes a dialog from code, and connects triggers outside the root to it. */
 export class DialogHandle<Payload = unknown> extends PopupHandle<Payload> {
   /**
-   * Opens the dialog for the trigger with this `id`. With `null`, or with an `id` that no trigger of
-   * the root has, the dialog opens with no trigger.
+   * Opens the popup for the trigger with this `id`. With `null`, or with an `id` that no trigger of
+   * the root has, the popup opens with no trigger.
    */
   override open(triggerId: string | null) {
     const root = rootOfHandle<Payload>(this);
@@ -30,7 +30,10 @@ export class DialogHandle<Payload = unknown> extends PopupHandle<Payload> {
     root.request(true, 'imperative-action', new Event('vase-ui'), trigger?.element ?? null);
   }
 
-  /** Opens the dialog with no trigger. The parts get the payload until the next open by a trigger. */
+  /**
+   * Opens the popup with no trigger. The default slot of the root gets the payload until a trigger
+   * opens the popup.
+   */
   openWithPayload(payload: Payload) {
     rootOfHandle<Payload>(this)?.openWithPayload(payload, new Event('vase-ui'));
   }

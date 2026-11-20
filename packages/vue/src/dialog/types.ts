@@ -35,12 +35,14 @@ export interface DialogRootProps<Payload = unknown> {
   defaultTriggerId?: string | null | undefined;
   /**
    * The modal state of the open dialog:
-   * - `true`: the focus stays in the popup, the rest of the page is inert, and the page does not
-   *   scroll.
-   * - `'trap-focus'`: the focus stays in the popup, and the page stays in use for the pointer.
-   * - `false`: the page stays in use.
+   * - `true`: the focus stays in the popup, and the rest of the page is inert. The page does not
+   *   scroll, and a fixed element covers it.
+   * - `'trap-focus'`: the focus stays in the popup, and screen readers do not read the rest of the
+   *   page. The page stays in use for the pointer.
+   * - `false`: the page stays in use. The dialog closes when the focus leaves it, unless
+   *   `disablePointerDismissal` is set.
    *
-   * Put a `Dialog.Close` in the popup: a touch screen reader needs it to leave a dialog that keeps
+   * Put a `Close` part in the popup: a touch screen reader needs it to leave a dialog that keeps
    * the focus.
    * @default true
    */
@@ -59,6 +61,7 @@ export interface DialogRootState {}
 
 export interface DialogTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /** The root names the active trigger by this id in `triggerId`. */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -106,16 +109,19 @@ export interface DialogViewportState {
 
 export interface DialogPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The trigger names the popup by this id in `aria-controls`. */
   id?: string | undefined;
   /**
-   * The element that gets the focus at the open. By default: the element with `autofocus`, else the
-   * first tab stop, else the popup; after a touch, the popup.
+   * The element that gets the focus at the open, or `false` to keep the focus where it is. A
+   * function gets the type of the interaction and gives the element. By default: the element with
+   * `autofocus`, else the first tab stop, else the popup; after a touch, the popup.
    */
   initialFocus?: FocusTarget | undefined;
   /**
-   * The element that gets the focus at the close. By default: the trigger, else the element that
-   * had the focus before the open. For an element that is no tab stop, the focus goes to its first
-   * tab stop outside the popup. An element in the popup is no target.
+   * The element that gets the focus at the close, or `false` to keep the focus where it is. A
+   * function gets the type of the interaction and gives the element. By default: the trigger, else
+   * the element that had the focus before the open. For an element that is no tab stop, the focus
+   * goes to its first tab stop outside the popup. An element in the popup is no target.
    */
   finalFocus?: FocusTarget | undefined;
 }
@@ -130,6 +136,7 @@ export interface DialogPopupState {
 
 export interface DialogTitleProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The popup names the title by this id in `aria-labelledby`. */
   id?: string | undefined;
 }
 
@@ -137,6 +144,7 @@ export interface DialogTitleState {}
 
 export interface DialogDescriptionProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The popup names the description by this id in `aria-describedby`. */
   id?: string | undefined;
 }
 

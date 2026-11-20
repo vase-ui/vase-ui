@@ -47,6 +47,9 @@ export namespace Root {
 /**
  * A button that opens the dialog.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The dialog is open for this trigger.
+ * @selector `:disabled` The trigger is a native button, and it or a fieldset around it is disabled.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and it is disabled.
  */
 export const Trigger: typeof DialogTrigger = DialogTrigger;
 export namespace Trigger {
@@ -67,6 +70,7 @@ export namespace Portal {
 /**
  * An overlay under the popup.
  * Renders a `<div>` element.
+ * @selector `[hidden]` The dialog is closed, and `keepMounted` of the portal keeps the backdrop in the DOM.
  */
 export const Backdrop: typeof DialogBackdrop = DialogBackdrop;
 export namespace Backdrop {
@@ -77,6 +81,10 @@ export namespace Backdrop {
 /**
  * A container that places the popup and scrolls it.
  * Renders a `<div>` element.
+ * @selector `[hidden]` The dialog is closed, and `keepMounted` of the portal keeps the viewport in the DOM.
+ * @selector `[data-nested]` The root of the dialog is inside a `Dialog.Root`, an `AlertDialog.Root` or a `Drawer.Root`.
+ * @selector `[data-nested-dialog-open]` A dialog, an alert dialog or a drawer is open above this dialog.
+ * @selector `:has(> .v-leave-active)` The popup leaves. Use the leave class of the `<Transition>` around the popup.
  */
 export const Viewport: typeof DialogViewport = DialogViewport;
 export namespace Viewport {
@@ -87,6 +95,10 @@ export namespace Viewport {
 /**
  * The container of the content of the dialog.
  * Renders a `<div>` element.
+ * @selector `[hidden]` The dialog is closed, and `keepMounted` of the portal keeps the popup in the DOM.
+ * @selector `[data-nested]` The root of the dialog is inside a `Dialog.Root`, an `AlertDialog.Root` or a `Drawer.Root`.
+ * @selector `[data-nested-dialog-open]` A dialog, an alert dialog or a drawer is open above this dialog.
+ * @cssVariable `--nested-dialogs` The number of dialogs, alert dialogs and drawers that are open above this dialog.
  */
 export const Popup: typeof DialogPopup = DialogPopup;
 export namespace Popup {
@@ -117,6 +129,8 @@ export namespace Description {
 /**
  * A button that closes the dialog.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button is a native button, and it or a fieldset around it is disabled.
+ * @selector `[aria-disabled="true"]` The button is another element, and it is disabled.
  */
 export const Close: typeof DialogClose = DialogClose;
 export namespace Close {

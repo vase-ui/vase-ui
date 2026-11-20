@@ -24,7 +24,10 @@ defineSlots<{
 
 const { root, close } = useDialogRoot<Payload>('alertdialog', props, emit);
 
-defineExpose({ close });
+defineExpose({
+  /** Closes the alert dialog with the reason `'imperative-action'`. */
+  close,
+});
 </script>
 
 <template>

@@ -5,6 +5,7 @@ description: An unstyled Vue drawer component with swipe-to-dismiss gestures.
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoDrawerHero from '../demos/drawer/hero/css-modules/index.vue';
@@ -68,65 +69,15 @@ Import the component and assemble its parts:
 
 <<< ./drawer/Anatomy.vue
 
-A swipe dismisses the drawer. Set `swipeDirection` to control which direction dismisses it. `Drawer.Content` lets a mouse pointer select its text, and that selection starts no swipe.
-
-Add `data-vase-ui-swipe-ignore` to a descendant to stop the swipe dismissal on it for all input types. If the element handles touch drags on one axis only, such as a carousel, set the value to `x` or `y`. A touch drag on the other axis then still swipes the drawer.
-
-Use `Drawer.VirtualKeyboardProvider` when a bottom sheet holds form fields and you want Vase UI to move the focus and scroll the content for a software keyboard. A drawer without this provider does not change.
-
-## Styling
-
-Select the states of the parts with these selectors:
-
-| Selector                       | On                          | State                                                                             |
-| ------------------------------ | --------------------------- | --------------------------------------------------------------------------------- |
-| `[aria-expanded="true"]`       | trigger                     | The drawer is open for this trigger.                                              |
-| `:disabled`                    | trigger, close              | The button is disabled. A part that is not a button has `[aria-disabled="true"]`. |
-| `[hidden]`                     | popup, backdrop, viewport   | The drawer is closed, with `keepMounted`.                                         |
-| `[data-nested]`                | viewport                    | A dialog root or a drawer root is above the root of this drawer.                  |
-| `[data-swipe-direction]`       | popup, swipe area           | The direction of the swipe that closes the drawer, or that opens it on the area.  |
-| `[data-swiping]`               | popup, backdrop, swipe area | A swipe moves the popup.                                                          |
-| `[data-swipe-dismiss]`         | popup, backdrop             | The part leaves after a swipe.                                                    |
-| `[data-expanded]`              | popup                       | The drawer is at the snap point `1`.                                              |
-| `[data-nested-drawer-open]`    | popup                       | A drawer in this drawer is open.                                                  |
-| `[data-nested-drawer-swiping]` | popup                       | A swipe moves a drawer in this drawer.                                            |
-| `[data-open]`                  | swipe area                  | The drawer is open. Use `:not([data-open])` for a closed drawer.                  |
-| `[data-disabled]`              | swipe area                  | The swipe area opens nothing.                                                     |
-| `[data-active]`                | indent, indent background   | A drawer of the provider is open.                                                 |
-
-`Drawer.Viewport` stays in the DOM while its popup leaves. To select its leave, use `:has(> .sheet-leave-active)`, with the leave class of the `<Transition>` around the popup.
-
-The popup sets `--drawer-swipe-movement-x`, `--drawer-swipe-movement-y`, `--drawer-snap-point-offset`, `--drawer-swipe-strength` and `--nested-drawers`. While a drawer in it is open, it also sets `--drawer-height`, `--drawer-frontmost-height` and the `--drawer-swipe-progress` of that drawer. The backdrop and `Drawer.Indent` set `--drawer-swipe-progress`, and `--drawer-height` while a swipe has a progress. `--drawer-swipe-strength` is `1`, except in the leave after a swipe.
-
-## Touch
-
-A touch drag on the popup goes to the swipe or to the browser. The drawer decides at the first move that is 6 px from the start:
-
-- A move that is more across the axis of the drawer than along it stays with the browser.
-- In a scroller on the axis of the drawer, the swipe takes the drag only when the scroller is at its edge and the finger moves toward the closed place. Else the scroller scrolls.
-- Else the swipe takes the drag.
-
-A touch starts a swipe also on a button, a field or `Drawer.Content`. A touch starts no swipe on a range input, or while the popup has a text selection. A touch that starts outside the popup moves the popup from the point where the finger comes into it.
-
-A mouse or a pen starts a swipe only in the popup. It starts none on a control, in `Drawer.Content`, or in a scroller on the axis of the drawer.
-
-## Back gesture
-
-On Android, in a browser with `CloseWatcher`, the back gesture closes the top open drawer with the reason `'close-watcher'`. A listener that cancels the change keeps the drawer open, unless the browser does not let a page cancel the gesture.
-
-## Server render
-
-`Drawer.Portal` renders its content after its mount, as `Dialog.Portal` does. The server HTML thus has the triggers and the swipe area only. The popup of an open root comes one update after the mount. With `disabled` on `Drawer.Portal`, the content renders in place, also on the server. `Drawer.Provider` is not active in the server HTML. It becomes active after the mount of an open root.
-
 ## Examples
 
 ### State
 
-By default, Drawer is an uncontrolled component that manages its own state.
+By default, Drawer is an uncontrolled component that keeps its own state.
 
 <<< ./drawer/UncontrolledDrawer.vue
 
-To control the open state, give `open` to `Drawer.Root` and listen to its `openChange` event, or use `v-model:open`. The root emits `openChange` with the new state and `eventDetails`, and then `update:open`. To stop the change, call `eventDetails.cancel()` before the `openChange` listener returns.
+To read or control the open state, bind it with `v-model:open`.
 
 <<< ./drawer/ControlledDrawer.vue{5,9}
 
@@ -167,9 +118,7 @@ Your styles position the drawer. `swipeDirection` is `"down"` by default, for a 
 
 ### Nested drawers
 
-Use the `[data-nested-drawer-open]` selector and the `--nested-drawers` CSS variable to style a drawer while a nested drawer is open.
-
-These values follow the component tree: a `Drawer.Root` in a `Drawer.Root` is a nested drawer. A drawer that a handle opens from another tree is no nested drawer. The `nestedDialogOpen` state of the viewport follows the stack: a dialog or a drawer is open above this drawer.
+Use the `[data-nested-drawer-open]` selector and the `--nested-drawers` CSS variable to style a drawer while a nested drawer is open. A drawer is nested when its `Drawer.Root` is in another `Drawer.Root`.
 
 This demo stacks nested drawers with a constant peek. The frontmost drawer stays at the bottom, and the drawers behind it become smaller and move up. The demo also uses the `--drawer-height` and `--drawer-frontmost-height` CSS variables for drawers of different heights.
 
@@ -204,9 +153,7 @@ This demo stacks nested drawers with a constant peek. The frontmost drawer stays
 
 ### Snap points
 
-Use `snapPoints` to snap a bottom sheet to preset heights. A number from 0 to 1 is a fraction of the viewport height, and a number greater than 1 is a number of pixels. A string can have the unit `px` or `rem`, such as `'148px'` or `'30rem'`.
-
-Bind the active snap point with `v-model:snap-point`. The root emits `snapPointChange` with the new snap point and `eventDetails`, and then `update:snapPoint`.
+Use `snapPoints` to snap a bottom sheet to preset heights. A number from 0 to 1 is a fraction of the viewport height, and a number greater than 1 is a number of pixels. A string can have the unit `px` or `rem`, such as `'148px'` or `'30rem'`. Bind the active snap point with `v-model:snap-point`.
 
 <<< ./drawer/SnapPoints.vue{5-6,10}
 
@@ -247,7 +194,7 @@ Apply the snap point offset in your styles for a vertical drawer:
 
 </DemoSource>
 
-By default, a fast swipe can skip snap points. Set the `snapToSequentialPoints` prop to stop this. The distance of the drag then decides the snap point, and a drag can still pass more than one point.
+By default, a fast swipe can skip snap points. Set `snapToSequentialPoints` to stop this. The distance of the drag then sets the snap point, and a drag can still go past more than one point.
 
 ### Virtual keyboard aware
 
@@ -255,7 +202,7 @@ Put a bottom sheet with form controls in `Drawer.VirtualKeyboardProvider`. When 
 
 - **Keep the frame of the popup stable**: put the header and the footer outside a plain scrollable body.
 - **Lift an input that is fixed in the footer**: reserve a footer slot below the scroll area, and offset it by `var(--drawer-keyboard-inset, 0px)`. When the input in the footer has the focus, the demo gives the footer `position: fixed` and adds the inset to its bottom padding. The `transform` of the popup makes the popup the container of the fixed footer.
-- **Always include the `0px` fallback**: the provider sets `--drawer-keyboard-inset` only while the keyboard is aligned. A plain `var(--drawer-keyboard-inset)` is thus not valid before the first alignment and after the cleanup.
+- **Always include the `0px` fallback**: the provider sets `--drawer-keyboard-inset` only while the keyboard covers the layout viewport. A plain `var(--drawer-keyboard-inset)` is thus not valid at other times.
 - **Bind no `padding-bottom` on the scroll body**: the provider gives the scroll body room below its content with `padding-bottom`. Vue writes a bound `padding-bottom` again at each render, and that removes the room.
 
 <<< ./drawer/VirtualKeyboard.vue{8,18}
@@ -404,7 +351,7 @@ The drawer can show different content for each trigger. Give a `payload` to each
 
 ### Stacking and animations
 
-The backdrop and the popup are in the DOM only while the drawer is open. Put each of them in a `<Transition appear>`, and animate the open and the close with the classes of `<Transition>`. A swipe that closes the drawer leaves the popup at the place of the drag, and the leave goes on from there.
+Put the backdrop and the popup each in a `<Transition appear>`, and use its classes to animate the open, the close, the swipe and the stack. A swipe that closes the drawer leaves the popup at the place of the drag, and the leave starts from there.
 
 The `--nested-drawers` CSS variable gives the depth in the stack. The frontmost drawer has the index `0`.
 
@@ -474,7 +421,7 @@ Use the `data-swipe-direction` attribute with the leave class of `<Transition na
 }
 ```
 
-Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer-swipe-strength` to scale the duration of the release transition by the speed of the swipe.
+Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer-swipe-strength` to scale the duration of the leave by the speed of the swipe.
 
 ```css
 .DrawerBackdrop {
@@ -493,24 +440,22 @@ Use `--drawer-swipe-progress` to fade the backdrop during a swipe, and `--drawer
 }
 ```
 
-## Portal target
-
-Set `to` on `Drawer.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
-
 ## API reference
 
 <ApiReference />
 
-## createHandle
+### createHandle
 
-Creates a handle that connects a `Drawer.Root` with detached `Drawer.Trigger` parts. The type argument of the function is the type of the payload.
+Makes a handle that connects a `Drawer.Root` to `Drawer.Trigger` parts outside it.
 
-<ApiReference name="Drawer.createHandle" :heading-level="3" />
+<ApiReference name="Drawer.createHandle" :heading-level="4" />
 
 ### Handle
 
-`Drawer.Handle` is the class of the handle.
+The class of the handle, which opens and closes the drawer from code.
 
 <ApiReference name="Drawer.Handle" :heading-level="4" />
 
-`open(null)`, and an `id` that no trigger has, open the drawer with no trigger. A `computed` that reads `isOpen` follows the open state.
+## Differences from Base UI
+
+<BaseUiDifferences />
