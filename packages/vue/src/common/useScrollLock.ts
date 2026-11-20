@@ -46,12 +46,11 @@ function lock(doc: Document) {
   const scrollbarY = win.innerHeight - html.clientHeight;
   const restoreHtml = saveStyle(html, ['overflow-x', 'overflow-y', 'scroll-behavior']);
   const restoreBody = saveStyle(body, ['position', 'width', 'height', 'box-sizing', 'overflow']);
-  const scrolls = (axis: 'X' | 'Y') =>
-    htmlStyle[`overflow${axis}`] === 'scroll' ||
-    (axis === 'Y' ? html.scrollHeight > html.clientHeight : html.scrollWidth > html.clientWidth);
+  // The view has a vertical scrollbar that takes room. A horizontal one stays where the page has it.
+  const scrollsX = htmlStyle.overflowX === 'scroll' || html.scrollWidth > html.clientWidth;
   Object.assign(html.style, {
-    overflowY: scrolls('Y') ? 'scroll' : 'hidden',
-    overflowX: scrolls('X') ? 'scroll' : 'hidden',
+    overflowY: 'scroll',
+    overflowX: scrollsX ? 'scroll' : 'hidden',
     // A smooth scroll would animate the move back to the offset at the unlock.
     scrollBehavior: 'auto',
   });

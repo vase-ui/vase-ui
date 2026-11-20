@@ -75,7 +75,7 @@ describe('useScrollLock', () => {
     },
   );
 
-  it('keeps the scrollbar of html and the place of the content when the scrollbars take room', async ({
+  it('keeps the scrollbars of html and the place of the content when the scrollbars take room', async ({
     skip,
   }) => {
     const { page, inset } = await createInsetDocument();
@@ -83,10 +83,11 @@ describe('useScrollLock', () => {
     page.win.scrollTo({ left: 30, top: 200, behavior: 'instant' });
     const place = page.reference.getBoundingClientRect().toJSON();
     const width = page.html.clientWidth;
+    const height = page.html.clientHeight;
     const enabled = await lock(page);
     expect(isPageLocked(page)).toBe(true);
     expect(page.html.style.overflowY).toBe('scroll');
-    expect(page.html.clientWidth).toBe(width);
+    expect([page.html.clientWidth, page.html.clientHeight]).toEqual([width, height]);
     expect(page.reference.getBoundingClientRect().toJSON()).toEqual(place);
     enabled.value = false;
     await nextTick();

@@ -51,6 +51,12 @@ describe('tabbables', () => {
       stops: ['b', 'c'],
     },
     {
+      name: 'one radio for each form of a name',
+      markup:
+        '<form><input id="a" type="radio" name="x" aria-label="A"></form><form><input id="b" type="radio" name="x" aria-label="B"></form>',
+      stops: ['a', 'b'],
+    },
+    {
       name: 'an element with contenteditable, and no hidden input',
       markup: '<div id="a" contenteditable="true">A</div><input id="b" type="hidden">',
       stops: ['a'],

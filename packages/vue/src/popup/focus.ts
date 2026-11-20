@@ -25,15 +25,13 @@ const CANDIDATES =
 export function tabbables(container: Element): HTMLElement[] {
   const found: HTMLElement[] = [];
   collect(container, found);
-  const radios = new Map<string, HTMLInputElement>();
-  for (const element of found) {
-    if (!isNamedRadio(element)) continue;
-    const chosen = radios.get(groupKey(element));
-    if (!chosen || (element.checked && !chosen.checked)) radios.set(groupKey(element), element);
-  }
-  return found.filter(
-    (element) => !isNamedRadio(element) || radios.get(groupKey(element)) === element,
-  );
+  return found.filter((element) => {
+    if (!isNamedRadio(element)) return true;
+    const group = found.filter(
+      (other) => isNamedRadio(other) && other.name === element.name && other.form === element.form,
+    );
+    return element === (group.find((radio) => radio.checked) ?? group[0]);
+  });
 }
 
 // The content of an open shadow root takes the place of its host in the order.
@@ -65,10 +63,6 @@ function isTabbable(element: HTMLElement) {
 function isNamedRadio(element: HTMLElement): element is HTMLInputElement {
   const input = element as HTMLInputElement;
   return element.localName === 'input' && input.type === 'radio' && !!input.name;
-}
-
-function groupKey(element: HTMLInputElement) {
-  return `${element.form?.id ?? ''} ${element.name}`;
 }
 
 function resolve(
