@@ -131,6 +131,26 @@ describe('the line of a wrapped link', () => {
     await placedAt((box) => expectNear(box.top, overlap[1]!.bottom));
   });
 
+  test('a move to another link that a listener cancels keeps the line of the open card', async () => {
+    mountLinks({
+      root: {
+        onOpenChange: (open: boolean, details: { trigger?: Element; cancel(): void }) => {
+          if (open && details.trigger?.id === 'parts') details.cancel();
+        },
+      },
+      trigger: { delay: 0, closeDelay: 5000 },
+      positioner: { side: 'top' },
+    });
+    await hoverLine('overlap', 1);
+    const second = linesOf(link('overlap'))[1]!;
+    await placedAt((box) => expectNear(box.bottom, second.top));
+    await hoverLine('parts', 0);
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(link('overlap')).toHaveAttribute('data-popup-open');
+    expectNear(positioner()!.getBoundingClientRect().bottom, second.top);
+  });
+
   test('a close that the parent refuses keeps the line', async () => {
     const root = reactive<Props>({ open: false });
     root['onUpdate:open'] = (open: boolean) => {
