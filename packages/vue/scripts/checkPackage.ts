@@ -188,7 +188,14 @@ async function main(): Promise<void> {
   const castBooleanDevelopment = await bundleConsumerFile('castBooleanWarning.ts', 'development');
   expectContent('castBooleanWarning.ts (development)', castBooleanDevelopment, 'did not set', true);
   expectContent('castBooleanWarning.ts (production)', castBoolean, 'did not set', false);
-  expectContent('castBooleanWarning.ts (production)', castBoolean, 'useCastBooleanWarning', false);
+  // The bundle names each chunk of the package in a comment, and a chunk can take the name of the
+  // module of the warning.
+  expectContent(
+    'castBooleanWarning.ts (production)',
+    castBoolean,
+    'function useCastBooleanWarning',
+    false,
+  );
   expectContent('singlePart.ts', singlePart, 'data-single-part', true);
   expectContent('singlePart.ts', singlePart, 'data-multi-part', false);
   expectContent('multiPartRoot.ts', multiPartRoot, 'data-multi-part-root', true);
