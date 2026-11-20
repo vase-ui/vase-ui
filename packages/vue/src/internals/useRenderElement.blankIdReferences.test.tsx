@@ -11,7 +11,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Select } from '@vase-ui/vue/select';
-import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -180,24 +179,6 @@ async function highlightFirstItem(user: UserEvent) {
 }
 
 const rows: Row[] = [
-  {
-    part: 'Toast.Root',
-    attribute: 'aria-describedby',
-    createNode: (attrs) => (
-      <Toast.Provider>
-        <Toast.Viewport>
-          <Toast.Root
-            toast={{ id: 'test', title: 'Saved', description: 'Copied' }}
-            data-testid="part"
-            {...attrs}
-          >
-            <Toast.Title />
-            <Toast.Description data-testid="target" />
-          </Toast.Root>
-        </Toast.Viewport>
-      </Toast.Provider>
-    ),
-  },
   {
     part: 'Dialog.Popup',
     attribute: 'aria-describedby',

@@ -34,7 +34,11 @@ export interface PopupPortalProps {
 // One key for each popup family, so that a popup in a popup has the target of its parent.
 const targetKey: InjectionKey<() => PortalTarget> = Symbol('portal target');
 
-export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
+/**
+ * The target of a portal, and whether the portal renders its teleport. A portal with no popup root,
+ * such as `Toast.Portal`, calls it alone.
+ */
+export function usePortalTarget(props: Pick<PopupPortalProps, 'to' | 'disabled'>) {
   const inherited = inject(targetKey, () => 'body');
   const target = computed(() => (props.to === undefined ? inherited() : props.to));
   provide(targetKey, () => target.value);
@@ -42,6 +46,12 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   // The server HTML has no content of a teleport to `<body>`, and Vue cannot hydrate one. So the
   // portal renders its teleport after its mount (the Vue guide on server rendering, "Teleports").
   const mounted = useIsHydrated();
+  const rendered = computed(() => (mounted.value || !!props.disabled) && target.value !== null);
+  return { target, mounted, rendered };
+}
+
+export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
+  const { target, mounted, rendered: placed } = usePortalTarget(props);
 
   watch(
     () => !!props.keepMounted,
@@ -50,10 +60,7 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   );
 
   const rendered = computed(
-    () =>
-      (mounted.value || !!props.disabled) &&
-      target.value !== null &&
-      (root.open || root.leaving || root.keepMounted),
+    () => placed.value && (root.open || root.leaving || root.keepMounted),
   );
   // The server HTML of a disabled portal has no sentinels and no block, because the server has no
   // popup element and no layer.

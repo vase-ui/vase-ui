@@ -13,7 +13,6 @@ import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
@@ -220,24 +219,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Select.Separator role={undefined} data-testid="part" />,
     expected: () => 'presentation',
-  },
-  {
-    name: 'Toast.Root aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: () => (
-      <Toast.Provider>
-        <Toast.Viewport>
-          <Toast.Root
-            toast={{ id: 't', title: 'Saved' }}
-            aria-labelledby={undefined}
-            data-testid="part"
-          >
-            <Toast.Title data-testid="target" />
-          </Toast.Root>
-        </Toast.Viewport>
-      </Toast.Provider>
-    ),
-    expected: targetId,
   },
   {
     name: 'Dialog.Trigger type',

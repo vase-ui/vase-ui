@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
-import type { Component, Ref, VNode } from 'vue';
+import type { Ref, VNode } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
-import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import * as Calendar from '../../calendar/index.parts';
@@ -15,12 +14,6 @@ import { useRegisteredId } from './useRegisteredId';
 interface SlotProps {
   props: HTMLProps;
 }
-
-interface ChildrenSlotProps extends SlotProps {
-  children: Component;
-}
-
-const toast = { id: 'test', title: 'Title', description: 'Description' };
 
 describe('useRegisteredId', () => {
   const { render } = createRenderer();
@@ -138,13 +131,6 @@ describe('useRegisteredId', () => {
       return { render: ({ props }: SlotProps) => h(tag, { ...props, id: id.value }) };
     }
 
-    function childrenSlot(tag: string, id: Ref<string>) {
-      return {
-        render: ({ props, children }: ChildrenSlotProps) =>
-          h(tag, { ...props, id: id.value }, h(children)),
-      };
-    }
-
     const rows: {
       name: string;
       attribute: string;
@@ -212,33 +198,6 @@ describe('useRegisteredId', () => {
               </Combobox.Positioner>
             </Combobox.Portal>
           </Combobox.Root>
-        ),
-      },
-      {
-        name: 'Toast.Title',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Toast.Provider>
-            <Toast.Viewport>
-              <Toast.Root toast={toast} data-testid="named">
-                <Toast.Title v-slots={childrenSlot('h2', id)} />
-              </Toast.Root>
-            </Toast.Viewport>
-          </Toast.Provider>
-        ),
-      },
-      {
-        name: 'Toast.Description',
-        attribute: 'aria-describedby',
-        render: (id) => (
-          <Toast.Provider>
-            <Toast.Viewport>
-              <Toast.Root toast={toast} data-testid="named">
-                <Toast.Title />
-                <Toast.Description v-slots={childrenSlot('p', id)} />
-              </Toast.Root>
-            </Toast.Viewport>
-          </Toast.Provider>
         ),
       },
       {

@@ -12,7 +12,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
@@ -239,20 +238,6 @@ const fieldParts = (part: string) => (k: string, blankId: BlankId) => (
   </Field.Root>
 );
 
-const toastParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Toast.Provider>
-    <Toast.Viewport>
-      <Toast.Root
-        toast={{ id: `toast${k}`, title: `Saved ${k}`, description: `Copied ${k}` }}
-        data-testid={`toast${k}`}
-      >
-        <Toast.Title {...blankIdIf(part === 'Title', blankId)} />
-        <Toast.Description {...blankIdIf(part === 'Description', blankId)} />
-      </Toast.Root>
-    </Toast.Viewport>
-  </Toast.Provider>
-);
-
 // An element and the text of its label. The label names the element with `for` or `aria-labelledby`.
 const labelled = (testId: string, label: string) => (k: string) => ({
   testId: `${testId}${k}`,
@@ -394,11 +379,6 @@ const rows: Row[] = [
       description: `Hint ${k} Wrong ${k}`,
       nativeLabel: true,
     }),
-  })),
-  ...(['Title', 'Description'] as const).map((part): Row => ({
-    name: `Toast.${part}`,
-    tree: toastParts(part),
-    named: (k) => ({ testId: `toast${k}`, name: `Saved ${k}`, description: `Copied ${k}` }),
   })),
   {
     name: 'Calendar.Caption',

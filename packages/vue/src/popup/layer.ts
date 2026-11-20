@@ -455,7 +455,13 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next.hide) {
     const kept = new Set<Node>();
-    for (const element of next.inside) {
+    // A live region and an alert stay in use at each place of the document, so that the page
+    // announces its messages, such as toasts, under a modal popup.
+    const documents = new Set(next.inside.flatMap((each) => each?.ownerDocument ?? []));
+    const announcers = [...documents].flatMap((doc) => [
+      ...doc.querySelectorAll('[aria-live], [role="alert"]'),
+    ]);
+    for (const element of [...next.inside, ...announcers]) {
       if (!element?.isConnected) continue;
       const body = element.ownerDocument.body;
       for (
@@ -469,7 +475,7 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
     }
     for (const node of kept) {
       for (const sibling of node.parentNode?.children ?? []) {
-        if (!kept.has(sibling) && !sibling.hasAttribute('aria-live')) {
+        if (!kept.has(sibling)) {
           wanted.set(sibling, next.hide);
         }
       }

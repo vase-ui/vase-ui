@@ -161,7 +161,8 @@ function physicalSide(side: Side, rtl: boolean): PhysicalSide {
  * is open.
  */
 export function usePlacement(
-  root: PopupRoot,
+  /** The open state and the active trigger. A placement with no popup root gives them as values. */
+  root: Pick<PopupRoot, 'open' | 'activeTrigger'>,
   props: Required<Omit<PlacementProps, 'anchor' | 'collisionAvoidance'>> &
     Pick<PlacementProps, 'anchor' | 'collisionAvoidance'>,
   options: {

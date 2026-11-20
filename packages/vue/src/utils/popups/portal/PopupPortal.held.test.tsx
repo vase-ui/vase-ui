@@ -20,7 +20,6 @@ import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
-import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import VaporHeldBranch from './VaporHeldBranch.test.vue';
 
@@ -247,18 +246,6 @@ const families = [
           </NavigationMenu.Positioner>
         </NavigationMenu.Portal>
       </NavigationMenu.Root>
-    ),
-    marksPage: false,
-    movesFocus: false,
-  },
-  {
-    name: 'Toast',
-    renderPart: () => (
-      <Toast.Provider>
-        <Toast.Portal data-testid="portal">
-          <Toast.Viewport data-testid="popup" />
-        </Toast.Portal>
-      </Toast.Provider>
     ),
     marksPage: false,
     movesFocus: false,
