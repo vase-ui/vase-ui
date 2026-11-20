@@ -67,7 +67,9 @@ export interface CollisionAvoidance {
 
 export interface PlacementProps {
   /**
-   * The side of the anchor for the popup. It can change to avoid a collision.
+   * The side of the anchor for the popup. It can change to avoid a collision. `inline-start` and
+   * `inline-end` follow the CSS `direction` of the positioner: give the positioner `dir` when the
+   * target of its portal has another direction.
    * @default 'bottom'
    */
   side?: Side | undefined;

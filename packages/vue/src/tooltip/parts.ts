@@ -30,7 +30,9 @@ import type {
 export { createHandle, TooltipHandle as Handle } from './root';
 
 /**
- * Gives one delay to the tooltips in it. After one of them opened, the others open at once.
+ * Makes the tooltips in it one group. One tooltip of a group is open at a time. While one is open,
+ * and for `timeout` after its close, a hover opens another tooltip of the group at once. The
+ * tooltips with no provider are one more group, in which each tooltip waits for its delay.
  * Renders no element.
  */
 export const Provider: typeof TooltipProvider = TooltipProvider;
@@ -52,8 +54,13 @@ export namespace Root {
 }
 
 /**
- * The element that the tooltip describes. A hover and the focus of a key open the tooltip.
+ * The element that the tooltip describes. A mouse that rests on it opens the tooltip after the
+ * delay, and the focus of a key opens it at once. A touch opens no tooltip. The tooltip of a
+ * disabled button also opens at a hover, so it can tell why the button is disabled. A trigger in
+ * another trigger opens only its own tooltip.
  * Renders a `<button>` element.
+ * @selector `[data-popup-open]` The tooltip is open for this trigger.
+ * @selector `[data-trigger-disabled]` The tooltip does not open from this trigger, because the trigger or the root is disabled.
  */
 export const Trigger: typeof TooltipTrigger = TooltipTrigger;
 export namespace Trigger {
@@ -74,6 +81,16 @@ export namespace Portal {
 /**
  * Places the popup at its anchor.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left` or `right`, or `inline-start` or `inline-end` for a logical `side` prop.
+ * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The anchor is out of view.
+ * @cssVariable `--anchor-width` The width of the anchor, in pixels.
+ * @cssVariable `--anchor-height` The height of the anchor, in pixels.
+ * @cssVariable `--available-width` The width that the popup can have before it goes over the edge of the collision boundary.
+ * @cssVariable `--available-height` The height that the popup can have before it goes over the edge of the collision boundary.
+ * @cssVariable `--transform-origin` The point of the popup that faces the anchor: at the arrow, or at the aligned edge of a popup with no arrow. Give it to `transform-origin` for an animation that scales the popup.
+ * @cssVariable `--positioner-width` The width of the popup, in pixels, with a `Tooltip.Viewport` in the popup. During a move to another trigger, the width of the new content.
+ * @cssVariable `--positioner-height` The height of the popup, in pixels, with a `Tooltip.Viewport` in the popup. During a move to another trigger, the height of the new content.
  */
 export const Positioner: typeof TooltipPositioner = TooltipPositioner;
 export namespace Positioner {
@@ -82,8 +99,16 @@ export namespace Positioner {
 }
 
 /**
- * The container of the content of the tooltip.
+ * The container of the content of the tooltip. It has no `role` and does not describe the trigger.
+ * To describe the trigger with it, set `keepMounted` on `Tooltip.Portal`, give the popup
+ * `role="tooltip"` and an `id`, and give the trigger `aria-describedby` with that `id`.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
+ * @selector `[data-instant]` An animation must not run. The value says why: `delay` (the tooltip opened while another tooltip of its group was open or in the `timeout` after its close, or it closed because another tooltip of the group opened or its active trigger left the DOM), `focus` (the focus opened it) or `dismiss` (Escape or a press on the trigger closed it).
+ * @selector `[hidden]` The tooltip is closed, and `keepMounted` keeps the popup in the DOM.
+ * @cssVariable `--popup-width` The width of the popup, in pixels, during a move to another trigger with a `Tooltip.Viewport`: first the old width, then the new width.
+ * @cssVariable `--popup-height` The height of the popup, in pixels, during a move to another trigger with a `Tooltip.Viewport`: first the old height, then the new height.
  */
 export const Popup: typeof TooltipPopup = TooltipPopup;
 export namespace Popup {
@@ -94,6 +119,10 @@ export namespace Popup {
 /**
  * An element that points to the anchor.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
+ * @selector `[data-align]` The alignment of the popup on its side, as on the positioner.
+ * @selector `[data-uncentered]` The arrow cannot point at the center of the anchor.
+ * @selector `[data-instant]` An animation must not run, with the values of the popup.
  */
 export const Arrow: typeof TooltipArrow = TooltipArrow;
 export namespace Arrow {
@@ -104,6 +133,8 @@ export namespace Arrow {
 /**
  * The container of content that changes when the tooltip moves to another trigger.
  * Renders a `<div>` element.
+ * @selector `[data-activation-direction]` The place of the new trigger from the old trigger, after a move: at most two tokens, `left` or `right` and `up` or `down`, such as `right down`.
+ * @selector `[data-instant]` An animation must not run, with the values of the popup.
  */
 export const Viewport: typeof TooltipViewport = TooltipViewport;
 export namespace Viewport {

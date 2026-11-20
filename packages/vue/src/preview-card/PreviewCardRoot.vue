@@ -24,7 +24,10 @@ defineSlots<{
 
 const { root, close } = usePreviewCardRoot<Payload>(props, emit);
 
-defineExpose({ close });
+defineExpose({
+  /** Closes the preview card with the reason `'imperative-action'`. */
+  close,
+});
 </script>
 
 <template>

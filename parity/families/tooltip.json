@@ -8,43 +8,43 @@
     {
       "upstream": "packages/react/src/tooltip/arrow/TooltipArrowDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/popup/TooltipPopupDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/trigger/TooltipTriggerDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/viewport/TooltipViewportCssVars.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/viewport/TooltipViewportDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/tooltip/Tooltip.test.ts",
-      "reason": "`Tooltip.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the dismissal, the hover, the focus, the press, `disabled`, `disableHoverablePopup`, `trackCursorAxis`, the group, `data-instant` and a trigger in a trigger. Vue has no `flushSync`, so the popup renders in the update after the hover event. The parts render no transition status and no unmount action: `<Transition>` animates the popup, and its JavaScript hooks replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete` (rule 8.9)."
+      "reason": "`Tooltip.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the dismissal, the hover, the focus, the press, `disabled`, `disableHoverablePopup`, `trackCursorAxis`, the group, `data-instant` and a trigger in a trigger. Vue has no `flushSync`, so the popup renders in the update after the hover event. The parts render no transition status and no unmount action: `<Transition>` animates the popup, and its JavaScript hooks replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete`."
     },
     {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
@@ -68,7 +68,7 @@
       "upstream": "packages/react/src/tooltip/popup/TooltipPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/tooltip/Tooltip.test.ts",
-      "reason": "`Tooltip.test.ts` tests the popup: its element and attributes, its children, the hover on the popup, a popup that a `v-if` replaces and the error with no positioner. The parts render no transition status and no unmount action: `<Transition>` animates the popup, and its JavaScript hooks replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete` (rule 8.9)."
+      "reason": "`Tooltip.test.ts` tests the popup: its element and attributes, its children, the hover on the popup, a popup that a `v-if` replaces and the error with no positioner. The parts render no transition status and no unmount action: `<Transition>` animates the popup, and its JavaScript hooks replace `unmount()`, `preventUnmountOnClose()` and `openChangeComplete`."
     },
     {
       "upstream": "packages/react/src/tooltip/portal/TooltipPortal.test.tsx",
@@ -111,90 +111,90 @@
       "entry": "Root",
       "prop": "onOpenChangeComplete",
       "kind": "not-applicable",
-      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Root",
       "prop": "actionsRef",
       "kind": "not-applicable",
-      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done` (rule 8.9)."
+      "reason": "A template ref of the root has `close()`. With `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`, so the root has no `unmount` action."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Portal",
       "prop": "render",
       "kind": "not-applicable",
-      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+      "reason": "The portal is a `<Teleport>` with no element of its own, so it has no `as` and no `element` slot. Put an element in the portal when you need one."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Popup",
       "kind": "not-applicable",
-      "reason": "The state has no `transitionStatus`, and the popup has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` around the popup animates it, and a kept popup has `[hidden]` (rules 8.9 and 8.15). `class`, `style` and the `element` slot replace `className`, `style` and `render`."
+      "reason": "`<Transition>` around the popup animates it, so the state has no `transitionStatus`, and the popup has no `data-starting-style` and no `data-ending-style`. CSS selects a closed popup that stays in the DOM with `[hidden]`, so the popup has no `data-open` and no `data-closed`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipArrowDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipPopupDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipPositionerCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipPositionerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipTriggerDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipViewportCssVariables",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "TooltipViewportDataAttributes",
       "kind": "not-applicable",
-      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Trigger",
       "prop": "delay",
       "kind": "not-applicable",
-      "reason": "The row gives the default `600`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the delay of `Tooltip.Provider`. With no provider, the part uses 600 for an absent prop, which is the default that Base UI documents."
+      "reason": "With no `delay`, the trigger takes the `delay` of `Tooltip.Provider`, or 600 with no provider. So the prop has no Vue default."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Trigger",
       "prop": "closeDelay",
       "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the close delay of `Tooltip.Provider`. With no provider, the part uses 0 for an absent prop, which is the default that Base UI documents."
+      "reason": "With no `closeDelay`, the trigger takes the `closeDelay` of `Tooltip.Provider`, or 0 with no provider. So the prop has no Vue default."
     }
   ],
   "surfaceAdditions": [
     {
       "entry": "Trigger",
       "stateField": "disabled",
-      "reason": "The state says that the tooltip does not open from this trigger, by its `disabled` prop or by the root. It is the source of `data-trigger-disabled` (rule 3). Base UI has no such state."
+      "reason": "The state says that the tooltip does not open from this trigger, because the trigger or the root is disabled. `data-trigger-disabled` shows it. Base UI has no such state."
     },
     {
       "entry": "Trigger",
@@ -205,7 +205,7 @@
     {
       "entry": "Portal",
       "prop": "disabled",
-      "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+      "reason": "The portal is a `<Teleport>`, and `disabled` renders its content in place, also on the server."
     },
     {
       "entry": "Portal",
@@ -215,7 +215,7 @@
     {
       "entry": "Root",
       "emit": "update:triggerId",
-      "reason": "`v-model:trigger-id` binds the active trigger, as a second state that a developer binds is a named model (rule 8.5)."
+      "reason": "`v-model:trigger-id` binds the active trigger: Vue binds a second state of a component with a named `v-model`."
     }
   ],
   "returnTypeDifferences": [
