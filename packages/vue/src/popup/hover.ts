@@ -101,22 +101,19 @@ export function usePopupHover(
   // document of the trigger after the render.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
-  let byHover = true;
   watch(
     closedBy,
     (by, _, onCleanup) => {
       if (!by) return;
       const doc = ownerDocument(options.trigger.value);
-      byHover = by === 'hover';
+      const byHover = by === 'hover';
       // The pointer of a popup that no hover opened can be anywhere.
       over = byHover ? 'trigger' : 'outside';
       from = null;
       onCleanup(
         mergeCleanups(
-          addEventListener(doc, 'pointermove', follow, true),
-          addEventListener(doc.documentElement, 'pointerleave', () => {
-            if (byHover) close();
-          }),
+          addEventListener(doc, 'pointermove', (event) => follow(event, byHover), true),
+          byHover && addEventListener(doc.documentElement, 'pointerleave', close),
           closeTimer.clear,
           restTimer.clear,
         ),
@@ -125,7 +122,7 @@ export function usePopupHover(
     { flush: 'post' },
   );
 
-  function follow(event: PointerEvent) {
+  function follow(event: PointerEvent, byHover: boolean) {
     const trigger = options.trigger.value;
     const target = event.target as Element;
     const point = { x: event.clientX, y: event.clientY };
