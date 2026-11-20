@@ -68,18 +68,11 @@ function click(element: HTMLElement) {
   return (user: User) => user.click(element);
 }
 
-function focus(element: HTMLElement) {
-  return () => {
-    element.focus();
-    return Promise.resolve();
-  };
-}
-
 /** The triggers of `root` that a part marks with an attribute and that have no open popup. */
 function markedTriggers(root: ParentNode): Trigger[] {
   return [
     ...root.querySelectorAll<HTMLElement>(
-      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger], [data-vase-ui-tooltip-trigger]',
+      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger]',
     ),
   ]
     .filter((element) =>
@@ -88,9 +81,6 @@ function markedTriggers(root: ParentNode): Trigger[] {
       ),
     )
     .map((element) => {
-      if (element.matches('[data-vase-ui-tooltip-trigger]')) {
-        return { element, open: focus(element) };
-      }
       if (element.matches('input')) {
         return {
           element,
@@ -160,6 +150,20 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
       },
     }));
   }
+  if (depth === 0 && family === 'tooltip') {
+    // A tooltip trigger has a name of its own. A Tab from an element just before it gives it the
+    // focus of a key, which opens its tooltip at once.
+    return [...root.querySelectorAll<HTMLElement>('button[aria-label]')].map((element) => ({
+      element,
+      open: async (user: User) => {
+        const start = element.parentNode!.insertBefore(document.createElement('span'), element);
+        start.tabIndex = -1;
+        start.focus();
+        await user.keyboard('{Tab}');
+        start.remove();
+      },
+    }));
+  }
   if (depth === 0 && family === 'toast') {
     return [...root.querySelectorAll<HTMLElement>('button')].map((element) => ({
       element,
@@ -191,11 +195,12 @@ function portals() {
   ];
 }
 
-// A closed popup that stays in the DOM is `hidden`.
+// A closed popup that stays in the DOM is `hidden`. A popup of the popup layer with no role is the
+// element with a side in its positioner.
 function openPopups() {
   return portals().flatMap((portal) => [
     ...portal.querySelectorAll<HTMLElement>(
-      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+      '[data-open], [role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden]), [data-side] > [data-side]:not([hidden])',
     ),
   ]);
 }

@@ -54,12 +54,58 @@ A popup that appears when an element is hovered or focused, and shows a hint for
 
 - **Use a tooltip only as a visual label**: A tooltip is a supplementary label for sighted users with a mouse or a keyboard. Touch users and screen reader users do not get it. See [Alternatives to tooltips](#alternatives-to-tooltips).
 - **Give the trigger an accessible name**: A tooltip does not label its trigger. Give the trigger an `aria-label` that matches the text of the tooltip, so that a screen reader user gets the same information.
+- **Describe a control only with content that stays**: The popup is not in the DOM while the tooltip is closed. To describe the trigger with the tooltip, set `keepMounted` on `Tooltip.Portal`, give the `Tooltip.Popup` `role="tooltip"` and an `id`, and give the `Tooltip.Trigger` `aria-describedby` with that `id`.
 
 ## Anatomy
 
 Import the component and assemble its parts:
 
 <<< ./tooltip/Anatomy.vue
+
+## Animation
+
+The popup is in the DOM only while the tooltip is open. Put it in a `<Transition appear>`, and animate it with the classes of `<Transition>`. The portal renders its content at the open, so `<Transition>` needs `appear` to run the enter of the first open.
+
+The popup has `data-instant` when an animation should not run. Give `[data-instant]` the style `transition: none` or `animation: none`. The tooltips of one `Tooltip.Provider` are one group, and the tooltips with no provider are another group. One tooltip of a group is open at a time. A tooltip that opens while another tooltip of its group was open has `delay`, and so has the tooltip that it closes.
+
+With `keepMounted` on `Tooltip.Portal`, the closed popup stays in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate the popup with CSS on `[hidden]`.
+
+## Opening and closing
+
+A mouse that rests on the trigger opens the tooltip after `delay`, 600 ms by default. The focus of a key opens it at once, and a press does not. The tooltip closes when the pointer leaves the trigger and the popup, when the focus leaves the trigger, at Escape, and at a press outside. A press on the trigger closes the tooltip, unless the trigger has `closeOnClick` set to `false`. A touch opens no tooltip.
+
+A trigger in another trigger opens only its own tooltip.
+
+### Disabled controls
+
+The tooltip of a disabled control opens at a hover, so it can say why the control is disabled. A `<button disabled>` and a button in a disabled fieldset get the events of a hover.
+
+The `disabled` prop of `Tooltip.Trigger` stops the tooltip of that trigger, and the `disabled` prop of `Tooltip.Root` stops each trigger of the tooltip. The element of the trigger stays in use.
+
+### With other parts
+
+To give a tooltip to the trigger of another part, such as `Popover.Trigger`, `Menu.Trigger` or `Toolbar.Button`, render that part in the `element` slot of `Tooltip.Trigger`. Bind the `props` and the `elementRef` of the slot to it. The part then keeps its own role, type and `disabled` state.
+
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                      | On                       | State                                                                                                                                                 |
+| ----------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[data-popup-open]`           | trigger                  | The tooltip is open for this trigger.                                                                                                                 |
+| `[data-trigger-disabled]`     | trigger                  | The tooltip does not open from this trigger.                                                                                                          |
+| `[data-side]`, `[data-align]` | positioner, popup, arrow | The side of the anchor and the alignment of the popup.                                                                                                |
+| `[data-anchor-hidden]`        | positioner               | The anchor is out of view.                                                                                                                            |
+| `[data-uncentered]`           | arrow                    | The arrow cannot point at the center of the anchor.                                                                                                   |
+| `[data-instant]`              | popup, arrow, viewport   | An animation should not run: `delay` (another tooltip of the group was open), `focus` (the focus opened it), `dismiss` (Escape or a press closed it). |
+| `[data-activation-direction]` | viewport                 | The side of the new trigger from the old one, such as `right down`.                                                                                   |
+| `[hidden]`                    | popup                    | The tooltip is closed, with `keepMounted`.                                                                                                            |
+
+The positioner has the variables `--anchor-width`, `--anchor-height`, `--available-width`, `--available-height`, `--transform-origin`, `--positioner-width` and `--positioner-height`. The popup has `--popup-width` and `--popup-height` while it moves to another trigger. See [Popover](/components/popover#styling).
+
+## Server render
+
+`Tooltip.Portal` renders its content after its mount, as the Vue guide for a server render says for a teleport. The server HTML thus has the triggers only. A trigger has `data-popup-open` there when the open root names it. With `disabled` on `Tooltip.Portal`, the content renders in place, also on the server.
 
 ## Alternatives to tooltips
 
@@ -95,7 +141,7 @@ A trigger can be inside or outside `<Tooltip.Root>`. For a simple tooltip, put `
 
 If the content of the tooltip cannot be next to its trigger, use a detached trigger. Put `<Tooltip.Trigger>` outside `<Tooltip.Root>`, and connect the two with a handle from `Tooltip.createHandle()`.
 
-The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root>` with the same handle. The handle ignores a call while no root uses it: before a root mounts, and after it unmounts. A development build then shows a warning. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
+The methods of the handle, `open()` and `close()`, need a mounted `<Tooltip.Root>` with the same handle. The handle ignores a call while no root uses it: before a root mounts, and after it unmounts. Each root that mounts starts with a new state. It does not replay an earlier call, and it does not keep the open state of an earlier root.
 
 <<< ./tooltip/DetachedTriggers.vue{4,8,10}
 
@@ -146,9 +192,9 @@ The type argument of `createHandle()` gives the payload its type:
 
 ### Controlled mode with multiple triggers
 
-To control the open state, use `v-model:open` on `<Tooltip.Root>`, or the `open` prop with the `openChange` event. With more than one trigger, control the active trigger with the `triggerId` prop of `<Tooltip.Root>` and the `id` prop of each `<Tooltip.Trigger>`.
+To control the open state, use `v-model:open` on `<Tooltip.Root>`, or the `open` prop with the `openChange` event. With more than one trigger, control the active trigger with `v-model:trigger-id` on `<Tooltip.Root>` and the `id` prop of each `<Tooltip.Trigger>`.
 
-The root has no event for a change of the trigger. The `openChange` event gives a second argument, `eventDetails`. Its `trigger` is the trigger element that started the change.
+The `openChange` event gives a second argument, `details`. Its `trigger` is the trigger element that started the change.
 
 <DemoFrame>
   <DemoTooltipDetachedTriggersControlled />
@@ -193,12 +239,9 @@ To animate the position, add CSS transitions for `left`, `right`, `top` and `bot
 
 A tooltip can animate its content when each trigger has a different content.
 
-Put the content in `<Tooltip.Viewport>`. Its `div` has the `data-activation-direction` attribute, which gives the position of the new trigger relative to the old trigger. The value has at most two tokens, one for each axis: `left` or `right`, and `up` or `down`, for example `right down`. Match one token with the `~=` attribute selector, such as `[data-activation-direction~='right']`.
+Put the content in `<Tooltip.Viewport>`. Its default slot gets the `triggerId` of the active trigger. Put the content in a `<Transition>`, with `triggerId` as the `key` of the element of the content. At a move, the old content leaves while the new content enters, with the classes of `<Transition>`.
 
-In `<Tooltip.Viewport>`, a `div` holds each content. Use their attributes to style the animations:
-
-- `data-current`: the content that shows when no transition runs, or the new content in a transition.
-- `data-previous`: the old content in a transition.
+The viewport has the `data-activation-direction` attribute, which gives the position of the new trigger relative to the old trigger. The value has at most two tokens, one for each axis: `left` or `right`, and `up` or `down`, for example `right down`. Match one token with the `~=` attribute selector, such as `[data-activation-direction~='right']`.
 
 Use `Tooltip.Viewport` only when one popup has more than one trigger, the content changes with the trigger, and the change is animated. With a viewport, set `width: var(--positioner-width)` and `height: var(--positioner-height)` on the Positioner. Its box then keeps the measured size during the transition. Without these styles, the size of the content can change the size of the popup in each frame, or move the popup to another side.
 
@@ -235,7 +278,7 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 ## Portal target
 
-Set `to` on `Tooltip.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. See [Portal targets](/components/dialog#portal-targets).
+Set `to` on `Tooltip.Portal` to select a target. For example, `to="#overlays"` selects the element with that ID. `Tooltip.Portal` renders no element of its own. See [Portal target](/components/popover#portal-target).
 
 ## API reference
 

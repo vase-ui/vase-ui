@@ -147,6 +147,20 @@
       "upstream": "packages/react/test/floating-ui-tests/renderGridRows.tsx",
       "kind": "not-applicable",
       "reason": "Only `Menu.tsx` and `MenuOrientation.tsx` import the file, and Vase UI has no counterpart of those files."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/Tooltip.test.ts",
+      "reason": "`Tooltip.test.ts` tests the anchor at the pointer through `Tooltip`: the axes, the move with the pointer, the stop on the popup, the trigger as the anchor after a focus open, a pen and a touch, and an open by code that stays with its trigger at a scroll."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
+      "describe": ["useHoverTriggerInteraction"],
+      "title": "treats disabled child trigger as inactive in wrapper fallback mode",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/Tooltip.test.ts",
+      "reason": "Only a tooltip trigger was a disabled trigger of the hover of `utils/popups`. `Tooltip.test.ts` tests that the hover from the active trigger to a disabled trigger closes the tooltip."
     }
   ],
   "surfaceAdditions": [],
@@ -183,10 +197,10 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
-      "relation": "inlined-into",
-      "destination": "packages/vue/src/tooltip/root/TooltipRoot.vue",
-      "member": "useTooltipCursor",
-      "witness": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx"
+      "relation": "merged-into",
+      "destination": "packages/vue/src/tooltip/cursor.ts",
+      "behavior": "The anchor at the mouse pointer of a tooltip with `trackCursorAxis`.",
+      "witness": "packages/vue/src/tooltip/Tooltip.test.ts"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
@@ -201,13 +215,6 @@
       "destination": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx",
       "member": "createPopupApp",
       "witness": "packages/vue/src/utils/popups/interactions/usePopupHover.popup.test.tsx"
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
-      "relation": "moved-test",
-      "destination": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx",
-      "member": "expectLocation",
-      "witness": "packages/vue/src/tooltip/root/TooltipRoot.clientPoint.test.tsx"
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",

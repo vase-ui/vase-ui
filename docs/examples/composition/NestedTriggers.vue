@@ -10,8 +10,8 @@ import MyButton from './MyButton.vue';
     <Tooltip.Root>
       <Menu.Root>
         <Tooltip.Trigger>
-          <template #render="{ props: tooltipTrigger }">
-            <Dialog.Trigger v-bind="tooltipTrigger">
+          <template #element="{ props: tooltipTrigger, elementRef }">
+            <Dialog.Trigger v-bind="tooltipTrigger" :ref="elementRef">
               <template #render="{ props: dialogTrigger }">
                 <Menu.Trigger v-bind="dialogTrigger">
                   <template #render="{ props: menuTrigger }">

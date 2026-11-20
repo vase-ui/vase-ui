@@ -54,8 +54,13 @@ for (const popover of popovers) {
 const previewCard: PreviewCard.Handle<Payload> = PreviewCard.createHandle<Payload>();
 check(previewCard);
 check(new PreviewCard.Handle<Payload>());
-const tooltip: Tooltip.Handle<Payload> = Tooltip.createHandle<Payload>();
-check(tooltip);
-check(new Tooltip.Handle<Payload>());
-// @ts-expect-error Tooltip requires the payload type of its factory.
-tooltip.store.set('payload', 1);
+// A Tooltip handle has no store.
+const tooltips: Tooltip.Handle<Payload>[] = [
+  Tooltip.createHandle<Payload>(),
+  new Tooltip.Handle<Payload>(),
+];
+for (const tooltip of tooltips) {
+  const open: boolean = tooltip.isOpen;
+  if (open) tooltip.close();
+  else tooltip.open('second');
+}

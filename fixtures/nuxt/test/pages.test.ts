@@ -1439,24 +1439,22 @@ function readTooltipTriggers(page: Page) {
 }
 
 // A portal renders after the mount, so the server HTML has no popup. Only the trigger that the
-// root names with `default-trigger-id` is open. On a server, a detached trigger reads the inert
-// store of its handle, so it is closed.
+// root names with `default-trigger-id` is open. On a server, a handle has no root, so a detached
+// trigger is closed.
 async function expectTooltipPageOnServer(page: Page) {
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
   expect(await page.locator('[data-testid$="-popup"]').count()).toBe(0);
   expect(await readTooltipTriggers(page)).toEqual([null, '', null, null]);
 }
 
-// After the mount, the two open popups and the kept popup are in the body. The kept popup is
-// hidden, and the detached trigger follows its root.
+// After the mount, the two open popups and the kept popup are in their positioners in the body.
+// The kept popup is hidden, and the detached trigger follows its root.
 async function expectHydratedTooltipPage(page: Page) {
   const readPopup = (testId: string) =>
     page.getByTestId(testId).evaluate((element) => ({
-      parent: element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+      parent: element.parentElement?.parentElement?.localName,
       isVisible: element.checkVisibility(),
     }));
 
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
   expect(await page.getByTestId('closed-popup').count()).toBe(0);
   expect(await readPopup('open-popup')).toEqual({ parent: 'body', isVisible: true });
   expect(await readPopup('kept-popup')).toEqual({ parent: 'body', isVisible: false });

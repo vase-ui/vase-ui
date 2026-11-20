@@ -32,7 +32,7 @@ A family with the `element` slot has this form. Each other family has `as` and [
 
 ## Composing multiple components
 
-To compose more than one part with your own components, nest the slots as deeply as you need. Tooltip is a common example. Its trigger and the triggers in the sample have the `#render` slot.
+To compose more than one part with your own components, nest the slots as deeply as you need. Tooltip is a common example. Its trigger has the `element` slot, and the other triggers in the sample have the `#render` slot.
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
@@ -170,7 +170,7 @@ Vase UI parts are ordinary Vue components. An application in Vapor mode renders 
 
 In a Vapor component (`<script setup vapor>`), bind the ref setter by name, beside `v-bind="props"`: `:ref="elementRef"` in the `element` slot, and `:ref="props.ref"` in the `#render` slot. Vapor does not apply the `ref` key of a bound object. Vue shows no warning. Without `:ref`, the part gets no element. For a part with the `#render` slot, a development build then shows a warning that names this binding.
 
-The rule applies to each element and each component that gets `props`. With nested `#render` slots, bind the setter of each slot: `<Dialog.Trigger v-bind="tooltipTrigger" :ref="tooltipTrigger.ref">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="props.ref"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
+The rule applies to each element and each component that gets `props`. With nested `#render` slots, bind the setter of each slot: `<Menu.Trigger v-bind="dialogTrigger" :ref="dialogTrigger.ref">`. With `mergeProps`, bind the setter of the slot: `v-bind="mergeProps(props, own)" :ref="props.ref"`. To add a `ref` of your own, use the function ref of [How props are merged](#how-props-are-merged). It works in a Vapor component too.
 
 A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to the slots, also when the component that renders the part is not in Vapor mode.
 

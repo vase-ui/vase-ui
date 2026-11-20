@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import { Fieldset } from '@vase-ui/vue/fieldset';
+import { Menubar } from '@vase-ui/vue/menubar';
 
-defineProps<{ closeOnClick?: boolean }>();
+defineProps<{ modal?: boolean }>();
 </script>
 
 <template>
-  <Tooltip.Root>
-    <Tooltip.Trigger :close-on-click="closeOnClick"><slot /></Tooltip.Trigger>
-  </Tooltip.Root>
+  <Fieldset.Root>
+    <Menubar :modal="modal"><slot /></Menubar>
+  </Fieldset.Root>
 </template>

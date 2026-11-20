@@ -5,7 +5,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Tooltip } from '@vase-ui/vue/tooltip';
 
 defineProps<{ fieldsetRoot?: boolean }>();
 </script>
@@ -31,8 +30,5 @@ defineProps<{ fieldsetRoot?: boolean }>();
         </NavigationMenu.Item>
       </NavigationMenu.List>
     </NavigationMenu.Root>
-    <Tooltip.Root>
-      <Tooltip.Trigger v-slot="{ state }">{{ state.disabled }}</Tooltip.Trigger>
-    </Tooltip.Root>
   </component>
 </template>

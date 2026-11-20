@@ -21,17 +21,18 @@ export function useHandles() {
     drawerHandle,
     menuHandle,
     previewCardHandle,
-    tooltipHandle,
   ]) {
     const open: boolean = handle.isOpen;
     const mounted: boolean = handle.store.state.mounted;
     if (open) handle.close();
     else if (!mounted) handle.open('trigger');
   }
-  // A Popover handle has no store.
-  const popoverOpen: boolean = popoverHandle.isOpen;
-  if (popoverOpen) popoverHandle.close();
-  else popoverHandle.open('trigger');
+  // A Popover handle and a Tooltip handle have no store.
+  for (const handle of [popoverHandle, tooltipHandle]) {
+    const open: boolean = handle.isOpen;
+    if (open) handle.close();
+    else handle.open('trigger');
+  }
   dialogHandle.openWithPayload(1);
   alertDialogHandle.openWithPayload(1);
   drawerHandle.openWithPayload(1);

@@ -135,13 +135,13 @@ defineProps({
       <Toolbar.Button id="disabled" disabled>Disabled</Toolbar.Button>
     </template>
     <Tooltip.Root v-else-if="scene.kind === 'tooltip'">
-      <Toolbar.Button :disabled="scene.disabled">
+      <Tooltip.Trigger id="trigger" :delay="20">
         <template #element="{ props, elementRef }">
-          <Tooltip.Trigger id="trigger" :delay="20" v-bind="props" :ref="elementRef">
+          <Toolbar.Button :disabled="scene.disabled" v-bind="props" :ref="elementRef">
             Push
-          </Tooltip.Trigger>
+          </Toolbar.Button>
         </template>
-      </Toolbar.Button>
+      </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner>
           <Tooltip.Popup id="popup">Nothing to push</Tooltip.Popup>

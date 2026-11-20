@@ -28,7 +28,7 @@ Use a transition where you can. A transition can be canceled midway with no jump
 
 ::: code-group
 
-```css{10-14} [tooltip.css]
+```css{10-14} [menu.css]
 .Popup {
   box-sizing: border-box;
   padding: 1rem 1.5rem;
@@ -57,7 +57,7 @@ Use these attributes to make a CSS animation when a component becomes visible or
 
 ::: code-group
 
-```css [tooltip.css]
+```css [menu.css]
 @keyframes scaleIn {
   from {
     opacity: 0;
