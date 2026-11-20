@@ -60,7 +60,7 @@ The popup and the backdrop are in the DOM only while the menu is open. Put each 
 
 A content is in a `<Teleport>` to the viewport, and Vue animates a `<Transition>` around such a part only from Vue 3.5.41. So give the props of a `<Transition>` to the `transition` prop of `NavigationMenu.Content`, such as `:transition="{ name: 'slide' }"`. At a change of the item, the old content leaves while the new one enters. Both have `data-activation-direction`, so the classes of the transition can move them to the side of the new trigger. At a close, the content stays in the popup and goes with it.
 
-While the popup changes its item, `--popup-width` and `--popup-height` give it its old size and then its new size. Give the popup a CSS transition of `width` and `height` to animate the change.
+While the popup changes its item, `--popup-width` and `--popup-height` give it its old size and then its new size. Give the popup a CSS transition of `width` and `height` to animate the change. Give the positioner `width: var(--positioner-width)` and `height: var(--positioner-height)`: at the side `top` or `left`, the popup is at the edge of the positioner that faces the trigger, so it grows away from the trigger.
 
 To keep the popup in the DOM until an animation of JavaScript ends, use the JavaScript hooks of `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
 

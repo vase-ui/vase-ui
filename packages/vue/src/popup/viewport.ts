@@ -23,16 +23,6 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
 }
 
 /**
- * Keeps the edge of the popup that faces its anchor in place while the popup changes its size: at
- * the side `top` and at the physical side `left`, the popup grows away from the anchor.
- */
-export function anchoredEdgeStyle(side: 'top' | 'bottom' | 'left' | 'right'): CSSProperties {
-  if (side === 'top') return { position: 'absolute', bottom: 0 };
-  if (side === 'left') return { position: 'absolute', right: 0 };
-  return {};
-}
-
-/**
  * The sizes of a popup whose content changes while it is open. At rest, the positioner has the
  * size of the popup. `resize()`, called before or after the DOM update of the new content, gives
  * the popup the size that it has, gives the positioner and then the popup the size of the new
@@ -80,8 +70,6 @@ export function usePopupSizes(element: () => HTMLElement | null) {
     const next = sizeOf(current);
     current.style.setProperty('--popup-width', `${from.width}px`);
     current.style.setProperty('--popup-height', `${from.height}px`);
-    // The read applies the old size, so that a CSS transition goes from it to the new size.
-    sizeOf(current);
     positioner.value = next;
     popup.value = next;
     await nextTick();

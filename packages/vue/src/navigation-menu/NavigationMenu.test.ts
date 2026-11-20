@@ -449,6 +449,7 @@ describe('the hover', () => {
     await wait(20);
     expect(byTestId('popup')).not.toBe(null);
     await closed();
+    expect(document.activeElement).toBe(document.body);
     expect(log).toEqual([
       'valueChange one trigger-hover',
       'update one',
@@ -776,6 +777,8 @@ describe('the Tab order', () => {
   test('in an inline viewport, the content follows its trigger, and a closed nested inline root adds no tab stop', async () => {
     await mountMenu({ inline: true, root: { defaultValue: 'one' }, nested: { root: {} } });
     await shows('one');
+    expect(get('nested-viewport').querySelectorAll('[tabindex]')).toHaveLength(0);
+    expect(get('viewport').querySelectorAll(':scope > [tabindex="0"]')).toHaveLength(2);
     get('trigger-one').focus();
     await tab();
     expect(document.activeElement).toBe(get('link-one-a'));
@@ -972,6 +975,28 @@ describe('the size', () => {
     expect(get('popup').getAnimations().length).toBeGreaterThan(0);
   });
 
+  test('a close in the steps gives the kept popup no size at the next open', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      portal: { keepMounted: true },
+      popup: { class: 'sized' },
+    });
+    await shows('one');
+    await placed();
+    get('trigger-two').click();
+    // The steps start in the update of the change. The close comes before their next step.
+    await nextTick();
+    get('trigger-two').click();
+    await waitFor(() => expect(get('popup')).toHaveAttribute('hidden'));
+    await frame();
+    get('trigger-two').click();
+    await shows('two');
+    await placed();
+    await frame();
+    expect(get('popup').style.getPropertyValue('--popup-width')).toBe('');
+    expect(get('popup').offsetWidth).toBe(get('content-two').offsetWidth);
+  });
+
   test('after fast changes the size is that of the last content, and no size variable is zero', async () => {
     await mountMenu({ root: { defaultValue: 'one' }, popup: { class: 'sized' } });
     await shows('one');
@@ -1025,7 +1050,13 @@ describe('the placement', () => {
           style:
             'display: flex; flex-direction: column; gap: 8px; margin: 300px 0 0 400px; padding: 0; list-style: none',
         },
-        positioner: { side, sideOffset: 4, collisionAvoidance: { side: 'none' } },
+        positioner: {
+          side,
+          sideOffset: 4,
+          collisionAvoidance: { side: 'none' },
+          // The CSS of the demos: the positioner has the size of the new content.
+          style: 'width: var(--positioner-width); height: var(--positioner-height)',
+        },
         popup: { class: 'sized' },
       });
       await shows('one');
@@ -1039,6 +1070,8 @@ describe('the placement', () => {
         return Math.round((side === 'top' ? box.top : box.left) - 4);
       };
       expect(edge()).toBe(near('trigger-one'));
+      // The popup at rest, so that its size animates at the change.
+      await wait(200);
       get('trigger-two').click();
       const edges: number[] = [];
       for (let index = 0; index < 8; index += 1) {
@@ -1048,6 +1081,7 @@ describe('the placement', () => {
       await waitFor(() => expect(get('popup').style.getPropertyValue('--popup-height')).toBe(''));
       expect(new Set(edges).size).toBeLessThanOrEqual(2);
       expect(Math.abs(edges.at(-1)! - near('trigger-two'))).toBeLessThanOrEqual(1);
+      expect(get('popup').offsetWidth).toBe(get('content-two').offsetWidth);
     },
   );
 
@@ -1068,6 +1102,21 @@ describe('the placement', () => {
     await placed();
     // With the visual viewport as its boundary, the shift would move the popup to its left edge.
     expect(get('popup').getBoundingClientRect().left).toBeGreaterThan(100);
+  });
+
+  test('a nested positioner takes a side of the other axis when neither side of its axis has room', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      contents: { one: { style: 'height: auto' } },
+      nested: {
+        root: { defaultValue: 'sub-a' },
+        inline: false,
+        contents: { a: { style: 'width: 95vw; height: 40px' } },
+      },
+    });
+    await waitFor(() => expect(byTestId('content-sub-a')).not.toBe(null));
+    await waitFor(() => expect(get('nested-positioner').style.visibility).toBe(''));
+    expect(get('nested-positioner')).toHaveAttribute('data-side', 'bottom');
   });
 
   test('a top-level positioner keeps its side when neither side of the axis has room; with `fallbackAxisSide` it takes the other axis', async () => {
