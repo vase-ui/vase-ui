@@ -72,7 +72,10 @@ const bar: MenubarForMenu = {
   get triggers() {
     return [...triggers.keys()];
   },
-  isTabStop: (trigger) => !!trigger && trigger === tabStop.value,
+  tabIndex(trigger) {
+    if (!tabStop.value) return undefined;
+    return trigger === tabStop.value ? 0 : -1;
+  },
   addTrigger(trigger, menu, disabled) {
     triggers.set(trigger, { menu, disabled });
     return () => triggers.delete(trigger);

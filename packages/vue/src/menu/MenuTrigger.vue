@@ -184,7 +184,7 @@ function elementProps() {
     const { tabindex: _, 'data-highlighted': __, ...listAttributes } = barItem.attributes.value;
     Object.assign(own, mergeProps(listAttributes, { onPointermove: onBarPointermove, onFocus: onBarFocus }), {
       role: 'menuitem',
-      tabindex: bar.isTabStop(element.value) ? 0 : -1,
+      tabindex: bar.tabIndex(element.value),
     });
   }
   return trigger.button.mergeAttributes(

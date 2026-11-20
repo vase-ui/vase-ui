@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Menu, type MenuRootChangeEventDetails } from '@vase-ui/vue/menu';
+import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
+import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { mount } from '../../test/render';
@@ -803,5 +805,141 @@ describe('the positioner', () => {
     expect(popup()).toHaveAttribute('data-side', 'bottom');
     const box = positioner.getBoundingClientRect();
     expect(box.top).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().bottom - 1);
+  });
+});
+
+describe('more behaviors of the parts', () => {
+  test('an `id` of white space counts as no `id`', async () => {
+    const { trigger } = await mountMenu({ trigger: { id: '  ' } });
+    expect(trigger.id.trim()).not.toBe('');
+    await userEvent.click(trigger);
+    expect(await opened()).toHaveAttribute('aria-labelledby', trigger.id);
+  });
+
+  test('a trigger in a disabled fieldset is disabled', async () => {
+    const { trigger } = await mountMenu({ fieldset: true });
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveTextContent('true');
+  });
+
+  test('with `keepMounted`, the closed popup stays with `hidden` and `inert`', async () => {
+    const { trigger } = await mountMenu({ portal: { keepMounted: true } });
+    await nextTick();
+    const element = popup()!;
+    expect(element).toHaveAttribute('hidden');
+    expect(element).toHaveAttribute('inert');
+    await userEvent.click(trigger);
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    expect(popup()).toBe(element);
+  });
+
+  test('the backdrop and the arrow have their roles', async () => {
+    const { trigger } = await mountMenu({ backdrop: {}, arrow: {} });
+    await userEvent.click(trigger);
+    await placed();
+    expect(byTestId('backdrop')).toHaveAttribute('role', 'presentation');
+    expect(byTestId('arrow')).toHaveAttribute('aria-hidden', 'true');
+    expect(byTestId('arrow')).toHaveAttribute('data-side', 'bottom');
+  });
+
+  test('an arrow key of a horizontal parent that the submenu did not use closes the submenu and moves the highlight of the parent', async () => {
+    const { trigger } = await mountMenu({
+      root: { orientation: 'horizontal' },
+      submenu: { trigger: { delay: 0 } },
+    });
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await userEvent.keyboard('{End}');
+    expect(active()).toBe(item('sub'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowRight}');
+    await closed(subPopup);
+    expect(active()).toBe(item('a'));
+  });
+
+  test('a pointer move to another item closes the open submenu with `sibling-open`, and a move back to its trigger keeps it', async () => {
+    const sub: string[] = [];
+    const { trigger } = await mountMenu({
+      submenu: {
+        trigger: { delay: 0, closeDelay: 100 },
+        root: {
+          onOpenChange: (open: boolean, details: MenuRootChangeEventDetails) =>
+            sub.push(`${open} ${details.reason}`),
+        },
+      },
+    });
+    await userEvent.click(trigger);
+    await placed();
+    await userEvent.hover(item('sub'));
+    await opened(subPopup);
+    // A move from the trigger up and away from the submenu, outside the triangle.
+    const away = async () => {
+      const box = item('sub').getBoundingClientRect();
+      await userEvent.pointer([
+        { coords: { x: box.left + 10, y: box.top - 2 } },
+        { coords: centerOf(item('a')) },
+      ]);
+    };
+    await away();
+    await userEvent.hover(item('sub'));
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(subPopup()).not.toBe(null);
+    await away();
+    await closed(subPopup);
+    expect(sub).toEqual(['true trigger-hover', 'false sibling-open']);
+  });
+
+  test('a submenu leaves in its `<Transition>` when its parent closes, and then the parent leaves', async () => {
+    mount(MenuInTransition, { root: { closeParentOnEsc: false } });
+    await nextTick();
+    byTestId('trigger')!.focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    const sub = subPopup()!;
+    const parent = popup()!;
+    await userEvent.pointer([{ coords: { x: 2, y: 600 } }, '[MouseLeft]']);
+    await waitFor(() => expect(sub).toHaveClass('menu-fade-leave-active'));
+    // The parent stays until the submenu left, and then leaves.
+    expect(parent.isConnected).toBe(true);
+    expect(parent).not.toHaveAttribute('hidden');
+    await waitFor(() => expect(sub.isConnected).toBe(false));
+    await waitFor(() => expect(parent).toHaveClass('menu-fade-leave-active'));
+    await waitFor(() => expect(parent.isConnected).toBe(false));
+  });
+});
+
+describe('a menu and a popover', () => {
+  test('a click on an item of a menu in a popover closes the menu and keeps the popover', async () => {
+    mount(MenuInPopover, { popover: { defaultOpen: true } });
+    await waitFor(() => expect(byTestId('popover-popup')).not.toBe(null));
+    await userEvent.click(byTestId('trigger')!);
+    await opened();
+    await placed();
+    await userEvent.click(item('a'));
+    await closed();
+    expect(byTestId('popover-popup')).not.toBe(null);
+    await userEvent.click(byTestId('trigger')!);
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(byTestId('popover-popup')).not.toBe(null);
+  });
+
+  test('a press in a popover in a menu keeps the menu open', async () => {
+    mount(MenuInPopover, { popover: { defaultOpen: true } });
+    await waitFor(() => expect(byTestId('popover-popup')).not.toBe(null));
+    await userEvent.click(byTestId('trigger')!);
+    await opened();
+    await placed();
+    await userEvent.click(byTestId('inner-trigger')!);
+    await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
+    await userEvent.click(byTestId('inner-button')!);
+    expect(popup()).not.toBe(null);
+    expect(byTestId('inner-popup')).not.toBe(null);
   });
 });

@@ -26,7 +26,9 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
 // While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(() => (root.open && !root.leaving) || root.keepMounted);
+const shown = computed(
+  () => (root.open && !root.leaving) || root.keepMounted || menu.childLeaving,
+);
 const state = computed<MenuPopupState>(() => ({
   open: root.open,
   side: placement.side.value,
@@ -84,7 +86,7 @@ function elementProps() {
       'data-align': state.value.align,
       'data-instant': root.instant,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
-      hidden: closed ? true : undefined,
+      hidden: closed && !menu.childLeaving ? true : undefined,
       inert: closed ? true : undefined,
       style: sizeVariables('popup', menu.viewport.value?.popup),
       onKeydown,

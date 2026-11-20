@@ -13,8 +13,8 @@ export interface MenubarForMenu {
   readonly openMenu: MenuContext | null;
   /** The elements of the triggers. */
   readonly triggers: readonly Element[];
-  /** The trigger is the tab stop of the bar. */
-  isTabStop(element: Element | null): boolean;
+  /** The `tabindex` of a trigger: 0 for the tab stop of the bar, and none before the mount. */
+  tabIndex(element: Element | null): 0 | -1 | undefined;
   /** Adds a trigger and its menu while it is mounted. */
   addTrigger(element: Element, menu: () => MenuContext | null, disabled: () => boolean): () => void;
   /** The bar has one open menu. */

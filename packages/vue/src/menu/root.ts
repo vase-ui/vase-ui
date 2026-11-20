@@ -73,6 +73,11 @@ export interface MenuContext<Payload = unknown> {
   readonly hoverOpen: boolean;
   /** The open submenu. */
   readonly openChild: MenuContext | null;
+  /**
+   * The last submenu leaves in its `<Transition>`. The popup stays until it is gone, because Vue
+   * removes the popup of a submenu with no leave when the popup around it leaves.
+   */
+  readonly childLeaving: boolean;
   readonly filter: MenuFilterRoot | null;
   /** The point of a context menu. */
   readonly anchor: VirtualElement | undefined;
@@ -212,6 +217,7 @@ export function useMenuRoot<Payload>(
   );
   const disabled = computed(() => props.disabled || !!parent?.disabled || !!menubar.value?.disabled);
   const openChild = shallowRef<MenuContext | null>(null);
+  const lastChild = shallowRef<MenuContext | null>(null);
   const positioner = shallowRef<HTMLElement | null>(null);
   const placed = shallowRef(false);
   const listElement = shallowRef<HTMLElement | null>(null);
@@ -451,6 +457,9 @@ export function useMenuRoot<Payload>(
     get openChild() {
       return openChild.value;
     },
+    get childLeaving() {
+      return !!lastChild.value?.root.leaving;
+    },
     filter,
     get anchor() {
       return anchor.value;
@@ -483,6 +492,7 @@ export function useMenuRoot<Payload>(
     },
     setOpenChild(child) {
       openChild.value = child;
+      if (child) lastChild.value = child;
     },
   };
   contexts.set(root, context as MenuContext);

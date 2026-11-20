@@ -42,6 +42,8 @@ defineProps({
   }>,
   /** A second submenu after the first one. */
   sibling: Object as PropType<{ trigger?: Props; items?: Item[] }>,
+  /** The root is in a disabled `<fieldset>`. */
+  fieldset: Boolean,
 });
 const defaultItems = (prefix: string): Item[] => [{ key: `${prefix}1` }, { key: `${prefix}2` }];
 const rootPart = useTemplateRef('rootPart');
@@ -52,7 +54,14 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
 
 <template>
   <input id="before" aria-label="Before" />
-  <Menu.Root ref="rootPart" v-bind="root">
+  <fieldset v-if="fieldset" disabled>
+    <Menu.Root v-bind="root">
+      <Menu.Trigger data-testid="trigger" v-bind="trigger" v-slot="{ state }">
+        {{ state.disabled }}
+      </Menu.Trigger>
+    </Menu.Root>
+  </fieldset>
+  <Menu.Root v-else ref="rootPart" v-bind="root">
     <Menu.Trigger ref="triggerPart" data-testid="trigger" v-bind="trigger">Menu</Menu.Trigger>
     <Menu.Portal v-bind="portal">
       <Menu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
