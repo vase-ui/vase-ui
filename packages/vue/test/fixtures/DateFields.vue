@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import { useTemplateRef, type PropType } from 'vue';
 import { DateField } from '../../src/date-field';
 
 defineProps({
@@ -8,11 +8,13 @@ defineProps({
   /** Renders `DateField.Clear` with this text. */
   clear: String,
 });
+const roots = useTemplateRef('roots');
+defineExpose({ roots });
 </script>
 
 <template>
   <form v-bind="formAttrs">
-    <DateField.Root v-for="(field, index) in fields" :key="index" v-bind="field">
+    <DateField.Root v-for="(field, index) in fields" ref="roots" :key="index" v-bind="field">
       <DateField.Input />
       <DateField.Clear v-if="clear" aria-label="Clear">{{ clear }}</DateField.Clear>
     </DateField.Root>

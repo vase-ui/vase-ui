@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import { useTemplateRef, type PropType } from 'vue';
 import { TimeField } from '../../src/time-field';
 
 defineProps({
@@ -8,11 +8,13 @@ defineProps({
   /** Renders `TimeField.Clear` with this text. */
   clear: String,
 });
+const roots = useTemplateRef('roots');
+defineExpose({ roots });
 </script>
 
 <template>
   <form v-bind="formAttrs">
-    <TimeField.Root v-for="(field, index) in fields" :key="index" v-bind="field">
+    <TimeField.Root v-for="(field, index) in fields" ref="roots" :key="index" v-bind="field">
       <TimeField.Input />
       <TimeField.Clear v-if="clear" aria-label="Clear">{{ clear }}</TimeField.Clear>
     </TimeField.Root>
