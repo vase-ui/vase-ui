@@ -5,12 +5,13 @@ import type {
   SelectRootChangeEventDetails,
   SelectRootOpenChangeEventDetails,
 } from '@vase-ui/vue/select';
+import SelectArrowsInTransition from '../../test/fixtures/SelectArrowsInTransition.vue';
 import SelectInPopover from '../../test/fixtures/SelectInPopover.vue';
 import SelectInTransition from '../../test/fixtures/SelectInTransition.vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { clientCenter, touchDrag } from '../../test/pointer';
-import { mount, mountError } from '../../test/render';
+import { mount, mountError, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
@@ -298,6 +299,7 @@ describe('the value', () => {
     await mountSelect({ root: { ...root, open: true, defaultValue: 'apple' } });
     await opened();
     item('cherry').click();
+    await nextTick();
     expect(valueText()).toBe('apple');
   });
 
@@ -489,8 +491,13 @@ describe('press, drag, release', () => {
   test('VUE-68: a release within 8 px of the press does nothing', async () => {
     await mountSelect({ ...aligned, root: { defaultValue: 'banana' } });
     const point = centerOf(trigger());
-    await pressAndRelease(point, { x: point.x + 6, y: point.y + 6 });
+    await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
     await opened();
+    // After 400 ms, a release on an item gives it a click.
+    await wait(450);
+    const to = { x: point.x + 6, y: point.y + 6 };
+    await userEvent.pointer({ coords: to });
+    await userEvent.pointer({ coords: to, keys: '[/MouseLeft]' });
     await wait(50);
     expect(shown(popup())).toBe(true);
     expect(valueText()).toBe('banana');
@@ -629,6 +636,23 @@ describe('the open list', () => {
     await nextTick();
     await userEvent.hover(item('cherry'));
     expect(item('cherry')).not.toHaveAttribute('data-highlighted');
+  });
+
+  test('the keys move the highlight while the list scrolls under a pointer that rests', async () => {
+    const items = Array.from({ length: 30 }, (_, index) => ({
+      value: `i${index}`,
+      text: `Item ${index}`,
+    }));
+    await mountSelect({ items, popup: { style: 'max-height: 120px; overflow-y: auto' } });
+    await userEvent.click(trigger());
+    await opened();
+    await userEvent.hover(item('i1'));
+    await focused(() => item('i1'));
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}');
+    await focused(() => item('i7'));
+    await wait(100);
+    expect(document.activeElement).toBe(item('i7'));
+    expect(popup().scrollTop).toBeGreaterThan(0);
   });
 
   test('Tab closes the popup, and the focus goes to the next tab stop after the trigger', async () => {
@@ -857,6 +881,13 @@ describe('item alignment', () => {
     expect(isScrollLocked()).toBe(true);
   });
 
+  test('locks the scroll of the page also for a select that is not modal', async () => {
+    await mountSelect({ ...aligned, root: { defaultValue: 'banana', modal: false } });
+    await userEvent.click(trigger());
+    await opened();
+    expect(isScrollLocked()).toBe(true);
+  });
+
   test('aligns the inline end in a right-to-left popup', async () => {
     await mountSelect({
       ...aligned,
@@ -940,6 +971,28 @@ describe('scroll arrows', () => {
     await userEvent.pointer({ coords: down });
     await waitFor(() => expect(popup().scrollTop).toBeGreaterThan(0));
     await waitFor(() => expect(byTestId('up')).not.toBe(null));
+  });
+
+  test('in a <Transition>, an arrow that comes back during its leave is one element at each moment, and the new one enters after the old one goes', async () => {
+    const { root } = mount(SelectArrowsInTransition);
+    const arrows = () => [...document.querySelectorAll('.down')];
+    await waitFor(() => expect(arrows()).toHaveLength(1));
+    await settle();
+    const old = arrows();
+    let most = 0;
+    const observer = new MutationObserver(() => (most = Math.max(most, arrows().length)));
+    observer.observe(document.body, { childList: true, subtree: true });
+    popup().scrollTop = popup().scrollHeight;
+    await waitFor(() => expect(old[0]).toHaveClass('v-leave-active'));
+    popup().scrollTop = 0;
+    await waitFor(() => {
+      expect(arrows()).toHaveLength(1);
+      expect(arrows()[0]).not.toBe(old[0]);
+      expect(arrows()[0]!.className).toBe('down');
+    });
+    observer.disconnect();
+    expect(most).toBe(1);
+    expect(root).not.toBe(null);
   });
 
   test('a kept arrow stays with hidden while the list cannot scroll', async () => {

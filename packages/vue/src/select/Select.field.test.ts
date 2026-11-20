@@ -99,11 +99,23 @@ describe('the validation', () => {
   });
 
   test('with multiple, the text input is required only while nothing is selected', async () => {
-    const root = reactive<Attrs>({ required: true, multiple: true, defaultValue: ['a'] });
-    const { text } = await mountField({ noField: true, root });
-    expect(text.required).toBe(false);
-    root.defaultValue = [];
-    expect(text.required).toBe(false);
+    const { text } = await mountField({ noField: true, root: { required: true, multiple: true } });
+    expect(text.required).toBe(true);
+    await userEvent.click(trigger());
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    await userEvent.click(byTestId('item-a'));
+    await waitFor(() => expect(text.required).toBe(false));
+  });
+
+  test('VUE-115: with multiple, the field validates the empty array for a null model', async () => {
+    const seen: unknown[] = [];
+    await mountField({
+      field: { validationMode: 'blur', validate: (value: unknown) => void seen.push(value) },
+      root: { multiple: true, modelValue: null },
+    });
+    trigger().focus();
+    await leave(trigger());
+    await waitFor(() => expect(seen).toEqual([[]]));
   });
 
   test('BUG-1425: a required select with no value is invalid after the focus leaves it in blur mode', async () => {
@@ -121,8 +133,9 @@ describe('the validation', () => {
 describe('the field', () => {
   test('a pick makes the field dirty and filled, and a leave makes it touched; the focus that goes into the popup is no leave', async () => {
     const { field } = await mountField({ root: { name: 'letter' } });
-    await userEvent.click(trigger());
-    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    trigger().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('item-a')));
     await settle();
     expect(field).not.toHaveAttribute('data-touched');
     await userEvent.click(byTestId('item-a'));
@@ -131,6 +144,15 @@ describe('the field', () => {
     expect(trigger()).toHaveAttribute('data-filled');
     await leave(trigger());
     expect(field).toHaveAttribute('data-touched');
+  });
+
+  test('a Tab out of the popup that a press opened makes the field touched', async () => {
+    const { field } = await mountField();
+    await userEvent.click(trigger());
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('popup')));
+    await userEvent.keyboard('{ArrowDown}{Tab}');
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(false));
+    await waitFor(() => expect(field).toHaveAttribute('data-touched'));
   });
 
   test('Field.Label names the trigger, and a click on it opens the select', async () => {
