@@ -413,8 +413,8 @@ describe('animation', () => {
 });
 
 /**
- * Expects a length of the variable to be `pixels`. WebKit snaps a scroll size to the pixel grid at
- * the place of the box, so it can give 1 px more.
+ * Expects a length of the variable to be `pixels`. Firefox and WebKit on Linux round a scroll size
+ * up to the pixel grid at the place of the box, so they can give 1 px more.
  */
 function expectLength(value: string | undefined, pixels: number) {
   expect(value).toMatch(/^\d+px$/);
