@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs and Button follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button, Toggle and Toggle Group follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
