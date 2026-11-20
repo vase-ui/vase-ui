@@ -29,7 +29,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { MountedElementTarget } from '../../test/fixtures/MountedElementTarget';
-import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
+import StylePart from '../../test/fixtures/StylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { markChildrenMounted, useRenderElement } from './useRenderElement';
@@ -170,18 +170,15 @@ describe('useRenderElement', () => {
     { props: ['as', 'enabled', 'refs', 'onClick'], inheritAttrs: false },
   );
 
-  const OverridingStyleTestComponent = defineComponent(
+  const StyleTestComponent = defineComponent(
     (
-      props: VaseUIComponentProps<Record<string, never>> &
-        WithVaseUIEvent<HTMLAttributes> & { overridingStyle?: CSSProperties | undefined },
+      props: VaseUIComponentProps<Record<string, never>> & WithVaseUIEvent<HTMLAttributes>,
       { slots },
     ) => {
-      const { elementProps } = useRenderElement('div', props, {
-        overridingStyle: () => props.overridingStyle,
-      });
+      const { elementProps } = useRenderElement('div', props);
       return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
     },
-    { props: ['as', 'overridingStyle'], inheritAttrs: false },
+    { props: ['as'], inheritAttrs: false },
   );
 
   it('makes single prop objects preventable', async () => {
@@ -569,41 +566,6 @@ describe('useRenderElement', () => {
       expect(element.style.margin).toBe('2px');
     });
 
-    it.each([
-      { name: 'an object', style: { padding: '20px', margin: '1px', color: 'red' } },
-      { name: 'a string', style: 'padding: 20px; margin: 1px; color: red' },
-    ])(
-      'lets the overriding style of the part win over a style attribute that is $name',
-      async ({ style }) => {
-        const { container } = await render(
-          <OverridingStyleTestComponent
-            overridingStyle={{ padding: '30px', margin: '3px' }}
-            style={style}
-          />,
-        );
-
-        const element = container.firstElementChild as HTMLElement;
-        expect(element.style.padding).toBe('30px');
-        expect(element.style.margin).toBe('3px');
-        expect(element.style.color).toBe('red');
-      },
-    );
-
-    it('follows an overriding style that changes', async () => {
-      const { container, setProps } = await render(
-        <OverridingStyleTestComponent
-          overridingStyle={{ padding: '30px' }}
-          style={{ padding: '20px' }}
-        />,
-      );
-      const element = container.firstElementChild as HTMLElement;
-      expect(element.style.padding).toBe('30px');
-
-      await setProps({ overridingStyle: undefined });
-
-      expect(element.style.padding).toBe('20px');
-    });
-
     it('merges a string style attribute of the consumer with the object style of the part', async () => {
       const { container } = await render(<TestComponent style="color: red; margin: 1px" />);
 
@@ -614,9 +576,7 @@ describe('useRenderElement', () => {
     });
 
     it('keeps a style that the code wrote when the merged style becomes empty', async () => {
-      const { container, setProps } = await render(
-        <OverridingStyleTestComponent style={{ color: 'red' }} />,
-      );
+      const { container, setProps } = await render(<StyleTestComponent style={{ color: 'red' }} />);
       const element = container.firstElementChild as HTMLElement;
       // A part writes such a declaration to the DOM, as `ScrollArea.Viewport` does.
       element.style.setProperty('--written', '1');
@@ -631,28 +591,26 @@ describe('useRenderElement', () => {
       // Vue sets each value of the list in turn. The browser keeps the last value that it accepts.
       const style = { color: ['not a color', 'red'] } as unknown as CSSProperties;
 
-      const { container } = await render(<OverridingStyleTestComponent style={style} />);
+      const { container } = await render(<StyleTestComponent style={style} />);
 
       expect((container.firstElementChild as HTMLElement).style.color).toBe('red');
     });
 
-    it.each([
-      { name: 'an empty style object', props: { style: {} } },
-      { name: 'an empty overriding style', props: { overridingStyle: {} } },
-    ])('hydrates an element that has no style attribute for $name', async ({ props }) => {
-      const serverHtml = await renderOnServer('test/fixtures/OverridingStylePart.vue', props);
+    it('hydrates an element that has no style attribute for an empty style object', async () => {
+      const props = { style: {} };
+      const serverHtml = await renderOnServer('test/fixtures/StylePart.vue', props);
       // A `<template>` element parses the HTML with no side effect.
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
 
       // `hydrate` takes an empty `style` attribute for no attribute, so this assertion is the proof.
       expect(template.content.firstElementChild?.hasAttribute('style')).toBe(false);
-      await hydrate(OverridingStylePart, { serverHtml, props });
+      await hydrate(StylePart, { serverHtml, props });
     });
 
     it('applies a style that becomes non-empty after the hydration', async () => {
       // `hydrate` gives no way to change a prop after the mount, so the test hydrates by hand.
-      const serverHtml = await renderOnServer('test/fixtures/OverridingStylePart.vue', {
+      const serverHtml = await renderOnServer('test/fixtures/StylePart.vue', {
         style: {},
       });
       const container = document.createElement('div');
@@ -661,7 +619,7 @@ describe('useRenderElement', () => {
       const element = container.firstElementChild as HTMLElement;
 
       const style = shallowRef<CSSProperties>({});
-      const app = createSSRApp({ render: () => h(OverridingStylePart, { style: style.value }) });
+      const app = createSSRApp({ render: () => h(StylePart, { style: style.value }) });
       onTestFinished(() => {
         app.unmount();
         container.remove();

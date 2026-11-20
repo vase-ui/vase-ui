@@ -1,12 +1,9 @@
 <script lang="ts">
-import type { CSSProperties, HTMLAttributes } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../src/internals/types';
 
-export interface OverridingStylePartProps
-  extends VaseUIComponentProps<{}>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
-  /** The style that the part gives to `useRenderElement` as `overridingStyle`. */
-  overridingStyle?: CSSProperties | undefined;
-}
+export interface StylePartProps
+  extends VaseUIComponentProps<{}>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">
@@ -15,16 +12,14 @@ import { useRenderElement } from '../../src/internals/useRenderElement';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<OverridingStylePartProps>(), { as: 'div' });
+const props = withDefaults(defineProps<StylePartProps>(), { as: 'div' });
 
 defineSlots<{
   default(props: { state: {} }): unknown;
   render: ComponentRenderFn<HTMLProps, {}>;
 }>();
 
-const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props, {
-  overridingStyle: () => props.overridingStyle,
-});
+const { element, elementProps, setRef, usesRenderSlot } = useRenderElement('div', props);
 
 defineExpose({ element });
 </script>
