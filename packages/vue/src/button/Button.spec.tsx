@@ -1,23 +1,16 @@
-import { Button, ButtonDataAttributes } from '@vase-ui/vue/button';
-import type { ButtonProps, ButtonState } from '@vase-ui/vue/button';
-import type { HTMLProps } from '@vase-ui/vue/types';
+import { expectType } from '#test-utils';
+import { Button, type ButtonProps, type ButtonState } from '@vase-ui/vue/button';
 
-<Button />;
-<Button type="submit" form="form-id" name="action" />;
+// The exposed `element` is the element of the part, so a template ref can read it.
+const button = null as unknown as InstanceType<typeof Button>;
+expectType<HTMLElement | null, typeof button.element>(button.element);
 
-<Button nativeButton={false} as="span" />;
-<Button
-  nativeButton={false}
-  v-slots={{ render: ({ props }: { props: HTMLProps }) => <div {...props} /> }}
-/>;
-<Button nativeButton={false} disabled as="span" />;
+export const props: ButtonProps = { disabled: true, focusableWhenDisabled: true };
+export const state: ButtonState = { disabled: true };
 
-<Button nativeButton={false} type="submit" />;
+export const withNativeAttributes = (
+  <Button type="submit" form="order" name="action" value="save" />
+);
 
-export const props: Button.Props = {
-  disabled: true,
-  focusableWhenDisabled: true,
-  nativeButton: false,
-} satisfies ButtonProps;
-export const state: Button.State = { disabled: true } satisfies ButtonState;
-export const attribute: 'data-disabled' = ButtonDataAttributes.disabled;
+// @ts-expect-error `disabled` is a Boolean.
+export const withWrongDisabled = <Button disabled="yes" />;
