@@ -184,6 +184,34 @@ describe('the selection', () => {
     expect(log).toEqual(['openChange false imperative-action']);
   });
 
+  test('a drag that a listener cancels keeps the range and the popup', async () => {
+    mockToday('2026-11-18');
+    const log: string[] = [];
+    await mountPicker({
+      root: logged(log, {
+        defaultOpen: true,
+        onValueChange: (
+          value: readonly unknown[],
+          details: DateRangePickerRootChangeEventDetails,
+        ) => {
+          log.push(`valueChange ${text(value)} ${details.reason}`);
+          details.cancel();
+        },
+      }),
+    });
+    await opened();
+    await waitFor(() => expect(dayButton('2026-11-18')).toHaveFocus());
+    await userEvent.pointer([
+      { coords: centerOf('2026-11-10'), keys: '[MouseLeft>]' },
+      { coords: centerOf('2026-11-11') },
+      { coords: centerOf('2026-11-12') },
+      { keys: '[/MouseLeft]' },
+    ]);
+    await settle();
+    expect(popup()).not.toBe(null);
+    expect(log).toEqual(['valueChange 2026-11-10 2026-11-12 drag']);
+  });
+
   test('a key that extends the range keeps the popup open; closeOnSelect false keeps it open', async () => {
     mockToday('2026-11-18');
     const log: string[] = [];
@@ -208,6 +236,28 @@ describe('the selection', () => {
     await userEvent.click(dayButton('2026-11-20'));
     expect(log[0]).toBe('valueChange 2026-11-20T00:00:00 null day-press');
     expect(inputs()[1]).toHaveAttribute('min', '2026-11-20T00:00');
+  });
+});
+
+describe('today', () => {
+  test('the root reads the clock again when the user opens the popup', async () => {
+    const spy = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(day('2026-11-18'));
+    const { trigger } = await mountPicker({ root: { locale: 'en-US' } });
+    spy.mockReturnValue(day('2026-12-02'));
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(dayButton('2026-12-02')).toHaveFocus());
+    spy.mockRestore();
+  });
+
+  test('a today prop of the calendar replaces the today of the root', async () => {
+    mockToday('2026-11-18');
+    await mountPicker({
+      root: { locale: 'en-US', defaultOpen: true },
+      calendar: { today: day('2026-11-25') },
+    });
+    await opened();
+    await waitFor(() => expect(dayButton('2026-11-25')).toHaveFocus());
   });
 });
 
@@ -330,6 +380,18 @@ describe('the fields', () => {
     );
     expect(trigger.getBoundingClientRect().bottom).toBeGreaterThan(
       end.getBoundingClientRect().bottom,
+    );
+  });
+
+  test('the positioner of a picker with one field is at that field', async () => {
+    const { start, trigger } = await mountPicker({ root: { locale: 'en-US' }, noEnd: true });
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() =>
+      expect(positioner()!.getBoundingClientRect().top).toBeCloseTo(
+        start.getBoundingClientRect().bottom,
+        0,
+      ),
     );
   });
 });

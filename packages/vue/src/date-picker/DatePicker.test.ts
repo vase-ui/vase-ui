@@ -318,11 +318,13 @@ describe('the value', () => {
     expect(log[0]).toBe(`valueChange ${value} ${months ? 'month-press' : 'day-press'}`);
   });
 
-  test('a picker that the user empties keeps the kind of its last value', async () => {
+  test('a picker that the user empties keeps the kind and the time of its last value', async () => {
     mockToday('2026-11-18');
     const log: string[] = [];
     const props = model(log, at('2026-11-02T07:45'));
     const { exposed } = await mountPicker({ root: props });
+    props.modelValue = at('2026-11-03T16:20');
+    await nextTick();
     exposed.field.clear();
     await nextTick();
     props.open = true;
@@ -330,8 +332,8 @@ describe('the value', () => {
     await userEvent.click(dayButton('2026-11-20'));
     expect(log).toEqual([
       'update null',
-      'valueChange 2026-11-20T07:45:00 day-press',
-      'update 2026-11-20T07:45:00',
+      'valueChange 2026-11-20T16:20:00 day-press',
+      'update 2026-11-20T16:20:00',
     ]);
   });
 });
@@ -382,6 +384,22 @@ describe('today and the first focus', () => {
     await opened();
     await waitFor(() => expect(dayButton('2026-11-19')).toHaveFocus());
     expect(cell('2026-11-19')).toHaveAttribute('data-today');
+    spy.mockRestore();
+  });
+
+  test('with no timeZone, the root reads today in the zone of a zoned reference date', async () => {
+    const spy = vi
+      .spyOn(Temporal.Now, 'plainDateISO')
+      .mockImplementation((zone) => day(zone === 'Asia/Tokyo' ? '2026-11-19' : '2026-11-18'));
+    await mountPicker({
+      root: {
+        locale: 'en-US',
+        referenceDate: Temporal.ZonedDateTime.from('2026-11-01T09:00[Asia/Tokyo]'),
+        defaultOpen: true,
+      },
+    });
+    await opened();
+    await waitFor(() => expect(dayButton('2026-11-19')).toHaveFocus());
     spy.mockRestore();
   });
 
@@ -438,11 +456,15 @@ describe('today and the first focus', () => {
     );
   });
 
-  test('an initialFocus that gives true asks for the focus of the picker', async () => {
+  test.each([
+    { name: 'null', target: null },
+    { name: 'a function that gives true', target: () => true },
+    { name: 'a function that gives null', target: () => null },
+  ])('an initialFocus of $name asks for the focus of the picker', async ({ target }) => {
     mockToday('2026-11-18');
     const { trigger } = await mountPicker({
       root: { locale: 'en-US' },
-      popup: { initialFocus: () => true },
+      popup: { initialFocus: target },
     });
     await userEvent.click(trigger);
     await opened();

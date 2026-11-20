@@ -5,11 +5,13 @@ import { DateRangePicker } from '../../src/date-range-picker';
 import { Popover } from '../../src/popover';
 import { TimeField } from '../../src/time-field';
 import { TimePicker } from '../../src/time-picker';
+import FieldWithLabelAfter from './FieldWithLabelAfter.vue';
 import PickerCalendarGrid from './PickerCalendarGrid.vue';
 
 // A picker of `family` for a server render. The props of a server render go to Node as JSON, so a
 // value is a text, and the form of the text gives its kind. A range is two texts with a space.
-// `inline` renders the calendar, or the list and the hour column, outside the popup.
+// `inline` renders the calendar, or the list and the hour column, outside the popup. `field` puts
+// the range picker in a `Field.Root` with its label after the picker.
 const props = defineProps<{
   family: 'date' | 'range' | 'time';
   value?: string | undefined;
@@ -19,6 +21,7 @@ const props = defineProps<{
   portalDisabled?: boolean | undefined;
   inline?: boolean | undefined;
   hourCycle?: 12 | 24 | undefined;
+  field?: boolean | undefined;
 }>();
 
 function toValue(text: string | undefined) {
@@ -56,22 +59,25 @@ const today = Temporal.PlainDate.from('2026-11-18');
       </DatePicker.Positioner>
     </Popover.Portal>
   </DatePicker.Root>
-  <DateRangePicker.Root
-    v-else-if="family === 'range'"
-    :default-value="range"
-    :default-open="open"
-    :locale="locale"
-    :disabled="disabled"
-  >
-    <DateRangePicker.StartField aria-label="Start"><DateField.Input /></DateRangePicker.StartField>
-    <DateRangePicker.EndField aria-label="End"><DateField.Input /></DateRangePicker.EndField>
-    <DateRangePicker.Trigger data-testid="trigger" aria-label="Choose dates"
-      >Open</DateRangePicker.Trigger
+  <FieldWithLabelAfter v-else-if="family === 'range'" :field="field">
+    <DateRangePicker.Root
+      :default-value="range"
+      :default-open="open"
+      :locale="locale"
+      :disabled="disabled"
     >
-    <DateRangePicker.Calendar v-if="inline" :today="today">
-      <PickerCalendarGrid />
-    </DateRangePicker.Calendar>
-  </DateRangePicker.Root>
+      <DateRangePicker.StartField aria-label="Start"
+        ><DateField.Input
+      /></DateRangePicker.StartField>
+      <DateRangePicker.EndField aria-label="End"><DateField.Input /></DateRangePicker.EndField>
+      <DateRangePicker.Trigger data-testid="trigger" aria-label="Choose dates"
+        >Open</DateRangePicker.Trigger
+      >
+      <DateRangePicker.Calendar v-if="inline" :today="today">
+        <PickerCalendarGrid />
+      </DateRangePicker.Calendar>
+    </DateRangePicker.Root>
+  </FieldWithLabelAfter>
   <TimePicker.Root
     v-else
     :default-value="time"

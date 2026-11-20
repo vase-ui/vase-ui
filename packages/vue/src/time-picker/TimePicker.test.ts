@@ -328,6 +328,16 @@ describe('the columns', () => {
     expect(document.querySelector('[data-testid="dayPeriod"]')).toBe(null);
   });
 
+  test('an aria-label of the developer names a column', async () => {
+    await mountPicker({
+      root: { locale: 'en-US', defaultOpen: true },
+      parts: ['hour'],
+      column: { 'aria-label': 'Hours' },
+    });
+    await opened();
+    expect(byTestId('hour')).toHaveAttribute('aria-label', 'Hours');
+  });
+
   test('a press sets the unit and keeps the other units; it closes only with closeOnSelect', async () => {
     const log: string[] = [];
     const props = model(log, time('09:30'), { defaultOpen: true });

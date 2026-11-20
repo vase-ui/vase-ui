@@ -20,4 +20,17 @@ describe('server render and hydration', () => {
     expect([...root.querySelectorAll('*')].slice(0, elements.length)).toEqual(elements);
     expect(takeReportedMessages()).toEqual([]);
   });
+
+  test('in a Field with its label after the picker, the server HTML names each field with the label', async () => {
+    const fixtureProps = { family: 'range', locale: 'en-US', field: true };
+    const root = await renderOnServer('PickersOnServer', fixtureProps);
+    const label = root.querySelector('label')!;
+    const groups = [...root.querySelectorAll('[role="group"]')];
+    expect(groups.map((group) => group.getAttribute('aria-labelledby'))).toEqual(
+      groups.map((group) => `${group.id} ${label.id}`),
+    );
+    hydrate(PickersOnServer, fixtureProps, root);
+    await settle();
+    expect(takeReportedMessages()).toEqual([]);
+  });
 });

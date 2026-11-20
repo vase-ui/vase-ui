@@ -26,6 +26,8 @@ defineProps({
   /** Renders a `Field.Error` with this `match`. */
   match: String as PropType<'badInput' | 'rangeUnderflow'>,
   noFields: Boolean,
+  /** Renders the start field with no end field. */
+  noEnd: Boolean,
   fieldsetDisabled: Boolean,
 });
 const rootPart = useTemplateRef('rootPart');
@@ -44,7 +46,7 @@ defineExpose({ root: rootPart, start: startPart, end: endPart });
             <DateRangePicker.StartField ref="startPart" data-testid="start" v-bind="start">
               <DateField.Input />
             </DateRangePicker.StartField>
-            <DateRangePicker.EndField ref="endPart" data-testid="end" v-bind="end">
+            <DateRangePicker.EndField v-if="!noEnd" ref="endPart" data-testid="end" v-bind="end">
               <DateField.Input />
             </DateRangePicker.EndField>
           </template>
