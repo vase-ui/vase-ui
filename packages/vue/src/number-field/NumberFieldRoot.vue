@@ -39,7 +39,7 @@ const emit = defineEmits<{
   valueChange: [value: Value, details: NumberFieldRootChangeEventDetails];
   /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: Value];
-  /** The user ends a change: at the blur after typed edits, a key, a release or a fill. */
+  /** The user ends a change: at the blur after typed edits, a key, a wheel step, a release or a fill. */
   valueCommitted: [value: Value, details: NumberFieldRootCommitEventDetails];
 }>();
 defineSlots<{ default?(scope: { state: NumberFieldRootState }): unknown }>();
@@ -295,10 +295,11 @@ function endEdit(event: FocusEvent) {
   }
   edited = false;
   // A typed number shows in the format. Other typed text stays.
-  if (last && numberText.value.parse(last.text) !== undefined) typed.value = null;
+  const typedNumber = !!last && numberText.value.parse(last.text) !== undefined;
+  if (typedNumber) typed.value = null;
   let final = value.value;
   // A rounding option of the format rounds the number that the user typed.
-  if (final !== null && last?.value === final) {
+  if (typedNumber && final !== null && last?.value === final) {
     const rounded = roundInRange(final, { ...typedRange.value, round: numberText.value.round });
     if (rounded !== final && change(rounded, 'input-blur', event)) final = rounded;
   }

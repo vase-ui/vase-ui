@@ -98,13 +98,14 @@ html:has([data-scrubbing]) {
 
 Select the states of the parts with these selectors:
 
-| Selector                  | Part                  | State                                                 |
-| ------------------------- | --------------------- | ----------------------------------------------------- |
-| `:disabled`               | Input, buttons        | The field is disabled. A button is also at its bound. |
-| `:read-only`              | Input                 | The field is read-only.                               |
-| `:required`               | Input                 | The field is required.                                |
-| `[aria-invalid="true"]`   | Input                 | The field is invalid, or the value is out of range.   |
-| `:focus`, `:focus-within` | Input; root and group | The input has the focus.                              |
+| Selector                  | Part                              | State                                                                                                |
+| ------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `:disabled`               | Input, buttons                    | The field is disabled. A button is also disabled by its prop, in a read-only field and at its bound. |
+| `[aria-disabled="true"]`  | A button that is not a `<button>` | The button is disabled, as `:disabled` says above.                                                   |
+| `:read-only`              | Input                             | The field is read-only.                                                                              |
+| `:required`               | Input                             | The field is required.                                                                               |
+| `[aria-invalid="true"]`   | Input                             | The field is invalid, or the value is out of range.                                                  |
+| `:focus`, `:focus-within` | Input; root and group             | The input has the focus.                                                                             |
 
 The parts have these attributes:
 

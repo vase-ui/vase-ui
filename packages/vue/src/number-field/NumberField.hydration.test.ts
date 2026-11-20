@@ -27,7 +27,7 @@ function readParts(root: Element) {
       'required',
     ]),
     hidden: read('[type=number]', ['name', 'value', 'min', 'max', 'step', 'disabled']),
-    root: read('[role=spinbutton]', ['data-filled', 'data-disabled']),
+    root: read('#form > div', ['data-filled', 'data-disabled']),
   };
 }
 
@@ -79,6 +79,19 @@ describe('server render and hydration', () => {
     }
     hydrate(NumberFields, props, root);
     await nextTick();
+  });
+
+  test('a button with a tag in as has the attributes of that element in the server HTML', async () => {
+    const props = { root: { defaultValue: 10, max: 10 }, increment: { as: 'span' } };
+    const root = await renderOnServer('NumberFields', props);
+    const increment = root.querySelector('[aria-label=Increase]')!;
+    const read = () =>
+      ['role', 'aria-disabled', 'type', 'disabled'].map((name) => increment.getAttribute(name));
+    expect(increment.tagName).toBe('SPAN');
+    expect(read()).toEqual(['button', 'true', null, null]);
+    hydrate(NumberFields, props, root);
+    await nextTick();
+    expect(read()).toEqual(['button', 'true', null, null]);
   });
 
   test('a locale gives the same text on the server and in the browser', async () => {

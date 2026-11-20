@@ -459,7 +459,7 @@ describe.runIf(server.browser === 'chromium')('a touch in Chromium', () => {
 });
 
 describe('a form reset', () => {
-  test('M3: a capture listener on the root node of a control gets the reset of its form, with the form as its target, also for a control that the form attribute gives to it, in a document and in a shadow root', () => {
+  test('M3: a capture listener on the root node of a control gets the reset and the formdata of its form, with the form as its target, also for a control that the form attribute gives to it, in a document and in a shadow root; both events bubble', () => {
     const container = html('<div id="host"></div>');
     const host = container.querySelector('#host')!;
     const shadow = host.attachShadow({ mode: 'open' });
@@ -467,25 +467,35 @@ describe('a form reset', () => {
     container.insertAdjacentHTML('beforeend', markup);
     shadow.innerHTML = markup;
     const heard: string[] = [];
+    const removers: (() => void)[] = [];
     for (const rootNode of [document, shadow]) {
       for (const id of ['inside', 'outside']) {
         const control = (rootNode as ParentNode).querySelector<HTMLInputElement>(`#${id}`)!;
-        control.getRootNode().addEventListener(
-          'reset',
-          (event) => {
-            if (event.target === control.form)
-              heard.push(`${rootNode === document ? 'document' : 'shadow'} ${id}`);
-          },
-          true,
-        );
+        for (const type of ['reset', 'formdata']) {
+          const listener = (event: Event) => {
+            if (event.target === control.form) {
+              const where = rootNode === document ? 'document' : 'shadow';
+              heard.push(`${type} ${where} ${id} ${event.bubbles}`);
+            }
+          };
+          control.getRootNode().addEventListener(type, listener, true);
+          removers.push(() => control.getRootNode().removeEventListener(type, listener, true));
+        }
       }
-      (rootNode as ParentNode).querySelector('form')!.reset();
+      const form = (rootNode as ParentNode).querySelector('form')!;
+      form.reset();
+      void new FormData(form);
     }
+    for (const remove of removers) remove();
     expect(heard).toEqual([
-      'document inside',
-      'document outside',
-      'shadow inside',
-      'shadow outside',
+      'reset document inside true',
+      'reset document outside true',
+      'formdata document inside true',
+      'formdata document outside true',
+      'reset shadow inside true',
+      'reset shadow outside true',
+      'formdata shadow inside true',
+      'formdata shadow outside true',
     ]);
   });
 });

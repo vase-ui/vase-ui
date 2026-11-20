@@ -679,7 +679,7 @@ describe('the blur and the commit', () => {
     ]);
   });
 
-  test('the blur rounds only a number that the user typed: with a parent that keeps its value, the blur emits nothing', async () => {
+  test('the blur rounds only a number that the user typed: with a parent that keeps its value, or with typed text that is not a number, the blur emits nothing', async () => {
     const log: string[] = [];
     const { input } = await mountField({
       root: record(log, { modelValue: 1.23456, format: { maximumFractionDigits: 2 } }),
@@ -689,6 +689,14 @@ describe('the blur and the commit', () => {
     await settle();
     expect(input.value).toBe('1.23');
     expect(log).toEqual(['change 1.237 input-change', 'update 1.237']);
+    log.length = 0;
+    input.focus();
+    input.select();
+    await userEvent.keyboard('-');
+    input.blur();
+    await settle();
+    expect(input.value).toBe('-');
+    expect(log).toEqual([]);
   });
 
   test('a blur after typed edits that give back the value of the focus commits nothing', async () => {
