@@ -441,20 +441,6 @@ describe('the swipe that closes', () => {
     expect(log).toEqual([]);
   });
 
-  test('removes a selection in the popup at the start of a mouse swipe', async () => {
-    await mountDrawer();
-    getSelection()!.selectAllChildren(get('text'));
-    const release = await press(textOf('scroller'), { x: 0, y: -1 }, 1);
-    await release();
-    await nextTick();
-    const rect = get('button').getBoundingClientRect();
-    getSelection()!.selectAllChildren(get('text'));
-    const drag = await press({ x: rect.right + 20, y: rect.top + 5 }, { x: 0, y: 40 });
-    expect(String(getSelection())).toBe('');
-    await wait(300);
-    await drag();
-  });
-
   test('starts at the place of a popup whose enter runs', async () => {
     // A slow enter is still at its start at the press.
     await mountDrawer({
@@ -473,8 +459,13 @@ describe('the swipe that closes', () => {
   });
 
   test('takes no swipe while a drawer in it is open, also for a nested drawer that is not modal', async () => {
+    // The viewport of the nested drawer lets a press through to the popup under it.
     await mountDrawer({
-      nested: { root: { defaultOpen: true, modal: false }, popup: { style: 'height: 100px' } },
+      nested: {
+        root: { defaultOpen: true, modal: false },
+        viewport: { style: 'pointer-events: none' },
+        popup: { style: 'height: 100px; pointer-events: auto' },
+      },
     });
     await waitFor(() => expect(byTestId('nested-popup')).not.toBe(null));
     const release = await press(textOf(), { x: 0, y: 120 });

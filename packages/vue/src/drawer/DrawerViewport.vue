@@ -205,13 +205,9 @@ const tracker = useSwipeTracker({
       event.clientY <= rect.bottom
     );
   },
-  start(event) {
+  start() {
     const popup = root.popup;
     if (!popup) return;
-    if (event.pointerType !== 'touch') {
-      const selection = popup.ownerDocument.getSelection();
-      if (selection && popup.contains(selection.anchorNode)) selection.removeAllRanges();
-    }
     // A press while the enter runs starts at the place of the popup, with no jump
     // (test/measurements/drawer.test.ts).
     const moving = new DOMMatrixReadOnly(getComputedStyle(popup).transform);
