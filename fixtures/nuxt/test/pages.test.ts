@@ -293,20 +293,26 @@ function readButtons(page: Page, testId: string, attributeName: string) {
     );
 }
 
-// The tab stop of a group is its first toggle that is not disabled, also when another toggle is
-// pressed. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
+// A group writes its tab stop at the mount, so each button of its server HTML is in the order of
+// the Tab key. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
 async function expectToggleGroupPage(page: Page) {
   expect(await page.getByTestId('alone').getAttribute('role')).toBe('group');
-  expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'alone', 'tabindex')).toEqual([null, null, null]);
   expect(await readButtons(page, 'alone', 'aria-pressed')).toEqual(['false', 'true', 'false']);
-  expect(await readButtons(page, 'alone', 'data-pressed')).toEqual([null, '', null]);
-  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
+  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual([null, null]);
   expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['0', '-1', '-1']);
   expect(await readButtons(page, 'in-toolbar', 'aria-pressed')).toEqual([null, 'true', 'false']);
   expect(await readAttributes(page.getByTestId('single'), ['tabindex', 'aria-pressed'])).toEqual({
-    tabindex: '0',
+    tabindex: null,
     'aria-pressed': 'true',
   });
+}
+
+// The tab stop of a group is its first toggle that is not disabled, also when another toggle is
+// pressed.
+async function expectHydratedToggleGroupPage(page: Page) {
+  expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
 }
 
 function readDisableScrollbarStyles(page: Page) {
@@ -1925,7 +1931,11 @@ const PAGES: PageCase[] = [
     expectPage: expectToolbarPage,
     expectHydratedPage: expectHydratedToolbarPage,
   },
-  { path: '/toggle-group', expectPage: expectToggleGroupPage },
+  {
+    path: '/toggle-group',
+    expectPage: expectToggleGroupPage,
+    expectHydratedPage: expectHydratedToggleGroupPage,
+  },
   {
     path: '/switch',
     expectPage: expectSwitchPage,

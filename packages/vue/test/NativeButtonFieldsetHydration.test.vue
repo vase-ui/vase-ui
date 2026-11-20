@@ -8,7 +8,6 @@ import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
-import { Toggle } from '@vase-ui/vue/toggle';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 
 defineProps<{ fieldsetRoot?: boolean }>();
@@ -16,7 +15,6 @@ defineProps<{ fieldsetRoot?: boolean }>();
 
 <template>
   <component :is="fieldsetRoot ? Fieldset.Root : 'fieldset'" disabled>
-    <Toggle v-slot="{ state }">{{ state.disabled }}</Toggle>
     <Accordion.Root>
       <Accordion.Item value="one">
         <Accordion.Header>

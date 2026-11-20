@@ -30,14 +30,11 @@ const HeartOutlineIcon: FunctionalComponent = () =>
 
 <template>
   <Toggle
+    v-slot="{ state }"
     aria-label="Favorite"
-    class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:not-data-disabled:bg-neutral-100 dark:hover:not-data-disabled:bg-neutral-800 active:not-data-disabled:bg-neutral-200 dark:active:not-data-disabled:bg-neutral-700 data-pressed:text-neutral-950 dark:data-pressed:text-white focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+    class="flex size-8 items-center justify-center border-none rounded-none bg-transparent text-neutral-950 dark:text-white select-none hover:enabled:bg-neutral-100 dark:hover:enabled:bg-neutral-800 active:enabled:bg-neutral-200 dark:active:enabled:bg-neutral-700 aria-pressed:text-neutral-950 dark:aria-pressed:text-white focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
   >
-    <template #render="{ props, state }">
-      <button type="button" v-bind="props">
-        <HeartFilledIcon v-if="state.pressed" />
-        <HeartOutlineIcon v-else />
-      </button>
-    </template>
+    <HeartFilledIcon v-if="state.pressed" />
+    <HeartOutlineIcon v-else />
   </Toggle>
 </template>

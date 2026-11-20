@@ -202,7 +202,7 @@ A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
 ## Entry points
 
-The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use the flat names of that part. This section holds for each other family until its refactor.
+The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) export no flat components and no constants of attribute and variable names. Their types follow item 8 of that part. This section holds for each other family until its refactor.
 
 The package is `@vase-ui/vue`. It is ESM only.
 
@@ -279,7 +279,7 @@ The families of [the rules of the refactored families](#the-rules-of-the-refacto
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
-- These native button parts read `useInDisabledFieldset` with their own element (`VUE-112`): `Toggle`, `Accordion.Trigger`, `Collapsible.Trigger`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup.
+- These native button parts read `useInDisabledFieldset` with their own element (`VUE-112`): `Accordion.Trigger`, `Collapsible.Trigger`, and the triggers of Dialog, Menu, Popover and Navigation Menu. The triggers of Alert Dialog, Drawer, Date Picker, Date Range Picker and Time Picker render one of them. A fieldset disables such a part only while its `nativeButton` prop is `true`, because a browser disables only a form control. The part is then disabled as by its `disabled` prop. It has `data-disabled` and the `disabled` slot state, `useButton` stops its handlers, and a hover does not open its popup.
 - `Tooltip.Trigger` checks whether its element is a native button, because it has no `nativeButton` prop. Before the mount it has no element. It is then a native button when `as` is `button` and it has no `#render` slot, so the server HTML follows `Fieldset.Root`. A fieldset that disables that button adds `data-disabled` and the `disabled` slot state, and prevents a tooltip open on hover or focus. The `disabled` prop still suppresses only the tooltip. The attribute `data-trigger-disabled` describes that suppression from a prop, the root, or a fieldset.
 
 The template of each such part has the `#render` slot, then the element, and no wrapper component:
@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Number Field, Scroll Area, Tabs, Button and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+The families in `REFACTORED_FOLDERS` of `packages/vue/test/refactoredFolders.ts` follow the rules of this part. That list holds each folder of `packages/vue/src` with an `index.ts` and a `types.ts`. Each other family moves to these rules in its own change, and that change adds its `types.ts`. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -718,7 +718,7 @@ The public form:
 5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change.
 6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
 7. `<Transition>` animates a part that appears and goes. The parts have no `data-starting-style`, `data-ending-style` or `transitionStatus`.
-8. A component is `Family.Part`, or the family name when the family has one part. A type is flat, such as `FieldRootProps`. No namespace types, and no constants for the names of data attributes.
+8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat, as in Base UI: `Field.Root.Props` and `FieldRootProps`. `parts.ts` declares the constant of each part with the type `typeof` its SFC. A type-only namespace beside the constant holds `Props`, `State` and the event types that the part has. A family with one part declares them in `index.ts`: `Checkbox.Props`. No constants for the names of data attributes.
 9. A part gives a form what the matching native control gives: the same name and value rules, the same constraint validation, the same implicit submit, the same reset. `uncheckedValue` of a checkbox and a switch adds an entry in a `formdata` listener of the form.
 10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
@@ -1387,7 +1387,6 @@ The composite item:
 
 A part that is in a composite only in some trees:
 
-- `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - Read the optional context in setup. Call `useCompositeItem(element, options)` or `useCompositeRoot(options)` when that context requires it.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
@@ -1586,7 +1585,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
 - A part that turns autocorrect off gives the key `autoCorrect`, and it takes `autocorrect` out of the attributes of the consumer. The comment in `OTPFieldInput.vue` gives the reason.
-- Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it. `Toggle` does this for `type` and `form`: `const { form, type, ...elementAttrs } = attrs`.
+- Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it.
 - Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - Bind `hidden="until-found"` on a closed searchable panel. An accepted page match clears the start style before the browser measures the text. If the panel stays closed, restore the matched element even if Vue has replaced it. A cached panel needs its closed attributes before the parent activation hook.
 - Bind listeners on the part's own element through its props. The element in the render slot then receives them too. `Collapsible.Panel` binds `onBeforematch`. `NavigationMenu.Positioner` binds both focus listeners in the capture phase.
