@@ -10,6 +10,7 @@ import CollapsibleParts from '../../test/fixtures/CollapsibleParts.vue';
 import CollapsiblePartOutside from '../../test/fixtures/CollapsiblePartOutside.vue';
 import CollapsibleScoped from '../../test/fixtures/CollapsibleScoped.vue';
 import { mount, mountError, settle } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 afterEach(() => {
@@ -147,11 +148,6 @@ describe('the elements', () => {
     expect(panel.style.display).toBe('none');
   });
 
-  test.each(['trigger', 'panel'])('a %s outside a root throws', (part) => {
-    expect(String(mountError(CollapsiblePartOutside, { part }))).toContain(
-      'must be inside <Collapsible.Root>',
-    );
-  });
 });
 
 describe('the state', () => {
@@ -562,5 +558,16 @@ describe('accessibility', () => {
     await expectNoAxeViolations(root);
     await press();
     await expectNoAxeViolations(root);
+  });
+});
+
+// The cases throw in `setup`, so they are the last of the file.
+describe('the errors', () => {
+  test.each(['trigger', 'panel'])('a %s outside a root throws an error that says so', (part) => {
+    expect((mountError(CollapsiblePartOutside, { part }) as Error).message).toBe(
+      'Vase UI: A part of Collapsible must be inside <Collapsible.Root>. Without a root the part has no open state to read. Put the part inside <Collapsible.Root>.',
+    );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });
