@@ -10,7 +10,7 @@ import { largest, nearestThumb, snap } from './values';
 interface Press {
   /** The thumb that the press moves. */
   index: number;
-  /** The distance on the axis from the centre of the pressed thumb to the pointer. */
+  /** The distance on the axis from the center of the pressed thumb to the pointer. */
   offset: number;
   vertical: boolean;
   rtl: boolean;

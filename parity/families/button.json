@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/button/ButtonDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes no `data-disabled`. CSS selects the disabled state on the same element: `:disabled` on a native disabled button, and `[aria-disabled='true']` on a disabled button that keeps the focus and on each other element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes no `data-disabled`. CSS selects the disabled state on the same element: `:disabled` on a native disabled button, and `[aria-disabled='true']` on a disabled button that keeps the focus and on each other element. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/button/Button.test.tsx",
@@ -21,13 +21,13 @@
       "entry": "Button",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and `as` and the `element` slot render another element."
+      "reason": "The part reads the element that it renders. `as` and the `element` slot render another element, so no prop says what the developer renders."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/button/types.md",
       "entry": "ButtonDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes no `data-disabled`: `:disabled` and `[aria-disabled='true']` select the disabled state on the same element (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes no `data-disabled`: `:disabled` and `[aria-disabled='true']` select the disabled state on the same element. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

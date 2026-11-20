@@ -43,37 +43,31 @@ const props = withDefaults(defineProps<OTPFieldRootProps>(), {
 });
 const emit = defineEmits<{
   /**
-   * Callback fired when the OTP value changes.
-   *
-   * The `eventDetails.reason` indicates what triggered the change:
-   * - `'input-change'` for typing or autofill
-   * - `'input-clear'` when a character is removed by text input
-   * - `'input-paste'` for paste interactions
-   * - `'keyboard'` for keyboard interactions that change the value
+   * The user changes the code. `details.reason` is `'input-change'` for typed text or a fill,
+   * `'input-clear'` for a removed character, `'input-paste'` for a paste, and `'keyboard'` for a
+   * key. `details.cancel()` keeps the code as it was.
    */
   valueChange: [value: string, eventDetails: OTPFieldRootChangeEventDetails];
   /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: string];
   /**
-   * Callback fired when entered text contains characters that are rejected by validation or
-   * normalization before the OTP value updates.
-   *
-   * The `value` argument is the attempted user-entered string before normalization.
+   * Typed, pasted or filled text has a character that `validationType` or `normalizeValue`
+   * refuses. It comes before the code changes. `value` is the text of the user.
    */
   valueInvalid: [value: string, eventDetails: OTPFieldRootInvalidEventDetails];
   /**
-   * Callback function that is fired when the OTP value becomes complete, or when a complete value
-   * is pasted while the OTP is already complete.
-   *
-   * When the value changes, it runs later than `valueChange`, after the internal value update is
-   * applied. If a complete pasted value matches the current value, `valueChange` does not fire.
-   *
-   * If `autoSubmit` is enabled, it runs immediately before the owning form is submitted.
+   * The code becomes complete, or the user pastes a complete code in a complete field. It comes
+   * after `valueChange` and the change of the code. A pasted code that equals the code gives no
+   * `valueChange`. With `autoSubmit`, the form submits just after it.
    */
   valueComplete: [value: string, eventDetails: OTPFieldRootCompleteEventDetails];
 }>();
 defineSlots<{
   default?(scope: { state: OTPFieldRootState }): unknown;
+  /**
+   * Renders your element in place of the element of the root. Bind `props` with `v-bind` and
+   * `elementRef` with `:ref`. The root renders the form input after your element.
+   */
   element?(scope: ElementSlotProps<OTPFieldRootState>): unknown;
 }>();
 

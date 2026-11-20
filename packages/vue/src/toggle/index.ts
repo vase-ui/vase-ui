@@ -9,6 +9,9 @@ import type {
 /**
  * A two-state button that can be on or off.
  * Renders a `<button>` element.
+ * @selector `[aria-pressed="true"]` The toggle is pressed.
+ * @selector `:disabled` The toggle is disabled, and it is a native button.
+ * @selector `[aria-disabled="true"]` The toggle is disabled, and it is not a native button, or a `Toolbar.Button` keeps it in the tab order.
  */
 export const Toggle: typeof ToggleComponent = ToggleComponent;
 export namespace Toggle {

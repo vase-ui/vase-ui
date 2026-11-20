@@ -26,6 +26,15 @@ import type {
 /**
  * Groups all parts of the number field and manages its state.
  * Renders a `<div>` element with a hidden form `<input>` element in it.
+ * @selector `[data-disabled]` The field is disabled.
+ * @selector `[data-readonly]` The field is read-only.
+ * @selector `[data-required]` The field is required.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-invalid]` The value is invalid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const Root: typeof NumberFieldRoot = NumberFieldRoot;
 export namespace Root {
@@ -40,6 +49,15 @@ export namespace Root {
 /**
  * Groups the input with the increment and decrement buttons.
  * Renders a `<div>` element.
+ * @selector `[data-disabled]` The field is disabled.
+ * @selector `[data-readonly]` The field is read-only.
+ * @selector `[data-required]` The field is required.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-invalid]` The value is invalid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const Group: typeof NumberFieldGroup = NumberFieldGroup;
 export namespace Group {
@@ -50,6 +68,15 @@ export namespace Group {
 /**
  * The native input control in the number field.
  * Renders an `<input>` element with the role `spinbutton`.
+ * @selector `:disabled` The field is disabled.
+ * @selector `:read-only` The field is read-only or disabled.
+ * @selector `:required` The field is required.
+ * @selector `[aria-invalid="true"]` The value is out of the range, or it is invalid in a `Field.Root`.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const Input: typeof NumberFieldInput = NumberFieldInput;
 export namespace Input {
@@ -60,6 +87,16 @@ export namespace Input {
 /**
  * A stepper button that increases the field value when the user clicks it.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button cannot step the value: the button or the field is disabled, the field is read-only, or the value is at its bound.
+ * @selector `[aria-disabled="true"]` The button cannot step the value, and it is not a native button.
+ * @selector `[data-readonly]` The field is read-only.
+ * @selector `[data-required]` The field is required.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-invalid]` The value is invalid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const Increment: typeof NumberFieldIncrement = NumberFieldIncrement;
 export namespace Increment {
@@ -70,6 +107,16 @@ export namespace Increment {
 /**
  * A stepper button that decreases the field value when the user clicks it.
  * Renders a `<button>` element.
+ * @selector `:disabled` The button cannot step the value: the button or the field is disabled, the field is read-only, or the value is at its bound.
+ * @selector `[aria-disabled="true"]` The button cannot step the value, and it is not a native button.
+ * @selector `[data-readonly]` The field is read-only.
+ * @selector `[data-required]` The field is required.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-invalid]` The value is invalid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const Decrement: typeof NumberFieldDecrement = NumberFieldDecrement;
 export namespace Decrement {
@@ -80,6 +127,15 @@ export namespace Decrement {
 /**
  * An interactive area where the user can click and drag to change the field value.
  * Renders a `<span>` element.
+ * @selector `[data-disabled]` The field is disabled.
+ * @selector `[data-readonly]` The field is read-only.
+ * @selector `[data-required]` The field is required.
+ * @selector `[data-scrubbing]` The user drags in a scrub area of the field.
+ * @selector `[data-valid]` The value is valid, in a `Field.Root`.
+ * @selector `[data-invalid]` The value is invalid, in a `Field.Root`.
+ * @selector `[data-touched]` The focus left the field one time or more, in a `Field.Root`.
+ * @selector `[data-dirty]` The value differs from the first value, in a `Field.Root`.
+ * @selector `[data-filled]` The field has a value, in a `Field.Root`.
  */
 export const ScrubArea: typeof NumberFieldScrubArea = NumberFieldScrubArea;
 export namespace ScrubArea {

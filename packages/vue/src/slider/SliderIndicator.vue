@@ -28,7 +28,7 @@ const { element, setElement } = useElement<HTMLDivElement>();
 // For `edge`, the size on the axis of the first and of the last thumb, after the mount.
 const thumbSizes = shallowRef<[first: number, last: number]>();
 
-// CSS has no way to the centre of an `edge` thumb without its size.
+// CSS has no way to the center of an `edge` thumb without its size.
 onMounted(() => {
   watch(
     [
@@ -57,7 +57,7 @@ const style = computed<CSSProperties>(() => {
   const [low = min] = values;
   const first = range ? percent(low, slider.state) : 0;
   const last = percent(values.at(-1) ?? min, slider.state);
-  // For `edge`, an end that has a thumb is at the centre of that thumb.
+  // For `edge`, an end that has a thumb is at the center of that thumb.
   const toCentre = (place: number, size: number) => (0.5 - place / 100) * size;
   const startShift = range && sizes ? toCentre(first, sizes[0]) : 0;
   const endShift = sizes ? toCentre(last, sizes[1]) : 0;

@@ -10,31 +10,52 @@ export interface SliderRootProps<Value extends number | readonly number[] = numb
   modelValue?: Value;
   /** The first value of an uncontrolled slider. The default is `min`. */
   defaultValue?: Value;
-  /** @default 0 */
+  /**
+   * The least value. The Home key sets it.
+   * @default 0
+   */
   min?: number;
-  /** @default 100 */
+  /**
+   * The greatest value. The End key moves the thumb to the largest value of the grid.
+   * @default 100
+   */
   max?: number;
-  /** The grid of values starts at `min`. @default 1 */
+  /**
+   * The distance between two values of the grid, which starts at `min`. An arrow key moves one
+   * step. The slider shows a value of the parent at the nearest value of the grid.
+   * @default 1
+   */
   step?: number;
   /** The change for Page Up, Page Down, and Shift with an arrow key. @default 10 */
   largeStep?: number;
-  /** The least distance between two thumbs, as a number of steps. @default 0 */
+  /**
+   * The least distance between two thumbs, as a number of steps. A thumb stops at its neighbor.
+   * @default 0
+   */
   minStepsBetweenValues?: number;
   /** What the thumbs do when a drag makes them meet. @default 'push' */
   thumbCollisionBehavior?: ThumbCollisionBehavior;
   /**
-   * Where a thumb is at `min` and `max`: its centre at the end of the control, or its edge.
+   * Where a thumb is at `min` and `max`: its center at the end of the control, or its edge. CSS
+   * places each thumb, also in the server HTML.
    * @default 'center'
    */
   thumbAlignment?: 'center' | 'edge';
-  /** @default 'horizontal' */
+  /**
+   * The axis of the slider.
+   * @default 'horizontal'
+   */
   orientation?: 'horizontal' | 'vertical';
+  /**
+   * The user cannot change the value, and the form data has no value.
+   * @default false
+   */
   disabled?: boolean;
-  /** The name of each input in the data of a form. */
+  /** The name of each input in the data of a form. The form gets one entry for each enabled thumb. */
   name?: string;
   /** The `id` of the form that owns the inputs, for a slider outside that form. */
   form?: string;
-  /** The format of the value as text. */
+  /** The format of the text of `Slider.Value`, and of `aria-valuetext` of each input. */
   format?: Intl.NumberFormatOptions;
   /**
    * The locale of the text.
@@ -98,6 +119,10 @@ export interface SliderThumbProps extends AsProps, /* @vue-ignore */ Omit<HTMLAt
    * Set it only when the thumbs do not render in the order of their values.
    */
   index?: number;
+  /**
+   * The user cannot move the thumb, and the form data has no value for it.
+   * @default false
+   */
   disabled?: boolean;
   /** The `id` of the input. */
   id?: string;
@@ -109,5 +134,6 @@ export interface SliderLabelProps extends /* @vue-ignore */ Omit<
   LabelHTMLAttributes,
   'for' | 'id'
 > {
+  /** The `id` of the label. With none, the label has an id of its own. */
   id?: string;
 }

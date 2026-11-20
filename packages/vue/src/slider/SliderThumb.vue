@@ -22,6 +22,11 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<SliderThumbProps>();
 const slots = defineSlots<{
   default?(scope: { state: SliderThumbState }): unknown;
+  /**
+   * Renders your element in place of the element of the thumb. Bind `props` with `v-bind` and
+   * `elementRef` with `:ref`. Render the input in your element, or in another place, with
+   * `v-bind="inputProps"` and `:ref="inputRef"`.
+   */
   element?(
     scope: ElementSlotProps<SliderThumbState> & {
       inputProps: Record<string, unknown>;
@@ -128,7 +133,11 @@ const inputStyle = computed<CSSProperties>(() => ({
 
 useFormReset(input, (event) => slider.onReset(event));
 
-defineExpose({ element, input });
+defineExpose({
+  element,
+  /** The range input of the thumb, or `null` while it is not mounted. */
+  input,
+});
 
 function splitAttrs() {
   const ofElement: Record<string, unknown> = {};
