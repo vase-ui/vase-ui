@@ -77,7 +77,7 @@ export interface ToolbarButtonState {
 
 export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
   InputProps,
-  'disabled' | 'readonly'
+  'defaultValue' | 'disabled' | 'id' | 'modelValue' | 'name' | 'readonly'
 > {
   /**
    * The user cannot edit the input.
@@ -90,9 +90,9 @@ export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
    */
   focusableWhenDisabled?: boolean;
   /** The text of the input. With no value, the input owns its text. */
-  modelValue?: InputProps['modelValue'];
+  modelValue?: NonNullable<InputProps['modelValue']>;
   /** The first text of an input that owns its text. */
-  defaultValue?: InputProps['defaultValue'];
+  defaultValue?: NonNullable<InputProps['defaultValue']>;
   id?: string;
   name?: string;
   readonly?: boolean;
