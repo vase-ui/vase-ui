@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, useSlots } from 'vue';
 import type { Component } from 'vue';
 
 /**
@@ -12,6 +12,19 @@ export interface AsProps {
    * attributes and content. The `element` slot wins over it.
    */
   as?: keyof HTMLElementTagNameMap | Component;
+}
+
+/**
+ * The tag in `as` of the part, known at the render, so that the server writes the attributes of that
+ * element. The element of a component in `as`, or of the `element` slot, which wins over `as`, is
+ * known after the mount.
+ */
+export function useAsTag(as: () => unknown): () => string | undefined {
+  const slots = useSlots();
+  return () => {
+    const given = as();
+    return typeof given === 'string' && !slots.element ? given : undefined;
+  };
 }
 
 /**

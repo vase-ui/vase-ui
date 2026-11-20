@@ -1,6 +1,8 @@
 import type { ButtonHTMLAttributes } from 'vue';
+import type { AsProps } from '../common/element';
 
-export interface ButtonProps extends /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'disabled'> {
+export interface ButtonProps
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /**
    * The user cannot press the button.
    * @default false

@@ -1,16 +1,13 @@
-import type { Component, HTMLAttributes } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 
 /** The characters that a slot accepts. `none` accepts each character. */
 export type OTPFieldRootValidationType = 'numeric' | 'alpha' | 'alphanumeric' | 'none';
 
-export interface OTPFieldRootProps extends /* @vue-ignore */ Omit<
-  HTMLAttributes,
-  'id' | 'inputmode'
-> {
-  /** The element or the component that the root renders in place of its `<div>`. */
-  as?: keyof HTMLElementTagNameMap | Component;
+export interface OTPFieldRootProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id' | 'inputmode'> {
   /**
    * The number of OTP input slots.
    * Required so the root can clamp values, detect completion, and generate

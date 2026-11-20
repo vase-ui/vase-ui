@@ -72,7 +72,7 @@ Import the component and assemble its parts:
 
 Each panel and each handle must be a flex item of the root element. A wrapper element between them needs `display: contents`. The root gives its element `display: flex` and the direction of its `orientation`.
 
-A panel needs an `id` only when a layout names it. A panel with no `id` gets a generated one. A handle resizes the panels beside it. Each part renders one `<div>`. The `element` slot renders an element of your own, and a template ref on a part has `element`.
+A panel needs an `id` only when a layout names it. A panel with no `id` gets a generated one. A handle resizes the panels beside it. Each part renders one `<div>`, or the tag or component of its `as` prop. The `element` slot renders an element of your own, and wins over `as`. A template ref on a part has `element`.
 
 ## Sizes and units
 

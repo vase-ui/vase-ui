@@ -245,7 +245,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 
 ## API convention
 
-The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use the `element` slot and the one root element of that part. This section holds for each other family until its refactor.
+The families of [the rules of the refactored families](#the-rules-of-the-refactored-families) use `as`, the `element` slot and the one root element of that part. This section holds for each other family until its refactor.
 
 ### Parts that render an element
 
@@ -349,7 +349,7 @@ A part whose new types change a prop is the exception. `AlertDialog.Trigger` is 
 Some upstream parts put nodes of their own in the element. An example is the focus guards of `Toast.Viewport`.
 
 - Put the extra nodes in an internal SFC, `<Part>Children.vue`.
-- A part of a refactored family writes the extra nodes in its own template, and its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot.
+- A part of a refactored family writes the extra nodes in its own template, in its own element and in the element of `as`. Its `element` slot gets none. `Progress.Root` and `Meter.Root` render their screen reader text after their default slot. A server writes no content in a void element, such as `<hr>` or `<input>` in `as`. So `Separator` and `Button` with no default slot give their `as` element no slot.
 - Inject any state the extra nodes need. `Field.Error` provides its message through `FieldErrorContext`.
 - Use a named template ref for a node that only `<Part>Children.vue` needs. For a node shared with its parent, bind the parent's setter by name. `TimeClockFaceChildren.vue` passes the range input to its owner this way.
 - It renders the nodes around its default slot, in upstream's order.
@@ -699,20 +699,42 @@ Lifetime:
 The element of a part:
 
 - A part renders one root element. Scoped styles, `v-show`, directives, `<Transition>` and the attributes of the developer reach it. A part with a form value is the native input itself, or holds its hidden input in its element. With the `element` slot, such a part renders the hidden input after the element of the developer.
-- The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part.
+- Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element, an image and a hidden input take no `as`. Examples are `Input`, `Checkbox`, `Form`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. The part keeps its content, its own nodes and its attributes on the element of `as`.
+- The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part. The slot wins over `as`.
+- A component in `as` or in the slot gives its element as an exposed `element`, else as its `$el`. A Vapor component has no `$el`, so it exposes `element`. `useElement` of `src/common/element.ts` reads both.
+- A part that reads its element in its render reads a tag in `as` before the mount with `useAsTag` of `src/common/element.ts`, so the server HTML has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`. `Button`, `Toggle`, the triggers of Collapsible and Accordion, and the step buttons of NumberField give the tag to the option `tag` of `useButton`.
+- The props type of a part extends `AsProps` and omits `as` from the attributes of its element, because motion-v adds an `as` to `HTMLAttributes`.
 - A template ref on a part has `element`.
 - The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
 - Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset), `locale-provider/part.ts` (a part and its locale provider).
 - `src/common/` holds only what two callers use.
-- A part that acts as a button takes `useButton` of `common/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Before the mount, a tag in `as` is the element, and only `button` is then a native button. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
+- A part that acts as a button takes `useButton` of `common/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Before the mount, a tag in `as` is the element, and `button` and `input` are then native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
-- A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. `Button`, `Toggle` and the triggers of Collapsible and Accordion pass the option `type` of `useButton`, and `Tabs.Tab` writes the attribute. A `type` of the developer wins, `undefined` too.
+- A part that renders a `<button>` gives it `type="button"`, so that it does not submit its form. `Button`, `Toggle`, the triggers of Collapsible and Accordion, and the step buttons of NumberField pass the option `type` of `useButton`, and `Tabs.Tab` writes the attribute. A `type` of the developer wins, `undefined` too.
 - A part that the user drags takes `usePointerPress` of `common/pointerPress.ts`. The press captures its pointer, so the element of the part gets each move and the release, also outside the element. `Slider.Control` and `Resizable.Handle` use it.
+
+The template of a part with `as` has the slot, then `as`, then the default element in a branch of its own. `<component :is>` with a tag renders a component of that name that the app registers, so `:is="as ?? 'button'"` can render a `Button` component:
+
+```vue
+<slot
+  v-if="$slots.element"
+  name="element"
+  :props="elementProps()"
+  :elementRef="setElement"
+  :state="state"
+/>
+<component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+  <slot :state="state" />
+</component>
+<button v-else v-bind="elementProps()" :ref="setElement">
+  <slot :state="state" />
+</button>
+```
 
 The public form:
 
 1. A prop that mirrors a native attribute has the name of the attribute in a Vue template: `readonly`, `autocomplete`. An ARIA attribute is a plain attribute, not a prop.
-2. No prop says what the developer renders, such as `nativeButton` or `nativeLabel`. A part reads its element after the mount.
+2. No prop says what the developer renders, such as `nativeButton` or `nativeLabel`. A part reads its element after the mount, and a tag in `as` before the mount.
 3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element.
 4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:errors`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`.
 5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change.
@@ -754,7 +776,7 @@ Platform and parity:
 Apply the state, effect, server and compatibility checks to each source file. Apply the part and feature checks where the part has that behavior.
 
 1. Check that the part renders one root element, and that the attributes of the developer reach it and win.
-2. Check the `element` slot: `props`, `elementRef` and `state`, and `element` on the template ref.
+2. Check `as` with a tag and with a component, and the `element` slot: `props`, `elementRef` and `state`, and `element` on the template ref.
 3. Check that each handler reads its current prop, ref or getter at the call. Trace each derived value to a pure computed.
 4. Check the source, depth and flush of each watcher, and each listener, observer and registration at replacement and at unmount.
 5. Check that each registration runs before its client hook, so that the server build of Nuxt keeps it.

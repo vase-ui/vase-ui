@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, type HTMLAttributes } from 'vue';
+import { mergeProps, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { injectProgressRoot, statusAttributes } from './root';
-import type { ProgressValueState } from './types';
+import type { ProgressValueProps, ProgressValueState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<ProgressValueProps>();
 defineSlots<{
   default?(scope: {
     formattedValue: string | null;
@@ -44,6 +44,15 @@ function elementProps() {
     :formattedValue="root.formattedValue"
     :value="root.value"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot
+      v-if="$slots.default"
+      :formattedValue="root.formattedValue"
+      :value="root.value"
+      :state="root.state"
+    />
+    <template v-else-if="root.formattedValue !== null">{{ root.formattedValue }}</template>
+  </component>
   <span v-else v-bind="elementProps()" :ref="setElement">
     <slot
       v-if="$slots.default"

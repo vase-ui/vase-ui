@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
-import { useElement } from '../common/element';
 import { useButton } from '../common/button';
+import { useAsTag, useElement } from '../common/element';
 import type { ButtonProps, ButtonState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -23,6 +23,7 @@ const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
+  tag: useAsTag(() => props.as),
   disabled: () => props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',
@@ -32,6 +33,8 @@ const state = computed<ButtonState>(() => ({ disabled: isDisabled.value }));
 defineExpose({ element });
 </script>
 
+<!-- A server writes no content in a void element, such as an `<input>` in `as`, and the hydration
+reads an empty slot as content. -->
 <template>
   <slot
     v-if="$slots.element"
@@ -40,6 +43,15 @@ defineExpose({ element });
     :elementRef="setElement"
     :state="state"
   />
+  <component
+    :is="as"
+    v-else-if="as && $slots.default"
+    v-bind="mergeAttributes({}, attrs)"
+    :ref="setElement"
+  >
+    <slot :state="state" />
+  </component>
+  <component :is="as" v-else-if="as" v-bind="mergeAttributes({}, attrs)" :ref="setElement" />
   <button v-else v-bind="mergeAttributes({}, attrs)" :ref="setElement">
     <slot :state="state" />
   </button>

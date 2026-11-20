@@ -129,6 +129,10 @@ https://github.com/mui/base-ui/issues/4184 -->
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+    <span role="presentation" :style="visuallyHidden">x</span>
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <span role="presentation" :style="visuallyHidden">x</span>

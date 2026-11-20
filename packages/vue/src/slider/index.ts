@@ -1,6 +1,8 @@
 export * as Slider from './parts';
 export type {
+  SliderControlProps,
   SliderControlState,
+  SliderIndicatorProps,
   SliderIndicatorState,
   SliderLabelProps,
   SliderLabelState,
@@ -12,6 +14,7 @@ export type {
   SliderRootState,
   SliderThumbProps,
   SliderThumbState,
+  SliderTrackProps,
   SliderTrackState,
   SliderValueState,
 } from './types';

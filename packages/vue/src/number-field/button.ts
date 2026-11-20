@@ -1,6 +1,6 @@
-import { computed, onBeforeUnmount, useAttrs, useSlots, watch } from 'vue';
+import { computed, onBeforeUnmount, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
-import { useElement } from '../common/element';
+import { useAsTag, useElement } from '../common/element';
 import { ownerWindow } from '../common/owner';
 import { injectNumberFieldRoot, stateAttributes, type StepKeys } from './root';
 import type { NumberFieldIncrementProps, NumberFieldRootState } from './types';
@@ -30,14 +30,13 @@ export function useStepButton(
   const root = injectNumberFieldRoot(part);
   const reason = direction > 0 ? 'increment-press' : 'decrement-press';
   const attrs = useAttrs();
-  const slots = useSlots();
   const { element, setElement } = useElement<HTMLElement>();
   const button = useButton({
     element,
     disabled: () =>
       props.disabled || root.state.disabled || root.state.readonly || root.atBound(direction),
     type: 'button',
-    tag: () => (!slots.element && typeof props.as === 'string' ? props.as : undefined),
+    tag: useAsTag(() => props.as),
   });
   const { disabled } = button;
   const state = computed<NumberFieldRootState>(() => ({ ...root.state, disabled: disabled.value }));

@@ -1,19 +1,10 @@
-import type { ButtonHTMLAttributes, Component, HTMLAttributes, InputHTMLAttributes } from 'vue';
+import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 
-// motion-v adds an `as` to `HTMLAttributes` of Vue.
-type ElementAttributes = Omit<HTMLAttributes, 'as'>;
-
-interface As {
-  /**
-   * A tag or a component that the part renders in place of its own element, with the same
-   * attributes and content. The `element` slot wins over it.
-   */
-  as?: keyof HTMLElementTagNameMap | Component;
-}
-
-export interface NumberFieldRootProps extends As, /* @vue-ignore */ ElementAttributes {
+export interface NumberFieldRootProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value. `null` is an empty field, and `NaN` counts as `null`. */
   modelValue?: number | null;
   /** The first value of a field with no `modelValue`. */
@@ -128,7 +119,8 @@ export type NumberFieldRootCommitEventDetails =
 
 export type NumberFieldRootCommitEventReason = NumberFieldRootCommitEventDetails['reason'];
 
-export interface NumberFieldGroupProps extends As, /* @vue-ignore */ ElementAttributes {}
+export interface NumberFieldGroupProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 export type NumberFieldGroupState = NumberFieldRootState;
 
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
@@ -143,7 +135,7 @@ export interface NumberFieldInputProps extends /* @vue-ignore */ InputAttributes
 export type NumberFieldInputState = NumberFieldRootState;
 
 export interface NumberFieldIncrementProps
-  extends As, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /** @default false */
   disabled?: boolean;
 }
@@ -151,14 +143,15 @@ export interface NumberFieldIncrementProps
 export type NumberFieldIncrementState = NumberFieldRootState;
 
 export interface NumberFieldDecrementProps
-  extends As, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
+  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /** @default false */
   disabled?: boolean;
 }
 /** `disabled` is also true for the `disabled` prop of the button and at the bound. */
 export type NumberFieldDecrementState = NumberFieldRootState;
 
-export interface NumberFieldScrubAreaProps extends As, /* @vue-ignore */ ElementAttributes {
+export interface NumberFieldScrubAreaProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The axis of the pointer that steps the value.
    * @default 'horizontal'

@@ -1,11 +1,11 @@
 import type { HTMLAttributes, LabelHTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 import type { ThumbCollisionBehavior } from './values';
 
-export interface SliderRootProps<
-  Value extends number | readonly number[] = number,
-> extends /* @vue-ignore */ HTMLAttributes {
+export interface SliderRootProps<Value extends number | readonly number[] = number>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value. An array makes a range, with one value for each thumb. */
   modelValue?: Value;
   /** The first value of an uncontrolled slider. The default is `min`. */
@@ -86,7 +86,14 @@ export type SliderRootCommitEventDetails =
   | { reason: 'track-press' | 'drag'; event: PointerEvent }
   | { reason: 'input-change'; event: Event };
 
-export interface SliderThumbProps extends /* @vue-ignore */ HTMLAttributes {
+export interface SliderControlProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface SliderTrackProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface SliderIndicatorProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
+
+export interface SliderThumbProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The index of the value of the thumb. With none, the thumb takes its place among the thumbs.
    * Set it only when the thumbs do not render in the order of their values.

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
-import type { HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { usePointerPress } from '../common/pointerPress';
 import { injectSlider, stateAttributes } from './root';
-import type { SliderControlState } from './types';
+import type { SliderControlProps, SliderControlState } from './types';
 import { largest, nearestThumb, snap } from './values';
 
 /** A press, from its `pointerdown` to its end. */
@@ -22,12 +21,9 @@ interface Press {
   half: number;
 }
 
-// The part takes the attributes of its element.
-interface Attributes extends /* @vue-ignore */ HTMLAttributes {}
-
 defineOptions({ inheritAttrs: false });
 
-defineProps<Attributes>();
+defineProps<SliderControlProps>();
 
 defineSlots<{
   default?(scope: { state: SliderControlState }): unknown;
@@ -158,6 +154,9 @@ function focus(index: number) {
     :elementRef="setElement"
     :state="slider.state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="slider.state" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="slider.state" />
   </div>

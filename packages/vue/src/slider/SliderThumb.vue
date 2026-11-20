@@ -255,6 +255,10 @@ function stopEvent(event: Event) {
     :inputProps="inputProps()"
     :inputRef="setInput"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+    <input v-bind="inputProps()" :ref="setInput" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <input v-bind="inputProps()" :ref="setInput" />

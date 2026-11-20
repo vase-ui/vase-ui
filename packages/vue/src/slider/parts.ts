@@ -6,7 +6,9 @@ import SliderThumb from './SliderThumb.vue';
 import SliderTrack from './SliderTrack.vue';
 import SliderValue from './SliderValue.vue';
 import type {
+  SliderControlProps,
   SliderControlState,
+  SliderIndicatorProps,
   SliderIndicatorState,
   SliderLabelProps,
   SliderLabelState,
@@ -18,6 +20,7 @@ import type {
   SliderRootState,
   SliderThumbProps,
   SliderThumbState,
+  SliderTrackProps,
   SliderTrackState,
   SliderValueState,
 } from './types';
@@ -45,16 +48,19 @@ export namespace Value {
 
 export const Control: typeof SliderControl = SliderControl;
 export namespace Control {
+  export type Props = SliderControlProps;
   export type State = SliderControlState;
 }
 
 export const Track: typeof SliderTrack = SliderTrack;
 export namespace Track {
+  export type Props = SliderTrackProps;
   export type State = SliderTrackState;
 }
 
 export const Indicator: typeof SliderIndicator = SliderIndicator;
 export namespace Indicator {
+  export type Props = SliderIndicatorProps;
   export type State = SliderIndicatorState;
 }
 

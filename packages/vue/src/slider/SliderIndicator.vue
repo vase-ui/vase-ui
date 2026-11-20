@@ -8,18 +8,14 @@ import {
   watch,
   type CSSProperties,
 } from 'vue';
-import type { HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
 import { injectSlider, stateAttributes } from './root';
-import type { SliderIndicatorState } from './types';
+import type { SliderIndicatorProps, SliderIndicatorState } from './types';
 import { percent } from './values';
-
-// The part takes the attributes of its element.
-interface Attributes extends /* @vue-ignore */ HTMLAttributes {}
 
 defineOptions({ inheritAttrs: false });
 
-defineProps<Attributes>();
+defineProps<SliderIndicatorProps>();
 
 defineSlots<{
   default?(scope: { state: SliderIndicatorState }): unknown;
@@ -93,6 +89,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="slider.state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="slider.state" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="slider.state" />
   </div>

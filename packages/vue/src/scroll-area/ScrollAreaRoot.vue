@@ -324,6 +324,10 @@ function elementProps() {
     :elementRef="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <StyleDisableScrollbar />
+    <slot :state="state" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <StyleDisableScrollbar />
     <slot :state="state" />
