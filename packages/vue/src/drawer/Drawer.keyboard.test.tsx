@@ -630,8 +630,9 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     const scroll = screen.getByTestId('scroll');
     const input = screen.getByTestId('input');
 
+    // WebKit can scroll to a focused field by itself, so the case counts the scrolls of the code.
+    const scrollTo = vi.spyOn(scroll, 'scrollTo');
     input.focus({ preventScroll: true });
-    scroll.scrollTop = 0;
     visualViewport.resize(500);
     await flushMicrotasks();
 
@@ -641,9 +642,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
     });
-    await waitFor(() => {
-      expect(scroll.scrollTop).toBe(0);
-    });
+    await flushAnimationFrames(10);
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it('restores keyboard scroll slack when the drawer closes', async () => {
@@ -845,8 +845,9 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     const scroll = screen.getByTestId('scroll');
     const input = screen.getByTestId('input');
 
+    // WebKit can scroll to a focused field by itself, so the case counts the scrolls of the code.
+    const scrollTo = vi.spyOn(scroll, 'scrollTo');
     input.focus({ preventScroll: true });
-    scroll.scrollTop = 0;
     visualViewport.setScale(1.5);
     visualViewport.resize(500);
     await flushMicrotasks();
@@ -857,9 +858,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
     });
-    await waitFor(() => {
-      expect(scroll.scrollTop).toBe(0);
-    });
+    await flushAnimationFrames(10);
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it('focuses an unfocused keyboard input on touchend without page scroll', async () => {
