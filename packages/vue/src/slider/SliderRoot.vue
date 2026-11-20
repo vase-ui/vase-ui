@@ -20,6 +20,7 @@ import { useModel } from '../common/model';
 import { warn } from '../common/warn';
 import { fieldKey } from '../field/control';
 import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
+import { useLocale } from '../locale-provider/part';
 import { sliderKey, stateAttributes, type SliderThumbEntry } from './root';
 import type {
   SliderRootChangeEventDetails,
@@ -45,7 +46,6 @@ const props = withDefaults(defineProps<SliderRootProps<Value>>(), {
   thumbCollisionBehavior: 'push',
   thumbAlignment: 'center',
   orientation: 'horizontal',
-  locale: 'en-US',
 });
 const emit = defineEmits<{
   /** The user changes the value, also at each move of a drag. `details.cancel()` keeps the value. */
@@ -78,7 +78,8 @@ const grid = computed(() => ({ min: props.min, max: props.max, step: props.step 
 const values = computed(() => shownValues(value.value, grid.value));
 // Two values of the grid differ by a whole number of steps.
 const distance = computed(() => props.step * Math.ceil(props.minStepsBetweenValues));
-const formatter = computed(() => new Intl.NumberFormat(props.locale, props.format));
+const textLocale = useLocale(() => props.locale);
+const formatter = computed(() => new Intl.NumberFormat(textLocale.value, props.format));
 
 // The thumbs in the order of `setup`, and the labels.
 const entries = shallowReactive<SliderThumbEntry[]>([]);

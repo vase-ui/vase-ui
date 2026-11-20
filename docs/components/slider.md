@@ -110,7 +110,7 @@ Each part has these attributes, and the slots give the same state:
 
 The slider reads the text direction of its element. For a right-to-left page that renders on a server, give `Slider.Root` the attribute `dir="rtl"`, so that the server HTML has each thumb at its place. On a page that changes its direction, bind `dir`.
 
-`format` and `locale` give the text of `Slider.Value`, and `aria-valuetext` of each input when `format` is set. The default `locale` is `en-US` on the server and in the browser, so give the locale of the page.
+`format` and `locale` give the text of `Slider.Value`, and `aria-valuetext` of each input when `format` is set. The text has the `locale` prop of the root, else the locale of the nearest [`LocaleProvider`](/utils/locale-provider), else `en-US`. The server and the browser use the same locale. Give the locale of the page to a `LocaleProvider`, so that the text has the language of the page.
 
 ## Examples
 

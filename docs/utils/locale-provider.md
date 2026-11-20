@@ -17,11 +17,11 @@ Import the component and wrap it around your app:
 
 <<< ./locale-provider/Anatomy.vue
 
-`Meter` and `Progress` format their text in this locale. Give the locale of the page, so that the text has the language of the page.
+`Meter`, `Progress` and `Slider` format their text in this locale. Give the locale of the page, so that the text has the language of the page.
 
 ## Which locale a part uses
 
-`Meter.Root` and `Progress.Root` use the first locale of this list:
+`Meter.Root`, `Progress.Root` and `Slider.Root` use the first locale of this list:
 
 1. The `locale` prop of the part.
 2. The locale of the nearest `LocaleProvider` above the part.

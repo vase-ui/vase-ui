@@ -12,7 +12,7 @@ function values(root: Element) {
   return Object.fromEntries(
     [...root.querySelectorAll('[aria-label]')].map((range) => [
       range.getAttribute('aria-label')!,
-      range.querySelector('[aria-hidden]')!,
+      range.querySelector('[aria-hidden], output')!,
     ]),
   );
 }
@@ -26,6 +26,7 @@ describe('the locale of a part', () => {
   test.each([
     { name: 'Meter', locale: 'de-DE', rule: 'a part with no locale prop has the provider locale' },
     { name: 'Progress', locale: 'de-DE', rule: 'Progress has the provider locale' },
+    { name: 'Slider', locale: 'de-DE', rule: 'Slider has the provider locale' },
     { name: 'Meter with a locale', locale: 'ar-EG', rule: 'the locale prop of a part wins' },
     { name: 'Meter in the inner provider', locale: 'fr-FR', rule: 'the nearest provider wins' },
   ])('$rule', async ({ name, locale }) => {
@@ -48,6 +49,7 @@ describe('the locale of a part', () => {
     expect(texts(root)).toEqual({
       Meter: text('ar-EG'),
       Progress: text('ar-EG'),
+      Slider: text('ar-EG'),
       'Meter with a locale': text('ar-EG'),
       'Meter in the inner provider': text('fr-FR'),
       'Meter with no provider': text('en-US'),
@@ -62,6 +64,7 @@ test('VUE-170: the server HTML has the locale of each part, and the text stays a
   expect(server).toEqual({
     Meter: text('de-DE'),
     Progress: text('de-DE'),
+    Slider: text('de-DE'),
     'Meter with a locale': text('ar-EG'),
     'Meter in the inner provider': text('fr-FR'),
     'Meter with no provider': text('en-US'),

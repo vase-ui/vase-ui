@@ -36,7 +36,10 @@ export interface SliderRootProps<
   form?: string;
   /** The format of the value as text. */
   format?: Intl.NumberFormatOptions;
-  /** The locale of the text. Give the locale of the page. @default 'en-US' */
+  /**
+   * The locale of the text.
+   * @default the locale of the nearest LocaleProvider, else 'en-US'
+   */
   locale?: Intl.LocalesArgument;
 }
 

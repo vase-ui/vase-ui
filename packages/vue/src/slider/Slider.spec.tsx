@@ -3,6 +3,8 @@ import {
   Slider,
   type SliderRootChangeEventDetails,
   type SliderRootCommitEventDetails,
+  type SliderRootProps,
+  type SliderThumbState,
 } from '@vase-ui/vue/slider';
 
 const value: number = 25;
@@ -49,3 +51,13 @@ export function onCommit(details: SliderRootCommitEventDetails) {
 const thumb = null as unknown as InstanceType<typeof Slider.Thumb>;
 expectType<HTMLElement | null, typeof thumb.element>(thumb.element);
 expectType<HTMLInputElement | null, typeof thumb.input>(thumb.input);
+
+// The types of a part are on the part too, with the type parameter of the props.
+const rangeProps = null as unknown as Slider.Root.Props<number[]>;
+const thumbState = null as unknown as Slider.Thumb.State;
+const changeDetails = null as unknown as Slider.Root.ChangeEventDetails;
+const commitDetails = null as unknown as Slider.Root.CommitEventDetails;
+expectType<SliderRootProps<number[]>, typeof rangeProps>(rangeProps);
+expectType<SliderThumbState, typeof thumbState>(thumbState);
+expectType<SliderRootChangeEventDetails, typeof changeDetails>(changeDetails);
+expectType<SliderRootCommitEventDetails, typeof commitDetails>(commitDetails);
