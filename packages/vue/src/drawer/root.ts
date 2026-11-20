@@ -48,8 +48,6 @@ export interface DrawerSample {
   y: number;
   /** 0 at the open place, 1 at the closed place. */
   progress: number;
-  /** The part of the leave that is left after a swipe. */
-  strength: number;
 }
 
 /** What a `Drawer.Root` gives to its parts and to each `Drawer.Root` in it. The properties are reactive. */
@@ -100,6 +98,8 @@ export interface DrawerRoot {
   markContentPress(event: PointerEvent): void;
   isContentPress(event: PointerEvent): boolean;
   write(sample: Partial<DrawerSample>): void;
+  /** Removes the marks of a swipe close from the popup and the backdrop. */
+  clearDismiss(): void;
 }
 
 /** What `Drawer.Provider` gives to its roots and to the indent parts. */
@@ -232,7 +232,7 @@ export function useDrawerRoot<Payload>(
   const backdrop = shallowRef<HTMLElement | null>(null);
   const swiping = shallowRef(false);
   const swipingFar = shallowRef(false);
-  const sample = shallowReactive<DrawerSample>({ x: 0, y: 0, progress: 0, strength: 1 });
+  const sample = shallowReactive<DrawerSample>({ x: 0, y: 0, progress: 0 });
   const children = shallowReactive<DrawerRoot[]>([]);
   const contentPresses = new WeakSet<Event>();
 
@@ -343,8 +343,23 @@ export function useDrawerRoot<Payload>(
     write(next) {
       Object.assign(sample, next);
     },
+    clearDismiss() {
+      for (const target of [root.popup, backdrop.value]) {
+        target?.removeAttribute('data-swipe-dismiss');
+        target?.style.setProperty('--drawer-swipe-strength', '1');
+      }
+    },
   };
   provide(drawerKey, drawer);
+  // A popup and a backdrop that the portal keeps closed have the marks of a swipe close, and Vue
+  // does not remove an attribute that it did not write.
+  watch(
+    () => root.open,
+    (open) => {
+      if (open) drawer.clearDismiss();
+    },
+    { flush: 'sync' },
+  );
   if (parent) onScopeDispose(parent.addNested(drawer));
 
   // The indent of the page follows the drawers that no drawer holds.

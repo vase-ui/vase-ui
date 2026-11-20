@@ -58,7 +58,7 @@ function elementProps() {
       'data-swiping': drawer.swiping ? '' : undefined,
       style: {
         '--drawer-swipe-progress': progress,
-        '--drawer-swipe-strength': drawer.sample.strength,
+        '--drawer-swipe-strength': 1,
         '--drawer-height': progress > 0 ? `${drawer.frontmostHeight}px` : undefined,
       },
       onMousedown: keepFocus,

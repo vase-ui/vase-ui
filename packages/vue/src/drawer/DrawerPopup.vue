@@ -95,7 +95,7 @@ function elementProps() {
         '--drawer-snap-point-offset': `${drawer.swipeDirection === 'up' ? -offset : offset}px`,
         '--drawer-swipe-movement-x': `${sample.x}px`,
         '--drawer-swipe-movement-y': `${sample.y}px`,
-        '--drawer-swipe-strength': sample.strength,
+        '--drawer-swipe-strength': 1,
         '--drawer-swipe-progress': drawer.nestedProgress,
       },
     },

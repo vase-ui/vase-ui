@@ -103,14 +103,6 @@ function goBack() {
   drawer.setSwiping(false);
 }
 
-function clearDismiss() {
-  for (const target of [root.popup, drawer.backdrop]) {
-    target?.removeAttribute('data-swipe-dismiss');
-    target?.style.removeProperty('--drawer-swipe-strength');
-  }
-  drawer.write({ strength: 1 });
-}
-
 function dismiss(release: SwipeRelease, traveled: number, restore: () => void) {
   const popup = root.popup;
   const direction = drawer.swipeDirection;
@@ -126,13 +118,12 @@ function dismiss(release: SwipeRelease, traveled: number, restore: () => void) {
     target?.style.setProperty('--drawer-swipe-strength', String(strength));
   }
   if (popup?.style.transition === 'none') popup.style.transition = '';
-  drawer.write({ strength });
   drawer.setSwiping(false);
   root.request(false, 'swipe', release.event);
   // A listener cancelled the close, or the parent kept the drawer open.
   void nextTick(() => {
     if (!root.open) return;
-    clearDismiss();
+    drawer.clearDismiss();
     restore();
     goBack();
   });
@@ -215,7 +206,7 @@ const tracker = useSwipeTracker({
     const resting = new DOMMatrixReadOnly(getComputedStyle(popup).transform);
     base = { x: moving.m41 - resting.m41, y: moving.m42 - resting.m42 };
     size = sizeOf(popup);
-    clearDismiss();
+    drawer.clearDismiss();
     drawer.setSwiping(true);
   },
   move(x, y) {

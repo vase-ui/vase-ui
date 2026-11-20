@@ -283,6 +283,25 @@ describe('the swipe that closes', () => {
     await waitFor(() => expect(popup.isConnected).toBe(false));
   });
 
+  test.each([false, true])(
+    'opens again with the strength 1 and no mark of the swipe close, with keepMounted=%s',
+    async (keepMounted) => {
+      await mountDrawer({ backdrop: {}, portal: { keepMounted } });
+      flick(get('text'), textOf(), await mousePointerId(textOf()), [
+        [10, 1010],
+        [100, 1030],
+        [200, 1050],
+      ]);
+      await waitFor(() => expect(byTestId('popup')?.hidden ?? true).toBe(true));
+      await userEvent.click(get('trigger'));
+      await waitFor(() => expect(byTestId('popup')?.hidden).toBe(false));
+      for (const element of [get('popup'), get('backdrop')]) {
+        expect(element.style.getPropertyValue('--drawer-swipe-strength')).toBe('1');
+        expect(element.hasAttribute('data-swipe-dismiss')).toBe(false);
+      }
+    },
+  );
+
   test('goes back after a cancelled close, and after a close that the parent refused', async () => {
     const root = reactive<Props>({
       defaultOpen: true,
@@ -654,6 +673,18 @@ describe('the swipe area', () => {
     expect(String(getSelection())).toBe('');
     await userEvent.keyboard('{Escape}');
     await closed();
+    await waitFor(() => expect(document.activeElement).toBe(button));
+  });
+
+  test('gives Shift+Tab out of a drawer that is not modal to the element that had the focus before the open', async () => {
+    await mountArea({ root: { modal: false } });
+    const button = document.body.appendChild(document.createElement('button'));
+    button.textContent = 'Before';
+    onTestFinished(() => button.remove());
+    button.focus();
+    await drag(centerOf('swipe-area'), { x: 0, y: -200 }, 10);
+    await waitFor(() => expect(document.activeElement).toBe(get('popup')));
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     await waitFor(() => expect(document.activeElement).toBe(button));
   });
 

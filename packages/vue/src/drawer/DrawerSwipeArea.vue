@@ -90,7 +90,7 @@ const tracker = useSwipeTracker({
   axis: () => axisOf(direction.value),
   captureAtPress: true,
   press(event) {
-    if (!enabled.value || root.open) return false;
+    if (props.disabled || root.open) return false;
     // The focus stays where it was. WebKit still selects text, so the area has `user-select: none`
     // (test/measurements/drawer.test.ts).
     if (event.pointerType !== 'touch' && event.cancelable) event.preventDefault();
@@ -100,7 +100,7 @@ const tracker = useSwipeTracker({
     opened = false;
     closed = null;
     movement = 0;
-    drawer.write({ x: 0, y: 0, progress: 1, strength: 1 });
+    drawer.write({ x: 0, y: 0, progress: 1 });
     drawer.setSwiping(true);
   },
   move(x, y, event) {
