@@ -8,7 +8,11 @@ import CallAtMount from './CallAtMount.vue';
 // are those of Alert Dialog. `scene.root` mounts the root, and `scene.inside` the trigger in the
 // root. `atMount` runs in `onMounted` of a child of the root.
 const props = defineProps({
-  handle: { type: Object as PropType<InstanceType<typeof Dialog.Handle>>, required: true },
+  // A server render gets its props as JSON, so it gets no handle.
+  handle: {
+    type: Object as PropType<InstanceType<typeof Dialog.Handle>>,
+    default: () => Dialog.createHandle(),
+  },
   alert: Boolean,
   root: Object as PropType<Record<string, unknown>>,
   scene: {
