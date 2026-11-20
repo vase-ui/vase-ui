@@ -190,11 +190,7 @@ defineExpose({
       :disabled="context.disabled"
       :value="text"
     />
-    <input
-      v-if="formInputs.rendersInputs()"
-      v-bind="formInputs.textProps()"
-      :ref="setTextInput"
-    />
+    <input v-if="formInputs.rendersInputs()" v-bind="formInputs.textProps()" :ref="setTextInput" />
   </component>
   <div v-else v-bind="attrs" :ref="setElement">
     <slot />
@@ -207,10 +203,6 @@ defineExpose({
       :disabled="context.disabled"
       :value="text"
     />
-    <input
-      v-if="formInputs.rendersInputs()"
-      v-bind="formInputs.textProps()"
-      :ref="setTextInput"
-    />
+    <input v-if="formInputs.rendersInputs()" v-bind="formInputs.textProps()" :ref="setTextInput" />
   </div>
 </template>
