@@ -9,7 +9,9 @@
     <Notice data-testid="nuxt-link">
       <template #element="{ props, elementRef }">
         <NuxtLink v-slot="{ href, navigate }" to="/button" custom>
-          <a v-bind="props" :ref="elementRef" :href="href ?? undefined" @click="navigate">Nuxt link</a>
+          <a v-bind="props" :ref="elementRef" :href="href ?? undefined" @click="navigate"
+            >Nuxt link</a
+          >
         </NuxtLink>
       </template>
     </Notice>
