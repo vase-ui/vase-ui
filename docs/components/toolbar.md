@@ -56,23 +56,51 @@ Import the component and assemble its parts:
 
 <<< ./toolbar/Anatomy.vue
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in `Toolbar.Input`. After the hydration, an `input` listener of `Toolbar.Input` runs with that text. When the visitor left the input before the page hydrated, the input then also gets `change`, `blur` and `focusout`.
+`Toolbar.Root` renders a `<div role="toolbar">` with `aria-orientation`. `Toolbar.Button`, `Toolbar.Input` and `Toolbar.Link` are its items, also inside a `Toolbar.Group`. `Toolbar.Button` renders a `<button type="button">`, `Toolbar.Input` renders the [Input](/components/input) part, and `Toolbar.Link` renders an `<a>`. Give `v-model` to `Toolbar.Input` for its text. `Toolbar.Separator` renders a [Separator](/components/separator) across the toolbar.
 
-Chromium can restore the form state of a page after its app is mounted, with no event. At the `pageshow` event, an `input` listener of `Toolbar.Input` runs with a restored value. An input that does not have the focus then also gets `change`, `blur` and `focusout`. For an input that `KeepAlive` holds at that event, the listener runs when `KeepAlive` shows the input again.
+The toolbar is one tab stop: the item that had the focus last, or else the first item. Do not give a `tabindex` to a part, because the toolbar then has more than one tab stop. Before the page hydrates, each item is a tab stop of its own.
+
+| Key                      | Action                                                                    |
+| ------------------------ | ------------------------------------------------------------------------- |
+| ArrowRight and ArrowLeft | In a horizontal toolbar, move the focus to the next or the previous item. |
+| ArrowDown and ArrowUp    | In a vertical toolbar, move the focus to the next or the previous item.   |
+| Tab and Shift+Tab        | Move the focus out of the toolbar, or into it at its tab stop.            |
+| Enter and Space          | Operate the item that has the focus.                                      |
+
+With right-to-left text, ArrowLeft moves to the next item of a horizontal toolbar. The arrow keys go from the last item to the first, unless `loopFocus` is `false`. The two keys of the toolbar never reach the item, so a menu trigger in a vertical toolbar does not open at ArrowDown. The keys of the other axis stay with the item.
+
+A text input keeps ArrowLeft and ArrowRight while its caret can move. The toolbar selects the text of an input when a key moves the focus to it. A textarea also keeps ArrowUp and ArrowDown while its caret can move.
+
+To take an item out of the toolbar, remove it with `v-if`. The arrow keys pass an item that CSS hides, but a hidden item can still be the tab stop.
+
+### Disabled items
+
+A disabled button or input keeps the focus, and the arrow keys still reach it. It has `aria-disabled="true"` and no `disabled`. A disabled input is also read-only. The toolbar stops a click, a press and each key on a disabled item, so no listener of the item gets them. Tab, Escape, F1 to F12 and the keys with Ctrl, Alt or Meta pass. Hover and focus events also pass, so a tooltip can say why the item is disabled.
+
+With `focusableWhenDisabled` set to `false`, a disabled item has `disabled`, and the arrow keys pass it. A disabled toolbar or group disables each button and input in it. A link is never disabled.
+
+## Styling
+
+| Selector                        | State                                                 |
+| ------------------------------- | ----------------------------------------------------- |
+| `[aria-orientation='vertical']` | On `Toolbar.Root`: the toolbar is vertical.           |
+| `[data-orientation='vertical']` | On a group, a button, an input or a link.             |
+| `[data-disabled]`               | On `Toolbar.Root` or `Toolbar.Group`: it is disabled. |
+| `[aria-disabled='true']`        | A disabled item that keeps the focus.                 |
+| `:disabled`                     | A disabled item with `focusableWhenDisabled` `false`. |
+| `:focus-visible`                | The item has the focus from the keyboard.             |
 
 ## Examples
 
 ### Using with other components
 
-Give a part of another component to the `as` prop of a toolbar part. The two parts then share one element. The element joins the keyboard navigation of the toolbar and keeps the behavior of the other part. The demo at the top of this page does this for `Toggle` and `Select.Trigger`, and this sample does it for `Menu.Trigger`:
+Render a part of another component in the `element` slot of a toolbar part. Bind `props` and `elementRef` to it. The part then joins the keyboard navigation of the toolbar and keeps its own behavior. The demo at the top of this page does this for `Toggle` and `Select.Trigger`, and this sample does it for `Menu.Trigger`:
 
-<<< ./toolbar/MenuInToolbar.vue{9}
+<<< ./toolbar/MenuInToolbar.vue{8-10}
 
-When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it.
-
-- **Popups with a trigger**: give the trigger to the `as` prop of `<Toolbar.Button>`, as shown above. This works for Alert Dialog, Dialog, Drawer, Menu, Popover and Select. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The button then stays in the keyboard navigation of the toolbar.
-- **Tooltip**: give `Toolbar.Button` to the `as` prop of `<Tooltip.Trigger>`. To disable the button, render `<Toolbar.Button disabled>` in the `#render` slot of `<Tooltip.Trigger>`. With the `disabled` prop of `<Tooltip.Trigger>`, the trigger does not open the tooltip, and the button stays enabled.
-- **Number Field**: give `NumberField.Input` to the `as` prop of `<Toolbar.Input>`. Put the input inside `<NumberField.Root>` and `<NumberField.Group>`, with the increment and decrement buttons.
+- **Popups with a trigger**: render the trigger in the slot of `<Toolbar.Button>`. This works for Alert Dialog, Dialog, Drawer, Menu, Popover, Select and Tooltip. Set `disabled` on `<Toolbar.Button>`, not on the trigger. The trigger then keeps the focus and opens nothing. A tooltip still opens at a hover.
+- **Toggle**: render a `Toggle` in the slot of `<Toolbar.Button>`. Each toggle of a `ToggleGroup` in the toolbar is an item with no wrapper.
+- **Inputs**: render a `Switch`, a `Checkbox`, a `Radio` or a `NumberField.Input` in the slot of `<Toolbar.Input>`. `Toolbar.Input` then renders no `Input` and owns no text, so give `v-model` to the part in the slot.
 
 See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
 

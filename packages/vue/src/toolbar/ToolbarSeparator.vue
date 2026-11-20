@@ -1,24 +1,10 @@
-<script lang="ts">
-import type { SeparatorProps, SeparatorState } from '../../separator/types';
-
-export interface ToolbarSeparatorState extends SeparatorState {}
-
-export interface ToolbarSeparatorProps extends SeparatorProps {
-  /**
-   * The orientation of the separator. Defaults to the opposite of the toolbar's
-   * orientation, so a horizontal toolbar renders vertical separators.
-   */
-  orientation?: 'horizontal' | 'vertical';
-}
-</script>
-
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { Separator } from '../../separator';
-import { useToolbarRootContext } from '../root/ToolbarRootContext';
+import { Separator } from '../separator';
+import { injectToolbar } from './item';
+import type { ToolbarSeparatorProps, ToolbarSeparatorState } from './types';
 
 const props = defineProps<ToolbarSeparatorProps>();
-
 defineSlots<{
   default?(scope: { state: ToolbarSeparatorState }): unknown;
   element?(scope: {
@@ -28,10 +14,9 @@ defineSlots<{
   }): unknown;
 }>();
 
-const context = useToolbarRootContext();
-
+const toolbar = injectToolbar();
 const separatorOrientation = computed(
-  () => props.orientation ?? (context.orientation.value === 'vertical' ? 'horizontal' : 'vertical'),
+  () => props.orientation ?? (toolbar.orientation === 'vertical' ? 'horizontal' : 'vertical'),
 );
 
 // Separate slot outlets keep the child slots stable across updates.

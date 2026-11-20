@@ -16,7 +16,7 @@ function handleMenuClick() {}
         :style="{ color: 'red', padding: '4px' }"
         @click="handleToolbarClick"
       >
-        <template #render="{ props }">
+        <template #element="{ props, elementRef }">
           <Menu.Trigger
             v-bind="
               mergeProps(props, {
@@ -25,6 +25,7 @@ function handleMenuClick() {}
                 onClick: handleMenuClick,
               })
             "
+            :ref="elementRef"
           >
             Open menu
           </Menu.Trigger>

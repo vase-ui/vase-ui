@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import { Popover, type PopoverRootChangeEventDetails } from '@vase-ui/vue/popover';
 import OpenModalDialog from '../../test/fixtures/OpenModalDialog.vue';
 import PopoverHandles from '../../test/fixtures/PopoverHandles.vue';
+import PopoverInToolbar from '../../test/fixtures/PopoverInToolbar.vue';
 import PopoverInTransition from '../../test/fixtures/PopoverInTransition.vue';
 import PopoverPartAlone from '../../test/fixtures/PopoverPartAlone.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
@@ -1978,6 +1979,50 @@ describe('the viewport (L11)', () => {
     await closed();
     root.open = true;
     expect(await opened()).not.toHaveAttribute('data-instant');
+  });
+});
+
+describe('in a toolbar', () => {
+  const button = (name: string) =>
+    [...document.querySelectorAll('button')].find((element) => element.textContent === name)!;
+
+  test('does not relay composite keys from the popup to the toolbar', async () => {
+    mount(PopoverInToolbar);
+    await nextTick();
+    // The toolbar moves its focus with the same key, so the last assertion does not come from a
+    // toolbar that takes no key.
+    button('First').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(button('Open'));
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(button('Inside')));
+    await userEvent.keyboard('{ArrowRight}');
+    await nextTick();
+    expect(document.activeElement).toBe(button('Inside'));
+  });
+
+  test('keeps composite keys working inside the popup content', async () => {
+    mount(PopoverInToolbar, { content: 'input' });
+    await nextTick();
+    await userEvent.click(button('Open'));
+    await opened();
+    const input = document.querySelector<HTMLInputElement>('[data-testid="popup"] input')!;
+    await waitFor(() => expect(document.activeElement).toBe(input));
+    input.setSelectionRange(0, 0);
+    await userEvent.keyboard('{ArrowRight}');
+    expect(input.selectionStart).toBe(1);
+    expect(document.activeElement).toBe(input);
+  });
+
+  test('keeps the focus in a popup that a portal puts in the toolbar', async () => {
+    mount(PopoverInToolbar, { defaultOpen: true, portalInToolbar: true });
+    const element = await opened();
+    expect(document.querySelector('[role="toolbar"]')!.contains(element)).toBe(true);
+    button('Inside').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await nextTick();
+    expect(document.activeElement).toBe(button('Inside'));
   });
 });
 

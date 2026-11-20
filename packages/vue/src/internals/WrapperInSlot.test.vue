@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Toolbar } from '@vase-ui/vue/toolbar';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 
-defineProps<{ focusableWhenDisabled?: boolean }>();
+defineProps<{ closeOnClick?: boolean }>();
 </script>
 
 <template>
-  <Toolbar.Root>
-    <Toolbar.Button :focusable-when-disabled="focusableWhenDisabled"><slot /></Toolbar.Button>
-  </Toolbar.Root>
+  <Tooltip.Root>
+    <Tooltip.Trigger :close-on-click="closeOnClick"><slot /></Tooltip.Trigger>
+  </Tooltip.Root>
 </template>

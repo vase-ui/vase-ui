@@ -14,7 +14,6 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
-import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
@@ -253,12 +252,6 @@ const rows: Row[] = [
       </form>
     ),
     expected: () => 'button',
-  },
-  {
-    name: 'Toolbar.Root role',
-    attribute: 'role',
-    createNode: () => <Toolbar.Root role={undefined} data-testid="part" />,
-    expected: () => 'toolbar',
   },
   {
     name: 'Tooltip.Popup data-open',

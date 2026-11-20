@@ -179,7 +179,7 @@ export interface UseButtonParameters {
   composite?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
-export function useFocusableWhenDisabled(parameters: UseFocusableWhenDisabledParameters) {
+function useFocusableWhenDisabled(parameters: UseFocusableWhenDisabledParameters) {
   function onKeydown(event: KeyboardEvent) {
     // Tab must still move focus away from a disabled button.
     if (

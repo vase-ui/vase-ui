@@ -34,9 +34,16 @@ const slots = defineSlots<{
 // The attributes and the listeners of the developer that go to the input.
 const INPUT_ATTRIBUTE =
   /^(?:aria-|tabindex$|autofocus$|on(?:Focus|Blur|Keydown)(?:Capture|Once|Passive)*$)/i;
-// `Toolbar.Root` moves the focus at these keys when they bubble from an item in it.
-const TOOLBAR_KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End']);
-const KEYS = new Set([...TOOLBAR_KEYS, 'PageUp', 'PageDown']);
+const KEYS = new Set([
+  'ArrowUp',
+  'ArrowRight',
+  'ArrowDown',
+  'ArrowLeft',
+  'Home',
+  'End',
+  'PageUp',
+  'PageDown',
+]);
 const FOCUS_EVENTS = ['blur', 'focusout', 'focus', 'focusin'];
 
 const slider = injectSlider('Thumb');
@@ -202,7 +209,6 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   event.preventDefault();
-  if (TOOLBAR_KEYS.has(event.key)) event.stopPropagation();
   const current = value.value;
   if (current === undefined) return;
   const grid = slider.state;

@@ -58,7 +58,7 @@ Attributes that you write beside `v-bind="props"` follow the rules of Vue. When 
 
 A part can name another part by its `id`: a trigger names its panel, and a dialog names its title. When an `id` that you write in the slot wins, the part names that `id` after the named part mounts, and follows each change of it. An empty `id` in the slot gives the element no `id`, so no part names it. The server HTML names the `id` that the part gives. To make the server HTML name the element, give the `id` to the part and not to the slot.
 
-For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a menu trigger:
+For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a menu trigger in its `element` slot:
 
 <<< ../examples/composition/MergedProps.vue{14-18,22-26}
 
@@ -160,7 +160,7 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 - `alignItemWithTrigger` on `Select.Positioner`.
 - `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
 - `pushPanels` on `Resizable.Root`.
-- `nativeButton` on button parts such as `Dialog.Trigger` and `Toolbar.Button`.
+- `nativeButton` on button parts such as `Dialog.Trigger` and `Menu.Trigger`.
 - `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 

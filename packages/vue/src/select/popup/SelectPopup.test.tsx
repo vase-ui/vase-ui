@@ -44,21 +44,26 @@ describe('<Select.Popup />', () => {
   }));
 
   it('keeps arrow keys inside the popup when the trigger lives in a toolbar', async () => {
-    const onToolbarKeyDown = vi.fn();
     const { user } = await render(
-      <Toolbar.Root onKeydown={onToolbarKeyDown}>
+      <Toolbar.Root>
         <Select.Root defaultValue="a">
           <Toolbar.Button
             v-slots={{
-              render: ({ props }: { props: Record<string, unknown> }) => (
-                <Select.Trigger {...props} data-testid="trigger">
+              element: ({
+                props,
+                elementRef,
+              }: {
+                props: Record<string, unknown>;
+                elementRef: (target: unknown) => void;
+              }) => (
+                <Select.Trigger {...props} ref={elementRef} data-testid="trigger">
                   <Select.Value />
                 </Select.Trigger>
               ),
             }}
           />
           {/* Rendered inline rather than portaled, so the popup sits inside the toolbar's own
-              DOM subtree and its composite key handling actually sees these events. */}
+              DOM subtree. The toolbar acts only on a key of its items. */}
           <Select.Positioner>
             <Select.Popup>
               <Select.Item value="a">a</Select.Item>
@@ -81,14 +86,11 @@ describe('<Select.Popup />', () => {
       expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
     });
 
-    // Enter isn't a composite key, so opening legitimately reaches the toolbar.
-    onToolbarKeyDown.mockClear();
-
     // A horizontal toolbar navigates with ArrowRight. While the select popup owns focus that key
-    // belongs to the popup, so it must not bubble out and move focus off the toolbar button.
+    // belongs to the popup, so it must not move focus off the toolbar button.
     await user.keyboard('{ArrowRight}');
 
-    expect(onToolbarKeyDown).not.toHaveBeenCalled();
+    expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
     expect(screen.getByTestId('next')).not.toHaveFocus();
   });
 

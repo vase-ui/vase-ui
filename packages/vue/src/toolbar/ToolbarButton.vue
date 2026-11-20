@@ -1,0 +1,66 @@
+<script setup lang="ts">
+import { computed, useAttrs } from 'vue';
+import { useButton } from '../common/button';
+import { useAsTag, useElement } from '../common/element';
+import { injectToolbar, useToolbarItem } from './item';
+import type { ToolbarButtonProps, ToolbarButtonState } from './types';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<ToolbarButtonProps>(), {
+  disabled: false,
+  focusableWhenDisabled: true,
+});
+defineSlots<{
+  default?(scope: { state: ToolbarButtonState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: ToolbarButtonState;
+  }): unknown;
+}>();
+
+const toolbar = injectToolbar();
+const attrs = useAttrs();
+const { element, setElement } = useElement<HTMLElement>();
+const { disabled: isDisabled, mergeAttributes } = useButton({
+  element,
+  disabled: () => toolbar.disabled || props.disabled,
+  focusableWhenDisabled: () => props.focusableWhenDisabled,
+  type: 'button',
+  tag: useAsTag(() => props.as),
+});
+const tabindex = useToolbarItem(toolbar, element, {
+  disabled: () => isDisabled.value,
+  focusable: () => !isDisabled.value || props.focusableWhenDisabled,
+});
+const state = computed<ToolbarButtonState>(() => ({
+  disabled: isDisabled.value,
+  focusable: props.focusableWhenDisabled,
+  orientation: toolbar.orientation,
+}));
+
+defineExpose({ element });
+
+function elementProps() {
+  const own: Record<string, unknown> = { 'data-orientation': toolbar.orientation };
+  if (tabindex.value !== undefined) own.tabindex = tabindex.value;
+  return mergeAttributes(own, attrs);
+}
+</script>
+
+<template>
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
+  <button v-else v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </button>
+</template>

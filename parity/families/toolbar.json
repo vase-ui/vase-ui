@@ -6,10 +6,29 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Switch"],
+      "upstream": "packages/react/src/toolbar/button/ToolbarButtonDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "`Switch` is one native `<input type=\"checkbox\" role=\"switch\">`. A `Toolbar.Button` renders a `<button>`, and a button cannot hold an input."
+      "reason": "The button writes `data-orientation`. It writes no `data-disabled`: CSS selects `:disabled` and `[aria-disabled='true']` (rule 8.15). It writes no `data-focusable`, which repeats the prop `focusableWhenDisabled`; the state keeps `focusable`. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/group/ToolbarGroupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The group writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInputDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The input writes `data-orientation`. It writes no `data-disabled`: CSS selects `:disabled` and `[aria-disabled='true']` (rule 8.15). It writes no `data-focusable`, which repeats the prop `focusableWhenDisabled`; the state keeps `focusable`. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/link/ToolbarLinkDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The link writes `data-orientation`, and CSS selects it as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/root/ToolbarRootDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The root writes `aria-orientation`, which the role `toolbar` takes, so CSS selects `[aria-orientation='vertical']`, and it writes no `data-orientation` (rule 8.15). It writes `data-disabled`. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "packages/react/src/toolbar/separator/ToolbarSeparatorDataAttributes.ts",
@@ -17,12 +36,130 @@
       "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     },
     {
-      "upstream": "packages/react/src/toolbar/separator/ToolbarSeparator.test.tsx",
-      "describe": ["<Toolbar.Separator />"],
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": ["<Toolbar.Button />"],
       "suite": "describeConformance",
       "kind": "replaced",
-      "test": "packages/vue/src/toolbar/separator/ToolbarSeparator.test.tsx",
-      "reason": "A case of `ToolbarSeparator.test.tsx` tests the attributes of the developer, the template ref and the `element` slot. `Separator.test.ts` tests the rest of the element."
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the element, `as`, the `element` slot with the state, the attributes of the developer and the template ref of each part."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": ["<Toolbar.Button />", "prop: nativeButton"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3). A case of `Toolbar.test.ts` renders a `<span>` in the `element` slot, and Enter and Space each give one click."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": ["<Toolbar.Button />", "prop: disabled"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests a disabled item: `aria-disabled` and no `disabled` while it keeps the focus, `disabled` with `focusableWhenDisabled` false, no press and no key for a listener of the item, and the hover events that pass."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": ["<Toolbar.Button />", "rendering other Base UI components"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.compose.test.ts",
+      "reason": "`Toolbar.compose.test.ts` renders each part in the `element` slot of a toolbar part: the triggers of Menu, Select, Dialog, AlertDialog, Popover and Tooltip, Toggle, and a toggle of a ToggleGroup. A Switch is an `<input>`, so it is in the slot of `Toolbar.Input`. `ToggleGroup.test.ts` tests the toggles of a group in a `Toolbar.Group`."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "describe": ["<Toolbar.Input />"],
+      "suite": "describeConformance",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the element, the `element` slot with the state, the attributes of the developer and the template ref of each part."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "describe": ["<Toolbar.Input />", "pointer interactions"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests that a press on a disabled input keeps the focus where it was, and that a click does not check a disabled checkbox in the `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "describe": ["<Toolbar.Input />", "keyboard navigation"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the caret and the selection of a text input in each direction, the vertical keys of an input and a textarea, and the keys of each orientation."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "describe": ["<Toolbar.Input />", "disabled"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests that the keys move the focus over a disabled input, which keeps no key, in each orientation."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "describe": ["<Toolbar.Input />", "rendering NumberField"],
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.compose.test.ts",
+      "reason": "`Toolbar.compose.test.ts` renders `NumberField.Input` in the `element` slot of `Toolbar.Input`: the keys of the axis move the focus, the other keys step it, and a disabled input keeps the focus and does not step."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/group/ToolbarGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the element, the role, `data-orientation`, the disabled state of the group and of the toolbar, and a link that stays enabled."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/link/ToolbarLink.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the `<a>` element with its attributes, `data-orientation`, and a link that stays enabled in a disabled toolbar."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/root/ToolbarRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the role, `aria-orientation`, the keys of each orientation and direction, `loopFocus`, the tab stop and the disabled items. The toolbar gives no optional reader of its context: `ToggleGroup.test.ts` tests a group outside and inside a toolbar."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/separator/ToolbarSeparator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/toolbar/Toolbar.test.ts",
+      "reason": "`Toolbar.test.ts` tests the orientation across the toolbar, an orientation of the developer, the attributes, the `element` slot, the template ref, and the error outside `Toolbar.Root`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "Button",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and `as` or the `element` slot renders another element."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The root writes `aria-orientation`, which the role `toolbar` takes, so CSS selects `[aria-orientation='vertical']`, and it writes no `data-orientation` (rule 8.15). It writes `data-disabled`. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarGroupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The group writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarButtonDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The button writes `data-orientation`. It writes no `data-disabled`: CSS selects `:disabled` and `[aria-disabled='true']` (rule 8.15). It writes no `data-focusable`, which repeats the prop `focusableWhenDisabled`; the state keeps `focusable`. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The input writes `data-orientation`. It writes no `data-disabled`: CSS selects `:disabled` and `[aria-disabled='true']` (rule 8.15). It writes no `data-focusable`, which repeats the prop `focusableWhenDisabled`; the state keeps `focusable`. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "entry": "ToolbarLinkDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The link writes `data-orientation`, and CSS selects it as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toolbar/types.md",
@@ -31,7 +168,110 @@
       "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Input",
+      "prop": "modelValue",
+      "reason": "`Toolbar.Input` gives `v-model` to the `Input` that it renders (rule 8.5)."
+    },
+    {
+      "entry": "Input",
+      "prop": "id",
+      "reason": "`Toolbar.Input` gives `id` to the `Input` that it renders, or to the element of its `element` slot. The `id` names the element that takes the focus (rule 8.4)."
+    },
+    {
+      "entry": "Input",
+      "prop": "name",
+      "reason": "`Toolbar.Input` gives `name` to the `Input` that it renders, or to the element of its `element` slot, for the form data."
+    },
+    {
+      "entry": "Input",
+      "prop": "readonly",
+      "reason": "`Toolbar.Input` adds `readonly` to the read-only state of a disabled input that keeps the focus, so the part declares it."
+    },
+    {
+      "entry": "Input",
+      "emit": "valueChange",
+      "reason": "`Toolbar.Input` gives the change event of the `Input` that it renders, with its details (rule 8.6)."
+    },
+    {
+      "entry": "Input",
+      "emit": "update:modelValue",
+      "reason": "`Toolbar.Input` gives the model update of the `Input` that it renders, for `v-model` (rule 8.5)."
+    }
+  ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarButton.vue",
+      "behavior": "The button is an item of the toolbar, by the button rule of the library.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/group/ToolbarGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarGroup.vue",
+      "behavior": "The group adds its disabled state to the toolbar of the items in it.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/group/ToolbarGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/item.ts",
+      "member": "toolbarKey",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/parts.ts",
+      "behavior": "The parts of the namespace `Toolbar`.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/input/ToolbarInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarInput.vue",
+      "behavior": "The input is an item of the toolbar, and a disabled input that keeps the focus is read-only.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/link/ToolbarLink.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarLink.vue",
+      "behavior": "The link is an item of the toolbar that is never disabled.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/link/ToolbarLink.spec.tsx",
+      "relation": "moved-test",
+      "destination": "packages/vue/src/toolbar/Toolbar.spec.tsx",
+      "behavior": "The types of the native attributes of a link, and of the parts.",
+      "witness": "packages/vue/src/toolbar/Toolbar.spec.tsx"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/root/ToolbarRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarRoot.vue",
+      "behavior": "The root lists the items, gives the tab stop, moves the focus with the arrow keys, and stops the presses and the keys of a disabled item.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/root/ToolbarRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/item.ts",
+      "member": "toolbarKey",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/toolbar/separator/ToolbarSeparator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/toolbar/ToolbarSeparator.vue",
+      "behavior": "The separator is across the toolbar.",
+      "witness": "packages/vue/src/toolbar/Toolbar.test.ts"
+    }
+  ]
 }

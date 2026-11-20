@@ -112,7 +112,7 @@ describe('useCastBooleanWarning', () => {
   it('finds the wrapper when the part is in the slot of another part', async () => {
     await render(() => <WrapperInSlot>Content</WrapperInSlot>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperInSlot.test', 'Toolbar.Button', 'focusableWhenDisabled'),
+      message('WrapperInSlot.test', 'Tooltip.Trigger', 'closeOnClick'),
     ]);
   });
 
