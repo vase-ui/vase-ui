@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/separator/SeparatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation`. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/separator/Separator.test.tsx",
@@ -22,7 +22,7 @@
       "upstream": "docs/src/app/(docs)/react/components/separator/types.md",
       "entry": "SeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation`. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

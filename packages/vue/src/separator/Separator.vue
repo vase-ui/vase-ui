@@ -7,6 +7,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<SeparatorProps>(), { orientation: 'horizontal' });
 defineSlots<{
+  /** Content, such as a glyph between two groups. Assistive technology does not read it. */
   default?(scope: { state: SeparatorState }): unknown;
   element?(scope: ElementSlotProps<SeparatorState>): unknown;
 }>();
