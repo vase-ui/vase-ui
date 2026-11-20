@@ -59,6 +59,17 @@ describe('server render and hydration', () => {
     expect(root.querySelector('#one')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('the server HTML of a toolbar gives its tab stop to the first enabled toggle of a group, and the hydration keeps it', async () => {
+    const props = { scene: { disabledSpan: true, noFirst: true } };
+    const root = await renderOnServer('ToggleGroupInToolbar', props);
+    const read = () =>
+      ['one', 'two'].map((id) => root.querySelector(`#${id}`)!.getAttribute('tabindex'));
+    expect(read()).toEqual(['-1', '0']);
+    hydrate(ToggleGroupInToolbar, props, root);
+    await settle();
+    expect(read()).toEqual(['-1', '0']);
+  });
+
   test('a disabled Toolbar.Button that renders a Toggle has aria-disabled and no disabled in the server HTML, so Tab reaches it before the hydration', async () => {
     const props = { scene: { buttonDisabled: true } };
     const root = await renderOnServer('ToggleGroupInToolbar', props);

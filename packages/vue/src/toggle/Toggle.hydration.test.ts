@@ -54,6 +54,19 @@ describe('server render and hydration', () => {
     expect(span.getAttributeNames().sort()).toEqual(['aria-pressed', 'role', 'tabindex']);
   });
 
+  test('the element slot wins over a tag in as, also in the server HTML', async () => {
+    const props = { scene: { tag: 'button' }, attrs: { as: 'span' } };
+    const root = await renderOnServer('ToggleInSlot', props);
+    const button = root.querySelector('.Ancestor > *')!;
+    expect(button.localName).toBe('button');
+    expect(button.getAttributeNames().sort()).toEqual(['aria-pressed', 'type']);
+    hydrate(ToggleInSlot, props, root);
+    await nextTick();
+    await nextTick();
+    expect(root.querySelector('.Ancestor > *')).toBe(button);
+    expect(button.getAttributeNames().sort()).toEqual(['aria-pressed', 'type']);
+  });
+
   test('VUE-112: the server HTML has the state of a disabled Fieldset.Root, and the hydration keeps it', async () => {
     const props = { scene: { kind: 'root', disabled: true } };
     const root = await renderOnServer('TogglesInFieldset', props);

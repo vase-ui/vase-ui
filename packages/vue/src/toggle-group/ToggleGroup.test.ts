@@ -172,14 +172,17 @@ describe('the value', () => {
     },
   );
 
-  test('a toggle with no value in a group with a value gives one development message; with no value of the group, none', async () => {
-    await mountGroup({}, [{ key: 'a', value: undefined }]);
-    await mountGroup({ defaultValue: [] }, [{ key: 'b', value: undefined }]);
-    await nextTick();
-    expect(takeReportedMessages()).toEqual([
-      'console.error: Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
-    ]);
-  });
+  test.each(['modelValue', 'defaultValue'])(
+    'a toggle with no value in a group with %s gives one development message; with no value of the group, none',
+    async (prop) => {
+      await mountGroup({}, [{ key: 'a', value: undefined }]);
+      await mountGroup({ [prop]: [] }, [{ key: 'b', value: undefined }]);
+      await nextTick();
+      expect(takeReportedMessages()).toEqual([
+        'console.error: Vase UI: A `<Toggle>` component rendered in a `<ToggleGroup>` has no explicit `value` prop. This will cause issues between the Toggle Group and Toggle values. Give `<Toggle>` a `value` of the same type as an item in the `<ToggleGroup>` model.',
+      ]);
+    },
+  );
 
   test('a change of multiple keeps the value and the focus, and emits nothing', async () => {
     const log: string[] = [];
@@ -334,6 +337,19 @@ describe('the keys', () => {
     },
   );
 
+  test('a key on another element of the group keeps its default and the focus', async () => {
+    const { root } = mount(ToggleGroupParts, { items: items('a', 'b'), input: true });
+    await nextTick();
+    const prevented: boolean[] = [];
+    const record = (event: KeyboardEvent) => prevented.push(event.defaultPrevented);
+    window.addEventListener('keydown', record);
+    onTestFinished(() => window.removeEventListener('keydown', record));
+    root.querySelector<HTMLInputElement>('#inner')!.focus();
+    await userEvent.keyboard('{ArrowLeft}{Home}');
+    expect(prevented).toEqual([false, false]);
+    expect(focused()).toBe('inner');
+  });
+
   test('a keydown listener on a toggle that stops the propagation stops the keys of the group', async () => {
     const list = items('a', 'b');
     list[0]!.attrs = { onKeydown: (event: KeyboardEvent) => event.stopPropagation() };
@@ -465,6 +481,15 @@ describe('in a toolbar', () => {
     await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('after');
     expect(element('one')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('the arrow keys of the toolbar skip a disabled toggle that is not a button', async () => {
+    const { element } = await mountInToolbar({ disabledSpan: true });
+    element('first').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('two');
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(focused()).toBe('first');
   });
 
   test.each([

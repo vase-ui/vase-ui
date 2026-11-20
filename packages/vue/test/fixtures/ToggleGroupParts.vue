@@ -10,6 +10,8 @@ defineProps({
     type: Array as PropType<{ key: string; value?: string; attrs?: Record<string, unknown> }[]>,
     required: true,
   },
+  /** A text input in the group, after the toggles. */
+  input: Boolean,
 });
 const groupPart = useTemplateRef('groupPart');
 defineExpose({ group: groupPart });
@@ -28,6 +30,7 @@ defineExpose({ group: groupPart });
     >
       {{ item.key }}
     </Toggle>
+    <input v-if="input" id="inner" aria-label="Inner" />
     <span class="State">{{ state.disabled }} {{ state.multiple }} {{ state.orientation }}</span>
   </ToggleGroup>
   <input id="after" aria-label="After" />
