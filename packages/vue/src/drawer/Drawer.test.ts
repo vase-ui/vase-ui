@@ -359,7 +359,9 @@ describe('Drawer', () => {
 
     test('holds no watcher on another system', async () => {
       vi.stubGlobal('CloseWatcher', TestCloseWatcher);
-      onTestFinished(() => vi.unstubAllGlobals());
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
       TestCloseWatcher.watchers = [];
       await mountDrawer({ root: { defaultOpen: true } });
       await opened();
