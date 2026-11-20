@@ -2,18 +2,14 @@
 import { mergeProps, useAttrs } from 'vue';
 import { useDateTimeFieldSegment } from '../common/date-time-field/segment';
 import { useAttributesAfterMount } from '../common/writeAttributes';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { TimeFieldSegmentProps, TimeFieldSegmentState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<TimeFieldSegmentProps>();
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeFieldSegmentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeFieldSegmentState>): unknown;
 }>();
 
 const attrs = useAttrs();

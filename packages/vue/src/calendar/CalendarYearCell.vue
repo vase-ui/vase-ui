@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ElementSlotProps } from '../common/element';
 import { useCell } from './cell';
 import type { CalendarYearCellProps, CalendarYearCellState } from './types';
 
@@ -7,12 +8,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CalendarYearCellProps>(), { format: 'numeric' });
 defineSlots<{
   default?(scope: { state: CalendarYearCellState; text: string }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarYearCellState;
-    text: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarYearCellState> & {
+      text: string;
+    },
+  ): unknown;
 }>();
 
 const { element, setElement, state, text, elementProps } = useCell(props, {

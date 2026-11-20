@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, shallowRef, useAttrs, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
@@ -14,11 +14,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ContextMenuTriggerProps>();
 defineSlots<{
   default?(scope: { state: ContextMenuTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ContextMenuTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ContextMenuTriggerState>): unknown;
 }>();
 
 // A touch or a pen that rests this time opens the menu. Safari on iOS sends no `contextmenu` for it.

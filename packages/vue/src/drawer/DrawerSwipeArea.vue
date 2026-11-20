@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDrawer } from './root';
 import { along, axisOf, oppositeOf, opensAtRelease, toward, useSwipeTracker } from './swipe';
@@ -14,11 +14,7 @@ const props = withDefaults(defineProps<DrawerSwipeAreaProps>(), {
 });
 defineSlots<{
   default?(scope: { state: DrawerSwipeAreaState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: DrawerSwipeAreaState;
-  }): unknown;
+  element?(scope: ElementSlotProps<DrawerSwipeAreaState>): unknown;
 }>();
 
 const drawer = injectDrawer('SwipeArea');

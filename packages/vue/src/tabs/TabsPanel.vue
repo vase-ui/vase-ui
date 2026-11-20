@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { injectTabsRoot, rootStateAttributes } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<TabsPanelProps<Value>>(), { keepMounted: false });
 defineSlots<{
   default?(scope: { state: TabsPanelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TabsPanelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TabsPanelState>): unknown;
 }>();
 
 const root = injectTabsRoot();

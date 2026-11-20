@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, mergeProps, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useOpenOnFocus, usePopupHover } from '../popup/hover';
 import { onKeydown as onLayerKeydown } from '../popup/layer';
@@ -17,11 +17,7 @@ const props = withDefaults(defineProps<PreviewCardTriggerProps<Payload>>(), {
 });
 defineSlots<{
   default?(scope: { state: PreviewCardTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: PreviewCardTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<PreviewCardTriggerState>): unknown;
 }>();
 
 const attrs = useAttrs();

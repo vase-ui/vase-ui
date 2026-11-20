@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes } from 'vue';
-import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { ChangeEventDetails, GenericEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
 import type { FieldState } from '../field/control';
 
@@ -85,14 +85,13 @@ export type NumberFieldRootChangeEventReason =
   | 'scrub'
   | 'none';
 
-interface Details<
+type Details<
   Reason extends NumberFieldRootChangeEventReason,
   Of extends Event,
-> extends ChangeEventDetails<Reason> {
-  event: Of;
+> = ChangeEventDetails<Reason, Of> & {
   /** `1` or `-1` for a step from a number. */
   direction?: 1 | -1;
-}
+};
 
 export type NumberFieldRootChangeEventDetails =
   | Details<'input-change' | 'input-clear', InputEvent | Event>
@@ -104,18 +103,13 @@ export type NumberFieldRootChangeEventDetails =
   | Details<'scrub', PointerEvent>
   | Details<'none', Event>;
 
-interface Commit<Reason extends NumberFieldRootChangeEventReason, Of extends Event> {
-  reason: Reason;
-  event: Of;
-}
-
 export type NumberFieldRootCommitEventDetails =
-  | Commit<'input-clear' | 'input-blur', FocusEvent>
-  | Commit<'keyboard', KeyboardEvent>
-  | Commit<'increment-press' | 'decrement-press', PointerEvent | MouseEvent>
-  | Commit<'wheel', WheelEvent>
-  | Commit<'scrub', PointerEvent>
-  | Commit<'none', Event>;
+  | GenericEventDetails<'input-clear' | 'input-blur', FocusEvent>
+  | GenericEventDetails<'keyboard', KeyboardEvent>
+  | GenericEventDetails<'increment-press' | 'decrement-press', PointerEvent | MouseEvent>
+  | GenericEventDetails<'wheel', WheelEvent>
+  | GenericEventDetails<'scrub', PointerEvent>
+  | GenericEventDetails<'none'>;
 
 export type NumberFieldRootCommitEventReason = NumberFieldRootCommitEventDetails['reason'];
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePlacement } from '../popup/placement';
 import { sizeVariables } from '../popup/viewport';
 import { injectPortal, injectTooltipRoot, positionerKey } from './root';
@@ -24,11 +24,7 @@ const props = withDefaults(defineProps<TooltipPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: TooltipPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TooltipPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TooltipPositionerState>): unknown;
 }>();
 
 const context = injectTooltipRoot('Positioner');

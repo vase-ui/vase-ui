@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectScrollArea, injectViewport, stateAttributes } from './root';
 import type { ScrollAreaContentProps, ScrollAreaContentState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ScrollAreaContentProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaContentState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ScrollAreaContentState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ScrollAreaContentState>): unknown;
 }>();
 
 injectViewport();

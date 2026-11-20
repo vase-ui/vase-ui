@@ -3,7 +3,7 @@ import type { CSSProperties, VNode } from 'vue';
 import { describe, expect, it } from 'vitest';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
-import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import TextDirectionProvider from '../src/internals/direction-context/TextDirectionProvider.test.vue';
 import { isJSDOM } from '../src/common/testUtils';
 import type { ComponentRenderFn, HTMLProps } from '../src/internals/types';
 import type {
@@ -154,7 +154,9 @@ export function positionerConformanceTests(config: PositionerTestConfig) {
               },
             });
 
-            await render(<DirectionProvider direction={direction}>{element}</DirectionProvider>);
+            await render(
+              <TextDirectionProvider direction={direction}>{element}</TextDirectionProvider>,
+            );
 
             const positionerElement = await screen.findByTestId('positioner');
             await waitForPositioned(positionerElement);

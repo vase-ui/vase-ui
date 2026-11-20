@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
@@ -11,11 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<FieldDescriptionProps>();
 const slots = defineSlots<{
   default?(scope: { state: FieldDescriptionState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: FieldDescriptionState;
-  }): unknown;
+  element?(scope: ElementSlotProps<FieldDescriptionState>): unknown;
 }>();
 
 const field = injectFieldRoot('Description');

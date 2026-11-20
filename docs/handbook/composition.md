@@ -62,7 +62,7 @@ Attributes that you write beside `v-bind="props"` follow the rules of Vue. When 
 
 A part can name another part by its `id`: a trigger names its panel, and a dialog names its title. When an `id` that you write in the slot wins, the part names that `id` after the named part mounts, and follows each change of it. An empty `id` in the slot gives the element no `id`, so no part names it. The server HTML names the `id` that the part gives. To make the server HTML name the element, give the `id` to the part and not to the slot.
 
-For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a menu trigger in its `element` slot:
+For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). To stop an event before the part gets it, see [Stop a native event before a part gets it](/handbook/customization#stop-a-native-event-before-a-part-gets-it). For example, this toolbar button renders a menu trigger in its `element` slot:
 
 <<< ../examples/composition/MergedProps.vue{14-18,22-26}
 
@@ -104,21 +104,13 @@ If the part removes its element, its exposed `element` becomes `null`.
 
 ## Wrap a part
 
-Use [`useForwardProps`](/utils/use-forward-props) when your component wraps a part. It forwards the props that your caller sets, plus your explicit defaults. It omits values of `undefined`.
+Declare only your own props in a wrapper. A prop of the part that you do not declare reaches the part as an attribute, and the part keeps its default or the value of its parent.
 
-Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`. The helper omits that cast value, so the part keeps its default or parent value.
-
-This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
-
-<<< ../examples/composition/MyAccordionPanel.vue{4,12-13,17}
-
-You can instead give each optional Boolean prop the default `undefined`. An explicit `false` still reaches the part:
+Vue sets an absent Boolean prop to `false` unless the wrapper declares a default. This also applies to an optional Boolean prop in `defineProps<...>()`. If you declare a Boolean prop or a model of the part, give it the default `undefined`. An explicit `false` still reaches the part. This wrapper keeps the root values of `keepMounted` and `hiddenUntilFound` when its caller omits them:
 
 <<< ../examples/composition/MyAccordionPanelDefaults.vue{11-14}
 
-You can also leave the prop undeclared and pass `$attrs` to the part with `v-bind="$attrs"`. Vue then applies the Boolean rules of the part.
-
-In a development build, some parts warn when a wrapper gives them a cast `false` that replaces a default or parent value. `Accordion.Panel` does not warn. The message names the wrapper, the part, the prop and both corrections. See [the development warning](/utils/use-forward-props#the-development-warning) for its limits.
+In a development build, some parts warn when a wrapper gives them a cast `false` that replaces a default or parent value. `Accordion.Panel` does not warn. The message names the wrapper, the part and the prop.
 
 An absent prop and `false` give different results in three cases.
 
@@ -174,6 +166,6 @@ The rule applies to each element and each component that gets `props`. With nest
 
 A custom component in Vapor mode must expose its element as `element`, with `defineExpose({ element })`. Make `element` a template ref of the root element. Vue gives a ref on a Vapor component only the values that the component exposes, so the part cannot read the root element. This rule applies to `as` and to the slots, also when the component that renders the part is not in Vapor mode.
 
-A component that you build with [useRender](/utils/use-render) exposes the `element` that `useRender` returns. Its template binds `setRef` by name on its element and calls `usesRenderSlot()` in the `v-if` of its `#render` slot, as the samples of that page do. In a Vapor component, a development build shows a warning when a native element has only the spread.
+A component that you build with [useElement](/utils/use-element) exposes `element`, and its template binds `setElement` by name on its element.
 
-In a Vapor wrapper, give each optional Boolean prop the default `undefined`, as [useForwardProps explains](/utils/use-forward-props#vapor-mode).
+In a Vapor wrapper, give each optional Boolean prop of the part that you declare the default `undefined`.

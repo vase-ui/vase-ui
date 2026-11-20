@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectPositioner, injectTooltipRoot } from './root';
 import type { TooltipArrowProps, TooltipArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<TooltipArrowProps>();
 defineSlots<{
   default?(scope: { state: TooltipArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TooltipArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TooltipArrowState>): unknown;
 }>();
 
 const context = injectTooltipRoot('Arrow');

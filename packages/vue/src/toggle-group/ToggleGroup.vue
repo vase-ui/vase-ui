@@ -3,7 +3,7 @@
 // check accepts `(value: ('a' | 'b')[]) => void`.
 import { computed, inject, mergeProps, provide, shallowReactive, shallowRef, useAttrs } from 'vue';
 import { arrowKeyTarget } from '../common/arrowKeyTarget';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { ownerWindow } from '../common/owner';
 import { useInDisabledFieldset } from '../fieldset/part';
@@ -29,11 +29,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: ToggleGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToggleGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToggleGroupState>): unknown;
 }>();
 
 // A toolbar holds the tab stop and the keys of the toggles. Each toggle is an item of the toolbar.

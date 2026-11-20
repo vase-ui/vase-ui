@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import { Separator } from '../separator';
+import type { ElementSlotProps } from '../common/element';
 import { injectToolbar } from './item';
 import type { ToolbarSeparatorProps, ToolbarSeparatorState } from './types';
 
 const props = defineProps<ToolbarSeparatorProps>();
 defineSlots<{
   default?(scope: { state: ToolbarSeparatorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarSeparatorState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarSeparatorState>): unknown;
 }>();
 
 const toolbar = injectToolbar();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { formatWeekday } from './pages';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarWeekdayProps, CalendarWeekdayState } from './types';
@@ -10,12 +10,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<CalendarWeekdayProps>(), { format: 'short' });
 defineSlots<{
   default?(scope: { state: CalendarWeekdayState; text: string }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarWeekdayState;
-    text: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarWeekdayState> & {
+      text: string;
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

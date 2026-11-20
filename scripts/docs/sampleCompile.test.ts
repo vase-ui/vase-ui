@@ -99,7 +99,7 @@ test('listSampleFiles reports a <<< line that names an absent Vue file with the 
 test('listSampleFiles at REPOSITORY_ROOT includes docs samples, unshown examples and shown fixture files with no problem', () => {
   const { files, problems } = listSampleFiles(REPOSITORY_ROOT);
   assert.deepEqual(problems, []);
-  assert.ok(files.includes('docs/utils/use-forward-props/CollapsibleRoot.vue'));
+  assert.ok(files.includes('docs/utils/csp-provider/NonceApp.vue'));
   assert.ok(files.includes('docs/examples/composition/MyButton.vue'));
   assert.ok(files.includes('fixtures/nuxt/app/components/ResizableCookieLayout.vue'));
 });

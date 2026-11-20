@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, onMounted, shallowRef, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { platform } from '../common/platform';
 import { controlAria } from '../field/control';
@@ -28,11 +28,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<NumberFieldInputProps>();
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NumberFieldInputState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NumberFieldInputState>): unknown;
 }>();
 
 const root = injectNumberFieldRoot('Input');

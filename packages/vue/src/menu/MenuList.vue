@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectMenu } from './root';
 import type { MenuListProps, MenuListState } from './types';
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<MenuListProps>();
 defineSlots<{
   default?(scope: { state: MenuListState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuListState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuListState>): unknown;
 }>();
 
 const menu = injectMenu('List');

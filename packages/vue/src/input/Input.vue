@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, nextTick, useAttrs, useId, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { useModel } from '../common/model';
@@ -22,11 +22,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
 const slots = defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: InputState;
-  }): unknown;
+  element?(scope: ElementSlotProps<InputState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -11,7 +11,7 @@ const SOURCE_ROOT = join(REPOSITORY_ROOT, 'packages/vue/src');
 const SOURCE_MODULE = { id: 'source' };
 const LOADED_PAGES = [
   'components/button.md',
-  'utils/use-render.md',
+  'utils/use-element.md',
   'quick-start.md',
   'handbook/styling.md',
 ];
@@ -64,7 +64,7 @@ test('a source edit gives the module of each family page that the server has', (
     assert.deepEqual(update(file, type), [
       SOURCE_MODULE,
       { id: 'components/button.md' },
-      { id: 'utils/use-render.md' },
+      { id: 'utils/use-element.md' },
     ]);
   }
 });
@@ -75,7 +75,7 @@ test('a source edit makes Vite discard the transform in progress of each family 
   // Vite discards the transform only for a call with no hot update argument.
   assert.deepEqual(invalidated, [
     [{ id: 'components/button.md' }],
-    [{ id: 'utils/use-render.md' }],
+    [{ id: 'utils/use-element.md' }],
   ]);
 });
 

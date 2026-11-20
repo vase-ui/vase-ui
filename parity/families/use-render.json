@@ -4,14 +4,136 @@
     "docs/src/app/(docs)/react/utils/use-render/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [
+  "exceptions": [
     {
+      "upstream": "packages/react/src/use-render/index.ts",
+      "kind": "not-applicable",
+      "reason": "`useElement` of `@vase-ui/vue/use-element` and the template of the developer give each feature: the slot `element` in place of `render`, `ElementSlotProps<State>` for its scope, `mergeProps(own, useAttrs())` of Vue for `props`, `setElement` in a function ref for `ref`, `v-if` for `enabled`, and the element of the template for `defaultTagName`."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.ts",
+      "kind": "not-applicable",
+      "reason": "`useElement` of `@vase-ui/vue/use-element` and the template of the developer give each feature: the slot `element` in place of `render`, `ElementSlotProps<State>` for its scope, `mergeProps(own, useAttrs())` of Vue for `props`, `setElement` in a function ref for `ref`, `v-if` for `enabled`, and the element of the template for `defaultTagName`."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/types/types.spec.ts",
+      "reason": "`types.spec.ts` tests `ElementSlotProps`, the type of the scope of the `element` slot."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender"],
+      "title": "refs are handled as expected",
+      "kind": "replaced",
+      "test": "packages/vue/src/use-element/useElement.test.ts",
+      "reason": "`useElement.test.ts` tests that a function ref of the developer beside `elementRef` gets the same element as `element`."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender"],
+      "title": "render props does not overwrite className in a render function when unspecified",
+      "kind": "not-applicable",
+      "reason": "The developer binds `props` on the element in the template, so the library merges no class. `mergeProps` of Vue joins `class`."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "param: defaultTagName"],
+      "title": "renders div by default if no defaultTagName and no render params are provided",
+      "kind": "not-applicable",
+      "reason": "The template of the developer has the element, so `useElement` takes no tag."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "param: defaultTagName"],
+      "title": "renders the element with the default tag with no render prop",
+      "kind": "not-applicable",
+      "reason": "The template of the developer has the element, so `useElement` takes no tag."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "param: defaultTagName"],
+      "title": "is overwritten by the render prop",
+      "kind": "not-applicable",
+      "reason": "The template of the developer has the element, so `useElement` takes no tag."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "converts state to data attributes automatically",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "handles undefined values in state",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "merges state-based data attributes with existing props",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "props override state-based data attributes",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "handles empty state",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "handles undefined state",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "converts boolean values in state to data attributes",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "converts number values in state to data attributes",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "packages/react/src/use-render/useRender.test.tsx",
+      "describe": ["useRender", "state to data attributes"],
+      "title": "supports custom stateAttributesMapping for kebab-case conversion",
+      "kind": "not-applicable",
+      "reason": "The developer binds each attribute of the state in the template, or uses CSS and ARIA (rule 8.15). `useElement` writes no attribute."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/use-render/types.md",
       "entry": "useRender",
-      "returns": "useRender.ReturnValue<RenderedElementType>",
-      "reason": "A composable cannot return the rendered element. It returns `element`, `elementProps`, `setRef`, `tag` and `usesRenderSlot`. The template of the component renders the element, binds `setRef` on it by name, and calls `usesRenderSlot()` in the `v-if` of its `#render` slot."
+      "kind": "not-applicable",
+      "reason": "`useElement` of `@vase-ui/vue/use-element` and the template of the developer give each feature: the slot `element` in place of `render`, `ElementSlotProps<State>` for its scope, `mergeProps(own, useAttrs())` of Vue for `props`, `setElement` in a function ref for `ref`, `v-if` for `enabled`, and the element of the template for `defaultTagName`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/utils/use-render/types.md",
+      "entry": "ComponentRenderFn",
+      "kind": "not-applicable",
+      "reason": "The slot `element` takes the place of a render function. `ElementSlotProps<State>` of `@vase-ui/vue/types` is the type of its scope."
     }
   ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

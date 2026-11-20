@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { hasContent, useHasSlot } from './label';
@@ -12,11 +12,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<ToastDescriptionProps>();
 defineSlots<{
   default?(scope: { state: ToastDescriptionState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastDescriptionState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastDescriptionState>): unknown;
 }>();
 
 const root = injectToastRoot('Description');

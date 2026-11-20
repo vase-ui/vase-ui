@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useMenuPositioner } from '../menu/positioner';
 import type { ContextMenuPositionerProps, ContextMenuPositionerState } from './types';
 
@@ -23,11 +23,7 @@ const props = withDefaults(defineProps<ContextMenuPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ContextMenuPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ContextMenuPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ContextMenuPositionerState>): unknown;
 }>();
 
 const attrs = useAttrs();

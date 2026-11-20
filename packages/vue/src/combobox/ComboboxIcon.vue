@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { ComboboxIconProps, ComboboxIconState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -8,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ComboboxIconProps>();
 defineSlots<{
   default?(scope: { state: ComboboxIconState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxIconState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxIconState>): unknown;
 }>();
 
 const attrs = useAttrs();

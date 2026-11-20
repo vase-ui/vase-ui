@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectComboboxRoot } from './root';
 import type { ComboboxListProps, ComboboxListState } from './types';
@@ -12,11 +12,7 @@ defineSlots<{
   default?(scope: { state: ComboboxListState }): unknown;
   /** Renders each item that the filter keeps. */
   item?(scope: { item: any; index: number }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxListState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxListState>): unknown;
 }>();
 
 const context = injectComboboxRoot('List');

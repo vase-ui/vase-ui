@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, useAttrs } from 'vue';
 import { useButton } from '../common/button';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { chipKey, createComboboxDetails, injectChipsOf, injectComboboxRoot } from './root';
 import type { ComboboxChipRemoveProps, ComboboxChipRemoveState } from './types';
 
@@ -10,11 +10,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ComboboxChipRemoveProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: ComboboxChipRemoveState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxChipRemoveState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxChipRemoveState>): unknown;
 }>();
 
 const context = injectComboboxRoot('ChipRemove');

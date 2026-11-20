@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ElementSlotProps } from '../common/element';
 import { useStepButton } from './button';
 import type { NumberFieldDecrementProps, NumberFieldDecrementState } from './types';
 
@@ -7,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<NumberFieldDecrementProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: NumberFieldDecrementState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: NumberFieldDecrementState;
-  }): unknown;
+  element?(scope: ElementSlotProps<NumberFieldDecrementState>): unknown;
 }>();
 
 const { element, setElement, state, elementProps } = useStepButton(-1, props, 'Decrement');

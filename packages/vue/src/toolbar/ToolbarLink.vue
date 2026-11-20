@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectToolbar, useToolbarItem } from './item';
 import type { ToolbarLinkProps, ToolbarLinkState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ToolbarLinkProps>();
 defineSlots<{
   default?(scope: { state: ToolbarLinkState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToolbarLinkState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToolbarLinkState>): unknown;
 }>();
 
 const toolbar = injectToolbar();

@@ -14,7 +14,7 @@ import {
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { useModel } from '../common/model';
@@ -74,11 +74,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: OTPFieldRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: OTPFieldRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<OTPFieldRootState>): unknown;
 }>();
 
 /** An edit that waits for its code: the focus and the completion of the edit. */

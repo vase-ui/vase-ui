@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectComboboxRoot, injectPositioner, useTriggerIsControl } from './root';
 import type { ComboboxPopupProps, ComboboxPopupState } from './types';
@@ -13,11 +13,7 @@ const props = withDefaults(defineProps<ComboboxPopupProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ComboboxPopupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxPopupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxPopupState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Popup');

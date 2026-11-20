@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { injectMenu, injectPositioner } from './root';
 import type { MenuArrowProps, MenuArrowState } from './types';
 
@@ -9,11 +9,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<MenuArrowProps>();
 defineSlots<{
   default?(scope: { state: MenuArrowState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: MenuArrowState;
-  }): unknown;
+  element?(scope: ElementSlotProps<MenuArrowState>): unknown;
 }>();
 
 const { root } = injectMenu('Arrow');

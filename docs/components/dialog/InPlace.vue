@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { ref, useId } from 'vue';
+import { onMounted, onUnmounted, ref, useId } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { useMediaQuery } from '@vase-ui/vue/unstable-use-media-query';
 
 const open = ref(true);
-const isNarrow = useMediaQuery('(max-width: 48rem)', { defaultMatches: false });
+const isNarrow = ref(false);
+let narrowQuery: MediaQueryList | undefined;
+function updateNarrow() {
+  isNarrow.value = narrowQuery?.matches ?? false;
+}
+onMounted(() => {
+  narrowQuery = window.matchMedia('(max-width: 48rem)');
+  updateNarrow();
+  narrowQuery.addEventListener('change', updateNarrow);
+});
+onUnmounted(() => narrowQuery?.removeEventListener('change', updateNarrow));
 const titleId = useId();
 </script>
 

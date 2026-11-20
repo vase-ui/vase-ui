@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatText } from '../internals/date-time/calendar/formatText';
+import type { ElementSlotProps } from '../common/element';
 import { injectCalendar } from './root';
 import { useCalendarSelect } from './select';
 import type {
@@ -17,13 +18,12 @@ const props = withDefaults(defineProps<CalendarYearSelectProps>(), {
   order: 'asc',
 });
 defineSlots<{
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CalendarYearSelectState;
-    options: readonly CalendarSelectOption[];
-    value: string;
-  }): unknown;
+  element?(
+    scope: ElementSlotProps<CalendarYearSelectState> & {
+      options: readonly CalendarSelectOption[];
+      value: string;
+    },
+  ): unknown;
 }>();
 
 const calendar = injectCalendar();

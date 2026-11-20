@@ -2,7 +2,7 @@
 import { computed, mergeProps, nextTick, provide, shallowReactive, useAttrs, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { byDocumentOrder, useElement } from '../common/element';
+import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { fieldStateAttributes } from '../field/control';
 import { useFieldGroup } from '../field/group';
@@ -24,11 +24,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: RadioGroupState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: RadioGroupState;
-  }): unknown;
+  element?(scope: ElementSlotProps<RadioGroupState>): unknown;
 }>();
 
 const attrs = useAttrs();

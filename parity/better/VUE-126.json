@@ -5,6 +5,6 @@
     "https://github.com/vuejs/core/blob/v3.5.45/packages/runtime-core/src/componentProps.ts#L499-L502",
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/accordion/panel/AccordionPanel.tsx#L52-L53"
   ],
-  "behavior": "A development build warns when a wrapper gives a part false because Vue cast an absent Boolean prop. useForwardProps forwards caller-set props and wrapper defaults, without undefined values. In Base UI this cast cannot occur: React gives an absent prop the value undefined.",
+  "behavior": "A development build warns when a wrapper gives a part false because Vue cast an absent Boolean prop. In Base UI this cast cannot occur: React gives an absent prop the value undefined.",
   "dueWith": "packages/react/src/accordion/panel/AccordionPanel.tsx"
 }

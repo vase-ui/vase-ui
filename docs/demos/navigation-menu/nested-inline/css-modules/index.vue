@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { h } from 'vue';
+import { h, onMounted, onUnmounted, ref } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { useMediaQuery } from '@vase-ui/vue/unstable-use-media-query';
 import { audienceMenus, guideLinks, guidesPanel } from '../data';
 import styles from './index.module.css';
 
 const transition = { enterFromClass: styles.EnterFrom, leaveToClass: styles.LeaveTo };
 
 const base = import.meta.env.BASE_URL;
-const isDesktop = useMediaQuery('(min-width: 700px)', { defaultMatches: true });
+const isDesktop = ref(true);
+let desktopQuery: MediaQueryList | undefined;
+function updateDesktop() {
+  isDesktop.value = desktopQuery?.matches ?? true;
+}
+onMounted(() => {
+  desktopQuery = window.matchMedia('(min-width: 700px)');
+  updateDesktop();
+  desktopQuery.addEventListener('change', updateDesktop);
+});
+onUnmounted(() => desktopQuery?.removeEventListener('change', updateDesktop));
 
 const CaretDownIcon: FunctionalComponent = () =>
   h(

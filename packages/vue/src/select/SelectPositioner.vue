@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, provide, reactive, toRefs, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { usePlacement } from '../popup/placement';
 import { useItemAlignment } from './alignment';
 import { injectPortal, injectSelectRoot, selectPositionerKey } from './root';
@@ -25,11 +25,7 @@ const props = withDefaults(defineProps<SelectPositionerProps>(), {
 });
 defineSlots<{
   default?(scope: { state: SelectPositionerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: SelectPositionerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<SelectPositionerState>): unknown;
 }>();
 
 const context = injectSelectRoot('Positioner');

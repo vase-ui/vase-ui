@@ -24,9 +24,9 @@ A component with one part has its types on the component, such as `Checkbox.Prop
 
 To make a component that wraps a part, use the `Props` type to accept all of the props of that part. The sample takes the flat name in `defineProps`.
 
-<<< ../examples/typescript/MyTooltip.vue{6-7}
+<<< ../examples/typescript/MyTooltip.vue{5-10}
 
-Vue changes an absent Boolean prop to `false`. The wrapper uses `useForwardProps` to omit that cast value, so the tooltip stays uncontrolled.
+Vue changes an absent Boolean prop to `false`. The wrapper gives each Boolean prop the default `undefined`, so the tooltip stays uncontrolled.
 
 See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that need this rule.
 
@@ -57,7 +57,7 @@ A part or a utility can also export other types. The list below is not complete.
   <<< ../examples/typescript/Actions.vue{5-9,14}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `ToastObject` gives access to this interface.
-- Most parts that render an element accept `as`. Extend `useRender.ComponentProps` to give your component this prop. See [useRender](/utils/use-render#typescript).
+- `ElementSlotProps<State>` of `@vase-ui/vue/types` types the scope of the `element` slot. A component of yours can have the same slot. See [useElement](/utils/use-element).
 
 ## Generic components
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, onScopeDispose, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import {
   controlAttributes,
@@ -20,11 +20,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ComboboxTriggerProps>(), { disabled: false });
 defineSlots<{
   default?(scope: { state: ComboboxTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxTriggerState>): unknown;
 }>();
 
 const context = injectComboboxRoot('Trigger');

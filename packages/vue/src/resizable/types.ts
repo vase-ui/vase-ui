@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from 'vue';
-import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { ChangeEventDetails, GenericEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
 
 /**
@@ -17,10 +17,7 @@ export type ResizableRootChangeEventReason = 'drag' | 'keyboard' | 'reset';
 
 export type ResizableRootChangeEventDetails = ChangeEventDetails<ResizableRootChangeEventReason>;
 
-export interface ResizableRootCommitEventDetails {
-  reason: ResizableRootChangeEventReason;
-  event: Event;
-}
+export type ResizableRootCommitEventDetails = GenericEventDetails<ResizableRootChangeEventReason>;
 
 export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**

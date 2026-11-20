@@ -2,7 +2,7 @@
 import { computed, useAttrs, useSlots } from 'vue';
 import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useAsTag, useElement } from '../common/element';
+import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
 import { useAttributesAfterMount } from '../common/writeAttributes';
 import { clockAttributes, injectClock } from './clock';
@@ -14,11 +14,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<TimeClockViewTriggerProps>();
 defineSlots<{
   default?(scope: { state: TimeClockViewTriggerState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeClockViewTriggerState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeClockViewTriggerState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -9,7 +9,7 @@ import {
   watchEffect,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
 import { hourCycleOf } from '../internals/date-time/format';
@@ -77,11 +77,7 @@ const emit = defineEmits<{
 }>();
 defineSlots<{
   default?(scope: { state: TimeClockRootState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: TimeClockRootState;
-  }): unknown;
+  element?(scope: ElementSlotProps<TimeClockRootState>): unknown;
 }>();
 
 assertTemporal('TimeClock.Root');

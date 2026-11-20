@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, shallowRef, useAttrs, watch } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { visuallyHidden } from '../common/visuallyHidden';
 import { isComposing } from '../popup/layer';
@@ -12,11 +12,7 @@ defineOptions({ inheritAttrs: false });
 defineProps<ToastViewportProps>();
 defineSlots<{
   default?(scope: { state: ToastViewportState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ToastViewportState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ToastViewportState>): unknown;
 }>();
 
 const provider = injectToastProvider('<Toast.Viewport>');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import { useCollapsiblePanel } from './panel';
 import { injectCollapsible } from './part';
 import type { CollapsiblePanelProps, CollapsiblePanelState } from './types';
@@ -13,11 +13,7 @@ const props = withDefaults(defineProps<CollapsiblePanelProps>(), {
 });
 defineSlots<{
   default?(scope: { state: CollapsiblePanelState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: CollapsiblePanelState;
-  }): unknown;
+  element?(scope: ElementSlotProps<CollapsiblePanelState>): unknown;
 }>();
 
 const collapsible = injectCollapsible();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
-import { useElement } from '../common/element';
+import { useElement, type ElementSlotProps } from '../common/element';
 import type { ComboboxSeparatorProps, ComboboxSeparatorState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -8,11 +8,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ComboboxSeparatorProps>(), { orientation: 'horizontal' });
 defineSlots<{
   default?(scope: { state: ComboboxSeparatorState }): unknown;
-  element?(scope: {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ComboboxSeparatorState;
-  }): unknown;
+  element?(scope: ElementSlotProps<ComboboxSeparatorState>): unknown;
 }>();
 
 const attrs = useAttrs();

@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { inject } from 'vue';
 import { useIsHydrating } from '../common/hydration';
-import { useCSPContext } from './csp-context/CSPContext';
+import { cspKey } from '../csp-provider/part';
 
 const props = defineProps<{ script: string }>();
 
@@ -15,7 +16,7 @@ const props = defineProps<{ script: string }>();
 // eslint-disable-next-line no-restricted-globals -- The SFC has no element, so `ownerDocument` does not apply. The typeof check tells a server from a client.
 const textProps = typeof document === 'undefined' ? { innerHTML: props.script } : {};
 
-const csp = useCSPContext();
+const csp = inject(cspKey, null);
 // While the part hydrates, the client renders the element too, so that Vue finds the element of the
 // server HTML. The element goes away in the flush after the mount.
 // The template has `<component :is="'script'">`, because the Vue compiler removes a `<script>` tag
@@ -24,5 +25,5 @@ const isHydrating = useIsHydrating();
 </script>
 
 <template>
-  <component :is="'script'" v-if="isHydrating" :nonce.attr="csp.nonce" v-bind="textProps" />
+  <component :is="'script'" v-if="isHydrating" :nonce.attr="csp?.nonce" v-bind="textProps" />
 </template>
