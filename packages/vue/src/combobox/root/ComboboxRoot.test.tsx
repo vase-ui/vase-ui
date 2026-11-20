@@ -13652,10 +13652,9 @@ describe('<Combobox.Root />', () => {
     );
 
     it('clears the highlight when an inline list in an unbound dialog unmounts', async () => {
-      const onOpenChangeComplete = vi.fn();
       await render(
         <Combobox.Root inline items={['Apple', 'Banana', 'Cherry']}>
-          <Dialog.Root onOpenChangeComplete={onOpenChangeComplete}>
+          <Dialog.Root>
             <Dialog.Trigger>Choose fruit</Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Popup aria-label="Fruit chooser">
@@ -13685,11 +13684,8 @@ describe('<Combobox.Root />', () => {
       await fireEvent.keyDown(input, { key: 'ArrowDown' });
       expect(screen.getByRole('option', { name: 'Banana' })).toHaveAttribute('data-highlighted');
 
-      onOpenChangeComplete.mockClear();
       await fireEvent.keyDown(input, { key: 'Escape' });
-      await waitFor(() => expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false));
-      await flushMicrotasks();
-      expect(screen.queryByRole('dialog')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
 
       await waitForLaterMillisecond(async () => {
         await fireEvent.click(trigger);

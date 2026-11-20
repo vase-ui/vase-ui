@@ -525,7 +525,13 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next.hide) {
     const kept = new Set<Node>();
-    for (const element of next.inside) {
+    // A live region, such as the viewport of the toasts in the page, stays in use, so a screen
+    // reader announces its changes.
+    const documents = new Set(next.inside.map((element) => element?.ownerDocument));
+    const liveRegions = [...documents].flatMap((doc) => [
+      ...(doc?.querySelectorAll('[aria-live]') ?? []),
+    ]);
+    for (const element of [...next.inside, ...liveRegions]) {
       if (!element?.isConnected) continue;
       const body = element.ownerDocument.body;
       for (
@@ -539,9 +545,7 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
     }
     for (const node of kept) {
       for (const sibling of node.parentNode?.children ?? []) {
-        if (!kept.has(sibling) && !sibling.hasAttribute('aria-live')) {
-          wanted.set(sibling, next.hide);
-        }
+        if (!kept.has(sibling)) wanted.set(sibling, next.hide);
       }
     }
   }
