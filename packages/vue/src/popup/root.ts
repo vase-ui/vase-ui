@@ -269,7 +269,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
     { flush: 'sync' },
   );
-  const activeTrigger = computed(() => activeEntry.value?.element ?? lastTrigger.value);
+  const activeTrigger = computed(() =>
+    activeTriggerId.value === null ? null : (activeEntry.value?.element ?? lastTrigger.value),
+  );
 
   /**
    * `entry` is the trigger of an open, `null` for an open with no trigger, and `undefined` for a
@@ -282,7 +284,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     entry: PopupTrigger | null | undefined,
     payload?: { value: Payload },
   ) {
-    const element = entry?.element ?? activeTrigger.value;
+    const element = entry === null ? null : (entry?.element ?? activeTrigger.value);
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = !next || entry === undefined ? activeTriggerId.value : (entry?.id ?? null);
     if (next === open.value && nextId === activeTriggerId.value) {
@@ -302,7 +304,8 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       withoutTrigger.value = entry === null;
       givenPayload.value = payload ?? (entry ? undefined : givenPayload.value);
     }
-    if (nextId !== activeTriggerId.value) {
+    // The trigger of an open stays active when another trigger mounts.
+    if (next && nextId !== chosenTriggerId.value) {
       triggerIdModel.setOwn(nextId);
       options.emitTriggerId(nextId);
     }

@@ -121,7 +121,9 @@ export function usePopupFocus(
       if (!popup) return;
       // A popup that an item of another popup opens gets the focus after that popup closed and
       // gave the focus back to its trigger.
-      before = activeElement(ownerDocument(popup));
+      const doc = ownerDocument(popup);
+      const active = activeElement(doc);
+      before = active === doc.body ? null : active;
       took = true;
       const target = resolve(options.initialFocus(), root.interaction);
       if (target === false) return;
@@ -150,7 +152,7 @@ export function usePopupFocus(
     if (active && active !== doc.body && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
-    const candidates = [target === true ? null : target, root.activeTrigger, before];
+    const trigger = root.activeTrigger;
     const keyboard = root.closeInteraction === 'keyboard';
     // The layer removes `inert` from the page in the update of the close. A focus of an inert
     // element does nothing, and a focus in the same task after the removal works
@@ -158,9 +160,11 @@ export function usePopupFocus(
     void nextTick(() => {
       // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
       // that closes is no target, also while the popup leaves.
-      const element = candidates
-        .map((each) => each && returnTarget(each, popup))
-        .find((each) => each?.isConnected);
+      const element = [
+        target === true ? null : tabStopOf(target, popup),
+        trigger as HTMLElement | null,
+        before as HTMLElement | null,
+      ].find((each) => each?.isConnected && !popup.contains(each));
       focus(element, keyboard);
     });
   }
@@ -199,15 +203,10 @@ export function usePopupFocus(
   };
 }
 
-/**
- * The element that gets the focus at the return: the target, or its first tab stop when it is no
- * tab stop. An element in the popup that closes is none.
- */
-function returnTarget(target: Element, popup: Element): HTMLElement | null {
-  if (popup.contains(target)) return null;
-  const element = target as HTMLElement;
-  if (element.matches(CANDIDATES) && isTabbable(element)) return element;
-  return tabbables(target, popup)[0] ?? element;
+/** The target, or its first tab stop outside the popup when the target is no tab stop. */
+function tabStopOf(target: HTMLElement, popup: Element) {
+  if (target.matches(CANDIDATES) && isTabbable(target)) return target;
+  return tabbables(target, popup)[0] ?? target;
 }
 
 // The first tab stop after the trigger in the document, outside the elements of the popup.

@@ -12,7 +12,8 @@ type Props = Record<string, unknown>;
 // outside button are at the bottom right of the view. The popup holds a text field and a button,
 // and the parts that their props name. With `alert`, the root and the triggers are those of Alert
 // Dialog. `nested` puts a second dialog in the popup, and `inTree` puts one beside the triggers,
-// outside the portal.
+// outside the portal. The popup is fixed at the top left of the view, above the fixed element of
+// a modal dialog.
 defineProps({
   alert: Boolean,
   root: Object as PropType<Props>,
@@ -29,6 +30,7 @@ defineProps({
   nested: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
   inTree: Object as PropType<InstanceType<typeof DialogNested>['$props']>,
 });
+const POPUP_STYLE = 'position: fixed; left: 200px; top: 100px';
 const rootPart = useTemplateRef('rootPart');
 const popupPart = useTemplateRef('popupPart');
 defineExpose({ root: rootPart, popup: popupPart });
@@ -51,7 +53,13 @@ defineExpose({ root: rootPart, popup: popupPart });
       <Dialog.Portal v-if="!noPortal" v-bind="portal">
         <Dialog.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
         <Dialog.Viewport v-if="viewport" data-testid="viewport" v-bind="viewport">
-          <Dialog.Popup v-if="!noPopup" ref="popupPart" data-testid="popup" v-bind="popup">
+          <Dialog.Popup
+            v-if="!noPopup"
+            ref="popupPart"
+            data-testid="popup"
+            :style="POPUP_STYLE"
+            v-bind="popup"
+          >
             <Dialog.Title v-if="title" v-bind="title">Title</Dialog.Title>
             <Dialog.Description v-if="description" v-bind="description">
               Description
@@ -63,7 +71,13 @@ defineExpose({ root: rootPart, popup: popupPart });
             <DialogNested v-if="nested" v-bind="nested" />
           </Dialog.Popup>
         </Dialog.Viewport>
-        <Dialog.Popup v-else-if="!noPopup" ref="popupPart" data-testid="popup" v-bind="popup">
+        <Dialog.Popup
+          v-else-if="!noPopup"
+          ref="popupPart"
+          data-testid="popup"
+          :style="POPUP_STYLE"
+          v-bind="popup"
+        >
           <Dialog.Title v-if="title" v-bind="title">Title</Dialog.Title>
           <Dialog.Description v-if="description" v-bind="description">
             Description
