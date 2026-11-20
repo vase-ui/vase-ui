@@ -1,9 +1,0 @@
-{
-  "id": "VUE-71",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/useCollapsiblePanel.ts#L302-L345",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useAnimationsFinished.ts#L195"
-  ],
-  "behavior": "When a keyframe exit of a panel ends before the panel reads its animations, for example after a late frame, the panel goes in the frame in which the exit ends. Base UI reads the animations of a closing panel two frames after the ending style and finds none, so the browser paints the panel with its open size for one frame.",
-  "dueWith": "packages/react/src/collapsible/panel/useCollapsiblePanel.ts"
-}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, useAttrs, useId, watch, watchPostEffect } from 'vue';
-import { useButton } from '../button/button';
+import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { error } from '../common/error';

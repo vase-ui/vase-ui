@@ -30,7 +30,7 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
+      <Accordion.Panel :class="styles.FoundPanel">
         <div :class="styles.Content">
           Standard shipping takes 3–5 business days. Express delivery arrives in 1–2 business days.
         </div>
@@ -44,7 +44,7 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
+      <Accordion.Panel :class="styles.FoundPanel">
         <div :class="styles.Content">
           You can return any item within 30 days of delivery. Opened items may be subject to a 10%
           restocking fee.
@@ -59,7 +59,7 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
+      <Accordion.Panel :class="styles.FoundPanel">
         <div :class="styles.Content">
           Yes, we ship to over 40 countries. International orders typically arrive within 7–14
           business days.
@@ -74,7 +74,7 @@ const PlusIcon: FunctionalComponent = () =>
           <PlusIcon :class="styles.Icon" />
         </Accordion.Trigger>
       </Accordion.Header>
-      <Accordion.Panel :class="styles.Panel">
+      <Accordion.Panel :class="styles.FoundPanel">
         <div :class="styles.Content">
           Once your order ships, you’ll receive a tracking link by email. Tracking updates can take
           up to 24 hours to appear.

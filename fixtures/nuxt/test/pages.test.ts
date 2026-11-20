@@ -134,19 +134,14 @@ async function expectFormPage(page: Page) {
   expect(await page.getByTestId('output').textContent()).toBe('');
 }
 
-async function expectCollapsiblePage(page: Page) {
-  const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open'];
-  const panelAttributeNames = ['hidden', 'data-open', 'data-closed'];
+// A trigger before its panel names the panel after the hydration.
+async function expectCollapsiblePage(page: Page, { hydrated = false } = {}) {
   const readTrigger = (testId: string) =>
-    readAttributes(page.getByTestId(testId), triggerAttributeNames);
+    readAttributes(page.getByTestId(testId), ['aria-expanded', 'aria-controls']);
   const readPanel = (testId: string) =>
-    readAttributes(page.getByTestId(testId), panelAttributeNames);
+    readAttributes(page.getByTestId(testId), ['hidden', 'inert']);
   // The trigger names the panel only while the panel is open.
-  const closedTrigger = {
-    'aria-expanded': 'false',
-    'aria-controls': null,
-    'data-panel-open': null,
-  };
+  const closedTrigger = { 'aria-expanded': 'false', 'aria-controls': null };
 
   expect(await readTrigger('closed-trigger')).toEqual(closedTrigger);
   expect(await page.getByTestId('closed-panel').count()).toBe(0);
@@ -155,22 +150,13 @@ async function expectCollapsiblePage(page: Page) {
   expect(openPanelId).toBeTruthy();
   expect(await readTrigger('open-trigger')).toEqual({
     'aria-expanded': 'true',
-    'aria-controls': openPanelId,
-    'data-panel-open': '',
+    'aria-controls': hydrated ? openPanelId : null,
   });
-  expect(await readPanel('open-panel')).toEqual({
-    hidden: null,
-    'data-open': '',
-    'data-closed': null,
-  });
+  expect(await readPanel('open-panel')).toEqual({ hidden: null, inert: null });
 
   const untilFoundPanel = page.getByTestId('until-found-panel');
   expect(await readTrigger('until-found-trigger')).toEqual(closedTrigger);
-  expect(await readPanel('until-found-panel')).toEqual({
-    hidden: 'until-found',
-    'data-open': null,
-    'data-closed': '',
-  });
+  expect(await readPanel('until-found-panel')).toEqual({ hidden: 'until-found', inert: null });
   expect((await untilFoundPanel.textContent())?.trim()).toBe('Until found panel');
 
   const untilFoundPanelId = await untilFoundPanel.getAttribute('id');
@@ -178,13 +164,13 @@ async function expectCollapsiblePage(page: Page) {
   expect(untilFoundPanelId).not.toBe(openPanelId);
 }
 
-async function expectAccordionPage(page: Page) {
-  const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open', 'data-index'];
-  const panelAttributeNames = ['hidden', 'data-open', 'data-closed', 'role', 'data-index'];
+// A trigger before its panel names the panel after the hydration. A panel after its trigger names
+// the trigger in the server HTML.
+async function expectAccordionPage(page: Page, { hydrated = false } = {}) {
   const readTrigger = (testId: string) =>
-    readAttributes(page.getByTestId(testId), triggerAttributeNames);
+    readAttributes(page.getByTestId(testId), ['aria-expanded', 'aria-controls']);
   const readPanel = (testId: string) =>
-    readAttributes(page.getByTestId(testId), panelAttributeNames);
+    readAttributes(page.getByTestId(testId), ['hidden', 'inert', 'role']);
   const readIds = async (name: string) => ({
     triggerId: await page.getByTestId(`${name}-trigger`).getAttribute('id'),
     labelledBy: await page.getByTestId(`${name}-panel`).getAttribute('aria-labelledby'),
@@ -195,8 +181,6 @@ async function expectAccordionPage(page: Page) {
   expect(await readTrigger('closed-trigger')).toEqual({
     'aria-expanded': 'false',
     'aria-controls': null,
-    'data-panel-open': null,
-    'data-index': '0',
   });
   expect(await page.getByTestId('closed-panel').count()).toBe(0);
 
@@ -206,17 +190,9 @@ async function expectAccordionPage(page: Page) {
   expect(open.labelledBy).toBe(open.triggerId);
   expect(await readTrigger('open-trigger')).toEqual({
     'aria-expanded': 'true',
-    'aria-controls': open.panelId,
-    'data-panel-open': '',
-    'data-index': '1',
+    'aria-controls': hydrated ? open.panelId : null,
   });
-  expect(await readPanel('open-panel')).toEqual({
-    hidden: null,
-    'data-open': '',
-    'data-closed': null,
-    role: 'region',
-    'data-index': '1',
-  });
+  expect(await readPanel('open-panel')).toEqual({ hidden: null, inert: null, role: 'region' });
   expect(await page.getByTestId('open-header').evaluate((element) => element.localName)).toBe('h3');
 
   const untilFound = await readIds('until-found');
@@ -228,15 +204,11 @@ async function expectAccordionPage(page: Page) {
   expect(await readTrigger('until-found-trigger')).toEqual({
     'aria-expanded': 'false',
     'aria-controls': null,
-    'data-panel-open': null,
-    'data-index': '2',
   });
   expect(await readPanel('until-found-panel')).toEqual({
     hidden: 'until-found',
-    'data-open': null,
-    'data-closed': '',
+    inert: null,
     role: 'region',
-    'data-index': '2',
   });
   expect((await page.getByTestId('until-found-panel').textContent())?.trim()).toBe(
     'Until found panel',
@@ -1931,8 +1903,16 @@ const PAGES: PageCase[] = [
   })),
   { path: '/fieldset', expectPage: expectFieldsetPage },
   { path: '/form', expectPage: expectFormPage },
-  { path: '/collapsible', expectPage: expectCollapsiblePage },
-  { path: '/accordion', expectPage: expectAccordionPage },
+  {
+    path: '/collapsible',
+    expectPage: expectCollapsiblePage,
+    expectHydratedPage: (page) => expectCollapsiblePage(page, { hydrated: true }),
+  },
+  {
+    path: '/accordion',
+    expectPage: expectAccordionPage,
+    expectHydratedPage: (page) => expectAccordionPage(page, { hydrated: true }),
+  },
   {
     path: '/avatar',
     expectPage: expectAvatarPageWithFallback,

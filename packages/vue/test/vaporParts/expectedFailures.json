@@ -258,9 +258,6 @@
     "src/utils/useSwipeDismiss.test.tsx": {
       "fails": {}
     },
-    "test/disclosurePanels.test.tsx": {
-      "fails": {}
-    },
     "test/modelOwnership.test.tsx": {
       "fails": {}
     },
