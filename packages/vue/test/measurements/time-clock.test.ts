@@ -56,14 +56,16 @@ describe('pointer capture', () => {
 });
 
 describe('a range input', () => {
-  // So the face gives the focus to its range input at a press.
-  test('a press gives it the focus in Chromium and Firefox, and not in WebKit', async () => {
+  // So the face gives the focus to its range input at a press. WebKit on Linux gives the focus.
+  test('a press gives it the focus, except in WebKit on macOS', async () => {
     const container = html(
       '<div style="position:relative;width:200px;height:200px"><input type="range" style="position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0"></div>',
     );
     const range = container.querySelector('input')!;
     await userEvent.pointer({ coords: center(range), keys: '[MouseLeft]' });
-    expect(document.activeElement === range).toBe(server.browser !== 'webkit');
+    expect(document.activeElement === range).toBe(
+      server.browser !== 'webkit' || server.platform !== 'darwin',
+    );
   });
 
   // So the face handles each key: the arrows of a clock follow the clock, the keys wrap, and
