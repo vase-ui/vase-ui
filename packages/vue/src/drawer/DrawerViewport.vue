@@ -116,11 +116,14 @@ function dismiss(release: SwipeRelease, traveled: number, restore: () => void) {
   if (popup?.style.transition === 'none') popup.style.transition = '';
   drawer.setSwiping(false);
   root.request(false, 'swipe', release.event);
-  // A listener cancelled the close, or the parent kept the drawer open.
+  // Vue does not patch the popup that leaves, so it leaves from the place of the release. The
+  // sample goes back to the open place for the popup of the next open.
   void nextTick(() => {
-    if (!root.open) return;
-    drawer.clearDismiss();
-    restore();
+    // A listener cancelled the close, or the parent kept the drawer open.
+    if (root.open) {
+      drawer.clearDismiss();
+      restore();
+    }
     goBack();
   });
 }
