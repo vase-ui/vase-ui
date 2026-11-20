@@ -33,7 +33,8 @@ describe('<TimePicker.Clock />', () => {
         }}
       />,
     );
-    await screen.findByTestId('face');
+    // The popup is hidden until its first placement, and a role query skips a hidden element.
+    await screen.findByRole('dialog');
     return result;
   }
 
