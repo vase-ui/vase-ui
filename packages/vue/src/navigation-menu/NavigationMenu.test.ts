@@ -182,6 +182,14 @@ describe('the value', () => {
     ]);
   });
 
+  test('an item with no `value` has a generated value', async () => {
+    const log: string[] = [];
+    await mountMenu({ generatedTwo: true, root: rootEvents(log) });
+    get('trigger-two').click();
+    await shows('two');
+    expect(log[0]).toMatch(/^valueChange v-\S+ trigger-press$/);
+  });
+
   test('cancel() keeps the menu as it was, with no update', async () => {
     const log: string[] = [];
     await mountMenu({
@@ -409,6 +417,15 @@ describe('an inline root', () => {
     ]);
   });
 
+  test('stays open when the pointer leaves after a hover open', async () => {
+    await mountMenu({ inline: true, root: { delay: 0, closeDelay: 0 } });
+    await userEvent.hover(get('trigger-one'));
+    await shows('one');
+    await userEvent.hover(byId('outside'));
+    await wait(80);
+    expect(byTestId('content-one')).not.toBe(null);
+  });
+
   test('VUE-98: closes by close(), and the focus in its viewport goes to the trigger', async () => {
     const { exposed } = await mountMenu({ inline: true, root: { defaultValue: 'one' } });
     await shows('one');
@@ -471,13 +488,15 @@ describe('the hover', () => {
     expect(byTestId('popup')).toBe(null);
   });
 
-  test('a press in the first 500 ms after a hover open keeps the menu open', async () => {
-    await mountMenu({ root: { delay: 0 } });
+  test('a press in the first 500 ms after a hover open keeps the menu open; the backdrop lets the pointer through until the press', async () => {
+    await mountMenu({ root: { delay: 0 }, backdrop: {} });
     await userEvent.hover(get('trigger-one'));
     await shows('one');
+    expect(get('backdrop').style.pointerEvents).toBe('none');
     await userEvent.click(get('trigger-one'));
     await wait(20);
     expect(byTestId('content-one')).not.toBe(null);
+    expect(get('backdrop').style.pointerEvents).toBe('');
     await userEvent.hover(byId('outside'));
     await wait(120);
     expect(byTestId('content-one')).not.toBe(null);
@@ -567,6 +586,13 @@ describe('the keys', () => {
     expect(seen.filter((key) => key.startsWith('Arrow'))).toEqual([]);
   });
 
+  test('an arrow key with Alt, Control or Meta moves no focus', async () => {
+    await mountMenu();
+    get('trigger-one').focus();
+    await userEvent.keyboard('{Alt>}{ArrowRight}{/Alt}{Control>}{ArrowRight}{/Control}');
+    expect(document.activeElement).toBe(get('trigger-one'));
+  });
+
   test('a vertical list moves with the up and down keys, and its open key is the right key, the left key in a right-to-left list', async () => {
     await mountMenu({ root: { orientation: 'vertical' }, list: { style: 'display: block' } });
     get('trigger-one').focus();
@@ -575,6 +601,17 @@ describe('the keys', () => {
     await userEvent.keyboard('{ArrowRight}');
     await shows('two');
     expect(document.activeElement).toBe(get('trigger-two'));
+    get('trigger-one').click();
+    await waitFor(() =>
+      expect(get('content-one')).toHaveAttribute('data-activation-direction', 'up'),
+    );
+    get('trigger-two').click();
+    await waitFor(() =>
+      expect(get('content-two')).toHaveAttribute('data-activation-direction', 'down'),
+    );
+    get('trigger-two').click();
+    await closed();
+    get('trigger-two').focus();
     get('root').setAttribute('dir', 'rtl');
     await userEvent.keyboard('{ArrowUp}');
     await userEvent.keyboard('{ArrowRight}');
@@ -720,6 +757,8 @@ describe('the Tab order', () => {
     byId('outside').focus();
     await tab();
     expect(get('popup').contains(document.activeElement)).toBe(false);
+    await tab();
+    expect(get('popup').contains(document.activeElement)).toBe(false);
     byId('outside').focus();
     await tab(true);
     expect(document.activeElement).toBe(byId('after'));
@@ -817,6 +856,29 @@ describe('the content', () => {
     );
   });
 
+  test('the old content with the focus in it is not inert while it leaves', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      contents: { one: { transition: { name: 'slide' }, class: 'animated' } },
+    });
+    const old = await shows('one');
+    await placed();
+    get('link-one-a').focus();
+    get('trigger-two').click();
+    await shows('two');
+    expect(old.isConnected).toBe(true);
+    expect(old.style.position).toBe('absolute');
+    expect(old).not.toHaveAttribute('inert');
+  });
+
+  test('a content with a CSS transition and no `transition` leaves at once', async () => {
+    await mountMenu({ root: { defaultValue: 'one' }, contents: { one: { class: 'animated' } } });
+    const old = await shows('one');
+    get('trigger-two').click();
+    await shows('two');
+    expect(old.isConnected).toBe(false);
+  });
+
   test('at a close the content stays in the popup and goes with it; then no content element is in the document', async () => {
     await mountMenu({
       root: { defaultValue: 'one' },
@@ -875,11 +937,14 @@ describe('the content', () => {
 });
 
 describe('the size', () => {
-  test('the popup follows content that changes in the shown content, and a nested inline root that changes its item', async () => {
+  test.each([
+    { name: 'its item', contents: {} },
+    { name: 'its kept item', contents: { a: { keepMounted: true }, b: { keepMounted: true } } },
+  ])('the popup follows a nested inline root that changes $name', async ({ contents }) => {
     const { exposed } = await mountMenu({
       root: { defaultValue: 'one' },
       contents: { one: { style: 'height: auto' } },
-      nested: { root: { defaultValue: 'sub-a' } },
+      nested: { root: { defaultValue: 'sub-a' }, contents },
       popup: { class: 'sized' },
     });
     await shows('sub-a');
@@ -894,6 +959,17 @@ describe('the size', () => {
       `${before + 60}px`,
     );
     expect(exposed).toBeDefined();
+  });
+
+  test('the popup animates from its old size to the size of the new content', async () => {
+    await mountMenu({ root: { defaultValue: 'one' }, popup: { class: 'sized' } });
+    await shows('one');
+    await placed();
+    await waitFor(() => expect(get('popup').getAnimations()).toEqual([]));
+    get('trigger-two').click();
+    await shows('two');
+    await frame();
+    expect(get('popup').getAnimations().length).toBeGreaterThan(0);
   });
 
   test('after fast changes the size is that of the last content, and no size variable is zero', async () => {
@@ -940,29 +1016,76 @@ describe('the placement', () => {
     expect(Math.round(place.top)).toBe(Math.round(trigger.bottom + 4));
   });
 
-  test('with the side `top`, the bottom edge of the popup stays at its place while the size changes', async () => {
+  test.each(['top', 'left'] as const)(
+    'with the side `%s`, the edge of the popup at the trigger stays at its place while the size changes',
+    async (side) => {
+      await mountMenu({
+        root: { defaultValue: 'one' },
+        list: {
+          style:
+            'display: flex; flex-direction: column; gap: 8px; margin: 300px 0 0 400px; padding: 0; list-style: none',
+        },
+        positioner: { side, sideOffset: 4, collisionAvoidance: { side: 'none' } },
+        popup: { class: 'sized' },
+      });
+      await shows('one');
+      await placed();
+      const edge = () => {
+        const box = get('popup').getBoundingClientRect();
+        return Math.round(side === 'top' ? box.bottom : box.right);
+      };
+      const near = (trigger: string) => {
+        const box = get(trigger).getBoundingClientRect();
+        return Math.round((side === 'top' ? box.top : box.left) - 4);
+      };
+      expect(edge()).toBe(near('trigger-one'));
+      get('trigger-two').click();
+      const edges: number[] = [];
+      for (let index = 0; index < 8; index += 1) {
+        await frame();
+        edges.push(edge());
+      }
+      await waitFor(() => expect(get('popup').style.getPropertyValue('--popup-height')).toBe(''));
+      expect(new Set(edges).size).toBeLessThanOrEqual(2);
+      expect(Math.abs(edges.at(-1)! - near('trigger-two'))).toBeLessThanOrEqual(1);
+    },
+  );
+
+  test('the shift keeps the popup in the layout viewport, so a pinch zoom does not move it', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, 'visualViewport')!;
+    // A visual viewport of a pinch zoom: a part of the layout viewport at its top left.
+    const visual = { width: 200, height: 300, offsetLeft: 0, offsetTop: 0, scale: 2 };
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: Object.assign(new EventTarget(), visual),
+    });
+    onTestFinished(() => Object.defineProperty(window, 'visualViewport', descriptor));
     await mountMenu({
       root: { defaultValue: 'one' },
-      list: { style: 'display: flex; gap: 8px; margin: 300px 0 0; padding: 0; list-style: none' },
-      positioner: { side: 'top', sideOffset: 4, collisionAvoidance: { side: 'none' } },
-      popup: { class: 'sized' },
+      list: { style: 'display: flex; margin: 0 0 0 250px; padding: 0; list-style: none' },
     });
     await shows('one');
     await placed();
-    const bottom = Math.round(get('popup').getBoundingClientRect().bottom);
-    const trigger = get('trigger-one').getBoundingClientRect();
-    expect(bottom).toBe(Math.round(trigger.top - 4));
-    get('trigger-two').click();
-    const edges: number[] = [];
-    for (let index = 0; index < 8; index += 1) {
-      await frame();
-      edges.push(Math.round(get('popup').getBoundingClientRect().bottom));
-    }
-    await waitFor(() => expect(get('popup').style.getPropertyValue('--popup-height')).toBe(''));
-    expect(new Set(edges).size).toBeLessThanOrEqual(2);
-    expect(
-      Math.abs(edges.at(-1)! - Math.round(get('trigger-two').getBoundingClientRect().top - 4)),
-    ).toBeLessThanOrEqual(1);
+    // With the visual viewport as its boundary, the shift would move the popup to its left edge.
+    expect(get('popup').getBoundingClientRect().left).toBeGreaterThan(100);
+  });
+
+  test('a top-level positioner keeps its side when neither side of the axis has room; with `fallbackAxisSide` it takes the other axis', async () => {
+    const setup = (positioner: Props) => ({
+      root: { defaultValue: 'one' },
+      list: { style: 'display: flex; margin: 45vh 0 0 40px; padding: 0; list-style: none' },
+      contents: { one: { style: 'width: 200px; height: 80vh' } },
+      positioner,
+    });
+    const first = await mountMenu(setup({}));
+    await shows('one');
+    await placed();
+    expect(get('positioner')).toHaveAttribute('data-side', 'bottom');
+    first.unmount();
+    await mountMenu(setup({ collisionAvoidance: { fallbackAxisSide: 'end' } }));
+    await shows('one');
+    await placed();
+    expect(get('positioner')).toHaveAttribute('data-side', 'right');
   });
 
   test('VUE-105, VUE-109: the popup has the id of the shown trigger in aria-labelledby, also an id of the developer', async () => {

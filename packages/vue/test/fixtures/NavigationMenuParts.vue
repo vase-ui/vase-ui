@@ -22,6 +22,8 @@ defineProps({
   /** The props of a `<Transition>` around the popup. */
   popupTransition: Object as PropType<Props>,
   inline: Boolean,
+  /** The item `two` has no `value`, so its value is a generated id. */
+  generatedTwo: Boolean,
   /** The portal is in the root while its value is `true`. */
   withPortal: { type: Object as PropType<{ shown: boolean }>, default: () => ({ shown: true }) },
   /** The item `one` is in the list while its value is `true`. */
@@ -101,7 +103,7 @@ defineExpose({ root: rootPart });
           </NavigationMenu.Root>
         </NavigationMenu.Content>
       </NavigationMenu.Item>
-      <NavigationMenu.Item value="two">
+      <NavigationMenu.Item :value="generatedTwo ? undefined : 'two'">
         <NavigationMenu.Trigger data-testid="trigger-two" v-bind="triggers?.two">
           Two
         </NavigationMenu.Trigger>

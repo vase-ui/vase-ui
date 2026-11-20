@@ -225,7 +225,6 @@ export function useNavigationMenuRoot(
       focus(place === 'before' ? trigger : trigger && nextTabStop(trigger, [box, before, after]));
       return;
     }
-    if (from && from === trigger) return;
     // A Tab from another place passes the contents, which follow their trigger.
     const stops = tabbables(ownerDocument(before).body).filter((stop) => !box.contains(stop));
     if (place === 'before') {

@@ -112,7 +112,7 @@ describe('a target in an element that leaves (M4)', () => {
     const refs: (string | null)[] = [];
     ({ root } = mount(MeasureTeleportScene, {
       scene,
-      recordRef: (value: string | null) => refs.push(value),
+      refs: { add: (value: string | null) => refs.push(value) },
     }));
     await nextTick();
     const content = root.querySelector('[data-name="a"]')!;

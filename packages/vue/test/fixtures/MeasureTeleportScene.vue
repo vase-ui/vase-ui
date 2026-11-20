@@ -17,7 +17,10 @@ defineProps({
   },
   around: Boolean,
   /** Gets each value of the ref of the target. */
-  recordRef: { type: Function as PropType<(value: string | null) => void>, default: () => {} },
+  refs: {
+    type: Object as PropType<{ add(value: string | null): void }>,
+    default: () => ({ add() {} }),
+  },
 });
 // A root keeps the last target, because the ref of the target gets `null` at the close.
 const view = shallowRef<HTMLElement | null>(null);
@@ -53,7 +56,7 @@ const view = shallowRef<HTMLElement | null>(null);
         :ref="
           (element) => {
             if (element) view = element as HTMLElement;
-            recordRef(element ? 'view' : null);
+            refs.add(element ? 'view' : null);
           }
         "
         class="view"
