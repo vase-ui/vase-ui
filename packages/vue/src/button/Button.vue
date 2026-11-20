@@ -34,6 +34,8 @@ const state = computed<ButtonState>(() => ({ disabled: isDisabled.value }));
 defineExpose({ element });
 </script>
 
+<!-- A server writes no content in a void element, such as an `<input>` in `as`, and the hydration
+reads an empty slot as content. -->
 <template>
   <slot
     v-if="$slots.element"
@@ -42,9 +44,15 @@ defineExpose({ element });
     :elementRef="setElement"
     :state="state"
   />
-  <component :is="as" v-else-if="as" v-bind="mergeAttributes({}, attrs)" :ref="setElement">
+  <component
+    :is="as"
+    v-else-if="as && $slots.default"
+    v-bind="mergeAttributes({}, attrs)"
+    :ref="setElement"
+  >
     <slot :state="state" />
   </component>
+  <component :is="as" v-else-if="as" v-bind="mergeAttributes({}, attrs)" :ref="setElement" />
   <button v-else v-bind="mergeAttributes({}, attrs)" :ref="setElement">
     <slot :state="state" />
   </button>

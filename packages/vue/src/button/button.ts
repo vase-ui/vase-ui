@@ -109,9 +109,9 @@ function isNativeButton(element: Element) {
   );
 }
 
-/** A `<button>`, or a tag that the part does not know yet. */
+/** A `<button>`, an `<input>`, or a tag that the part does not know yet. */
 function isNativeTag(tag: string | undefined) {
-  return tag === undefined || tag === 'button';
+  return tag === undefined || tag === 'button' || tag === 'input';
 }
 
 function isLink(element: Element) {

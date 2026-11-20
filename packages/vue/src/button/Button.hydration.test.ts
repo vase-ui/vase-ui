@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
+import ButtonAsInput from '../../test/fixtures/ButtonAsInput.vue';
 import ButtonInSlot from '../../test/fixtures/ButtonInSlot.vue';
 import Buttons from '../../test/fixtures/Buttons.vue';
 import ButtonsInFieldset from '../../test/fixtures/ButtonsInFieldset.vue';
@@ -46,6 +47,19 @@ describe('server render and hydration', () => {
     expect(root.querySelector('.Ancestor > span')).toBe(span);
     expect(span.getAttributeNames().sort()).toEqual(['aria-disabled', 'role', 'tabindex']);
     expect(span).toHaveAttribute('tabindex', '-1');
+  });
+
+  test('an <input> in `as` has the attributes of a native button in the server HTML, and hydrates with no message', async () => {
+    const props = { disabled: true };
+    const root = await renderOnServer('ButtonAsInput', props);
+    const input = root.querySelector('input')!;
+    const attributes = ['disabled', 'type', 'value'];
+    expect(input.getAttributeNames().sort()).toEqual(attributes);
+    expect(input).toHaveAttribute('type', 'submit');
+    hydrate(ButtonAsInput, props, root);
+    await nextTick();
+    expect(root.querySelector('input')).toBe(input);
+    expect(input.getAttributeNames().sort()).toEqual(attributes);
   });
 
   test('the server HTML has the state of a disabled Fieldset.Root; a native disabled fieldset gives it after the mount', async () => {
