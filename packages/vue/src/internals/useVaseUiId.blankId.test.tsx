@@ -15,7 +15,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
-import { Toggle } from '@vase-ui/vue/toggle';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
@@ -488,13 +487,5 @@ describe.each([
     expect(blankIds()).toEqual([]);
     expect(duplicateIds()).toEqual([]);
     expect(unresolvedReferences()).toEqual([]);
-  });
-
-  it('removes the id from a Toggle that had a nonblank id attribute', async () => {
-    const { setProps } = await render(<Toggle id=" a b ">Save</Toggle>);
-    expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('id', ' a b ');
-
-    await setProps({ id });
-    expect(screen.getByRole('button', { name: 'Save' })).not.toHaveAttribute('id');
   });
 });

@@ -4,9 +4,7 @@ import { Form } from '@vase-ui/vue/form';
 
 const form = useTemplateRef('form');
 
-async function onSubmit(event: SubmitEvent) {
-  // Prevent the browser's default full-page refresh
-  event.preventDefault();
+async function onSubmit() {
   const formData = new FormData(form.value?.element ?? undefined);
   await fetch('https://api.example.com', {
     method: 'POST',

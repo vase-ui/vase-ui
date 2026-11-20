@@ -1,0 +1,9 @@
+import LocaleProviderComponent from './LocaleProvider.vue';
+
+/**
+ * Gives a locale to the Vase UI parts below it. `Meter.Root` and `Progress.Root` with no `locale`
+ * prop format their text in this locale.
+ */
+export const LocaleProvider: typeof LocaleProviderComponent = LocaleProviderComponent;
+
+export type { LocaleProviderProps } from './types';

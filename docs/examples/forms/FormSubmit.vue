@@ -14,5 +14,5 @@ async function onSubmit(_event: SubmitEvent, formValues: Record<string, unknown>
 </script>
 
 <template>
-  <Form @submit.prevent="onSubmit" />
+  <Form @submit="onSubmit" />
 </template>

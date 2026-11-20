@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LocaleProvider } from '@vase-ui/vue/locale-provider';
 import { Meter } from '@vase-ui/vue/meter';
 </script>
 
@@ -21,5 +22,10 @@ import { Meter } from '@vase-ui/vue/meter';
     <Meter.Root data-testid="percent-root" :value="42" aria-label="Storage">
       <Meter.Value data-testid="percent-value" />
     </Meter.Root>
+    <LocaleProvider locale="fr-FR">
+      <Meter.Root data-testid="provider-root" :value="42" aria-label="Load">
+        <Meter.Value data-testid="provider-value" />
+      </Meter.Root>
+    </LocaleProvider>
   </main>
 </template>

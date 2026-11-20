@@ -9,8 +9,7 @@ const form = useTemplateRef('form');
 const errors = ref({});
 const loading = shallowRef(false);
 
-async function onSubmit(event: SubmitEvent) {
-  event.preventDefault();
+async function onSubmit() {
   const formData = new FormData(form.value?.element ?? undefined);
   const value = String(formData.get('url'));
 
