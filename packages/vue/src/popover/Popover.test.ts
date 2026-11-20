@@ -20,6 +20,8 @@ const popup = () => document.querySelector<HTMLElement>('[data-testid="popup"]')
 const positioner = () => document.querySelector<HTMLElement>('[data-testid="positioner"]');
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
 const byId = (id: string) => document.getElementById(id)!;
+// The fixed element of a modal popover. A backdrop of an earlier case can still leave.
+const BLOCK = 'body > div[role="presentation"]:not([data-testid])';
 
 async function mountPopover(setup: Props = {}) {
   const { root, exposed, unmount } = mount(PopoverParts, setup);
@@ -841,7 +843,7 @@ describe('modal (3.2, L4 to L6)', () => {
     await userEvent.click(trigger());
     await opened();
     await placed();
-    const block = document.querySelector<HTMLElement>('body > div[role="presentation"]')!;
+    const block = document.querySelector<HTMLElement>(BLOCK)!;
     expect(block.style.position).toBe('fixed');
     await waitFor(() => expect(block.style.clipPath).toContain('polygon'));
     await waitFor(() => expect(isScrollLocked()).toBe(true));
@@ -996,7 +998,7 @@ describe('modal (3.2, L4 to L6)', () => {
       await mountPopover({ root: keepOpen });
       await opened();
       await placed();
-      const block = document.querySelector<HTMLElement>('body > div[role="presentation"]')!;
+      const block = document.querySelector<HTMLElement>(BLOCK)!;
       await userEvent.dblClick(block, { position: centerOf(words) });
       expect(getSelection()!.toString()).toBe('');
     } finally {
@@ -1749,9 +1751,7 @@ describe('more behaviors of the parts', () => {
     await opened();
     await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
     await placed();
-    const block = [...document.querySelectorAll<HTMLElement>('body > div[role="presentation"]')].at(
-      -1,
-    )!;
+    const block = [...document.querySelectorAll<HTMLElement>(BLOCK)].at(-1)!;
     await waitFor(() => expect(block.style.clipPath).toContain('polygon'));
     await userEvent.click(block, { position: { x: 2, y: 2 } });
     await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
@@ -1763,7 +1763,7 @@ describe('more behaviors of the parts', () => {
     await mountPopover({ root: { defaultOpen: true, modal: true }, noPortal: true });
     await nextTick();
     await new Promise((resolve) => setTimeout(resolve));
-    expect(document.querySelector('body > div[role="presentation"]')).toBe(null);
+    expect(document.querySelector(BLOCK)).toBe(null);
     expect(isScrollLocked()).toBe(false);
   });
 
