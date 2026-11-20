@@ -163,7 +163,7 @@
       "describe": ["<Tabs.Panel />"],
       "title": "sets the panel index data attribute",
       "kind": "not-applicable",
-      "reason": "`data-index` is cut. It counts only the panels in the DOM. The developer has the index where they render the panels, `:nth-child()` selects by place, and `data-activation-direction` gives the side for a slide."
+      "reason": "The panel has no `data-index`, which counts only the panels in the DOM. The developer has the index where they render the panels, `:nth-child()` selects by place, and `data-activation-direction` gives the side for a slide."
     },
     {
       "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
