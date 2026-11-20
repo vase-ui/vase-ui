@@ -19,48 +19,62 @@ const fields = [
     <Drawer.Trigger :class="styles.Button">Open keyboard-aware drawer</Drawer.Trigger>
     <Drawer.VirtualKeyboardProvider>
       <Drawer.Portal>
-        <Drawer.Backdrop :class="styles.Backdrop" />
+        <Transition
+          :enter-from-class="styles.BackdropHidden"
+          :leave-to-class="styles.BackdropHidden"
+          :leave-active-class="styles.BackdropLeaving"
+          appear
+        >
+          <Drawer.Backdrop :class="styles.Backdrop" />
+        </Transition>
         <Drawer.Viewport :class="styles.Viewport">
-          <Drawer.Popup :class="styles.Popup">
-            <div :class="styles.Header">
-              <div :class="styles.Handle" />
-              <div :class="styles.HeaderActions">
-                <Drawer.Close :class="[styles.Button, styles.HeaderButton]">Cancel</Drawer.Close>
-                <Drawer.Title :class="styles.Title">Delivery details</Drawer.Title>
-                <Drawer.Close :class="[styles.Button, styles.HeaderButton]">Save</Drawer.Close>
+          <Transition
+            :enter-from-class="styles.PopupHidden"
+            :leave-to-class="styles.PopupHidden"
+            :leave-active-class="styles.PopupLeaving"
+            appear
+          >
+            <Drawer.Popup :class="styles.Popup">
+              <div :class="styles.Header">
+                <div :class="styles.Handle" />
+                <div :class="styles.HeaderActions">
+                  <Drawer.Close :class="[styles.Button, styles.HeaderButton]">Cancel</Drawer.Close>
+                  <Drawer.Title :class="styles.Title">Delivery details</Drawer.Title>
+                  <Drawer.Close :class="[styles.Button, styles.HeaderButton]">Save</Drawer.Close>
+                </div>
               </div>
-            </div>
 
-            <Drawer.Content :class="styles.Scroll">
-              <div :class="styles.Form">
-                <label v-for="[label, placeholder] in fields" :key="label" :class="styles.Field">
-                  <span :class="styles.FieldLabel">{{ label }}</span>
-                  <input :class="styles.Input" :placeholder="placeholder" type="text" />
-                </label>
+              <Drawer.Content :class="styles.Scroll">
+                <div :class="styles.Form">
+                  <label v-for="[label, placeholder] in fields" :key="label" :class="styles.Field">
+                    <span :class="styles.FieldLabel">{{ label }}</span>
+                    <input :class="styles.Input" :placeholder="placeholder" type="text" />
+                  </label>
 
-                <label :class="styles.Field">
-                  <span :class="styles.FieldLabel">Instructions</span>
-                  <textarea
-                    :class="styles.Textarea"
-                    placeholder="Gate code, drop-off spot, or anything else the driver should know"
-                  />
-                </label>
+                  <label :class="styles.Field">
+                    <span :class="styles.FieldLabel">Instructions</span>
+                    <textarea
+                      :class="styles.Textarea"
+                      placeholder="Gate code, drop-off spot, or anything else the driver should know"
+                    />
+                  </label>
+                </div>
+              </Drawer.Content>
+
+              <div :class="styles.FooterSlot">
+                <div :class="styles.StickyFooter">
+                  <label :class="styles.Composer">
+                    <span :class="styles.FieldLabel">Delivery note</span>
+                    <input
+                      :class="styles.ComposerInput"
+                      placeholder="Add a note for the driver"
+                      type="text"
+                    />
+                  </label>
+                </div>
               </div>
-            </Drawer.Content>
-
-            <div :class="styles.FooterSlot">
-              <div :class="styles.StickyFooter">
-                <label :class="styles.Composer">
-                  <span :class="styles.FieldLabel">Delivery note</span>
-                  <input
-                    :class="styles.ComposerInput"
-                    placeholder="Add a note for the driver"
-                    type="text"
-                  />
-                </label>
-              </div>
-            </div>
-          </Drawer.Popup>
+            </Drawer.Popup>
+          </Transition>
         </Drawer.Viewport>
       </Drawer.Portal>
     </Drawer.VirtualKeyboardProvider>

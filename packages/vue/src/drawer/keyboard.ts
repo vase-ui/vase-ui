@@ -127,8 +127,7 @@ function moveForFocus(field: HTMLElement, translateY: number) {
 export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch {
   let field: HTMLElement | null = null;
   let programmaticFocus = false;
-  let openKeyboard: (() => { top: number; bottom: number; resizing: boolean } | null) | null =
-    null;
+  let openKeyboard: (() => { top: number; bottom: number; resizing: boolean } | null) | null = null;
   let touchStart: { x: number; y: number } | null = null;
   let touchMoved = false;
   let room: {
@@ -317,7 +316,10 @@ export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch 
       const rect = target.getBoundingClientRect();
       let offset = (rect.top + rect.bottom - visibleTop - visibleBottom) / 2;
       if (android) {
-        const margin = Math.min(Math.max((clippedBottom - clippedTop - rect.height) / 2, 0), MARGIN);
+        const margin = Math.min(
+          Math.max((clippedBottom - clippedTop - rect.height) / 2, 0),
+          MARGIN,
+        );
         offset = 0;
         if (rect.top < clippedTop) offset = rect.top - clippedTop - margin;
         else if (rect.bottom > clippedBottom) {

@@ -202,7 +202,8 @@ export namespace IndentBackground {
  * Keeps a focused text field of the drawer above the software keyboard.
  * Renders no element.
  */
-export const VirtualKeyboardProvider: typeof DrawerVirtualKeyboardProvider = DrawerVirtualKeyboardProvider;
+export const VirtualKeyboardProvider: typeof DrawerVirtualKeyboardProvider =
+  DrawerVirtualKeyboardProvider;
 export namespace VirtualKeyboardProvider {
   export type Props = DrawerVirtualKeyboardProviderProps;
   export type State = DrawerVirtualKeyboardProviderState;

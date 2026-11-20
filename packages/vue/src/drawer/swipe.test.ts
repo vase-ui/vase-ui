@@ -132,10 +132,7 @@ describe('pressStartsSwipe', () => {
     ['role button', '<span role="button"><span id="target">B</span></span>'],
     ['label', '<label><span id="target">L</span><input></label>'],
     ['swipe ignore', '<div data-vase-ui-swipe-ignore="x"><span id="target">I</span></div>'],
-    [
-      'scroller',
-      `<div style="${SCROLLER}"><p id="target" style="height: 200px">Long</p></div>`,
-    ],
+    ['scroller', `<div style="${SCROLLER}"><p id="target" style="height: 200px">Long</p></div>`],
   ])('starts no swipe on a %s', (_, markup) => {
     html(`<div id="popup">${markup}</div>`);
     expect(pressOn(byId('target'), byId('popup'))).toBe(false);

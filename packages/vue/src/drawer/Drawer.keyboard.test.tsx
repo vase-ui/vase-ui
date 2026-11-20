@@ -16,8 +16,7 @@ import { injectKeyboard } from './keyboard';
 const platformMock = vi.hoisted(() => ({ android: false }));
 
 vi.mock('../common/platform', async () => {
-  const actual =
-    await vi.importActual<typeof import('../common/platform')>('../common/platform');
+  const actual = await vi.importActual<typeof import('../common/platform')>('../common/platform');
   return {
     ...actual,
     platform: {
@@ -2980,5 +2979,4 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       expect(scrollToSpy).not.toHaveBeenCalled();
     });
   });
-
 });

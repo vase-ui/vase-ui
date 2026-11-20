@@ -7,20 +7,34 @@ import styles from './index.module.css';
   <Drawer.Root>
     <Drawer.Trigger :class="styles.Button">Open bottom drawer</Drawer.Trigger>
     <Drawer.Portal>
-      <Drawer.Backdrop :class="styles.Backdrop" />
+      <Transition
+        :enter-from-class="styles.BackdropHidden"
+        :leave-to-class="styles.BackdropHidden"
+        :leave-active-class="styles.BackdropLeaving"
+        appear
+      >
+        <Drawer.Backdrop :class="styles.Backdrop" />
+      </Transition>
       <Drawer.Viewport :class="styles.Viewport">
-        <Drawer.Popup :class="styles.Popup">
-          <div :class="styles.Handle" />
-          <Drawer.Content :class="styles.Content">
-            <Drawer.Title :class="styles.Title">Notifications</Drawer.Title>
-            <Drawer.Description :class="styles.Description">
-              You are all caught up. Good job!
-            </Drawer.Description>
-            <div :class="styles.Actions">
-              <Drawer.Close :class="styles.Button">Close</Drawer.Close>
-            </div>
-          </Drawer.Content>
-        </Drawer.Popup>
+        <Transition
+          :enter-from-class="styles.PopupHidden"
+          :leave-to-class="styles.PopupHidden"
+          :leave-active-class="styles.PopupLeaving"
+          appear
+        >
+          <Drawer.Popup :class="styles.Popup">
+            <div :class="styles.Handle" />
+            <Drawer.Content :class="styles.Content">
+              <Drawer.Title :class="styles.Title">Notifications</Drawer.Title>
+              <Drawer.Description :class="styles.Description">
+                You are all caught up. Good job!
+              </Drawer.Description>
+              <div :class="styles.Actions">
+                <Drawer.Close :class="styles.Button">Close</Drawer.Close>
+              </div>
+            </Drawer.Content>
+          </Drawer.Popup>
+        </Transition>
       </Drawer.Viewport>
     </Drawer.Portal>
   </Drawer.Root>

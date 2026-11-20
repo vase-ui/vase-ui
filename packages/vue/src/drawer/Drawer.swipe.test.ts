@@ -413,7 +413,14 @@ describe('the swipe area', () => {
         ),
       ...(setup.root as Props),
     });
-    await mountDrawer({ trigger: null, swipeArea: {}, backdrop: {}, provider: true, ...setup, root });
+    await mountDrawer({
+      trigger: null,
+      swipeArea: {},
+      backdrop: {},
+      provider: true,
+      ...setup,
+      root,
+    });
     return { log, root };
   }
 
@@ -452,10 +459,7 @@ describe('the swipe area', () => {
     await wait(120);
     await release();
     await closed();
-    expect(log).toEqual([
-      'openChange true swipe swipe-area',
-      'openChange false swipe swipe-area',
-    ]);
+    expect(log).toEqual(['openChange true swipe swipe-area', 'openChange false swipe swipe-area']);
   });
 
   test('keeps the drawer open at a release outside the popup, and the click of the release closes nothing', async () => {
@@ -592,7 +596,10 @@ describe.skipIf(!chromium)('a touch (Chromium)', () => {
     const range = get('popup').appendChild(document.createElement('input'));
     range.type = 'range';
     range.style.cssText = 'position: absolute; right: 0; top: 0; width: 120px';
-    let from = { x: range.getBoundingClientRect().left + 10, y: range.getBoundingClientRect().top + 5 };
+    let from = {
+      x: range.getBoundingClientRect().left + 10,
+      y: range.getBoundingClientRect().top + 5,
+    };
     await touchDrag(from, { x: from.x, y: from.y + 200 }, 10);
     await wait(50);
     expect(byTestId('popup')).not.toBe(null);

@@ -168,9 +168,7 @@ function release(end: SwipeRelease) {
     goBack();
     return;
   }
-  dismiss(end, (offset ?? 0) + movement, () =>
-    drawer.snap.set(active, 'swipe', end.event),
-  );
+  dismiss(end, (offset ?? 0) + movement, () => drawer.snap.set(active, 'swipe', end.event));
 }
 
 const tracker = useSwipeTracker({
@@ -231,7 +229,10 @@ const tracker = useSwipeTracker({
     let progress: number;
     if (points.length > 0) {
       place = snapMovement(offset ?? 0, movement);
-      progress = snapProgress(points, Math.min(Math.max((offset ?? 0) + movement, 0), drawer.height));
+      progress = snapProgress(
+        points,
+        Math.min(Math.max((offset ?? 0) + movement, 0), drawer.height),
+      );
     } else {
       place = resist(movement);
       progress = size > 0 ? Math.min(Math.max(movement / size, 0), 1) : 0;

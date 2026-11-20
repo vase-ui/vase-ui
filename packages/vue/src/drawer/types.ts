@@ -58,7 +58,10 @@ export interface DrawerRootSnapPointChangeEventDetails {
   trigger: Element | undefined;
 }
 
-export interface DrawerRootProps<Payload = unknown> extends Omit<DialogRootProps<Payload>, 'handle'> {
+export interface DrawerRootProps<Payload = unknown> extends Omit<
+  DialogRootProps<Payload>,
+  'handle'
+> {
   /** Connects the root to triggers outside it and to code. */
   handle?: DrawerHandle<Payload> | undefined;
   /**

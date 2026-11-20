@@ -346,7 +346,10 @@ describe('Drawer', () => {
     test('keeps a drawer open for a cancelled request, unless the browser does not let a page cancel', async () => {
       const { active } = androidWithWatcher();
       await mountDrawer({
-        root: { defaultOpen: true, onOpenChange: (_: boolean, details: { cancel(): void }) => details.cancel() },
+        root: {
+          defaultOpen: true,
+          onOpenChange: (_: boolean, details: { cancel(): void }) => details.cancel(),
+        },
       });
       await opened();
       await waitFor(() => expect(active()).toHaveLength(1));

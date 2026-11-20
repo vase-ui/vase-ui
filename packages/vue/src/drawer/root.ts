@@ -82,7 +82,11 @@ export interface DrawerRoot {
     /** The distance from the open place to the active point, with no point `null`. */
     readonly offset: number | null;
     /** Asks for a change of the snap point. Gives `false` when a listener cancelled it. */
-    set(point: DrawerSnapPoint | null, reason: DrawerRootSnapPointChangeEventReason, event: Event): boolean;
+    set(
+      point: DrawerSnapPoint | null,
+      reason: DrawerRootSnapPointChangeEventReason,
+      event: Event,
+    ): boolean;
   };
   readonly viewport: HTMLElement | null;
   readonly backdrop: HTMLElement | null;
@@ -160,7 +164,11 @@ export function useDrawerRoot<Payload>(
   const parent = inject(drawerKey, null);
   let lastClose: DrawerRootChangeEventDetails | undefined;
 
-  const { root, context: dialog, close } = useDialogRoot<Payload>('dialog', props, ((
+  const {
+    root,
+    context: dialog,
+    close,
+  } = useDialogRoot<Payload>('dialog', props, ((
     event: 'openChange' | 'update:open' | 'update:triggerId',
     value: boolean & string,
     details?: DrawerRootChangeEventDetails,
@@ -196,7 +204,9 @@ export function useDrawerRoot<Payload>(
     const value = snapModel.value.value;
     const points = props.snapPoints;
     if (props.snapPoint !== undefined || !points?.length) return value;
-    return value !== null && points.some((point) => Object.is(point, value)) ? value : defaultPoint();
+    return value !== null && points.some((point) => Object.is(point, value))
+      ? value
+      : defaultPoint();
   });
 
   function setSnap(
@@ -216,9 +226,7 @@ export function useDrawerRoot<Payload>(
 
   const sizes = shallowReactive({ popup: 0, viewport: 0, rootFontSize: 16 });
   const vertical = computed(() => props.swipeDirection === 'down' || props.swipeDirection === 'up');
-  const points = computed(() =>
-    vertical.value ? resolveSnapPoints(props.snapPoints, sizes) : [],
-  );
+  const points = computed(() => (vertical.value ? resolveSnapPoints(props.snapPoints, sizes) : []));
   const activePoint = computed(() => findSnapPoint(points.value, active.value, sizes));
   const offset = computed(() => (points.value.length ? (activePoint.value?.offset ?? null) : null));
 
@@ -231,7 +239,10 @@ export function useDrawerRoot<Payload>(
   const contentPresses = new WeakSet<Event>();
 
   const nestedOpen = computed(() =>
-    children.reduce((count, child) => count + (child.dialog.root.open ? 1 : 0) + child.nestedOpen, 0),
+    children.reduce(
+      (count, child) => count + (child.dialog.root.open ? 1 : 0) + child.nestedOpen,
+      0,
+    ),
   );
   const nestedPresent = computed(() =>
     children.some((child) => child.dialog.root.open || child.dialog.root.leaving),

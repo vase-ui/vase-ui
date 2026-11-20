@@ -130,7 +130,9 @@ describe('a mouse drag on text in a box with pointer capture (M1)', () => {
 
 describe('a press of the right button in a mouse drag with capture (M2)', () => {
   test('sends `contextmenu` in the three browsers; then Chromium sends no `pointerup`, and Firefox and WebKit send it at the release of the left button', async () => {
-    html(`<div id="box" style="position: fixed; left: 100px; top: 100px; width: 100px; height: 100px"></div>`);
+    html(
+      `<div id="box" style="position: fixed; left: 100px; top: 100px; width: 100px; height: 100px"></div>`,
+    );
     const box = element('box');
     box.addEventListener('pointerdown', (event) => {
       if (event.button === 0) box.setPointerCapture(event.pointerId);
@@ -165,7 +167,10 @@ describe('a press of the right button in a mouse drag with capture (M2)', () => 
 
 const Sheet = defineComponent({
   props: {
-    scene: { type: Object as PropType<{ open: boolean; tick: number; hooks: string[] }>, required: true },
+    scene: {
+      type: Object as PropType<{ open: boolean; tick: number; hooks: string[] }>,
+      required: true,
+    },
     children: { type: Number, default: 0 },
   },
   setup(props) {
@@ -326,7 +331,10 @@ describe('a real touch on a sheet (M6, M7)', () => {
         sheet.addEventListener(
           type,
           (event) => {
-            const y = 'touches' in event ? (event as TouchEvent).touches[0]!.clientY : (event as PointerEvent).clientY;
+            const y =
+              'touches' in event
+                ? (event as TouchEvent).touches[0]!.clientY
+                : (event as PointerEvent).clientY;
             if (type === 'pointerdown') startY = y;
             first[type] ??= { distance: Math.round(y - startY), cancelable: event.cancelable };
           },
@@ -404,12 +412,15 @@ describe('an element that gets `inert` in a drag that started on it (M9)', () =>
     expect(log.slice(1)).toEqual(['pointerdown 1', 'pointermove 1', 'pointerup 0']);
   });
 
-  test.skipIf(server.browser !== 'chromium')('keeps the events of a touch to `pointerup`', async () => {
-    const log = area();
-    await touchDrag({ x: 50, y: 150 }, { x: 300, y: 300 }, 6);
-    await wait(50);
-    expect(log).toEqual(['pointerdown 1', 'pointermove 1', 'pointerup 0']);
-  });
+  test.skipIf(server.browser !== 'chromium')(
+    'keeps the events of a touch to `pointerup`',
+    async () => {
+      const log = area();
+      await touchDrag({ x: 50, y: 150 }, { x: 300, y: 300 }, 6);
+      await wait(50);
+      expect(log).toEqual(['pointerdown 1', 'pointermove 1', 'pointerup 0']);
+    },
+  );
 });
 
 describe('`transition: none` on a sheet while its enter runs (N2)', () => {
@@ -429,8 +440,7 @@ describe('an update of a style bound to a ref, on a component with 2,000 element
     const movement = shallowRef(0);
     const Popup = defineComponent({
       setup(_, { slots }) {
-        return () =>
-          h('div', { style: { '--y': `${movement.value}px` } }, slots.default?.());
+        return () => h('div', { style: { '--y': `${movement.value}px` } }, slots.default?.());
       },
     });
     const Content = defineComponent({

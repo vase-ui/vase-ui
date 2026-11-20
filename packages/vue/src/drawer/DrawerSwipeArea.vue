@@ -3,14 +3,7 @@ import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDrawer } from './root';
-import {
-  along,
-  axisOf,
-  oppositeOf,
-  opensAtRelease,
-  toward,
-  useSwipeTracker,
-} from './swipe';
+import { along, axisOf, oppositeOf, opensAtRelease, toward, useSwipeTracker } from './swipe';
 import type { DrawerSwipeAreaProps, DrawerSwipeAreaState } from './types';
 
 defineOptions({ inheritAttrs: false });
