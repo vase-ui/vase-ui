@@ -1,10 +1,11 @@
 ---
 order: 1
-description: An unstyled Vue form component with consolidated error handling.
+description: An unstyled Vue form component that validates its fields and gives each field its errors.
 ---
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoFormFormAction from '../demos/form/form-action/css-modules/index.vue';
@@ -17,7 +18,7 @@ import DemoFormZodTailwind from '../demos/form/zod/tailwind/index.vue';
 
 # Form
 
-A native form element with consolidated error handling.
+A native form element that validates its fields and gives each field its errors.
 
 <DemoFrame>
   <DemoFormHero />
@@ -50,15 +51,9 @@ A native form element with consolidated error handling.
 
 ## Anatomy
 
-Form works together with [Field](/components/field). Import the components and place them together:
+Import the components and assemble their parts:
 
 <<< ./form/Anatomy.vue
-
-`Form` renders a `<form>` with `novalidate`. A submit validates each field of the form. A submit that a field blocks is prevented, and the first invalid control gets the focus. A submit that passes emits `submit` with the native `SubmitEvent` and the values of the form. While `Form` has a `submit` listener, it prevents the native submit, so the page stays. Give `@submit` a function, because `Form` can miss a listener that you add or remove after the mount. To keep the native submit to the `action` URL, give `Form` no `submit` listener.
-
-`errors` makes a field invalid by its `name`. Bind it with `v-model:errors`: an edit of a field asks to remove its key. After a submit that passed, the first change of `errors` moves the focus to the first invalid control.
-
-The template ref of `Form` has `validate(name?)`. It validates each field, or the field of one name, and returns `true` when they are valid.
 
 ## Examples
 
@@ -99,11 +94,11 @@ The demo keeps the response in one state object. It disables the button while th
 
 ### Submit form values as a JavaScript object
 
-The second argument of `submit` has the value of each named field of the form whose control is enabled. Each value has the type that the control gives: a string for `Input`, a boolean for `Checkbox` and `Switch`, and the value of a `RadioGroup` or of a `CheckboxGroup`.
+The second argument of `submit` has the values of the form in an object, by the `name` of each field that is not disabled. Use it to change the values before you send them, or to send them to an API. Each value has the type that its control gives: a string for `Input`, a boolean for `Checkbox` and `Switch`, and the value of a `RadioGroup` or of a `CheckboxGroup`.
 
 <<< ./form/FormSubmit.vue
 
-Give the second parameter of the listener the type of the form values. With no type, that parameter is `any`.
+Give the second parameter of the listener the type of the values. With no type, that parameter is `any`.
 
 ### Using with Zod
 
@@ -141,3 +136,7 @@ When you parse the schema with `schema.safeParse()`, use `z.flattenError(result.
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />

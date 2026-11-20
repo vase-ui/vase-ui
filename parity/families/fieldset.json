@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/fieldset/legend/FieldsetLegendDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",
@@ -26,13 +26,13 @@
       "upstream": "docs/src/app/(docs)/react/components/fieldset/types.md",
       "entry": "Legend",
       "kind": "not-applicable",
-      "reason": "The legend has no state: `.Fieldset:disabled .Legend` selects the legend of a disabled root, and the default slot of `Fieldset.Root` has `state.disabled`."
+      "reason": "`.Fieldset:disabled .Legend` selects the legend of a disabled root, and the default slot of `Fieldset.Root` has `state.disabled`, so the legend has no state."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/fieldset/types.md",
       "entry": "FieldsetLegendDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

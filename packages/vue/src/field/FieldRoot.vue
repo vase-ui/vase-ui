@@ -43,6 +43,11 @@ const emit = defineEmits<{
   'update:touched': [touched: boolean];
 }>();
 defineSlots<{
+  /**
+   * The content of the field. `validity` has the failures of the native check and `valid`, and
+   * `errors` has the messages. `value` and `initialValue` are the value of the control and its
+   * first value.
+   */
   default?(scope: {
     state: FieldRootState;
     validity: FieldValidity;

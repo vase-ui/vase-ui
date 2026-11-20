@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/issues/6206",
     "https://github.com/mui/base-ui/issues/5765"
   ],
-  "behavior": "A native form reset puts each uncontrolled control back to its default value and removes `data-filled`.",
+  "behavior": "A native reset of the form gives a control its first value. The control emits only `update:modelValue`, also when `v-model` controls it. Its field then has `data-filled` only when that value is not empty.",
   "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx"
 }

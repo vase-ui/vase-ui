@@ -5,44 +5,44 @@
     {
       "upstream": "packages/react/src/field/control/FieldControlDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/description/FieldDescriptionDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/error/FieldErrorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/item/FieldItemDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/label/FieldLabelDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/input/Input.field.test.ts",
-      "reason": "`Input` is the control of a field, under one name (rule 8.10). `Input.field.test.ts` tests the value, the state and the validation of a field with an `Input`."
+      "reason": "`Input` is the control of a field. `Input.field.test.ts` tests the value, the state and the validation of a field with an `Input`."
     },
     {
       "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
       "describe": ["<Field.Control />", "[data-focused]"],
       "kind": "not-applicable",
-      "reason": "The part has no state field `focused` and no `data-focused`. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+      "reason": "CSS selects `:focus`, `:focus-visible` and `:focus-within`, so the part has no state field `focused` and no `data-focused`."
     },
     {
       "upstream": "packages/react/src/field/description/FieldDescription.test.tsx",
@@ -101,86 +101,86 @@
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "The state has no `focused` (rule 8.15). A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own. `v-model:dirty` and `v-model:touched` replace `dirty` and `touched`, and the template ref has `validate()`."
+      "reason": "`v-model:dirty` and `v-model:touched` bind the dirty and touched states. The template ref has `validate()`, in place of `actionsRef`. CSS selects `:focus-within`, so the state has no `focused`. Vue gives an absent Boolean prop the value `false`, so `disabled` needs no default."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Item",
       "kind": "not-applicable",
-      "reason": "The state has no `focused` (rule 8.15). A Boolean prop of Vue is `false` when the developer does not give it, so `disabled` has no default of its own."
+      "reason": "CSS selects `:focus-within` on the field, so the state has no `focused`. Vue gives an absent Boolean prop the value `false`, so `disabled` needs no default."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Description",
       "kind": "not-applicable",
-      "reason": "The state has no `focused` (rule 8.15)."
+      "reason": "CSS selects `:focus-within` on the field, so the state has no `focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Label",
       "kind": "not-applicable",
-      "reason": "The state has no `focused` (rule 8.15). The label reads its element after the mount, so it needs no `nativeLabel`: a `<label>` names the control with `for`, and another element with `aria-labelledby`."
+      "reason": "The label reads its element after the mount, so it needs no `nativeLabel`: a `<label>` names the control with `for`, and another element with `aria-labelledby`. CSS selects `:focus-within` on the field, so the state has no `focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Error",
       "kind": "not-applicable",
-      "reason": "The state has no `focused` (rule 8.15) and no `transitionStatus`: a `<Transition>` around `Field.Error` gives the animation (rule 8.9)."
+      "reason": "`<Transition>` around `Field.Error` animates it, so the state has no `transitionStatus`, and the error has no `data-starting-style` and no `data-ending-style`. `match` takes the name of one failure. The `invalid` prop of `Field.Root` shows the error with no failure, and the default slot of `Field.Root` has `validity.valid`. CSS selects `:focus-within` on the field, so the state has no `focused`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Control",
       "kind": "not-applicable",
-      "reason": "`Field.Control` is cut. `Input` is this part, under one name (rule 8.10)."
+      "reason": "`Input` is the control of a field, and it also works with no field."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Validity",
       "kind": "not-applicable",
-      "reason": "`Field.Validity` is cut. The default slot of `Field.Root` gives the validity, the errors, the value and the first value."
+      "reason": "The default slot of `Field.Root` gives the validity, the errors, the value and the first value."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldControlDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldDescriptionDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldErrorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldItemDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldLabelDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "FieldRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Root",
       "prop": "validationMode",
       "kind": "not-applicable",
-      "reason": "The row gives the default `'onSubmit'`. The part has no Vue default: a prop that is absent takes the `validationMode` of the form, and `'onSubmit'` with no form, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The modes are `'submit'`, `'blur'` and `'change'`. The prop has no default: with no prop, the field takes the mode of its form, or else `'submit'`, as in Base UI. A default would hide that the prop is absent."
     }
   ],
   "surfaceAdditions": [
@@ -205,12 +205,12 @@
     {
       "entry": "Root",
       "emit": "update:dirty",
-      "reason": "`v-model:dirty` controls the dirty state. Base UI takes the `dirty` prop and has no event for the change."
+      "reason": "`v-model:dirty` binds the dirty state. Base UI takes the `dirty` prop and has no event for the change."
     },
     {
       "entry": "Root",
       "emit": "update:touched",
-      "reason": "`v-model:touched` controls the touched state. Base UI takes the `touched` prop and has no event for the change."
+      "reason": "`v-model:touched` binds the touched state. Base UI takes the `touched` prop and has no event for the change."
     }
   ],
   "returnTypeDifferences": [],

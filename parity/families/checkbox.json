@@ -13,22 +13,22 @@
     {
       "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
       "kind": "not-applicable",
-      "reason": "`Checkbox.Indicator` is cut. CSS on the input (`appearance: none`, `:checked`, `[data-indeterminate]`), an element of the developer beside the input (`:checked + .icon`), or the `element` slot with `state` gives the mark."
+      "reason": "CSS on the input (`appearance: none`, `:checked`, `[data-indeterminate]`), an element of the developer beside the input (`:checked + .icon`), or the `element` slot with `state` gives the mark."
     },
     {
       "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicatorDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRootContext.ts",
       "kind": "not-applicable",
-      "reason": "The context gives the state of the root to `Checkbox.Indicator`, which is cut. The `element` slot gives the state."
+      "reason": "The `element` slot gives the state of the checkbox, so no part needs the context."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRootDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/checkbox/utils/getCheckboxStateAttributesMapping.ts",
@@ -38,7 +38,7 @@
     {
       "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicator.test.tsx",
       "kind": "not-applicable",
-      "reason": "The file tests `Checkbox.Indicator`, which is cut. CSS on the input or an element of the developer gives the mark."
+      "reason": "The file tests `Checkbox.Indicator`. CSS on the input or an element of the developer gives the mark."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.react17.test.tsx",
@@ -55,7 +55,7 @@
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
       "describe": ["<Checkbox.Root />", "ARIA attributes"],
       "kind": "not-applicable",
-      "reason": "The part is the native input. The browser gives the role, the checked state, the disabled state and the required state (rules 8.1, 8.3)."
+      "reason": "The part is the native input. The browser gives the role, the checked state, the disabled state and the required state."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
@@ -67,25 +67,25 @@
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`Checkbox` is the part: one `<input type=\"checkbox\">` (rules 8.1, 8.3). The types of the part are `Checkbox.Props`, `Checkbox.State` and `Checkbox.ChangeEventReason`, also with the flat names `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason`. `readonly` replaces `readOnly`. `form` is a plain attribute, and the `element` of the template ref replaces `inputRef`. The input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-readonly` or `data-invalid`: CSS selects `:checked`, `:disabled`, `:required`, `[aria-readonly]` and `[aria-invalid]`."
+      "reason": "`Checkbox` is the part: one native `<input type=\"checkbox\">`, so it needs no `nativeButton`. Its types are `Checkbox.Props`, `Checkbox.State` and `Checkbox.ChangeEventReason`, and the flat names `CheckboxProps`, `CheckboxState` and `CheckboxChangeEventReason`. `readonly` is in place of `readOnly`, and `form` is a plain attribute. The `element` of the template ref is the input, in place of `inputRef`. CSS selects `:checked`, `:disabled`, `:required`, `[aria-readonly=\"true\"]` and `[aria-invalid=\"true\"]`, so the input has no `data-checked`, `data-unchecked`, `data-disabled`, `data-required`, `data-readonly` and `data-invalid`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "Indicator",
       "kind": "not-applicable",
-      "reason": "`Checkbox.Indicator` is cut. CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
+      "reason": "CSS on the input, an element of the developer beside the input, or the `element` slot with `state` gives the mark."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "CheckboxIndicatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
       "entry": "CheckboxRootDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes the attribute names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+      "reason": "The part writes the attribute names that the API reference lists, and CSS selects them as text. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [],

@@ -1,10 +1,11 @@
 ---
 order: 1
-description: An unstyled Vue switch component that indicates whether a setting is on or off.
+description: An unstyled Vue switch component that shows whether a setting is on or off.
 ---
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import BaseUiDifferences from '../.vitepress/components/BaseUiDifferences.vue';
 import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoSource from '../.vitepress/components/DemoSource.vue';
 import DemoSwitchHero from '../demos/switch/hero/css-modules/index.vue';
@@ -13,7 +14,7 @@ import DemoSwitchHeroTailwind from '../demos/switch/hero/tailwind/index.vue';
 
 # Switch
 
-A control that indicates whether a setting is on or off.
+A control that shows whether a setting is on or off.
 
 <DemoFrame>
   <DemoSwitchHero />
@@ -54,33 +55,6 @@ Import the component:
 
 <<< ./switch/Anatomy.vue
 
-`Switch` renders one `<input type="checkbox" role="switch">`. The browser gives it the label, the keyboard, the form data and `required`. Each attribute and listener that you give goes to the input.
-
-Bind the checked state with `v-model`, or give `defaultChecked` to an uncontrolled switch. A press emits `checkedChange` and then `update:modelValue`. To keep the state, call `details.cancel()` in `checkedChange`.
-
-`uncheckedValue` gives the form an entry while the switch is off, enabled and has a name. The switch adds the entry in a `formdata` listener of its form, so a submit before the hydration has no entry.
-
-A native reset of the form puts an uncontrolled switch back to its first state, and emits only `update:*`.
-
-## Styling
-
-The input is the element that you style. Select its states with these selectors:
-
-| Selector                 | State                                       |
-| ------------------------ | ------------------------------------------- |
-| `:checked`               | The switch is on.                           |
-| `:not(:checked)`         | The switch is off.                          |
-| `:disabled`              | The switch is disabled.                     |
-| `:required`              | The switch is required.                     |
-| `[aria-readonly="true"]` | The switch is read-only.                    |
-| `:focus-visible`         | The switch has the focus from the keyboard. |
-| `[data-valid]`           | The field is valid.                         |
-| `[aria-invalid="true"]`  | The field is invalid.                       |
-| `[data-touched]`         | The focus left the control.                 |
-| `[data-dirty]`           | The value differs from the first value.     |
-
-The last four selectors apply in a `Field`.
-
 ## Examples
 
 ### Labeling a switch
@@ -93,7 +67,7 @@ A `<label>` beside the switch names it with `for` and `id`:
 
 <<< ./switch/SiblingLabel.vue{6,7}
 
-### Showing a thumb
+### Show a thumb
 
 Give the input `appearance: none`, and put an element of your own after it for the thumb. Select the thumb with `:checked + .thumb`:
 
@@ -106,3 +80,7 @@ The `element` slot renders the input and gives its state. Render the thumb from 
 ## API reference
 
 <ApiReference />
+
+## Differences from Base UI
+
+<BaseUiDifferences />
