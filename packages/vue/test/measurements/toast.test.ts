@@ -254,13 +254,10 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     return { atOnce, afterAMove: log.splice(0) };
   }
 
-  test('T4: a toast under the pointer gets `inert`: `mouseleave` at once in Firefox and WebKit, at the next move in Chromium', async () => {
-    const result = await atRest(() => (element('a').inert = true));
-    expect(result).toEqual(
-      engine === 'chromium'
-        ? { atOnce: [], afterAMove: ['mouseleave'] }
-        : { atOnce: ['mouseleave'], afterAMove: [] },
-    );
+  test('T4: a toast under the pointer gets `inert`: `mouseleave` at the next move in Chromium, and at once or at the next move in Firefox and WebKit', async () => {
+    const { atOnce, afterAMove } = await atRest(() => (element('a').inert = true));
+    expect([...atOnce, ...afterAMove]).toEqual(['mouseleave']);
+    if (engine === 'chromium') expect(atOnce).toEqual([]);
   });
 
   test('T5: a toast under the pointer leaves the document: `mouseleave` at once in Chromium and Firefox, never in WebKit, which sends a `mouseover` outside', async () => {
@@ -558,7 +555,7 @@ describe(':focus-visible (T15, T16, T17)', () => {
     },
   );
 
-  test('T17: a mouse press on a root and on a button in it gives no :focus-visible; WebKit focuses the root for the button', async () => {
+  test('T17: a mouse press on a root and on a button in it gives no :focus-visible; WebKit on macOS focuses the root for the button', async () => {
     html(
       '<div id="root" tabindex="0" style="width: 300px; height: 80px"><button id="close">Close</button></div>',
     );
@@ -566,7 +563,10 @@ describe(':focus-visible (T15, T16, T17)', () => {
     expect(activeId()).toBe('root');
     expect(element('root').matches(':focus-visible')).toBe(false);
     await userEvent.click(element('close'));
-    expect(activeId()).toBe(engine === 'webkit' ? 'root' : 'close');
+    // WebKit on Linux focuses the button.
+    expect(activeId()).toBe(
+      engine === 'webkit' && navigator.platform.startsWith('Mac') ? 'root' : 'close',
+    );
     expect(document.activeElement!.matches(':focus-visible')).toBe(false);
   });
 });

@@ -277,19 +277,19 @@ describe('the timers (B2)', () => {
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' });
     fakeTimers();
-    manager.update('a', { timeout: 1000 });
-    await advance(400);
+    // A command of `vitest/browser` moves the fake clock while it runs, so the times are long.
+    manager.update('a', { timeout: 10000 });
+    await advance(4000);
     await userEvent.hover(toastRoot('a')!);
     await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
-    manager.add({ id: 'b', title: 'B', timeout: 100 });
-    await advance(5000);
+    manager.add({ id: 'b', title: 'B', timeout: 2000 });
+    await advance(20000);
     expect(manager.toasts.value).toHaveLength(2);
-    await userEvent.unhover(viewport());
     await userEvent.pointer({ coords: { x: 0, y: 0 } });
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
-    await advance(150);
+    await advance(2500);
     expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['a']);
-    await advance(500);
+    await advance(6000);
     expect(manager.toasts.value).toEqual([]);
   });
 
@@ -387,12 +387,13 @@ describe('the timers (B2)', () => {
         0,
       );
       await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+      // A touch that scrolls the page sends no `mouseleave` (test/measurements/toast.test.ts).
+      const page = document.body.appendChild(document.createElement('div'));
+      page.style.height = '3000px';
+      onTestFinished(() => page.remove());
       const outside = byId('toast-before').getBoundingClientRect();
-      await touchDrag(
-        { x: outside.left + 2, y: outside.top + 2 },
-        { x: outside.left + 2, y: outside.top + 2 },
-        0,
-      );
+      const start = { x: outside.left + 2, y: outside.top + 2 };
+      await touchDrag(start, { x: start.x, y: start.y - 100 }, 10);
       await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
     },
   );
@@ -501,6 +502,8 @@ describe('the stack (B4)', () => {
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', description: 'Short' });
     await waitFor(() => expect(manager.toasts.value[0]!.height).toBeGreaterThan(0));
+    // The resize observer measures once after its start.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const first = manager.toasts.value[0]!.height!;
     manager.update('a', { description: 'A longer text\nthat wraps on more lines '.repeat(20) });
     await waitFor(() => expect(manager.toasts.value[0]!.height).toBeGreaterThan(first));
@@ -526,13 +529,14 @@ describe('hover, focus and the window (B5)', () => {
 
   test('the hover ends when the toast under the pointer leaves the document', async () => {
     const { manager } = await mountToasts();
+    // The older toast is the lower one, so no toast is under the pointer after its close.
     await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
-    await userEvent.hover(toastRoot('b')!);
+    await userEvent.hover(toastRoot('a')!);
     await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
-    manager.close('b');
-    await waitFor(() => expect(toastRoot('b')).toBe(null));
-    // Chromium sends the events of a pointer at rest at its next move (test/measurements/toast.test.ts).
-    await userEvent.pointer({ coords: { x: 1, y: 1 } });
+    const leaving = toastRoot('a')!;
+    manager.close('a');
+    await waitFor(() => expect(leaving.isConnected).toBe(false));
+    // The pointer rests. WebKit then sends no `mouseleave` (test/measurements/toast.test.ts).
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
   });
 
@@ -647,11 +651,12 @@ describe('the keys (B6)', () => {
     });
     // The popup takes the focus after its first placement.
     await waitFor(() => expect(document.activeElement).toHaveAttribute('data-testid', 'first'));
-    const { manager } = await mountToasts();
+    // With no F6 the viewport has no origin, so only the root stops the Escape.
+    const { manager } = await mountToasts({ inPlace: true });
     await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
     byId('toast-before').focus();
-    await pressF6();
     await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('b'));
     await userEvent.keyboard('{Escape}');
     expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['a']);
     expect(log).not.toContain('escape-key');

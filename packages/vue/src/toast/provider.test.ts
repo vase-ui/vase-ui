@@ -62,7 +62,7 @@ describe('the list with no viewport', () => {
 });
 
 describe('the timers', () => {
-  test('stop with the time that is left, and start again; a timer that stops with no time left gets its full time', async () => {
+  test('stop with the time that is left, and start again', async () => {
     const { provider } = await mountProviders();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
     provider.add({ id: 'a', timeout: 1000 });
@@ -73,6 +73,17 @@ describe('the timers', () => {
     provider.setInteraction({ hover: false });
     await advance(350);
     expect(ids(provider)).toEqual(['a']);
+    await advance(100);
+    expect(ids(provider)).toEqual([]);
+  });
+
+  test('a timer that stops with no time left gets its full time at the next start', async () => {
+    const { provider } = await mountProviders();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    provider.add({ id: 'a', timeout: 1000 });
+    await advance(950);
+    // The clock of `Date` passes the end before the timer runs, as in a page that the browser
+    // throttles.
     vi.setSystemTime(Date.now() + 100);
     provider.setInteraction({ windowFocused: false });
     provider.setInteraction({ windowFocused: true });
