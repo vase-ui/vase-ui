@@ -154,9 +154,7 @@ export function interactionOf(event: Event): InteractionType {
   if (event.type === 'click' && event.detail === 0) return 'keyboard';
   const type = (event as Partial<PointerEvent>).pointerType;
   const target = event.target as Node | null;
-  return (
-    (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element)) ?? '')
-  );
+  return (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element)) ?? '');
 }
 
 const handleRoots = new WeakMap<PopupHandle, ShallowRef<PopupRoot | null>>();

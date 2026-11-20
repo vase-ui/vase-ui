@@ -1,11 +1,4 @@
-import {
-  computed,
-  effectScope,
-  onMounted,
-  onUnmounted,
-  shallowReactive,
-  watch,
-} from 'vue';
+import { computed, effectScope, onMounted, onUnmounted, shallowReactive, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';

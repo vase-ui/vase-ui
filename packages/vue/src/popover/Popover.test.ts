@@ -277,7 +277,9 @@ describe('in the DOM (L2)', () => {
     expect(positioner()).not.toBe(null);
     await waitFor(() => expect(log).toEqual(['after-enter', 'after-leave']));
     expect(document.querySelector('[data-testid="backdrop"]')).not.toBe(null);
-    await waitFor(() => expect(log).toEqual(['after-enter', 'after-leave', 'backdrop-after-leave']));
+    await waitFor(() =>
+      expect(log).toEqual(['after-enter', 'after-leave', 'backdrop-after-leave']),
+    );
     await waitFor(() => expect(positioner()).toBe(null));
   });
 
@@ -428,6 +430,7 @@ describe('the dismissal (L4)', () => {
     const escape = (init: KeyboardEventInit) =>
       button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, ...init }));
     escape({ isComposing: true });
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- An IME sends the key code 229 while it composes.
     escape({ keyCode: 229 });
     button.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
     escape({});
@@ -614,9 +617,13 @@ describe('the dismissal (L4)', () => {
           backdrop: { style: 'position: fixed; inset: 0' },
         },
       });
-      await waitFor(() => expect(container.querySelector('[data-testid="nested-backdrop"]')).toBeTruthy());
+      await waitFor(() =>
+        expect(container.querySelector('[data-testid="nested-backdrop"]')).toBeTruthy(),
+      );
       await userEvent.click(byTestId('nested-backdrop'), { position: { x: 2, y: 2 } });
-      await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
+      await waitFor(() =>
+        expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null),
+      );
       expect(popup()).not.toBe(null);
       expect(log).toEqual(['child']);
     } finally {
@@ -637,7 +644,9 @@ describe('the dismissal (L4)', () => {
         portal: { to: container },
       });
       await waitFor(() =>
-        expect(container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility).toBe(''),
+        expect(
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+        ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
       input.focus();
@@ -666,7 +675,9 @@ describe('the dismissal (L4)', () => {
     try {
       mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
       await waitFor(() =>
-        expect(container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility).toBe(''),
+        expect(
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+        ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
       input.focus();
@@ -676,7 +687,9 @@ describe('the dismissal (L4)', () => {
     }
   });
 
-  test('a press on a scrollbar keeps a popover open that closes at the press of an outside element', async ({ skip }) => {
+  test('a press on a scrollbar keeps a popover open that closes at the press of an outside element', async ({
+    skip,
+  }) => {
     const style = document.head.appendChild(document.createElement('style'));
     style.textContent = '.scroller::-webkit-scrollbar { width: 12px; height: 12px }';
     const box = (dir: string) => {
@@ -1351,7 +1364,9 @@ describe('the hover (L9)', () => {
     });
     await userEvent.hover(trigger());
     await opened();
-    document.documentElement.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    document.documentElement.dispatchEvent(
+      new PointerEvent('pointerleave', { pointerType: 'mouse' }),
+    );
     await closed();
   });
 
@@ -1363,7 +1378,10 @@ describe('the hover (L9)', () => {
     const element = await opened();
     await placed();
     const outside = centerOf(byId('outside'));
-    const moves = Array.from({ length: 12 }, (_, index) => ({ x: outside.x + index, y: outside.y }));
+    const moves = Array.from({ length: 12 }, (_, index) => ({
+      x: outside.x + index,
+      y: outside.y,
+    }));
     await moveMouse([centerOf(element), ...moves]);
     expect(popup()).toBe(null);
   });
@@ -1654,7 +1672,12 @@ describe('the placement (L10)', () => {
         window.scrollTo({ top: 0, behavior: 'instant' });
         await mountPopover({
           root: { defaultOpen: true },
-          positioner: { anchor, positionMethod: 'fixed', align: 'start', disableAnchorTracking: true },
+          positioner: {
+            anchor,
+            positionMethod: 'fixed',
+            align: 'start',
+            disableAnchorTracking: true,
+          },
         });
         await opened();
         await placed();

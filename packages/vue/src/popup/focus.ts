@@ -28,7 +28,8 @@ export function tabbables(container: Element): HTMLElement[] {
   return found.filter((element) => {
     if (!isNamedRadio(element)) return true;
     const group = found.filter(
-      (other) => isNamedRadio(other) && other.name === element.name && other.form === element.form,
+      (other): other is HTMLInputElement =>
+        isNamedRadio(other) && other.name === element.name && other.form === element.form,
     );
     return element === (group.find((radio) => radio.checked) ?? group[0]);
   });

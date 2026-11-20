@@ -347,8 +347,7 @@ export function usePlacement(
       '--anchor-width': anchorSize.value?.width,
       '--anchor-height': anchorSize.value?.height,
       '--transform-origin': floating.middlewareData.value.transformOrigin?.value as
-        | string
-        | undefined,
+        string | undefined,
       visibility: placed.value ? undefined : 'hidden',
     };
   });
