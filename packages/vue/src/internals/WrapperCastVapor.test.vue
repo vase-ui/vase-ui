@@ -1,9 +1,9 @@
 <script setup vapor lang="ts">
-import { Drawer } from '@vase-ui/vue/drawer';
+import { Menu } from '@vase-ui/vue/menu';
 
 defineProps<{ open?: boolean | undefined }>();
 </script>
 
 <template>
-  <Drawer.Root :open="open" />
+  <Menu.Root :open="open" />
 </template>

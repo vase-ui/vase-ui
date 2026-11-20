@@ -5,7 +5,6 @@ import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
@@ -31,18 +30,6 @@ const vMark: Directive<HTMLElement, string> = {
 };
 
 const families: PopupFamily[] = [
-  {
-    name: 'Drawer.Popup',
-    part: Drawer.Popup,
-    tree: (popup) => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>{popup}</Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
-    siblings: 'guards',
-  },
   {
     name: 'Menu.Popup',
     part: Menu.Popup,

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
-import * as Drawer from '../../../drawer/index.parts';
+import { Drawer } from '../../../drawer';
 import * as Menu from '../../../menu/index.parts';
 import {
   createHeldBranch,

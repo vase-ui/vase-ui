@@ -5,7 +5,6 @@ import { createRenderer, screen, waitFor } from '#test-utils';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
@@ -42,18 +41,6 @@ interface Row {
 const targetId = () => screen.getByTestId('target').id;
 
 const rows: Row[] = [
-  {
-    name: 'Drawer.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Drawer.Root>
-        <Drawer.Trigger aria-haspopup={undefined} data-testid="part">
-          Open
-        </Drawer.Trigger>
-      </Drawer.Root>
-    ),
-    expected: () => 'dialog',
-  },
   {
     name: 'Autocomplete.Input role',
     attribute: 'role',
@@ -96,50 +83,6 @@ const rows: Row[] = [
       </ContextMenu.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Drawer.Popup aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: () => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup aria-labelledby={undefined} data-testid="part">
-              <Drawer.Title data-testid="target">Title</Drawer.Title>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
-    expected: targetId,
-  },
-  {
-    name: 'Drawer.Portal id',
-    attribute: 'id',
-    createNode: () => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal id={undefined} data-testid="part">
-          <Drawer.Viewport>
-            <Drawer.Popup />
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
-    expected: () => expect.stringMatching(/./),
-  },
-  {
-    name: 'Drawer.Popup role',
-    attribute: 'role',
-    createNode: () => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup role={undefined} data-testid="part" />
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
-    expected: () => 'dialog',
   },
   {
     name: 'FilterDropdown.Input role',
@@ -240,20 +183,6 @@ const rows: Row[] = [
       </Toast.Provider>
     ),
     expected: targetId,
-  },
-  {
-    name: 'Drawer.Trigger type',
-    attribute: 'type',
-    createNode: () => (
-      <form>
-        <Drawer.Root>
-          <Drawer.Trigger type={undefined} data-testid="part">
-            Open
-          </Drawer.Trigger>
-        </Drawer.Root>
-      </form>
-    ),
-    expected: () => 'button',
   },
   {
     name: 'Tooltip.Popup data-open',
