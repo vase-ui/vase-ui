@@ -20,6 +20,7 @@ const get = (id: string, root: ParentNode = document) => byTestId(id, root)!;
 const byId = (id: string) => document.getElementById(id)!;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+const isVaporParts = ['vapor', 'vdom-interop'].includes(inject('app'));
 
 async function mountMenu(setup: Props = {}) {
   const result = mount(NavigationMenuParts, setup);
@@ -574,7 +575,9 @@ describe('the keys', () => {
   test('the arrow keys of the orientation move the focus in the list, with no loop, and stop at an end', async () => {
     await mountMenu();
     const seen: string[] = [];
-    document.body.addEventListener('keydown', (event) => seen.push(event.key), { once: false });
+    const record = (event: KeyboardEvent) => seen.push(event.key);
+    document.body.addEventListener('keydown', record);
+    onTestFinished(() => document.body.removeEventListener('keydown', record));
     get('trigger-one').focus();
     await userEvent.keyboard('{ArrowRight}');
     expect(document.activeElement).toBe(get('trigger-two'));
@@ -765,6 +768,17 @@ describe('the Tab order', () => {
     expect(document.activeElement).toBe(byId('after'));
   });
 
+  test('a Tab that a listener of the developer prevents moves no focus', async () => {
+    const prevent = (event: KeyboardEvent) => event.key === 'Tab' && event.preventDefault();
+    await mountMenu({ triggers: { one: { onKeydown: prevent } } });
+    await userEvent.click(get('trigger-one'));
+    await shows('one');
+    await placed();
+    get('trigger-one').focus();
+    await tab();
+    expect(document.activeElement).toBe(get('trigger-one'));
+  });
+
   test('VUE-132: with no viewport, Tab on the active trigger goes to the next tab stop', async () => {
     await mountMenu({ noViewport: true });
     await userEvent.click(get('trigger-one'));
@@ -814,6 +828,17 @@ describe('the content', () => {
     await closed();
     await waitFor(() => expect(content.parentElement!.localName).toBe('li'));
     expect(content).toHaveAttribute('hidden');
+  });
+
+  // A Vapor part has no instance that tells a client-only mount from a hydration, so it mounts a
+  // kept content again after its own mount.
+  test.skipIf(isVaporParts)('a kept content mounts the components in it one time', async () => {
+    let mounts = 0;
+    await mountMenu({ contents: { one: { keepMounted: true } }, countMount: () => (mounts += 1) });
+    await frame();
+    get('trigger-one').click();
+    await shows('one');
+    expect(mounts).toBe(1);
   });
 
   test('with a kept portal, the closed contents are hidden in the closed popup', async () => {
@@ -944,7 +969,7 @@ describe('the size', () => {
     { name: 'its item', contents: {} },
     { name: 'its kept item', contents: { a: { keepMounted: true }, b: { keepMounted: true } } },
   ])('the popup follows a nested inline root that changes $name', async ({ contents }) => {
-    const { exposed } = await mountMenu({
+    await mountMenu({
       root: { defaultValue: 'one' },
       contents: { one: { style: 'height: auto' } },
       nested: { root: { defaultValue: 'sub-a' }, contents },
@@ -961,7 +986,6 @@ describe('the size', () => {
     expect(get('positioner').style.getPropertyValue('--positioner-height')).toBe(
       `${before + 60}px`,
     );
-    expect(exposed).toBeDefined();
   });
 
   test('the popup animates from its old size to the size of the new content', async () => {

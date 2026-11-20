@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch, type TransitionProps } from 'vue';
+// eslint-disable-next-line no-restricted-imports -- Vue has no other API that tells a client-only mount from a hydration in `setup`: it sets `vnode.el` before `setup` only when it hydrates the component. A Vapor component gets no instance, and it waits for its mount.
+import { getCurrentInstance } from 'vue';
 import { useElement } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
@@ -37,8 +39,13 @@ providePortalTarget((inherited) => root.portalTarget ?? inherited);
 // The server and the hydration render a kept content in its item with no `<Teleport>`: the server
 // render of a component with no `ssrRender`, such as one of the package in Nuxt, drops a
 // `<Teleport>` with no target, and Vue 3.5.12 cannot hydrate one. The `<Teleport>` comes after the
-// mount, disabled while no viewport is there.
-const mounted = useIsHydrated();
+// mount, disabled while no viewport is there, and the kept content mounts again in it. A
+// client-only mount renders the `<Teleport>` at once, so the kept content mounts one time.
+const clientOnly =
+  // eslint-disable-next-line no-restricted-globals -- `setup` has no element for `ownerDocument`. The typeof check tells a server from a client.
+  typeof document !== 'undefined' && getCurrentInstance()?.vnode.el === null;
+const hydrated = useIsHydrated();
+const teleports = computed(() => clientOnly || hydrated.value);
 const contentId = computed(() => givenId(props.id) ?? generatedId);
 const shown = computed(
   () => root.shown != null && root.shown === item.value && root.target !== null,
@@ -100,7 +107,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Teleport v-if="mounted" :to="root.target" :disabled="!root.target">
+  <Teleport v-if="teleports" :to="root.target" :disabled="!root.target">
     <Transition v-bind="transitionProps">
       <slot
         v-if="rendered && $slots.element"

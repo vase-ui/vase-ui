@@ -201,7 +201,9 @@ export function useNavigationMenuRoot(
     const trigger = popup.activeTrigger;
     const box = popup.popup;
     const [before, after] = sentinels();
-    if (event.key !== 'Tab' || !trigger || !box || !before || !after) return;
+    if (event.key !== 'Tab' || event.defaultPrevented || !trigger || !box || !before || !after) {
+      return;
+    }
     if (tabbables(box).length === 0) return;
     const keyTarget = event.composedPath()[0];
     if (!event.shiftKey && keyTarget === trigger) moveTo(before);

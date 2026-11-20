@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTemplateRef, type PropType } from 'vue';
 import { NavigationMenu } from '../../src/navigation-menu';
+import MountLog from './MountLog.vue';
 
 type Props = Record<string, unknown>;
 
@@ -33,6 +34,8 @@ defineProps({
   moreLinks: { type: Number, default: 0 },
   /** A nested root in the content of `one`, in place unless `inline` is `false`. */
   nested: Object as PropType<{ root?: Props; inline?: boolean; contents?: Record<string, Props> }>,
+  /** Called at each mount of a component in the content of `one`. */
+  countMount: Function as PropType<() => void>,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart });
@@ -57,6 +60,7 @@ defineExpose({ root: rootPart });
         >
           <NavigationMenu.Link href="#one-a" data-testid="link-one-a">One A</NavigationMenu.Link>
           <NavigationMenu.Link href="#one-b" data-testid="link-one-b">One B</NavigationMenu.Link>
+          <MountLog v-if="countMount" @mount="countMount" />
           <NavigationMenu.Link
             v-for="index in moreLinks"
             :key="index"

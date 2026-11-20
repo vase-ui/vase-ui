@@ -66,14 +66,14 @@ To keep the popup in the DOM until an animation of JavaScript ends, use the Java
 
 ## Keyboard
 
-| Key                                | Action                                                                                                      |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| <kbd>Enter</kbd>, <kbd>Space</kbd> | On a trigger: opens or closes its item.                                                                     |
-| <kbd>ArrowDown</kbd>               | On a trigger of a horizontal root: opens its item. In a vertical root, <kbd>ArrowRight</kbd> opens it.      |
-| Arrow keys of the orientation      | In the list: move the focus to the next or the previous trigger or link, with no loop.                      |
-| Arrow keys                         | In a content: move the focus between its links and triggers, with a loop.                                   |
-| <kbd>Tab</kbd>                     | On the trigger of the open item: goes into its content. From the end of the content, goes to the next item. |
-| <kbd>Escape</kbd>                  | In a menu with a portal: closes the menu, and the focus in the popup goes to the trigger.                   |
+| Key                                | Action                                                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <kbd>Enter</kbd>, <kbd>Space</kbd> | On a trigger: opens or closes its item.                                                                                                                |
+| <kbd>ArrowDown</kbd>               | On a trigger of a horizontal root: opens its item. In a vertical root, <kbd>ArrowRight</kbd> opens it, and <kbd>ArrowLeft</kbd> in right-to-left text. |
+| Arrow keys of the orientation      | In the list: move the focus to the next or the previous trigger or link, with no loop.                                                                 |
+| Arrow keys                         | In a content: move the focus between its links and triggers, with a loop.                                                                              |
+| <kbd>Tab</kbd>                     | On the trigger of the open item: goes into its content. From the end of the content, goes to the next item.                                            |
+| <kbd>Escape</kbd>                  | In a menu with a portal: closes the menu, and the focus in the popup goes to the trigger.                                                              |
 
 ## Styling
 
@@ -108,7 +108,7 @@ The root of `NavigationMenu.Content` is a `<Teleport>`, so a scoped rule of the 
 
 ## Server render
 
-`NavigationMenu.Portal` renders its content after its mount, so the server HTML has the list, the triggers and the links of the list. With `keepMounted`, a `NavigationMenu.Content` is in the server HTML, hidden in its item, so its links are in the page also before the app runs.
+`NavigationMenu.Portal` renders its content after its mount, so the server HTML has the list, the triggers and the links of the list. With `keepMounted`, a `NavigationMenu.Content` is in the server HTML, hidden in its item, so its links are in the page also before the app runs. After the hydration, Vue mounts the content again in a `<Teleport>`, so a component in it mounts two times.
 
 ## Examples
 
