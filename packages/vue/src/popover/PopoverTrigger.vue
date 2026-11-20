@@ -29,7 +29,7 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const context = useTriggerRoot(() => props.handle as PopoverHandle | undefined);
 const root = () => context.value?.root ?? null;
-const id = computed(() => givenId(props.id) ?? generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 
 const hover = usePopupHover(root, {
   trigger: element,
@@ -40,7 +40,7 @@ const hover = usePopupHover(root, {
 });
 const trigger = usePopupTrigger(root, {
   element,
-  id: () => id.value,
+  id: () => elementId.value,
   payload: () => props.payload,
   disabled: () => props.disabled,
   closesAtPress: (event) => !props.openOnHover || hover.closesAtPress(event),
@@ -56,7 +56,7 @@ function elementProps() {
   const popup = current?.popup;
   return trigger.button.mergeAttributes(
     mergeProps(props.openOnHover ? hover.listeners : {}, {
-      id: id.value,
+      id: elementId.value,
       'aria-haspopup': 'dialog',
       'aria-expanded': trigger.open.value ? 'true' : 'false',
       'aria-controls': trigger.open.value && popup?.isConnected ? popup.id : undefined,

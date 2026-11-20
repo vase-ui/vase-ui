@@ -485,7 +485,7 @@ function transformOrigin(
  * The `referenceHidden` strategy of `hide()` of Floating UI. An anchor with `display: none` has a
  * rectangle of zeros, and it is hidden too.
  */
-const hide: Middleware = {
+export const hide: Middleware = {
   name: 'hide',
   async fn(state) {
     const { width, height, x, y } = state.rects.reference;

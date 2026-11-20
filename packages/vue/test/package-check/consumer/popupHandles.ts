@@ -20,7 +20,6 @@ export function useHandles() {
     alertDialogHandle,
     drawerHandle,
     menuHandle,
-    popoverHandle,
     previewCardHandle,
     tooltipHandle,
   ]) {
@@ -29,6 +28,10 @@ export function useHandles() {
     if (open) handle.close();
     else if (!mounted) handle.open('trigger');
   }
+  // A Popover handle has no store.
+  const popoverOpen: boolean = popoverHandle.isOpen;
+  if (popoverOpen) popoverHandle.close();
+  else popoverHandle.open('trigger');
   dialogHandle.openWithPayload(1);
   alertDialogHandle.openWithPayload(1);
   drawerHandle.openWithPayload(1);

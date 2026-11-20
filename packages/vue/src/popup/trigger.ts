@@ -1,4 +1,4 @@
-import { computed, watch, type Ref } from 'vue';
+import { computed, onMounted, onUnmounted, watch, type Ref } from 'vue';
 import { useButton } from '../button/button';
 import type { PopupRoot } from './root';
 
@@ -33,13 +33,25 @@ export function usePopupTrigger(
       return button.disabled.value;
     },
   };
-  watch(
-    root,
-    (current, _, onCleanup) => {
-      if (current) onCleanup(current.addTrigger(entry));
-    },
-    { immediate: true },
-  );
+  // The server and the first render know the root of the setup. A server stops an immediate
+  // watcher after its first run, and its cleanup would remove the trigger.
+  const initial = root();
+  const removeInitial = initial?.addTrigger(entry);
+  // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part
+  // registers before the call.
+  onUnmounted(() => removeInitial?.());
+  // A handle can give the trigger another root after the mount.
+  onMounted(() => {
+    watch(
+      root,
+      (current, _, onCleanup) => {
+        if (current === initial) return;
+        removeInitial?.();
+        if (current) onCleanup(current.addTrigger(entry));
+      },
+      { immediate: true },
+    );
+  });
 
   const active = computed(() => {
     const current = root();

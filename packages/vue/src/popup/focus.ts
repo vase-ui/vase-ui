@@ -44,9 +44,18 @@ function collect(container: Element | ShadowRoot, found: HTMLElement[]) {
   }
 }
 
+// A browser gives an editable element and a media element with controls the `tabIndex` -1, and its
+// Tab key reaches them.
+function tabIndexOf(element: HTMLElement) {
+  const reached =
+    !element.hasAttribute('tabindex') &&
+    (element.isContentEditable || /^(?:audio|video)$/.test(element.localName));
+  return reached ? 0 : element.tabIndex;
+}
+
 function isTabbable(element: HTMLElement) {
   return (
-    element.tabIndex >= 0 &&
+    tabIndexOf(element) >= 0 &&
     !element.matches(':disabled') &&
     !element.closest('[inert]') &&
     element.checkVisibility({ checkVisibilityCSS: true })
