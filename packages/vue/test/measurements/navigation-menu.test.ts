@@ -140,7 +140,8 @@ describe('an element that leaves (M5)', () => {
     await nextTick();
     const next = root.querySelector<HTMLElement>('[data-name="b"]')!;
     expect(next.dataset.direction).toBe('right');
-    expect(old.dataset.direction).toBe(animatesTeleportRoot ? 'none' : undefined);
+    // Before Vue 3.5.41 the old element goes at once, with the value of its last render.
+    expect(old.dataset.direction).toBe('none');
     takeReportedMessages();
   });
 });
