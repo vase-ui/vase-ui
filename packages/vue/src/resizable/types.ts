@@ -12,10 +12,7 @@ export type ResizableLayout = Record<string, number | string>;
 /** A drag changes the layout at each move (`'live'`), or one time at the release. */
 export type ResizableRootResizeMode = 'live' | 'on-release';
 
-/**
- * The action of the user: `'drag'` is a drag of a handle, `'keyboard'` a key on a handle, and
- * `'reset'` a double click on a handle.
- */
+/** `'reset'` is a double click on a handle. */
 export type ResizableRootChangeEventReason = 'drag' | 'keyboard' | 'reset';
 
 export type ResizableRootChangeEventDetails = ChangeEventDetails<ResizableRootChangeEventReason>;
