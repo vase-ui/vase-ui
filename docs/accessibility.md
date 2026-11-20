@@ -33,7 +33,7 @@ Each component has tests in Chromium, Firefox and WebKit. Also test your app wit
 
 ### Automated checks
 
-An open popup in a portal has a focus sentinel before and after its content. A toast viewport has the same sentinels while it shows a toast. A sentinel is a `<span>` with `tabindex="0"` and `aria-hidden="true"`. When a sentinel gets the focus, the component moves the focus at once. The sentinels keep the Tab order correct between the page and the portal.
+An open popup that can hold the focus, such as a Dialog, a Menu, a Popover or a Select, has a focus sentinel before and after the content of its portal. A toast viewport has the same sentinels after <kbd>F6</kbd> moves the focus into it. A sentinel is a `<span>` with `tabindex="0"` and `aria-hidden="true"`. When a sentinel gets the focus, the component moves the focus at once. The sentinels keep the Tab order correct between the page and that content.
 
 [axe-core](https://github.com/dequelabs/axe-core) reports each sentinel under the rule `aria-hidden-focus`. The report is a false positive: [ACT rule 6cfa84](https://www.w3.org/WAI/standards-guidelines/act/rules/6cfa84/) passes a sentinel that moves the focus. Base UI and Floating UI render the same sentinels ([base-ui#5237](https://github.com/mui/base-ui/issues/5237), [floating-ui#2758](https://github.com/floating-ui/floating-ui/issues/2758)).
 
