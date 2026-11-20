@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
+import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { sizeVariables } from '../popup/viewport';
 import { injectPositioner, injectTooltipRoot } from './root';
@@ -33,6 +33,11 @@ const state = computed<TooltipPopupState>(() => ({
 }));
 
 watch(element, (popup) => root.setPopup(popup), { flush: 'sync' });
+// Vue stops the watcher before it removes the element of the part, so the part clears the popup of
+// the root. The popup of a part that mounted first stays.
+onBeforeUnmount(() => {
+  if (root.popup === element.value) root.setPopup(null);
+});
 // Vue does not patch an element that leaves in a `<Transition>`, so the close writes its instant.
 watch(
   () => context.instant,
@@ -43,10 +48,7 @@ watch(
   { flush: 'sync' },
 );
 const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(() => {
-  removeLeaving();
-  if (root.popup === element.value) root.setPopup(null);
-});
+onUnmounted(removeLeaving);
 
 function elementProps() {
   const closed = !root.open;
