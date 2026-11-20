@@ -62,11 +62,15 @@ export function usePopupHover(
     });
   }
 
-  // A touch ends with `pointerleave`, which stops the delay. A popup that is open for this trigger
-  // keeps the time of its open, for the press after it.
+  // A touch that rests for the delay would open the popup, and the click at its end would close it.
+  // A popup that is open for this trigger keeps the time of its open, for the press after it.
   function onPointerenter(event: PointerEvent) {
     const current = root();
-    if (!options.enabled() || (current?.open && current.activeTrigger === options.trigger.value)) {
+    if (
+      !options.enabled() ||
+      event.pointerType === 'touch' ||
+      (current?.open && current.activeTrigger === options.trigger.value)
+    ) {
       return;
     }
     startOpen(event);
