@@ -74,7 +74,6 @@ describe('the parts', () => {
     expect(region).toHaveAttribute('aria-live', 'polite');
     expect(region).toHaveAttribute('aria-atomic', 'false');
     expect(region).toHaveAttribute('aria-relevant', 'additions');
-    expect(region).not.toHaveAttribute('aria-label', 'Notifications ');
     const root = toastRoot('a')!;
     expect(root.localName).toBe('div');
     expect(root).toHaveAttribute('role', 'dialog');
@@ -545,6 +544,32 @@ describe('hover, focus and the window (B5)', () => {
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
   });
 
+  test.each(['a blur of the window', 'a keyboard focus in a toast'])(
+    'a viewport that unmounts after %s leaves the timers of the next viewport to run',
+    async (state) => {
+      // A new key mounts a new viewport in the same provider.
+      const list = reactive<Props>({ key: 'first' });
+      const { manager } = await mountToasts({ list });
+      await added(manager, { id: 'a', title: 'A' });
+      if (state === 'a blur of the window') {
+        window.dispatchEvent(new FocusEvent('blur'));
+      } else {
+        byId('toast-before').focus();
+        await pressF6();
+        await userEvent.keyboard('{Tab}');
+        expect(document.activeElement).toBe(toastRoot('a'));
+      }
+      const first = toastRoot('a');
+      list.key = 'second';
+      await waitFor(() => {
+        expect(toastRoot('a')).not.toBe(null);
+        expect(toastRoot('a')).not.toBe(first);
+      });
+      manager.update('a', { timeout: 100 });
+      await waitFor(() => expect(toastRoot('a')).toBe(null));
+    },
+  );
+
   test('the hover ends when the last toast closes, also while the toast leaves under the pointer', async () => {
     style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
     const { manager } = await mountToasts();
@@ -748,6 +773,22 @@ describe('the keys (B6)', () => {
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(toastRoot('b'));
     await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
+    manager.update('a', { timeout: 100 });
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('a close ends the focus state when the origin cannot take the focus', async () => {
+    const { manager } = await mountToasts({ provider: { limit: 1 } });
+    await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
+    const origin = byId('toast-before') as HTMLInputElement;
+    origin.focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('b'));
+    await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    origin.disabled = true;
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
     manager.update('a', { timeout: 100 });

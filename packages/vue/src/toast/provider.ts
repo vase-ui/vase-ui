@@ -23,9 +23,10 @@ import type {
 /** What `Toast.Viewport` gives to its provider. */
 export interface ToastViewportOfProvider {
   readonly element: HTMLElement | null;
-  /** The element that had the focus before F6 moved it to the viewport. */
-  readonly origin: Element | null;
-  /** Moves the focus to the origin. Gives `true` when the focus is then outside the viewport. */
+  /**
+   * Moves the focus to the element that had it before F6. Gives `true` when the focus is then
+   * outside the viewport.
+   */
   returnFocus(): boolean;
 }
 
@@ -231,10 +232,9 @@ export function useToastProvider(
           .find((element) => element && !element.inert)
       : null;
     if (next) next.focus();
-    else if (viewport.value?.origin) viewport.value.returnFocus();
     // Firefox and WebKit send no `focusout` when the focused element leaves the document, so the
     // viewport keeps its focus state (test/measurements/toast.test.ts).
-    else (active as HTMLElement).blur();
+    else if (!viewport.value?.returnFocus()) (active as HTMLElement).blur();
   }
 
   function promise<Value>(value: Promise<Value>, options: ToastManagerPromiseOptions<Value>) {

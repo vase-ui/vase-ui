@@ -32,9 +32,6 @@ const removeViewport = provider.setViewport({
   get element() {
     return element.value;
   },
-  get origin() {
-    return origin.value;
-  },
   returnFocus,
 });
 onUnmounted(removeViewport);
@@ -62,7 +59,7 @@ function onKeydown(event: KeyboardEvent) {
     (event.key === 'Tab' && event.shiftKey && event.target === element.value) ||
     // An Escape that no toast took (VUE-130).
     (event.key === 'Escape' && !isComposing(event));
-  if (back && origin.value && returnFocus()) {
+  if (back && returnFocus()) {
     event.stopPropagation();
     event.preventDefault();
   }
@@ -138,6 +135,10 @@ watch(
       win.removeEventListener('blur', onBlur);
       win.removeEventListener('focus', onFocus);
       doc.removeEventListener('visibilitychange', onVisibilitychange);
+      // The states that the element gave end with it, so that the timers of another viewport run.
+      // Firefox and WebKit send no `focusout` when the focused element leaves the document
+      // (test/measurements/toast.test.ts).
+      provider.setInteraction({ hover: false, focus: false, windowFocused: true, hidden: false });
     });
   },
   { immediate: true, flush: 'post' },
