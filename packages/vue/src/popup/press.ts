@@ -9,7 +9,7 @@ import type { PopupRoot } from './root';
 /**
  * The press, drag and release of a popup that a mouse press opens at `pointerdown`. The browser
  * sends the `click` of a press that starts on one element and ends on another to their common
- * ancestor (test/measurements/menu.test.ts), so a release on an item gives the item the focus and
+ * ancestor (test/measurements/select.test.ts), so a release on an item gives the item the focus and
  * one `click` itself.
  */
 export function usePopupPress(

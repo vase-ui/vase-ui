@@ -1,4 +1,6 @@
-<script setup lang="ts" generic="Value = any, Multiple extends boolean | undefined = false">
+<script setup lang="ts" generic="Value = never, Multiple extends boolean | undefined = false">
+// vue-tsc resolves `Value` before it checks a listener of a template. With the default `never`,
+// that check accepts a typed parameter and keeps `null` in the type.
 import { computed, inject, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
@@ -46,20 +48,20 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: input, setElement: setInput } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 const ownDisabled = computed(() => props.disabled || inDisabledFieldset.value);
-const disabled = computed(() => ownDisabled.value || !!field?.disabled);
-const id = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const isDisabled = computed(() => ownDisabled.value || !!field?.disabled);
+const triggerId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 
 const { context, value, firstValue, setOwn, close } = useSelectRoot(
   props,
-  { field, triggerId: () => id.value, disabled: () => disabled.value },
+  { field, triggerId: () => triggerId.value, disabled: () => isDisabled.value },
   emit,
 );
 
-const form = useSelectForm(
+const inputs = useSelectForm(
   context,
   {
     get id() {
-      return id.value;
+      return triggerId.value;
     },
     get name() {
       return props.name;
@@ -98,21 +100,21 @@ defineExpose({ element, inputElement: input, close });
 <template>
   <component :is="as" v-if="as" v-bind="attrs" :ref="setElement">
     <slot />
-    <input v-bind="form.textProps()" :ref="setInput" />
+    <input v-bind="inputs.textProps()" :ref="setInput" />
     <input
-      v-for="(text, index) in form.hiddenValues.value"
+      v-for="(text, index) in inputs.hiddenValues.value"
       :key="index"
-      v-bind="form.hiddenProps()"
+      v-bind="inputs.hiddenProps()"
       :value="text"
     />
   </component>
   <div v-else v-bind="attrs" :ref="setElement">
     <slot />
-    <input v-bind="form.textProps()" :ref="setInput" />
+    <input v-bind="inputs.textProps()" :ref="setInput" />
     <input
-      v-for="(text, index) in form.hiddenValues.value"
+      v-for="(text, index) in inputs.hiddenValues.value"
       :key="index"
-      v-bind="form.hiddenProps()"
+      v-bind="inputs.hiddenProps()"
       :value="text"
     />
   </div>

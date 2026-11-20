@@ -3,7 +3,7 @@
 import { h } from 'vue';
 import type { VNode } from 'vue';
 import * as Menu from '../src/menu/index.parts';
-import * as Select from '../src/select/index.parts';
+import * as Select from '../src/select/parts';
 import * as Tooltip from '../src/tooltip/index.parts';
 
 // `Component` refuses this function, because its context has a required slot. A function type

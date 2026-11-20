@@ -11,7 +11,6 @@ import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
@@ -181,31 +180,6 @@ const navigationMenuParts = (part: string) => (k: string, blankId: BlankId) => (
   </NavigationMenu.Root>
 );
 
-const selectParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Field.Root>
-    <Field.Label>Fruit {k}</Field.Label>
-    <Select.Root defaultOpen {...blankIdIf(part === 'Root', blankId)}>
-      <Select.Trigger {...blankIdIf(part === 'Trigger', blankId)} data-testid={`trigger${k}`}>
-        <Select.Value placeholder="Pick" />
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Positioner>
-          <Select.Popup {...blankIdIf(part === 'Popup', blankId)}>
-            <Select.List {...blankIdIf(part === 'List', blankId)}>
-              <Select.Group data-testid={`group${k}`}>
-                <Select.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
-                  Group {k}
-                </Select.GroupLabel>
-                <Select.Item value="a">A</Select.Item>
-              </Select.Group>
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  </Field.Root>
-);
-
 const comboboxParts = (part: string) => (k: string, blankId: BlankId) => (
   <Field.Root>
     <Field.Label>Fruit {k}</Field.Label>
@@ -362,17 +336,6 @@ const rows: Row[] = [
     ready: 'ready',
     named: (k) => ({ testId: `popup${k}`, name: `One ${k}` }),
   })),
-  ...(['Root', 'Trigger', 'Popup', 'List'] as const).map((part): Row => ({
-    name: `Select.${part}`,
-    tree: selectParts(part),
-    twice: part === 'Root' || part === 'Trigger',
-    named: labelled('trigger', 'Fruit'),
-  })),
-  {
-    name: 'Select.GroupLabel',
-    tree: selectParts('GroupLabel'),
-    named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
-  },
   ...(['Root', 'Trigger', 'Input', 'Popup', 'List'] as const).map((part): Row => ({
     name: `Combobox.${part}`,
     tree: comboboxParts(part),

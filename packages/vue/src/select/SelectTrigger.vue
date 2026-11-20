@@ -27,10 +27,10 @@ const { root, field } = context;
 useDeferredServerRender();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const id = computed(() => givenId(props.id) ?? context.triggerId);
+const triggerId = computed(() => givenId(props.id) ?? context.triggerId);
 const trigger = usePopupTrigger(() => root, {
   element,
-  id: () => id.value,
+  id: () => triggerId.value,
   payload: () => undefined,
   disabled: () => props.disabled || context.disabled,
   tag: useAsTag(() => props.as),
@@ -106,7 +106,7 @@ function elementProps() {
   const merged = trigger.button.mergeAttributes(
     {
       ...(field && controlAttributes(field)),
-      id: id.value,
+      id: triggerId.value,
       role: 'combobox',
       'aria-haspopup': 'listbox',
       'aria-expanded': open ? 'true' : 'false',

@@ -21,16 +21,16 @@ defineSlots<{
 const context = injectSelectRoot('Item');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const disabled = computed(() => props.disabled || context.disabled);
+const isDisabled = computed(() => props.disabled || context.disabled);
 const button = useButton({
   element,
-  disabled: () => disabled.value,
+  disabled: () => isDisabled.value,
   focusableWhenDisabled: () => true,
   tag: useAsTag(() => props.as ?? 'div'),
 });
 const item = useListItem(context.list, element, {
   label: () => props.label,
-  disabled: () => disabled.value,
+  disabled: () => isDisabled.value,
 });
 
 watch(
@@ -48,7 +48,7 @@ const selected = computed(() => context.isSelected(props.value));
 const state = computed<SelectItemState>(() => ({
   selected: selected.value,
   highlighted: item.highlighted.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
 }));
 
 function elementProps() {
@@ -72,7 +72,7 @@ function elementProps() {
   // The default of the key would then press the trigger.
   return mergeProps(merged, {
     onKeydown(event: KeyboardEvent) {
-      if (event.key === 'Enter' && !disabled.value) event.preventDefault();
+      if (event.key === 'Enter' && !isDisabled.value) event.preventDefault();
     },
   });
 }

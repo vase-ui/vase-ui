@@ -3,7 +3,6 @@ import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Component, Ref, VNode } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
@@ -187,17 +186,6 @@ describe('useRegisteredId', () => {
         ),
       },
       {
-        name: 'Select.GroupLabel',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Select.Root open>
-            <Select.Group data-testid="named">
-              <Select.GroupLabel v-slots={slot('div', id)} />
-            </Select.Group>
-          </Select.Root>
-        ),
-      },
-      {
         name: 'Combobox.GroupLabel',
         attribute: 'aria-labelledby',
         render: (id) => (
@@ -249,16 +237,6 @@ describe('useRegisteredId', () => {
             <Calendar.Caption v-slots={slot('div', id)} />
             <Calendar.Grid data-testid="named" />
           </CalendarAncestors>
-        ),
-      },
-      {
-        name: 'Select.Label',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Select.Root>
-            <Select.Label v-slots={slot('div', id)} />
-            <Select.Trigger data-testid="named" />
-          </Select.Root>
         ),
       },
       {

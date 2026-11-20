@@ -5,7 +5,7 @@ import type { VNode } from 'vue';
 import type * as Dialog from '../src/dialog/index.parts';
 import type * as Drawer from '../src/drawer/index.parts';
 import * as Menu from '../src/menu/index.parts';
-import * as Select from '../src/select/index.parts';
+import * as Select from '../src/select/parts';
 import { nextAnimationsRead, nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';

@@ -297,7 +297,7 @@ export function useValueBeforeHydration(
 }
 
 /**
- * For a root that renders a hidden `<input>` of its own, such as `Select.Root`. It is
+ * For a root that renders a hidden `<input>` of its own, such as `Combobox.Root`. It is
  * {@link useValueBeforeHydration} with one difference: the input gets only the `input` event,
  * because the user cannot focus or leave it.
  * @param input Gives the hidden input.

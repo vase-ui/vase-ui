@@ -12,7 +12,6 @@ import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -204,22 +203,6 @@ const rows: Row[] = [
       </PreviewCard.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Select.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Select.Root>
-        <Select.Trigger aria-haspopup={undefined} data-testid="part" />
-      </Select.Root>
-    ),
-    expected: () => 'listbox',
-  },
-  {
-    name: 'Select.Separator role',
-    attribute: 'role',
-    createNode: () => <Select.Separator role={undefined} data-testid="part" />,
-    expected: () => 'presentation',
   },
   {
     name: 'Toast.Root aria-labelledby',

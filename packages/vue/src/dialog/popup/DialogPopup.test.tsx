@@ -22,7 +22,7 @@ import {
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/parts';
-import * as Select from '../../select/index.parts';
+import * as Select from '../../select/parts';
 import type { DialogStore } from '../store/DialogStore';
 import { createSlotHost } from '../../../test/fixtures/slotHost';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';

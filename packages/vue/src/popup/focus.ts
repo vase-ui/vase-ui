@@ -138,8 +138,8 @@ export function usePopupFocus(
     { flush: 'post' },
   );
 
-  // Only Chromium sends `focusout` when the focused element leaves the DOM, and no browser sends
-  // one when it hides (test/measurements/menu.test.ts), so an observer looks after each change.
+  // Only Chromium sends `focusout` when the focused element leaves the DOM
+  // (test/measurements/popup.test.ts), so an observer looks after each change.
   watch(
     () => (root.open && options.lostFocus ? root.popup : null),
     (popup, _, onCleanup) => {

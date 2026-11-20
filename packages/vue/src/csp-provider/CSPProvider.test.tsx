@@ -4,7 +4,7 @@ import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { useCSPContext } from '../internals/csp-context/CSPContext';
-import * as Select from '../select/index.parts';
+import * as Select from '../select/parts';
 
 function queryDisableScrollbarStyle() {
   const styles = Array.from(document.querySelectorAll('style'));

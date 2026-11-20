@@ -51,7 +51,7 @@ import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/parts';
-import * as Select from '../../select/index.parts';
+import * as Select from '../../select/parts';
 import { DialogStore } from '../store/DialogStore';
 import DialogRootHydration from './DialogRootHydration.test.vue';
 import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
@@ -1308,6 +1308,8 @@ describe('<Dialog.Root />', () => {
         expect(screen.queryByRole('dialog')).toBe(null);
       });
 
+      // Select is on the popup layer and Dialog is not, so the two do not know each other. The unit
+      // that moves Dialog to the popup layer restores the case.
       it('should not dismiss the dialog when dismissing outside a nested select popup', async () => {
         const { user } = await render(
           <TestDialog

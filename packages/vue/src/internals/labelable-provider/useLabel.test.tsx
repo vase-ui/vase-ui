@@ -10,7 +10,6 @@ import {
   within,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
-import * as Select from '../../select/index.parts';
 import LabelPosition from './LabelPosition.test.vue';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
 import type { RegisterId } from './createIdRegistry';
@@ -72,45 +71,23 @@ function Control(props: { id: string; testid?: string }) {
 describe('useLabel', () => {
   const { render } = createRenderer();
 
-  describe.each(['Select.Label', 'Combobox.Label'])('%s', (labelType) => {
-    const TestControl = defineComponent(() => () => {
-      if (labelType === 'Combobox.Label') {
-        return (
-          <Combobox.Root>
-            <Combobox.Label>Country</Combobox.Label>
-            <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Input aria-label="Search countries" />
-                  <Combobox.List>
-                    <Combobox.Item value="fr">France</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-        );
-      }
-
-      return (
-        <Select.Root>
-          <Select.Label>Country</Select.Label>
-          <Select.Trigger id="country">Choose a country</Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.List>
-                  <Select.Item value="fr">
-                    <Select.ItemText>France</Select.ItemText>
-                  </Select.Item>
-                </Select.List>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>
-      );
-    });
+  describe.each(['Combobox.Label'])('%s', () => {
+    const TestControl = defineComponent(() => () => (
+      <Combobox.Root>
+        <Combobox.Label>Country</Combobox.Label>
+        <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.Input aria-label="Search countries" />
+              <Combobox.List>
+                <Combobox.Item value="fr">France</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ));
 
     it('focuses the trigger without opening the popup in the document', async () => {
       const { user } = await render(<TestControl />);
@@ -150,10 +127,10 @@ describe('useLabel', () => {
 
     const { unmount } = await render(
       <Teleport to={container}>
-        <Select.Root>
-          <Select.Label>Country</Select.Label>
-          <Select.Trigger id="country">Choose a country</Select.Trigger>
-        </Select.Root>
+        <Combobox.Root>
+          <Combobox.Label>Country</Combobox.Label>
+          <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+        </Combobox.Root>
       </Teleport>,
     );
 

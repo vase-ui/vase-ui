@@ -2,27 +2,23 @@
 // A part of each family whose input Chromium restores and that takes the value of that input at
 // the `pageshow` event. A new `revision` renders the part again with the same value, as a render
 // before that event does.
-export type FormRestoreFamily = 'select' | 'combobox';
+export type FormRestoreFamily = 'combobox';
 </script>
 
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Select } from '@vase-ui/vue/select';
 
 const props = defineProps<{
   family: FormRestoreFamily;
   revision: number;
 }>();
 
-const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 
-const font = shallowRef<string | null>('serif');
 const fruit = shallowRef<string | null>(null);
 
 const MODELS = {
-  select: font,
   combobox: fruit,
 };
 
@@ -36,26 +32,8 @@ function record(value: unknown, details: { reason: string }) {
 
 <template>
   <form @submit.prevent>
-    <Select.Root
-      v-if="family === 'select'"
-      v-model="font"
-      name="font"
-      :items="{ ...FONTS }"
-      @value-change="record"
-    >
-      <Select.Trigger :data-revision="revision"><Select.Value /></Select.Trigger>
-      <Select.Portal>
-        <Select.Positioner>
-          <Select.Popup>
-            <Select.Item v-for="(label, key) in FONTS" :key="key" :value="key">
-              <Select.ItemText>{{ label }}</Select.ItemText>
-            </Select.Item>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
     <Combobox.Root
-      v-else-if="family === 'combobox'"
+      v-if="family === 'combobox'"
       v-model="fruit"
       name="fruit"
       :items="[...FRUITS]"

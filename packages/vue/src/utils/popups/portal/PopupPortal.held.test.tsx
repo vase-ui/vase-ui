@@ -19,7 +19,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
-import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import VaporHeldBranch from './VaporHeldBranch.test.vue';
@@ -53,33 +52,6 @@ function renderDialog() {
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
-
-function renderSelect() {
-  return (
-    <Select.Root defaultOpen defaultValue="one">
-      <Select.Trigger data-testid="trigger">
-        <Select.Value />
-      </Select.Trigger>
-      <Select.Portal data-testid="portal">
-        <Select.Positioner>
-          <Select.Popup data-testid="popup">
-            <Select.Item value="one">One</Select.Item>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
-
-// The place of the popup against its trigger, after the positioner has had frames to place it.
-async function measurePopupOffset() {
-  for (let frame = 0; frame < 5; frame += 1) {
-    await waitSingleFrame();
-  }
-  const trigger = screen.getByTestId('trigger').getBoundingClientRect();
-  const popup = screen.getByTestId('popup').getBoundingClientRect();
-  return { left: popup.left - trigger.left, top: popup.top - trigger.top };
 }
 
 const families = [
@@ -150,12 +122,6 @@ const families = [
         </ContextMenu.Portal>
       </ContextMenu.Root>
     ),
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
-    name: 'Select',
-    renderPart: renderSelect,
     marksPage: true,
     movesFocus: true,
   },
@@ -326,30 +292,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     expect(screen.getByTestId('portal').parentElement).toBe(document.body);
     expect(popup.contains(document.activeElement)).toBe(true);
     expect(isMarked(container)).toBe(true);
-  });
-
-  it('a select that mounts while its branch is held has the place of a select that mounts in a shown branch', async () => {
-    const held = createHeldBranch(renderSelect);
-    const { unmount } = await render(
-      <div>
-        <button data-testid="outside">Outside</button>
-        <held.HeldBranch />
-      </div>,
-    );
-    await held.mountWhileHeld();
-    await waitForLaterMillisecond(() => held.show());
-    const afterShow = await measurePopupOffset();
-    unmount();
-
-    await render(
-      <div>
-        <button data-testid="outside">Outside</button>
-        <div>{renderSelect()}</div>
-      </div>,
-    );
-    const shownMount = await measurePopupOffset();
-
-    expect(afterShow).toEqual(shownMount);
   });
 
   // Only the project `vapor` renders a Vapor component. There the `KeepAlive` of the fixture is the

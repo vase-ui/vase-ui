@@ -433,7 +433,7 @@ const read = createApiReferenceReader(REPOSITORY_ROOT);
 const ROOT_MEMBERS = ['unmount', 'close', 'inputElement'];
 
 for (const { family, part, members } of [
-  { family: 'select', part: 'Select.Root', members: ROOT_MEMBERS },
+  { family: 'select', part: 'Select.Root', members: ['element', 'inputElement', 'close'] },
   { family: 'combobox', part: 'Combobox.Root', members: ROOT_MEMBERS },
   { family: 'autocomplete', part: 'Autocomplete.Root', members: ROOT_MEMBERS },
   {
@@ -582,8 +582,8 @@ test('the reference of a part that other families export again has the descripti
   );
 });
 
-test('the reference of Select.Separator has data-orientation with its type', () => {
-  const separator = read('select').parts.find(({ name }) => name === 'Select.Separator');
+test('the reference of Combobox.Separator has data-orientation with its type', () => {
+  const separator = read('combobox').parts.find(({ name }) => name === 'Combobox.Separator');
   assert.deepEqual(separator?.dataAttributes, [
     {
       name: 'data-orientation',

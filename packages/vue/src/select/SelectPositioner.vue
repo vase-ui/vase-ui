@@ -50,9 +50,9 @@ const placement = usePlacement(
   }),
   { positioner: element, insets: () => false, place: () => alignment.place.value },
 );
-const side = computed(() => (aligned.value ? 'none' : placement.side.value));
+const placedSide = computed(() => (aligned.value ? 'none' : placement.side.value));
 watch(
-  [element, () => placement.placed.value && alignment.ready.value, side],
+  [element, () => placement.placed.value && alignment.ready.value, placedSide],
   ([positioner, placed, current]) => {
     context.positioner.value = positioner;
     context.placed.value = placed;
@@ -66,7 +66,7 @@ onUnmounted(() => {
   context.side.value = null;
 });
 provide(selectPositionerKey, {
-  side,
+  side: placedSide,
   align: placement.align,
   arrow: placement.arrow,
   onScroll: alignment.onScroll,
@@ -74,7 +74,7 @@ provide(selectPositionerKey, {
 
 const state = computed<SelectPositionerState>(() => ({
   open: root.open,
-  side: side.value,
+  side: placedSide.value,
   align: placement.align.value,
   anchorHidden: placement.anchorHidden.value,
 }));

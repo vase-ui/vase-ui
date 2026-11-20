@@ -50,7 +50,7 @@ export function useList(options: {
   const added = shallowReactive<ListItem[]>([]);
   const highlighted = shallowRef<ListItem | null>(null);
   // The position of the pointer, so that a list that opens or scrolls under a pointer that rests
-  // highlights nothing (test/measurements/menu.test.ts).
+  // highlights nothing (test/measurements/select.test.ts).
   let known: { x: number; y: number } | null = null;
   let lastOver: { x: number; y: number } | null = null;
 
@@ -81,7 +81,7 @@ export function useList(options: {
     highlighted.value = item;
     if (item) {
       item.element.focus({ preventScroll: true });
-      // `focus()` alone puts the item in the middle of the list (test/measurements/menu.test.ts).
+      // `focus()` alone puts the item in the middle of the list (test/measurements/select.test.ts).
       // A pointer highlight does not move the list under the pointer.
       if (reason !== 'pointer') item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       return;

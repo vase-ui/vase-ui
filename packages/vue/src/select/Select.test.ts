@@ -131,7 +131,7 @@ describe('the parts', () => {
   });
 });
 
-describe('the content stays', () => {
+describe('VUE-95: the content stays', () => {
   test('the portal renders nothing until the trigger gets the focus; then the closed popup stays, hidden and inert, with no tab stop', async () => {
     await mountSelect();
     expect(popup()).toBe(null);

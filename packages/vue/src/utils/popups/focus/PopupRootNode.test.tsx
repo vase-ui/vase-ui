@@ -9,7 +9,6 @@ import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
-import { Select } from '@vase-ui/vue/select';
 import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
 import type { HTMLProps } from '../../../internals/types';
 import { createAttribute } from '../createAttribute';
@@ -87,21 +86,6 @@ const families: PopupFamily[] = [
           <ContextMenu.Positioner>{popup}</ContextMenu.Positioner>
         </ContextMenu.Portal>
       </ContextMenu.Root>
-    ),
-    siblings: 'guards',
-  },
-  {
-    name: 'Select.Popup',
-    part: Select.Popup,
-    tree: (popup) => (
-      <Select.Root defaultOpen>
-        <Select.Trigger>
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>{popup}</Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
     ),
     siblings: 'guards',
   },

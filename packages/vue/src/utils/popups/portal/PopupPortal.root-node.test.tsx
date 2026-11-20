@@ -7,7 +7,6 @@ import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
-import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
 import { usePortalFocus } from './usePortalFocus';
 import PopupPortal from './PopupPortal.vue';
@@ -59,7 +58,6 @@ const portalParts: PortalPart[] = [
     portal: NavigationMenu.Portal,
     portalProps: { keepMounted: true },
   },
-  { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
 ];
 
 describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root node', () => {

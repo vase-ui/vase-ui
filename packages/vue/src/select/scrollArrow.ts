@@ -89,7 +89,7 @@ export function useScrollArrow(
         position = { x: event.clientX, y: event.clientY };
       },
       // An arrow that appears under a pointer that rests gets a `pointermove` with no move in
-      // WebKit (test/measurements/menu.test.ts).
+      // WebKit (test/measurements/select.test.ts).
       onPointermove(event: PointerEvent) {
         const moved = !!position && (position.x !== event.clientX || position.y !== event.clientY);
         position = { x: event.clientX, y: event.clientY };
