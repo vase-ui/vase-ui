@@ -231,6 +231,23 @@ describe('animation', () => {
     await waitFor(() => expect(log).toEqual(['before-enter', 'after-enter']));
   });
 
+  test('a <Transition> around the backdrop runs its enter and its leave; the closed backdrop is hidden and inert, and a press on it closes the popup', async () => {
+    const log: string[] = [];
+    mount(SelectInTransition, { backdrop: true, log: { add: (entry: string) => log.push(entry) } });
+    await nextTick();
+    await userEvent.click(byTestId('trigger'));
+    await waitFor(() => expect(log).toContain('backdrop after-enter'));
+    const backdrop = byTestId('backdrop');
+    expect(backdrop).toHaveAttribute('role', 'presentation');
+    expect(backdrop).not.toHaveAttribute('inert');
+    expect(document.elementFromPoint(2, 2)).toBe(backdrop);
+    await userEvent.pointer({ coords: { x: 2, y: 2 }, keys: '[MouseLeft]' });
+    await waitFor(() => expect(log).toContain('backdrop after-leave'));
+    expect(shown(backdrop)).toBe(false);
+    expect(backdrop).toHaveAttribute('inert');
+    await closed();
+  });
+
   test('a popup with display: flex from a class does not show while closed', async () => {
     mount(SelectInTransition, { popup: { class: 'flex' } });
     byTestId('trigger').focus();
@@ -597,6 +614,25 @@ describe('press, drag, release', () => {
       expect(valueText()).toBe('');
     },
   );
+});
+
+describe('Select.Item', () => {
+  test('gives its default slot the state: selected, highlighted and disabled', async () => {
+    await mountSelect({
+      root: { defaultValue: 'banana' },
+      items: [
+        { value: 'apple', text: 'Apple', disabled: true },
+        { value: 'banana', text: 'Banana' },
+      ],
+    });
+    const stateOf = (value: string) =>
+      JSON.parse(item(value).querySelector('[data-state]')!.getAttribute('data-state')!);
+    trigger().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await focused(() => item('banana'));
+    expect(stateOf('banana')).toEqual({ selected: true, highlighted: true, disabled: false });
+    expect(stateOf('apple')).toEqual({ selected: false, highlighted: false, disabled: true });
+  });
 });
 
 describe('the open list', () => {

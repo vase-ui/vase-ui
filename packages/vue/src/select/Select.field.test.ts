@@ -243,20 +243,30 @@ describe('the fill', () => {
 });
 
 describe('the reset', () => {
-  test('BUG-6206: a native reset puts the first value back with update:modelValue only, also on a controlled select', async () => {
-    const log: string[] = [];
-    const root = reactive<Attrs>({
-      defaultValue: 'a',
-      onValueChange: () => log.push('change'),
-      'onUpdate:modelValue': (v: string) => log.push(`update ${v}`),
-    });
-    const { form } = await mountField({ root });
-    await pick('b');
-    log.length = 0;
-    form.reset();
-    await waitFor(() => expect(log).toEqual(['update a']));
-    expect(trigger()).toHaveTextContent('a');
-  });
+  test.each([
+    { name: 'an uncontrolled select', value: { defaultValue: 'a' } },
+    { name: 'a controlled select', value: { modelValue: 'a' } },
+  ])(
+    'BUG-6206: a native reset puts the first value back with update:modelValue only: $name',
+    async ({ value }) => {
+      const log: string[] = [];
+      const root: Attrs = reactive({
+        ...value,
+        onValueChange: () => log.push('change'),
+        'onUpdate:modelValue': (next: string) => {
+          log.push(`update ${next}`);
+          if ('modelValue' in root) root.modelValue = next;
+        },
+      });
+      const { form } = await mountField({ root });
+      await pick('b');
+      expect(trigger()).toHaveTextContent('b');
+      log.length = 0;
+      form.reset();
+      await waitFor(() => expect(log).toEqual(['update a']));
+      expect(trigger()).toHaveTextContent('a');
+    },
+  );
 
   test('VUE-21: a reset clears the error of the field', async () => {
     const { form, field } = await mountField({

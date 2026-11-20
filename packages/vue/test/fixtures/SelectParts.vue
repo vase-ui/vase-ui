@@ -79,8 +79,10 @@ defineExpose({ root: rootPart, popup: popupPart });
               :label="item.label"
               :disabled="item.disabled"
               :data-testid="`item-${String(item.value)}`"
+              v-slot="{ state }"
             >
               <Select.ItemText>{{ item.text }}</Select.ItemText>
+              <span :data-state="JSON.stringify(state)" />
             </Select.Item>
           </component>
           <Select.ScrollDownArrow v-if="arrows" data-testid="down" v-bind="arrows" />

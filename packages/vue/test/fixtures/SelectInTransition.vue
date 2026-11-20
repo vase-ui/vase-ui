@@ -4,11 +4,13 @@ import { Select } from '../../src/select';
 
 type Props = Record<string, unknown>;
 
-// A select whose popup is in a `<Transition>` of 100 ms, with no `appear`. `noRoot` renders a
-// trigger with no root.
+// A select whose popup is in a `<Transition>` of 100 ms, with no `appear`. `backdrop` adds a
+// backdrop that covers the view, in a `<Transition>` of its own. `noRoot` renders a trigger with no
+// root.
 defineProps({
   root: Object as PropType<Props>,
   popup: Object as PropType<Props>,
+  backdrop: Boolean,
   noRoot: Boolean,
   log: { type: Object as PropType<{ add(entry: string): void }>, default: () => ({ add() {} }) },
 });
@@ -19,6 +21,14 @@ defineProps({
   <Select.Root v-else v-bind="root">
     <Select.Trigger data-testid="trigger"><Select.Value /></Select.Trigger>
     <Select.Portal>
+      <Transition
+        v-if="backdrop"
+        name="pop"
+        @after-enter="log.add('backdrop after-enter')"
+        @after-leave="log.add('backdrop after-leave')"
+      >
+        <Select.Backdrop data-testid="backdrop" style="position: fixed; inset: 0" />
+      </Transition>
       <Select.Positioner data-testid="positioner" :align-item-with-trigger="false">
         <Transition
           name="pop"

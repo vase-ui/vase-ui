@@ -219,16 +219,22 @@ describe('a popup that a press shows under the pointer (SM6)', () => {
 });
 
 describe('the focus ring after a submit that the validation blocks (SM8)', () => {
-  test('a button that gets the focus from the invalid input has `:focus-visible` in each browser with `focusVisible: true`', async () => {
-    html(
-      '<form id="f"><button id="t" type="button">T</button><input id="h" required tabindex="-1" style="position: absolute; width: 1px; height: 1px"><button id="s">Submit</button></form>',
-    );
-    element('f').addEventListener('submit', (event) => event.preventDefault());
-    element('h').addEventListener('focus', () => element('t').focus({ focusVisible: true }));
-    await userEvent.click(element('s'));
-    expect(document.activeElement).toBe(element('t'));
-    expect(element('t').matches(':focus-visible')).toBe(true);
-  });
+  test.each([
+    { option: {}, ring: server.browser === 'webkit' },
+    { option: { focusVisible: true }, ring: true },
+  ])(
+    'a button that gets the focus from the invalid input with $option has `:focus-visible`: $ring',
+    async ({ option, ring }) => {
+      html(
+        '<form id="f"><button id="t" type="button">T</button><input id="h" required tabindex="-1" style="position: absolute; width: 1px; height: 1px"><button id="s">Submit</button></form>',
+      );
+      element('f').addEventListener('submit', (event) => event.preventDefault());
+      element('h').addEventListener('focus', () => element('t').focus(option));
+      await userEvent.click(element('s'));
+      expect(document.activeElement).toBe(element('t'));
+      expect(element('t').matches(':focus-visible')).toBe(ring);
+    },
+  );
 });
 
 describe('the list', () => {
