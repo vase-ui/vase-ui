@@ -485,6 +485,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     orientation: () => 'vertical',
     loop: () => source.loopFocus,
     container: () => listElement.value,
+    owner: () => control.value,
     canLeave: () => source.loopFocus && !source.autoHighlight,
     hover: () => source.highlightItemOnHover,
     keepOnLeave: () => source.keepHighlight,

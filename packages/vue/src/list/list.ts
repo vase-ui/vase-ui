@@ -3,7 +3,7 @@ import { addEventListener } from '../common/addEventListener';
 import { arrowKeyTarget } from '../common/arrowKeyTarget';
 import { byDocumentOrder } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
-import { ownerWindow } from '../common/owner';
+import { ownerDocument, ownerWindow } from '../common/owner';
 import { isComposing } from '../popup/layer';
 
 /** An item of a list, while it is mounted. The properties are reactive. */
@@ -31,6 +31,8 @@ export interface ListOptions {
   loop(): boolean;
   /** The element around the items. */
   container(): HTMLElement | null;
+  /** The element that keeps the focus. The list reads the pointer moves of its document. */
+  owner(): Element | null;
   /** An arrow key at an end removes the highlight. */
   canLeave?(): boolean;
   /** A pointer move highlights its item. */
@@ -57,10 +59,29 @@ export function useList(options: ListOptions): List {
     reason: 'none',
     event: undefined,
   };
-  // The position of the pointer, while the list knows it.
+  // The positions of the last two `pointermove` events of the document. A list opens and scrolls
+  // under a pointer that rests where its last move put it. WebKit then sends a `pointermove` at that
+  // position, with no move (test/measurements/combobox.test.ts, C2 and C7).
   let pointer: { x: number; y: number } | null = null;
-  // The position of the last `pointerover`.
-  let over: { x: number; y: number } | null = null;
+  let previous: { x: number; y: number } | null = null;
+  watch(
+    () => options.owner(),
+    (owner, _, onCleanup) => {
+      if (!owner) return;
+      onCleanup(
+        addEventListener(
+          ownerDocument(owner),
+          'pointermove',
+          (event) => {
+            previous = pointer;
+            pointer = { x: event.clientX, y: event.clientY };
+          },
+          true,
+        ),
+      );
+    },
+    { immediate: true, flush: 'post' },
+  );
 
   watch(highlighted, (item) => options.onHighlight?.(item, last.reason, last.event), {
     flush: 'post',
@@ -69,25 +90,12 @@ export function useList(options: ListOptions): List {
   watch(
     () => options.container(),
     (container, _, onCleanup) => {
-      pointer = null;
-      over = null;
       if (!container) return;
       onCleanup(
         mergeCleanups(
           addEventListener(container, 'pointermove', (event) => {
-            const isMove = moved(event);
-            pointer = { x: event.clientX, y: event.clientY };
-            const item = isMove && hovers() ? itemOf(event.target) : undefined;
+            const item = moved(event) && hovers() ? itemOf(event.target) : undefined;
             if (item) highlight(item, 'pointer', event);
-          }),
-          // Content that moves under a pointer at rest gets a second `pointerover` at the same
-          // position, and WebKit then sends a `pointermove` there. A move in one step sends its
-          // `pointerover` and its `pointermove` at one position, so one `pointerover` is no
-          // reference (test/measurements/combobox.test.ts, C2 and C7).
-          addEventListener(container, 'pointerover', (event) => {
-            const at = { x: event.clientX, y: event.clientY };
-            if (over?.x === at.x && over.y === at.y) pointer = at;
-            over = at;
           }),
           addEventListener(container, 'pointerout', (event) => {
             const item = highlighted.value;
@@ -95,10 +103,6 @@ export function useList(options: ListOptions): List {
             const to = event.relatedTarget as Node | null;
             if (item.element.contains(to) || itemOf(to) || options.keepOnLeave?.(item)) return;
             highlight(null, 'pointer', event);
-          }),
-          addEventListener(container, 'pointerleave', () => {
-            pointer = null;
-            over = null;
           }),
         ),
       );
@@ -115,8 +119,9 @@ export function useList(options: ListOptions): List {
       .sort((a, b) => byDocumentOrder(b.element, a.element))[0];
   }
 
+  // The document listener runs first, so `previous` is the position before this event.
   function moved(event: PointerEvent) {
-    return pointer?.x !== event.clientX || pointer.y !== event.clientY;
+    return previous?.x !== event.clientX || previous.y !== event.clientY;
   }
 
   function items() {
