@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, useAttrs, useSlots } from 'vue';
-import { useElement } from '../common/element';
+import { computed, useAttrs } from 'vue';
+import { useAsTag, useElement } from '../common/element';
 import { useButton } from './button';
 import type { ButtonProps, ButtonState } from './types';
 
@@ -20,11 +20,10 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
-const slots = useSlots();
 const { element, setElement } = useElement<HTMLElement>();
 const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
-  tag: () => (typeof props.as === 'string' && !slots.element ? props.as : undefined),
+  tag: useAsTag(() => props.as),
   disabled: () => props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',

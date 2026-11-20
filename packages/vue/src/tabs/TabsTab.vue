@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Value = any">
-import { computed, mergeProps, onUnmounted, useAttrs, useId, useSlots } from 'vue';
-import { useElement } from '../common/element';
+import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
+import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectTabsList } from './list';
 import { injectTabsRoot, rootStateAttributes, type RootTab } from './root';
@@ -21,7 +21,7 @@ defineSlots<{
 const root = injectTabsRoot();
 const list = injectTabsList();
 const attrs = useAttrs();
-const slots = useSlots();
+const asTag = useAsTag(() => props.as);
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
@@ -55,12 +55,7 @@ onUnmounted(unregister);
 defineExpose({ element });
 
 function elementProps() {
-  // A tag in `as` is known at the render, so the server writes the `type` of the client. The element
-  // of a component or of the `element` slot is known after the mount.
-  const button =
-    typeof props.as === 'string' && !slots.element
-      ? props.as === 'button'
-      : !element.value || element.value.localName === 'button';
+  const button = (element.value?.localName ?? asTag() ?? 'button') === 'button';
   return mergeProps(
     {
       role: 'tab',
