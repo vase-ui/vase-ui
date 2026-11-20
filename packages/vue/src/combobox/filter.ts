@@ -87,7 +87,7 @@ export function filterItems<Item>(
     room -= kept.length;
     return kept;
   };
-  if (!isGroupedItems(items)) return take(items as readonly Item[]);
+  if (!isGroupedItems(items)) return take(items);
   const groups: Group<Item>[] = [];
   for (const group of items) {
     const kept = take(group.items);

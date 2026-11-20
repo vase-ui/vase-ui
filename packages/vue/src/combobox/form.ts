@@ -14,14 +14,14 @@ export function useComboboxForm(
   context: ComboboxRootContext,
   options: {
     /** The autofill purpose of the text input. */
-    autocomplete(): string | undefined;
+    autocomplete: () => string | undefined;
     /** The root renders its inputs. Autocomplete renders them only for an input in the popup. */
-    rendersInputs(): boolean;
+    rendersInputs: () => boolean;
     /** The element whose form owns the root: the text input, else the input of Autocomplete. */
-    formElement(): HTMLInputElement | null;
-    isEqual(): (itemValue: any, value: any) => boolean;
+    formElement: () => HTMLInputElement | null;
+    isEqual: () => (itemValue: any, value: any) => boolean;
     /** Puts back the first value and the first text, and emits only the `update:*` events. */
-    reset(): void;
+    reset: () => void;
   },
 ) {
   const field = inject(fieldKey, null);

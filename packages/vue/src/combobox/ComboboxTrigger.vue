@@ -3,7 +3,12 @@ import { computed, inject, mergeProps, onScopeDispose, useAttrs, useId, watch } 
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
-import { controlAttributes, describedByWith, fieldKey, fieldStateAttributes } from '../field/control';
+import {
+  controlAttributes,
+  describedByWith,
+  fieldKey,
+  fieldStateAttributes,
+} from '../field/control';
 import { nextTextMatch, TYPEAHEAD_RESET_MS } from '../list/typeahead';
 import { interactionOf } from '../popup/root';
 import { isMouseClick, usePopupTrigger } from '../popup/trigger';
@@ -48,16 +53,13 @@ watch(element, (el, _, onCleanup) => onCleanup(context.setTrigger(el)), {
   immediate: true,
 });
 // Beside an input, the trigger is inside the layer, and the input is the trigger of the popup.
-let removeInside: (() => void) | undefined;
 watch(
   isControl,
-  (control) => {
-    removeInside?.();
-    removeInside = control ? undefined : context.addInside(() => element.value);
+  (control, _, onCleanup) => {
+    if (!control) onCleanup(context.addInside(() => element.value));
   },
   { immediate: true },
 );
-onScopeDispose(() => removeInside?.());
 
 const state = computed<ComboboxTriggerState>(() => ({
   open: root.open,
@@ -171,8 +173,7 @@ function elementProps() {
         'aria-haspopup': 'listbox',
         'aria-controls': open ? context.listId : undefined,
         // The labels of the input name the button beside it.
-        'aria-labelledby':
-          [field?.labelId, context.labelId].filter(Boolean).join(' ') || undefined,
+        'aria-labelledby': [field?.labelId, context.labelId].filter(Boolean).join(' ') || undefined,
         ...(field && fieldStateAttributes(field.state)),
       };
   Object.assign(own, {

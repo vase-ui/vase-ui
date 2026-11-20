@@ -331,13 +331,10 @@ export function usePlacement(
   const placed = floating.isPositioned;
 
   const placedSide = computed(() => getSide(floating.placement.value));
-  watch(
-    [() => root.open, placed, placedSide],
-    ([open, isPlaced, side]) => {
-      if (!open) keptSide.value = undefined;
-      else if (options.lazyFlip?.() && isPlaced) keptSide.value = side;
-    },
-  );
+  watch([() => root.open, placed, placedSide], ([open, isPlaced, side]) => {
+    if (!open) keptSide.value = undefined;
+    else if (options.lazyFlip?.() && isPlaced) keptSide.value = side;
+  });
   const side = computed(() => logicalSide(props.side, placedSide.value, rtl.value));
   const align = computed<Align>(() => getAlignment(floating.placement.value) ?? 'center');
   const anchorHidden = computed(() => !!floating.middlewareData.value.hide?.referenceHidden);

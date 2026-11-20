@@ -41,7 +41,11 @@ describe('createItems', () => {
   });
 
   test('Value shows the label of the derived value, and the placeholder with no value', async () => {
-    mount(ComboboxCollection, { items: collection(COUNTRIES), inputInPopup: true, root: { defaultValue: 1 } });
+    mount(ComboboxCollection, {
+      items: collection(COUNTRIES),
+      inputInPopup: true,
+      root: { defaultValue: 1 },
+    });
     await nextTick();
     expect(byTestId('trigger')).toHaveTextContent('France');
   });
@@ -57,7 +61,11 @@ describe('createItems', () => {
   test('the form data has the derived values of a multiple root', async () => {
     const form = document.body.appendChild(document.createElement('form'));
     try {
-      mount(ComboboxCollection, { items: collection(COUNTRIES), root: { name: 'c', multiple: true, defaultValue: [1, 3] } }, form);
+      mount(
+        ComboboxCollection,
+        { items: collection(COUNTRIES), root: { name: 'c', multiple: true, defaultValue: [1, 3] } },
+        form,
+      );
       await nextTick();
       expect([...new FormData(form).getAll('c')]).toEqual(['1', '3']);
     } finally {

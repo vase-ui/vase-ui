@@ -40,7 +40,9 @@ test('20 steps of the highlight over 300 items render 39 items and 20 inputs, an
     await userEvent.keyboard('{ArrowDown}');
     await nextTick();
   }
-  await waitFor(() => expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 19'));
+  await waitFor(() =>
+    expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 19'),
+  );
   expect(spy.renders).toEqual({ item: 39, input: 20 });
 });
 

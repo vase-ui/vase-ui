@@ -130,11 +130,15 @@ const groupedProduce: ProduceGroup[] = groupProduce(produceData);
                   {{ group.value }}
                 </Combobox.GroupLabel>
                 <template v-for="item in group.items" :key="item.value">
-                  <Combobox.Item v-slot="{ state }"
+                  <Combobox.Item
+                    v-slot="{ state }"
                     class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
                     :value="item"
                   >
-                    <span v-if="state.selected" class="col-start-1 flex items-center justify-center">
+                    <span
+                      v-if="state.selected"
+                      class="col-start-1 flex items-center justify-center"
+                    >
                       <CheckIcon />
                     </span>
                     <span class="col-start-2">{{ item.label }}</span>

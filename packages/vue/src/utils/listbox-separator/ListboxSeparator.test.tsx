@@ -33,16 +33,17 @@ describe('<ListboxSeparator />', () => {
     );
   });
 
-  describe.each([
-    ['Select.Separator', () => <Select.Separator data-testid="separator" />],
-  ])('%s', (_, separator) => {
-    it('exposes the listbox separator behavior', async () => {
-      await render(separator());
+  describe.each([['Select.Separator', () => <Select.Separator data-testid="separator" />]])(
+    '%s',
+    (_, separator) => {
+      it('exposes the listbox separator behavior', async () => {
+        await render(separator());
 
-      const element = screen.getByTestId('separator');
-      expect(element).toHaveAttribute('role', 'presentation');
-      expect(element).toHaveAttribute('data-orientation', 'horizontal');
-      expect(element).not.toHaveAttribute('aria-orientation');
-    });
-  });
+        const element = screen.getByTestId('separator');
+        expect(element).toHaveAttribute('role', 'presentation');
+        expect(element).toHaveAttribute('data-orientation', 'horizontal');
+        expect(element).not.toHaveAttribute('aria-orientation');
+      });
+    },
+  );
 });

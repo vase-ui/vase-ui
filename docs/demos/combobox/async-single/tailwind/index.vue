@@ -335,7 +335,8 @@ const allUsers: DirectoryUser[] = [
             </Combobox.Empty>
             <Combobox.List>
               <template #item="{ item: user }">
-                <Combobox.Item v-slot="{ state }"
+                <Combobox.Item
+                  v-slot="{ state }"
                   class="grid cursor-default grid-cols-[1rem_1fr] items-start gap-2 px-2 py-2 text-sm leading-[1.2rem] outline-none select-none [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-neutral-950 [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-100 dark:[@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:before:bg-neutral-800"
                   :value="user"
                 >

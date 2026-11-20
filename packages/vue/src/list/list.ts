@@ -91,7 +91,7 @@ export function useList(options: ListOptions): List {
             const point = { x: event.clientX, y: event.clientY };
             // A `pointerover` at the place of the one before it: the content moved under a
             // pointer that rests (test/measurements/combobox.test.ts, C2 and C7).
-            if (over && over.x === point.x && over.y === point.y) pointer = point;
+            if (over?.x === point.x && over.y === point.y) pointer = point;
             over = point;
           }),
           addEventListener(container, 'pointerout', (event) => {
@@ -121,16 +121,14 @@ export function useList(options: ListOptions): List {
   }
 
   function moved(event: PointerEvent) {
-    return !pointer || pointer.x !== event.clientX || pointer.y !== event.clientY;
+    return pointer?.x !== event.clientX || pointer.y !== event.clientY;
   }
 
   function items() {
     return added
       .filter(
         ({ element }) =>
-          element.isConnected &&
-          element.checkVisibility() &&
-          !element.matches(':disabled'),
+          element.isConnected && element.checkVisibility() && !element.matches(':disabled'),
       )
       .sort((a, b) => byDocumentOrder(a.element, b.element));
   }
@@ -151,7 +149,8 @@ export function useList(options: ListOptions): List {
   }
 
   function target(key: string, list: ListItem[]): ListItem | null | undefined {
-    const current = highlighted.value && list.includes(highlighted.value) ? highlighted.value : null;
+    const current =
+      highlighted.value && list.includes(highlighted.value) ? highlighted.value : null;
     const orientation = options.orientation();
     const rtl = isRtl();
     if (options.rows?.()) return rowTarget(key, list, current, rtl);
@@ -179,11 +178,11 @@ export function useList(options: ListOptions): List {
   // The grid keys of a list whose items are in rows.
   function rowTarget(key: string, list: ListItem[], current: ListItem | null, rtl: boolean) {
     const rows: ListItem[][] = [];
-    let row: Element | null = null;
+    let row: Element | null | undefined;
     for (const item of list) {
       const around = item.element.closest('[role="row"]');
-      if (!rows.length || around !== row) rows.push([]);
-      rows.at(-1)!.push(item);
+      if (around !== row || rows.length === 0) rows.push([item]);
+      else rows[rows.length - 1]?.push(item);
       row = around;
     }
     const [forward, back] = rtl ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft'];
@@ -193,7 +192,7 @@ export function useList(options: ListOptions): List {
       return undefined;
     }
     const rowIndex = rows.findIndex((each) => each.includes(current));
-    const column = rows[rowIndex]!.indexOf(current);
+    const column = rows[rowIndex]?.indexOf(current) ?? 0;
     if (key === forward || key === back) {
       const step = key === forward ? 1 : -1;
       return (
@@ -207,9 +206,9 @@ export function useList(options: ListOptions): List {
     if (!nextRow) {
       if (options.canLeave?.()) return null;
       if (!options.loop()) return current;
-      nextRow = step === 1 ? rows[0]! : rows.at(-1)!;
+      nextRow = step === 1 ? rows[0] : rows.at(-1);
     }
-    return nextRow[column] ?? nextRow.at(-1);
+    return nextRow?.[column] ?? nextRow?.at(-1);
   }
 
   return {

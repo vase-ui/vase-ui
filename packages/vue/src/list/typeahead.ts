@@ -17,13 +17,15 @@ export function nextTextMatch(
   const fits = (text: string, prefix: string) => text.toLowerCase().startsWith(prefix);
   let prefix = lower;
   let from = start;
-  if ([...lower].every((letter) => letter === lower[0]) && !texts.some((text) => fits(text, lower))) {
-    prefix = lower[0] ?? '';
+  // One letter typed more than one time.
+  const repeated = /^(.)\1+$/su.exec(lower);
+  if (repeated && !texts.some((text) => fits(text, lower))) {
+    prefix = repeated[1] ?? '';
     from = current;
   }
   for (let step = 1; step <= texts.length; step += 1) {
     const index = (from + step + texts.length) % texts.length;
-    if (fits(texts[index]!, prefix)) return index;
+    if (fits(texts[index] ?? '', prefix)) return index;
   }
   return -1;
 }

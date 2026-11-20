@@ -127,9 +127,7 @@ describe('the form', () => {
 
   test('with the input in the popup, the root holds the value inputs', async () => {
     await mountAutocomplete({ inputInPopup: true, root: { name: 'tag', defaultValue: 'docs' } });
-    await waitFor(() =>
-      expect([...new FormData(form()).entries()]).toEqual([['tag', 'docs']]),
-    );
+    await waitFor(() => expect([...new FormData(form()).entries()]).toEqual([['tag', 'docs']]));
     expect(byTestId('trigger')).toHaveTextContent('docs');
   });
 

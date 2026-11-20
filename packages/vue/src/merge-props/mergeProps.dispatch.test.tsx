@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Menu } from '@vase-ui/vue/menu';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
+import { createRenderer, waitFor, waitForLaterMillisecond } from '#test-utils';
 
 describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
   const { render } = createRenderer();
@@ -38,5 +38,4 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
       [false, 'trigger-press'],
     ]);
   });
-
 });

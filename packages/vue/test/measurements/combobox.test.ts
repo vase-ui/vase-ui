@@ -4,7 +4,16 @@
 // `<Transition>` (C5): see `tabs.test.ts`.
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { createApp, computed, defineComponent, h, inject, nextTick, provide, shallowRef } from 'vue';
+import {
+  createApp,
+  computed,
+  defineComponent,
+  h,
+  inject,
+  nextTick,
+  provide,
+  shallowRef,
+} from 'vue';
 import ComboboxParts from '../fixtures/ComboboxParts.vue';
 import { touchDrag } from '../pointer';
 import { mount } from '../render';
@@ -100,7 +109,9 @@ describe('the `inputType` of an `input` event (C4)', () => {
   test('a key gives `insertText`; an event of a script has none', async () => {
     html(`<input id="input" aria-label="Input">`);
     const types: unknown[] = [];
-    element('input').addEventListener('input', (event) => types.push((event as InputEvent).inputType));
+    element('input').addEventListener('input', (event) =>
+      types.push((event as InputEvent).inputType),
+    );
     element('input').focus();
     await userEvent.keyboard('a{Backspace}');
     element('input').dispatchEvent(new Event('input', { bubbles: true }));
@@ -123,7 +134,9 @@ describe('the renders of 300 items for 20 steps of a highlight (C6)', () => {
         const state = inject<typeof shared>('shared')!;
         return () => {
           count += 1;
-          const value = form.startsWith('a computed') ? on.value : state.value.highlighted === props.index;
+          const value = form.startsWith('a computed')
+            ? on.value
+            : state.value.highlighted === props.index;
           return h('div', { 'data-highlighted': value ? '' : undefined });
         };
       },
@@ -147,7 +160,7 @@ describe('the renders of 300 items for 20 steps of a highlight (C6)', () => {
 });
 
 describe('scrollIntoView of an item (C8)', () => {
-  test('scrolls the box and the page', async () => {
+  test('scrolls the box and the page', () => {
     html(
       `<div style="height: 200vh"><div id="box" style="position: absolute; top: calc(100vh - 50px); height: 100px; overflow: auto">${Array.from(
         { length: 10 },
@@ -175,7 +188,9 @@ describe('a press on a `<label for>` of a button (C9, N8)', () => {
 
 describe('Enter after a microtask of `keydown` changed the values of a form (C10)', () => {
   test('Firefox submits the old values; Chromium and WebKit the new ones', async () => {
-    html(`<form id="form"><input id="input" name="q" aria-label="Q" value="typed"><input id="hidden" type="hidden" name="h" value="old"></form>`);
+    html(
+      `<form id="form"><input id="input" name="q" aria-label="Q" value="typed"><input id="hidden" type="hidden" name="h" value="old"></form>`,
+    );
     let submitted: string[] = [];
     element('form').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -189,15 +204,15 @@ describe('Enter after a microtask of `keydown` changed the values of a form (C10
     );
     element('input').focus();
     await userEvent.keyboard('{Enter}');
-    expect(submitted).toEqual(
-      server.browser === 'firefox' ? ['typed', 'old'] : ['label', 'new'],
-    );
+    expect(submitted).toEqual(server.browser === 'firefox' ? ['typed', 'old'] : ['label', 'new']);
   });
 });
 
 describe('a submit that a required, hidden input blocks (C11)', () => {
   test('the input gets `invalid` and then the focus', async () => {
-    html(`<form id="form"><input id="hidden" required tabindex="-1" aria-label="Hidden" style="position: absolute; width: 1px; height: 1px; clip-path: inset(50%)"><button id="submit">Submit</button></form>`);
+    html(
+      `<form id="form"><input id="hidden" required tabindex="-1" aria-label="Hidden" style="position: absolute; width: 1px; height: 1px; clip-path: inset(50%)"><button id="submit">Submit</button></form>`,
+    );
     const log: string[] = [];
     element('hidden').addEventListener('invalid', () => log.push('invalid'));
     element('hidden').addEventListener('focus', () => log.push('focus'));
@@ -218,7 +233,11 @@ describe('a text composition (C12, N6)', () => {
       element('input').focus();
       const { cdp } = await import('vitest/browser');
       const session = cdp();
-      await session.send('Input.imeSetComposition', { text: 'に', selectionStart: 1, selectionEnd: 1 });
+      await session.send('Input.imeSetComposition', {
+        text: 'に',
+        selectionStart: 1,
+        selectionEnd: 1,
+      });
       await session.send('Input.insertText', { text: '日本' });
       expect(log).toEqual(['compositionstart', 'input', 'input', 'compositionend']);
     },
@@ -233,7 +252,13 @@ describe('a text composition (C12, N6)', () => {
     const send = (event: Event) => input.dispatchEvent(event);
     send(new CompositionEvent('compositionstart', { data: '' }));
     input.value = 'に';
-    send(new InputEvent('input', { inputType: 'insertCompositionText', data: 'に', isComposing: true }));
+    send(
+      new InputEvent('input', {
+        inputType: 'insertCompositionText',
+        data: 'に',
+        isComposing: true,
+      }),
+    );
     input.value = '日本';
     send(new CompositionEvent('compositionend', { data: '日本' }));
     send(new InputEvent('input', { inputType: 'insertFromComposition', data: '日本' }));
@@ -258,7 +283,9 @@ describe('the caret after setSelectionRange in each direction (C13)', () => {
 
 describe('the scroll of a text input after a script moved the caret (C14)', () => {
   test('Firefox scrolls to the caret; Chromium and WebKit do not', async () => {
-    html(`<input id="input" aria-label="Input" style="width: 60px" value="${'a long text '.repeat(8)}">`);
+    html(
+      `<input id="input" aria-label="Input" style="width: 60px" value="${'a long text '.repeat(8)}">`,
+    );
     const input = element<HTMLInputElement>('input');
     input.focus();
     input.setSelectionRange(0, 0);

@@ -208,7 +208,12 @@ const top100Movies: Movie[] = [
     </label>
 
     <Autocomplete.Portal>
-      <Autocomplete.Positioner :hidden="!hasStatus" :class="styles.Positioner" :side-offset="4" align="start">
+      <Autocomplete.Positioner
+        :hidden="!hasStatus"
+        :class="styles.Positioner"
+        :side-offset="4"
+        align="start"
+      >
         <Autocomplete.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
           <div :class="styles.Viewport">
             <Autocomplete.Status>

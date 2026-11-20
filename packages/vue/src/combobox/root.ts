@@ -3,7 +3,6 @@ import {
   inject,
   nextTick,
   onMounted,
-  onScopeDispose,
   provide,
   shallowReactive,
   shallowRef,
@@ -14,6 +13,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
+import { mergeCleanups } from '../common/mergeCleanups';
 import { EMPTY_ARRAY } from '../common/empty';
 import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
@@ -40,7 +40,7 @@ import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers'
 import { isReleaseAtPressPoint } from '../utils/popups/isReleaseAtPressPoint';
 import { filterItems, sameItems, type FilterItemToString, type ItemFilter } from './filter';
 import { useComboboxForm } from './form';
-import { isItemCollection, type ItemCollection } from './items';
+import { isItemCollection } from './items';
 import type {
   ComboboxRootChangeEventDetails,
   ComboboxRootChangeEventReason,
@@ -94,13 +94,13 @@ export interface RootSource {
 
 /** The events of a root. Each change event comes before its `update:*` event. */
 export interface RootEmit {
-  value(value: unknown, details: ComboboxRootChangeEventDetails): void;
-  text(text: string, details: ComboboxRootChangeEventDetails): void;
-  open(open: boolean, details: ComboboxRootOpenChangeEventDetails): void;
-  updateValue(value: unknown): void;
-  updateText(text: string): void;
-  updateOpen(open: boolean): void;
-  highlight(value: unknown, details: ComboboxRootHighlightEventDetails): void;
+  value: (value: unknown, details: ComboboxRootChangeEventDetails) => void;
+  text: (text: string, details: ComboboxRootChangeEventDetails) => void;
+  open: (open: boolean, details: ComboboxRootOpenChangeEventDetails) => void;
+  updateValue: (value: unknown) => void;
+  updateText: (text: string) => void;
+  updateOpen: (open: boolean) => void;
+  highlight: (value: unknown, details: ComboboxRootHighlightEventDetails) => void;
 }
 
 /** What a mounted item gives to its root. */
@@ -198,7 +198,10 @@ export interface ComboboxRootContext {
   startDrag(press: PointerEvent): void;
   /** Requests the submit of the form of the root. */
   requestSubmit(): void;
-  addInput(input: { readonly insidePopup: boolean; readonly element: HTMLElement | null }): () => void;
+  addInput(input: {
+    readonly insidePopup: boolean;
+    readonly element: HTMLElement | null;
+  }): () => void;
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
   setLabel(label: { readonly id: string }): () => void;
@@ -254,9 +257,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const multiple = () => source.mode === 'multiple';
 
   // The items.
-  const collection = computed(() =>
-    isItemCollection(source.items) ? (source.items as ItemCollection) : null,
-  );
+  const collection = computed(() => (isItemCollection(source.items) ? source.items : null));
   const data = computed(
     () =>
       (collection.value ? collection.value.data : source.items) as readonly unknown[] | undefined,
@@ -270,7 +271,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     return items.label(value, isEqual.value, (unknown) => {
       // A value that is not in the data can be in the items of `filteredItems`.
       const flat = source.filteredItems ? flattenLeafItems(source.filteredItems) : [];
-      const item = flat.find((each) => compareItemEquality(items.value(each), unknown, isEqual.value));
+      const item = flat.find((each) =>
+        compareItemEquality(items.value(each), unknown, isEqual.value),
+      );
       return item === undefined
         ? stringifyAsLabel(unknown, source.itemToStringLabel)
         : items.itemLabel(item);
@@ -288,20 +291,18 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   // The value and the text.
   const NO_VALUES: readonly unknown[] = EMPTY_ARRAY;
   const valueModelOf = (value: unknown) => (multiple() && value === null ? NO_VALUES : value);
-  const firstValue = valueModelOf(source.value ?? source.defaultValue ?? null) ?? (multiple() ? NO_VALUES : null);
-  const { value: valueModel, setOwn: setOwnValue } = useModel(
-    () => valueModelOf(source.value),
-    firstValue,
-  );
+  const firstValue =
+    valueModelOf(source.value ?? source.defaultValue ?? null) ?? (multiple() ? NO_VALUES : null);
+  const valueState = useModel(() => valueModelOf(source.value), firstValue);
+  const valueModel = valueState.value;
   const value = computed(() => (source.mode === 'none' ? text.value : valueModel.value));
 
   const followsLabel = () =>
     source.mode === 'single' && source.text === undefined && source.defaultText === undefined;
   const firstText =
-    source.text ??
-    source.defaultText ??
-    (source.mode === 'single' ? labelOf(firstValue) : '');
-  const { value: text, setOwn: setOwnText } = useModel(() => source.text, firstText);
+    source.text ?? source.defaultText ?? (source.mode === 'single' ? labelOf(firstValue) : '');
+  const textState = useModel(() => source.text, firstText);
+  const text = textState.value;
 
   const hasValue = computed(() => {
     if (source.mode === 'none') return text.value !== '';
@@ -352,7 +353,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         filter ?? ((item, q, toString) => coreFilter.value.contains(item, q, toString));
       next = filterItems(
         data.value as unknown[] | Group[],
-        keepsEach ? () => true : (item) => item != null && matches(item, query.value, itemToString.value),
+        keepsEach
+          ? () => true
+          : (item) => item != null && matches(item, query.value, itemToString.value),
         source.limit,
       );
     }
@@ -370,16 +373,24 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   );
 
   // The parts.
-  const inputs = shallowReactive<{ readonly insidePopup: boolean; readonly element: HTMLElement | null }[]>([]);
-  const inputIsControl = computed(() => source.inline || inputs.some((input) => !input.insidePopup));
+  const inputs = shallowReactive<
+    { readonly insidePopup: boolean; readonly element: HTMLElement | null }[]
+  >([]);
+  const inputIsControl = computed(
+    () => source.inline || inputs.some((input) => !input.insidePopup),
+  );
   const controlInput = computed(
     () => inputs.find((input) => source.inline || !input.insidePopup)?.element ?? null,
   );
   const triggerElement = shallowRef<HTMLElement | null>(null);
-  const control = computed(() => (inputIsControl.value ? controlInput.value : triggerElement.value));
+  const control = computed(() =>
+    inputIsControl.value ? controlInput.value : triggerElement.value,
+  );
   const insideGetters = shallowReactive<(() => Element | null)[]>([]);
   const groupGetters = shallowReactive<(() => Element | null)[]>([]);
-  const lists = shallowReactive<{ readonly element: HTMLElement | null; readonly id: string }[]>([]);
+  const lists = shallowReactive<{ readonly element: HTMLElement | null; readonly id: string }[]>(
+    [],
+  );
   const labels = shallowReactive<{ readonly id: string }[]>([]);
   const empties = shallowRef(0);
   const textInput = shallowRef<HTMLInputElement | null>(null);
@@ -395,7 +406,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const anchor = computed<Element | null>(() => {
     if (!inputIsControl.value) return triggerElement.value;
     const input = controlInput.value;
-    const group = groupGetters.map((get) => get()).find((element) => !!input && !!element?.contains(input));
+    const group = groupGetters
+      .map((get) => get())
+      .find((element) => !!input && !!element?.contains(input));
     return group ?? input;
   });
 
@@ -427,7 +440,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     fullWidth.value =
       isPlaced &&
       !!element &&
-      element.offsetWidth >= element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
+      element.offsetWidth >=
+        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
   });
   const layer = useLayer(root, () => {
     const modal = source.modal && !source.inline && !!positioner.value;
@@ -465,7 +479,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     const entry = itemEntries.get(item.element);
     const given = entry?.index();
     if (given !== undefined) return given;
-    if (source.virtualized) return findItemIndex(filteredValues.value, entry?.value(), isEqual.value);
+    if (source.virtualized)
+      return findItemIndex(filteredValues.value, entry?.value(), isEqual.value);
     return list.items().indexOf(item);
   }
 
@@ -493,7 +508,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       const completes = source.completion === 'both' || source.completion === 'inline';
       completion.value = completes && item && reason === 'keyboard' ? labelOf(valueOf(item)) : null;
       if (item) emitHighlight(valueOf(item), indexOf(item), reason, event);
-      else if (!source.virtualized || reason !== 'none') emitHighlight(undefined, -1, reason, event);
+      else if (!source.virtualized || reason !== 'none')
+        emitHighlight(undefined, -1, reason, event);
     },
   });
   // An item that changes its value gives a new highlight event.
@@ -516,9 +532,10 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 
   function highlightSelected() {
     const items = list.items();
+    const pick = lastPick;
     const picked =
-      lastPick && isSelected(lastPick.value)
-        ? items.find((item) => compareItemEquality(valueOf(item), lastPick!.value, isEqual.value))
+      pick && isSelected(pick.value)
+        ? items.find((item) => compareItemEquality(valueOf(item), pick.value, isEqual.value))
         : undefined;
     const selected = picked ?? items.find((item) => isSelected(valueOf(item)));
     if (selected) list.highlight(selected, 'none');
@@ -580,7 +597,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 
   // An input in the popup starts with no text: the label of the value is in the trigger.
   onMounted(() => {
-    if (followsLabel() && !inputIsControl.value) setOwnText('');
+    if (followsLabel() && !inputIsControl.value) textState.setOwn('');
   });
 
   // The text of a single combobox follows the label of its value.
@@ -594,11 +611,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   );
 
   // The field.
-  watch(
-    [value, hasValue],
-    ([current, filled]) => field?.setValue(current, filled),
-    { immediate: true },
-  );
+  watch([value, hasValue], ([current, filled]) => field?.setValue(current, filled), {
+    immediate: true,
+  });
 
   // The commands.
   function setText(next: string, details: ComboboxRootChangeEventDetails) {
@@ -607,7 +622,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (next === text.value) return true;
     emit.text(next, details);
     if (details.isCanceled) return false;
-    setOwnText(next);
+    textState.setOwn(next);
     emit.updateText(next);
     if (source.mode === 'none') field?.onEdit();
     return true;
@@ -616,7 +631,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   function setValue(next: unknown, details: ComboboxRootChangeEventDetails) {
     emit.value(next, details);
     if (details.isCanceled) return false;
-    setOwnValue(next);
+    valueState.setOwn(next);
     emit.updateValue(next);
     field?.onEdit();
     return true;
@@ -636,7 +651,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     // A link in an item does its own action.
     const link = (event.target as Element | null)?.closest?.('a[href]');
     if (link) {
-      if (link.getAttribute('href')!.startsWith('#')) request(false, 'item-press', pick);
+      if (link.getAttribute('href')?.startsWith('#')) request(false, 'item-press', pick);
       return;
     }
     if (source.mode === 'none') {
@@ -649,7 +664,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (multiple()) {
       const current = valueModel.value as unknown[];
       const selected = selectedValueIncludes(current, itemValue, isEqual.value);
-      const next = selected ? removeItem(current, itemValue, isEqual.value) : [...current, itemValue];
+      const next = selected
+        ? removeItem(current, itemValue, isEqual.value)
+        : [...current, itemValue];
       if (!setValue(next, details)) return;
       if (!selected) lastPick = { value: itemValue };
       if (text.value.trim() === '') return;
@@ -657,11 +674,15 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       else setText('', createComboboxDetails('input-clear', pick, true));
       return;
     }
-    if (!compareItemEquality(itemValue, valueModel.value, isEqual.value) && !setValue(itemValue, details)) {
+    if (
+      !compareItemEquality(itemValue, valueModel.value, isEqual.value) &&
+      !setValue(itemValue, details)
+    ) {
       return;
     }
     lastPick = { value: itemValue };
-    if (inputIsControl.value) setText(labelOf(itemValue), createComboboxDetails('item-press', pick));
+    if (inputIsControl.value)
+      setText(labelOf(itemValue), createComboboxDetails('item-press', pick));
     request(false, 'item-press', pick);
   }
 
@@ -739,34 +760,39 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (!root.open) openKey = undefined;
   }
 
-  let stopDrag: (() => void) | undefined;
-  onScopeDispose(() => stopDrag?.());
-  function startDrag(press: PointerEvent) {
-    stopDrag?.();
-    const doc = ownerDocument(press.target as Element);
-    const end = (release: PointerEvent) => {
-      stopDrag?.();
-      if (release.type !== 'pointerup' || !root.open || isReleaseAtPressPoint(press, release)) {
-        return;
-      }
-      const target = release.target as Element;
-      const item = list.items().find(({ element }) => element.contains(target));
-      if (item) {
-        if (!item.disabled) dispatchClickWithModifiers(item.element, release, { detail: 1, pointerType: 'mouse' });
-        return;
-      }
-      if (isInPopup(layer, target) || triggerElement.value?.contains(target)) return;
-      if (layer.inside.some((element) => element.contains(target))) return;
-      request(false, 'cancel-open', release);
-    };
-    const stopUp = addEventListener(doc, 'pointerup', end, true);
-    const stopCancel = addEventListener(doc, 'pointercancel', end, true);
-    stopDrag = () => {
-      stopUp();
-      stopCancel();
-      stopDrag = undefined;
-    };
-  }
+  // The press of a mouse that opened the popup, until its release.
+  const dragPress = shallowRef<PointerEvent | null>(null);
+  watch(
+    dragPress,
+    (press, _, onCleanup) => {
+      if (!press) return;
+      const end = (release: PointerEvent) => {
+        dragPress.value = null;
+        if (release.type !== 'pointerup' || !root.open || isReleaseAtPressPoint(press, release)) {
+          return;
+        }
+        const target = release.target as Element;
+        const item = list.items().find(({ element }) => element.contains(target));
+        if (item) {
+          if (!item.disabled) {
+            dispatchClickWithModifiers(item.element, release, { detail: 1, pointerType: 'mouse' });
+          }
+          return;
+        }
+        if (isInPopup(layer, target) || triggerElement.value?.contains(target)) return;
+        if (layer.inside.some((element) => element.contains(target))) return;
+        request(false, 'cancel-open', release);
+      };
+      const doc = ownerDocument(press.target as Element);
+      onCleanup(
+        mergeCleanups(
+          addEventListener(doc, 'pointerup', end, true),
+          addEventListener(doc, 'pointercancel', end, true),
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
 
   function add<T>(collection: T[], item: T) {
     collection.push(item);
@@ -864,7 +890,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       return anchor.value;
     },
     get listId() {
-      return lists.at(-1)?.element ? lists.at(-1)!.id : undefined;
+      const last = lists.at(-1);
+      return last?.element ? last.id : undefined;
     },
     get labelId() {
       return labels.at(-1)?.id;
@@ -894,7 +921,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     onListKeydown,
     clickHighlighted,
     openByKey,
-    startDrag,
+    startDrag: (press) => (dragPress.value = press),
     requestSubmit,
     addInput: (input) => add(inputs, input),
     setTrigger(element) {
@@ -933,20 +960,24 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const form = useComboboxForm(context, {
     autocomplete: () => source.autocomplete,
     // Autocomplete renders its inputs after its mount, so the server HTML has one name.
-    rendersInputs: () =>
-      source.mode !== 'none' || (mounted.value && !inputIsControl.value),
+    rendersInputs: () => source.mode !== 'none' || (mounted.value && !inputIsControl.value),
     formElement,
     isEqual: () => isEqual.value,
     reset() {
       const firstOwn = valueModelOf(source.defaultValue ?? null) ?? (multiple() ? NO_VALUES : null);
-      if (source.value === undefined && source.mode !== 'none' && isSelectedValueDirty(valueModel.value, firstOwn, isEqual.value)) {
-        setOwnValue(firstOwn);
+      if (
+        source.value === undefined &&
+        source.mode !== 'none' &&
+        isSelectedValueDirty(valueModel.value, firstOwn, isEqual.value)
+      ) {
+        valueState.setOwn(firstOwn);
         emit.updateValue(firstOwn);
       }
       const resetText =
-        source.defaultText ?? (source.mode === 'single' && inputIsControl.value ? labelOf(firstOwn) : '');
+        source.defaultText ??
+        (source.mode === 'single' && inputIsControl.value ? labelOf(firstOwn) : '');
       if (source.text === undefined && text.value !== resetText) {
-        setOwnText(resetText);
+        textState.setOwn(resetText);
         emit.updateText(resetText);
       }
     },
@@ -1015,7 +1046,6 @@ export function useInPopup() {
   return !!inject(positionerKey, null);
 }
 
-
 /** What `Chips` gives to its chips and to the input in it. */
 export interface ChipsContext {
   /** The direction of the chips element is right to left. */
@@ -1039,6 +1069,17 @@ export const chipKey: InjectionKey<ChipContext> = Symbol('combobox chip');
 
 export function injectChips() {
   return inject(chipsKey, null);
+}
+
+/** The chips around a chip part. A part with no chips throws an error that names it. */
+export function injectChipsOf(part: string) {
+  const chips = inject(chipsKey, null);
+  if (!chips) {
+    throw new Error(
+      `Vase UI: <Combobox.${part}> must be inside <Combobox.Chips>. Without the chips the part has no value. Put the part inside <Combobox.Chips>.`,
+    );
+  }
+  return chips;
 }
 
 /** An item in a `Row` is a cell of a grid. */

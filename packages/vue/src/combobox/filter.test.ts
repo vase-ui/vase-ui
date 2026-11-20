@@ -15,8 +15,8 @@ function inSetup(use: () => Filter, locale?: string) {
     return () => null;
   });
   mount(
-    defineComponent(() => () =>
-      locale ? h(LocaleProvider, { locale }, () => h(Probe)) : h(Probe),
+    defineComponent(
+      () => () => (locale ? h(LocaleProvider, { locale }, () => h(Probe)) : h(Probe)),
     ),
   );
   return filter!;

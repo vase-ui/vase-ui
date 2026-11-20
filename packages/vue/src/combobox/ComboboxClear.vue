@@ -52,7 +52,10 @@ function onClick(event: MouseEvent) {
   context.setText('', details);
   // A press can come while there is no value: in the leave of the button, or with `keepMounted`.
   if (context.mode !== 'none' && context.hasValue) {
-    context.setValue(context.mode === 'multiple' ? [] : null, createComboboxDetails('clear-press', event));
+    context.setValue(
+      context.mode === 'multiple' ? [] : null,
+      createComboboxDetails('clear-press', event),
+    );
   }
   context.list.highlight(null, 'none', event);
   context.input?.focus();

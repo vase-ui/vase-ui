@@ -2,7 +2,7 @@
 import { computed, inject, useAttrs } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement } from '../common/element';
-import { chipKey, chipsKey, createComboboxDetails, injectComboboxRoot } from './root';
+import { chipKey, createComboboxDetails, injectChipsOf, injectComboboxRoot } from './root';
 import type { ComboboxChipRemoveProps, ComboboxChipRemoveState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -18,9 +18,10 @@ defineSlots<{
 }>();
 
 const context = injectComboboxRoot('ChipRemove');
-const chips = inject(chipsKey, null);
-const chip = inject(chipKey, null);
-if (!chip || !chips) {
+const chips = injectChipsOf('ChipRemove');
+const chip = inject(chipKey, null) ?? missingChip();
+
+function missingChip(): never {
   throw new Error(
     'Vase UI: <Combobox.ChipRemove> must be inside <Combobox.Chip>. Without a chip the button has no value to remove. Put the button inside <Combobox.Chip>.',
   );
@@ -37,9 +38,9 @@ const state = computed<ComboboxChipRemoveState>(() => ({ disabled: button.disabl
 
 // Removes the value of the chip, and gives the focus to the input.
 function onClick(event: MouseEvent) {
-  const el = chip!.element;
+  const el = chip.element;
   if (!el || context.readonly) return;
-  const index = chips!.indexOf(el);
+  const index = chips.indexOf(el);
   if (index === -1) return;
   const details = createComboboxDetails('chip-remove-press', event);
   context.setValue(

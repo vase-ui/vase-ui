@@ -12,13 +12,15 @@ export type ComboboxPrimitiveValue = string | number | bigint | boolean;
 export type ComboboxGroup<Item = unknown> = Group<Item>;
 
 type RemoveIndexSignature<Type> = {
-  [Key in keyof Type as string extends Key
-    ? never
-    : number extends Key
+  [
+    Key in keyof Type as string extends Key
       ? never
-      : symbol extends Key
+      : number extends Key
         ? never
-        : Key]: Type[Key];
+        : symbol extends Key
+          ? never
+          : Key
+  ]: Type[Key];
 };
 
 /** Whether any constituent of `Item` declares an `items` field that may be a list. */
@@ -81,7 +83,11 @@ export interface ItemCollection<Item = any, Value = any> {
   hasValue(value: Value, isEqual: ItemEqualityComparer<Value>): boolean;
   itemLabel(item: Item): string;
   /** The label of the item with the value, else `fallback` of the value. */
-  label(value: Value, isEqual: ItemEqualityComparer<Value>, fallback?: (value: Value) => string): string;
+  label(
+    value: Value,
+    isEqual: ItemEqualityComparer<Value>,
+    fallback?: (value: Value) => string,
+  ): string;
 }
 
 export function isItemCollection(value: unknown): value is ItemCollection {
@@ -117,7 +123,7 @@ export function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(
   function derived() {
     if (valueToItem) return valueToItem;
     valueToItem = new Map();
-    for (const item of data ? flattenLeafItems<Item>(data as readonly Item[]) : []) {
+    for (const item of data ? flattenLeafItems<Item>(data) : []) {
       const value = getValue(item);
       if (!valueToItem.has(value)) valueToItem.set(value, item);
       else if (process.env.NODE_ENV !== 'production') {
@@ -131,7 +137,7 @@ export function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(
 
   const collection: ItemCollection<Item, Value> = {
     // Data that has not loaded stays no data, not an empty list that the filter empties.
-    data: data as ItemCollection<Item, Value>['data'],
+    data,
     value: (item) => (item == null ? (item as unknown as Value) : getValue(item)),
     hasValue: (value, isEqual) => findItem(derived(), value, isEqual) !== undefined,
     itemLabel: getLabel,

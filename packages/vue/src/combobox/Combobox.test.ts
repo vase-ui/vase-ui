@@ -46,7 +46,8 @@ function rootEvents(log: string[], props: Props = {}) {
     ...props,
     onValueChange: (value: unknown, details: ComboboxRootChangeEventDetails) =>
       log.push(`valueChange ${JSON.stringify(value)} ${details.reason}`),
-    'onUpdate:modelValue': (value: unknown) => log.push(`update:modelValue ${JSON.stringify(value)}`),
+    'onUpdate:modelValue': (value: unknown) =>
+      log.push(`update:modelValue ${JSON.stringify(value)}`),
     onInputValueChange: (text: string, details: ComboboxRootChangeEventDetails) =>
       log.push(
         `inputValueChange ${JSON.stringify(text)} ${details.reason}${details.isItemPress ? ' item' : ''}`,

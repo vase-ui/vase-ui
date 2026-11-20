@@ -81,7 +81,8 @@ defineExpose({ virtualizer });
       :class="styles.VirtualizedPlaceholder"
       :style="{ height: `${totalSize}px` }"
     >
-      <Combobox.Item v-slot="{ state }"
+      <Combobox.Item
+        v-slot="{ state }"
         v-for="{ virtualItem, item } in rows"
         :key="virtualItem.index"
         :ref="measureItem"

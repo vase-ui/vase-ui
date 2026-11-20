@@ -15,7 +15,7 @@ defineProps({
 <template>
   <Combobox.Root :items="items" multiple v-bind="root">
     <Combobox.Chips data-testid="chips">
-      <template v-for="value in ((root?.modelValue ?? []) as string[])" :key="value">
+      <template v-for="value in (root?.modelValue ?? []) as string[]" :key="value">
         <Combobox.Chip :data-testid="`chip-${value}`">
           {{ value }}
           <Combobox.ChipRemove :data-testid="`remove-${value}`" aria-label="Remove" />

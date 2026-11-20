@@ -74,9 +74,7 @@ export interface ComboboxRootHighlightEventDetails {
 
 /** The items of the `items` prop: a list, a list of groups, or a collection of `createItems()`. */
 export type ComboboxItems<Item, Value> =
-  | readonly Item[]
-  | readonly Group<Item>[]
-  | ComboboxItemCollection<Item, Value>;
+  readonly Item[] | readonly Group<Item>[] | ComboboxItemCollection<Item, Value>;
 
 /** The props of the roots of Combobox and Autocomplete. */
 export interface ComboboxSharedRootProps<Item> {
@@ -91,7 +89,8 @@ export interface ComboboxSharedRootProps<Item> {
    * Keeps an item for the query, the text with no space at the ends. `null` keeps each item. The
    * default is `contains` of `useFilter`.
    */
-  filter?: ((item: Item, query: string, itemToString?: FilterItemToString) => boolean) | null | undefined;
+  filter?:
+    ((item: Item, query: string, itemToString?: FilterItemToString) => boolean) | null | undefined;
   /**
    * The largest number of items to show. -1 shows each item.
    * @default -1
@@ -228,8 +227,9 @@ interface InputAutocomplete {
 }
 
 export interface ComboboxInputProps
+  /* @vue-ignore */
   extends
-    /* @vue-ignore */ Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'>,
+    Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'>,
     /* @vue-ignore */ InputAutocomplete {
   id?: string | undefined;
   /**

@@ -31,7 +31,9 @@ describe('the form data', () => {
   });
 
   test('a multiple value is one hidden input for each value', async () => {
-    await mountForm({ root: { name: 'fruits', multiple: true, defaultValue: ['Apple', 'Cherry'] } });
+    await mountForm({
+      root: { name: 'fruits', multiple: true, defaultValue: ['Apple', 'Cherry'] },
+    });
     expect(entries()).toEqual([
       ['fruits', 'Apple'],
       ['fruits', 'Cherry'],
@@ -116,7 +118,11 @@ describe('the autofill', () => {
   test('an `input` event on the text input selects the item with that text, with no regard to case', async () => {
     const values: unknown[] = [];
     await mountForm({
-      root: { name: 'a', autocomplete: 'fruit', 'onUpdate:modelValue': (value: unknown) => values.push(value) },
+      root: {
+        name: 'a',
+        autocomplete: 'fruit',
+        'onUpdate:modelValue': (value: unknown) => values.push(value),
+      },
     });
     expect(textInput()).toHaveAttribute('type', 'text');
     expect(textInput()).toHaveAttribute('autocomplete', 'fruit');
@@ -153,5 +159,4 @@ describe('the field', () => {
     expect(byTestId('field')).toHaveAttribute('data-touched');
     expect(byTestId('field')).not.toHaveAttribute('data-dirty');
   });
-
 });

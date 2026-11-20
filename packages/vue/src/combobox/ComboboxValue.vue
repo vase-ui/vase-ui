@@ -32,7 +32,6 @@ const labels = computed<NonNullable<ItemLabel>[]>(() => {
   // An empty text would leave an empty text node.
   return resolved.filter((each) => each !== '');
 });
-
 </script>
 
 <template>

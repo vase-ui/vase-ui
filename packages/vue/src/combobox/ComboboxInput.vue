@@ -19,7 +19,13 @@ import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
 import { controlAttributes, describedByWith, fieldKey } from '../field/control';
 import { isComposing, isInPopup } from '../popup/layer';
-import { createComboboxDetails, injectChips, injectComboboxRoot, useInPopup } from './root';
+import {
+  createComboboxDetails,
+  injectChips,
+  injectComboboxRoot,
+  useInPopup,
+  type ChipsContext,
+} from './root';
 import type { ComboboxInputProps, ComboboxInputState } from './types';
 
 type TextElement = HTMLInputElement | HTMLTextAreaElement;
@@ -60,9 +66,7 @@ onUnmounted(removeInput);
 
 const isControl = computed(() => !inPopup || context.inline);
 const isDisabled = computed(() => context.disabled || props.disabled);
-const id = computed(
-  () => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId),
-);
+const id = computed(() => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId));
 // A `<textarea>` in the slot has the role only while the list shows (VUE-97). The server HTML and
 // the first render have the attributes of an `<input>`.
 const isInput = computed(
@@ -201,7 +205,7 @@ function onKeydown(event: KeyboardEvent) {
     clearByEscape(event);
     return;
   }
-  if (chips && !context.readonly && onChipsKey(event, el)) return;
+  if (chips && !context.readonly && onChipsKey(event, el, chips)) return;
   if (event.key === 'Enter' || (event.key === ' ' && el.value === '')) {
     if (!expanded.value) return;
     if (context.readonly) {
@@ -241,7 +245,7 @@ function clearByEscape(event: KeyboardEvent) {
 }
 
 // Backspace in an empty input removes the last value. ArrowLeft at the start goes to the last chip.
-function onChipsKey(event: KeyboardEvent, el: TextElement) {
+function onChipsKey(event: KeyboardEvent, el: TextElement, around: ChipsContext) {
   const values = context.value as unknown[];
   if (!Array.isArray(values) || values.length === 0) return false;
   if (event.key === 'Backspace' && el.value === '') {
@@ -249,10 +253,10 @@ function onChipsKey(event: KeyboardEvent, el: TextElement) {
     context.setValue(values.slice(0, -1), createComboboxDetails('none', event));
     return true;
   }
-  const back = chips!.rtl() ? 'ArrowRight' : 'ArrowLeft';
+  const back = around.rtl() ? 'ArrowRight' : 'ArrowLeft';
   if (event.key === back && el.selectionStart === 0 && el.selectionEnd === 0) {
     event.preventDefault();
-    chips!.focusChip(-1);
+    around.focusChip(-1);
     return true;
   }
   return false;

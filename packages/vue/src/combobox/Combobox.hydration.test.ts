@@ -10,7 +10,10 @@ const byTestId = (root: ParentNode, id: string) =>
 
 describe('server render and hydration', () => {
   test('the server HTML of an open root has the root, the control and the form inputs, and no popup', async () => {
-    const props = { root: { defaultOpen: true, name: 'fruit', defaultValue: 'Apple' }, trigger: true };
+    const props = {
+      root: { defaultOpen: true, name: 'fruit', defaultValue: 'Apple' },
+      trigger: true,
+    };
     const root = await renderOnServer('ComboboxParts', props);
     const input = byTestId(root, 'input')!;
     expect(input).toHaveAttribute('role', 'combobox');

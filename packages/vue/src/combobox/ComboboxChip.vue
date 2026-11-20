@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, nextTick, provide, useAttrs, watch } from 'vue';
+import { computed, mergeProps, nextTick, provide, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
-import { chipKey, chipsKey, createComboboxDetails, injectComboboxRoot } from './root';
+import { chipKey, createComboboxDetails, injectChipsOf, injectComboboxRoot } from './root';
 import type { ComboboxChipProps, ComboboxChipState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -17,12 +17,7 @@ defineSlots<{
 }>();
 
 const context = injectComboboxRoot('Chip');
-const chips = inject(chipsKey, null);
-if (!chips) {
-  throw new Error(
-    'Vase UI: <Combobox.Chip> must be inside <Combobox.Chips>. Without the chips the chip has no value. Put the chip inside <Combobox.Chips>.',
-  );
-}
+const chips = injectChipsOf('Chip');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 watch(
@@ -49,7 +44,7 @@ function remove(event: Event) {
   const el = element.value;
   const values = context.value as unknown[];
   if (!el || context.readonly || disabled.value) return;
-  const index = chips!.indexOf(el);
+  const index = chips.indexOf(el);
   if (index === -1) return;
   context.setValue(
     values.filter((_, at) => at !== index),
@@ -61,16 +56,17 @@ function onKeydown(event: KeyboardEvent) {
   if (event.target !== event.currentTarget || event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
-  const el = element.value!;
-  const index = chips!.indexOf(el);
-  const [forward, back] = chips!.rtl() ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft'];
+  const el = element.value;
+  if (!el) return;
+  const index = chips.indexOf(el);
+  const [forward, back] = chips.rtl() ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft'];
   const input = context.input;
   if (event.key === forward || event.key === back) {
     event.preventDefault();
     const next = index + (event.key === forward ? 1 : -1);
     const count = (context.value as unknown[]).length;
     if (next >= count) input?.focus();
-    else if (next >= 0) chips!.focusChip(next);
+    else if (next >= 0) chips.focusChip(next);
     return;
   }
   if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -80,7 +76,7 @@ function onKeydown(event: KeyboardEvent) {
     // chips render the new value.
     void nextTick(() => {
       const next = Math.min(index, (context.value as unknown[]).length - 1);
-      if (next >= 0) chips!.focusChip(next);
+      if (next >= 0) chips.focusChip(next);
       else input?.focus();
     });
     return;

@@ -88,8 +88,11 @@ export { useFilteredItems } from './root';
  */
 export const Root: typeof ComboboxRoot = ComboboxRoot;
 export namespace Root {
-  export type Props<Value = unknown, Multiple extends boolean | undefined = false, Item = Value> =
-    ComboboxRootProps<Value, Multiple, Item>;
+  export type Props<
+    Value = unknown,
+    Multiple extends boolean | undefined = false,
+    Item = Value,
+  > = ComboboxRootProps<Value, Multiple, Item>;
   export type State = ComboboxRootState;
   export type ChangeEventReason = ComboboxRootChangeEventReason;
   export type ChangeEventDetails = ComboboxRootChangeEventDetails;

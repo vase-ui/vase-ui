@@ -29,4 +29,3 @@ expectType<
   string | undefined,
   WithVaseUIEvent<HTMLAttributes, 'aria-labelledby'>['aria-labelledby']
 >(undefined);
-
