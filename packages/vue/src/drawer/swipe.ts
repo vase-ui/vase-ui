@@ -349,10 +349,6 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
         finish(null);
         return;
       }
-      if (event.buttons === 0 && !current.started) {
-        finish(null);
-        return;
-      }
     }
     current.moveTime ??= event.timeStamp;
     if (current.claimed === undefined) decide(current, event.clientX, event.clientY);

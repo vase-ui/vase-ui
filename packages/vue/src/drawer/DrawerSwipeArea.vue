@@ -137,12 +137,6 @@ watch(
   },
   { flush: 'post' },
 );
-watch(
-  () => root.open,
-  (open) => {
-    if (!open && opened) tracker.cancel();
-  },
-);
 
 const state = computed<DrawerSwipeAreaState>(() => ({
   open: root.open,

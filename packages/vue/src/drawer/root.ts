@@ -245,15 +245,17 @@ export function useDrawerRoot<Payload>(
   const nestedPresent = computed(() =>
     children.some((child) => child.dialog.root.open || child.dialog.root.leaving),
   );
-  // While a drawer in it is present, the drawer keeps its height.
-  const height = shallowRef(0);
+  // While a drawer in it is present, the drawer keeps its height: the CSS of a nest can stretch it.
+  const kept = shallowRef(0);
   watch(
-    () => sizes.popup,
-    (next) => {
-      if (!nestedPresent.value || height.value === 0) height.value = next;
+    [nestedPresent, () => sizes.popup],
+    ([present, size]) => {
+      if (!present) kept.value = 0;
+      else kept.value ||= size;
     },
-    { immediate: true },
+    { immediate: true, flush: 'sync' },
   );
+  const height = computed(() => kept.value || sizes.popup);
   const frontmost = computed<number>(() => {
     const child = children.find((each) => each.dialog.root.open);
     return child ? child.frontmostHeight : height.value;
