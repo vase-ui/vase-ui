@@ -1226,6 +1226,19 @@ describe('the trigger (L8)', () => {
     expect(trigger()).toHaveAttribute('data-pressed');
     expect(trigger()).toHaveAttribute('aria-controls', element.id);
   });
+
+  test('VUE-73: a popup that unmounts while the popover is open leaves no aria-controls and no sentinel', async () => {
+    const scene = reactive({ popup: true });
+    const { trigger } = await mountPopover({ root: { defaultOpen: true }, scene });
+    const element = await opened();
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-controls', element.id));
+    scene.popup = false;
+    await closed();
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger()).not.toHaveAttribute('aria-controls');
+    expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
+  });
 });
 
 describe('the hover (L9)', () => {

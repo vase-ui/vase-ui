@@ -26,6 +26,8 @@ defineProps({
   autofocus: Boolean,
   /** Parts that mount while their value is `true`. The arrow is 20 px wide. */
   later: Object as PropType<{ arrow: boolean }>,
+  /** The popup mounts while `scene.popup` is not `false`. */
+  scene: Object as PropType<{ popup?: boolean }>,
   /** A second popover in the popup, with its own trigger. */
   nested: Object as PropType<{ root?: Props; portal?: Props; popup?: Props; backdrop?: Props }>,
 });
@@ -49,7 +51,12 @@ defineExpose({ root: rootPart, popup: popupPart });
       <Popover.Portal v-if="!noPortal" v-bind="portal">
         <Popover.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
         <Popover.Positioner data-testid="positioner" v-bind="positioner">
-          <Popover.Popup v-if="!noPopup" ref="popupPart" data-testid="popup" v-bind="popup">
+          <Popover.Popup
+            v-if="!noPopup && scene?.popup !== false"
+            ref="popupPart"
+            data-testid="popup"
+            v-bind="popup"
+          >
             <Popover.Arrow v-if="arrow" data-testid="arrow" v-bind="arrow" />
             <Popover.Arrow
               v-if="later?.arrow"
