@@ -1,4 +1,4 @@
-import type { DayOfWeek } from '../internals/date-time/temporal';
+import type { DayOfWeek } from '../common/date-time/temporal';
 
 // The regions whose week does not start on Monday, from `weekData.firstDay` of CLDR 49
 // (cldr-json, `cldr-core/supplemental/weekData.json`). `Intl.Locale#getWeekInfo` is not Baseline

@@ -1,8 +1,8 @@
 import { computed, inject, useAttrs, watch, type ComputedRef, type InjectionKey } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement } from '../common/element';
-import { formatText } from '../internals/date-time/calendar/formatText';
-import { isSameDay } from '../internals/date-time/temporal';
+import { formatText } from '../common/date-time/text';
+import { isSameDay } from '../common/date-time/temporal';
 import { injectCalendar } from './root';
 import type { CalendarCellState } from './types';
 

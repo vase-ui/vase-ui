@@ -8,8 +8,8 @@ import type {
   DateTimeFieldState,
 } from '../common/date-time-field/field';
 import type { DateTimeFieldSegmentState } from '../common/date-time-field/segment';
-import type { DateMatcher } from '../internals/date-time/matchers';
-import type { DateValue } from '../internals/date-time/temporal';
+import type { DateMatcher } from '../common/date-time/matchers';
+import type { DateValue } from '../common/date-time/temporal';
 
 /** The kinds of value that the field takes and gives back. */
 export type DateFieldRootValue = DateValue | Temporal.PlainYearMonth;

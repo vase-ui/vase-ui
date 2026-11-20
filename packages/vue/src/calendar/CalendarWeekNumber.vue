@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { formatNumber } from '../internals/date-time/calendar/formatText';
+import { formatNumber } from '../common/formatNumber';
 import { injectCalendar, stateAttributes } from './root';
 import type { CalendarWeekNumberProps, CalendarWeekNumberState } from './types';
 

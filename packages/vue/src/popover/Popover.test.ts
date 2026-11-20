@@ -385,6 +385,23 @@ describe('the portal (L3)', () => {
     expect((await opened()).closest('[data-v-app]')).toBe(inPlace.root.closest('[data-v-app]'));
     expect(inPlace.root.contains(popup())).toBe(true);
   });
+
+  test('VUE-135: an attribute with the name of a prop of the internal portal reaches no element, and the portal keeps its focus guards', async () => {
+    await mountPopover({
+      root: { defaultOpen: true },
+      portal: { guards: 'external', 'portal-owner-role': 'menu' },
+    });
+    await opened();
+    // Vue warns in development: the root of the portal is a `<Teleport>`, which takes no attribute.
+    expect(takeReportedMessages().join()).toMatch(
+      /Extraneous non-props attributes \(guards, portal-owner-role\)/,
+    );
+    expect(document.querySelector('[guards], [portal-owner-role], [role="menu"]')).toBe(null);
+    for (const guard of [positioner()!.previousElementSibling, positioner()!.nextElementSibling]) {
+      expect(guard).toHaveAttribute('tabindex', '0');
+      expect(guard).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
 });
 
 describe('the dismissal (L4)', () => {

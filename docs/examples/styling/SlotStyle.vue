@@ -4,17 +4,17 @@ import { TimePicker } from '@vase-ui/vue/time-picker';
 
 <template>
   <TimePicker.Root>
-    <TimePicker.List>
+    <TimePicker.List aria-label="Times">
       <template #item="{ time }">
         <TimePicker.Item :time="time">
-          <template #render="{ props, state, text }">
-            <div
+          <template #element="{ props, elementRef, state, text }">
+            <button
               v-bind="props"
-              :ref="props.ref"
+              :ref="elementRef"
               :style="{ color: state.selected ? 'red' : 'blue' }"
             >
               {{ text }}
-            </div>
+            </button>
           </template>
         </TimePicker.Item>
       </template>

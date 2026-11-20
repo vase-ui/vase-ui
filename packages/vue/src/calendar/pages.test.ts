@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DayOfWeek } from '../internals/date-time/temporal';
+import type { DayOfWeek } from '../common/date-time/temporal';
 import {
   alignPageStart,
   getBroadcastPage,

@@ -12,13 +12,14 @@ import {
 } from 'vue';
 import { describedByWith, fieldKey } from '../../field/control';
 import { useInDisabledFieldset } from '../../fieldset/part';
-import { displayCalendar } from '../../internals/date-time/displayCalendar';
-import { digits as localeDigits, formatter } from '../../internals/date-time/format';
-import { matches, type DateMatcher } from '../../internals/date-time/matchers';
+import { displayCalendar } from '../date-time/displayCalendar';
+import { digits as localeDigits, formatter } from '../date-time/format';
+import { matches, type DateMatcher } from '../date-time/matchers';
 import {
   isKind,
   kindOf,
   parseInputText,
+  sameTemporal,
   toInputText,
   toPlainDate,
   toPlainTime,
@@ -28,7 +29,7 @@ import {
   type TemporalKind,
   type TemporalValue,
   type TimeValue,
-} from '../../internals/date-time/temporal';
+} from '../date-time/temporal';
 import { useLocale } from '../../locale-provider/part';
 import { createChangeEventDetails } from '../changeEventDetails';
 import { useDeferredServerRender } from '../deferredServerRender';
@@ -112,13 +113,6 @@ const FIXED_DAY = '2000-01-01T00:00';
 
 function isTimeUnit(granularity: DateTimeFieldGranularity): granularity is TimeUnit {
   return TIME_UNITS.includes(granularity);
-}
-
-/** Two values of the same kind and the same `equals`, or two empty values. */
-function sameTemporal(a: unknown, b: unknown): boolean {
-  if (a == null || b == null) return a == null && b == null;
-  const kind = kindOf(a);
-  return kind !== null && kind === kindOf(b) && (a as Temporal.PlainDate).equals(b as never);
 }
 
 function kindOfField(
@@ -584,7 +578,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
             return !!props.readonly;
           },
           get inputs() {
-            return [inputElement.value, host?.endInput?.()].filter((input) => !!input);
+            return inputElement.value ? [inputElement.value] : [];
           },
           get customError() {
             return ownError.value ?? undefined;

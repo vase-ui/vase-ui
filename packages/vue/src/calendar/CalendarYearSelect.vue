@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatText } from '../internals/date-time/calendar/formatText';
+import { formatText } from '../common/date-time/text';
 import type { ElementSlotProps } from '../common/element';
 import { injectCalendar } from './root';
 import { useCalendarSelect } from './select';

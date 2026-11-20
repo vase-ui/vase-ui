@@ -1,5 +1,5 @@
-import { isKind, toInputText, toPlainDate } from '../../internals/date-time/temporal';
-import type { DateValue, TemporalKind } from '../../internals/date-time/temporal';
+import { isKind, toInputText, toPlainDate } from '../date-time/temporal';
+import type { DateValue, TemporalKind } from '../date-time/temporal';
 
 /** A failure that a field finds itself, with the flag of `ValidityState` that a `Field` shows. */
 export interface DateTimeFieldError {

@@ -9,8 +9,8 @@ import type {
 } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
-import type { DateMatcher } from '../internals/date-time/matchers';
-import type { DateValue, DayOfWeek } from '../internals/date-time/temporal';
+import type { DateMatcher } from '../common/date-time/matchers';
+import type { DateValue, DayOfWeek } from '../common/date-time/temporal';
 
 /** What a calendar selects: a day, or a year and month. */
 export type CalendarValue = DateValue | Temporal.PlainYearMonth;
