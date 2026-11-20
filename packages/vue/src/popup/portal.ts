@@ -81,8 +81,8 @@ export function usePopupPortal(
       inset: 0,
       // A double click selects text of the page in Firefox and WebKit
       // (test/measurements/popup.test.ts).
-      userSelect: 'none',
-      WebkitUserSelect: 'none',
+      'user-select': 'none',
+      '-webkit-user-select': 'none',
       // The active trigger keeps its hover and its press.
       clipPath: rect
         ? `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rect.left}px ${rect.top}px,${rect.right}px ${rect.top}px,${rect.right}px ${rect.bottom}px,${rect.left}px ${rect.bottom}px,${rect.left}px ${rect.top}px)`

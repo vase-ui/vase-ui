@@ -39,8 +39,8 @@ function elementProps() {
         pointerEvents: context.hoverOpen ? 'none' : undefined,
         // A double click selects text of the page in Firefox and WebKit
         // (test/measurements/popup.test.ts).
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
+        'user-select': 'none',
+        '-webkit-user-select': 'none',
       },
     },
     attrs,

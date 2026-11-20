@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';

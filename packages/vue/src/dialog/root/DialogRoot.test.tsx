@@ -48,7 +48,6 @@ import {
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
-import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/parts';
@@ -58,22 +57,6 @@ import DialogRootHydration from './DialogRootHydration.test.vue';
 import { DialogRootContext, useDialogRootContext } from './DialogRootContext';
 
 type Store = DialogStore<unknown>;
-
-// The viewport takes its overflow from <html>, falling back to <body> when <html> doesn't
-// establish its own scroll container. Whichever one propagates decides if the user can scroll.
-function isPageLocked() {
-  const html = document.documentElement;
-  const { overflow, overflowX, overflowY } = getComputedStyle(html);
-  const htmlScrolls = /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX);
-  return /hidden|clip/.test(getComputedStyle(htmlScrolls ? html : document.body).overflowY);
-}
-
-// When <html> is the viewport scroller, Vase UI hides its overflow to lock the page. An external
-// <body> lock never touches <html>, so this distinguishes a lock Vase UI applied itself from one
-// it is still waiting to take over.
-function hasOwnScrollLock(doc: Document) {
-  return doc.documentElement.style.overflowX === 'hidden';
-}
 
 type OpenChangeDetails = { open: boolean; reason: string | null | undefined };
 

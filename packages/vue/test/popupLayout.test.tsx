@@ -1,5 +1,5 @@
 import { expect, it, onTestFinished } from 'vitest';
-import { KeepAlive, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,

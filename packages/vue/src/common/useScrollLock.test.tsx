@@ -111,9 +111,9 @@ describe('useScrollLock', () => {
     const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
     const enabled = shallowRef(false);
     const shown = shallowRef(true);
-    await render(() =>
-      shown.value ? <Locker enabled={enabled.value} reference={page.reference} /> : null,
-    );
+    await render(() => (
+      <div>{shown.value && <Locker enabled={enabled.value} reference={page.reference} />}</div>
+    ));
     await nextTick();
     expect(isPageLocked(page)).toBe(false);
     enabled.value = true;

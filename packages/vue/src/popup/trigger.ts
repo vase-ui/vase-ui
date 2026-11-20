@@ -1,4 +1,4 @@
-import { computed, onUnmounted, watch, type Ref } from 'vue';
+import { computed, watch, type Ref } from 'vue';
 import { useButton } from '../button/button';
 import type { PopupRoot } from './root';
 
@@ -33,18 +33,13 @@ export function usePopupTrigger(
       return button.disabled.value;
     },
   };
-  let unregister: (() => void) | undefined;
   watch(
     root,
-    (current) => {
-      unregister?.();
-      unregister = current?.addTrigger(entry);
+    (current, _, onCleanup) => {
+      if (current) onCleanup(current.addTrigger(entry));
     },
     { immediate: true },
   );
-  // Nuxt removes the call of `onUnmounted` from its server build, with its arguments.
-  const stop = () => unregister?.();
-  onUnmounted(stop);
 
   const active = computed(() => {
     const current = root();

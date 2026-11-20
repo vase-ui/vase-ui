@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
-import { shallowRef } from 'vue';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Popover } from '@vase-ui/vue/popover';
 import { Field } from '@vase-ui/vue/field';

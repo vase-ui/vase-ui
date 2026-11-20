@@ -3,7 +3,6 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import {
   createRenderer,
-  flushMicrotasks,
   screen,
   waitForPositioned,
 } from '#test-utils';

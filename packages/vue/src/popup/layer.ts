@@ -10,8 +10,10 @@ import {
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
+import { isShadowRoot } from '@floating-ui/utils/dom';
 import { activeElement } from '../common/shadowDom';
 import { useScrollLock } from '../common/useScrollLock';
+import { followRootNode } from '../internals/observeRootNode';
 import type { PopupRoot } from './root';
 
 /** What an open root gives to the stack. The properties are reactive. */
@@ -128,9 +130,12 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     // A popup in a shadow root gets the focus events of that root there. The document gets no
     // focus event for a move of the focus in one shadow root.
     watch(
-      () => (root.open ? root.popup?.getRootNode() : undefined),
-      (node, _, onCleanup) => {
-        if (node instanceof ShadowRoot) onCleanup(listen(node));
+      () => (root.open ? root.popup : null),
+      (popup, _, onCleanup) => {
+        if (!popup) return;
+        onCleanup(
+          followRootNode(popup, (node) => (isShadowRoot(node) ? listen(node) : undefined)),
+        );
       },
       { flush: 'post' },
     );
@@ -241,7 +246,7 @@ function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
 // `pointerdown` reads it.
 function isScrollbarPress(event: PointerEvent | MouseEvent) {
   const target = event.target;
-  if (!(target instanceof ownerWindow(target as Element).HTMLElement)) return false;
+  if (!(target instanceof ownerWindow(target).HTMLElement)) return false;
   const html = target.ownerDocument.documentElement;
   const root = target === html || target === target.ownerDocument.body;
   const style = ownerWindow(target).getComputedStyle(target);
@@ -467,13 +472,13 @@ function writeHide(
       for (
         let node: Node | null = element;
         node && node !== body;
-        node = node.parentNode instanceof ShadowRoot ? node.parentNode.host : node.parentNode
+        node = node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
       ) {
         kept.add(node);
       }
     }
     for (const node of kept) {
-      for (const sibling of (node.parentNode as ParentNode | null)?.children ?? []) {
+      for (const sibling of node.parentNode?.children ?? []) {
         if (!kept.has(sibling) && !sibling.hasAttribute('aria-live')) {
           wanted.set(sibling, next.hide);
         }

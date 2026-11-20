@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, h, shallowRef } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
@@ -12,7 +12,6 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
-import { createSlotHost } from '../../../../test/fixtures/slotHost';
 import FocusManagerPart from '../../../../test/fixtures/FocusManagerPart.vue';
 import { createMenuStoreProbe } from '../../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../../internals/reasons';

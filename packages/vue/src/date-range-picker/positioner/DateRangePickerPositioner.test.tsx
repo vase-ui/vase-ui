@@ -5,7 +5,6 @@ import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import {
   createRenderer,
-  describeConformance,
   flushMicrotasks,
   screen,
   waitFor,

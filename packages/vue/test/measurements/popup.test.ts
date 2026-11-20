@@ -103,7 +103,11 @@ describe('a press in a same-origin frame (M3)', () => {
     });
     const log: string[] = [];
     element('control').focus();
-    document.addEventListener('focusout', (event) => log.push(`focusout ${String(event.relatedTarget)}`), true);
+    document.addEventListener(
+      'focusout',
+      (event) => log.push(`focusout ${event.relatedTarget === null ? 'null' : 'element'}`),
+      true,
+    );
     document.addEventListener('pointerdown', () => log.push('pointerdown'), true);
     await userEvent.pointer({ coords: centerOf(frame), keys: '[MouseLeft]' });
     await new Promise((resolve) => setTimeout(resolve));

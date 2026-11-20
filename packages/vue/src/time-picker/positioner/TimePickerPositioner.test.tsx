@@ -3,8 +3,6 @@ import { TimeField } from '@vase-ui/vue/time-field';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
   createRenderer,
-  describeConformance,
-  flushMicrotasks,
   screen,
   waitForPositioned,
 } from '#test-utils';

@@ -63,7 +63,7 @@ export function usePopoverRoot<Payload>(
     defaultOpen: props.defaultOpen,
     triggerId: () => props.triggerId,
     defaultTriggerId: props.defaultTriggerId,
-    handle: () => props.handle as PopupHandle | undefined,
+    handle: () => props.handle,
     emitChange: (open, details) =>
       emit('openChange', open, details as PopoverRootChangeEventDetails),
     emitOpen: (open) => emit('update:open', open),
@@ -133,7 +133,7 @@ export function usePopoverRoot<Payload>(
     popupFocus,
     viewport: shallowRef(null),
   };
-  contexts.set(root as PopupRoot, context as PopoverRootContext);
+  contexts.set(root, context);
   provide(popoverRootKey, context as PopoverRootContext);
 
   return {

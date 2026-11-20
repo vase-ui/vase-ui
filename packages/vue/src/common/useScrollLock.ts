@@ -1,6 +1,6 @@
 import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
 import { getPortalLocation } from '../utils/popups/portal/portalElements';
-import { ownerDocument } from './owner';
+import { ownerDocument, ownerWindow } from './owner';
 
 // One count for each document, so that the last unlock restores the page.
 const locks = new WeakMap<Document, { count: number; restore: () => void }>();
@@ -11,7 +11,7 @@ function viewportScroller(html: HTMLElement, body: HTMLElement) {
 }
 
 function getStyle(element: HTMLElement) {
-  return element.ownerDocument.defaultView!.getComputedStyle(element);
+  return ownerWindow(element).getComputedStyle(element);
 }
 
 function saveStyle(element: HTMLElement, names: string[]) {
@@ -24,7 +24,8 @@ function saveStyle(element: HTMLElement, names: string[]) {
 function lock(doc: Document) {
   const html = doc.documentElement;
   const body = doc.body;
-  const scrollbar = doc.defaultView!.innerWidth - html.clientWidth;
+  const win = ownerWindow(html);
+  const scrollbar = win.innerWidth - html.clientWidth;
   // An overlay scrollbar takes no room, so `overflow: hidden` alone stops the scroll.
   if (scrollbar <= 0) {
     const scroller = viewportScroller(html, body);
@@ -40,7 +41,7 @@ function lock(doc: Document) {
   const bodyStyle = getStyle(body);
   const marginY = Number.parseFloat(bodyStyle.marginTop) + Number.parseFloat(bodyStyle.marginBottom);
   const marginX = Number.parseFloat(bodyStyle.marginLeft) + Number.parseFloat(bodyStyle.marginRight);
-  const scrollbarY = doc.defaultView!.innerHeight - html.clientHeight;
+  const scrollbarY = win.innerHeight - html.clientHeight;
   const restoreHtml = saveStyle(html, ['overflow-x', 'overflow-y', 'scroll-behavior']);
   const restoreBody = saveStyle(body, ['position', 'width', 'height', 'box-sizing', 'overflow']);
   const scrolls = (axis: 'X' | 'Y') =>

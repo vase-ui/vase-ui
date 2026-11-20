@@ -7,7 +7,6 @@ import {
   isVaporApp,
   nextEvent,
   screen,
-  waitFor,
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';

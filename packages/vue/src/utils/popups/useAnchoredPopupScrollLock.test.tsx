@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
-import { KeepAlive, nextTick, shallowRef } from 'vue';
+import { nextTick, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, renderOnServer, wait, waitFor } from '#test-utils';
 import AnchoredScrollLockPart from '../../../test/fixtures/AnchoredScrollLockPart.vue';
 import {

@@ -4,7 +4,6 @@ import {
   nextTick,
   onMounted,
   onScopeDispose,
-  onUnmounted,
   shallowReactive,
   shallowRef,
   watch,
@@ -97,11 +96,11 @@ export interface PopupRootOptions {
   defaultTriggerId: string | null;
   handle: () => PopupHandle | undefined;
   /** Emits the change event. Its listeners can cancel the change. */
-  emitChange(open: boolean, details: PopupChangeEventDetails): void;
-  emitOpen(open: boolean): void;
-  emitTriggerId(id: string | null): void;
+  emitChange: (open: boolean, details: PopupChangeEventDetails) => void;
+  emitOpen: (open: boolean) => void;
+  emitTriggerId: (id: string | null) => void;
   /** The `instant` state of a change. */
-  instantOf?(open: boolean, reason: string, event: Event): string | undefined;
+  instantOf?: (open: boolean, reason: string, event: Event) => string | undefined;
 }
 
 export function createPopupChangeEventDetails<Reason extends string>(
@@ -172,7 +171,7 @@ const handleRoots = new WeakMap<PopupHandle, ShallowRef<PopupRoot | null>>();
 
 /** The root that has the handle as `handle`, while it is mounted. */
 export function rootOfHandle<Payload>(handle: PopupHandle<Payload>) {
-  return handleRoots.get(handle)!.value as PopupRoot<Payload> | null;
+  return (handleRoots.get(handle)?.value ?? null) as PopupRoot<Payload> | null;
 }
 
 /**
@@ -199,11 +198,11 @@ export class PopupHandle<Payload = unknown> {
         `Vase UI: The handle has no trigger with the id "${triggerId}". Give this id to a trigger of the root, or open the popup with the id of one of its triggers.`,
       );
     }
-    openRequests.set(root as PopupRoot, trigger);
+    openRequests.set(root, trigger);
     try {
       root.request(true, 'imperative-action', new Event('vase-ui'), trigger.element);
     } finally {
-      openRequests.delete(root as PopupRoot);
+      openRequests.delete(root);
     }
   }
 
@@ -222,14 +221,13 @@ export class PopupHandle<Payload = unknown> {
 const openRequests = new WeakMap<PopupRoot, PopupTrigger>();
 
 export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
-  const { value: open, setOwn: setOpen } = useModel(
-    options.open,
-    options.open() ?? options.defaultOpen,
-  );
-  const { value: chosenTriggerId, setOwn: setTriggerId } = useModel(
+  const openModel = useModel(() => options.open(), options.open() ?? options.defaultOpen);
+  const open = openModel.value;
+  const triggerIdModel = useModel(
     () => options.triggerId(),
     options.triggerId() ?? options.defaultTriggerId,
   );
+  const chosenTriggerId = triggerIdModel.value;
   const triggers = shallowReactive<PopupTrigger[]>([]);
   const leavingElements = shallowReactive<(() => Element | null)[]>([]);
   const portalElements = shallowReactive<(() => Element | null)[]>([]);
@@ -245,7 +243,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const closeRequests = shallowRef(0);
 
   const activeTriggerId = computed(
-    () => chosenTriggerId.value ?? (triggers.length === 1 ? triggers[0]!.id : null),
+    () => chosenTriggerId.value ?? (triggers.length === 1 ? (triggers[0]?.id ?? null) : null),
   );
   const activeEntry = computed(() =>
     triggers.find((trigger) => trigger.id === activeTriggerId.value),
@@ -283,11 +281,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     else closeInteraction.value = interactionOf(event);
     instant.value = options.instantOf?.(next, why, event);
     if (nextId !== activeTriggerId.value) {
-      setTriggerId(nextId);
+      triggerIdModel.setOwn(nextId);
       options.emitTriggerId(nextId);
     }
     if (next !== open.value) {
-      setOpen(next);
+      openModel.setOwn(next);
       options.emitOpen(next);
     }
     if (!next) closeRequests.value += 1;
@@ -406,28 +404,26 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     addLabel: (kind, label) => add(kind === 'title' ? titles : descriptions, label),
   };
 
-  let stopTracking: (() => void) | undefined;
-  let handleRoot: ShallowRef<PopupRoot | null> | undefined;
   // A handle holds its root only on the client. A handle in a module of a server would otherwise
   // hold the roots of each request.
   onMounted(() => {
-    stopTracking = trackPointerType(ownerDocument(null));
     watch(
-      options.handle,
+      () => ownerDocument(null),
+      (doc, _, onCleanup) => onCleanup(trackPointerType(doc)),
+      { immediate: true },
+    );
+    watch(
+      () => options.handle(),
       (handle, _, onCleanup) => {
-        if (!handle) return;
-        handleRoot = handleRoots.get(handle);
-        handleRoot!.value = root as PopupRoot;
+        const holder = handle && handleRoots.get(handle);
+        if (!holder) return;
+        holder.value = root;
         onCleanup(() => {
-          if (handleRoot?.value === root) handleRoot.value = null;
+          if (holder.value === root) holder.value = null;
         });
       },
       { immediate: true },
     );
-  });
-  onUnmounted(() => {
-    stopTracking?.();
-    if (handleRoot?.value === root) handleRoot.value = null;
   });
 
   return root;
