@@ -214,6 +214,16 @@ describe('Toolbar.Input', () => {
     expect(input.value).toBe('x');
   });
 
+  test('with the element slot, gives id, name and readonly to the element in the slot', async () => {
+    const { app } = await mountToolbar({}, [
+      { key: 'box', kind: 'checkbox', attrs: { id: 'wrap', name: 'wrap', readonly: true } },
+    ]);
+    const box = app.querySelector<HTMLInputElement>('#wrap')!;
+    expect(box.type).toBe('checkbox');
+    expect(box.name).toBe('wrap');
+    expect(box).toHaveAttribute('aria-readonly', 'true');
+  });
+
   test('keeps the text of the user at a render with defaultValue', async () => {
     const { item, root } = await mountToolbar({}, [
       { key: 'text', kind: 'input', attrs: { defaultValue: 'a' } },
@@ -295,6 +305,19 @@ describe('the keys', () => {
     items.push(items.shift()!);
     await settle();
     expect(await press('{ArrowRight}', '{ArrowRight}')).toEqual(['c', 'a']);
+  });
+
+  test('a key tries each other item one time, also from a focused item that becomes disabled and leaves the sequence', async () => {
+    const attrs = reactive<Record<string, unknown>>({});
+    const { item } = await mountToolbar({}, [
+      { key: 'span', kind: 'span', attrs },
+      { key: 'b', attrs: { style: 'display: none' } },
+      { key: 'c', attrs: { style: 'display: none' } },
+    ]);
+    item('span').focus();
+    Object.assign(attrs, { disabled: true, focusableWhenDisabled: false });
+    await nextTick();
+    expect(await press('{ArrowRight}', '{ArrowLeft}')).toEqual(['span', 'span']);
   });
 
   test('the keys pass an item that CSS hides, and an item with the disabled attribute in the element slot', async () => {

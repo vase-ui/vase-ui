@@ -71,7 +71,7 @@ describe('focus() from script on a text input', () => {
 describe.runIf(server.browser === 'chromium')(
   'an arrow key while a text input method composes',
   () => {
-    test('Chromium sends no keydown of the key to the page', async () => {
+    test('Chromium sends the keydown of the key with isComposing true and the key code 229', async () => {
       html('<input id="input">');
       const input = find<HTMLInputElement>('input');
       const keys: string[] = [];
@@ -197,12 +197,26 @@ describe('native radios with one name as the items of a row with one tab stop', 
     expect(await tabs()).toEqual({ tab: 'b', shiftTab: 'b' });
   });
 
-  test('with tabindex 0 on each radio and none checked, Tab stops at the first; Shift+Tab stops at the last in WebKit, and at the first in Chromium and Firefox', async () => {
-    radios(['0', '0', '0'], '');
-    expect(await tabs()).toEqual({
-      tab: 'a',
-      shiftTab: server.browser === 'webkit' ? 'c' : 'a',
-    });
+  test('with no radio checked, after an arrow key of a toolbar gave b the focus: Firefox passes the group unless a has tabindex 0, and Chromium unless b has it; with tabindex 0 on each radio, each browser stops in the group', async () => {
+    const results: Record<string, { tab: string; shiftTab: string }> = {};
+    for (const tabindexes of [
+      ['-1', '0', '-1'],
+      ['0', '-1', '-1'],
+      ['0', '0', '0'],
+    ]) {
+      radios(tabindexes, '');
+      find('b').focus();
+      results[tabindexes.join(' ')] = await tabs();
+      root!.remove();
+    }
+    const stop = (tab: string, shiftTab = tab) => ({ tab, shiftTab });
+    const passes = stop('after', 'before');
+    const expected: Record<string, typeof results> = {
+      chromium: { '-1 0 -1': stop('b'), '0 -1 -1': passes, '0 0 0': stop('b') },
+      firefox: { '-1 0 -1': passes, '0 -1 -1': stop('a'), '0 0 0': stop('a') },
+      webkit: { '-1 0 -1': stop('b'), '0 -1 -1': stop('a'), '0 0 0': stop('a', 'c') },
+    };
+    expect(results).toEqual(expected[server.browser]);
   });
 });
 

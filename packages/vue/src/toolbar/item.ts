@@ -67,7 +67,9 @@ export function useToolbarItem(
 
 // Chromium stops Tab at a radio with `tabindex="0"`, and Firefox and WebKit pass it when another
 // radio of its group is checked (test/measurements/toolbar.test.ts). With `tabindex="0"` on each
-// radio of the group, Tab stops at the checked radio in each browser.
+// radio of the group, Tab stops at the checked radio in each browser. With no radio checked,
+// Firefox passes the group when its first radio has -1, and Chromium when the radio that had the
+// focus has -1.
 function isRadioOfGroup(element: HTMLElement, tabStop: HTMLElement) {
   return (
     isNamedRadio(element) &&

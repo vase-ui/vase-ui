@@ -52,7 +52,8 @@ const itemValue = computed(() => props.value || generatedValue);
 const pressed = computed(() => (group ? group.value.includes(itemValue.value) : ownPressed.value));
 const state = computed<ToggleState>(() => ({ pressed: pressed.value, disabled: isDisabled.value }));
 
-// A toggle with no group is an item of a toolbar through `Toolbar.Button`.
+// A toggle of a group in a toolbar is an item of the toolbar. A toggle with no group is an item
+// only through `Toolbar.Button`.
 const toolbarTabindex =
   group && toolbar
     ? useToolbarItem(toolbar, element, {
