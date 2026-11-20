@@ -173,7 +173,7 @@ test('the site: the index of a component page has its props', async () => {
     sections.map(({ title, anchor }) => `${title} ${anchor}`),
     ['Button button', 'API reference api-reference', 'Button api-button'],
   );
-  assert.ok(sections[2]?.text.includes('nativeButton'));
+  assert.ok(sections[2]?.text.includes('focusableWhenDisabled'));
 });
 
 test('the site: the index leaves out the badge of a heading', async () => {

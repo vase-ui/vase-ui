@@ -10,6 +10,10 @@ const count = ref(0);
     <Button data-testid="counter" @click="count += 1">Count {{ count }}</Button>
     <Button data-testid="disabled" disabled>Disabled</Button>
     <Button data-testid="focusable" disabled focusable-when-disabled>Focusable</Button>
-    <Button data-testid="span" as="span" :native-button="false">Span</Button>
+    <Button>
+      <template #element="{ props, elementRef }">
+        <span data-testid="span" v-bind="props" :ref="elementRef">Span</span>
+      </template>
+    </Button>
   </main>
 </template>
