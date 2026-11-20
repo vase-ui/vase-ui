@@ -57,7 +57,6 @@ const state = computed<ToggleGroupState>(() => ({
   multiple: props.multiple,
   orientation: props.orientation,
 }));
-// The toggle that had the focus last, else the first enabled toggle.
 const tabStop = computed(() => {
   if (toolbar) return undefined;
   const last = focused.value;
