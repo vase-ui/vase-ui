@@ -15,7 +15,7 @@ defineProps<{ to: RouteLocationRaw }>();
         <a
           v-bind="{ ...props, ...$attrs }"
           :ref="elementRef"
-          :href="href"
+          :href="href ?? undefined"
           :aria-current="isExactActive ? 'page' : undefined"
           @click="navigate"
         >
