@@ -21,8 +21,10 @@ defineProps({
   close: Object as PropType<Props>,
   noPopup: Boolean,
   noPortal: Boolean,
+  /** The second button of the popup has `autofocus`. */
+  autofocus: Boolean,
   /** A second popover in the popup, with its own trigger. */
-  nested: Object as PropType<{ root?: Props; portal?: Props; popup?: Props }>,
+  nested: Object as PropType<{ root?: Props; portal?: Props; popup?: Props; backdrop?: Props }>,
 });
 const rootPart = useTemplateRef('rootPart');
 const popupPart = useTemplateRef('popupPart');
@@ -52,11 +54,16 @@ defineExpose({ root: rootPart, popup: popupPart });
             </Popover.Description>
             <span data-testid="payload">{{ payload }}</span>
             <button data-testid="first">First</button>
-            <button data-testid="second">Second</button>
+            <button data-testid="second" :autofocus="autofocus || undefined">Second</button>
             <Popover.Close v-if="close" v-bind="close">Close</Popover.Close>
             <Popover.Root v-if="nested" v-bind="nested.root">
               <Popover.Trigger data-key="nested">nested</Popover.Trigger>
               <Popover.Portal v-bind="nested.portal">
+                <Popover.Backdrop
+                  v-if="nested.backdrop"
+                  data-testid="nested-backdrop"
+                  v-bind="nested.backdrop"
+                />
                 <Popover.Positioner data-testid="nested-positioner">
                   <Popover.Popup data-testid="nested-popup" v-bind="nested.popup">
                     <button data-testid="nested-button">Nested</button>

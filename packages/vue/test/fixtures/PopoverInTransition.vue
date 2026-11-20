@@ -5,7 +5,8 @@ import { Popover } from '../../src/popover';
 type Props = Record<string, unknown>;
 
 // A backdrop and a popup in `<Transition appear>` in a portal. The classes of the transitions have
-// a duration, so a leave waits for its end.
+// a duration, so a leave waits for its end. The leave of the backdrop is longer than that of the
+// popup.
 defineProps({
   root: Object as PropType<Props>,
   portal: Object as PropType<Props>,
@@ -18,7 +19,7 @@ defineProps({
   <Popover.Root v-bind="root">
     <Popover.Trigger>Trigger</Popover.Trigger>
     <Popover.Portal v-bind="portal">
-      <Transition name="fade" appear>
+      <Transition name="fade" appear @after-leave="log.add('backdrop-after-leave')">
         <Popover.Backdrop data-testid="backdrop" />
       </Transition>
       <Popover.Positioner data-testid="positioner">
@@ -39,10 +40,12 @@ defineProps({
 
 <style>
 .fade-enter-active,
-.fade-leave-active,
 .pop-enter-active,
 .pop-leave-active {
   transition: opacity 100ms;
+}
+.fade-leave-active {
+  transition: opacity 250ms;
 }
 .fade-enter-from,
 .fade-leave-to,

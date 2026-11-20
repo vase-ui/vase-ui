@@ -216,6 +216,15 @@ describe('the root (L1)', () => {
     observer.disconnect();
     expect(writes).toEqual([]);
   });
+
+  test('an open root whose other trigger unmounts is open for the trigger that stays', async () => {
+    const triggers = reactive([{ key: 'a' }, { key: 'b' }]);
+    const { trigger } = await mountPopover({ root: { defaultOpen: true }, triggers });
+    await opened();
+    expect(trigger('b')).toHaveAttribute('aria-expanded', 'false');
+    triggers.splice(0, 1);
+    await waitFor(() => expect(trigger('b')).toHaveAttribute('aria-expanded', 'true'));
+  });
 });
 
 describe('the handle (L1)', () => {
@@ -252,7 +261,7 @@ describe('the handle (L1)', () => {
 });
 
 describe('in the DOM (L2)', () => {
-  test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until the leave ends', async () => {
+  test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until each leave ends', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const log: string[] = [];
     mount(PopoverInTransition, {
@@ -267,10 +276,12 @@ describe('in the DOM (L2)', () => {
     expect(byTestId('backdrop').className).toContain('fade-leave-active');
     expect(positioner()).not.toBe(null);
     await waitFor(() => expect(log).toEqual(['after-enter', 'after-leave']));
+    expect(document.querySelector('[data-testid="backdrop"]')).not.toBe(null);
+    await waitFor(() => expect(log).toEqual(['after-enter', 'after-leave', 'backdrop-after-leave']));
     await waitFor(() => expect(positioner()).toBe(null));
   });
 
-  test('an open while the popup leaves renders one popup element, which enters after the leave', async () => {
+  test('an open while the popup leaves renders one popup and one backdrop, which enter after the leave', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const root = reactive<Props>({ open: true });
     mount(PopoverInTransition, { root });
@@ -280,7 +291,8 @@ describe('in the DOM (L2)', () => {
     root.open = true;
     await nextTick();
     expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([first]);
-    await waitFor(() => expect(popup()).not.toBe(first));
+    expect(document.querySelectorAll('[data-testid="backdrop"]')).toHaveLength(1);
+    await waitFor(() => expect(popup() ?? first).not.toBe(first));
     expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
     expect(popup()!.className).toContain('pop-enter');
   });
@@ -303,6 +315,20 @@ describe('in the DOM (L2)', () => {
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(element).toHaveAttribute('data-instant', 'dismiss');
+  });
+
+  test('a kept popup that closes and opens again stays when `keepMounted` turns off', async () => {
+    const portal = reactive({ keepMounted: true });
+    const { trigger } = await mountPopover({ root: { defaultOpen: true }, portal });
+    const element = await opened();
+    await userEvent.click(trigger());
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    await userEvent.click(trigger());
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    portal.keepMounted = false;
+    await nextTick();
+    await nextTick();
+    expect(popup()).toBe(element);
   });
 });
 
@@ -370,7 +396,7 @@ describe('the dismissal (L4)', () => {
     await closed();
   });
 
-  test('an Escape that a listener of the developer prevented closes nothing; an Escape of a text composition closes nothing', async () => {
+  test('an Escape that a listener of the developer prevented closes nothing', async () => {
     await mountPopover({
       root: { defaultOpen: true },
       popup: {
@@ -382,12 +408,76 @@ describe('the dismissal (L4)', () => {
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(popup()).not.toBe(null);
-    element
-      .querySelector('button')!
-      .dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, isComposing: true }),
-      );
+  });
+
+  test('an Escape of a text composition closes nothing, also the Escape that WebKit sends after `compositionend`', async () => {
+    await mountPopover({ root: { defaultOpen: true } });
+    const button = (await opened()).querySelector('button')!;
+    const escape = (init: KeyboardEventInit) =>
+      button.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, ...init }));
+    escape({ isComposing: true });
+    escape({ keyCode: 229 });
+    button.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    escape({});
+    await nextTick();
     expect(popup()).not.toBe(null);
+    // An Escape of the next case comes more than 5 ms after the end of this composition.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  });
+
+  test('an Escape stops at the popup: a listener of an ancestor gets no Escape, also after cancel()', async () => {
+    const keys: string[] = [];
+    const root = reactive<Props>({
+      defaultOpen: true,
+      onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) => details.cancel(),
+    });
+    const { root: app } = await mountPopover({ root, portal: { disabled: true } });
+    app.addEventListener('keydown', (event) => keys.push(event.key));
+    const element = await opened();
+    await placed();
+    element.querySelector('button')!.focus();
+    await userEvent.keyboard('{Escape}');
+    root.onOpenChange = undefined;
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(keys).toEqual([]);
+  });
+
+  test('an Escape in a popover in a modal <dialog> closes only the popover', async () => {
+    const dialog = document.body.appendChild(document.createElement('dialog'));
+    try {
+      dialog.showModal();
+      mount(PopoverParts, { root: { defaultOpen: true }, portal: { to: dialog } }, dialog);
+      (await opened()).querySelector('button')!.focus();
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      expect(dialog.open).toBe(true);
+    } finally {
+      dialog.remove();
+    }
+  });
+
+  test('Escape in a child that calls cancel() and allowPropagation() gives the child one openChange and closes its parent', async () => {
+    const log: string[] = [];
+    await mountPopover({
+      root: rootEvents(log, { defaultOpen: true }),
+      nested: {
+        root: {
+          defaultOpen: true,
+          onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) => {
+            log.push('child');
+            details.cancel();
+            details.allowPropagation();
+          },
+        },
+      },
+    });
+    await opened();
+    await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
+    byTestId('nested-button').focus();
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(log).toEqual(['child', 'openChange false escape-key', 'update false']);
   });
 
   test('a press outside closes; a drag from the popup to the outside, and from the outside into the popup, closes nothing', async () => {
@@ -473,7 +563,7 @@ describe('the dismissal (L4)', () => {
     },
   );
 
-  test('the focus that moves to an outside element closes the popup with `focus-out`', async () => {
+  test('the focus that moves to an outside element closes the popup with `focus-out` and stays there', async () => {
     const log: string[] = [];
     await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
     await opened();
@@ -482,6 +572,184 @@ describe('the dismissal (L4)', () => {
     byId('after').focus();
     await closed();
     expect(log).toEqual(['openChange false focus-out', 'update false']);
+    expect(document.activeElement).toBe(byId('after'));
+  });
+
+  test('a press on another element of <body> that was there before the open closes the popup', async () => {
+    const other = document.body.appendChild(document.createElement('div'));
+    other.textContent = 'Other';
+    try {
+      const log: string[] = [];
+      await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
+      await opened();
+      await userEvent.click(other);
+      await closed();
+      expect(log).toEqual(['openChange false outside-press', 'update false']);
+    } finally {
+      other.remove();
+    }
+  });
+
+  test('a press on the backdrop of a child in a container closes only the child', async () => {
+    const container = document.body.appendChild(document.createElement('div'));
+    try {
+      const log: string[] = [];
+      await mountPopover({
+        root: rootEvents(log, { defaultOpen: true }),
+        portal: { to: container },
+        nested: {
+          root: { defaultOpen: true, onOpenChange: () => log.push('child') },
+          backdrop: { style: 'position: fixed; inset: 0' },
+        },
+      });
+      await waitFor(() => expect(container.querySelector('[data-testid="nested-backdrop"]')).toBeTruthy());
+      await userEvent.click(byTestId('nested-backdrop'), { position: { x: 2, y: 2 } });
+      await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
+      expect(popup()).not.toBe(null);
+      expect(log).toEqual(['child']);
+    } finally {
+      container.remove();
+    }
+  });
+
+  test('a popup in a shadow root closes with `focus-out` when the focus moves to another element of that root; a modal one makes the page outside the host inert', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const shadow = host.attachShadow({ mode: 'open' });
+    const container = shadow.appendChild(document.createElement('div'));
+    const input = shadow.appendChild(document.createElement('input'));
+    const inShadow = () => container.querySelector<HTMLElement>('[data-testid="popup"]');
+    try {
+      const log: string[] = [];
+      const first = await mountPopover({
+        root: rootEvents(log, { defaultOpen: true }),
+        portal: { to: container },
+      });
+      await waitFor(() =>
+        expect(container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility).toBe(''),
+      );
+      inShadow()!.querySelector('button')!.focus();
+      input.focus();
+      await waitFor(() => expect(inShadow()).toBe(null));
+      expect(log).toEqual(['openChange false focus-out', 'update false']);
+      first.unmount();
+      await mountPopover({
+        root: { defaultOpen: true, modal: true },
+        portal: { to: container },
+        close: {},
+      });
+      await waitFor(() => expect(byId('outside')).toHaveAttribute('inert'));
+      expect(input).toHaveAttribute('inert');
+      expect(host).not.toHaveAttribute('inert');
+    } finally {
+      host.remove();
+    }
+  });
+
+  test('a press in a frame closes the popup with `focus-out`; a focused element that leaves the popup closes nothing', async () => {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    try {
+      const log: string[] = [];
+      await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
+      const element = await opened();
+      const extra = element.appendChild(document.createElement('button'));
+      extra.focus();
+      extra.remove();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(popup()).toBe(element);
+      element.querySelector('button')!.focus();
+      await userEvent.click(frame);
+      await closed();
+      expect(log).toEqual(['openChange false focus-out', 'update false']);
+    } finally {
+      frame.remove();
+    }
+  });
+
+  test('a move of the focus between two elements outside keeps a popover that a hover opened', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
+    });
+    byId('before').focus();
+    await userEvent.hover(trigger());
+    await opened();
+    byId('after').focus();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(popup()).not.toBe(null);
+  });
+
+  test("a press of the right button outside keeps a `'trap-focus'` popover open", async () => {
+    const other = document.body.appendChild(document.createElement('div'));
+    other.textContent = 'Other';
+    try {
+      const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });
+      await userEvent.click(trigger());
+      await opened();
+      await userEvent.click(other, { button: 'right' });
+      await nextTick();
+      expect(popup()).not.toBe(null);
+    } finally {
+      other.remove();
+    }
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch outside closes at its end after a tap or a drag of more than 5 px, and at a move of more than 10 px; a touch that rests more than 1 s closes nothing',
+    async () => {
+      const other = document.body.appendChild(document.createElement('div'));
+      other.style.cssText = 'height: 100px; touch-action: none';
+      try {
+        const events: string[] = [];
+        const setup = () => ({
+          root: {
+            defaultOpen: true,
+            onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) =>
+              events.push(`${details.reason} ${details.event.type}`),
+          },
+          popup: { initialFocus: false },
+        });
+        const point = centerOf(other);
+        let current = await mountPopover(setup());
+        await placed();
+        await touchDrag(point, point, 0, 1200);
+        await nextTick();
+        expect(popup()).not.toBe(null);
+        await touchDrag(point, point, 0);
+        await closed();
+        current.unmount();
+        current = await mountPopover(setup());
+        await placed();
+        await touchDrag(point, { x: point.x + 8, y: point.y }, 2, 1200);
+        await closed();
+        current.unmount();
+        await mountPopover(setup());
+        await placed();
+        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await closed();
+        expect(events).toEqual([
+          'outside-press pointerup',
+          'outside-press pointerup',
+          'outside-press pointermove',
+        ]);
+      } finally {
+        other.remove();
+      }
+    },
+  );
+
+  test('a popover that a hover opened stays open while the pointer is in its child popup', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
+      nested: {},
+    });
+    await userEvent.hover(trigger());
+    await opened();
+    await userEvent.click(document.querySelector<HTMLElement>('[data-key="nested"]')!);
+    await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
+    byTestId('nested-button').dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true, composed: true, pointerType: 'mouse' }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).not.toBe(null);
   });
 });
 
@@ -549,6 +817,112 @@ describe('modal (3.2, L4 to L6)', () => {
     await nextTick();
     expect(isScrollLocked()).toBe(true);
   });
+
+  test('`true` with no Close leaves the rest of the page in use', async () => {
+    const { trigger } = await mountPopover({ root: { modal: true } });
+    await userEvent.click(trigger());
+    await opened();
+    await placed();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(byId('before')).not.toHaveAttribute('inert');
+  });
+
+  test('a modal popover leaves its backdrop, its child popups and each `aria-live` region in use, and keeps an `aria-hidden` of the developer after the close', async () => {
+    const live = document.body.appendChild(document.createElement('div'));
+    live.setAttribute('aria-live', 'polite');
+    const hidden = document.body.appendChild(document.createElement('div'));
+    hidden.setAttribute('aria-hidden', 'true');
+    try {
+      const { trigger } = await mountPopover({
+        root: { modal: 'trap-focus' },
+        close: {},
+        backdrop: {},
+        nested: { root: { defaultOpen: true } },
+      });
+      await userEvent.click(trigger());
+      await opened();
+      await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
+      await waitFor(() => expect(byId('outside')).toHaveAttribute('aria-hidden', 'true'));
+      expect(live).not.toHaveAttribute('aria-hidden');
+      expect(byTestId('backdrop')).not.toHaveAttribute('aria-hidden');
+      expect(byTestId('nested-popup').closest('[aria-hidden]')).toBe(null);
+      await userEvent.keyboard('{Escape}');
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      expect(hidden).toHaveAttribute('aria-hidden', 'true');
+    } finally {
+      live.remove();
+      hidden.remove();
+    }
+  });
+
+  test("`'trap-focus'` with a Close closes at the press of an outside element, before the release", async () => {
+    const other = document.body.appendChild(document.createElement('div'));
+    other.textContent = 'Other';
+    try {
+      const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });
+      await userEvent.click(trigger());
+      await opened();
+      try {
+        await userEvent.pointer([{ coords: centerOf(other) }, '[MouseLeft>]']);
+        await closed();
+      } finally {
+        await userEvent.pointer('[/MouseLeft]');
+      }
+    } finally {
+      other.remove();
+    }
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a modal popover that a touch opened locks the page only when it is as wide as the view',
+    async () => {
+      const first = await mountPopover({ root: { modal: true } });
+      await touchDrag(centerOf(first.trigger()), centerOf(first.trigger()), 0);
+      await opened();
+      await placed();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(isScrollLocked()).toBe(false);
+      first.unmount();
+      const wide = await mountPopover({
+        root: { modal: true },
+        positioner: { style: 'width: 100vw' },
+      });
+      await touchDrag(centerOf(wide.trigger()), centerOf(wide.trigger()), 0);
+      await opened();
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
+    },
+  );
+
+  test('a double click on the fixed element or the backdrop of a popover that stays open selects no text of the page', async () => {
+    const words = document.body.appendChild(document.createElement('p'));
+    words.textContent = 'Some words of the page';
+    const keepOpen = {
+      modal: true,
+      defaultOpen: true,
+      onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) => details.cancel(),
+    };
+    try {
+      const first = await mountPopover({
+        root: keepOpen,
+        backdrop: { style: 'position: fixed; inset: 0' },
+      });
+      await opened();
+      await placed();
+      await userEvent.dblClick(byTestId('backdrop'), { position: centerOf(words) });
+      expect(getSelection()!.toString()).toBe('');
+      first.unmount();
+      await mountPopover({ root: keepOpen });
+      await opened();
+      await placed();
+      const block = document.querySelector<HTMLElement>('body > div[role="presentation"]')!;
+      await userEvent.dblClick(block, { position: centerOf(words) });
+      expect(getSelection()!.toString()).toBe('');
+    } finally {
+      words.remove();
+      getSelection()!.removeAllRanges();
+    }
+  });
 });
 
 describe('the focus (L7)', () => {
@@ -607,6 +981,119 @@ describe('the focus (L7)', () => {
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(byId('after'));
   });
+
+  test('a focus function that gives nothing moves no focus; `initialFocus` gets `keyboard` after a key on the trigger', async () => {
+    const calls: string[] = [];
+    const { trigger } = await mountPopover({
+      popup: {
+        initialFocus: (type: string) => {
+          calls.push(type);
+        },
+      },
+    });
+    trigger().focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await placed();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(document.activeElement).toBe(trigger());
+    expect(calls).toEqual(['keyboard']);
+  });
+
+  test('the trigger shows its focus ring after a close with a key', async () => {
+    const { trigger } = await mountPopover();
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(trigger().matches(':focus-visible')).toBe(true);
+  });
+
+  test('the focus that goes back to the trigger scrolls nothing', async () => {
+    const spacer = document.body.appendChild(document.createElement('div'));
+    spacer.style.height = '3000px';
+    try {
+      const { trigger } = await mountPopover();
+      await userEvent.click(trigger());
+      await opened();
+      await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+      window.scrollTo({ top: 1000, behavior: 'instant' });
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      expect(window.scrollY).toBe(1000);
+    } finally {
+      spacer.remove();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch open focuses the popup, not its first tab stop',
+    async () => {
+      const { trigger } = await mountPopover();
+      await touchDrag(centerOf(trigger()), centerOf(trigger()), 0);
+      const element = await opened();
+      await waitFor(() => expect(document.activeElement).toBe(element));
+    },
+  );
+
+  test('an element with `autofocus` takes the focus at the open', async () => {
+    const { trigger } = await mountPopover({ autofocus: true });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toHaveTextContent('Second'));
+  });
+
+  test('a press on an outside input closes the popover, and the input keeps the focus', async () => {
+    const { trigger } = await mountPopover();
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await userEvent.click(byId('after'));
+    await closed();
+    expect(document.activeElement).toBe(byId('after'));
+  });
+
+  test('Shift+Tab on the trigger of an open popover goes to the element before it', async () => {
+    const { trigger } = await mountPopover();
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    trigger().focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(byId('before'));
+  });
+
+  test('Tab on the trigger of a popover that a hover opened goes to the next element of the page', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
+    });
+    trigger().focus();
+    await userEvent.hover(trigger());
+    await opened();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(byId('after'));
+  });
+
+  test('Tab from the element before the portal goes to the first tab stop of the popup', async () => {
+    await mountPopover({ root: { defaultOpen: true }, popup: { initialFocus: false } });
+    await opened();
+    await placed();
+    byId('outside').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toHaveTextContent('First');
+  });
+
+  test('Tab from the last tab stop of a popup in place goes to the element after the trigger', async () => {
+    const { trigger } = await mountPopover({ portal: { disabled: true } });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toHaveTextContent('First'));
+    await userEvent.keyboard('{Tab}{Tab}');
+    await closed();
+    expect(document.activeElement).toBe(byId('after'));
+  });
 });
 
 describe('the trigger (L8)', () => {
@@ -648,6 +1135,8 @@ describe('the hover (L9)', () => {
     });
     await userEvent.hover(trigger());
     await opened();
+    await placed();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(trigger()).not.toHaveAttribute('data-pressed');
     expect(document.activeElement).toBe(document.body);
     await userEvent.hover(byId('outside'));
@@ -699,17 +1188,21 @@ describe('the hover (L9)', () => {
     expect(popup()).toBe(null);
   });
 
-  test('a modal popover that a hover opened has no fixed element and no lock; the backdrop lets the pointer through', async () => {
+  test('a modal popover that a hover opened has no fixed element, no lock and no inert page; the backdrop lets the pointer through', async () => {
     const { trigger } = await mountPopover({
       root: { modal: true },
       triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
       backdrop: {},
+      close: {},
     });
     await userEvent.hover(trigger());
     await opened();
+    await placed();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(positioner()!.previousElementSibling).toBe(byTestId('backdrop'));
     expect(byTestId('backdrop').style.pointerEvents).toBe('none');
     expect(isScrollLocked()).toBe(false);
+    expect(byId('before')).not.toHaveAttribute('inert');
   });
 });
 
