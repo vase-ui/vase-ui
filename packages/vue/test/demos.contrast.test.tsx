@@ -273,7 +273,7 @@ const rows: Row[] = [
       // The submenu of the default value is open, and no pointer is on its trigger.
       const trigger = await waitFor(() => screen.getByRole('button', { name: /^Developers/ }));
       await waitFor(() => {
-        expect(trigger).toHaveAttribute('data-pressed');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
       return trigger;
     },
@@ -290,7 +290,7 @@ const rows: Row[] = [
       trigger.focus();
       await userEvent.keyboard('{Enter}');
       await waitFor(() => {
-        expect(trigger).toHaveAttribute('data-pressed');
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
       return trigger;
     },
@@ -301,7 +301,8 @@ const rows: Row[] = [
     async reach() {
       await userEvent.click(screen.getByRole('button', { name: 'Overview' }));
       const link = await waitFor(() => {
-        const element = document.querySelector('[data-vase-ui-portal] a[href]');
+        // The first link of the popup, a `<nav>` that the portal moves to `<body>`.
+        const element = document.querySelector('body > div > nav a[href]');
         expect(element).toBeInTheDocument();
         return element!;
       });

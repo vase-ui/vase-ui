@@ -1,0 +1,10 @@
+{
+  "id": "VUE-171",
+  "evidence": [
+    "https://floating-ui.com/docs/useHover#safepolygon",
+    "https://github.com/kamens/jQuery-menu-aim/blob/master/jquery.menu-aim.js",
+    "https://react-aria.adobe.com/blog/creating-a-pointer-friendly-submenu-experience"
+  ],
+  "behavior": "A hover moves an open popup to another trigger of its root at once. When the point where the pointer enters that trigger is in the triangle from the last point on the active trigger to the near edge of the popup, the trigger opens nothing while the pointer moves in the triangle. It opens when the pointer leaves the triangle on it or rests there for 40 ms. This rule holds for Popover, Preview Card, Tooltip, Menu and Navigation Menu. Base UI blocks the other triggers in the triangle only in Navigation Menu and Menu, so in a Popover, a Preview Card or a Tooltip with a hoverable popup, a trigger in the triangle takes the popup while the user moves to it.",
+  "dueWith": "packages/react/src/popover/trigger/PopoverTrigger.tsx"
+}

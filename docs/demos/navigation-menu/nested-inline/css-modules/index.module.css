@@ -56,7 +56,7 @@
     }
   }
 
-  &[data-pressed] {
+  &[aria-expanded='true'] {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -157,13 +157,13 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.EnterFrom,
+  &.LeaveTo {
     opacity: 0;
     transform: scale(0.9);
   }
 
-  &[data-ending-style] {
+  &.LeaveTo {
     transition-property: opacity, transform;
     transition-timing-function: ease;
     transition-duration: 0.15s;
@@ -179,12 +179,12 @@
   width: calc(100vw - 40px);
   height: 100%;
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.EnterFrom,
+  &.LeaveTo {
     opacity: 0;
   }
 
-  &[data-starting-style] {
+  &.EnterFrom {
     &[data-activation-direction='left'] {
       transform: translateX(-2rem);
     }
@@ -193,7 +193,7 @@
     }
   }
 
-  &[data-ending-style] {
+  &.LeaveTo {
     transition-duration: calc(var(--duration) * 0.5);
     transition-timing-function: ease;
 
@@ -305,7 +305,7 @@
     }
   }
 
-  &[data-pressed] {
+  &[aria-expanded='true'] {
     background-color: oklch(97% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -373,12 +373,12 @@
     transform var(--duration) var(--easing),
     filter var(--duration) var(--easing);
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.EnterFrom,
+  &.LeaveTo {
     opacity: 0;
   }
 
-  &[data-starting-style] {
+  &.EnterFrom {
     &[data-activation-direction='left'] {
       transform: translateX(-50%);
     }
@@ -388,7 +388,7 @@
     }
   }
 
-  &[data-ending-style] {
+  &.LeaveTo {
     &[data-activation-direction='left'] {
       transform: translateX(50%);
     }
@@ -404,7 +404,7 @@
     transition-duration: calc(var(--duration) * 1.35);
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 
-    &[data-starting-style] {
+    &.EnterFrom {
       &[data-activation-direction='up'] {
         transform: translateY(-72px);
       }
@@ -414,7 +414,7 @@
       }
     }
 
-    &[data-ending-style] {
+    &.LeaveTo {
       &[data-activation-direction='up'] {
         transform: translateY(72px);
       }
@@ -424,8 +424,8 @@
       }
     }
 
-    &[data-starting-style],
-    &[data-ending-style] {
+    &.EnterFrom,
+    &.LeaveTo {
       filter: blur(2px);
     }
   }

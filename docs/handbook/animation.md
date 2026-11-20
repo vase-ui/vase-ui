@@ -188,8 +188,6 @@ The request lasts until the popup opens again or unmounts, also when more close 
 
 <<< ../examples/animation/ManualUnmountAfterAwait.vue#listener{6-8 ts}
 
-[Navigation Menu](/components/navigation-menu#closing-animations) takes `details.preventUnmountOnClose()` in its `valueChange` listener.
-
 ### AnimatePresence
 
 `<AnimatePresence>` renders a Vue `<Transition>` or `<TransitionGroup>`. Both keep the element of the portal part in the DOM during the exit, but the parts in that element unmount. Thus the `exit` prop does not fit the close of a popup:

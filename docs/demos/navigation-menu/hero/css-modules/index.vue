@@ -4,6 +4,8 @@ import type { FunctionalComponent } from 'vue';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import styles from './index.module.css';
 
+const transition = { enterFromClass: styles.EnterFrom, leaveToClass: styles.LeaveTo };
+
 const CaretDownIcon: FunctionalComponent = () =>
   h(
     'svg',
@@ -73,10 +75,10 @@ const handbookLinks = [
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="styles.Content">
+        <NavigationMenu.Content :class="styles.Content" :transition="transition">
           <ul :class="styles.GridLinkList">
             <li v-for="item in overviewLinks" :key="item.href">
-              <!-- To use the link of a router, such as RouterLink, give it to `as`. -->
+              <!-- For the link of a router, see the custom links of the docs. -->
               <NavigationMenu.Link :class="styles.LinkCard" :href="item.href">
                 <h3 :class="styles.LinkTitle">{{ item.title }}</h3>
                 <p :class="styles.LinkDescription">{{ item.description }}</p>
@@ -93,7 +95,7 @@ const handbookLinks = [
             <CaretDownIcon />
           </NavigationMenu.Icon>
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content :class="styles.Content">
+        <NavigationMenu.Content :class="styles.Content" :transition="transition">
           <ul :class="styles.FlexLinkList">
             <li v-for="item in handbookLinks" :key="item.href">
               <NavigationMenu.Link :class="styles.LinkCard" :href="item.href">
@@ -119,10 +121,12 @@ const handbookLinks = [
         :collision-padding="{ top: 5, bottom: 5, left: 20, right: 20 }"
         :collision-avoidance="{ side: 'none' }"
       >
-        <NavigationMenu.Popup :class="styles.Popup">
-          <NavigationMenu.Arrow :class="styles.Arrow" />
-          <NavigationMenu.Viewport :class="styles.Viewport" />
-        </NavigationMenu.Popup>
+        <Transition :enter-from-class="styles.EnterFrom" :leave-to-class="styles.LeaveTo" appear>
+          <NavigationMenu.Popup :class="styles.Popup">
+            <NavigationMenu.Arrow :class="styles.Arrow" />
+            <NavigationMenu.Viewport :class="styles.Viewport" />
+          </NavigationMenu.Popup>
+        </Transition>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>

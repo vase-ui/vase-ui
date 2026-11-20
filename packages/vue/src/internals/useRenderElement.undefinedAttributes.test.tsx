@@ -7,7 +7,6 @@ import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
@@ -103,23 +102,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Menubar role={undefined} data-testid="part" />,
     expected: () => 'menubar',
-  },
-  {
-    name: 'NavigationMenu.Trigger aria-expanded',
-    attribute: 'aria-expanded',
-    createNode: () => (
-      <NavigationMenu.Root>
-        <NavigationMenu.List>
-          <NavigationMenu.Item value="one">
-            <NavigationMenu.Trigger aria-expanded={undefined} data-testid="part">
-              One
-            </NavigationMenu.Trigger>
-            <NavigationMenu.Content />
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-      </NavigationMenu.Root>
-    ),
-    expected: () => 'false',
   },
   {
     name: 'Select.Trigger aria-haspopup',

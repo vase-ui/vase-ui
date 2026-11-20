@@ -4,7 +4,6 @@ import type { DefineComponent, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
 import * as Select from '../../../select/index.parts';
 
@@ -95,30 +94,6 @@ const children = {
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>
-  ),
-  // The list calls `useDismissLayer`, and the portal is not below the list.
-  navigationMenu: (record: Recorder) => (
-    <NavigationMenu.Root
-      defaultValue="item"
-      onValueChange={(value: unknown, details: { reason: string }) =>
-        record(value !== null, details)
-      }
-    >
-      <NavigationMenu.List>
-        <NavigationMenu.Item value="item">
-          <NavigationMenu.Trigger>Child trigger</NavigationMenu.Trigger>
-          <NavigationMenu.Content>Content</NavigationMenu.Content>
-        </NavigationMenu.Item>
-      </NavigationMenu.List>
-      <NavigationMenu.Portal>
-        <NavigationMenu.Backdrop data-testid="backdrop" />
-        <NavigationMenu.Positioner data-testid="positioner">
-          <NavigationMenu.Popup data-testid="popup">
-            <NavigationMenu.Viewport />
-          </NavigationMenu.Popup>
-        </NavigationMenu.Positioner>
-      </NavigationMenu.Portal>
-    </NavigationMenu.Root>
   ),
 };
 

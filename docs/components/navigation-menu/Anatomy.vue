@@ -9,19 +9,23 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
         <NavigationMenu.Trigger>
           <NavigationMenu.Icon />
         </NavigationMenu.Trigger>
-        <NavigationMenu.Content>
+        <NavigationMenu.Content :transition="{ name: 'slide' }">
           <NavigationMenu.Link />
         </NavigationMenu.Content>
       </NavigationMenu.Item>
     </NavigationMenu.List>
 
     <NavigationMenu.Portal>
-      <NavigationMenu.Backdrop />
+      <Transition appear>
+        <NavigationMenu.Backdrop />
+      </Transition>
       <NavigationMenu.Positioner>
-        <NavigationMenu.Popup>
-          <NavigationMenu.Arrow />
-          <NavigationMenu.Viewport />
-        </NavigationMenu.Popup>
+        <Transition appear>
+          <NavigationMenu.Popup>
+            <NavigationMenu.Arrow />
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </Transition>
       </NavigationMenu.Positioner>
     </NavigationMenu.Portal>
   </NavigationMenu.Root>
