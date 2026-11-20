@@ -263,7 +263,7 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     if (engine === 'chromium') expect(atOnce).toEqual([]);
   });
 
-  test('T5: a toast under the pointer leaves the document: `mouseleave` at once in Chromium and Firefox, never in WebKit, which sends a `mouseover` outside', async () => {
+  test('T5: a toast under the pointer leaves the document: `mouseleave` at once in Firefox, at once or at the next move in Chromium, never in WebKit, which sends a `mouseover` outside', async () => {
     const overs: string[] = [];
     const onMouseover = (event: MouseEvent) =>
       overs.push((event.target as Element).id || (event.target as Element).localName);
@@ -272,10 +272,11 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
         document.addEventListener('mouseover', onMouseover, true);
         element('a').remove();
       });
-      expect(result).toEqual({
-        atOnce: engine === 'webkit' ? [] : ['mouseleave'],
-        afterAMove: [],
-      });
+      // On a busy machine, Chromium can send it at the next move (seen in CI).
+      expect([...result.atOnce, ...result.afterAMove]).toEqual(
+        engine === 'webkit' ? [] : ['mouseleave'],
+      );
+      if (engine === 'firefox') expect(result.atOnce).toEqual(['mouseleave']);
       expect(overs.length).toBeGreaterThan(0);
       expect(overs).not.toContain('a');
     } finally {
@@ -601,12 +602,17 @@ describe('a mouse drag on text (T19)', () => {
           box.style.setProperty('--y', `${event.clientY - start.clientY}px`);
         });
         getSelection()?.removeAllRanges();
-        await userEvent.pointer({ coords: { x: 150, y: 125 }, keys: '[MouseLeft>]' });
-        for (let step = 1; step <= 8; step += 1) {
-          await userEvent.pointer({ coords: { x: 150 + step * 12, y: 125 + step * 15 } });
+        let point = { x: 150, y: 125 };
+        await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
+        try {
+          for (let step = 1; step <= 8; step += 1) {
+            point = { x: 150 + step * 12, y: 125 + step * 15 };
+            await userEvent.pointer({ coords: point });
+          }
+          selected[how] = String(getSelection()).length > 0;
+        } finally {
+          await userEvent.pointer({ coords: point, keys: '[/MouseLeft]' });
         }
-        selected[how] = String(getSelection()).length > 0;
-        await userEvent.pointer({ keys: '[/MouseLeft]' });
         root!.remove();
       }
       const oneAxisFirefox = engine === 'firefox' && axes === 'one axis';
