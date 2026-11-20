@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Drawer } from '@vase-ui/vue/drawer';
 import styles from './index.module.css';
+
+const popupHiddenClass = styles.PopupHidden;
+const popupLeavingClass = styles.PopupLeaving;
 </script>
 
 <template>
@@ -9,9 +12,9 @@ import styles from './index.module.css';
     <Drawer.Portal>
       <Drawer.Viewport :class="styles.Viewport">
         <Transition
-          :enter-from-class="styles.PopupHidden"
-          :leave-to-class="styles.PopupHidden"
-          :leave-active-class="styles.PopupLeaving"
+          :enter-from-class="popupHiddenClass"
+          :leave-to-class="popupHiddenClass"
+          :leave-active-class="popupLeavingClass"
           appear
         >
           <Drawer.Popup :class="styles.Popup">

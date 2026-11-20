@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { Drawer } from '@vase-ui/vue/drawer';
+
+const backdropHiddenClass = 'opacity-0!';
+const backdropLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
+const popupHiddenClass =
+  '[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!';
+const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
 </script>
 
 <template>
@@ -10,9 +16,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
     >
     <Drawer.Portal>
       <Transition
-        enter-from-class="opacity-0!"
-        leave-to-class="opacity-0!"
-        leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        :leave-active-class="backdropLeavingClass"
         appear
       >
         <Drawer.Backdrop
@@ -23,9 +29,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
         class="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)"
       >
         <Transition
-          enter-from-class="[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
-          leave-to-class="[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
-          leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+          :enter-from-class="popupHiddenClass"
+          :leave-to-class="popupHiddenClass"
+          :leave-active-class="popupLeavingClass"
           appear
         >
           <Drawer.Popup

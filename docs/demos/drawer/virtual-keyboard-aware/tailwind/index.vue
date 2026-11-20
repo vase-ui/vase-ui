@@ -11,6 +11,12 @@ const fields = [
   ['Delivery window', 'After 6 PM'],
   ['Backup contact', 'Grace Hopper'],
 ];
+
+const backdropHiddenClass = 'opacity-0!';
+const backdropLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
+const popupHiddenClass =
+  '[transform:translateY(calc(100%-var(--bleed)+2px))]! shadow-[0.25rem_0.25rem_0]! shadow-black/0!';
+const popupLeavingClass = 'leaving duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
 </script>
 
 <template>
@@ -22,9 +28,9 @@ const fields = [
     <Drawer.VirtualKeyboardProvider>
       <Drawer.Portal>
         <Transition
-          enter-from-class="opacity-0!"
-          leave-to-class="opacity-0!"
-          leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+          :enter-from-class="backdropHiddenClass"
+          :leave-to-class="backdropHiddenClass"
+          :leave-active-class="backdropLeavingClass"
           appear
         >
           <Drawer.Backdrop
@@ -35,9 +41,9 @@ const fields = [
           class="fixed inset-0 flex items-end justify-center touch-none [--bleed:3rem] after:pointer-events-none after:fixed after:inset-x-0 after:bottom-0 after:h-[var(--bleed)] after:bg-white after:content-[''] has-[>.leaving]:after:opacity-0 has-[[data-swiping]]:after:opacity-0 dark:after:bg-neutral-950"
         >
           <Transition
-            enter-from-class="[transform:translateY(calc(100%-var(--bleed)+2px))]! shadow-[0.25rem_0.25rem_0]! shadow-black/0!"
-            leave-to-class="[transform:translateY(calc(100%-var(--bleed)+2px))]! shadow-[0.25rem_0.25rem_0]! shadow-black/0!"
-            leave-active-class="leaving duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            :leave-active-class="popupLeavingClass"
             appear
           >
             <Drawer.Popup

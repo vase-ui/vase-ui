@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { Drawer } from '@vase-ui/vue/drawer';
+
+const popupHiddenClass =
+  'shadow-[0.25rem_0.25rem_0]! shadow-black/0! [transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!';
+const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
 </script>
 
 <template>
@@ -13,9 +17,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
         class="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding) pointer-events-none"
       >
         <Transition
-          enter-from-class="shadow-[0.25rem_0.25rem_0]! shadow-black/0! [transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
-          leave-to-class="shadow-[0.25rem_0.25rem_0]! shadow-black/0! [transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
-          leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+          :enter-from-class="popupHiddenClass"
+          :leave-to-class="popupHiddenClass"
+          :leave-active-class="popupLeavingClass"
           appear
         >
           <Drawer.Popup

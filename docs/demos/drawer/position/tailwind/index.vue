@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Drawer } from '@vase-ui/vue/drawer';
+
+const backdropHiddenClass = 'opacity-0!';
+const backdropLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
+const popupHiddenClass = '[transform:translateY(calc(100%-3rem+2px))]!';
+const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
 </script>
 
 <template>
@@ -10,9 +15,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
     >
     <Drawer.Portal>
       <Transition
-        enter-from-class="opacity-0!"
-        leave-to-class="opacity-0!"
-        leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+        :enter-from-class="backdropHiddenClass"
+        :leave-to-class="backdropHiddenClass"
+        :leave-active-class="backdropLeavingClass"
         appear
       >
         <Drawer.Backdrop
@@ -21,9 +26,9 @@ import { Drawer } from '@vase-ui/vue/drawer';
       </Transition>
       <Drawer.Viewport class="fixed inset-0 flex items-end justify-center">
         <Transition
-          enter-from-class="[transform:translateY(calc(100%-3rem+2px))]!"
-          leave-to-class="[transform:translateY(calc(100%-3rem+2px))]!"
-          leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+          :enter-from-class="popupHiddenClass"
+          :leave-to-class="popupHiddenClass"
+          :leave-active-class="popupLeavingClass"
           appear
         >
           <Drawer.Popup

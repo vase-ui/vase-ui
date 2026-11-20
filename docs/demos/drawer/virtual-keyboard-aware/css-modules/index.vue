@@ -12,6 +12,11 @@ const fields = [
   ['Delivery window', 'After 6 PM'],
   ['Backup contact', 'Grace Hopper'],
 ];
+
+const backdropHiddenClass = styles.BackdropHidden;
+const backdropLeavingClass = styles.BackdropLeaving;
+const popupHiddenClass = styles.PopupHidden;
+const popupLeavingClass = styles.PopupLeaving;
 </script>
 
 <template>
@@ -20,18 +25,18 @@ const fields = [
     <Drawer.VirtualKeyboardProvider>
       <Drawer.Portal>
         <Transition
-          :enter-from-class="styles.BackdropHidden"
-          :leave-to-class="styles.BackdropHidden"
-          :leave-active-class="styles.BackdropLeaving"
+          :enter-from-class="backdropHiddenClass"
+          :leave-to-class="backdropHiddenClass"
+          :leave-active-class="backdropLeavingClass"
           appear
         >
           <Drawer.Backdrop :class="styles.Backdrop" />
         </Transition>
         <Drawer.Viewport :class="styles.Viewport">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
-            :leave-active-class="styles.PopupLeaving"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            :leave-active-class="popupLeavingClass"
             appear
           >
             <Drawer.Popup :class="styles.Popup">

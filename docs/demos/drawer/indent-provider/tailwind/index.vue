@@ -3,6 +3,11 @@ import { useTemplateRef } from 'vue';
 import { Drawer } from '@vase-ui/vue/drawer';
 
 const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
+
+const backdropHiddenClass = 'opacity-0!';
+const backdropLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
+const popupHiddenClass = '[transform:translateY(calc(100%-var(--bleed)+2px))]!';
+const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!';
 </script>
 
 <template>
@@ -20,9 +25,9 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
             >
             <Drawer.Portal :to="portalContainer">
               <Transition
-                enter-from-class="opacity-0!"
-                leave-to-class="opacity-0!"
-                leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+                :enter-from-class="backdropHiddenClass"
+                :leave-to-class="backdropHiddenClass"
+                :leave-active-class="backdropLeavingClass"
                 appear
               >
                 <Drawer.Backdrop
@@ -31,9 +36,9 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
               </Transition>
               <Drawer.Viewport class="absolute inset-0 flex items-end justify-center">
                 <Transition
-                  enter-from-class="[transform:translateY(calc(100%-var(--bleed)+2px))]!"
-                  leave-to-class="[transform:translateY(calc(100%-var(--bleed)+2px))]!"
-                  leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
+                  :enter-from-class="popupHiddenClass"
+                  :leave-to-class="popupHiddenClass"
+                  :leave-active-class="popupLeavingClass"
                   appear
                 >
                   <Drawer.Popup
