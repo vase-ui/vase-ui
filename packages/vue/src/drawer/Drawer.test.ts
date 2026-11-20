@@ -81,6 +81,20 @@ describe('Drawer', () => {
       expect(get('backdrop').getAttribute('role')).toBe('presentation');
     });
 
+    test('VUE-73: a popup that unmounts while the drawer is open leaves no aria-controls and no sentinel', async () => {
+      const scene = reactive({ popup: true });
+      await mountDrawer({ root: { defaultOpen: true }, scene });
+      const popup = await opened();
+      const trigger = get('trigger');
+      await waitFor(() => expect(trigger).toHaveAttribute('aria-controls', popup.id));
+      scene.popup = false;
+      await closed();
+      await nextTick();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+      expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
+    });
+
     test('gives the focus to `initialFocus`, and back to the trigger at an Escape', async () => {
       const log: string[] = [];
       await mountDrawer({

@@ -28,6 +28,8 @@ const props = defineProps({
   provider: Boolean,
   title: Boolean,
   testPrefix: { type: String, default: '' },
+  /** The popup mounts while `scene.popup` is not `false`. */
+  scene: Object as PropType<{ popup?: boolean }>,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart });
@@ -75,7 +77,12 @@ const id = (name: string) => `${props.testPrefix}${name}`;
             :appear="transition"
             :enter-from-class="enterFromClass"
           >
-            <Drawer.Popup :data-testid="id('popup')" class="drawer-test-popup" v-bind="popup">
+            <Drawer.Popup
+              v-if="scene?.popup !== false"
+              :data-testid="id('popup')"
+              class="drawer-test-popup"
+              v-bind="popup"
+            >
               <Drawer.Title v-if="title" :data-testid="id('title')">Title</Drawer.Title>
               <Drawer.Description v-if="title" :data-testid="id('description')">
                 Description
