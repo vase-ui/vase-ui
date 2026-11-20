@@ -3,6 +3,7 @@ import {
   markRaw,
   nextTick,
   onMounted,
+  onScopeDispose,
   onUnmounted,
   shallowReactive,
   shallowRef,
@@ -293,41 +294,38 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
 
   // The popup and the backdrop leave in a `<Transition>` after Vue removes them from the render.
   // Vue sets their refs to `null` at once, so the root keeps the elements of the close.
+  let leavingNow: Element[] = [];
+  let observer: MutationObserver | undefined;
+  function settle() {
+    leavingNow = leavingNow.filter((element) => element.isConnected);
+    if (leavingNow.length > 0) return false;
+    observer?.disconnect();
+    observer = undefined;
+    leaving.value = false;
+    return true;
+  }
   watch(
     open,
-    (isOpen, _, onCleanup) => {
-      if (isOpen) {
-        if (instant.value === 'trigger-change') instant.value = undefined;
-        return;
-      }
+    (isOpen) => {
       if (instant.value === 'trigger-change') instant.value = undefined;
-      if (keepMounted.value) return;
+      if (isOpen || keepMounted.value) return;
       const elements = leavingElements
         .map((element) => element())
         .filter((element): element is Element => !!element?.isConnected);
       if (elements.length === 0) return;
+      leavingNow.push(...elements);
       leaving.value = true;
-      let observer: MutationObserver | undefined;
-      const check = () => {
-        if (elements.some((element) => element.isConnected)) return false;
-        leaving.value = false;
-        observer?.disconnect();
-        return true;
-      };
-      onCleanup(() => {
-        observer?.disconnect();
-        leaving.value = false;
-      });
       void nextTick(() => {
-        if (open.value || check()) return;
-        observer = new MutationObserver(check);
-        for (const element of elements) {
+        if (settle()) return;
+        observer ??= new MutationObserver(settle);
+        for (const element of leavingNow) {
           if (element.parentNode) observer.observe(element.parentNode, { childList: true });
         }
       });
     },
     { flush: 'sync' },
   );
+  onScopeDispose(() => observer?.disconnect());
 
   const root: PopupRoot<Payload> = {
     get open() {

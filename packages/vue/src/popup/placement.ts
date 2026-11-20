@@ -178,7 +178,12 @@ export function usePlacement(
 
   const reference = shallowRef<Element | VirtualElement | null>(null);
   watch(
-    [() => root.open, () => root.activeTrigger, () => resolveAnchor(props.anchor)],
+    [
+      () => root.open,
+      () => root.activeTrigger,
+      () => resolveAnchor(props.anchor),
+      options.positioner,
+    ],
     ([open, trigger, anchor]) => {
       const element = options.positioner.value;
       if (element) rtl.value = ownerWindow(element).getComputedStyle(element).direction === 'rtl';

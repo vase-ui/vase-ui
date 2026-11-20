@@ -21,6 +21,8 @@ defineProps({
   close: Object as PropType<Props>,
   noPopup: Boolean,
   noPortal: Boolean,
+  /** A second popover in the popup, with its own trigger. */
+  nested: Object as PropType<{ root?: Props; portal?: Props; popup?: Props }>,
 });
 const rootPart = useTemplateRef('rootPart');
 const popupPart = useTemplateRef('popupPart');
@@ -52,10 +54,21 @@ defineExpose({ root: rootPart, popup: popupPart });
             <button data-testid="first">First</button>
             <button data-testid="second">Second</button>
             <Popover.Close v-if="close" v-bind="close">Close</Popover.Close>
+            <Popover.Root v-if="nested" v-bind="nested.root">
+              <Popover.Trigger data-key="nested">nested</Popover.Trigger>
+              <Popover.Portal v-bind="nested.portal">
+                <Popover.Positioner data-testid="nested-positioner">
+                  <Popover.Popup data-testid="nested-popup" v-bind="nested.popup">
+                    <button data-testid="nested-button">Nested</button>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
     </template>
   </Popover.Root>
   <input id="after" aria-label="After" />
+  <button id="outside">Outside</button>
 </template>

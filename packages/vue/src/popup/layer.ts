@@ -275,8 +275,6 @@ let touch: TouchGesture | null = null;
 let pressType = '';
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
-/** From a `pointerdown` of the main button to the next `click`. */
-let pressed = false;
 
 function onPointerdown(event: PointerEvent) {
   pressType = event.pointerType;
@@ -293,7 +291,6 @@ function onPointerdown(event: PointerEvent) {
   }
   if (event.button !== 0) return;
   pressing = true;
-  pressed = true;
   const outside = isScrollbarPress(event) ? [] : outsideEntries(event);
   for (const entry of stack) {
     entry.pressOutside = outside.includes(entry);
@@ -325,10 +322,7 @@ function onPointerup(event: PointerEvent) {
     return;
   }
   pressing = false;
-  if (event.type === 'pointercancel') {
-    pressed = false;
-    return;
-  }
+  if (event.type === 'pointercancel') return;
   // A press on a scrollbar sends no `click` (test/measurements/popup.test.ts).
   const outside = outsideEntries(event);
   for (const entry of stack) {
@@ -340,8 +334,8 @@ function onPointerup(event: PointerEvent) {
 // the edge of the popup (test/measurements/popup.test.ts). The layer reads the press and the
 // release.
 function onClick(event: MouseEvent) {
-  const withPress = pressed && event.detail !== 0;
-  pressed = false;
+  // A click of a key, of a script or of an assistive tool has no press.
+  const withPress = event.detail !== 0;
   if (withPress && pressType === 'touch') return;
   const outside = outsideEntries(event);
   const entries = fromTop().filter((entry) => {
