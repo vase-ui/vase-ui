@@ -6,6 +6,9 @@
  * Only the frame of a Tailwind demo gets the reset. The popup of a demo is outside the frame, and
  * the base styles of VitePress reset it already. The reset of Tailwind would change the popups of
  * the CSS-module demos. The utilities also apply in a portal element, so a popup gets its classes.
+ * A portal of the popup layer moves its parts to `<body>` with no element of its own, so the
+ * utilities apply in `<body>` outside the app of the site and outside each frame. Tailwind gives
+ * one set of utilities, so one `@scope` has each place.
  */
 @layer base {
   :where([data-demo='tailwind']) {
@@ -13,7 +16,7 @@
   }
 }
 @layer utilities {
-  :where([data-demo='tailwind'], [data-vase-ui-portal]) {
+  @scope ([data-demo='tailwind'], [data-vase-ui-portal], body) to (#app, [data-demo]) {
     @tailwind utilities source(none);
   }
 }

@@ -135,10 +135,10 @@ function getPointOnLine(from: ClientPoint, to: ClientPoint, step: number, steps:
 
 /**
  * Drags a real touch from one client point of the test page to another, in `steps` moves, and lifts
- * it at the last point. Only Chromium has the protocol that the helper uses: guard a case that
- * calls it with `it.skipIf(!platform.engine.blink)`.
+ * it at the last point after `rest` milliseconds. With no moves, it taps. Only Chromium has the
+ * protocol that the helper uses: guard a case that calls it with `it.skipIf(!platform.engine.blink)`.
  */
-export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6) {
+export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, rest = 0) {
   // Each engine loads this file, and only Chromium has a session. The import is lazy, as in the
   // other cases that call `cdp()`.
   const { cdp } = await import('vitest/browser');
@@ -153,6 +153,7 @@ export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6) {
     for (let step = 1; step <= steps; step += 1) {
       await send('touchMove', getPointOnLine(from, to, step, steps));
     }
+    if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
   } finally {
     await send('touchEnd');
   }

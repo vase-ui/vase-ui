@@ -77,7 +77,6 @@ function assertOpenChange(details: DatePicker.Root.OpenChangeEventDetails) {
     | 'none',
     DatePicker.Root.OpenChangeEventDetails['reason']
   >(details.reason);
-  expectType<() => void, typeof details.preventUnmountOnClose>(details.preventUnmountOnClose);
 }
 
 void assertOpenChange;
@@ -92,4 +91,3 @@ void invalidGranularity;
 // The actions are those of the popover.
 declare const actions: DatePicker.Root.Actions;
 expectType<() => void, typeof actions.close>(actions.close);
-expectType<() => void, typeof actions.unmount>(actions.unmount);

@@ -68,7 +68,7 @@ In this sample, the rules `.root` and `.input` match `DateField.Root` and `DateF
 
 <<< ../examples/styling/ScopedStyle.vue
 
-Each `Portal` part renders its element in a `Teleport`, in another place of the document. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach that element, and `:deep()` does not reach it either. Write the element in the `#render` slot of the part. It is then an element of your own template, so they apply to it. Bind `props` on it, and mount `children` in it:
+Each `Portal` part renders its content in a `Teleport`, in another place of the document. `Popover.Portal` renders no element of its own: write an element of your own in it. Each other `Portal` part renders its element there. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach that element, and `:deep()` does not reach it either. Write the element in the `#render` slot of the part, bind `props` on it, and mount `children` in it. In both forms, the element is an element of your own template, so they apply to it:
 
 <<< ../examples/styling/ScopedPortal.vue
 

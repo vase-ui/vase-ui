@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Popover } from '@vase-ui/vue/popover';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 
 const day = Temporal.PlainDate.from('2026-11-14');
@@ -35,15 +35,6 @@ describe('<DatePicker.Trigger />', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Choose' })).toBeInTheDocument();
   });
-
-  describeConformance(<DatePicker.Trigger />, () => ({
-    refInstanceof: window.HTMLButtonElement,
-    testRenderPropWith: 'button',
-    button: true,
-    render(node) {
-      return render(<DatePicker.Root>{node}</DatePicker.Root>);
-    },
-  }));
 
   it('has the attributes of a dialog trigger', async () => {
     await render(

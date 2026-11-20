@@ -81,6 +81,48 @@
       "entry": "SelectTriggerDataAttributes",
       "kind": "not-applicable",
       "reason": "The state has no `focused`, and the data attributes have no `focused`, because a field has no focused state. CSS selects `:focus`, `:focus-visible` and `:focus-within` (rule 8.15)."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "dismisses the popover with one outside press after reopening an aligned select",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "keeps a modal popover open when choosing a non-modal aligned select item",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "returns focus to the opener when a select is opened programmatically inside a popover",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "dismisses the popover after reopening a selected aligned select",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "does not bubble Escape from a non-modal select to the popover",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "does not consume the next outside press after a native drag from a modal select trigger outside all popups",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a Select of the older popup code. Popover moved to the popup layer, and the two do not share a stack until Select moves to it. The change that moves Select to the popup layer ports the case again."
     }
   ],
   "surfaceAdditions": [

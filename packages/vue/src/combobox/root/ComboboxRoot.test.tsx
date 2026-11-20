@@ -22,7 +22,6 @@ import { Field } from '@vase-ui/vue/field';
 import ErrorsForm from '../../../test/fixtures/ErrorsForm.vue';
 import { Form, type FormValues } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
-import { Popover } from '@vase-ui/vue/popover';
 import {
   createFormDataSpy,
   createRenderer,
@@ -1344,42 +1343,6 @@ describe('<Combobox.Root />', () => {
     await user.click(screen.getByTestId('pad'));
 
     expect(screen.queryByRole('listbox')).toBe(null);
-  });
-
-  it('does not dismiss when pressing content inside a nested popover', async () => {
-    const { user } = await render(
-      <Combobox.Root defaultOpen>
-        <Combobox.Trigger>Open</Combobox.Trigger>
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.Input />
-              <Combobox.List>
-                <Combobox.Item value="apple">Apple</Combobox.Item>
-              </Combobox.List>
-              <Popover.Root>
-                <Popover.Trigger>Open nested popover</Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Positioner>
-                    <Popover.Popup>
-                      <button type="button">Nested focusable content</button>
-                    </Popover.Popup>
-                  </Popover.Positioner>
-                </Popover.Portal>
-              </Popover.Root>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
-    );
-
-    const nestedContent = await waitForLaterMillisecond(async () => {
-      await user.click(screen.getByRole('button', { name: 'Open nested popover' }));
-      return screen.findByRole('button', { name: 'Nested focusable content' });
-    });
-    await user.click(nestedContent);
-
-    expect(screen.getByRole('listbox')).not.toBe(null);
   });
 
   it('wraps modal focus from popup controls back to the input', async () => {

@@ -156,4 +156,4 @@ export namespace Popup {
   export type Props = TimePickerPopupProps;
 }
 
-export { Arrow, Backdrop, Close, Description, Portal, Title } from '../popover/index.parts';
+export { Arrow, Backdrop, Close, Description, Portal, Title } from '../popover/parts';

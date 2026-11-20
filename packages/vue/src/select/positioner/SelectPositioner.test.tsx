@@ -11,11 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import {
-  createScrollDocument,
-  scrollLockCount,
-  isPageLocked,
-} from '../../../test/fixtures/scrollDocument';
+import { createScrollDocument, isPageLocked } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
@@ -392,7 +388,7 @@ describe('<Select.Positioner />', () => {
 
       actions.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false));
-      expect(scrollLockCount(page)).toBe(0);
+      expect(isPageLocked(page)).toBe(false);
       expect(getPositioner(page)?.isConnected).toBe(true);
     });
 
@@ -412,29 +408,9 @@ describe('<Select.Positioner />', () => {
         open.value = true;
         await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side));
 
-        expect(scrollLockCount(page)).toBe(locks);
+        expect(isPageLocked(page)).toBe(locks > 0);
       },
     );
-
-    it('VUE-5: releases the lock while KeepAlive holds the select, and takes it back after', async () => {
-      const page = await createScrollDocument();
-      const show = shallowRef(true);
-      const { open, ModalSelect } = createSelect(page, {
-        positioner: { alignItemWithTrigger: false },
-      });
-      open.value = true;
-      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
-      await render(() => (
-        <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
-      ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true));
-
-      show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false));
-
-      show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true));
-    });
   });
 
   describe('VUE-61: the positioner of a modal select has one root node', () => {

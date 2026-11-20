@@ -85,7 +85,7 @@ Put the picker in a `Field` to show the errors of its validation. Do not give a 
 
 ## Events
 
-The root emits `valueChange` and `update:modelValue` for each change of the range. It emits `openChange` and `update:open` when the popup opens or closes, and `openChangeComplete` after its animations end. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for each change of the range. It emits `openChange` and `update:open` when the popup opens or closes. To run code after the animations of the popup, use the hooks of a `<Transition>` around `DateRangePicker.Popup`. A `details.cancel()` in `valueChange` or `openChange` stops the change and its `update` event.
 
 | Reason of `valueChange` | When                                                     |
 | ----------------------- | -------------------------------------------------------- |

@@ -1,9 +1,0 @@
-{
-  "id": "VUE-75",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useDismiss.ts#L587-L604",
-    "https://dom.spec.whatwg.org/#concept-event-dispatch"
-  ],
-  "behavior": "An outside press closes the popup before the listeners of the pressed element run, as in Base UI. Such a listener reads the open state after the close. Thus an outside element whose listener toggles the open state opens the popup again. In Base UI, a listener that reads the open state of the last render closes the popup. To toggle a popup from an outside element, use a detached trigger, or call `details.cancel()` in `onOpenChange` for the press on that element.",
-  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
-}

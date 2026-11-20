@@ -7,13 +7,13 @@ export { default as DateRangePickerEndField } from './end-field/DateRangePickerE
 export { default as DateRangePickerTrigger } from './trigger/DateRangePickerTrigger.vue';
 export { default as DateRangePickerPositioner } from './positioner/DateRangePickerPositioner.vue';
 export { default as DateRangePickerCalendar } from './calendar/DateRangePickerCalendar.vue';
-export { default as DateRangePickerPortal } from '../popover/portal/PopoverPortal.vue';
+export { default as DateRangePickerPortal } from '../popover/PopoverPortal.vue';
 export { default as DateRangePickerPopup } from './popup/DateRangePickerPopup.vue';
-export { default as DateRangePickerArrow } from '../popover/arrow/PopoverArrow.vue';
-export { default as DateRangePickerBackdrop } from '../popover/backdrop/PopoverBackdrop.vue';
-export { default as DateRangePickerClose } from '../popover/close/PopoverClose.vue';
-export { default as DateRangePickerTitle } from '../popover/title/PopoverTitle.vue';
-export { default as DateRangePickerDescription } from '../popover/description/PopoverDescription.vue';
+export { default as DateRangePickerArrow } from '../popover/PopoverArrow.vue';
+export { default as DateRangePickerBackdrop } from '../popover/PopoverBackdrop.vue';
+export { default as DateRangePickerClose } from '../popover/PopoverClose.vue';
+export { default as DateRangePickerTitle } from '../popover/PopoverTitle.vue';
+export { default as DateRangePickerDescription } from '../popover/PopoverDescription.vue';
 
 export type * from './root/DateRangePickerRoot.vue';
 export type * from './start-field/DateRangePickerStartField.vue';
@@ -26,33 +26,26 @@ export type * from './calendar/DateRangePickerCalendar.vue';
 export type {
   PopoverPortalProps as DateRangePickerPortalProps,
   PopoverPortalState as DateRangePickerPortalState,
-} from '../popover/portal/PopoverPortal.vue';
+} from '../popover/types';
 export type {
   PopoverArrowProps as DateRangePickerArrowProps,
   PopoverArrowState as DateRangePickerArrowState,
-} from '../popover/arrow/PopoverArrow.vue';
+} from '../popover/types';
 export type {
   PopoverBackdropProps as DateRangePickerBackdropProps,
   PopoverBackdropState as DateRangePickerBackdropState,
-} from '../popover/backdrop/PopoverBackdrop.vue';
+} from '../popover/types';
 export type {
   PopoverCloseProps as DateRangePickerCloseProps,
   PopoverCloseState as DateRangePickerCloseState,
-} from '../popover/close/PopoverClose.vue';
+} from '../popover/types';
 export type {
   PopoverTitleProps as DateRangePickerTitleProps,
   PopoverTitleState as DateRangePickerTitleState,
-} from '../popover/title/PopoverTitle.vue';
+} from '../popover/types';
 export type {
   PopoverDescriptionProps as DateRangePickerDescriptionProps,
   PopoverDescriptionState as DateRangePickerDescriptionState,
-} from '../popover/description/PopoverDescription.vue';
+} from '../popover/types';
 
-export * as DateRangePickerTriggerDataAttributes from '../popover/trigger/PopoverTriggerDataAttributes';
-export * as DateRangePickerPositionerCssVariables from '../popover/positioner/PopoverPositionerCssVars';
-export * as DateRangePickerPositionerDataAttributes from '../popover/positioner/PopoverPositionerDataAttributes';
 export * as DateRangePickerCalendarDataAttributes from '../range-calendar/root/RangeCalendarRootDataAttributes';
-export * as DateRangePickerPopupCssVariables from '../popover/popup/PopoverPopupCssVars';
-export * as DateRangePickerPopupDataAttributes from '../popover/popup/PopoverPopupDataAttributes';
-export * as DateRangePickerArrowDataAttributes from '../popover/arrow/PopoverArrowDataAttributes';
-export * as DateRangePickerBackdropDataAttributes from '../popover/backdrop/PopoverBackdropDataAttributes';

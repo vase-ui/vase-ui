@@ -11,7 +11,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
@@ -191,21 +190,6 @@ const rows: Row[] = [
       </NavigationMenu.Root>
     ),
     expected: () => 'false',
-  },
-  {
-    name: 'Popover.Popup role',
-    attribute: 'role',
-    createNode: () => (
-      <Popover.Root defaultOpen>
-        <Popover.Trigger>Open</Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup role={undefined} data-testid="part" />
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ),
-    expected: () => 'dialog',
   },
   {
     name: 'PreviewCard.Popup data-open',

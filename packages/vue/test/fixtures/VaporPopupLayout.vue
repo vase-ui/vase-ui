@@ -11,8 +11,8 @@ const width = ref(120);
     <Popover.Portal>
       <Popover.Positioner data-testid="positioner">
         <Popover.Popup>
-          <template #render="{ props }">
-            <div v-bind="props" :ref="props.ref" data-testid="popup">
+          <template #element="{ props, elementRef }">
+            <div v-bind="props" :ref="elementRef" data-testid="popup" style="width: max-content">
               <Popover.Viewport>
                 <button :style="{ width: width + 'px', height: '40px' }" @click="width = 180">
                   Resize

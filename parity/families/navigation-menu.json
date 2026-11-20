@@ -52,6 +52,13 @@
       "prop": "render",
       "kind": "not-applicable",
       "reason": "The default tag is `nav`, or `div` when the root is nested. The part decides it in `setup`, so the prop `as` has no static default."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested popups"],
+      "title": "keeps the menu open when interacting with a nested popover",
+      "kind": "not-applicable",
+      "reason": "The case nests a Popover and a NavigationMenu of the older popup code. Popover moved to the popup layer, and the two do not share a stack until NavigationMenu moves to it. The change that moves NavigationMenu to the popup layer ports the case again."
     }
   ],
   "surfaceAdditions": [

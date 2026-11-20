@@ -35,13 +35,19 @@
       "describe": ["useIsHydrating"],
       "title": "returns true before hydration for server-rendered markup",
       "kind": "replaced",
-      "test": "packages/vue/src/utils/useIsHydrating.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/common/hydration.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. `common/hydration.node.test.tsx` renders `useIsHydrating` on a server."
     },
     {
       "upstream": "packages/react/src/utils/resolveClassName.ts",
       "kind": "not-applicable",
       "reason": "The file resolves the React `className` prop, which is a string or a function of the state. Vase UI accepts the native `class` attribute. A render slot can bind it from state."
+    },
+    {
+      "upstream": "packages/react/src/utils/useIsHydrating.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/common/hydration.test.tsx",
+      "reason": "`common/hydration.test.tsx` tests `useIsHydrating` in a client-only mount and through a hydration."
     },
     {
       "upstream": "packages/react/src/utils/collapsibleOpenStateMapping.ts",
@@ -102,7 +108,13 @@
       "relation": "merged-into",
       "destination": "packages/vue/src/internals/useAnchorPositioning.ts",
       "member": "hide",
-      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts"
+      "witness": "packages/vue/src/internals/useAnchorPositioning.hide.test.ts",
+      "additional": [
+        {
+          "destination": "packages/vue/src/popup/placement.ts",
+          "member": "hide"
+        }
+      ]
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
@@ -145,6 +157,13 @@
       "destination": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx",
       "member": "createPositioner",
       "witness": "packages/vue/src/utils/popups/usePopupPositioner.floating.test.tsx"
+    },
+    {
+      "upstream": "packages/react/src/utils/useIsHydrating.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/hydration.ts",
+      "member": "useIsHydrating",
+      "witness": "packages/vue/src/common/hydration.test.tsx"
     }
   ]
 }
