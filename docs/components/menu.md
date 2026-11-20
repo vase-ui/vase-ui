@@ -78,14 +78,14 @@ With `keepMounted` on `Menu.Portal`, the closed popup stays in the DOM with `hid
 
 ## Style hooks
 
-| Hook                     | Part                      | When                                                                         |
-| ------------------------ | ------------------------- | ---------------------------------------------------------------------------- |
-| `[aria-expanded="true"]` | trigger                   | The menu of the trigger is open.                                             |
-| `[data-popup-open]`      | submenu trigger           | The submenu is open.                                                         |
-| `[aria-checked="true"]`  | checkbox item, radio item | The item is checked.                                                         |
-| `[aria-disabled="true"]` | item                      | The item is disabled. A disabled trigger has `:disabled`.                    |
-| `[data-highlighted]`     | item, input               | The item has the highlight, or the input shows its focus ring.               |
-| `[data-instant]`         | popup                     | The menu opened or closed by a key, or moved between the menus of a menubar. |
+| Hook                     | Part                      | When                                                                                                |
+| ------------------------ | ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `[aria-expanded="true"]` | trigger                   | The menu of the trigger is open.                                                                    |
+| `[data-popup-open]`      | submenu trigger           | The submenu is open.                                                                                |
+| `[aria-checked="true"]`  | checkbox item, radio item | The item is checked.                                                                                |
+| `[aria-disabled="true"]` | item                      | The item is disabled. A disabled trigger has `:disabled`.                                           |
+| `[data-highlighted]`     | item, input               | The item has the highlight, or the input shows its focus ring.                                      |
+| `[data-instant]`         | popup                     | A key opened or closed the menu, or the menu moved to another trigger or another menu of a menubar. |
 
 ## Examples
 
@@ -523,7 +523,7 @@ Set `autoHighlight` to highlight the first match while the query is not empty. S
 
 #### Focus and keyboard
 
-When a click or the keyboard opens the menu, the input gets the focus. A hover, a touch or a pen does not move the focus to the input, so the on-screen keyboard stays hidden. The arrow keys move the highlight while the input keeps the focus. <kbd>Tab</kbd> closes the menu, and <kbd>Shift</kbd>+<kbd>Tab</kbd> returns the focus to the trigger. The popup is a `dialog` that holds the `searchbox` input and the `menu` list.
+When a mouse press or a key opens the menu, the input gets the focus. A hover, a touch or a pen does not move the focus to the input, so the on-screen keyboard stays hidden. The arrow keys move the highlight while the input keeps the focus. <kbd>Tab</kbd> closes the menu, and <kbd>Shift</kbd>+<kbd>Tab</kbd> returns the focus to the trigger. The popup is a `dialog` that holds the `searchbox` input and the `menu` list.
 
 #### Submenus
 
