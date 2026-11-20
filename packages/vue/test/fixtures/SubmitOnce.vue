@@ -8,7 +8,7 @@ defineProps({
 </script>
 
 <template>
-  <Form @submit.prevent.once="(event) => submits.add(event)">
+  <Form @submit.once="(event) => submits.add(event)">
     <button type="submit">Submit</button>
   </Form>
 </template>

@@ -25,4 +25,6 @@ export const REFACTORED_FOLDERS = [
   'tabs',
   'time-clock',
   'time-field',
+  'toggle',
+  'toggle-group',
 ];

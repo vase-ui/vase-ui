@@ -1,13 +1,12 @@
 import type { InjectionKey } from 'vue';
-import type { FieldsetForPart } from './part';
 
 /** What a `Fieldset.Root` gives to its legends. */
 export interface FieldsetForLegend {
   /**
-   * The answer for a part in the legend. A disabled root does not disable its legend, so the
-   * answer comes from the fieldsets around the root.
+   * The id that the root names in its server HTML, while the root has no legend. A legend with no
+   * `id` prop takes it, so that the server HTML of the root names that legend.
    */
-  readonly forParts: FieldsetForPart;
+  readonly firstLegendId: string | undefined;
   /** Adds a legend. Returns the function that removes it. */
   addLegend(legend: { readonly id: string }): () => void;
 }

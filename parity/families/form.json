@@ -16,7 +16,7 @@
       "upstream": "docs/src/app/(docs)/react/components/form/types.md",
       "entry": "Form",
       "kind": "not-applicable",
-      "reason": "`submit(event, values)` replaces `onFormSubmit`: the first argument is the native `SubmitEvent`, and `@submit.prevent` prevents the default. `v-model:errors` replaces `errors`. The modes are `submit`, `blur` and `change` (rule 8.17). The form has no state to read, so the family has no `FormState`."
+      "reason": "`submit(event, values)` replaces `onFormSubmit`: the first argument is the native `SubmitEvent`, and the form prevents the native submit while it has a `submit` listener, as Base UI does for `onFormSubmit`. `v-model:errors` replaces `errors`. The modes are `submit`, `blur` and `change` (rule 8.17). The form has no state to read, so the family has no `FormState`."
     }
   ],
   "surfaceAdditions": [

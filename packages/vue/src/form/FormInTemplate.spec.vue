@@ -28,7 +28,7 @@ function saveWrongEvent(event: string, values: Values) {
 <template>
   <Form @submit="save" />
   <Form @submit.prevent="save" />
-  <Form @submit.prevent.once="saveLiteral" />
+  <Form @submit.once="saveLiteral" />
   <Form @submit="saveValues" />
   <Form @submit="(_event: SubmitEvent, values: { id: string }) => values.id" />
   <Form
