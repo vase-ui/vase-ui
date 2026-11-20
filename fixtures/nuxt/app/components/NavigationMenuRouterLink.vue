@@ -4,16 +4,17 @@ import { RouterLink, type RouteLocationRaw } from 'vue-router';
 
 // A native `<a>` in the `element` slot of the link, in the slot of `<RouterLink custom>`, so that
 // the arrow keys of the menu reach it. The `<a>` of the current route has `aria-current="page"`.
+// The attributes and `closeOnClick` go to the link, which merges them with its own.
 defineOptions({ inheritAttrs: false });
 defineProps<{ to: RouteLocationRaw }>();
 </script>
 
 <template>
   <RouterLink v-slot="{ href, navigate, isExactActive }" :to="to" custom>
-    <NavigationMenu.Link>
+    <NavigationMenu.Link v-bind="$attrs">
       <template #element="{ props, elementRef }">
         <a
-          v-bind="{ ...props, ...$attrs }"
+          v-bind="props"
           :ref="elementRef"
           :href="href"
           :aria-current="isExactActive ? 'page' : undefined"
