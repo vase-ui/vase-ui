@@ -711,7 +711,8 @@ describe('the focus', () => {
     ]);
   });
 
-  test.skipIf(server.browser === 'webkit')(
+  // WebKit on macOS moves no focus to a link at a click (test/measurements/preview-card.test.ts).
+  test.skipIf(server.browser === 'webkit' && server.platform === 'darwin')(
     'a mouse click on the link gives the focus with no open by the focus',
     async () => {
       const { trigger } = await mountCard({ triggers: [{ key: 't', attrs: { delay: 5000 } }] });

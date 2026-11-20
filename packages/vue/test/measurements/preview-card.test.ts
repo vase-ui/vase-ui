@@ -110,11 +110,11 @@ describe(':focus-visible of a link in its `focusin` listener (P2)', () => {
     expect(log).toEqual([true, false]);
   });
 
-  test('a mouse click on the link moves the focus to it with no :focus-visible in Chromium and Firefox, and moves no focus in WebKit', async () => {
+  test('a mouse click on the link moves the focus to it with no :focus-visible, except in WebKit on macOS, which moves no focus', async () => {
     html(scene);
     const log = recordFocusin();
     await userEvent.click(element('link'));
-    expect(log).toEqual(server.browser === 'webkit' ? [] : [false]);
+    expect(log).toEqual(server.browser === 'webkit' && server.platform === 'darwin' ? [] : [false]);
   });
 });
 
