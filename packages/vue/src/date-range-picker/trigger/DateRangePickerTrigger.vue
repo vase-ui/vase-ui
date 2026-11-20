@@ -29,7 +29,6 @@ import { formatRangeText } from '../../internals/date-time/calendar/formatText';
 import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import { useAriaAfterHydration } from '../../common/hydration';
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
@@ -40,10 +39,6 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<DateRangePickerTriggerProps>(), {
   disabled: false,
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  useCastBooleanWarning('DateRangePicker.Trigger');
-}
 
 defineSlots<{
   default?(scope: { state: DateRangePickerTriggerState }): unknown;

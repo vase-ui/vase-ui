@@ -28,7 +28,6 @@ import { formatText } from '../../internals/date-time/calendar/formatText';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { isKind } from '../../internals/date-time/temporal';
 import { useAriaAfterHydration } from '../../common/hydration';
-import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
@@ -41,10 +40,6 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<TimePickerTriggerProps>(), {
   disabled: false,
 });
-
-if (process.env.NODE_ENV !== 'production') {
-  useCastBooleanWarning('TimePicker.Trigger');
-}
 
 defineSlots<{
   default?(scope: { state: TimePickerTriggerState }): unknown;
