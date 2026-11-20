@@ -446,10 +446,22 @@ describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs (N2)
 });
 
 describe.runIf(vdomApp)(
-  'an update of a style bound to a ref, on a component with 2,000 elements in its slot (N4)',
+  'an update of a style bound to a ref, on a component with 2,000 components in its slot (N4)',
   () => {
-    test('takes less than 2 ms', async () => {
+    // A runner can be slow, and WebKit gives `performance.now()` in steps of 1 ms, so the bound of
+    // the time is half a frame.
+    test('renders no component of the slot again, and takes less than half a frame', async () => {
       const movement = shallowRef(0);
+      let renders = 0;
+      const Item = defineComponent({
+        props: { index: { type: Number, required: true } },
+        setup(props) {
+          return () => {
+            renders += 1;
+            return h('span', { class: 'item' }, `${props.index}`);
+          };
+        },
+      });
       const Popup = defineComponent({
         setup(_, { slots }) {
           return () => h('div', { style: { '--y': `${movement.value}px` } }, slots.default?.());
@@ -459,10 +471,7 @@ describe.runIf(vdomApp)(
         setup() {
           return () =>
             h(Popup, null, {
-              default: () =>
-                Array.from({ length: 2000 }, (_, index) =>
-                  h('span', { class: 'item' }, `${index}`),
-                ),
+              default: () => Array.from({ length: 2000 }, (_, index) => h(Item, { index })),
             });
         },
       });
@@ -475,7 +484,8 @@ describe.runIf(vdomApp)(
         times.push(performance.now() - start);
       }
       times.sort((a, b) => a - b);
-      expect(times[30]).toBeLessThan(2);
+      expect(renders).toBe(2000);
+      expect(times[30]).toBeLessThan(8);
     });
   },
 );
