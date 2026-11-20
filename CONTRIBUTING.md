@@ -1354,7 +1354,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 
 ### Composite
 
-A composite is a group of items with one tab stop, such as a menubar or a radio group of the older form. Its code is in `src/internals/composite`. A toolbar keeps its own list of items in `toolbar/item.ts`. Each toggle of a `ToggleGroup` in a toolbar is an item of that list.
+A composite is a group of items with one tab stop, such as a menubar or the list of a navigation menu. Its code is in `src/internals/composite`. A toolbar keeps its own list of items in `toolbar/item.ts`. Each toggle of a `ToggleGroup` in a toolbar is an item of that list.
 
 - A root part calls `useCompositeRoot` in `setup`, and an item part calls `useCompositeItem`. Each part gives the result to `useRenderElement`.
 - `useCompositeRoot` makes the item registry with `useCompositeList`. `useCompositeItem` registers the item with `useCompositeListItem`. A part that needs only the registry calls those two composables.
