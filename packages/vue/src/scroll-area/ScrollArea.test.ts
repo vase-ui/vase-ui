@@ -412,8 +412,9 @@ describe('animations in the viewport', () => {
     const area = mounted.root.querySelector('.root')!;
     await waitFor(() => expect(area).toHaveAttribute('data-has-overflow-x'));
     await finite.finished;
-    await nextTick();
-    expect(area).not.toHaveAttribute('data-has-overflow-x');
+    // The first frame can come before the task in which the viewport reads the animations. The
+    // test then waits for `finished` before the viewport does, and its reaction runs first.
+    await waitFor(() => expect(area).not.toHaveAttribute('data-has-overflow-x'));
   });
 
   test('a script animation that ends after the unmount gives no error', async () => {
