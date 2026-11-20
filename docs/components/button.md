@@ -76,7 +76,7 @@ A link (`<a>`) has its own semantics. Do not render a link in `as` or in the `el
 
 Set `focusableWhenDisabled` on a button that becomes disabled while it loads. The button then keeps the focus.
 
-Some combinations of a browser and a screen reader do not announce a change of the text in a focused button. Use [`aria-labelledby`](https://www.w3.org/TR/accname-1.2/#computation-steps) to make the changing text the accessible name of the button.
+Some combinations of a browser and a screen reader do not announce a change of the text in a focused button. Use [`aria-labelledby`](https://www.w3.org/TR/accname-1.2/#computation-steps) to name the button with the text that changes.
 
 <DemoFrame>
   <DemoButtonLoading />

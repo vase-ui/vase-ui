@@ -126,7 +126,7 @@
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Thumb",
       "kind": "not-applicable",
-      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`. A template ref has the input as `input`, in the place of `inputRef`. The developer writes each thumb and knows its index, so an `aria-label` on each thumb takes the place of `getAriaLabel`. `aria-valuetext` and `tabindex` are plain attributes that go to the input."
+      "reason": "CSS selects `:focus-within`, and a slot reads `state.activeThumbIndex`, so the state has no `focused`, and the part has no `data-focused`. A template ref has the input as `input`, in the place of `inputRef`. The developer writes each thumb and knows its index, so an `aria-label` on each thumb takes the place of `getAriaLabel`, and a class on each thumb takes the place of `data-index`. `aria-valuetext` and `tabindex` are plain attributes that go to the input."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",

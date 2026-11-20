@@ -24,7 +24,7 @@ import DemoSliderVerticalTailwind from '../demos/slider/vertical/tailwind/index.
 
 # Slider
 
-An easily stylable range input.
+A range input that is easy to style.
 
 <DemoFrame>
   <DemoSliderHero />
@@ -186,7 +186,7 @@ The marks do not change the values that the thumb can have. To snap the thumb to
 
 ### Thumb alignment
 
-By default, the centre of the thumb is on the edge of the control when the value is at `min` or `max`, so the thumb goes past the control. With `thumbAlignment="edge"`, the thumb stays in the control, and its edge is on the edge of the control.
+By default, the center of the thumb is on the edge of the control when the value is at `min` or `max`, so the thumb goes past the control. With `thumbAlignment="edge"`, the thumb stays in the control, and its edge is on the edge of the control.
 
 <DemoFrame>
   <DemoSliderEdgeAlignment />

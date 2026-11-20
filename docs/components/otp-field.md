@@ -66,7 +66,7 @@ Import the component and assemble its parts:
 
 ### Labeling an OTP field
 
-A native `<label>` names the first input when its `for` is the `id` of `OTPField.Root`. To name the group too, give the label an `id` and the root `aria-labelledby`. Give each other input an `aria-label`, so that a screen reader announces the slot that has the focus. To announce a supporting text with the field, give the root `aria-describedby`.
+A native `<label>` names the first input when its `for` is the `id` of `OTPField.Root`. To name the group too, give the label an `id` and the root `aria-labelledby`. Give each other input an `aria-label`, so that a screen reader announces the slot that has the focus. To announce a description with the field, give the root `aria-describedby`.
 
 <<< ./otp-field/NativeLabel.vue{7,9,11}
 

@@ -15,8 +15,8 @@ export interface NumberFieldRootProps
   max?: number;
   /**
    * The amount of one step. A number is also the `step` of the hidden input, so the form accepts
-   * only its multiples from `min`. With none, or `'any'`, a step is 1 and the form accepts each
-   * number.
+   * only its multiples from `min`, and each number with no `min`. With none, or `'any'`, a step is 1
+   * and the form accepts each number.
    */
   step?: number | 'any';
   /**
@@ -46,8 +46,9 @@ export interface NumberFieldRootProps
    */
   allowWheelScrub?: boolean;
   /**
-   * The options of `Intl.NumberFormat` for the text. Typed text stays as the user typed it, and
-   * the blur gives it the format. A rounding option rounds the typed number at the blur.
+   * The options of `Intl.NumberFormat` for the text. Typed text stays as the user typed it while
+   * its number is the value, and the blur gives it the format. A rounding option rounds the typed
+   * number at the blur.
    */
   format?: Intl.NumberFormatOptions;
   /**

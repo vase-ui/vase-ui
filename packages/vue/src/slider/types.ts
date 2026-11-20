@@ -16,7 +16,7 @@ export interface SliderRootProps<Value extends number | readonly number[] = numb
    */
   min?: number;
   /**
-   * The greatest value. The End key moves to the largest value of the grid.
+   * The greatest value. The End key moves the thumb to the largest value of the grid.
    * @default 100
    */
   max?: number;
@@ -29,14 +29,14 @@ export interface SliderRootProps<Value extends number | readonly number[] = numb
   /** The change for Page Up, Page Down, and Shift with an arrow key. @default 10 */
   largeStep?: number;
   /**
-   * The least distance between two thumbs, as a number of steps. A thumb stops at its neighbour.
+   * The least distance between two thumbs, as a number of steps. A thumb stops at its neighbor.
    * @default 0
    */
   minStepsBetweenValues?: number;
   /** What the thumbs do when a drag makes them meet. @default 'push' */
   thumbCollisionBehavior?: ThumbCollisionBehavior;
   /**
-   * Where a thumb is at `min` and `max`: its centre at the end of the control, or its edge. CSS
+   * Where a thumb is at `min` and `max`: its center at the end of the control, or its edge. CSS
    * places each thumb, also in the server HTML.
    * @default 'center'
    */

@@ -9,8 +9,8 @@ export type OTPFieldRootValidationType = 'numeric' | 'alpha' | 'alphanumeric' | 
 export interface OTPFieldRootProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id' | 'inputmode'> {
   /**
-   * The number of slots. The root cuts the code to it and finds the completion from it. The form
-   * input then has the validation of a whole code before the slots hydrate.
+   * The number of slots. The root cuts the code to it and finds the completion from it. With it,
+   * the form input has the validation of a whole code before the slots hydrate.
    */
   length: number;
   /** The code. With no value, the field owns its code. */
