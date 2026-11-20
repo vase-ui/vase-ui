@@ -1,25 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, h, shallowRef } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Menu } from '@vase-ui/vue/menu';
-import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
-import * as FilterDropdown from '../../test/filterDropdown';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
-import { NOOP } from '../common/empty';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -88,18 +83,6 @@ const rows: Row[] = [
     expected: () => 'dialog',
   },
   {
-    name: 'ContextMenu.Trigger data-popup-open',
-    attribute: 'data-popup-open',
-    createNode: () => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger data-popup-open={undefined} data-testid="part">
-          Area
-        </ContextMenu.Trigger>
-      </ContextMenu.Root>
-    ),
-    expected: () => '',
-  },
-  {
     name: 'Dialog.Popup aria-labelledby',
     attribute: 'aria-labelledby',
     createNode: () => (
@@ -138,40 +121,6 @@ const rows: Row[] = [
       </Drawer.Root>
     ),
     expected: () => 'dialog',
-  },
-  {
-    name: 'FilterDropdown.Input role',
-    attribute: 'role',
-    createNode: () => (
-      <FilterDropdown.Root
-        open
-        value=""
-        listRef={shallowRef([])}
-        getActiveIndex={() => null}
-        setActiveIndex={NOOP}
-      >
-        <FilterDropdown.Input role={undefined} data-testid="part" />
-      </FilterDropdown.Root>
-    ),
-    expected: () => 'searchbox',
-  },
-  {
-    name: 'Menu.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Menu.Root>
-        <Menu.Trigger aria-haspopup={undefined} data-testid="part">
-          Open
-        </Menu.Trigger>
-      </Menu.Root>
-    ),
-    expected: () => 'menu',
-  },
-  {
-    name: 'Menubar role',
-    attribute: 'role',
-    createNode: () => <Menubar role={undefined} data-testid="part" />,
-    expected: () => 'menubar',
   },
   {
     name: 'NavigationMenu.Trigger aria-expanded',

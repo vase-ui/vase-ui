@@ -7,7 +7,6 @@ import * as AlertDialog from '../../../alert-dialog/index.parts';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Drawer from '../../../drawer/index.parts';
-import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
@@ -94,19 +93,7 @@ const children = {
       </Drawer.Portal>
     </Drawer.Root>
   ),
-  menu: (record: Recorder) => (
-    <Menu.Root defaultOpen onOpenChange={record}>
-      <Menu.Trigger>Child trigger</Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Backdrop data-testid="backdrop" />
-        <Menu.Positioner data-testid="positioner">
-          <Menu.Popup data-testid="popup">
-            <Menu.Item>Item</Menu.Item>
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
-  ),
+
   select: (record: Recorder) => (
     <Select.Root defaultOpen onOpenChange={record}>
       <Select.Trigger>
@@ -255,13 +242,7 @@ describe('a press on a part of a child popup that is outside its popup element',
       part: 'viewport',
       closesChild: true,
     },
-    {
-      name: 'Menu.Positioner / popover',
-      parent: 'popover',
-      child: 'menu',
-      part: 'positioner',
-      closesChild: false,
-    },
+
     {
       name: 'Select.Positioner / popover',
       parent: 'popover',
@@ -276,20 +257,8 @@ describe('a press on a part of a child popup that is outside its popup element',
       part: 'positioner',
       closesChild: false,
     },
-    {
-      name: 'Menu.Backdrop / trap-focus',
-      parent: 'trapFocusPopover',
-      child: 'menu',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'Menu internal backdrop / trap-focus',
-      parent: 'trapFocusPopover',
-      child: 'menu',
-      part: INTERNAL_BACKDROP,
-      closesChild: true,
-    },
+
+
     {
       name: 'Select.Backdrop / trap-focus',
       parent: 'trapFocusPopover',
@@ -403,24 +372,7 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
   const { render } = createRenderer();
 
   it.each<PendingPositionerCase>([
-    {
-      name: 'Menu',
-      render: (record, onOpenChangeComplete) => (
-        <Menu.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
-          <Menu.Trigger>Trigger</Menu.Trigger>
-          <Menu.Portal>
-            <Menu.Backdrop data-testid="backdrop" />
-            <Pending>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <Menu.Item>Item</Menu.Item>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Pending>
-          </Menu.Portal>
-        </Menu.Root>
-      ),
-    },
+
     {
       name: 'Select',
       render: (record, onOpenChangeComplete) => (

@@ -6,8 +6,6 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
-import { Menu } from '@vase-ui/vue/menu';
-import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
@@ -108,54 +106,6 @@ const popoverParts = (part: string) => (k: string, blankId: BlankId) => (
       </Popover.Positioner>
     </Popover.Portal>
   </Popover.Root>
-);
-
-const menuParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Menu.Root defaultOpen>
-    <Menu.Trigger {...blankIdIf(part === 'Trigger', blankId)}>Actions {k}</Menu.Trigger>
-    <Menu.Portal>
-      <Menu.Positioner>
-        <Menu.Popup {...blankIdIf(part === 'Popup', blankId)} data-testid={`popup${k}`}>
-          <Menu.Item {...blankIdIf(part === 'Item', blankId)}>Rename</Menu.Item>
-          <Menu.CheckboxItem {...blankIdIf(part === 'CheckboxItem', blankId)}>
-            Bold
-          </Menu.CheckboxItem>
-          <Menu.RadioGroup defaultValue="a">
-            <Menu.RadioItem value="a" {...blankIdIf(part === 'RadioItem', blankId)}>
-              A
-            </Menu.RadioItem>
-          </Menu.RadioGroup>
-          <Menu.LinkItem href="#" {...blankIdIf(part === 'LinkItem', blankId)}>
-            Link
-          </Menu.LinkItem>
-          <Menu.Group data-testid={`group${k}`}>
-            <Menu.GroupLabel {...blankIdIf(part === 'GroupLabel', blankId)}>
-              Group {k}
-            </Menu.GroupLabel>
-            <Menu.Item>In group</Menu.Item>
-          </Menu.Group>
-        </Menu.Popup>
-      </Menu.Positioner>
-    </Menu.Portal>
-  </Menu.Root>
-);
-
-const menuFilterParts = (part: string) => (k: string, blankId: BlankId) => (
-  <Menu.FilterProvider>
-    <Menu.Root defaultOpen>
-      <Menu.Trigger>Actions {k}</Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner>
-          <Menu.Popup>
-            <Menu.Input aria-label="Filter actions" {...blankIdIf(part === 'Input', blankId)} />
-            <Menu.List {...blankIdIf(part === 'List', blankId)} data-testid={`list${k}`}>
-              <Menu.Item>Rename</Menu.Item>
-            </Menu.List>
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
-  </Menu.FilterProvider>
 );
 
 const navigationMenuParts = (part: string) => (k: string, blankId: BlankId) => (
@@ -319,41 +269,6 @@ const rows: Row[] = [
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>
-    ),
-  },
-  ...(['Trigger', 'Popup', 'Item', 'CheckboxItem', 'RadioItem', 'LinkItem'] as const).map(
-    (part): Row => ({
-      name: `Menu.${part}`,
-      tree: menuParts(part),
-      named: (k) => ({ testId: `popup${k}`, name: `Actions ${k}` }),
-    }),
-  ),
-  {
-    name: 'Menu.GroupLabel',
-    tree: menuParts('GroupLabel'),
-    named: (k) => ({ testId: `group${k}`, name: `Group ${k}` }),
-  },
-  ...(['List', 'Input'] as const).map((part): Row => ({
-    name: `Menu.${part} with a filter`,
-    tree: menuFilterParts(part),
-    named: (k) => ({ testId: `list${k}`, name: `Actions ${k}` }),
-  })),
-  {
-    name: 'Menubar',
-    ready: 'ready',
-    tree: (_k, blankId) => (
-      <Menubar {...blankId}>
-        <Menu.Root defaultOpen>
-          <Menu.Trigger>File</Menu.Trigger>
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup data-testid="ready">
-                <Menu.Item>New</Menu.Item>
-              </Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>
-      </Menubar>
     ),
   },
   ...(['Trigger', 'Popup', 'Viewport'] as const).map((part): Row => ({

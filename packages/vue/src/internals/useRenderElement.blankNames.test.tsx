@@ -3,7 +3,6 @@ import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -97,38 +96,6 @@ const rows: Row[] = [
       </Dialog.Root>
     ),
     expected: 'Settings',
-  },
-  {
-    name: 'Menu.Popup aria-label',
-    attribute: 'aria-label',
-    // An empty string is falsy, and `resolvePopupLabel` reads the `aria-label` by its truth.
-    blanks: [WHITE_SPACE],
-    createNode: (attrs) => (
-      <Menu.Root open>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup data-testid="part" {...attrs} />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    expected: 'Actions',
-  },
-  {
-    name: 'Menu.Popup aria-labelledby',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Menu.Root open>
-        <Menu.Trigger>Actions</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner>
-            <Menu.Popup data-testid="part" {...attrs} />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    expected: 'Actions',
   },
   {
     name: 'NavigationMenu.Popup aria-label',

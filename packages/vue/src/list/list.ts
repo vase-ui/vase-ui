@@ -244,7 +244,7 @@ export function useListItem(
     { flush: 'post', immediate: true },
   );
   const highlighted = computed(() => !!element.value && list.highlighted?.element === element.value);
-  const options = optionsOfLists.get(list) ?? {};
+  const options: Partial<ListOptions> = optionsOfLists.get(list) ?? {};
   const hovers = () => options.hover?.() ?? true;
 
   const attributes = computed<Record<string, unknown>>(() => ({

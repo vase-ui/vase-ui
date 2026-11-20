@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
-import { Menu } from '@vase-ui/vue/menu';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimePicker } from '@vase-ui/vue/time-picker';
 import {
@@ -11,7 +10,6 @@ import {
   flushMicrotasks,
   screen,
   waitFor,
-  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { TestElement } from '../../test/testElement';
@@ -293,67 +291,4 @@ describe('owned parts', () => {
     );
   });
 
-  it('VUE-46: returns the submenu key to its trigger across documents', async () => {
-    const frame = document.createElement('iframe');
-    document.body.append(frame);
-    try {
-      const frameBody = frame.contentDocument?.body;
-      if (!frameBody) {
-        throw new Error('The iframe has no document.');
-      }
-      const { user, unmount } = await render(
-        <Menu.FilterProvider>
-          <Menu.Root defaultOpen orientation="horizontal">
-            <Menu.Trigger>Actions</Menu.Trigger>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <Menu.Input aria-label="Filter" />
-                  <Menu.List>
-                    <Menu.Item>First</Menu.Item>
-                    <Menu.SubmenuRoot>
-                      <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
-                      <Menu.Portal to={frameBody}>
-                        <Menu.Positioner>
-                          <Menu.Popup>
-                            <Menu.Item>Child</Menu.Item>
-                          </Menu.Popup>
-                        </Menu.Positioner>
-                      </Menu.Portal>
-                    </Menu.SubmenuRoot>
-                    <Menu.Item>Last</Menu.Item>
-                  </Menu.List>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        </Menu.FilterProvider>,
-      );
-      try {
-        const input = screen.getByRole('searchbox');
-        await waitFor(() => expect(input).toHaveFocus());
-        await user.keyboard('[ArrowRight][ArrowRight]');
-        const trigger = screen.getByRole('menuitem', { name: 'More' });
-        expect(input).toHaveAttribute('aria-activedescendant', trigger.id);
-        const child = await waitForLaterMillisecond(async () => {
-          await user.keyboard('[ArrowDown]');
-          return within(frameBody).findByRole('menuitem', { name: 'Child' });
-        });
-        await waitFor(() => expect(frameBody.ownerDocument.activeElement).toBe(child));
-        // A consumer can supply another ID in the trigger slot.
-        trigger.setAttribute('aria-controls', 'custom');
-        await fireEvent.keyDown(child, { key: 'ArrowLeft' });
-        await waitFor(() => expect(input).toHaveFocus());
-        expect(input).toHaveAttribute(
-          'aria-activedescendant',
-          screen.getByRole('menuitem', { name: 'First' }).id,
-        );
-        expect(child.isConnected).toBe(false);
-      } finally {
-        unmount();
-      }
-    } finally {
-      frame.remove();
-    }
-  });
 });

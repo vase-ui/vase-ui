@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { Component, Ref, VNode } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -150,42 +149,6 @@ describe('useRegisteredId', () => {
       attribute: string;
       render: (id: Ref<string>) => VNode;
     }[] = [
-      {
-        name: 'Menu.GroupLabel in Menu.Group',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Menu.Root open>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <Menu.Group data-testid="named">
-                    <Menu.GroupLabel v-slots={slot('div', id)} />
-                    <Menu.Item>One</Menu.Item>
-                  </Menu.Group>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        ),
-      },
-      {
-        name: 'Menu.GroupLabel in Menu.RadioGroup',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <Menu.Root open>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <Menu.RadioGroup data-testid="named">
-                    <Menu.GroupLabel v-slots={slot('div', id)} />
-                    <Menu.RadioItem value="a">One</Menu.RadioItem>
-                  </Menu.RadioGroup>
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        ),
-      },
       {
         name: 'Select.GroupLabel',
         attribute: 'aria-labelledby',

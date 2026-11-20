@@ -4,16 +4,17 @@ import * as Combobox from '../combobox/index.parts';
 import * as DatePicker from '../date-picker/index.parts';
 import * as DateRangePicker from '../date-range-picker/index.parts';
 import * as Dialog from '../dialog/index.parts';
-import * as Menu from '../menu/index.parts';
+import * as Menu from '../menu/parts';
+import * as Select from '../select/index.parts';
 import * as TimePicker from '../time-picker/index.parts';
 </script>
 
 <template>
-  <Menu.GroupLabel :aria-hidden="null" />
+  <Select.GroupLabel :aria-hidden="null" />
   <Dialog.Popup :aria-describedby="null" />
   <Dialog.Popup :aria-describedby="undefined" />
   <!-- @vue-expect-error `aria-hidden` is a Boolean -->
-  <Menu.GroupLabel :aria-hidden="5" />
+  <Select.GroupLabel :aria-hidden="5" />
 
   <Combobox.Input :autocomplete="null" />
   <Menu.Input :autocomplete="null" />

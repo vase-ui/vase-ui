@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, type Component } from 'vue';
 import { AlertDialog } from '../alert-dialog';
 import { Dialog } from '../dialog';
 import { DatePicker } from '../date-picker';
-import { Menubar } from '../menubar';
+import { TimePicker } from '../time-picker';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
 import { isCastToFalseWhenAbsent } from './callerProps';
@@ -28,10 +28,10 @@ function message(wrapper: string, part: string, prop: string) {
 // A wrapper that forwards its props with `useForwardProps`.
 const WrapperForward = defineComponent({
   name: 'WrapperForward',
-  props: { modal: Boolean, loopFocus: Boolean },
+  props: { open: Boolean, closeOnSelect: Boolean },
   setup(props, { slots }) {
     const forwarded = useForwardProps(props);
-    return () => <Menubar {...forwarded.value}>{slots.default?.()}</Menubar>;
+    return () => <TimePicker.Root {...forwarded.value}>{slots.default?.()}</TimePicker.Root>;
   },
 });
 
@@ -41,19 +41,19 @@ describe('useCastBooleanWarning', () => {
   it('VUE-126: warns for a wrapper that casts an absent Boolean prop', async () => {
     await render(() => <WrapperCast>Content</WrapperCast>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperCast.test', 'Menubar', 'modal'),
-      message('WrapperCast.test', 'Menubar', 'loopFocus'),
+      message('WrapperCast.test', 'TimePicker.Root', 'open'),
+      message('WrapperCast.test', 'TimePicker.Root', 'closeOnSelect'),
     ]);
     await render(() => <WrapperBindProps>Content</WrapperBindProps>);
     expect(takeReportedMessages()).toEqual([
-      message('WrapperBindProps.test', 'Menubar', 'modal'),
-      message('WrapperBindProps.test', 'Menubar', 'loopFocus'),
+      message('WrapperBindProps.test', 'TimePicker.Root', 'open'),
+      message('WrapperBindProps.test', 'TimePicker.Root', 'closeOnSelect'),
     ]);
   });
 
   it('gives no warning when the caller sets false', async () => {
     await render(() => (
-      <WrapperCast modal={false} loopFocus={false}>
+      <WrapperCast open={false} closeOnSelect={false}>
         Content
       </WrapperCast>
     ));
@@ -61,7 +61,7 @@ describe('useCastBooleanWarning', () => {
   });
 
   it('gives no warning for a caller value in kebab case', async () => {
-    await render(() => h(WrapperCast, { modal: false, 'loop-focus': false }));
+    await render(() => h(WrapperCast, { open: false, 'close-on-select': false }));
     expect(takeReportedMessages()).toEqual([]);
   });
 
@@ -83,7 +83,7 @@ describe('useCastBooleanWarning', () => {
 
   it('gives no warning for an undefined binding', async () => {
     const { container } = await render(() => (
-      <WrapperCast modal={undefined} loopFocus={undefined}>
+      <WrapperCast open={undefined} closeOnSelect={undefined}>
         Kept content
       </WrapperCast>
     ));
@@ -95,18 +95,18 @@ describe('useCastBooleanWarning', () => {
     await render(() => (
       <>
         {[1, 2, 3].map((key) => (
-          <WrapperCast key={key} loopFocus={false}>
+          <WrapperCast key={key} closeOnSelect={false}>
             Content
           </WrapperCast>
         ))}
       </>
     ));
-    expect(takeReportedMessages()).toEqual([message('WrapperCast.test', 'Menubar', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('WrapperCast.test', 'TimePicker.Root', 'open')]);
   });
 
   it('names the outer wrapper of two', async () => {
     await render(() => <WrapperOuter>Content</WrapperOuter>);
-    expect(takeReportedMessages()).toEqual([message('WrapperOuter.test', 'Menubar', 'modal')]);
+    expect(takeReportedMessages()).toEqual([message('WrapperOuter.test', 'TimePicker.Root', 'open')]);
   });
 
   it('finds the wrapper when the part is in the slot of another part', async () => {
@@ -120,21 +120,21 @@ describe('useCastBooleanWarning', () => {
     await render(() => <SlotHostUser />);
     await render(() => (
       <SlotHost>
-        <Menubar modal={false}>Content</Menubar>
+        <TimePicker.Root open={false}>Content</TimePicker.Root>
       </SlotHost>
     ));
-    await render(() => <SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
+    await render(() => <SlotHost>{{ default: () => <TimePicker.Root open={false} /> }}</SlotHost>);
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a vnode that no render made', async () => {
-    await render(<SlotHost>{{ default: () => <Menubar modal={false} /> }}</SlotHost>);
-    await render(h(SlotHost, null, () => h(Menubar, { modal: false })));
+    await render(<SlotHost>{{ default: () => <TimePicker.Root open={false} /> }}</SlotHost>);
+    await render(h(SlotHost, null, () => h(TimePicker.Root as Component, { open: false })));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for array children', async () => {
-    await render(() => h(SlotHost, null, [h(Menubar, { modal: false })]));
+    await render(() => h(SlotHost, null, [h(TimePicker.Root as Component, { open: false })]));
     // Vue reports the array slot itself, independently of the Boolean check.
     expect(takeReportedMessages()).toEqual([
       expect.stringContaining('Non-function value encountered for default slot.'),

@@ -38,18 +38,17 @@ check(new Dialog.Handle<Payload>());
 const drawer: Drawer.Handle<Payload> = Drawer.createHandle<Payload>();
 check(drawer);
 check(new Drawer.Handle<Payload>());
-const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
-check(menu);
-check(new Menu.Handle<Payload>());
-// A Popover handle has no store.
-const popovers: Popover.Handle<Payload>[] = [
+// A Menu handle and a Popover handle have no store.
+const storeless: (Menu.Handle<Payload> | Popover.Handle<Payload>)[] = [
+  Menu.createHandle<Payload>(),
+  new Menu.Handle<Payload>(),
   Popover.createHandle<Payload>(),
   new Popover.Handle<Payload>(),
 ];
-for (const popover of popovers) {
-  const open: boolean = popover.isOpen;
-  if (open) popover.close();
-  else popover.open('second');
+for (const handle of storeless) {
+  const open: boolean = handle.isOpen;
+  if (open) handle.close();
+  else handle.open('second');
 }
 const previewCard: PreviewCard.Handle<Payload> = PreviewCard.createHandle<Payload>();
 check(previewCard);

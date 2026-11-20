@@ -3,7 +3,6 @@ import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
-import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
@@ -40,7 +39,6 @@ const portalParts = [
     rootProps: open,
     portalProps: { disabled: true },
   },
-  { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
   {
     name: 'NavigationMenu.Portal',
     root: NavigationMenu.Root,

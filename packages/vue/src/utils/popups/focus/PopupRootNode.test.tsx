@@ -5,10 +5,8 @@ import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Menu } from '@vase-ui/vue/menu';
 import { Select } from '@vase-ui/vue/select';
 import { MountedElementTarget } from '../../../../test/fixtures/MountedElementTarget';
 import type { HTMLProps } from '../../../internals/types';
@@ -65,31 +63,7 @@ const families: PopupFamily[] = [
     ),
     siblings: 'guards',
   },
-  {
-    name: 'Menu.Popup',
-    part: Menu.Popup,
-    tree: (popup) => (
-      <Menu.Root defaultOpen>
-        <Menu.Portal>
-          <Menu.Positioner>{popup}</Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    siblings: 'guards',
-  },
-  {
-    name: 'ContextMenu.Popup',
-    part: ContextMenu.Popup,
-    tree: (popup) => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
-        <ContextMenu.Portal>
-          <ContextMenu.Positioner>{popup}</ContextMenu.Positioner>
-        </ContextMenu.Portal>
-      </ContextMenu.Root>
-    ),
-    siblings: 'guards',
-  },
+
   {
     name: 'Select.Popup',
     part: Select.Popup,

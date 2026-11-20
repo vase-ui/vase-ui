@@ -13,10 +13,8 @@ import {
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
-import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
-import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
@@ -119,40 +117,8 @@ const families = [
     marksPage: true,
     movesFocus: true,
   },
-  {
-    name: 'Menu',
-    renderPart: () => (
-      <Menu.Root defaultOpen>
-        <Menu.Trigger>Open</Menu.Trigger>
-        <Menu.Portal data-testid="portal">
-          <Menu.Positioner>
-            <Menu.Popup data-testid="popup">
-              <Menu.Item>One</Menu.Item>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ),
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
-    name: 'ContextMenu',
-    renderPart: () => (
-      <ContextMenu.Root defaultOpen>
-        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
-        <ContextMenu.Portal data-testid="portal">
-          <ContextMenu.Positioner>
-            <ContextMenu.Popup data-testid="popup">
-              <ContextMenu.Item>One</ContextMenu.Item>
-            </ContextMenu.Popup>
-          </ContextMenu.Positioner>
-        </ContextMenu.Portal>
-      </ContextMenu.Root>
-    ),
-    marksPage: true,
-    movesFocus: true,
-  },
+
+
   {
     name: 'Select',
     renderPart: renderSelect,

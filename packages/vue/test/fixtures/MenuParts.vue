@@ -43,6 +43,7 @@ defineProps({
   /** A second submenu after the first one. */
   sibling: Object as PropType<{ trigger?: Props; items?: Item[] }>,
 });
+const defaultItems = (prefix: string): Item[] => [{ key: `${prefix}1` }, { key: `${prefix}2` }];
 const rootPart = useTemplateRef('rootPart');
 const popupPart = useTemplateRef('popupPart');
 const triggerPart = useTemplateRef('triggerPart');
@@ -94,7 +95,7 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
                 <Menu.Positioner data-testid="sub-positioner" v-bind="submenu.positioner">
                   <Menu.Popup data-testid="sub-popup" v-bind="submenu.popup">
                     <Menu.Item
-                      v-for="item in submenu.items ?? [{ key: 's1' }, { key: 's2' }]"
+                      v-for="item in submenu.items ?? defaultItems('s')"
                       :key="item.key"
                       :data-key="item.key"
                       v-bind="item.attrs"
@@ -109,7 +110,7 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
                         <Menu.Positioner>
                           <Menu.Popup data-testid="deep-popup">
                             <Menu.Item
-                              v-for="item in submenu.nested.items ?? [{ key: 'd1' }, { key: 'd2' }]"
+                              v-for="item in submenu.nested.items ?? defaultItems('d')"
                               :key="item.key"
                               :data-key="item.key"
                               v-bind="item.attrs"
