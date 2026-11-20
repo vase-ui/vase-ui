@@ -4,6 +4,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/backdrop/DrawerBackdrop.tsx#L43-L49",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/popup/DrawerPopup.tsx#L383-L386"
   ],
-  "behavior": "The drawer popup and backdrop use the same strength for a swipe release. A replacement popup clears the release. Base UI gives the backdrop a fixed strength of one.",
+  "behavior": "At the release of a swipe that closes the drawer, the backdrop gets the strength of the popup in `--drawer-swipe-strength`, so the two leave in the same time. Base UI gives the backdrop a fixed strength of one.",
   "dueWith": "packages/react/src/drawer/backdrop/DrawerBackdrop.tsx"
 }

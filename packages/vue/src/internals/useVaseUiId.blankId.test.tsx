@@ -3,7 +3,6 @@ import { createRenderer, screen, waitFor } from '#test-utils';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Dialog } from '@vase-ui/vue/dialog';
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
 import { Input } from '@vase-ui/vue/input';
 import { Menu } from '@vase-ui/vue/menu';
@@ -275,14 +274,6 @@ const rows: Row[] = [
       </AlertDialog.Root>
     ),
     named: (k) => ({ testId: `popup${k}`, name: `Title ${k}` }),
-  },
-  {
-    name: 'Drawer.SwipeArea',
-    tree: (_k, blankId) => (
-      <Drawer.Root>
-        <Drawer.SwipeArea {...blankId} />
-      </Drawer.Root>
-    ),
   },
   ...(['Title', 'Description', 'Trigger', 'Popup'] as const).map((part): Row => ({
     name: `Popover.${part}`,

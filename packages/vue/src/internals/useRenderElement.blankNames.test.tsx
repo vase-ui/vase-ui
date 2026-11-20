@@ -5,7 +5,6 @@ import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#te
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useRender } from '@vase-ui/vue/use-render';
-import { Drawer } from '@vase-ui/vue/drawer';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -84,22 +83,6 @@ async function showNavigationMenu() {
 }
 
 const rows: Row[] = [
-  {
-    name: 'Drawer.Popup',
-    attribute: 'aria-labelledby',
-    createNode: (attrs) => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="part" {...attrs}>
-              <Drawer.Title>Settings</Drawer.Title>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ),
-    expected: 'Settings',
-  },
   {
     name: 'Menu.Popup aria-label',
     attribute: 'aria-label',

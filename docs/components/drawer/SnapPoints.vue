@@ -11,7 +11,9 @@ const snapPoint = shallowRef<Drawer.Root.SnapPoint | null>(snapPoints[0]);
     <Drawer.Trigger>Open</Drawer.Trigger>
     <Drawer.Portal>
       <Drawer.Viewport>
-        <Drawer.Popup>Drawer</Drawer.Popup>
+        <Transition name="sheet" appear>
+          <Drawer.Popup>Drawer</Drawer.Popup>
+        </Transition>
       </Drawer.Viewport>
     </Drawer.Portal>
   </Drawer.Root>

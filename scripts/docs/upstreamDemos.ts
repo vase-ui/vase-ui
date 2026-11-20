@@ -44,6 +44,7 @@ const RESTYLED_FAMILIES = new Set([
   'checkbox-group',
   'collapsible',
   'dialog',
+  'drawer',
   'field',
   'fieldset',
   'form',

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { Drawer } from '@vase-ui/vue/drawer';
+import { Menu } from '@vase-ui/vue/menu';
 
 declare function save(): Promise<void>;
 
 const open = shallowRef(false);
 
 // #region listener
-async function handleOpenChange(nextOpen: boolean, details: Drawer.Root.ChangeEventDetails) {
+async function handleOpenChange(nextOpen: boolean, details: Menu.Root.ChangeEventDetails) {
   if (nextOpen) {
     open.value = true;
     return;
@@ -20,7 +20,7 @@ async function handleOpenChange(nextOpen: boolean, details: Drawer.Root.ChangeEv
 </script>
 
 <template>
-  <Drawer.Root :open="open" @open-change="handleOpenChange">
+  <Menu.Root :open="open" @open-change="handleOpenChange">
     <!-- ... -->
-  </Drawer.Root>
+  </Menu.Root>
 </template>

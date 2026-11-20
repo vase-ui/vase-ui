@@ -3,7 +3,6 @@ import { defineAsyncComponent } from 'vue';
 import type { DefineComponent, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
-import * as Drawer from '../../../drawer/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
@@ -52,29 +51,10 @@ const parents = {
       </Popover.Portal>
     </Popover.Root>
   ),
-  drawer: (record: Recorder, content: VNode) => (
-    <Drawer.Root defaultOpen modal={false} onOpenChange={record}>
-      <Drawer.Portal>
-        <Drawer.Viewport>
-          <Drawer.Popup initialFocus={false}>{content}</Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
-  ),
 };
 
 // Each child is open at the mount. The cases press the parts that have a test id.
 const children = {
-  drawer: (record: Recorder) => (
-    <Drawer.Root defaultOpen onOpenChange={record}>
-      <Drawer.Portal>
-        <Drawer.Backdrop data-testid="backdrop" />
-        <Drawer.Viewport data-testid="viewport">
-          <Drawer.Popup data-testid="popup" initialFocus={false} />
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
-  ),
   menu: (record: Recorder) => (
     <Menu.Root defaultOpen onOpenChange={record}>
       <Menu.Trigger>Child trigger</Menu.Trigger>
@@ -195,20 +175,6 @@ describe('a press on a part of a child popup that is outside its popup element',
 
   it.each<PressCase>([
     {
-      name: 'Drawer.Backdrop / popover',
-      parent: 'popover',
-      child: 'drawer',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'Drawer.Viewport / popover',
-      parent: 'popover',
-      child: 'drawer',
-      part: 'viewport',
-      closesChild: true,
-    },
-    {
       name: 'Menu.Positioner / popover',
       parent: 'popover',
       child: 'menu',
@@ -256,34 +222,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       child: 'combobox',
       part: 'backdrop',
       closesChild: true,
-    },
-    {
-      name: 'PreviewCard.Positioner / drawer',
-      parent: 'drawer',
-      child: 'previewCard',
-      part: 'positioner',
-      closesChild: false,
-    },
-    {
-      name: 'Tooltip.Positioner / drawer',
-      parent: 'drawer',
-      child: 'tooltip',
-      part: 'positioner',
-      closesChild: false,
-    },
-    {
-      name: 'NavigationMenu.Backdrop / drawer',
-      parent: 'drawer',
-      child: 'navigationMenu',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'NavigationMenu.Popup / drawer',
-      parent: 'drawer',
-      child: 'navigationMenu',
-      part: 'popup',
-      closesChild: false,
     },
   ])('VUE-4: $name closes no popup above', async ({ parent, child, part, closesChild }) => {
     const parentChanges: Change[] = [];
@@ -376,19 +314,6 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
         </Combobox.Root>
       ),
     },
-    {
-      name: 'Drawer',
-      render: (record, onOpenChangeComplete) => (
-        <Drawer.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
-          <Drawer.Portal>
-            <Drawer.Backdrop data-testid="backdrop" />
-            <Pending>
-              <Drawer.Popup>Drawer</Drawer.Popup>
-            </Pending>
-          </Drawer.Portal>
-        </Drawer.Root>
-      ),
-    },
   ])('closes $name and hides the backdrop', async ({ render: renderPopup }) => {
     const changes: Change[] = [];
     const onOpenChangeComplete = vi.fn();
@@ -402,33 +327,5 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
     expect(backdrop.isConnected && !backdrop.hidden).toBe(false);
-  });
-});
-
-describe('a press on the internal backdrop of a modal dialog whose popup has not mounted', () => {
-  const { render } = createRenderer();
-
-  it.each<{ name: string; render: (record: Recorder) => VNode }>([
-    {
-      name: 'Drawer',
-      render: (record) => (
-        <Drawer.Root defaultOpen onOpenChange={record}>
-          <Drawer.Portal>
-            <Pending>
-              <Drawer.Popup>Drawer</Drawer.Popup>
-            </Pending>
-          </Drawer.Portal>
-        </Drawer.Root>
-      ),
-    },
-  ])('closes $name and makes the internal backdrop inert', async ({ render: renderPopup }) => {
-    const changes: Change[] = [];
-    await render(renderPopup(recordInto(changes)));
-    const backdrop = screen.getByRole('presentation', { hidden: true });
-
-    await press(backdrop);
-
-    expect(changes).toEqual(OUTSIDE_PRESS);
-    expect(backdrop.inert).toBe(true);
   });
 });

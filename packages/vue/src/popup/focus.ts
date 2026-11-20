@@ -103,6 +103,13 @@ export function usePopupFocus(
   let before: Element | null = null;
   let took = false;
 
+  // A trigger that takes no focus, such as the swipe area of a drawer, gives its place to the
+  // element that had the focus before the open.
+  function focusableTrigger() {
+    const trigger = root.activeTrigger;
+    return trigger?.matches(CANDIDATES) ? (trigger as HTMLElement) : null;
+  }
+
   watch(
     () => root.open,
     (open) => {
@@ -156,7 +163,7 @@ export function usePopupFocus(
     // that closes is no target, also while the popup leaves.
     const element = [
       target === true ? null : tabStopOf(target, popup),
-      root.activeTrigger as HTMLElement | null,
+      focusableTrigger(),
       before as HTMLElement | null,
     ].find((each) => each?.isConnected && !popup.contains(each));
     const keyboard = root.closeInteraction === 'keyboard';
@@ -194,7 +201,7 @@ export function usePopupFocus(
       } else if (layer.trap) {
         focus(place === 'before' ? last : first);
       } else if (place === 'before') {
-        focus((root.activeTrigger ?? before) as HTMLElement | null);
+        focus(focusableTrigger() ?? (before as HTMLElement | null));
       } else {
         // With no trigger, the element that had the focus before the open has its place. With
         // neither, the next Tab goes on in the order of the document.

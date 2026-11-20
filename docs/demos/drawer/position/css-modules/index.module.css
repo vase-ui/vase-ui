@@ -25,7 +25,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -34,7 +34,7 @@
     }
   }
 
-  &:active:not([data-disabled]) {
+  &:active:not(:disabled) {
     background-color: oklch(92.2% 0 0deg);
 
     @media (prefers-color-scheme: dark) {
@@ -42,7 +42,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 
@@ -82,8 +82,7 @@
     --backdrop-opacity: 0.7;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.BackdropHidden {
     opacity: 0;
   }
 
@@ -91,7 +90,7 @@
     transition-duration: 0ms;
   }
 
-  &[data-ending-style] {
+  &.BackdropLeaving {
     transition-duration: calc(var(--drawer-swipe-strength) * 400ms);
   }
 }
@@ -134,12 +133,11 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
+  &.PopupHidden {
     transform: translateY(calc(100% - var(--bleed) + 2px));
   }
 
-  &[data-ending-style] {
+  &.PopupLeaving {
     transition-duration: calc(var(--drawer-swipe-strength) * 400ms);
   }
 }

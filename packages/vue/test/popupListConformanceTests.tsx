@@ -3,7 +3,7 @@ import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it } from 'vitest';
 import { screen } from './queries';
 import { waitFor } from './waitFor';
-import * as Drawer from '../src/drawer/index.parts';
+import * as Dialog from '../src/dialog/parts';
 import { platform } from '../src/common/platform';
 import { isJSDOM } from '../src/common/testUtils';
 import { waitForLaterMillisecond } from './createRenderer';
@@ -1090,13 +1090,11 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('closes only itself on Escape inside a dialog', async () => {
         const { user } = await renderList({
           wrap: (node) => (
-            <Drawer.Root defaultOpen>
-              <Drawer.Portal>
-                <Drawer.Viewport>
-                  <Drawer.Popup data-testid="dialog">{node}</Drawer.Popup>
-                </Drawer.Viewport>
-              </Drawer.Portal>
-            </Drawer.Root>
+            <Dialog.Root defaultOpen>
+              <Dialog.Portal>
+                <Dialog.Popup data-testid="dialog">{node}</Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
           ),
         });
         await openWithKeyboard(user);

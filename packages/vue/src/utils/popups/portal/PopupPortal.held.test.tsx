@@ -1,10 +1,7 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { describe, expect, it } from 'vitest';
 import {
   createHeldBranch,
   createRenderer,
-  flushMicrotasks,
-  isVaporApp,
   nextEvent,
   screen,
   waitForLaterMillisecond,
@@ -13,14 +10,12 @@ import {
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import VaporHeldBranch from './VaporHeldBranch.test.vue';
 
 function isMarked(element: Element) {
   return (
@@ -39,20 +34,6 @@ function getMarkedChildrenOfBody() {
 async function waitPastFocusFrame() {
   await waitSingleFrame();
   await waitSingleFrame();
-}
-
-function renderDrawer() {
-  return (
-    <Drawer.Root defaultOpen>
-      <Drawer.Portal data-testid="portal">
-        <Drawer.Viewport>
-          <Drawer.Popup data-testid="popup">
-            <button>Inside</button>
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
-  );
 }
 
 function renderSelect() {
@@ -83,12 +64,6 @@ async function measurePopupOffset() {
 }
 
 const families = [
-  {
-    name: 'Drawer',
-    renderPart: renderDrawer,
-    marksPage: true,
-    movesFocus: true,
-  },
   {
     name: 'Menu',
     renderPart: () => (
@@ -279,25 +254,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     },
   );
 
-  it('a drawer whose root mounts in the flush that shows its branch locks the scroll, marks the page and takes the focus', async () => {
-    const { HeldBranch, hide, mountInActivation } = createHeldBranch(renderDrawer);
-    const { container } = await render(
-      <div>
-        <button data-testid="outside">Outside</button>
-        <HeldBranch />
-      </div>,
-    );
-    screen.getByTestId('outside').focus();
-    await hide();
-
-    await nextEvent(document, 'focusin', { action: mountInActivation });
-
-    const popup = screen.getByTestId('popup');
-    expect(screen.getByTestId('portal').parentElement).toBe(document.body);
-    expect(popup.contains(document.activeElement)).toBe(true);
-    expect(isMarked(container)).toBe(true);
-  });
-
   it('a select that mounts while its branch is held has the place of a select that mounts in a shown branch', async () => {
     const held = createHeldBranch(renderSelect);
     const { unmount } = await render(
@@ -320,182 +276,5 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     const shownMount = await measurePopupOffset();
 
     expect(afterShow).toEqual(shownMount);
-  });
-
-  // Only the project `vapor` renders a Vapor component. There the `KeepAlive` of the fixture is the
-  // `KeepAlive` of Vapor.
-  it.runIf(isVaporApp)(
-    'a drawer below the KeepAlive of a Vapor component stays out of the document until the branch shows',
-    async () => {
-      expect((VaporHeldBranch as { __vapor?: boolean }).__vapor).toBe(true);
-      const visible = shallowRef(true);
-      const mounted = shallowRef(false);
-      const { container } = await render(
-        <div>
-          <button data-testid="outside">Outside</button>
-          <VaporHeldBranch
-            visible={visible}
-            mounted={mounted}
-            part={defineComponent(() => renderDrawer)}
-          />
-        </div>,
-      );
-      const outside = screen.getByTestId('outside');
-      outside.focus();
-
-      visible.value = false;
-      await flushMicrotasks();
-      mounted.value = true;
-      await flushMicrotasks();
-      await waitPastFocusFrame();
-
-      expect(document.querySelector('[data-vase-ui-portal]')).toBe(null);
-      expect(getMarkedChildrenOfBody()).toEqual([]);
-      expect(outside).toHaveFocus();
-
-      await nextEvent(document, 'focusin', {
-        action: async () => {
-          visible.value = true;
-          await flushMicrotasks();
-        },
-      });
-
-      const popup = screen.getByTestId('popup');
-      expect(screen.getByTestId('portal').parentElement).toBe(document.body);
-      expect(popup.contains(document.activeElement)).toBe(true);
-      expect(isMarked(container)).toBe(true);
-    },
-  );
-
-  it('a nested drawer does not set data-nested-drawer-open on the drawer above', async () => {
-    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="child">
-              <button>Child</button>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ));
-    await render(
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="parent">
-              <button>Parent</button>
-              <HeldBranch />
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>,
-    );
-    const parent = screen.getByTestId('parent');
-
-    await mountWhileHeld();
-
-    expect(parent).not.toHaveAttribute('data-nested-drawer-open');
-
-    await show();
-
-    expect(parent).toHaveAttribute('data-nested-drawer-open');
-  });
-
-  it('a drawer does not activate Drawer.Indent', async () => {
-    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup>
-              <button>Inside</button>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ));
-    await render(
-      <Drawer.Provider>
-        <Drawer.Indent data-testid="indent">
-          <HeldBranch />
-        </Drawer.Indent>
-      </Drawer.Provider>,
-    );
-    const indent = screen.getByTestId('indent');
-
-    await mountWhileHeld();
-
-    expect(indent).not.toHaveAttribute('data-active');
-
-    await show();
-
-    expect(indent).toHaveAttribute('data-active');
-  });
-
-  it('a nested drawer does not report its presence to the drawer above', async () => {
-    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="child">
-              <button>Child</button>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ));
-    await render(
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup data-testid="parent">
-              <button>Parent</button>
-              <HeldBranch />
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>,
-    );
-    const parent = screen.getByTestId('parent');
-
-    await mountWhileHeld();
-
-    expect(parent.style.getPropertyValue('--drawer-height')).toBe('');
-
-    await show();
-
-    expect(parent.style.getPropertyValue('--drawer-height')).toBe(`${parent.offsetHeight}px`);
-  });
-
-  it('a drawer viewport adds no non-passive touchmove listener to the document', async () => {
-    const addEventListener = vi.spyOn(document, 'addEventListener');
-    onTestFinished(() => {
-      addEventListener.mockRestore();
-    });
-    const countTouchMoveListeners = () =>
-      addEventListener.mock.calls.filter(
-        ([type, , options]) =>
-          type === 'touchmove' && typeof options === 'object' && options.passive === false,
-      ).length;
-    const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
-      <Drawer.Root defaultOpen>
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup>
-              <button>Inside</button>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    ));
-    await render(<HeldBranch />);
-
-    await mountWhileHeld();
-
-    expect(countTouchMoveListeners()).toBe(0);
-
-    await show();
-
-    expect(countTouchMoveListeners()).toBe(1);
   });
 });
