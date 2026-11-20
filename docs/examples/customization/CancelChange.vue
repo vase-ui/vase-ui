@@ -3,7 +3,6 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
 
 function onOpenChange(_open: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) {
   if (eventDetails.reason === 'trigger-press') {
-    // Stop the open change (false) from happening.
     eventDetails.cancel();
   }
 }

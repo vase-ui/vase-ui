@@ -7,9 +7,9 @@ description: A guide to customizing the behavior of Vase UI components.
 
 A guide to customizing the behavior of Vase UI components.
 
-## Vase UI events
+## Events
 
-The change events `openChange`, `valueChange` and `pressedChange` are custom to Vase UI. They are emits. In a template, write them as `@open-change`, `@value-change` and `@pressed-change`. A DOM event, or a change in the part itself, can emit them.
+A part emits a change event when the user changes its state, such as `openChange`, `valueChange` or `pressedChange`. In a template, write `@open-change`, `@value-change` or `@pressed-change`. The last argument is the details of the change:
 
 ```ts
 openChange: (open, eventDetails) => void
@@ -17,71 +17,77 @@ valueChange: (value, eventDetails) => void
 pressedChange: (pressed, eventDetails) => void
 ```
 
-The part passes `eventDetails` as the second argument to a change listener. It lets you customize the event. It also lets you run a side effect only for the reason or the DOM event that caused the change.
-
-After the listener accepts a change, the part emits its model update with the new value. For example, `v-model:open` listens for `update:open`, and `v-model` listens for `update:modelValue`. Automatic tab selection always emits its update, even if the listener calls `cancel()`.
-
 ```ts
 interface ChangeEventDetails {
   reason: string;
   event: Event;
-  cancel: () => void;
+  cancel(): void;
   readonly isCanceled: boolean;
 }
 ```
 
-- `reason` tells why the change event occurred. Use it to run a side effect only for some reasons. An editor can show the possible string values after you type `reason === '`.
-- `event` is the native DOM event that caused the change. When no DOM event caused it, `event` is a plain `Event`.
-- `cancel` stops a cancelable change.
-- `isCanceled` shows whether the change event is canceled.
+- `reason` tells why the change occurred. An editor shows the possible values after you type `reason === '`.
+- `event` is the native event that caused the change.
+- `cancel()` stops the change.
+- `isCanceled` tells whether a listener stopped the change.
 
-`@vase-ui/vue/types` exports `ChangeEventDetails`, and `GenericEventDetails` with only `reason` and `event` for an event that a listener cannot cancel. A part that adds a member lists it on its page. A popup part adds these members:
+After the listeners, the part emits the update of its model, such as `update:open` or `update:modelValue`. It emits no update for a stopped change.
 
-- `allowPropagation` allows the DOM event to propagate where Vase UI stops the propagation.
-- `isPropagationAllowed` shows whether the DOM event is allowed to propagate.
-- `trigger` is the element that started the change, when there is one. When a popup closes for a reason that names no element, such as <kbd>Esc</kbd> or a press outside, `trigger` is the trigger that opened the popup, if it is still in the document.
+`@vase-ui/vue/types` exports `ChangeEventDetails`, and `GenericEventDetails` with only `reason` and `event`, for an event that a listener cannot stop. The details of a popup part have three more members:
 
-### Canceling a Vase UI event
+- `allowPropagation()` lets the native event propagate where the popup stops it.
+- `isPropagationAllowed` tells whether a listener called `allowPropagation()`.
+- `trigger` is the trigger that opens the popup. At a close, it is the active trigger, while that trigger is in the document.
 
-Call the `cancel()` method on `eventDetails` to cancel an event. This sample keeps a tooltip open when the user presses its trigger:
+### Cancel a change
 
-<<< ../examples/customization/CancelChange.vue{5-8}
+Call `cancel()` to stop a change. The part then stays as it is, so you need no state of your own. This tooltip stays open when the user presses its trigger:
 
-This lets you leave the part uncontrolled, because its internal state does not change. You do not need external state with a check on each update.
-
-When the part is controlled, `cancel()` is still the way to decline a change. A request that you do not apply to the `open` prop stays pending until the prop changes, so the part still reports a later close.
+<<< ../examples/customization/CancelChange.vue{5-7}
 
 Call `cancel()` before the listener returns. A call after an `await` has no effect.
 
-### Allowing propagation of the DOM event
+### Allow the propagation of the DOM event
 
-In a popup, the <kbd>Esc</kbd> key stops the propagation of the event, so that parent popups do not close at the same time. The `allowPropagation()` method changes this:
+A popup stops the propagation of the <kbd>Esc</kbd> key that closes it, so that a popup below it stays open. Call `allowPropagation()` to let the key event propagate:
 
 <<< ../examples/customization/AllowPropagation.vue{5-7}
 
 ## Stop a native event before a part gets it
 
-To stop a change of a part, [cancel the change event](#canceling-a-vase-ui-event) for its `reason`. To stop a native event that causes no change event, add a capture listener on the part and call `event.stopPropagation()`:
+To stop a change, [cancel it](#cancel-a-change). To stop a native event that causes no change, add a capture listener on the part, and call `event.stopPropagation()`:
 
 <<< ../examples/customization/StopEvent.vue{7}
 
-Your capture listener runs before the listeners of the part. After the call, no bubble listener gets the event. Two limits apply:
+Your capture listener runs before the listeners of the part, and no listener after it gets the event. Two limits apply:
 
-- No bubble listener above the part gets the event. This includes the listeners of your app and the <kbd>Esc</kbd> listener of a popup.
-- A capture listener on an element around the part, or on the document, runs before your listener. The call does not stop it. A popup has such listeners for a press outside. To stop that close, call `cancel()` on the change event.
+- No listener above the part gets the event. This includes the listeners of your app and the <kbd>Esc</kbd> listener of a popup.
+- A capture listener on an element around the part, or on the document, runs before yours, and the call does not stop it. A popup closes at a press outside it with such a listener. To stop that close, call `cancel()` on the change event.
 
-## Controlling components with state
+## Control a component with v-model
 
-You can control a part with your own state.
-
-Parts are uncontrolled by default. They manage their own state internally.
+A part owns its state, unless you bind it. This dialog owns its open state:
 
 <<< ../examples/customization/Uncontrolled.vue
 
-Bind the value of a part with `v-model`. In a render function, pass `modelValue` and listen for `update:modelValue`. Bind independent state by name, such as `v-model:open` or `v-model:snapPoint`. The props `defaultOpen`, `defaultValue` and their kin give the first state of an uncontrolled part.
+- `v-model` binds the main value of a part. A second state has a named model, such as `v-model:open`.
+- A `default*` prop, such as `defaultValue` or `defaultOpen`, gives the first value of a part that you do not bind. The part reads it at its mount only.
+- A model that is not `undefined` controls the part, also with no update listener. After a change of the user, the part shows the new value only when you write it to the model.
+- A model of `undefined` makes the part own its state again. The part keeps the value that it has.
 
-For example, you can open [Dialog](/components/dialog) after a timeout, without a trigger:
+For example, this dialog opens after a timeout, with no trigger:
 
 <<< ../examples/customization/Controlled.vue{20}
 
-This also lets you read the state of the part outside the root.
+A native reset of the form puts a form control back to its value at the mount. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset.
+
+## Differences from Base UI
+
+| Base UI                                                                       | Vase UI                                                                                                                                 |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `onOpenChange`, `onValueChange` and the other change props                    | The events `openChange`, `valueChange` and the others: `@open-change`, `@value-change`.                                                 |
+| `value` with `onValueChange`, `open` with `onOpenChange`                      | `v-model` for the main value. A named model, such as `v-model:open`, for another state.                                                 |
+| `allowPropagation()` and `isPropagationAllowed` in the details of each change | Only in the details of a popup part, which stops the propagation of an event.                                                           |
+| `event.preventBaseUIHandler()`                                                | `cancel()` for a change. For a native event that causes no change, a capture listener on the part that calls `event.stopPropagation()`. |
+| The part keeps its control mode from its mount, and warns at a change of it   | A model can start and stop the control at each moment, with no warning. With `undefined`, the part keeps the value that it has.         |
+| A warning at a change of a `default*` prop after the mount                    | No warning. The part reads the prop at its mount only.                                                                                  |

@@ -9,67 +9,64 @@ A guide to using TypeScript with Vase UI.
 
 ## Namespaces
 
-Vase UI uses namespaces to organize types. The namespace of a part holds its types. The two core types are:
+The namespace of a part holds its types. The two main types are:
 
-- `Props` (such as `Tooltip.Root.Props`)
-- `State` (such as `Tooltip.Root.State`)
+- `Props`, such as `Tooltip.Root.Props`
+- `State`, such as `Tooltip.Root.State`
 
-A part with no props of its own has no `Props`. A part with no state has no `State`.
-
-Each type also has a flat name, such as `TooltipRootProps` and `TooltipRootState`. The entry point of the component exports both names.
-
-A component with one part has its types on the component, such as `Checkbox.Props` and `CheckboxProps`.
+Each type also has a flat name, such as `TooltipRootProps`. The entry point of the component exports both names. A component with one part has its types on the component, such as `Checkbox.Props` and `CheckboxProps`.
 
 ### Props
 
-To make a component that wraps a part, use the `Props` type to accept all of the props of that part. The sample takes the flat name in `defineProps`.
+A component that wraps a part takes the props of the part with its `Props` type. Give the flat name to `defineProps`:
 
 <<< ../examples/typescript/MyTooltip.vue{5-10}
 
-Vue changes an absent Boolean prop to `false`. The wrapper gives each Boolean prop the default `undefined`, so the tooltip stays uncontrolled.
-
-See [Wrap a part](/handbook/composition#wrap-a-part) for the Boolean props that need this rule.
+The wrapper gives each Boolean prop the default `undefined`, so that the tooltip stays uncontrolled. See [Wrap a part](/handbook/composition#wrap-a-part).
 
 ### State
 
-The `State` type is the internal state of the part. For example, a `Positioner` part, such as `<Popover.Positioner>`, has state that describes the position of the element in relation to its anchor.
-
-The `element` slot passes its state to a typed function that selects the class of the positioner.
+The `State` type is the state of the part. For example, the state of `Popover.Positioner` gives the side and the alignment of the popup. The `element` slot gives the state to a typed function:
 
 <<< ../examples/typescript/PositionerState.vue{4-6,14-15,17-20}
 
 ### Events
 
-The namespace of a part also exports the types of the custom events.
+The namespace of a part also has the types of its change events:
 
-- `ChangeEventDetails` (such as `Combobox.Root.ChangeEventDetails`) is the object that a part gives to a change listener, such as `valueChange`.
-- `OpenChangeEventDetails` (such as `Combobox.Root.OpenChangeEventDetails`) is the object that a part gives to `openChange`, on a part whose `ChangeEventDetails` also serves other listeners. It has the members of `ChangeEventDetails` and `trigger`, the element of the action.
-- `ChangeEventReason` (such as `Combobox.Root.ChangeEventReason`) is the union of the possible reason strings of a change event.
+- `ChangeEventDetails`, such as `Combobox.Root.ChangeEventDetails`: the details that a change listener, such as `valueChange`, gets.
+- `OpenChangeEventDetails`, such as `Combobox.Root.OpenChangeEventDetails`: the details that `openChange` gets, on a part whose `ChangeEventDetails` serves other listeners.
+- `ChangeEventReason`, such as `Combobox.Root.ChangeEventReason`: the union of the reasons of a change.
 
 <<< ../examples/typescript/ChangeEvents.vue{6,7,11}
 
 ### Other accessible types
 
-A part or a utility can also export other types. The list below is not complete. Each type is documented where it is needed.
+A part or a utility can export other types. Its page documents them. Some examples:
 
-- A popup root exposes methods, and you read them through a template ref. `useTemplateRef` gives the ref of `Menu.Root` the type of its `close` method.
+- A template ref on a part has the types of the members that the part exposes. `useTemplateRef` gives the ref of `Menu.Root` the type of its `close` method:
 
   <<< ../examples/typescript/Actions.vue{5-9,14}
 
-- The `toast` object of `<Toast.Root>` is a complex object with many properties. `ToastObject` gives access to this interface.
-- `ElementSlotProps<State>` of `@vase-ui/vue/types` types the scope of the `element` slot. A component of yours can have the same slot. See [useElement](/utils/use-element).
+- `ToastObject` is the type of a toast of `Toast.Root`.
+- `ElementSlotProps<State>` of `@vase-ui/vue/types` is the type of the props of the `element` slot. A component of yours can have the same slot. See [useElement](/utils/use-element).
 
 ## Generic components
 
-A part whose types follow a value or a payload is a generic component. Its type parameter comes from its props.
+A part whose types follow a value or a payload is a generic component. Its type parameter comes from its props:
 
-- A part with a value, such as `RadioGroup`, `ToggleGroup`, `Slider.Root` or `Accordion.Root`, takes its type parameter from `model-value` or `default-value`.
-- A popup root and its trigger, such as `Tooltip.Root` and `Tooltip.Trigger`, take the type of their payload from `handle`. See [Multiple triggers](/components/tooltip#multiple-triggers).
+- A part with a value, such as `RadioGroup`, `ToggleGroup`, `Slider.Root`, `Select.Root` or `Accordion.Root`, takes it from `v-model` or `default-value`.
+- A popup root and its trigger, such as `Tooltip.Root` and `Tooltip.Trigger`, take the type of their payload from `handle`.
 
 In this sample, the type of the listener follows `default-value`: a number for one thumb, and an array of numbers for a range. The type check refuses a listener with another type.
 
 <<< ../examples/typescript/GenericValue.vue
 
-When no prop gives the type, write it on the parameter of the listener, such as `(value: string | null) => void` on a `Select.Root` with no `model-value` and no `default-value`.
+## Differences from Base UI
 
-A generic component can be the value of `as`. To give it a prop or a listener with its type, render it in the `element` slot of the other part, and bind `props` on it.
+| Base UI                                                         | Vase UI                                                                                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| A wrapper spreads the props of the part on it                   | A wrapper declares the props with `defineProps<TooltipRootProps>()`, and gives each Boolean prop the default `undefined`. |
+| `OpenChangeEventDetails` with `preventUnmountOnClose()`         | `OpenChangeEventDetails` with `trigger`. A `<Transition>` keeps a closing popup in the DOM.                               |
+| The types of `actionsRef`, such as `Menu.Root.Actions`          | The types of the exposed members of the part, which a template ref gets.                                                  |
+| `useRender.ComponentProps` for a component with a `render` prop | `ElementSlotProps<State>` of `@vase-ui/vue/types`, for a component with an `element` slot.                                |
