@@ -8,7 +8,7 @@ type Size = { width: number; height: number };
 export interface ViewportSizes {
   /** The size of the popup during a move to another trigger. */
   readonly popup: Size | undefined;
-  /** The size of the new content during a move. */
+  /** The size of the popup, and of its new content during a move. */
   readonly positioner: Size | undefined;
   /** The side of the new trigger from the old one, such as `'right down'`. */
   readonly direction: string | undefined;
@@ -51,6 +51,20 @@ export function usePopupViewport(root: PopupRoot, slot: ShallowRef<ViewportSizes
     if (slot.value === sizes) slot.value = null;
   });
 
+  // The positioner has the size of the popup, so that a style can animate a change of the content.
+  watch(
+    () => (root.open && !transitioning.value ? root.popup : null),
+    (element, _, onCleanup) => {
+      if (!element) return;
+      const measure = () => (positioner.value = sizeOf(element));
+      measure();
+      const observer = new ResizeObserver(measure);
+      observer.observe(element);
+      onCleanup(() => observer.disconnect());
+    },
+    { flush: 'post' },
+  );
+
   let move = 0;
   // The default flush runs before the render of the new content, so the popup has its old size.
   watch(
@@ -76,10 +90,10 @@ export function usePopupViewport(root: PopupRoot, slot: ShallowRef<ViewportSizes
       if (current !== move) return;
       popup.value = next;
       await nextTick();
-      await Promise.all(element.getAnimations().map((animation) => animation.finished));
+      // A cancelled animation rejects its promise.
+      await Promise.allSettled(element.getAnimations().map((animation) => animation.finished));
       if (current !== move) return;
       popup.value = undefined;
-      positioner.value = undefined;
       transitioning.value = false;
       root.setInstant('trigger-change');
     },

@@ -1,6 +1,6 @@
 import { computed, inject, provide, shallowRef, watch, type InjectionKey, type ShallowRef } from 'vue';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInsideLayer, useLayer, type Layer } from '../popup/layer';
+import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
 import type { usePlacement } from '../popup/placement';
 import type { ViewportSizes } from '../popup/viewport';
@@ -123,7 +123,7 @@ export function usePopoverRoot<Payload>(
       return hoverOpen.value;
     },
     focus,
-    inside: (element) => isInsideLayer(layer, element),
+    inside: (element) => isInPopup(layer, element),
     addClose() {
       closes.value += 1;
       return () => (closes.value -= 1);

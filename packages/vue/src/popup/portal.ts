@@ -8,15 +8,14 @@ import {
   watch,
   type CSSProperties,
   type InjectionKey,
-  type RendererElement,
 } from 'vue';
 import { useIsHydrated } from '../common/hydration';
 import { visuallyHidden } from '../common/visuallyHidden';
 import type { Layer } from './layer';
 import type { PopupRoot } from './root';
 
-/** The target of a `<Teleport>`: a selector or an element. `null` renders nothing. */
-export type PortalTarget = string | RendererElement | null;
+/** The target of a `<Teleport>`: a selector, an element or a shadow root. `null` renders nothing. */
+export type PortalTarget = string | Element | ShadowRoot | null;
 
 export interface PopupPortalProps {
   /**

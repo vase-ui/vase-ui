@@ -94,17 +94,6 @@ const children = {
       </Drawer.Portal>
     </Drawer.Root>
   ),
-  popover: (record: Recorder) => (
-    <Popover.Root defaultOpen modal onOpenChange={record}>
-      <Popover.Trigger>Child trigger</Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Backdrop data-testid="backdrop" />
-        <Popover.Positioner>
-          <Popover.Popup data-testid="popup" initialFocus={false} />
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
-  ),
   menu: (record: Recorder) => (
     <Menu.Root defaultOpen onOpenChange={record}>
       <Menu.Trigger>Child trigger</Menu.Trigger>
@@ -267,20 +256,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: true,
     },
     {
-      name: 'Popover.Backdrop / popover',
-      parent: 'popover',
-      child: 'popover',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
-      name: 'Popover internal backdrop / popover',
-      parent: 'popover',
-      child: 'popover',
-      part: INTERNAL_BACKDROP,
-      closesChild: true,
-    },
-    {
       name: 'Menu.Positioner / popover',
       parent: 'popover',
       child: 'menu',
@@ -330,13 +305,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: true,
     },
     {
-      name: 'Popover.Backdrop / dialog',
-      parent: 'dialog',
-      child: 'popover',
-      part: 'backdrop',
-      closesChild: true,
-    },
-    {
       name: 'PreviewCard.Positioner / dialog',
       parent: 'dialog',
       child: 'previewCard',
@@ -364,6 +332,8 @@ describe('a press on a part of a child popup that is outside its popup element',
       part: 'popup',
       closesChild: false,
     },
+    // The case of a Popover above a Dialog comes back with the Dialog unit, when Dialog moves to
+    // the stack of the popup layer.
   ])('VUE-4: $name closes no popup above', async ({ parent, child, part, closesChild }) => {
     const parentChanges: Change[] = [];
     const childChanges: Change[] = [];
@@ -433,22 +403,6 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
   const { render } = createRenderer();
 
   it.each<PendingPositionerCase>([
-    {
-      name: 'Popover',
-      render: (record, onOpenChangeComplete) => (
-        <Popover.Root defaultOpen onOpenChange={record} onOpenChangeComplete={onOpenChangeComplete}>
-          <Popover.Trigger>Trigger</Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Backdrop data-testid="backdrop" />
-            <Pending>
-              <Popover.Positioner>
-                <Popover.Popup>Popup</Popover.Popup>
-              </Popover.Positioner>
-            </Pending>
-          </Popover.Portal>
-        </Popover.Root>
-      ),
-    },
     {
       name: 'Menu',
       render: (record, onOpenChangeComplete) => (

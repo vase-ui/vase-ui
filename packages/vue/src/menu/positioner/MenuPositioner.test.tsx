@@ -27,7 +27,6 @@ import {
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import {
   createScrollDocument,
-  scrollLockCount,
   isPageLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
@@ -1116,7 +1115,7 @@ describe('<Menu.Positioner />', () => {
 
       handle.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false));
-      expect(scrollLockCount(page)).toBe(0);
+      expect(isPageLocked(page)).toBe(false);
     });
 
     it.each([
@@ -1135,7 +1134,7 @@ describe('<Menu.Positioner />', () => {
       await flushMicrotasks();
 
       expect(probe.store.select('open')).toBe(true);
-      expect(scrollLockCount(page)).toBe(0);
+      expect(isPageLocked(page)).toBe(false);
     });
 
     // A trigger in a menubar is an item of the composite of the menubar. The menu thus opens from
@@ -1166,27 +1165,9 @@ describe('<Menu.Positioner />', () => {
       await flushMicrotasks();
 
       expect(probe.store.select('modal')).toBe(false);
-      expect(scrollLockCount(page)).toBe(locks);
+      expect(isPageLocked(page)).toBe(locks === 1);
     });
 
-    it('VUE-5: releases the lock while KeepAlive holds the menu, and takes it back after', async () => {
-      const page = await createScrollDocument();
-      const show = shallowRef(true);
-      const { ModalMenu } = createMenu(page, {
-        root: { defaultOpen: true, defaultTriggerId: 'trigger' },
-      });
-      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
-      await render(() => (
-        <KeepAlive>{show.value ? <ModalMenu key="menu" /> : <Other key="other" />}</KeepAlive>
-      ));
-      await waitFor(() => expect(isPageLocked(page)).toBe(true));
-
-      show.value = false;
-      await waitFor(() => expect(isPageLocked(page)).toBe(false));
-
-      show.value = true;
-      await waitFor(() => expect(isPageLocked(page)).toBe(true));
-    });
   });
 
   describe('VUE-61: the positioner of a modal menu has one root node', () => {

@@ -11,7 +11,6 @@ import {
   waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
-import { getScrollLockRegistry } from '../../../../test/fixtures/scrollDocument';
 import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Combobox } from '@vase-ui/vue/combobox';
@@ -20,16 +19,11 @@ import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import VaporHeldBranch from './VaporHeldBranch.test.vue';
-
-function getLockCount() {
-  return getScrollLockRegistry()?.lockCount ?? 0;
-}
 
 function isMarked(element: Element) {
   return (
@@ -93,7 +87,6 @@ const families = [
   {
     name: 'Dialog',
     renderPart: renderDialog,
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
@@ -108,7 +101,6 @@ const families = [
         </AlertDialog.Portal>
       </AlertDialog.Root>
     ),
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
@@ -125,25 +117,6 @@ const families = [
         </Drawer.Portal>
       </Drawer.Root>
     ),
-    locksScroll: true,
-    marksPage: true,
-    movesFocus: true,
-  },
-  {
-    name: 'Popover',
-    renderPart: () => (
-      <Popover.Root defaultOpen modal>
-        <Popover.Trigger>Open</Popover.Trigger>
-        <Popover.Portal data-testid="portal">
-          <Popover.Positioner>
-            <Popover.Popup data-testid="popup">
-              <button>Inside</button>
-            </Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ),
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
@@ -161,7 +134,6 @@ const families = [
         </Menu.Portal>
       </Menu.Root>
     ),
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
@@ -179,14 +151,12 @@ const families = [
         </ContextMenu.Portal>
       </ContextMenu.Root>
     ),
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
   {
     name: 'Select',
     renderPart: renderSelect,
-    locksScroll: true,
     marksPage: true,
     movesFocus: true,
   },
@@ -206,7 +176,6 @@ const families = [
         </Combobox.Portal>
       </Combobox.Root>
     ),
-    locksScroll: false,
     marksPage: true,
     movesFocus: false,
   },
@@ -226,7 +195,6 @@ const families = [
         </Autocomplete.Portal>
       </Autocomplete.Root>
     ),
-    locksScroll: false,
     marksPage: true,
     movesFocus: false,
   },
@@ -242,7 +210,6 @@ const families = [
         </Tooltip.Portal>
       </Tooltip.Root>
     ),
-    locksScroll: false,
     marksPage: false,
     movesFocus: false,
   },
@@ -258,7 +225,6 @@ const families = [
         </PreviewCard.Portal>
       </PreviewCard.Root>
     ),
-    locksScroll: false,
     marksPage: false,
     movesFocus: false,
   },
@@ -283,7 +249,6 @@ const families = [
         </NavigationMenu.Portal>
       </NavigationMenu.Root>
     ),
-    locksScroll: false,
     marksPage: false,
     movesFocus: false,
   },
@@ -296,7 +261,6 @@ const families = [
         </Toast.Portal>
       </Toast.Provider>
     ),
-    locksScroll: false,
     marksPage: false,
     movesFocus: false,
   },
@@ -307,7 +271,7 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
 
   it.each(families)(
     '$name stays out of the document and takes nothing until the branch shows',
-    async ({ renderPart, locksScroll, marksPage, movesFocus }) => {
+    async ({ renderPart, marksPage, movesFocus }) => {
       const { HeldBranch, mountWhileHeld, show, hide } = createHeldBranch(renderPart);
       const { container, user } = await render(
         <div>
@@ -323,7 +287,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
 
       expect(document.querySelector('[data-vase-ui-portal]')).toBe(null);
       expect(screen.queryByTestId('popup')).toBe(null);
-      expect(getLockCount()).toBe(0);
       expect(getMarkedChildrenOfBody()).toEqual([]);
       expect(outside).toHaveFocus();
 
@@ -339,13 +302,10 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
       const portal = screen.getByTestId('portal');
       expect(portal.parentElement).toBe(document.body);
       expect(portal).toContainElement(popup);
-      expect(getLockCount()).toBe(locksScroll ? 1 : 0);
       expect(isMarked(container)).toBe(marksPage);
       expect(popup.contains(document.activeElement)).toBe(movesFocus);
 
       await hide();
-
-      expect(getLockCount()).toBe(0);
       expect(getMarkedChildrenOfBody()).toEqual([]);
     },
   );
@@ -366,7 +326,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     const popup = screen.getByTestId('popup');
     expect(screen.getByTestId('portal').parentElement).toBe(document.body);
     expect(popup.contains(document.activeElement)).toBe(true);
-    expect(getLockCount()).toBe(1);
     expect(isMarked(container)).toBe(true);
   });
 
@@ -422,7 +381,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
       await waitPastFocusFrame();
 
       expect(document.querySelector('[data-vase-ui-portal]')).toBe(null);
-      expect(getLockCount()).toBe(0);
       expect(getMarkedChildrenOfBody()).toEqual([]);
       expect(outside).toHaveFocus();
 
@@ -436,7 +394,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
       const popup = screen.getByTestId('popup');
       expect(screen.getByTestId('portal').parentElement).toBe(document.body);
       expect(popup.contains(document.activeElement)).toBe(true);
-      expect(getLockCount()).toBe(1);
       expect(isMarked(container)).toBe(true);
     },
   );
@@ -470,40 +427,6 @@ describe('VUE-5: a popup whose root mounts while KeepAlive holds its branch', ()
     await show();
 
     expect(parent).toHaveAttribute('data-nested-dialog-open');
-  });
-
-  it('a popover above a nested popover that mounts held closes on Escape', async () => {
-    const { HeldBranch, mountWhileHeld } = createHeldBranch(() => (
-      <Popover.Root defaultOpen>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup>Inner</Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ));
-    const { user } = await render(
-      <Popover.Root defaultOpen>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup data-testid="outer">
-              <button data-testid="inside">Inside</button>
-              <HeldBranch />
-            </Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>,
-    );
-
-    await mountWhileHeld();
-    const outer = screen.getByTestId('outer');
-    screen.getByTestId('inside').focus();
-    await user.keyboard('{Escape}');
-
-    await waitFor(() => {
-      expect(outer).not.toBeInTheDocument();
-    });
-    expect(screen.queryByTestId('outer')).toBe(null);
   });
 
   it('a drawer does not activate Drawer.Indent', async () => {

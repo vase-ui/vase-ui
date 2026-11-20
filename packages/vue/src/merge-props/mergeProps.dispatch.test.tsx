@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { Popover } from '@vase-ui/vue/popover';
+import { Menu } from '@vase-ui/vue/menu';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-utils';
@@ -8,17 +8,15 @@ import { createRenderer, screen, waitFor, waitForLaterMillisecond } from '#test-
 describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
   const { render } = createRenderer();
 
-  it('closes a tooltip around a popover trigger whose click listener calls it', async () => {
+  it('closes a tooltip around a menu trigger whose click listener calls it', async () => {
     const onTooltipOpenChange = vi.fn();
-    const onPopoverOpenChange = vi.fn();
+    const onMenuOpenChange = vi.fn();
     const { user } = await render(
       <Tooltip.Root onOpenChange={onTooltipOpenChange}>
         <Tooltip.Trigger as="span" delay={0}>
-          <Popover.Root onOpenChange={onPopoverOpenChange}>
-            <Popover.Trigger onClick={(event) => event.preventVaseUIHandler()}>
-              Open
-            </Popover.Trigger>
-          </Popover.Root>
+          <Menu.Root onOpenChange={onMenuOpenChange}>
+            <Menu.Trigger onClick={(event) => event.preventVaseUIHandler()}>Open</Menu.Trigger>
+          </Menu.Root>
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner>
@@ -36,7 +34,7 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
     });
     await user.keyboard('[Enter]');
 
-    expect(onPopoverOpenChange).not.toHaveBeenCalled();
+    expect(onMenuOpenChange).not.toHaveBeenCalled();
     expect(onTooltipOpenChange.mock.calls.map((call) => [call[0], call[1].reason])).toEqual([
       [true, 'trigger-focus'],
       [false, 'trigger-press'],

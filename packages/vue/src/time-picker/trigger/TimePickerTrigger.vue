@@ -7,10 +7,18 @@ export interface TimePickerTriggerState extends PopoverTriggerState {}
  * The props of `Popover.Trigger` that a time picker needs. The trigger belongs to the root of the
  * picker, so it has no handle, no payload and no hover open.
  */
-export interface TimePickerTriggerProps extends Omit<
-  PopoverTriggerProps,
-  'as' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
-> {}
+export interface TimePickerTriggerProps
+  extends
+    Omit<
+      PopoverTriggerProps,
+      'as' | 'aria-label' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
+    >,
+    /* @vue-ignore */ NamedTrigger {}
+
+interface NamedTrigger {
+  /** The name of the trigger. With no name the trigger names its action and the value; `null` removes the name. */
+  'aria-label'?: string | null;
+}
 </script>
 
 <script setup lang="ts">
@@ -19,7 +27,9 @@ import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { isKind } from '../../internals/date-time/temporal';
+import { useAriaAfterHydration } from '../../common/hydration';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
@@ -46,6 +56,9 @@ defineSlots<{
 }>();
 
 const attrs = useAttrs();
+// Node and a browser can give another `Intl` text, and Vue keeps the text of the server while it
+// hydrates.
+const afterHydration = useAriaAfterHydration();
 const picker = useTimePickerRootContext();
 const locale = useFormatLocale(() => picker.props.locale);
 
@@ -91,14 +104,14 @@ const element = computed(() => trigger.value?.element ?? null);
 usePickerPartElement(picker.triggers, element);
 
 function triggerProps() {
-  return { ...props, disabled: isDisabled.value, 'aria-label': label.value ?? undefined };
+  return { ...props, disabled: isDisabled.value, 'aria-label': afterHydration(label.value) ?? undefined };
 }
 
 defineExpose({ element });
 </script>
 
 <template>
-  <PopoverTrigger ref="trigger" v-bind="{ ...$attrs, ...triggerProps() }">
+  <PopoverTrigger ref="trigger" v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }">
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

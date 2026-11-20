@@ -28,6 +28,7 @@ export interface TimePickerPopupProps extends Omit<PopoverPopupProps, 'as'> {
 import { computed, useTemplateRef } from 'vue';
 import { usePickerInitialFocus } from '../../internals/date-time/picker/usePickerPopup';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverPopup from '../../popover/PopoverPopup.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -62,7 +63,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPopup ref="popup" v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }">
+  <PopoverPopup ref="popup" v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }">
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

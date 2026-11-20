@@ -187,9 +187,8 @@ export function usePlacement(
     ([open, trigger, anchor]) => {
       const element = options.positioner.value;
       if (element) rtl.value = ownerWindow(element).getComputedStyle(element).direction === 'rtl';
-      // The popup stays at its place while it leaves, and after its trigger left the DOM.
-      const next = open ? (anchor ?? trigger) : null;
-      reference.value = next && !('isConnected' in next && !next.isConnected) ? next : null;
+      // The popup stays at its place while it leaves.
+      reference.value = open ? (anchor ?? trigger) : null;
     },
     { flush: 'post', immediate: true },
   );
@@ -295,8 +294,10 @@ export function usePlacement(
     placement,
     strategy: () => props.positionMethod,
     middleware,
+    // The popup stays at its place while its anchor is out of the document: after the trigger left
+    // the DOM, and before an app in a detached element joins the document.
     whileElementsMounted: (anchor, element, update) =>
-      autoUpdate(anchor, element, update, {
+      autoUpdate(anchor, element, () => ('isConnected' in anchor && !anchor.isConnected ? undefined : update()), {
         ancestorScroll: !props.disableAnchorTracking,
         elementResize: !props.disableAnchorTracking,
         layoutShift: !props.disableAnchorTracking,

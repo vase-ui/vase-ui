@@ -158,6 +158,7 @@ import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateT
 import { createPickerPartElements } from '../../internals/date-time/picker/usePickerPartElement';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverRoot from '../../popover/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
@@ -280,7 +281,7 @@ defineExpose<DateRangePickerRootActions>({
 <template>
   <PopoverRoot
     ref="popover"
-    v-bind="$attrs"
+    v-bind="withoutPropsOf($attrs, PopoverRoot)"
     :open="props.open"
     :default-open="props.defaultOpen"
     :modal="props.modal"

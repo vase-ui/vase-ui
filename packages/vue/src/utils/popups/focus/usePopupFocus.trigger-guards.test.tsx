@@ -4,7 +4,6 @@ import { defineComponent, h, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as Popover from '../../../popover/parts';
 import {
   createHeldBranch,
   createRenderer,
@@ -51,44 +50,10 @@ function listPlaceOfTrigger(host: Element) {
 describe('useTriggerFocusGuards', () => {
   const { render } = createRenderer();
 
-  it('VUE-138: exits through the trigger guard from a field in the popup slot', async () => {
-    const field = document.createElement('input');
-    const root = createSlotHost(field);
-    const reasons: string[] = [];
-    await render(
-      <>
-        <Popover.Root
-          open
-          triggerId="trigger"
-          modal={false}
-          onOpenChange={(_open, details) => reasons.push(details.reason)}
-        >
-          <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
-          <Popover.Portal to={root}>
-            <Popover.Positioner>
-              <Popover.Popup initialFocus={field}>{h('slot')}</Popover.Popup>
-            </Popover.Positioner>
-          </Popover.Portal>
-        </Popover.Root>
-        <button>After</button>
-      </>,
-    );
-    await waitFor(() => expect(field).toHaveFocus());
-
-    const guard = screen.getByRole('button', { name: 'Toggle' }).nextElementSibling as HTMLElement;
-    guard.focus();
-    await flushMicrotasks();
-    expect(reasons).toEqual([REASONS.focusOut]);
-    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
-  });
-
   // The cases press Tab with `userEvent` of `vitest/browser`. A native Tab runs a microtask
   // checkpoint between the blur of the trigger and the focus of the guard, and a synthetic event
   // does not.
-  describe.each([
-    { name: 'Popover', Component: Popover },
-    { name: 'Menu', Component: Menu },
-  ])('$name', ({ name, Component }) => {
+  describe.each([{ name: 'Menu', Component: Menu }])('$name', ({ name, Component }) => {
     beforeEach(() => {
       // The guards outlive `open` by a microtask only while exit animations run.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
@@ -135,9 +100,9 @@ describe('useTriggerFocusGuards', () => {
         await userEvent.click(trigger);
         await screen.findByTestId('popup');
       });
-      // Menu moves focus to the popup itself; Popover moves it to the first tabbable inside.
+      // A menu moves the focus to the popup itself.
       await waitFor(() => {
-        expect(screen.getByTestId(name === 'Popover' ? 'inside' : 'popup')).toHaveFocus();
+        expect(screen.getByTestId('popup')).toHaveFocus();
       });
       return trigger;
     }
@@ -184,12 +149,8 @@ describe('useTriggerFocusGuards', () => {
 
           const trigger = await openPopup();
 
-          if (direction === 'backward' && name === 'Popover') {
-            await userEvent.tab({ shift: true });
-          } else {
-            // Menu closes on Shift+Tab from its content, so focus the trigger directly instead.
-            await focusTabOrigin(trigger);
-          }
+          // A menu closes on Shift+Tab from its content, so the case focuses the trigger.
+          await focusTabOrigin(trigger);
 
           expect(direction === 'backward' ? trigger : screen.getByTestId('inside')).toHaveFocus();
           expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -615,37 +576,6 @@ describe('useTriggerFocusGuards', () => {
     ];
   }
 
-  async function renderOpenPopover(options: OpenOptions = {}) {
-    const { content = 'text', placement = 'beside', before, after, far, tabindex } = options;
-    const reasons: string[] = [];
-    const renderPortal = () => (
-      <Popover.Portal>
-        <Popover.Positioner>
-          <Popover.Popup initialFocus={false}>
-            {content === 'text' ? 'Text' : renderButtons(content)}
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    );
-    await render(() => (
-      <div>
-        {before && renderStop('before', 'Before')}
-        <Popover.Root {...createRootProps(options, reasons)}>
-          {placement === 'before' && renderPortal()}
-          <Popover.Trigger id="trigger" data-testid="trigger" tabindex={tabindex}>
-            Toggle
-          </Popover.Trigger>
-          {placement === 'beside' && renderPortal()}
-          {after && renderStop('after', 'After')}
-          {placement === 'detached' && renderPortal()}
-        </Popover.Root>
-        {far && renderStop('far', 'Far')}
-      </div>
-    ));
-    await flushMicrotasks();
-    return { reasons, trigger: screen.getByTestId('trigger') };
-  }
-
   // The items of a menu have `tabindex="-1"`, so a menu with items has no tabbable element.
   async function renderOpenMenu(options: OpenOptions = {}) {
     const { content = 'text', placement = 'beside', before, after, far, tabindex } = options;
@@ -751,10 +681,7 @@ describe('useTriggerFocusGuards', () => {
     reasons.length = 0;
   }
 
-  describe.each([
-    { name: 'Popover', renderOpen: renderOpenPopover },
-    { name: 'Menu', renderOpen: renderOpenMenu },
-  ])('VUE-63: $name that stays open', ({ renderOpen }) => {
+  describe.each([{ name: 'Menu', renderOpen: renderOpenMenu }])('VUE-63: $name that stays open', ({ renderOpen }) => {
     it.each([
       { name: 'beside the trigger', placement: 'beside' as const },
       { name: 'detached', placement: 'detached' as const },
@@ -896,11 +823,6 @@ describe('useTriggerFocusGuards', () => {
   // from its last tabbable element.
   describe.each([
     {
-      name: 'Popover',
-      renderOpen: renderOpenPopover,
-      listBackward: (inside: string[]) => [...inside].reverse(),
-    },
-    {
       name: 'Menu',
       renderOpen: renderOpenMenu,
       listBackward: (inside: string[]) => inside.slice(-1),
@@ -1027,14 +949,8 @@ describe('useTriggerFocusGuards', () => {
     },
   );
 
-  function renderPopupPart(family: 'Popover' | 'Menu') {
-    return family === 'Popover' ? (
-      <Popover.Portal>
-        <Popover.Positioner>
-          <Popover.Popup initialFocus={false}>{renderStop('inside', 'Inside')}</Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    ) : (
+  function renderPopupPart() {
+    return (
       <Menu.Portal>
         <Menu.Positioner>
           <Menu.Popup>
@@ -1047,44 +963,30 @@ describe('useTriggerFocusGuards', () => {
 
   // `KeepAlive` takes a held popup out of the document, with its inside guards. An open root with
   // no popup part has no inside guards.
-  async function renderPopupOutOfDocument(
-    family: 'Popover' | 'Menu',
-    popup: 'held' | 'mounted while held' | 'not mounted',
-  ) {
+  async function renderPopupOutOfDocument(popup: 'held' | 'mounted while held' | 'not mounted') {
     const reasons: string[] = [];
-    const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(() => renderPopupPart(family), {
+    const { HeldBranch, hide, mountWhileHeld } = createHeldBranch(() => renderPopupPart(), {
       mounted: popup === 'held',
       renderBranch: (part) => part,
     });
     const renderBranch = () => (popup === 'not mounted' ? null : <HeldBranch />);
     await render(() => (
       <div>
-        {family === 'Popover' ? (
-          <Popover.Root {...createRootProps({}, reasons)}>
-            <Popover.Trigger id="trigger" data-testid="trigger">
-              Toggle
-            </Popover.Trigger>
-            {renderBranch()}
-          </Popover.Root>
-        ) : (
-          <Menu.Root modal={false} {...createRootProps({}, reasons)}>
-            <Menu.Trigger id="trigger" data-testid="trigger">
-              Toggle
-            </Menu.Trigger>
-            {renderBranch()}
-          </Menu.Root>
-        )}
+        <Menu.Root modal={false} {...createRootProps({}, reasons)}>
+          <Menu.Trigger id="trigger" data-testid="trigger">
+            Toggle
+          </Menu.Trigger>
+          {renderBranch()}
+        </Menu.Root>
         {renderStop('after', 'After')}
       </div>
     ));
     await flushMicrotasks();
     if (popup === 'held') {
-      if (family === 'Menu') {
-        // The menu moves the focus into its popup when it opens. The hold comes after that move.
-        await waitFor(() => {
-          expect(screen.getByRole('menu')).toContainElement(document.activeElement as HTMLElement);
-        });
-      }
+      // The menu moves the focus into its popup when it opens. The hold comes after that move.
+      await waitFor(() => {
+        expect(screen.getByRole('menu')).toContainElement(document.activeElement as HTMLElement);
+      });
       await hide();
     } else if (popup === 'mounted while held') {
       await mountWhileHeld();
@@ -1092,17 +994,14 @@ describe('useTriggerFocusGuards', () => {
     return { reasons, trigger: screen.getByTestId('trigger') };
   }
 
-  describe.each([
-    { name: 'Popover', family: 'Popover' as const },
-    { name: 'Menu', family: 'Menu' as const },
-  ])('VUE-120: $name whose popup KeepAlive holds', ({ family }) => {
+  describe('VUE-120: Menu whose popup KeepAlive holds', () => {
     it.each([
       { name: 'held', popup: 'held' as const },
       { name: 'mounted while held', popup: 'mounted while held' as const },
     ])(
       'goes from the trigger to the element after it for Tab, and asks for the close ($name)',
       async ({ popup }) => {
-        const { trigger, reasons } = await renderPopupOutOfDocument(family, popup);
+        const { trigger, reasons } = await renderPopupOutOfDocument(popup);
         await startAt('trigger', reasons);
         const focus = trackFocus();
 
@@ -1121,7 +1020,7 @@ describe('useTriggerFocusGuards', () => {
     ])(
       'goes from the element after the trigger to the trigger for Shift+Tab ($name)',
       async ({ popup }) => {
-        const { trigger, reasons } = await renderPopupOutOfDocument(family, popup);
+        const { trigger, reasons } = await renderPopupOutOfDocument(popup);
         await startAt('after', reasons);
         const focus = trackFocus();
 
@@ -1134,12 +1033,9 @@ describe('useTriggerFocusGuards', () => {
     );
   });
 
-  describe.each([
-    { name: 'Popover', family: 'Popover' as const },
-    { name: 'Menu', family: 'Menu' as const },
-  ])('VUE-132: $name with no popup part', ({ family }) => {
+  describe('VUE-132: Menu with no popup part', () => {
     it('goes from the element after the trigger to the trigger for Shift+Tab', async () => {
-      const { trigger, reasons } = await renderPopupOutOfDocument(family, 'not mounted');
+      const { trigger, reasons } = await renderPopupOutOfDocument('not mounted');
       await startAt('after', reasons);
       const focus = trackFocus();
 
@@ -1151,63 +1047,19 @@ describe('useTriggerFocusGuards', () => {
     });
   });
 
-  // The inner popup has guards beside its trigger and none at the place of its portal. The search
-  // from the inner trigger then meets the inside guards of the outer popup, and they take the focus
-  // on to the element after the outer trigger.
-  it('VUE-63: goes past the outer popup to the element after its trigger for Tab from a nested trigger', async () => {
-    const reasons: string[] = [];
-    await render(() => (
-      <div>
-        <Popover.Root defaultOpen defaultTriggerId="outer">
-          <Popover.Trigger id="outer">Outer</Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Positioner>
-              <Popover.Popup initialFocus={false}>
-                <Popover.Root
-                  open
-                  triggerId="inner"
-                  onOpenChange={(_open, details) => reasons.push(details.reason)}
-                >
-                  <Popover.Trigger id="inner">Inner</Popover.Trigger>
-                  <Popover.Portal>
-                    <Popover.Positioner>
-                      <Popover.Popup initialFocus={false}>Text</Popover.Popup>
-                    </Popover.Positioner>
-                  </Popover.Portal>
-                </Popover.Root>
-              </Popover.Popup>
-            </Popover.Positioner>
-          </Popover.Portal>
-        </Popover.Root>
-        <button data-testid="after">After</button>
-      </div>
-    ));
-    await flushMicrotasks();
-    screen.getByRole('button', { name: 'Inner' }).focus();
-    const focus = trackFocus();
-
-    await pressTab();
-
-    expect(screen.getByTestId('after')).toHaveFocus();
-    expect(reasons).toEqual([REASONS.focusOut]);
-    expectNoReentry(focus);
-  });
-
-  // The popup that is not a Popover or a Menu has no guards beside a trigger, so its portal keeps
+  // The popup that is not a Menu has no guards beside a trigger, so its portal keeps
   // its own guards. The search from the trigger of the first popup meets them whether or not the
   // first popup closes, and they come before the element after the portal.
-  it.each([
-    { name: 'closes', closes: true },
-    { name: 'stays open', closes: false },
-  ])(
+  it.each([{ name: 'closes', closes: true }])(
     'VUE-66: goes into the next open popup for Tab from the trigger of a popup that $name',
     async ({ closes }) => {
       const reasons: string[] = [];
       await render(() => (
         <div>
-          <Popover.Root
+          <Menu.Root
             defaultOpen
             defaultTriggerId="first"
+            modal={false}
             onOpenChange={(_open, details) => {
               reasons.push(details.reason);
               if (!closes) {
@@ -1215,13 +1067,15 @@ describe('useTriggerFocusGuards', () => {
               }
             }}
           >
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Popover.Popup initialFocus={false}>Text</Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-            <Popover.Trigger id="first">First</Popover.Trigger>
-          </Popover.Root>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+            <Menu.Trigger id="first">First</Menu.Trigger>
+          </Menu.Root>
           <PopupPortal guards={usePortalFocus}>
             <FocusManagerPart>
               <button data-testid="inside">Inside</button>

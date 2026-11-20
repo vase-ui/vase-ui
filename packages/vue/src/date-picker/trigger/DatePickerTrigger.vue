@@ -7,10 +7,18 @@ export interface DatePickerTriggerState extends PopoverTriggerState {}
  * The props of `Popover.Trigger` that a date picker needs. The trigger belongs to the root of the
  * picker, so it has no handle, no payload and no hover open.
  */
-export interface DatePickerTriggerProps extends Omit<
-  PopoverTriggerProps,
-  'as' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
-> {}
+export interface DatePickerTriggerProps
+  extends
+    Omit<
+      PopoverTriggerProps,
+      'as' | 'aria-label' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
+    >,
+    /* @vue-ignore */ NamedTrigger {}
+
+interface NamedTrigger {
+  /** The name of the trigger. With no name the trigger names its action and the value; `null` removes the name. */
+  'aria-label'?: string | null;
+}
 </script>
 
 <script setup lang="ts">
@@ -21,6 +29,7 @@ import { usePickerPartElement } from '../../internals/date-time/picker/usePicker
 import { isKind } from '../../internals/date-time/temporal';
 import type { DatePickerRootValue } from '../root/DatePickerRoot.vue';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
+import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useDatePickerRootContext } from '../root/DatePickerRootContext';
@@ -92,7 +101,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverTrigger ref="trigger" v-bind="{ ...$attrs, ...triggerProps() }">
+  <PopoverTrigger ref="trigger" v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }">
     <template v-if="$slots.element" #element="slotProps">
       <slot name="element" v-bind="slotProps" />
     </template>

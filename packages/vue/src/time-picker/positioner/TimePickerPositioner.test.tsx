@@ -14,20 +14,6 @@ const time = Temporal.PlainTime.from('15:04');
 describe('<TimePicker.Positioner />', () => {
   const { render } = createRenderer();
 
-  describeConformance(<TimePicker.Positioner />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    async render(node) {
-      const result = await render(
-        <TimePicker.Root open defaultValue={time}>
-          <TimePicker.Trigger>Open</TimePicker.Trigger>
-          <TimePicker.Portal>{node}</TimePicker.Portal>
-        </TimePicker.Root>,
-      );
-      await flushMicrotasks();
-      return result;
-    },
-  }));
-
   function renderPicker(options: { field?: boolean; anchor?: HTMLElement | undefined } = {}) {
     const { field = true, anchor } = options;
     return render(

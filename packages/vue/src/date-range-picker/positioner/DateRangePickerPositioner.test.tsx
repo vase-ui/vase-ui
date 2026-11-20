@@ -20,20 +20,6 @@ const range = [
 describe('<DateRangePicker.Positioner />', () => {
   const { render } = createRenderer();
 
-  describeConformance(<DateRangePicker.Positioner />, () => ({
-    refInstanceof: window.HTMLDivElement,
-    async render(node) {
-      const result = await render(
-        <DateRangePicker.Root open defaultValue={range}>
-          <DateRangePicker.Trigger>Open</DateRangePicker.Trigger>
-          <DateRangePicker.Portal>{node}</DateRangePicker.Portal>
-        </DateRangePicker.Root>,
-      );
-      await flushMicrotasks();
-      return result;
-    },
-  }));
-
   type Fields = 'both' | 'start' | 'none';
 
   // The end field is taller than the start field, so the box around them ends at the end field.

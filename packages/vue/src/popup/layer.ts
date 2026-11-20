@@ -67,11 +67,11 @@ export function layersAbove(layer: Layer) {
   return index === -1 ? 0 : stack.length - index - 1;
 }
 
-/** The element is in the popup of the layer, in one of its triggers, or in a layer above it. */
-export function isInsideLayer(layer: Layer, element: Element) {
-  const entry = stack.find((each) => each.layer === layer);
-  const inside = entry ? insideElements(entry) : [layer.root.popup];
-  return inside.some((each) => !!each?.contains(element));
+/** The element is in the popup of the layer, or in a layer above it. */
+export function isInPopup(layer: Layer, element: Element) {
+  const index = stack.findIndex((each) => each.layer === layer);
+  const inside = [layer.root.popup, ...stack.slice(index + 1).flatMap(layerElements)];
+  return index !== -1 && inside.some((each) => !!each?.contains(element));
 }
 
 /**
@@ -190,30 +190,40 @@ function fromTop() {
   return [...stack].reverse();
 }
 
-/** The elements of the layer itself: its popup, its sentinels and its fixed element, its backdrop. */
-function ownElements(entry: Entry, withTriggers: boolean): Element[] {
+/** Each element of the layer: its popup, its backdrop, its sentinels and fixed element, its triggers. */
+function layerElements(entry: Entry): Element[] {
   const { root } = entry.layer;
-  const elements = [root.popup, ...root.portalElements];
-  if (withTriggers) elements.push(...root.triggers.map((trigger) => trigger.element));
-  return elements.filter((element): element is Element => !!element?.isConnected);
-}
-
-/** The elements inside the layer: its own, and those of each layer above it. */
-function insideElements(entry: Entry) {
-  const index = stack.indexOf(entry);
   return [
-    ...ownElements(entry, true),
-    ...stack.slice(index + 1).flatMap((above) => ownElements(above, true)),
-  ];
+    root.popup,
+    ...root.parts,
+    ...root.portalElements,
+    ...root.triggers.map((trigger) => trigger.element),
+  ].filter((element): element is Element => !!element?.isConnected);
 }
 
-function isFixedElement(entry: Entry, node: EventTarget) {
-  return entry.layer.block && entry.layer.root.portalElements.includes(node as Element);
+/**
+ * The elements inside the layer: its popup, its sentinels and its triggers, and each element of the
+ * layers above it. Its backdrop and its fixed element are outside.
+ */
+function insideElements(entry: Entry) {
+  const { root } = entry.layer;
+  const index = stack.indexOf(entry);
+  const own = [
+    root.popup,
+    ...root.portalElements.filter((element) => !(entry.layer.block && isFixed(element))),
+    ...root.triggers.map((trigger) => trigger.element),
+  ].filter((element): element is Element => !!element?.isConnected);
+  return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
 }
 
-/** The event path has an element inside the layer. The fixed element of the layer is outside. */
+// The fixed element of a block is the one portal element that is no sentinel.
+function isFixed(element: Element) {
+  return element.getAttribute('tabindex') !== '0';
+}
+
+/** The event path has an element inside the layer. */
 function isInside(entry: Entry, path: readonly EventTarget[]) {
-  const inside = insideElements(entry).filter((element) => !isFixedElement(entry, element));
+  const inside = insideElements(entry);
   return path.some((node) => inside.includes(node as Element));
 }
 
@@ -223,7 +233,7 @@ function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
   const body = ownerDocument(path[0] as Element).body;
   const child = path.find((node) => (node as Node).parentNode === body) as Element | undefined;
   if (!child || entry.bodyChildren.has(child)) return false;
-  return !stack.some((each) => ownElements(each, false).some((element) => child.contains(element)));
+  return !stack.some((each) => layerElements(each).some((element) => child.contains(element)));
 }
 
 // A press on a scrollbar sends `pointerdown` with an offset outside the client box of the element
@@ -427,7 +437,17 @@ function startHide() {
         if (!top) return null;
         const { root } = top.layer;
         const hide = top.layer.hide as 'inert' | 'aria-hidden';
-        return { hide, inside: [...insideElements(top), root.activeTrigger] };
+        const index = stack.indexOf(top);
+        return {
+          hide,
+          inside: [
+            root.popup,
+            ...root.parts,
+            ...root.portalElements,
+            root.activeTrigger,
+            ...stack.slice(index + 1).flatMap(layerElements),
+          ],
+        };
       },
       (next) => writeHide(next),
       { flush: 'post', immediate: true },

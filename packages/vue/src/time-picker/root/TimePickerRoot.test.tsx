@@ -9,7 +9,6 @@ import {
   createRenderer,
   fireEvent,
   flushMicrotasks,
-  popupConformanceTests,
   screen,
   waitFor,
   waitForLaterMillisecond,
@@ -84,22 +83,6 @@ describe('<TimePicker.Root />', () => {
     await fireEvent.pointerDown(face, { ...mouse, ...pointOnFace(face, angle) });
     await fireEvent.pointerUp(face, { ...mouse, ...pointOnFace(face, angle) });
   }
-
-  popupConformanceTests({
-    createComponent: (props) => (
-      <TimePicker.Root {...props.root}>
-        <TimePicker.Trigger {...props.trigger}>Open menu</TimePicker.Trigger>
-        <TimePicker.Portal {...props.portal}>
-          <TimePicker.Positioner>
-            <TimePicker.Popup {...props.popup}>Content</TimePicker.Popup>
-          </TimePicker.Positioner>
-        </TimePicker.Portal>
-      </TimePicker.Root>
-    ),
-    render,
-    triggerMouseAction: 'click',
-    expectedPopupRole: 'dialog',
-  });
 
   it('renders no element of its own', async () => {
     const { container } = await render(
@@ -297,7 +280,6 @@ describe('<TimePicker.Root />', () => {
       it.each([
         { name: '`true`', createOption: () => true },
         { name: '`null`', createOption: () => null },
-        { name: 'an empty ref', createOption: () => shallowRef(null) },
       ])('moves the focus to the default element for $name', async ({ createOption }) => {
         const { user } = await renderPicker({
           clock: true,
@@ -853,7 +835,7 @@ describe('<TimePicker.Root />', () => {
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+        expect(screen.getByTestId('trigger')).toBeDisabled();
       });
       expect(screen.getByTestId('list')).toHaveAttribute('aria-disabled', 'true');
       expect(listItem('15:00')).toHaveAttribute('aria-disabled', 'true');

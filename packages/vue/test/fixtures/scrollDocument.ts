@@ -2,72 +2,15 @@ import { expect, onTestFinished } from 'vitest';
 
 export type ScrollWindow = Window & typeof globalThis;
 
-const REGISTRY_KEY = Symbol.for('vase-ui.scroll-lock');
-
-export interface ScrollLockRegistry {
-  version: number;
-  lockCount: number;
-  restore: (() => void) | null;
-  stableGutter: WeakMap<Document, boolean>;
-}
-
-/**
- * The registry that all copies of the library share. It is `undefined` until the first lock. It
- * lives for the whole test file, so each lock test file checks in `afterEach` that no lock is left.
- */
-export function getScrollLockRegistry(win: Window = window) {
-  return (win as { [REGISTRY_KEY]?: ScrollLockRegistry })[REGISTRY_KEY];
-}
-
-export function scrollLockCount(page: ScrollDocument) {
-  return getScrollLockRegistry(page.win)?.lockCount ?? 0;
-}
-
+/** Expects that no lock holds the page or the document of a frame of the page. */
 export function expectScrollLocksReleased() {
-  const windows = [
-    window,
-    ...Array.from(document.querySelectorAll('iframe'), (frame) => frame.contentWindow),
+  const documents = [
+    document,
+    ...Array.from(document.querySelectorAll('iframe'), (frame) => frame.contentDocument),
   ];
-  for (const win of windows) {
-    const registry = win && getScrollLockRegistry(win);
-    if (registry) {
-      expect([registry.lockCount, registry.restore]).toEqual([0, null]);
-    }
+  for (const doc of documents) {
+    if (doc?.body) expect(isScrollLocked(doc)).toBe(false);
   }
-}
-
-/**
- * Records each value that the shared count of the locks gets, until the test ends. It makes the
- * registry when no lock has made it yet, in the form that `CONTRIBUTING.md` gives.
- */
-export function recordLockCounts(win: Window) {
-  const holder = win as { [REGISTRY_KEY]?: ScrollLockRegistry };
-  holder[REGISTRY_KEY] ??= {
-    version: 1,
-    lockCount: 0,
-    restore: null,
-    stableGutter: new WeakMap(),
-  };
-  const registry = holder[REGISTRY_KEY];
-  let current = registry.lockCount;
-  const values: number[] = [];
-  Object.defineProperty(registry, 'lockCount', {
-    configurable: true,
-    get: () => current,
-    set(value: number) {
-      current = value;
-      values.push(value);
-    },
-  });
-  onTestFinished(() => {
-    Object.defineProperty(registry, 'lockCount', {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-      value: current,
-    });
-  });
-  return () => values;
 }
 
 export interface ScrollDocument {
@@ -78,9 +21,6 @@ export interface ScrollDocument {
   /** An empty element of the document, for the `referenceElement` of a lock. */
   reference: HTMLElement;
 }
-
-/** The three ways in which the scroll lock holds a page. */
-export type ScrollLockStrategy = 'overlay' | 'gutter' | 'body';
 
 /** A style sheet that takes the scrollbars out of the layout in each engine. */
 export const HIDDEN_SCROLLBARS_CSS =
@@ -139,34 +79,6 @@ export async function createScrollDocument({
   return scrollDocument;
 }
 
-/**
- * Says which way the scroll lock takes in a new document that has the style sheet `css`. It reads
- * the scrollbar as the lock does. A case that needs scrollbars that take layout space asks this
- * function. It runs only in an engine that has them.
- */
-export async function probeStrategy(css = ''): Promise<ScrollLockStrategy> {
-  const { frame, scrollDocument } = await mountFrame(css);
-  try {
-    const { win, html } = scrollDocument;
-    if (win.innerWidth - html.clientWidth <= 0) {
-      return 'overlay';
-    }
-    if (!win.CSS.supports('scrollbar-gutter', 'stable')) {
-      return 'body';
-    }
-
-    html.style.scrollbarGutter = 'stable';
-    const scroller = getViewportScroller(scrollDocument);
-    scroller.style.overflowY = 'scroll';
-    const before = scroller.offsetWidth;
-    scroller.style.overflowY = 'hidden';
-    const after = scroller.offsetWidth;
-    return before === after ? 'gutter' : 'body';
-  } finally {
-    frame.remove();
-  }
-}
-
 // The viewport takes its overflow from <html> when it has one, and from <body> otherwise.
 function getViewportScroller({ win, html, body }: Pick<ScrollDocument, 'win' | 'html' | 'body'>) {
   const { overflow, overflowX, overflowY } = win.getComputedStyle(html);
@@ -174,9 +86,9 @@ function getViewportScroller({ win, html, body }: Pick<ScrollDocument, 'win' | '
 }
 
 /**
- * Says if the scroll lock holds the page of `doc`. With overlay scrollbars and with a gutter, the
- * element that the viewport follows is hidden. With scrollbars that take space, the lock sets its
- * marker and gives the body a fixed size. A ported case calls it in place of `isScrollLocked` of
+ * Says if the scroll lock holds the page of `doc`. With overlay scrollbars, the element that the
+ * viewport follows is hidden. With scrollbars that take space, `<html>` keeps its scrollbar, and the
+ * lock hides the overflow of `<body>`. A ported case calls it in place of `isScrollLocked` of
  * Base UI.
  */
 export function isScrollLocked(doc: Document = document) {
@@ -185,10 +97,9 @@ export function isScrollLocked(doc: Document = document) {
     html: doc.documentElement,
     body: doc.body,
   };
-  return (
-    /hidden|clip/.test(page.win.getComputedStyle(getViewportScroller(page)).overflowY) ||
-    page.html.hasAttribute('data-vase-ui-scroll-locked')
-  );
+  const hidden = (element: HTMLElement) =>
+    /hidden|clip/.test(page.win.getComputedStyle(element).overflowY);
+  return hidden(getViewportScroller(page)) || (hidden(page.body) && !!page.body.style.height);
 }
 
 /**

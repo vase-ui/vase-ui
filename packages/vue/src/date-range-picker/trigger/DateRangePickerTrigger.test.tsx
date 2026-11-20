@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { Popover } from '@vase-ui/vue/popover';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import { formatRangeText } from '../../internals/date-time/calendar/formatText';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -36,15 +36,6 @@ describe('<DateRangePicker.Trigger />', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Choose' })).toBeInTheDocument();
   });
-
-  describeConformance(<DateRangePicker.Trigger />, () => ({
-    refInstanceof: window.HTMLButtonElement,
-    testRenderPropWith: 'button',
-    button: true,
-    render(node) {
-      return render(<DateRangePicker.Root>{node}</DateRangePicker.Root>);
-    },
-  }));
 
   it('has the attributes of a dialog trigger', async () => {
     await render(

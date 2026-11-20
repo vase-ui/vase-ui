@@ -1,4 +1,5 @@
 import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
+import { getPortalLocation } from '../utils/popups/portal/portalElements';
 import { ownerDocument } from './owner';
 
 // One count for each document, so that the last unlock restores the page.
@@ -95,8 +96,13 @@ export function useScrollLock(
   referenceElement: MaybeRefOrGetter<Element | null> = null,
 ): void {
   onMounted(() => {
+    // A portal of a family of `utils/popups` can move its popup to another document. Its
+    // registration then changes, and the document of the lock follows.
     watch(
-      [() => toValue(enabled), () => ownerDocument(toValue(referenceElement))],
+      [
+        () => toValue(enabled),
+        () => getPortalLocation(toValue(referenceElement)).document ?? ownerDocument(null),
+      ],
       ([locked, doc], _, onCleanup) => {
         if (locked) onCleanup(acquire(doc));
       },

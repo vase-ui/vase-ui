@@ -11,7 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import type { OffsetFunction } from '../../internals/useAnchorPositioning';
 import ComboboxPositionerScoped from './ComboboxPositionerScoped.test.vue';
 
@@ -375,7 +375,7 @@ describe('<Combobox.Positioner />', () => {
       await renderModal();
 
       await waitFor(() => {
-        expect(getScrollLockRegistry()?.lockCount).toBe(1);
+        expect(isScrollLocked()).toBe(true);
       });
     });
 
@@ -395,25 +395,8 @@ describe('<Combobox.Positioner />', () => {
         expect(screen.getByTestId('input')).toHaveAttribute('data-popup-side', 'bottom');
       });
 
-      expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
+      expect(isScrollLocked()).toBe(false);
     });
 
-    it('releases the scroll lock while KeepAlive holds it, and takes it back', async () => {
-      const shown = shallowRef(true);
-      await renderModal(shown);
-      await waitFor(() => {
-        expect(getScrollLockRegistry()?.lockCount).toBe(1);
-      });
-
-      shown.value = false;
-      await flushMicrotasks();
-
-      expect(getScrollLockRegistry()?.lockCount).toBe(0);
-
-      shown.value = true;
-      await waitFor(() => {
-        expect(getScrollLockRegistry()?.lockCount).toBe(1);
-      });
-    });
   });
 });

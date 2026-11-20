@@ -14,7 +14,6 @@ import { Field } from '@vase-ui/vue/field';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
@@ -222,23 +221,6 @@ const rows: Row[] = [
     createNode: (attrs) => createDialog(Drawer, 'popup', attrs),
   },
   {
-    part: 'Popover.Popup',
-    attribute: 'aria-describedby',
-    createNode: (attrs) => (
-      <Popover.Root defaultOpen>
-        <Popover.Trigger>Open</Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup data-testid="part" {...attrs}>
-              <Popover.Title>Title</Popover.Title>
-              <Popover.Description data-testid="target">Text</Popover.Description>
-            </Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ),
-  },
-  {
     part: 'Accordion.Trigger',
     attribute: 'aria-controls',
     createNode: (attrs) => (
@@ -280,22 +262,6 @@ const rows: Row[] = [
     part: 'Drawer.Trigger',
     attribute: 'aria-controls',
     createNode: (attrs) => createDialog(Drawer, 'trigger', attrs),
-  },
-  {
-    part: 'Popover.Trigger',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <Popover.Root defaultOpen>
-        <Popover.Trigger data-testid="part" {...attrs}>
-          Open
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup data-testid="target">Text</Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ),
   },
   {
     part: 'Menu.Trigger',

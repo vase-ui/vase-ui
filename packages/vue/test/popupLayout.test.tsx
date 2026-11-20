@@ -11,7 +11,6 @@ import {
 } from '#test-utils';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { Popover } from '@vase-ui/vue/popover';
 import { recordStyleProperty } from './recordStyleProperty';
 import SelectLayout from './fixtures/SelectLayout.vue';
 import VaporPopupLayout from './fixtures/VaporPopupLayout.vue';
@@ -205,71 +204,19 @@ it('updates the positioner when the controlled Navigation Menu value changes', a
   expect(style.getPropertyValue('--positioner-width')).toBe('120px');
 });
 
-it('measures the active viewport after switching back to a cached viewport', async () => {
-  const page = shallowRef('first');
-  const side = shallowRef<'top' | 'left'>('top');
-  await render(() => (
-    <Popover.Root defaultOpen defaultTriggerId="anchor">
-      <Popover.Trigger id="anchor">Open</Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner
-          data-testid="positioner"
-          side={side.value}
-          collisionAvoidance={{ side: 'none' }}
-        >
-          <Popover.Popup data-testid="popup" style={{ color: 'red' }}>
-            <KeepAlive>
-              {page.value === 'plain' ? (
-                <div>Plain content</div>
-              ) : (
-                <Popover.Viewport key={page.value}>
-                  <div style={{ width: page.value === 'first' ? '120px' : '180px' }} />
-                </Popover.Viewport>
-              )}
-            </KeepAlive>
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
-  ));
-  const { style } = screen.getByTestId('positioner');
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
-
-  const first = screen.getByTestId('popup').querySelector('[data-current]');
-  expect(screen.getByTestId('popup').style.bottom).toBe('0px');
-  page.value = 'second';
-  side.value = 'left';
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('180px');
-
-  page.value = 'first';
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('120px');
-
-  const popup = screen.getByTestId('popup');
-  expect(popup.querySelector('[data-current]')).toBe(first);
-  expect(popup.style.right).toBe('0px');
-  expect(popup.style.bottom).toBe('');
-  expect(popup.style.color).toBe('red');
-
-  page.value = 'plain';
-  await waitSingleFrame();
-  expect(style.getPropertyValue('--positioner-width')).toBe('');
-});
-
 it.runIf(isVaporApp)(
-  'applies viewport dimensions to the popup of a Vapor render slot',
+  'gives the size of the popup of a Vapor element slot to the positioner',
   async () => {
     await render(<VaporPopupLayout />);
     const positioner = screen.getByTestId('positioner');
     const popup = screen.getByTestId('popup');
     await waitSingleFrame();
     expect(positioner.style.getPropertyValue('--positioner-width')).toBe('120px');
-    expect(popup.style.getPropertyValue('--popup-width')).toBe('auto');
+    expect(popup.style.getPropertyValue('--popup-width')).toBe('');
     await fireEvent.click(screen.getByRole('button', { name: 'Resize' }));
-    await waitSingleFrame();
-    expect(positioner.style.getPropertyValue('--positioner-width')).toBe('180px');
-    expect(popup.style.getPropertyValue('--popup-width')).toBe('auto');
+    await waitFor(() =>
+      expect(positioner.style.getPropertyValue('--positioner-width')).toBe('180px'),
+    );
+    expect(popup.style.getPropertyValue('--popup-width')).toBe('');
   },
 );

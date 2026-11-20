@@ -7,7 +7,6 @@ import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
-import * as Popover from '../../../popover/parts';
 import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
 import { usePortalFocus } from './usePortalFocus';
@@ -60,7 +59,6 @@ const portalParts: PortalPart[] = [
     portal: NavigationMenu.Portal,
     portalProps: { keepMounted: true },
   },
-  { name: 'Popover.Portal', root: Popover.Root, portal: Popover.Portal, rootProps: open },
   { name: 'Select.Portal', root: Select.Root, portal: Select.Portal, rootProps: open },
 ];
 

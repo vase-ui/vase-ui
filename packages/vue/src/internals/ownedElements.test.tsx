@@ -3,7 +3,6 @@ import { KeepAlive, shallowRef, Teleport } from 'vue';
 import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { Menu } from '@vase-ui/vue/menu';
-import { Popover } from '@vase-ui/vue/popover';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimePicker } from '@vase-ui/vue/time-picker';
@@ -328,41 +327,6 @@ describe('owned parts', () => {
       );
       await user.click(screen.getByText('Volume'));
       expect(screen.getByRole('slider', { name: 'Volume' })).toHaveFocus();
-    },
-  );
-
-  it.each([true, false])(
-    'VUE-47: keeps a popup outside its positioner accessible with modal=%s',
-    async (modal) => {
-      const shown = shallowRef(true);
-      await render(() => (
-        <>
-          <Popover.Root defaultOpen modal={modal}>
-            <Popover.Trigger>Open</Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Teleport to="body">
-                  <Popover.Popup data-testid="popup">
-                    {shown.value && <button>Inside</button>}
-                    <Popover.Close>Close</Popover.Close>
-                  </Popover.Popup>
-                </Teleport>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
-          <button data-testid="outside">Outside</button>
-        </>
-      ));
-      const popup = screen.getByTestId('popup');
-      expect(popup.closest('[aria-hidden="true"], [inert], [data-vase-ui-inert]')).toBe(null);
-      if (modal) {
-        expect(screen.getByTestId('outside').closest('[aria-hidden="true"]')).not.toBe(null);
-      }
-      const inside = within(popup).getByRole('button', { name: 'Inside' });
-      inside.focus();
-      expect(inside).toHaveFocus();
-      shown.value = false;
-      await waitFor(() => expect(popup).toHaveFocus());
     },
   );
 

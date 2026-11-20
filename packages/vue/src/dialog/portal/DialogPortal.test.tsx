@@ -25,7 +25,7 @@ import type { DialogStore } from '../store/DialogStore';
 import DialogPortalHydration from './DialogPortalHydration.test.vue';
 import DialogPortalInPlaceHydration from './DialogPortalInPlaceHydration.test.vue';
 import DialogPortalInPlaceScoped from './DialogPortalInPlaceScoped.test.vue';
-import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 
 const INTERNAL_BACKDROP_SELECTOR = '[role="presentation"][data-vase-ui-inert]';
 
@@ -298,7 +298,7 @@ describe('<Dialog.Portal />', () => {
 
     beforeEach(() => {
       onTestFinished(() => {
-        expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
+        expect(isScrollLocked()).toBe(false);
       });
     });
 
@@ -402,13 +402,13 @@ describe('<Dialog.Portal />', () => {
       await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
       expect(inertOf('before', 'after', 'portal', 'popup')).toEqual([false, false, false, false]);
       expect(document.querySelectorAll(guards)).toHaveLength(0);
-      expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
+      expect(isScrollLocked()).toBe(false);
 
       modal.value = true;
       await waitFor(() => expect(inertOf('before', 'after')).toEqual([true, true]));
       expect(inertOf('portal', 'popup', 'backdrop')).toEqual([false, false, true]);
       expect(document.querySelectorAll(guards)).toHaveLength(2);
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
       screen.getByTestId('close').focus();
       await userEvent.tab();
       expect(screen.getByTestId('inside')).toHaveFocus();
@@ -416,7 +416,7 @@ describe('<Dialog.Portal />', () => {
       modal.value = 'trap-focus';
       await waitFor(() => expect(inertOf('before', 'after')).toEqual([false, false]));
       expect(document.querySelectorAll(guards)).toHaveLength(2);
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(0));
+      await waitFor(() => expect(isScrollLocked()).toBe(false));
       screen.getByTestId('close').focus();
       await userEvent.tab();
       expect(screen.getByTestId('inside')).toHaveFocus();
@@ -426,7 +426,7 @@ describe('<Dialog.Portal />', () => {
       expect(inertOf('before', 'after')).toEqual([false, false]);
       expect(screen.getByTestId('before').closest('[aria-hidden]')).toBe(null);
       expect(screen.getByTestId('after').closest('[aria-hidden]')).toBe(null);
-      expect(getScrollLockRegistry()?.lockCount).toBe(0);
+      expect(isScrollLocked()).toBe(false);
       expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
       expect(onOpenChange).not.toHaveBeenCalled();
     });
@@ -522,7 +522,7 @@ describe('<Dialog.Portal />', () => {
       ));
       await waitFor(() => expect(screen.getByTestId('inside')).toHaveFocus());
       expect(inertOf('before', 'after', 'popup')).toEqual([true, true, false]);
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
 
       await waitForLaterMillisecond(() => {
         alertOpen.value = true;
@@ -533,7 +533,7 @@ describe('<Dialog.Portal />', () => {
         nested ? screen.getByTestId('portal') : document.body,
       );
       expect(inertOf('before', 'after', 'popup', 'alert')).toEqual([true, true, true, false]);
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(2));
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
 
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(alert).not.toBeInTheDocument());
@@ -541,13 +541,13 @@ describe('<Dialog.Portal />', () => {
       await waitFor(() =>
         expect(screen.getByTestId('popup')).toContainElement(document.activeElement as HTMLElement),
       );
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(1));
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
 
       modal.value = false;
       await waitFor(() =>
         expect(inertOf('before', 'after', 'popup')).toEqual([false, false, false]),
       );
-      await waitFor(() => expect(getScrollLockRegistry()?.lockCount).toBe(0));
+      await waitFor(() => expect(isScrollLocked()).toBe(false));
       expect(document.querySelector('[inert]')).toBe(null);
     });
 
@@ -631,7 +631,7 @@ describe('<Dialog.Portal />', () => {
         await waitFor(() => expect(screen.getByTestId('input')).toHaveFocus());
         expect(inertOf('after')).toEqual([modal]);
         expect(document.querySelectorAll(guards)).toHaveLength(modal ? 2 : 0);
-        await waitFor(() => expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(modal ? 1 : 0));
+        await waitFor(() => expect(isScrollLocked()).toBe(modal));
         expect(onOpenChange).not.toHaveBeenCalled();
       },
     );

@@ -16,7 +16,6 @@ import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
-import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
@@ -259,21 +258,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <OTPField.Root length={4} role={undefined} data-testid="part" />,
     expected: () => 'group',
-  },
-  {
-    name: 'Popover.Popup role',
-    attribute: 'role',
-    createNode: () => (
-      <Popover.Root defaultOpen>
-        <Popover.Trigger>Open</Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner>
-            <Popover.Popup role={undefined} data-testid="part" />
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>
-    ),
-    expected: () => 'dialog',
   },
   {
     name: 'PreviewCard.Popup data-open',

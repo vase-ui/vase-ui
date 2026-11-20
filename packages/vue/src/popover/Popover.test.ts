@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { nextTick, reactive, shallowRef } from 'vue';
+import { nextTick, reactive, type Component } from 'vue';
 import { Popover, type PopoverRootChangeEventDetails } from '@vase-ui/vue/popover';
 import { Dialog } from '@vase-ui/vue/dialog';
 import PopoverHandles from '../../test/fixtures/PopoverHandles.vue';
@@ -502,13 +502,11 @@ describe('modal (3.2, L4 to L6)', () => {
   });
 
   test('a modal popover that closes under an open Dialog leaves the page locked', async () => {
-    const dialogOpen = shallowRef(false);
     const root = reactive<Props>({ open: true, modal: true });
     await mountPopover({ root });
     await opened();
     await waitFor(() => expect(isScrollLocked()).toBe(true));
-    mount(Dialog.Root, { open: true, modal: true }, document.body);
-    dialogOpen.value = true;
+    mount(Dialog.Root as Component, { open: true, modal: true });
     root.open = false;
     await closed();
     await nextTick();

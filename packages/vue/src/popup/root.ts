@@ -60,6 +60,8 @@ export interface PopupRoot<Payload = unknown> {
   readonly popup: HTMLElement | null;
   /** The sentinels and the fixed element of the portal, while they are in the document. */
   readonly portalElements: readonly Element[];
+  /** The elements of the popup and the backdrop, while they are in the document. */
+  readonly parts: readonly Element[];
   /** The `id` of the last mounted title. */
   readonly titleId: string | undefined;
   /** The `id` of the last mounted description. */
@@ -368,6 +370,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return portalElements
         .map((element) => element())
         .filter((element): element is Element => !!element);
+    },
+    get parts() {
+      return leavingElements
+        .map((element) => element())
+        .filter((element): element is Element => !!element?.isConnected);
     },
     get titleId() {
       return titles.at(-1)?.id;

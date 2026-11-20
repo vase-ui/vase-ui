@@ -173,7 +173,7 @@ describe.each([
       ));
       const target = await screen.findByTestId('choice');
       expect(target).not.toHaveAttribute(disabledAttribute);
-      expect(screen.getByTestId('trigger')).toHaveAttribute('data-disabled');
+      expect(screen.getByTestId('trigger')).toBeDisabled();
 
       hasField.value = false;
       await waitFor(() => {
