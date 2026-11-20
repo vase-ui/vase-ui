@@ -84,3 +84,4 @@ const layout = null as unknown as Resizable.Layout;
 expectType<ResizableRootProps, typeof rootProps>(rootProps);
 expectType<ResizableHandleState, typeof handleState>(handleState);
 expectType<ResizableLayout, typeof layout>(layout);
+expectType<'as', keyof ResizableRootProps & 'as'>('as');

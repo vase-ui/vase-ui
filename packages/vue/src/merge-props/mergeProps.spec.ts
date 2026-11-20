@@ -12,7 +12,7 @@ const typed = mergeProps<'button'>(slotProps, {
   },
 });
 
-expectType<NativeElements['button'], typeof typed>(typed);
+expectType<Omit<NativeElements['button'], 'as'>, typeof typed>(typed);
 typed.onKeydown?.(new KeyboardEvent('keydown'));
 
 const untyped = mergeProps(slotProps, {
@@ -21,11 +21,11 @@ const untyped = mergeProps(slotProps, {
   },
 });
 
-expectType<NativeElements['div'], typeof untyped>(untyped);
+expectType<Omit<NativeElements['div'], 'as'>, typeof untyped>(untyped);
 untyped.onKeydown?.(new KeyboardEvent('keydown'));
 
 const untypedLink = mergeProps(slotProps, { href: '/' });
-expectType<NativeElements['div'], typeof untypedLink>(untypedLink);
+expectType<Omit<NativeElements['div'], 'as'>, typeof untypedLink>(untypedLink);
 mergeProps<'a'>(slotProps, { href: '/' });
 
 mergeProps({ type: 'button' }, slotProps);
@@ -62,13 +62,13 @@ mergeProps<'div'>(slotProps, { href: '/' });
 const typedFromArray = mergePropsN<'button'>([slotProps, { type: 'submit' }]);
 const untypedFromArray = mergePropsN([slotProps, { href: '/' }, { 'data-state': 'on' }]);
 
-expectType<NativeElements['button'], typeof typedFromArray>(typedFromArray);
-expectType<NativeElements['div'], typeof untypedFromArray>(untypedFromArray);
+expectType<Omit<NativeElements['button'], 'as'>, typeof typedFromArray>(typedFromArray);
+expectType<Omit<NativeElements['div'], 'as'>, typeof untypedFromArray>(untypedFromArray);
 // @ts-expect-error No element has the attribute `hreff`.
 mergePropsN([slotProps, { hreff: '/' }]);
 
 mergeProps<'button'>(slotProps, (mergedProps) => {
-  expectType<NativeElements['button'], typeof mergedProps>(mergedProps);
+  expectType<Omit<NativeElements['button'], 'as'>, typeof mergedProps>(mergedProps);
 
   return {
     onKeydown(event) {

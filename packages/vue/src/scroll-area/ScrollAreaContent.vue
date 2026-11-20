@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, watch, type HTMLAttributes } from 'vue';
+import { mergeProps, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { injectScrollArea, injectViewport, stateAttributes } from './root';
-import type { ScrollAreaContentState } from './types';
+import type { ScrollAreaContentProps, ScrollAreaContentState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-defineProps</* @vue-ignore */ HTMLAttributes>();
+defineProps<ScrollAreaContentProps>();
 defineSlots<{
   default?(scope: { state: ScrollAreaContentState }): unknown;
   element?(scope: {
@@ -45,6 +45,9 @@ function elementProps() {
     :elementRef="setElement"
     :state="root.state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="root.state" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="root.state" />
   </div>

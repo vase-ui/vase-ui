@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
 /**
  * The size of each panel, by panel `id`: a number in percent of the panel space, or a string of a
@@ -21,7 +22,7 @@ export interface ResizableRootCommitEventDetails {
   event: Event;
 }
 
-export interface ResizableRootProps extends /* @vue-ignore */ HTMLAttributes {
+export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The layout. `null` is a layout with no entries, and the root stays controlled. An entry that is
    * not a size has no effect.
@@ -61,7 +62,8 @@ export interface ResizableRootState {
   dragging: boolean;
 }
 
-export interface ResizablePanelProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface ResizablePanelProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /** The `id` of the element, and the key of the panel in the layout. */
   id?: string;
   /**
@@ -110,7 +112,8 @@ export interface ResizablePanelState {
   disabled: boolean;
 }
 
-export interface ResizableHandleProps extends /* @vue-ignore */ HTMLAttributes {
+export interface ResizableHandleProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The handle ignores the user. */
   disabled?: boolean;
   /**

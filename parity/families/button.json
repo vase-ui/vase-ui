@@ -21,7 +21,7 @@
       "entry": "Button",
       "prop": "nativeButton",
       "kind": "not-applicable",
-      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and the `element` slot renders another element."
+      "reason": "The prop only says what the developer renders (rule 8.3). The part reads the element that it renders, and `as` and the `element` slot render another element."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/button/types.md",

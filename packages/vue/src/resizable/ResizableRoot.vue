@@ -835,6 +835,9 @@ defineExpose({ element });
     :element-ref="setElement"
     :state="state"
   />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" :sizes="shownSizes" />
+  </component>
   <div v-else v-bind="elementProps()" :ref="setElement">
     <slot :state="state" :sizes="shownSizes" />
   </div>

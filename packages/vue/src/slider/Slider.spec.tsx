@@ -5,6 +5,7 @@ import {
   type SliderRootCommitEventDetails,
   type SliderRootProps,
   type SliderThumbState,
+  type SliderTrackProps,
 } from '@vase-ui/vue/slider';
 
 const value: number = 25;
@@ -61,3 +62,7 @@ expectType<SliderRootProps<number[]>, typeof rangeProps>(rangeProps);
 expectType<SliderThumbState, typeof thumbState>(thumbState);
 expectType<SliderRootChangeEventDetails, typeof changeDetails>(changeDetails);
 expectType<SliderRootCommitEventDetails, typeof commitDetails>(commitDetails);
+// A part with no props of its own has `Props` for `as`.
+const trackProps = null as unknown as Slider.Track.Props;
+expectType<SliderTrackProps, typeof trackProps>(trackProps);
+expectType<'as', keyof SliderTrackProps & 'as'>('as');

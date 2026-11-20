@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import type { AsProps } from '../common/element';
 
 export type TabsRootOrientation = 'horizontal' | 'vertical';
 
@@ -23,7 +24,8 @@ export interface TabsTabSize {
   height: number;
 }
 
-export interface TabsRootProps<Value = any> extends /* @vue-ignore */ HTMLAttributes {
+export interface TabsRootProps<Value = any>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value of the active tab. With `null`, no tab is active. */
   modelValue?: Value | null;
   /**
@@ -54,7 +56,7 @@ export interface TabsRootChangeEventDetails extends ChangeEventDetails<TabsRootC
   activationDirection: TabsTabActivationDirection;
 }
 
-export interface TabsListProps extends /* @vue-ignore */ HTMLAttributes {
+export interface TabsListProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** An arrow key, Home and End also make the tab that gets the focus active. */
   activateOnFocus?: boolean;
   /** An arrow key moves the focus from the last tab to the first, and from the first to the last. */
@@ -63,10 +65,10 @@ export interface TabsListProps extends /* @vue-ignore */ HTMLAttributes {
 
 export type TabsListState = TabsRootState;
 
-export interface TabsTabProps<Value = any> extends /* @vue-ignore */ Omit<
-  ButtonHTMLAttributes,
-  'disabled' | 'id' | 'value'
-> {
+export interface TabsTabProps<Value = any>
+  extends
+    AsProps,
+    /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id' | 'value'> {
   /** The value that the root gets when the user chooses this tab. */
   value: Value;
   /** The user cannot choose the tab. The tab can still get the focus. */
@@ -81,7 +83,8 @@ export interface TabsTabState extends TabsRootState {
   disabled: boolean;
 }
 
-export interface TabsPanelProps<Value = any> extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface TabsPanelProps<Value = any>
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /** The value of the tab that opens the panel. */
   value: Value;
   /** A closed panel stays in the DOM, with `hidden` and `inert`. */
@@ -94,7 +97,7 @@ export interface TabsPanelState extends TabsRootState {
   hidden: boolean;
 }
 
-export interface TabsIndicatorProps extends /* @vue-ignore */ HTMLAttributes {
+export interface TabsIndicatorProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /**
    * The server HTML has a script that places the indicator before the app starts. Use it when the
    * page shows the server HTML for some time.

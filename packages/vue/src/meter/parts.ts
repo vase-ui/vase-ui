@@ -3,7 +3,13 @@ import MeterLabel from './MeterLabel.vue';
 import MeterRoot from './MeterRoot.vue';
 import MeterTrack from './MeterTrack.vue';
 import MeterValue from './MeterValue.vue';
-import type { MeterLabelProps, MeterRootProps } from './types';
+import type {
+  MeterIndicatorProps,
+  MeterLabelProps,
+  MeterRootProps,
+  MeterTrackProps,
+  MeterValueProps,
+} from './types';
 
 export const Root: typeof MeterRoot = MeterRoot;
 export namespace Root {
@@ -16,5 +22,16 @@ export namespace Label {
 }
 
 export const Value: typeof MeterValue = MeterValue;
+export namespace Value {
+  export type Props = MeterValueProps;
+}
+
 export const Track: typeof MeterTrack = MeterTrack;
+export namespace Track {
+  export type Props = MeterTrackProps;
+}
+
 export const Indicator: typeof MeterIndicator = MeterIndicator;
+export namespace Indicator {
+  export type Props = MeterIndicatorProps;
+}

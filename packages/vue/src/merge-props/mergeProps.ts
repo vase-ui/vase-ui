@@ -28,9 +28,12 @@ type SetAttributes<T extends ElementType> =
 // Each element accepts the attributes of `div`. An element refuses `AttributesOfEachElement`:
 // its `type` is a string, and `button` accepts only three values.
 // A listener of the result gets the DOM event, as Vue types a listener of an element. A template
-// refuses a bound object whose listeners need a `VaseUIEvent`.
-type MergedProps<T extends ElementType> =
-  IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T];
+// refuses a bound object whose listeners need a `VaseUIEvent`. The result has no `as`: motion-v adds
+// an `as` of each string to the attributes of each element, and the `as` of a part refuses it.
+type MergedProps<T extends ElementType> = Omit<
+  IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T],
+  'as'
+>;
 // The first member accepts an object with no index signature, such as `HTMLProps`.
 type PropsOf<T extends ElementType> =
   | WithVaseUIEventHandlers<SetAttributes<T>>
@@ -141,7 +144,7 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  */
 export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return {};
+    return {} as MergedProps<T>;
   }
   if (props.length === 1) {
     return createInitialMergedProps(props[0]) as MergedProps<T>;
@@ -159,7 +162,9 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Merg
 
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
   // A props getter can write to the object that it gets, so each call gets a new object.
-  return copyInitialProps(isPropsGetter(inputProps) ? inputProps({}) : inputProps);
+  return copyInitialProps(
+    isPropsGetter(inputProps) ? inputProps({} as MergedProps<T>) : inputProps,
+  );
 }
 
 function mergeInto<T extends ElementType>(merged: Record<string, any>, inputProps: InputProps<T>) {

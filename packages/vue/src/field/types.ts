@@ -1,10 +1,11 @@
 import type { HTMLAttributes, LabelHTMLAttributes } from 'vue';
 import type { FormValidationMode, FormValues } from '../form/field';
 import type { FieldState } from './control';
+import type { AsProps } from '../common/element';
 
 export type FieldValidateResult = string | string[] | null | undefined | void;
 
-export interface FieldRootProps extends /* @vue-ignore */ HTMLAttributes {
+export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   name?: string;
   disabled?: boolean;
   /**
@@ -50,15 +51,17 @@ export interface FieldLabelProps extends /* @vue-ignore */ Omit<LabelHTMLAttribu
   id?: string;
 }
 
-export interface FieldDescriptionProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface FieldDescriptionProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
 }
 
-export interface FieldItemProps extends /* @vue-ignore */ HTMLAttributes {
+export interface FieldItemProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   disabled?: boolean;
 }
 
-export interface FieldErrorProps extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface FieldErrorProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string;
   match?: Exclude<keyof FieldValidity, 'valid'>;
 }

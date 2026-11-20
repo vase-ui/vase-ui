@@ -68,7 +68,7 @@ An image component that renders its own `<img>` also needs `keepMounted`. Put th
 
 <<< ./avatar/ImageComponent.vue
 
-The part reads the `<img>` from the `element` that a component exposes. For a component that exposes no `element`, give its root element: `:ref="(image) => elementRef(image?.$el)"`. With no element, the part reads the status from the `load` and `error` events only.
+The part reads the `<img>` from the `element` that a component exposes, else from the root element of the component. With no element, the part reads the status from the `load` and `error` events only.
 
 ### Stacking
 

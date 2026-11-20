@@ -68,9 +68,11 @@ The default slot holds content, such as a glyph or an icon between two groups. A
 
 ## Another element
 
-The `element` slot renders your element in place of the `<div>`. A paragraph cannot hold a `<div>`, so render a `<span>` there. Bind `props` and `elementRef` on your element:
+`as` renders another tag or a component in place of the `<div>`. A paragraph cannot hold a `<div>`, so give `as="span"`:
 
-<<< ./separator/ElementSlot.vue
+<<< ./separator/AnotherElement.vue
+
+For full control, render your own element in the `element` slot. Bind `props` and `elementRef` on it.
 
 A native `<hr>` has the role `separator` too. For a horizontal line with no content, use `<hr>` with no part.
 

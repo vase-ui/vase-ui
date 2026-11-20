@@ -66,6 +66,8 @@ Import the component and assemble its parts:
 
 `Slider.Root` renders a `<div role="group">`. Each `Slider.Thumb` renders a `<div>` with an `<input type="range">` after its content. The input has the role `slider` and takes the focus. A part outside `Slider.Root` throws an error.
 
+Each part except `Slider.Label` and `Slider.Value` takes `as`, a tag or a component that it renders in place of its `<div>`. `Slider.Thumb` keeps its input in that element. The `element` slot of a part wins over `as`.
+
 The input gets each `aria-*` attribute, `tabindex`, `autofocus`, and the `focus`, `blur` and `keydown` listeners of `Slider.Thumb`. The thumb element gets each other attribute. The `element` slot of `Slider.Thumb` also gives `inputProps` and `inputRef`. Render the input in your element, or in another place:
 
 <<< ../examples/composition/ThumbElementSlot.vue{10-14}
