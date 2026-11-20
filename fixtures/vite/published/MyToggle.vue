@@ -18,7 +18,7 @@ const toggleProps = computed(() => {
 <template>
   <Toggle
     v-bind="toggleProps"
-    :data-size="props.size ?? 'md'"
+    :class="`size-${props.size ?? 'md'}`"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <template v-if="$slots.element" #element="scope">

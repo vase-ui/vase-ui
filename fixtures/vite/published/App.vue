@@ -24,6 +24,6 @@ function update(value: boolean) {
     <MyToggle v-slot="{ state }" size="sm" @update:model-value="wrapperUpdates.push($event)">
       {{ state.pressed ? 'Wrapper pressed' : 'Wrapper released' }}
     </MyToggle>
-    <p data-testid="wrapper-updates">{{ JSON.stringify(wrapperUpdates) }}</p>
+    <p id="wrapper-updates">{{ JSON.stringify(wrapperUpdates) }}</p>
   </main>
 </template>

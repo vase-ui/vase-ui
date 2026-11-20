@@ -45,11 +45,11 @@ it('hydrates the built Toggle and a wrapper of it, and forwards the first update
 
   // A wrapper that declares the props of the part gives them the defaults of the part.
   const wrapper = page.getByRole('button', { name: 'Wrapper released' });
-  expect(await wrapper.getAttribute('data-size')).toBe('sm');
+  expect(await wrapper.getAttribute('class')).toBe('size-sm');
   await wrapper.click();
   expect(await page.getByRole('button', { name: 'Wrapper pressed', pressed: true }).count()).toBe(
     1,
   );
-  expect(await page.getByTestId('wrapper-updates').textContent()).toBe('[true]');
+  expect(await page.locator('#wrapper-updates').textContent()).toBe('[true]');
   expect(messages).toEqual([]);
 });
