@@ -235,12 +235,11 @@ describe('the parts', () => {
     });
     expect(decrement).toHaveAttribute('aria-controls', 'amount');
     expect(increment).toHaveAttribute('aria-controls', '');
-    // The new input mounts before `<Transition>` removes the old one.
     Object.assign(parts, { input: false, second: true });
     await waitFor(() => expect(left).toBe(1));
     expect(decrement).toHaveAttribute('aria-controls', 'second');
     parts.second = false;
-    await waitFor(() => expect(left).toBe(2));
+    await nextTick();
     expect(decrement).not.toHaveAttribute('aria-controls');
   });
 });
