@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { nextTick } from 'vue';
 import ToastServer from '../../test/fixtures/ToastServer.vue';
 import { hydrate, renderOnServer } from '../../test/render';
@@ -24,20 +24,25 @@ describe('server render and hydration (B10)', () => {
     expect(root.querySelector('[role="region"]')).toBe(null);
   });
 
-  test('hydrates with no message; the alert of the toast of high priority comes after the mount, with the component of its title', async () => {
-    const root = await renderOnServer('ToastServer');
-    const toast = root.querySelector('[data-id="a"]');
-    hydrate(ToastServer, {}, root);
-    await nextTick();
-    expect(root.querySelector('[data-id="a"]')).toBe(toast);
-    const alert = await waitFor(() => {
-      const found = root.querySelector('[role="alert"]');
-      expect(found).not.toBe(null);
-      return found!;
-    });
-    expect(alert.querySelector('strong')).toHaveTextContent('Bold');
-    expect(alert).toHaveTextContent('BoldSaved');
-  });
+  // A Vapor app without the interop plugin renders no virtual DOM content of a label that is a
+  // function.
+  test.skipIf(inject('app') === 'vapor')(
+    'hydrates with no message; the alert of the toast of high priority comes after the mount, with the component of its title',
+    async () => {
+      const root = await renderOnServer('ToastServer');
+      const toast = root.querySelector('[data-id="a"]');
+      hydrate(ToastServer, {}, root);
+      await nextTick();
+      expect(root.querySelector('[data-id="a"]')).toBe(toast);
+      const alert = await waitFor(() => {
+        const found = root.querySelector('[role="alert"]');
+        expect(found).not.toBe(null);
+        return found!;
+      });
+      expect(alert.querySelector('strong')).toHaveTextContent('Bold');
+      expect(alert).toHaveTextContent('BoldSaved');
+    },
+  );
 
   test('a manager of a module gives no toast to a server render, also in a second render', async () => {
     for (let render = 0; render < 2; render += 1) {

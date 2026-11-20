@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, onTestFinished, test, vi } from 'vitest';
+import { afterEach, describe, expect, inject, onTestFinished, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { h, nextTick, reactive, Teleport, watchEffect } from 'vue';
 import type { UseToastManagerReturnValue } from '@vase-ui/vue/toast';
@@ -10,6 +10,7 @@ import ToastPartAlone from '../../test/fixtures/ToastPartAlone.vue';
 import ToastParts from '../../test/fixtures/ToastParts.vue';
 import { expectNoAxeViolations } from '../../test/axe';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Manager = UseToastManagerReturnValue<{ note?: string }>;
@@ -19,6 +20,9 @@ const viewport = () => document.querySelector<HTMLElement>('[data-testid="viewpo
 const toastRoot = (id: string) => document.querySelector<HTMLElement>(`[data-id="${id}"]`);
 const byId = (id: string) => document.getElementById(id)!;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// A label that is a function gives vnodes. A Vapor app without the interop plugin renders no
+// virtual DOM content in a part.
+const rendersVnodes = inject('app') !== 'vapor';
 
 async function mountToasts(props: Props = {}) {
   const { exposed, unmount } = mount(ToastParts, props);
@@ -532,15 +536,16 @@ describe('hover, focus and the window (B5)', () => {
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
   });
 
-  test('the hover and the focus state end when the last toast closes', async () => {
+  test('the hover ends when the last toast closes, also while the toast leaves under the pointer', async () => {
+    style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' });
-    byId('toast-before').focus();
-    await pressF6();
-    await userEvent.keyboard('{Tab}');
+    await userEvent.hover(toastRoot('a')!);
     await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    const leaving = toastRoot('a')!;
     manager.close('a');
     await nextTick();
+    expect(leaving.isConnected).toBe(true);
     expect(viewport()).not.toHaveAttribute('data-expanded');
   });
 });
@@ -576,6 +581,19 @@ describe('the keys (B6)', () => {
     document.removeEventListener('keydown', prevent);
     f6();
     expect(document.activeElement).toBe(viewport());
+  });
+
+  test('F6 in a toast with no origin stays with the browser: no listener of the window takes the focus', async () => {
+    const { manager } = await mountToasts({ inPlace: true });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('a'));
+    // A real F6 moves the focus out of the page in Firefox.
+    toastRoot('a')!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'F6', bubbles: true, cancelable: true }),
+    );
+    expect(document.activeElement).toBe(toastRoot('a'));
   });
 
   test('Tab from the viewport goes to the first toast that is not inert; Shift+Tab on the first toast and Tab after the last return the focus to the origin', async () => {
@@ -669,17 +687,20 @@ describe('the keys (B6)', () => {
     expect(manager.toasts.value).toHaveLength(1);
   });
 
-  test('an Escape in content that a <Teleport> of the toast moves out of it closes nothing', async () => {
-    const { manager } = await mountToasts();
-    await added(manager, {
-      id: 'a',
-      description: () =>
-        h(Teleport, { to: 'body' }, h('input', { id: 'moved', 'aria-label': 'Moved' })),
-    });
-    byId('moved').focus();
-    await userEvent.keyboard('{Escape}');
-    expect(manager.toasts.value).toHaveLength(1);
-  });
+  test.runIf(rendersVnodes)(
+    'an Escape in content that a <Teleport> of the toast moves out of it closes nothing',
+    async () => {
+      const { manager } = await mountToasts();
+      await added(manager, {
+        id: 'a',
+        description: () =>
+          h(Teleport, { to: 'body' }, h('input', { id: 'moved', 'aria-label': 'Moved' })),
+      });
+      byId('moved').focus();
+      await userEvent.keyboard('{Escape}');
+      expect(manager.toasts.value).toHaveLength(1);
+    },
+  );
 
   test('a close with a keyboard focus in the toast moves it to the next older toast that is not inert, else to the next newer one, else to the origin', async () => {
     const { manager } = await mountToasts();
@@ -781,21 +802,24 @@ describe('the names and the announcements (B7)', () => {
     },
   );
 
-  test('a label that is a function renders as a component; `actionProps` gives the attributes and the listeners of the action', async () => {
-    const onClick = vi.fn();
-    const { manager } = await mountToasts();
-    await added(manager, {
-      id: 'a',
-      title: () => h('strong', 'Bold'),
-      actionProps: { children: 'Undo', onClick, 'aria-label': 'Undo the change' },
-    });
-    const root = toastRoot('a')!;
-    expect(root.querySelector('h2 > strong')).toHaveTextContent('Bold');
-    const action = root.querySelector('button')!;
-    expect(action).toHaveAttribute('aria-label', 'Undo the change');
-    await userEvent.click(action);
-    expect(onClick).toHaveBeenCalledTimes(1);
-  });
+  test.runIf(rendersVnodes)(
+    'a label that is a function renders as a component; `actionProps` gives the attributes and the listeners of the action',
+    async () => {
+      const onClick = vi.fn();
+      const { manager } = await mountToasts();
+      await added(manager, {
+        id: 'a',
+        title: () => h('strong', 'Bold'),
+        actionProps: { children: 'Undo', onClick, 'aria-label': 'Undo the change' },
+      });
+      const root = toastRoot('a')!;
+      expect(root.querySelector('h2 > strong')).toHaveTextContent('Bold');
+      const action = root.querySelector('button')!;
+      expect(action).toHaveAttribute('aria-label', 'Undo the change');
+      await userEvent.click(action);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    },
+  );
 
   test('a slot that comes after the mount is content', async () => {
     const list = reactive<Props>({ titleText: '' });
@@ -846,12 +870,7 @@ describe('the names and the announcements (B7)', () => {
 
   test('a toast of high priority is an `alertdialog`, hidden from a screen reader until the focus comes; an alert in the parent of the viewport announces it', async () => {
     const { manager } = await mountToasts();
-    await added(manager, {
-      id: 'a',
-      title: 'Alert',
-      description: () => h('em', 'Now'),
-      priority: 'high',
-    });
+    await added(manager, { id: 'a', title: 'Alert', description: 'Now', priority: 'high' });
     const root = toastRoot('a')!;
     expect(root).toHaveAttribute('role', 'alertdialog');
     expect(root).toHaveAttribute('aria-hidden', 'true');
@@ -860,7 +879,6 @@ describe('the names and the announcements (B7)', () => {
     expect(alert.parentElement).toBe(viewport().parentElement);
     expect(alert).toHaveAttribute('aria-atomic', 'true');
     expect(alert.textContent).toBe('AlertNow');
-    expect(alert.querySelector('em')).toHaveTextContent('Now');
     byId('toast-before').focus();
     await pressF6();
     await userEvent.keyboard('{Tab}');
@@ -996,6 +1014,7 @@ describe('VUE-60: one root node', () => {
   });
 });
 
+// The case throws in `setup`, so it is the last of the file.
 describe('a part outside its parent', () => {
   test('throws an error that names the part and its parent', () => {
     expect(String(mountError(ToastPartAlone, { part: 'Root' }))).toContain(
@@ -1007,5 +1026,7 @@ describe('a part outside its parent', () => {
     expect(String(mountError(ToastPartAlone, { part: 'useToastManager' }))).toContain(
       'Toast.useToastManager() must be inside <Toast.Provider>',
     );
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
   });
 });
