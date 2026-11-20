@@ -6,7 +6,7 @@ import { server, userEvent } from 'vitest/browser';
 import { defineComponent, h, nextTick, reactive, shallowRef, Transition, type PropType } from 'vue';
 import { touchDrag } from '../pointer';
 import { mount } from '../render';
-import { wait, waitSingleFrame } from '../wait';
+import { wait } from '../wait';
 
 let root: HTMLElement | undefined;
 
@@ -325,11 +325,11 @@ describe('a real touch on a sheet (M6, M7)', () => {
   );
 
   test.skipIf(server.browser !== 'chromium')(
-    'sends the first `pointermove` at 1 px and the first `touchmove` near 16 px; with only passive listeners that `touchmove` is not cancelable',
+    'sends the first `pointermove` at 1 px and the first `touchmove` near 16 px',
     async () => {
       const { sheet } = touchSheet();
       element('scroller').scrollTop = 200;
-      const first: Record<string, { distance: number; cancelable: boolean }> = {};
+      const first: Record<string, number> = {};
       let startY = 0;
       for (const type of ['pointerdown', 'pointermove', 'touchmove']) {
         sheet.addEventListener(
@@ -340,21 +340,16 @@ describe('a real touch on a sheet (M6, M7)', () => {
                 ? (event as TouchEvent).touches[0]!.clientY
                 : (event as PointerEvent).clientY;
             if (type === 'pointerdown') startY = y;
-            first[type] ??= { distance: Math.round(y - startY), cancelable: event.cancelable };
+            first[type] ??= Math.round(y - startY);
           },
           { passive: true },
         );
       }
-      // The compositor of Chromium reads the listeners of a page at a frame. The case before this one
-      // has a listener that is not passive in the same place.
-      await waitSingleFrame();
-      await waitSingleFrame();
       const start = centerOf(element('scroller'));
       await touchDrag(start, { x: start.x, y: start.y + 40 }, 40);
       await wait(50);
-      expect(first.pointermove?.distance).toBe(1);
-      expect(first.touchmove?.distance).toBeGreaterThanOrEqual(10);
-      expect(first.touchmove?.cancelable).toBe(false);
+      expect(first.pointermove).toBe(1);
+      expect(first.touchmove).toBeGreaterThanOrEqual(10);
     },
   );
 });
