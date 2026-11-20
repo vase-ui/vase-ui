@@ -7,9 +7,11 @@ import {
   type NumberFieldRootCommitEventDetails,
 } from '@vase-ui/vue/number-field';
 import { dataAttributes } from '../../test/field';
+import NumberFieldInLocaleProvider from '../../test/fixtures/NumberFieldInLocaleProvider.vue';
 import NumberFieldInputAlone from '../../test/fixtures/NumberFieldInputAlone.vue';
 import NumberFieldParts from '../../test/fixtures/NumberFieldParts.vue';
 import NumberFields from '../../test/fixtures/NumberFields.vue';
+import { mockRuntimeLocale } from '../../test/mockRuntimeLocale';
 import { mount, mountError, settle, typeAtEnd } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { fireTouch } from '../../test/touch';
@@ -413,6 +415,21 @@ describe('the value and the text', () => {
     input.focus();
     await userEvent.keyboard('{ArrowUp}');
     expect(commits(log)).toEqual(['commit 150 input-blur', 'commit 100 keyboard']);
+  });
+});
+
+describe('the locale', () => {
+  test('the text has the locale prop, else the locale of the nearest LocaleProvider, and never the locale of the visitor', async () => {
+    mockRuntimeLocale('de-CH');
+    const provider = reactive({ locale: 'de-DE' });
+    const { root } = mount(NumberFieldInLocaleProvider, { provider });
+    await nextTick();
+    const text = (name: string) => root.querySelector<HTMLInputElement>(`[aria-label=${name}]`)!.value;
+    expect(text('Provider')).toBe('1.234,5');
+    expect(text('Own')).toBe(new Intl.NumberFormat('fr-FR').format(1234.5));
+    provider.locale = 'en-US';
+    await nextTick();
+    expect(text('Provider')).toBe('1,234.5');
   });
 });
 
