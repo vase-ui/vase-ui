@@ -14,6 +14,8 @@ defineProps({
   inputInPopup: Boolean,
   /** A trigger beside the input. */
   trigger: Boolean,
+  /** A trigger before the group of the input. */
+  triggerFirst: Boolean,
   clear: Object as PropType<Props>,
   label: Boolean,
   input: Object as PropType<Props>,
@@ -55,6 +57,7 @@ export const FRUITS = [
   <input id="before" aria-label="Before" />
   <Combobox.Root ref="rootPart" :items="items" v-bind="root">
     <Combobox.Label v-if="label" data-testid="label">Fruit</Combobox.Label>
+    <Combobox.Trigger v-if="triggerFirst" data-testid="trigger">Open</Combobox.Trigger>
     <Combobox.Trigger v-if="inputInPopup" data-testid="trigger">
       <Combobox.Value placeholder="Pick a fruit" />
     </Combobox.Trigger>
