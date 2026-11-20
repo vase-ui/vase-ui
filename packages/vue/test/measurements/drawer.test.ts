@@ -6,7 +6,7 @@ import { server, userEvent } from 'vitest/browser';
 import { defineComponent, h, nextTick, reactive, shallowRef, Transition, type PropType } from 'vue';
 import { touchDrag } from '../pointer';
 import { mount } from '../render';
-import { wait } from '../wait';
+import { wait, waitSingleFrame } from '../wait';
 
 let root: HTMLElement | undefined;
 
@@ -345,6 +345,10 @@ describe('a real touch on a sheet (M6, M7)', () => {
           { passive: true },
         );
       }
+      // The compositor of Chromium reads the listeners of a page at a frame. The case before this one
+      // has a listener that is not passive in the same place.
+      await waitSingleFrame();
+      await waitSingleFrame();
       const start = centerOf(element('scroller'));
       await touchDrag(start, { x: start.x, y: start.y + 40 }, 40);
       await wait(50);

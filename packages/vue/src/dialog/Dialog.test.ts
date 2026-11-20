@@ -1564,7 +1564,7 @@ describe('a part outside its parent', () => {
       part: 'Popup',
       inRoot: false,
       message:
-        'Vase UI: <Dialog.Popup> must be inside <Dialog.Root> or <AlertDialog.Root>. Without a root the part has no dialog. Put the part inside <Dialog.Root> or <AlertDialog.Root>.',
+        'Vase UI: <Dialog.Popup> must be inside <Dialog.Root>, <AlertDialog.Root> or <Drawer.Root>. Without a root the part has no dialog. Put the part inside one of these roots.',
     },
     {
       part: 'Trigger',
