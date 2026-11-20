@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, useAttrs, useSlots } from 'vue';
-import { useButton } from '../button/button';
+import { useButton } from '../common/button';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { formatNumber } from '../common/formatNumber';
