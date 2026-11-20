@@ -1,7 +1,7 @@
-import OTPFieldInput from './input/OTPFieldInput.vue';
-import type { OTPFieldInputProps, OTPFieldInputState } from './input/OTPFieldInput.vue';
-import OTPFieldRoot from './root/OTPFieldRoot.vue';
+import OTPFieldInput from './OTPFieldInput.vue';
+import OTPFieldRoot from './OTPFieldRoot.vue';
 import type {
+  OTPFieldInputState,
   OTPFieldRootChangeEventDetails,
   OTPFieldRootChangeEventReason,
   OTPFieldRootCompleteEventDetails,
@@ -11,19 +11,18 @@ import type {
   OTPFieldRootProps,
   OTPFieldRootState,
   OTPFieldRootValidationType,
-} from './root/OTPFieldRoot.vue';
+} from './types';
+
+// The API reference of the docs reads the description of a part from the JSDoc of its export.
 
 /**
  * Groups all OTP field parts and manages their state.
- * Renders a `<div>` element and a hidden `<input>` beside.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * Renders a `<div>` element. Its last child is a hidden `<input>` that holds the code.
  */
 export const Root: typeof OTPFieldRoot = OTPFieldRoot;
 export namespace Root {
-  export type State = OTPFieldRootState;
   export type Props = OTPFieldRootProps;
+  export type State = OTPFieldRootState;
   export type ValidationType = OTPFieldRootValidationType;
   export type ChangeEventReason = OTPFieldRootChangeEventReason;
   export type ChangeEventDetails = OTPFieldRootChangeEventDetails;
@@ -40,7 +39,6 @@ export namespace Root {
 export const Input: typeof OTPFieldInput = OTPFieldInput;
 export namespace Input {
   export type State = OTPFieldInputState;
-  export type Props = OTPFieldInputProps;
 }
 
 export { Separator } from '../separator';
