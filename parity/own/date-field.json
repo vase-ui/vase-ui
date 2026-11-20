@@ -4,7 +4,7 @@
     "https://html.spec.whatwg.org/multipage/input.html#date-state-(type=date)",
     "https://www.rfc-editor.org/rfc/rfc9557"
   ],
-  "reason": "Base UI has no date field. A person types a date into one segment for each part, as the spinbutton pattern describes, and the field gives one Temporal value to a form.",
+  "reason": "A person types a date into one segment for each part, as the spinbutton pattern describes. The field gives one Temporal value to a form.",
   "parts": ["Root", "Input", "Segment", "Literal", "Clear"],
   "types": ["DateField.Root.Granularity", "DateField.Root.ChangeEventReason"]
 }

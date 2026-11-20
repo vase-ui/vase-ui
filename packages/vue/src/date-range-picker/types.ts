@@ -44,7 +44,8 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> {
   /**
    * The first day and the last day of the range: each a `Temporal.PlainDate`, `PlainDateTime` or
    * `ZonedDateTime`, or `null` while it has no value. `null` is `[null, null]`. A new end has the
-   * kind, the calendar, the time and the zone of an end.
+   * kind, the calendar, the time and the zone of an end, else of `defaultValue`, else of the last
+   * end.
    */
   modelValue?: DateRangePickerRootValue<Value> | null | undefined;
   /** The first range of a picker with no `modelValue`. */
@@ -64,6 +65,7 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> {
   /**
    * The press that gives the second end, or a drag, closes the popup. The user sets a time in a
    * field, so the default is `true` also for a range with a time.
+   * In a wrapper that declares this prop, give it the default `undefined`.
    * @default true
    */
   closeOnSelect?: boolean | undefined;
@@ -216,7 +218,7 @@ export interface DateRangePickerPopupProps extends /* @vue-ignore */ Omit<
   /**
    * The element that gets the focus at the open. The default is the day of the tab stop of the
    * calendar, else the default of `Popover.Popup`. `true`, `null` and a function that gives one of
-   * them ask for that default.
+   * them ask for that default. `false` moves no focus.
    */
   initialFocus?: PopoverPopupProps['initialFocus'] | undefined;
 }

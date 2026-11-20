@@ -58,8 +58,9 @@ export namespace Root {
 }
 
 /**
- * The field of the picker: `TimeField.Root` with the value of the picker. Alt+ArrowDown in it
- * opens the popup.
+ * The field of the picker: `TimeField.Root` with the value of the picker. It takes the other props
+ * of `TimeField.Root`, such as `id` and `step`, and it has the selectors of that part. Its form input
+ * gives the value to a form. Alt+ArrowDown in it opens the popup.
  * Renders a `<div>` element with a hidden form `<input>` element in it.
  */
 export const Field: typeof TimePickerField = TimePickerField;
@@ -69,8 +70,13 @@ export namespace Field {
 }
 
 /**
- * A button that opens the popup: `Popover.Trigger` of the picker.
+ * A button that opens the popup: `Popover.Trigger` of the picker. The `text` of its slots is the
+ * time in the locale, or `undefined` with no value.
  * Renders a `<button>` element.
+ * @selector `[aria-expanded="true"]` The popup is open.
+ * @selector `[data-pressed]` The popup is open, and a press on the trigger or Alt+ArrowDown in the field opened it.
+ * @selector `:disabled` The trigger is a native button, and the trigger or the picker is disabled or read-only.
+ * @selector `[aria-disabled="true"]` The trigger is another element, and the trigger or the picker is disabled or read-only.
  */
 export const Trigger: typeof TimePickerTrigger = TimePickerTrigger;
 export namespace Trigger {
@@ -81,6 +87,14 @@ export namespace Trigger {
 /**
  * Places the popup at the field: `Popover.Positioner` of the picker.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`.
+ * @selector `[data-align]` The alignment of the popup on that side: `start`, `center` or `end`.
+ * @selector `[data-anchor-hidden]` The anchor is out of the view.
+ * @cssVariable `--anchor-width` The width of the anchor.
+ * @cssVariable `--anchor-height` The height of the anchor.
+ * @cssVariable `--available-width` The width that the popup has before it goes out of its collision boundary.
+ * @cssVariable `--available-height` The height that the popup has before it goes out of its collision boundary.
+ * @cssVariable `--transform-origin` The `transform-origin` that makes the popup grow from its anchor.
  */
 export const Positioner: typeof TimePickerPositioner = TimePickerPositioner;
 export namespace Positioner {
@@ -92,6 +106,10 @@ export namespace Positioner {
  * The container of the list, the columns or the clock: `Popover.Popup` of the picker. It gives the
  * focus to the first of them at each open.
  * Renders a `<div>` element.
+ * @selector `[data-side]` The side of the anchor that the popup is on: `top`, `bottom`, `left`, `right`, `inline-start` or `inline-end`.
+ * @selector `[data-align]` The alignment of the popup on that side: `start`, `center` or `end`.
+ * @selector `[data-instant]` The popup changes with no animation: `click` after a key opened it, `dismiss` after Escape closed it, or `focus` after the focus left it.
+ * @selector `[hidden]` The popup is closed, and `keepMounted` of `Popover.Portal` keeps it in the DOM.
  */
 export const Popup: typeof TimePickerPopup = TimePickerPopup;
 export namespace Popup {
@@ -102,6 +120,8 @@ export namespace Popup {
 /**
  * A list of times, by a step of minutes.
  * Renders a `<div>` element.
+ * @selector `[aria-disabled="true"]` The picker is disabled.
+ * @selector `[aria-readonly="true"]` The picker is read-only.
  */
 export const List: typeof TimePickerList = TimePickerList;
 export namespace List {
@@ -112,6 +132,9 @@ export namespace List {
 /**
  * A time of `TimePicker.List`. A press gives the time to the picker.
  * Renders a `<button>` element.
+ * @selector `[aria-selected="true"]` The time of the item is the time of the value.
+ * @selector `:disabled` The item is a native button, and the item or the picker is disabled.
+ * @selector `[aria-disabled="true"]` The item is another element, and the item or the picker is disabled.
  */
 export const Item: typeof TimePickerItem = TimePickerItem;
 export namespace Item {
@@ -120,8 +143,11 @@ export namespace Item {
 }
 
 /**
- * A list of the values of one unit: the hours, the minutes, the seconds or the day periods.
+ * A list of the values of one unit: the hours, the minutes, the seconds or the day periods. Its name
+ * is the name of its unit in the locale.
  * Renders a `<div>` element.
+ * @selector `[aria-disabled="true"]` The picker is disabled.
+ * @selector `[aria-readonly="true"]` The picker is read-only.
  */
 export const Column: typeof TimePickerColumn = TimePickerColumn;
 export namespace Column {
@@ -132,8 +158,12 @@ export namespace Column {
 }
 
 /**
- * A value of `TimePicker.Column`. A press sets the unit of the time.
+ * A value of `TimePicker.Column`. A press sets the unit of the time, keeps the other units, and
+ * moves the time into `min` and `max`.
  * Renders a `<button>` element.
+ * @selector `[aria-selected="true"]` The value of the item is the unit of the time of the value.
+ * @selector `:disabled` The item is a native button, and the item or the picker is disabled, or its value has no time between `min` and `max`.
+ * @selector `[aria-disabled="true"]` The item is another element, and the item or the picker is disabled, or its value has no time between `min` and `max`.
  */
 export const ColumnItem: typeof TimePickerColumnItem = TimePickerColumnItem;
 export namespace ColumnItem {
@@ -142,8 +172,10 @@ export namespace ColumnItem {
 }
 
 /**
- * The clock of the picker: `TimeClock.Root` with the value of the picker. The commit of the last
- * view closes the popup.
+ * The clock of the picker: `TimeClock.Root` with the value of the picker. It takes the other props
+ * and events of `TimeClock.Root`, such as `minuteStep` and `valueCommitted`, and it has the
+ * selectors of that part. The commit of the last view closes the popup when `closeOnSelect` of the
+ * root allows it.
  * Renders a `<div>` element.
  */
 export const Clock: typeof TimePickerClock = TimePickerClock;
