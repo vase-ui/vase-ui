@@ -73,24 +73,24 @@ To keep the popup in the DOM until an animation of JavaScript ends, use the Java
 | Arrow keys of the orientation      | In the list: move the focus to the next or the previous trigger or link, with no loop.                      |
 | Arrow keys                         | In a content: move the focus between its links and triggers, with a loop.                                   |
 | <kbd>Tab</kbd>                     | On the trigger of the open item: goes into its content. From the end of the content, goes to the next item. |
-| <kbd>Escape</kbd>                  | Closes the menu, and the focus goes to the trigger.                                                         |
+| <kbd>Escape</kbd>                  | In a menu with a portal: closes the menu, and the focus in the popup goes to the trigger.                   |
 
 ## Styling
 
 Select the states of the parts with these selectors:
 
-| Selector                      | On                       | State                                                                                                 |
-| ----------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `[aria-expanded="true"]`      | trigger                  | The item of the trigger is open.                                                                      |
-| `[aria-disabled="true"]`      | trigger                  | The trigger is disabled. It keeps the focus. In a disabled fieldset it has `:disabled`.               |
-| `[aria-current="page"]`       | link                     | The link of the current page, with `aria-current` that you give.                                      |
-| `[data-popup-open]`           | icon                     | The item of the icon is open.                                                                         |
-| `[data-activation-direction]` | content                  | The side of the new trigger from the old one: `left`, `right`, `up` or `down`.                        |
-| `[data-side]`, `[data-align]` | positioner, popup, arrow | The side of the trigger and the alignment of the popup.                                               |
-| `[data-anchor-hidden]`        | positioner, popup        | The trigger is out of view.                                                                           |
-| `[data-uncentered]`           | arrow                    | The arrow cannot point at the center of the trigger.                                                  |
-| `[data-instant]`              | positioner               | An animation should not run: the popup takes its first place, or the window changes its size.         |
-| `[hidden]`                    | content, popup, backdrop | A closed content with `keepMounted`, or a closed popup and backdrop with `keepMounted` on the portal. |
+| Selector                      | On                                   | State                                                                                         |
+| ----------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `[aria-expanded="true"]`      | trigger                              | The item of the trigger is open.                                                              |
+| `[aria-disabled="true"]`      | trigger                              | The trigger is disabled. It keeps the focus. In a disabled fieldset it has `:disabled`.       |
+| `[aria-current="page"]`       | link                                 | The link of the current page, with `aria-current` that you give.                              |
+| `[data-popup-open]`           | icon                                 | The item of the icon is open.                                                                 |
+| `[data-activation-direction]` | content                              | The side of the new trigger from the old one: `left`, `right`, `up` or `down`.                |
+| `[data-side]`, `[data-align]` | positioner, popup, arrow             | The side of the trigger and the alignment of the popup.                                       |
+| `[data-anchor-hidden]`        | positioner, popup                    | The trigger is out of view.                                                                   |
+| `[data-uncentered]`           | arrow                                | The arrow cannot point at the center of the trigger.                                          |
+| `[data-instant]`              | positioner                           | An animation should not run: the popup takes its first place, or the window changes its size. |
+| `[hidden]`                    | content, positioner, popup, backdrop | A closed content with `keepMounted`, or the closed parts of a portal with `keepMounted`.      |
 
 These CSS variables give the sizes and the place:
 
