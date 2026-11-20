@@ -10,12 +10,12 @@ const transition = { enterFromClass: styles.EnterFrom, leaveToClass: styles.Leav
 const base = import.meta.env.BASE_URL;
 const isDesktop = ref(true);
 let desktopQuery: MediaQueryList | undefined;
-function updateDesktop() {
-  isDesktop.value = desktopQuery?.matches ?? true;
+function updateDesktop({ matches }: { matches: boolean }) {
+  isDesktop.value = matches;
 }
 onMounted(() => {
   desktopQuery = window.matchMedia('(min-width: 700px)');
-  updateDesktop();
+  updateDesktop(desktopQuery);
   desktopQuery.addEventListener('change', updateDesktop);
 });
 onUnmounted(() => desktopQuery?.removeEventListener('change', updateDesktop));

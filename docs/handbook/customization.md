@@ -65,10 +65,10 @@ To stop a change of a part, [cancel the change event](#canceling-a-vase-ui-event
 
 <<< ../examples/customization/StopEvent.vue{7}
 
-A capture listener runs before the other listeners of the element. After the call, no bubble listener gets the event. These limits apply:
+Your capture listener runs before the listeners of the part. After the call, no bubble listener gets the event. Two limits apply:
 
-- The listeners above the part do not get the event too, also the listeners of your app.
-- A capture listener on an element around the part, or on the document, runs before your listener, and the call does not stop it. A popup has such listeners for a press outside. To stop that close, call `cancel()` on the change event.
+- No bubble listener above the part gets the event. This includes the listeners of your app and the <kbd>Esc</kbd> listener of a popup.
+- A capture listener on an element around the part, or on the document, runs before your listener. The call does not stop it. A popup has such listeners for a press outside. To stop that close, call `cancel()` on the change event.
 
 ## Controlling components with state
 

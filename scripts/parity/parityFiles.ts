@@ -91,7 +91,7 @@ export interface OwnComponent {
   parts?: string[];
   /** The titles of the functions and classes, such as `createHandle`. */
   functions?: string[];
-  /** The paths of the types, such as `Resizable.Panel.Size`. */
+  /** The paths of the types, such as `Calendar.Root.View`. */
   types?: string[];
 }
 

@@ -170,7 +170,7 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 | `reason` | Why Vase UI has the component. |
 | `parts` | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports. A record needs `parts` or `functions`. |
 | `functions` | Optional. The titles of the functions and classes that the entry point exports, such as `createHandle`. |
-| `types` | Optional. The paths of the types that the entry point exports, such as `Resizable.Panel.Size`. |
+| `types` | Optional. The paths of the types that the entry point exports, such as `Calendar.Root.View`. |
 
 A utility of Vase UI's own has the same record, with `functions` and no `parts`.
 
@@ -718,7 +718,7 @@ The public form:
 2. No prop says what the developer renders, such as `nativeButton` or `nativeLabel`. A part reads its element after the mount, and a tag in `as` before the mount.
 3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element.
 4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:errors`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`.
-5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. Their type is `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, and `E` is the type of the native event. A family that knows the event of each reason writes a union with one member for each event type. A family that adds a member writes an intersection: `ChangeEventDetails<Reason> & { … }`. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`. `@vase-ui/vue/types` exports the two types and `ElementSlotProps`.
+5. The details of a change have `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. Their type is `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, and `E` is the type of the native event. A family that knows the event of each reason writes a union with one member for each event type. A family that adds a member extends the type in an interface, or writes an intersection in each member of a union: `ChangeEventDetails<Reason, E> & { … }`. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`. `@vase-ui/vue/types` exports the two types and `ElementSlotProps`.
 6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
 7. `<Transition>` animates a part that appears and goes. The parts have no `data-starting-style`, `data-ending-style` or `transitionStatus`.
 8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat, as in Base UI: `Field.Root.Props` and `FieldRootProps`. `parts.ts` declares the constant of each part with the type `typeof` its SFC. A type-only namespace beside the constant holds `Props`, `State` and the event types that the part has. A family with one part declares them in `index.ts`: `Checkbox.Props`. No constants for the names of data attributes.

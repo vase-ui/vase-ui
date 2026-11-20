@@ -23,7 +23,7 @@ The component renders its own element, or the element that a consumer renders in
 <<< ./use-element/Notice.vue
 
 - Bind `setElement` on the element with `:ref`. Vapor mode ignores a `ref` in `v-bind`.
-- `element` is that element. For a component in the slot, it is the `element` that the component exposes. It is `null` on a server, before the mount and after the unmount.
+- `element` is that element. For a component in the slot, it is the `element` that the component exposes. A component that exposes no `element` gives its root element, but a component in Vapor mode gives none. `element` is `null` on a server, before the mount and after the unmount.
 - Expose `element`. A template ref of the consumer then reads the native element.
 - A Vase UI part exposes `element` too. The component can be the element of a part, and a part can be the element of the component.
 - With `inheritAttrs: false`, the template binds the attributes of the consumer on the element. `mergeProps` of Vue merges them with the attributes of the component, and the value of the consumer wins. It joins `class` and `style`, and keeps each listener.

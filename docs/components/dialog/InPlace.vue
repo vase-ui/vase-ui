@@ -5,12 +5,12 @@ import { Dialog } from '@vase-ui/vue/dialog';
 const open = ref(true);
 const isNarrow = ref(false);
 let narrowQuery: MediaQueryList | undefined;
-function updateNarrow() {
-  isNarrow.value = narrowQuery?.matches ?? false;
+function updateNarrow({ matches }: { matches: boolean }) {
+  isNarrow.value = matches;
 }
 onMounted(() => {
   narrowQuery = window.matchMedia('(max-width: 48rem)');
-  updateNarrow();
+  updateNarrow(narrowQuery);
   narrowQuery.addEventListener('change', updateNarrow);
 });
 onUnmounted(() => narrowQuery?.removeEventListener('change', updateNarrow));
