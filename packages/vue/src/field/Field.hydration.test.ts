@@ -46,7 +46,7 @@ describe('server render and hydration', () => {
     expect(input).toHaveAttribute('aria-describedby', 'first error last');
   });
 
-  test('the server HTML of a control names the label, the description and the error that come after it', async () => {
+  test('VUE-17: the server HTML of a control names the label, the description and the error that come after it', async () => {
     const props = { root: { invalid: true } };
     const root = await renderOnServer('PartsAfterControl', props);
     const input = root.querySelector('input')!;

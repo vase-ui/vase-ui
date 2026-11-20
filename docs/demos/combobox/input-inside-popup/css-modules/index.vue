@@ -237,6 +237,8 @@ const countries: Country[] = [
   { code: 'zm', value: 'zambia', label: 'Zambia', continent: 'Africa' },
   { code: 'zw', value: 'zimbabwe', label: 'Zimbabwe', continent: 'Africa' },
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -251,24 +253,30 @@ const countries: Country[] = [
       </Combobox.Trigger>
       <Combobox.Portal>
         <Combobox.Positioner align="start" :side-offset="4">
-          <Combobox.Popup :class="styles.Popup" aria-label="Select country">
-            <Combobox.Input placeholder="e.g. United Kingdom" :class="styles.Input" />
-            <div :class="styles.Viewport">
-              <Combobox.Empty>
-                <div :class="styles.Empty">No countries found.</div>
-              </Combobox.Empty>
-              <Combobox.List :class="styles.List">
-                <template #item="{ item: country }">
-                  <Combobox.Item :value="country" :class="styles.Item">
-                    <Combobox.ItemIndicator :class="styles.ItemIndicator">
-                      <CheckIcon />
-                    </Combobox.ItemIndicator>
-                    <span :class="styles.ItemText">{{ country.label }}</span>
-                  </Combobox.Item>
-                </template>
-              </Combobox.List>
-            </div>
-          </Combobox.Popup>
+          <Transition
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
+            appear
+          >
+            <Combobox.Popup :class="styles.Popup" aria-label="Select country">
+              <Combobox.Input placeholder="e.g. United Kingdom" :class="styles.Input" />
+              <div :class="styles.Viewport">
+                <Combobox.Empty>
+                  <div :class="styles.Empty">No countries found.</div>
+                </Combobox.Empty>
+                <Combobox.List :class="styles.List">
+                  <template #item="{ item: country }">
+                    <Combobox.Item v-slot="{ state }" :value="country" :class="styles.Item">
+                      <span v-if="state.selected" :class="styles.ItemIndicator">
+                        <CheckIcon />
+                      </span>
+                      <span :class="styles.ItemText">{{ country.label }}</span>
+                    </Combobox.Item>
+                  </template>
+                </Combobox.List>
+              </div>
+            </Combobox.Popup>
+          </Transition>
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>

@@ -66,6 +66,17 @@
       "kind": "replaced",
       "test": "packages/vue/src/fieldset/Fieldset.test.ts",
       "reason": "A label removes only its own entry, and the root names the next label (`VUE-131`). The case of `Fieldset.test.ts` with that id tests it."
+    },
+    {
+      "upstream": "packages/react/src/utils/listbox-separator/ListboxSeparator.tsx",
+      "kind": "not-applicable",
+      "reason": "Each family renders its own separator: `SelectSeparator.vue`, and `ComboboxSeparator.vue`, which `Autocomplete.Separator` is. The parity files of Select and Combobox map them."
+    },
+    {
+      "upstream": "packages/react/src/utils/listbox-separator/ListboxSeparator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.test.ts",
+      "reason": "`Combobox.test.ts` and `Select.test.ts` test the separator of each family: the role `presentation`, `data-orientation` with its default `horizontal`, and no `aria-orientation`. `Autocomplete.Separator` is the part of Combobox."
     }
   ],
   "surfaceAdditions": [],

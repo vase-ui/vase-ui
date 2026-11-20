@@ -10,26 +10,6 @@
     }
   },
   "files": {
-    "src/autocomplete/value/AutocompleteValue.test.tsx": {
-      "fails": {}
-    },
-    "src/combobox/chip-remove/ComboboxChipRemove.test.tsx": {
-      "fails": {
-        "<Combobox.ChipRemove /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/combobox/collection/ComboboxCollection.test.tsx": {
-      "fails": {}
-    },
-    "src/combobox/items/createItems.test.tsx": {
-      "fails": {}
-    },
-    "src/combobox/trigger/ComboboxTrigger.press.test.tsx": {
-      "fails": {}
-    },
-    "src/combobox/value/ComboboxValue.test.tsx": {
-      "fails": {}
-    },
     "src/common/shadowDom.test.ts": {
       "fails": {}
     },

@@ -63,6 +63,8 @@ const items = Combobox.createItems(fruits, {
   getValue: (fruit) => fruit.id,
   getLabel: (fruit) => fruit.name,
 });
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -84,21 +86,23 @@ const items = Combobox.createItems(fruits, {
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup">
-          <Combobox.Empty>
-            <div :class="styles.Empty">No fruits found.</div>
-          </Combobox.Empty>
-          <Combobox.List :class="styles.List">
-            <template #item="{ item }">
-              <Combobox.Item :value="item.id" :class="styles.Item">
-                <Combobox.ItemIndicator :class="styles.ItemIndicator">
-                  <CheckIcon />
-                </Combobox.ItemIndicator>
-                <span :class="styles.ItemText">{{ item.name }}</span>
-              </Combobox.Item>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup :class="styles.Popup">
+            <Combobox.Empty>
+              <div :class="styles.Empty">No fruits found.</div>
+            </Combobox.Empty>
+            <Combobox.List :class="styles.List">
+              <template #item="{ item }">
+                <Combobox.Item v-slot="{ state }" :value="item.id" :class="styles.Item">
+                  <span v-if="state.selected" :class="styles.ItemIndicator">
+                    <CheckIcon />
+                  </span>
+                  <span :class="styles.ItemText">{{ item.name }}</span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

@@ -174,8 +174,11 @@ export function usePlacement(
     inline?: Middleware;
     /** The shift keeps the popup in the layout viewport, so a pinch zoom does not move it. */
     shiftInLayoutViewport?: boolean;
-    /** After the first place of an open, the popup keeps its side and its alignment. */
-    lazyFlip?: () => boolean;
+    /**
+     * After a place, the popup keeps its side while it is open, so a list that filters its items
+     * does not flip back at each change. `'placement'` also keeps the alignment.
+     */
+    lazyFlip?: () => boolean | 'placement';
     /** The popup moves across the side axis into the layout viewport. */
     shiftAcross?: () => boolean;
     /**
@@ -223,11 +226,12 @@ export function usePlacement(
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
-  // A list that filters its items shrinks, and the popup would flip back at each change.
+  // The placement of the last place of an open, which a popup with `lazyFlip` keeps.
   const kept = shallowRef<Placement>();
   const placement = computed<Placement>(() => {
-    if (kept.value) return kept.value;
-    const side = physicalSide(props.side, rtl.value);
+    const keptPlacement = kept.value;
+    if (keptPlacement && options.lazyFlip?.() === 'placement') return keptPlacement;
+    const side = keptPlacement ? getSide(keptPlacement) : physicalSide(props.side, rtl.value);
     return props.align === 'center' ? side : `${side}-${props.align}`;
   });
 
@@ -358,10 +362,10 @@ export function usePlacement(
   const { lazyFlip } = options;
   if (lazyFlip) {
     watch(
-      [placed, () => root.open],
-      ([isPlaced, open]) => {
+      [placed, () => root.open, floating.placement],
+      ([isPlaced, open, current]) => {
         if (!open) kept.value = undefined;
-        else if (isPlaced && lazyFlip()) kept.value = floating.placement.value;
+        else if (isPlaced && lazyFlip()) kept.value = current;
       },
       { flush: 'sync' },
     );
@@ -540,6 +544,26 @@ function transformOrigin(
       return { data: { value: vertical ? `${cross} ${along}` : `${along} ${cross}` } };
     },
   };
+}
+
+// A popup that covers the view leaves no room for a swipe outside, so a touch open locks the page.
+const FULL_WIDTH_TOLERANCE = 20;
+
+/** The placed positioner is as wide as the view, within 20 px. */
+export function useFullWidth(
+  positioner: Readonly<Ref<HTMLElement | null>>,
+  placed: Readonly<Ref<boolean>>,
+) {
+  const fullWidth = shallowRef(false);
+  watch(placed, (isPlaced) => {
+    const element = positioner.value;
+    fullWidth.value =
+      isPlaced &&
+      !!element &&
+      element.offsetWidth >=
+        element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE;
+  });
+  return fullWidth;
 }
 
 /**

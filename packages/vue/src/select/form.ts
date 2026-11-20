@@ -1,15 +1,10 @@
-import { computed, nextTick, watch, type Ref } from 'vue';
-import { useFormReset } from '../common/formEvents';
-import { visuallyHiddenInput } from '../common/visuallyHidden';
+import { nextTick, type Ref } from 'vue';
+import { useValueInputs } from '../common/valueInputs';
 import { isSelectedValueDirty } from '../internals/itemEquality';
 import { stringifyAsLabel, stringifyAsValue } from '../internals/resolveValueLabel';
 import type { SelectContext } from './root';
 
-/**
- * The form of a select: the values in `type="hidden"` inputs, and one visually hidden text input
- * that the browser validates and fills. A text input removes each line break of its value, and a
- * hidden input has no constraint validation (test/measurements/select.test.ts).
- */
+/** The form inputs of a select (`useValueInputs`): the trigger is the control. */
 export function useSelectForm(
   context: SelectContext,
   props: {
@@ -26,101 +21,61 @@ export function useSelectForm(
   reset: () => void,
 ) {
   const { field } = context;
-  const name = computed(() => field?.name ?? props.name);
   const textOf = (value: unknown) => stringifyAsValue(value, props.itemToStringValue);
   /** The form text of the value, or of each value with `multiple`. */
-  const formValue = computed(() =>
-    context.multiple ? (context.value as unknown[]).map(textOf) : textOf(context.value),
-  );
-  const hiddenValues = computed(() => {
-    if (!name.value) return [];
-    return Array.isArray(formValue.value) ? formValue.value : [formValue.value];
-  });
-
-  watch(
-    // The trigger is the element of `Select.Trigger`, which renders an HTML element.
-    [() => context.root.activeTrigger as HTMLElement | null, input],
-    ([trigger, text], _, onCleanup) => {
-      if (!trigger || !text || !field) return;
-      onCleanup(
-        field.setControl({
-          element: trigger,
-          get id() {
-            return trigger.id;
-          },
-          get name() {
-            return props.name;
-          },
-          get disabled() {
-            return props.ownDisabled;
-          },
-          get readOnly() {
-            return context.readonly;
-          },
-          inputs: [text],
-          focusElement: trigger,
-          formValue: () => formValue.value,
-          sameValue: (a, b) => !isSelectedValueDirty(a, b, props.isItemEqualToValue ?? Object.is),
-          // The user picks the value, so a select with no value is never dirty (BUG-1425).
-          countsMissingAtLeave: true,
-        }),
-      );
-    },
-    { flush: 'post' },
-  );
-
-  useFormReset(input, reset);
+  const formValue = () =>
+    context.multiple ? (context.value as unknown[]).map(textOf) : textOf(context.value);
+  // The trigger is the element of `Select.Trigger`, which renders an HTML element.
+  const trigger = () => context.root.activeTrigger as HTMLElement | null;
 
   /** A fill of the browser: the item whose form text, label or text is the text of the input. */
-  function onInput(event: Event) {
-    const element = event.currentTarget as HTMLInputElement;
-    const text = element.value.toLowerCase();
+  function fill(filled: string, event: Event) {
+    const text = filled.toLowerCase();
     context.keep();
     // The items of a select that never had the focus mount in the next update.
     void nextTick(() => {
-      if (!context.multiple && !context.disabled && !context.readonly) {
-        const items = context.list.items({ hidden: true });
-        const valueOf = (item: (typeof items)[number]) => context.itemValues.get(item.element);
-        const match =
-          items.find((item) => {
-            const value = valueOf(item);
-            return (
-              textOf(value).toLowerCase() === text ||
-              stringifyAsLabel(value, context.itemToStringLabel).toLowerCase() === text
-            );
-          }) ?? items.find((item) => context.list.text(item).toLowerCase() === text);
-        if (match) context.change(valueOf(match), 'none', event);
-      }
-      // Vue writes the value only when it changes, and the fill gave the input another text.
-      const shown = Array.isArray(formValue.value) ? '' : formValue.value;
-      if (element.value !== shown) element.value = shown;
+      if (context.multiple || context.disabled || context.readonly) return;
+      const items = context.list.items({ hidden: true });
+      const valueOf = (item: (typeof items)[number]) => context.itemValues.get(item.element);
+      const match =
+        items.find((item) => {
+          const value = valueOf(item);
+          return (
+            textOf(value).toLowerCase() === text ||
+            stringifyAsLabel(value, context.itemToStringLabel).toLowerCase() === text
+          );
+        }) ?? items.find((item) => context.list.text(item).toLowerCase() === text);
+      if (match) context.change(valueOf(match), 'none', event);
     });
   }
 
-  function textProps() {
-    const multiple = context.multiple;
-    // An input with no work is `type="hidden"`, so that a password tool skips it (Base UI).
-    const works = !!field || !!name.value || !!props.autocomplete || context.required;
-    return {
-      type: works ? undefined : 'hidden',
-      id: `${props.id}-hidden-input`,
-      form: props.form,
-      autocomplete: props.autocomplete,
-      required: context.required && !(multiple && context.hasValue),
-      readonly: context.readonly,
-      disabled: context.disabled,
-      value: multiple ? '' : formValue.value,
-      'aria-hidden': 'true' as const,
-      tabindex: -1,
-      style: visuallyHiddenInput,
-      onInput,
-      // The browser gives the focus to an invalid input at a submit. `focusVisible` gives the
-      // trigger its focus ring in each browser (test/measurements/select.test.ts).
-      onFocus() {
-        (context.root.activeTrigger as HTMLElement | null)?.focus({ focusVisible: true });
+  return useValueInputs(field, {
+    name: () => field?.name ?? props.name,
+    values: () => [formValue()].flat(),
+    text: () => (context.multiple ? '' : textOf(context.value)),
+    id: () => `${props.id}-hidden-input`,
+    form: () => props.form,
+    autocomplete: () => props.autocomplete,
+    required: () => context.required,
+    multipleValues: () => context.multiple && context.hasValue,
+    readonly: () => context.readonly,
+    disabled: () => context.disabled,
+    control: trigger,
+    textInput: () => input.value,
+    input: () => input.value,
+    fill,
+    reset,
+    fieldControl: {
+      get name() {
+        return props.name;
       },
-    };
-  }
-
-  return { name, hiddenValues, textProps };
+      get disabled() {
+        return props.ownDisabled;
+      },
+      formValue,
+      sameValue: (a, b) => !isSelectedValueDirty(a, b, props.isItemEqualToValue ?? Object.is),
+      // The user picks the value, so a select with no value is never dirty (BUG-1425).
+      countsMissingAtLeave: true,
+    },
+  });
 }

@@ -1,4 +1,4 @@
-import { h, mergeProps } from 'vue';
+import { h, mergeProps, Transition } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { withProps } from './withProps';
@@ -40,10 +40,25 @@ export const Portal = Combobox.Portal;
 
 export const Positioner = withProps(Combobox.Positioner, { class: 'outline-none', sideOffset: 4 });
 
-export const Popup = withProps(Combobox.Popup, {
-  class:
-    'w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0/12%)] transition-[scale,opacity] duration-100 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none',
-});
+// The enter-from and leave-to class of the `<Transition>` around the popup.
+const POPUP_HIDDEN = 'scale-95 opacity-0';
+
+const PopupWrapper: FunctionalComponent = (_, { attrs, slots }) =>
+  h(Transition, { enterFromClass: POPUP_HIDDEN, leaveToClass: POPUP_HIDDEN, appear: true }, () =>
+    h(
+      Combobox.Popup,
+      mergeProps(
+        {
+          class:
+            'w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0/12%)] transition-[scale,opacity] duration-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none',
+        },
+        attrs,
+      ),
+      slots,
+    ),
+  );
+PopupWrapper.inheritAttrs = false;
+export const Popup = PopupWrapper as unknown as typeof Combobox.Popup;
 
 const EmptyWrapper: FunctionalComponent = (_, { attrs, slots }) => {
   const { class: className, ...props } = attrs;
@@ -76,8 +91,6 @@ export const Item = withProps(Combobox.Item, {
   class:
     'grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white',
 });
-
-export const ItemIndicator = withProps(Combobox.ItemIndicator, { class: 'col-start-1' });
 
 const ICON_PROPS = {
   width: '16',

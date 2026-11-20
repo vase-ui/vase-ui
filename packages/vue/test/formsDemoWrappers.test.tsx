@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
-import type { Component } from 'vue';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import '../../../docs/demos/tailwind.css';
 import * as Combobox from '../../../docs/demos/handbook-forms/components/combobox';
@@ -73,38 +72,34 @@ describe('the wrappers of the Forms demos', () => {
     expect(await screen.findByRole('button', { name: 'Clear selection' })).toBeVisible();
   });
 
-  it('gives the #render slot to Combobox.Clear and Combobox.Empty', async () => {
-    await render(<ClearAndEmptyWithRender />);
+  it('gives the element slot to Combobox.Clear and Combobox.Empty', async () => {
+    await render(<ClearAndEmptyWithElement />);
 
     expect(screen.getByTestId('clear')).toHaveAttribute('aria-label', 'Clear selection');
     expect(screen.getByTestId('empty')).toHaveAttribute('role', 'status');
   });
 });
 
-interface RenderSlotProps {
+interface ElementSlotProps {
   props: object;
-  children: Component;
+  elementRef: (target: unknown) => void;
 }
 
-function ClearAndEmptyWithRender() {
+function ClearAndEmptyWithElement() {
   return (
     <Combobox.Root items={[]}>
       <Combobox.Clear
         keepMounted
         v-slots={{
-          render: ({ props, children }: RenderSlotProps) => (
-            <button {...props} data-testid="clear">
-              {h(children)}
-            </button>
+          element: ({ props, elementRef }: ElementSlotProps) => (
+            <button {...props} ref={elementRef} data-testid="clear" />
           ),
         }}
       />
       <Combobox.Empty
         v-slots={{
-          render: ({ props, children }: RenderSlotProps) => (
-            <div {...props} data-testid="empty">
-              {h(children)}
-            </div>
+          element: ({ props, elementRef }: ElementSlotProps) => (
+            <div {...props} ref={elementRef} data-testid="empty" />
           ),
         }}
       />

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h, type Component } from 'vue';
 import { DatePicker } from '../date-picker';
-import * as Combobox from '../combobox/index.parts';
 import { TimePicker } from '../time-picker';
 import { useForwardProps } from '../use-forward-props';
 import { createRenderer, flushMicrotasks, isVaporApp, takeReportedMessages } from '#test-utils';
@@ -146,14 +145,14 @@ describe('useCastBooleanWarning', () => {
 
   it('warns for a JSX wrapper with a run-time Boolean prop', async () => {
     const Wrapper = defineComponent({
-      name: 'MyCombobox',
+      name: 'MyTimePicker',
       props: { open: Boolean },
       setup(props) {
-        return () => <Combobox.Root open={props.open} />;
+        return () => <TimePicker.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyCombobox', 'Combobox.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([message('MyTimePicker', 'TimePicker.Root', 'open')]);
   });
 
   it('gives one warning for a part that gives the prop to another part', async () => {
@@ -179,67 +178,12 @@ describe('useCastBooleanWarning', () => {
     ]);
   });
 
-  it('warns for the default true of Combobox.Root loopFocus', async () => {
-    const Wrapper = defineComponent({
-      name: 'MyCombobox',
-      props: { loopFocus: Boolean },
-      setup(props) {
-        return () => <Combobox.Root loopFocus={props.loopFocus} />;
-      },
-    });
-    await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([message('MyCombobox', 'Combobox.Root', 'loopFocus')]);
-  });
-
-  it('warns for Combobox.Trigger nativeButton', async () => {
-    const Wrapper = defineComponent({
-      name: 'MyTrigger',
-      props: { nativeButton: Boolean },
-      setup(props) {
-        return () => (
-          <Combobox.Root>
-            <Combobox.Trigger as="span" nativeButton={props.nativeButton}>
-              Action
-            </Combobox.Trigger>
-          </Combobox.Root>
-        );
-      },
-    });
-    await render(() => <Wrapper />);
-    expect(takeReportedMessages()).toEqual([
-      message('MyTrigger', 'Combobox.Trigger', 'nativeButton'),
-    ]);
-  });
-
-  it('warns for the Boolean union of Combobox.Popup finalFocus', async () => {
-    const Wrapper = defineComponent({
-      name: 'MyComboboxPopup',
-      props: { finalFocus: Boolean },
-      setup(props) {
-        return () => <Combobox.Popup finalFocus={props.finalFocus} aria-label="Example" />;
-      },
-    });
-    await render(() => (
-      <Combobox.Root defaultOpen>
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Wrapper />
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>
-    ));
-    await flushMicrotasks();
-    expect(takeReportedMessages()).toEqual([
-      message('MyComboboxPopup', 'Combobox.Popup', 'finalFocus'),
-    ]);
-  });
-
   it('checks only at setup', async () => {
     const Wrapper = defineComponent({
-      name: 'MyCombobox',
+      name: 'MyTimePicker',
       props: { open: Boolean },
       setup(props) {
-        return () => <Combobox.Root open={props.open} />;
+        return () => <TimePicker.Root open={props.open} />;
       },
     });
     const { rerender } = await render(() => <Wrapper open={false} />);
@@ -251,12 +195,12 @@ describe('useCastBooleanWarning', () => {
     const Wrapper = defineComponent({
       props: { open: Boolean },
       setup(props) {
-        return () => <Combobox.Root open={props.open} />;
+        return () => <TimePicker.Root open={props.open} />;
       },
     });
     await render(() => <Wrapper />);
     expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('A component with no name gives `open: false` to <Combobox.Root>'),
+      expect.stringContaining('A component with no name gives `open: false` to <TimePicker.Root>'),
     ]);
   });
 

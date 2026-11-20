@@ -145,6 +145,18 @@ describe('the parts', () => {
     expect(document.querySelectorAll('span[tabindex="0"][aria-hidden="true"]')).toHaveLength(0);
   });
 
+  test('the separator has the role `presentation` and its orientation in `data-orientation`', async () => {
+    const separator = reactive<Props>({});
+    await mountSelect({ root: { defaultOpen: true }, separator });
+    await opened();
+    expect(byTestId('separator')).toHaveAttribute('role', 'presentation');
+    expect(byTestId('separator')).toHaveAttribute('data-orientation', 'horizontal');
+    expect(byTestId('separator')).not.toHaveAttribute('aria-orientation');
+    separator.orientation = 'vertical';
+    await nextTick();
+    expect(byTestId('separator')).toHaveAttribute('data-orientation', 'vertical');
+  });
+
   test('render the tag of `as`', async () => {
     await mountSelect({ root: { as: 'section' }, trigger: { as: 'span' }, value: { as: 'b' } });
     expect(byTestId('root').localName).toBe('section');

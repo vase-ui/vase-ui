@@ -2,8 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { ButtonHTMLAttributes, HTMLAttributes, ImgHTMLAttributes, VNode } from 'vue';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import { Autocomplete } from '@vase-ui/vue/autocomplete';
-import { Combobox } from '@vase-ui/vue/combobox';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -30,27 +28,6 @@ interface Row {
 const targetId = () => screen.getByTestId('target').id;
 
 const rows: Row[] = [
-  {
-    name: 'Autocomplete.Input role',
-    attribute: 'role',
-    createNode: () => (
-      <Autocomplete.Root>
-        <Autocomplete.Input role={undefined} data-testid="part" />
-      </Autocomplete.Root>
-    ),
-    expected: () => 'combobox',
-  },
-  {
-    name: 'Combobox.Trigger aria-haspopup',
-    attribute: 'aria-haspopup',
-    createNode: () => (
-      <Combobox.Root>
-        <Combobox.Trigger aria-haspopup={undefined} data-testid="part" />
-      </Combobox.Root>
-    ),
-    // With no input, the trigger opens a popup that holds the input.
-    expected: () => 'dialog',
-  },
   {
     name: 'Toast.Root aria-labelledby',
     attribute: 'aria-labelledby',

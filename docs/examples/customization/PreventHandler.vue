@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Combobox } from '@vase-ui/vue/combobox';
+import { Select } from '@vase-ui/vue/select';
 </script>
 
 <template>
-  <Combobox.Root>
-    <Combobox.Input aria-label="Fruit" @keydown="(event) => event.preventVaseUIHandler()" />
-  </Combobox.Root>
+  <Select.Root>
+    <Select.Trigger aria-label="Fruit" @keydown="(event) => event.preventVaseUIHandler()" />
+  </Select.Root>
 </template>

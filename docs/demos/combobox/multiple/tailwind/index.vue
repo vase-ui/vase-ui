@@ -49,6 +49,8 @@ const langs: ProgrammingLanguage[] = [
   { id: 'rust', value: 'Rust' },
   { id: 'swift', value: 'Swift' },
 ];
+
+const popupHiddenClass = 'scale-95 opacity-0';
 </script>
 
 <template>
@@ -99,28 +101,31 @@ const langs: ProgrammingLanguage[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner class="z-50 outline-none" :side-offset="4">
-        <Combobox.Popup
-          class="w-[var(--anchor-width)] max-h-[min(var(--available-height),24.5rem)] max-w-[var(--available-width)] origin-[var(--transform-origin)] overflow-y-auto overscroll-contain border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-        >
-          <Combobox.Empty>
-            <div class="py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
-              No languages found.
-            </div>
-          </Combobox.Empty>
-          <Combobox.List>
-            <template #item="{ item: language }">
-              <Combobox.Item
-                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-selected:relative data-selected:z-0 data-selected:text-neutral-950 data-selected:before:absolute data-selected:before:inset-0 data-selected:before:z-[-1] [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-white [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-950 dark:data-selected:text-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950 dark:[@media(hover:hover)]:data-highlighted:before:bg-white"
-                :value="language"
-              >
-                <Combobox.ItemIndicator class="col-start-1">
-                  <CheckIcon />
-                </Combobox.ItemIndicator>
-                <span class="col-start-2">{{ language.value }}</span>
-              </Combobox.Item>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup
+            class="w-[var(--anchor-width)] max-h-[min(var(--available-height),24.5rem)] max-w-[var(--available-width)] origin-[var(--transform-origin)] overflow-y-auto overscroll-contain border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+          >
+            <Combobox.Empty>
+              <div class="py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
+                No languages found.
+              </div>
+            </Combobox.Empty>
+            <Combobox.List>
+              <template #item="{ item: language }">
+                <Combobox.Item
+                  v-slot="{ state }"
+                  class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none aria-selected:relative aria-selected:z-0 aria-selected:text-neutral-950 aria-selected:before:absolute aria-selected:before:inset-0 aria-selected:before:z-[-1] [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-white [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-950 dark:aria-selected:text-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950 dark:[@media(hover:hover)]:data-highlighted:before:bg-white"
+                  :value="language"
+                >
+                  <span v-if="state.selected" class="col-start-1">
+                    <CheckIcon />
+                  </span>
+                  <span class="col-start-2">{{ language.value }}</span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

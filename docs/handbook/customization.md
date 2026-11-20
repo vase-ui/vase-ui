@@ -71,7 +71,7 @@ The method has no effect in these cases:
 
 - A native event that the part declares as an emit, such as `submit` of `Form`. The part emits the event after its own work.
 - A listener that the part adds with `addEventListener`, such as a listener on the document or the window. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
-- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. `Combobox.Chips` and `Combobox.InputGroup` are the exceptions: they do not handle a press that a listener of a child part stopped. In `Select`, a key listener that calls `preventDefault()` stops the keys of the list.
+- A listener of a parent part, such as a `Tooltip.Trigger` around the part. A call in a listener of the part stops only the handlers of the part. In `Select`, a key listener that calls `preventDefault()` stops the keys of the list.
 
 To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](/utils/merge-props#preventing-vase-ui-s-default-behavior).
 

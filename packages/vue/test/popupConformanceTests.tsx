@@ -25,7 +25,6 @@ export function popupConformanceTests(config: PopupTestConfig) {
     expectedPopupRole,
     expectedAriaHasPopupValue = expectedPopupRole,
     alwaysMounted,
-    combobox = false,
     exitAnimation = true,
     openReason = triggerMouseAction === 'click' ? REASONS.triggerPress : REASONS.triggerHover,
   } = config;
@@ -507,9 +506,8 @@ export function popupConformanceTests(config: PopupTestConfig) {
             await user.keyboard('[Escape]');
           }
           expect(handleClose).toHaveBeenCalledTimes(closes);
-          // The close adds no attribute that every caller has: the list of Combobox has no
-          // `data-closed`, and a hover trigger has no `aria-expanded`. The case thus waits for the
-          // close that its handler applies.
+          // The close adds no attribute that every caller has: a hover trigger has no
+          // `aria-expanded`. The case thus waits for the close that its handler applies.
           await waitFor(() => {
             expect(handleCloseApplied).toHaveBeenCalledTimes(1);
           });
@@ -547,10 +545,8 @@ export function popupConformanceTests(config: PopupTestConfig) {
             expect(getPopup()).toBe(null);
             expect(trigger).toHaveAttribute('aria-expanded', 'false');
             await user.click(trigger);
-            // A combobox popup is the listbox itself; other popups mark the open state.
-            const [openAttribute, openValue] = combobox ? ['role', 'listbox'] : ['data-open', ''];
             await waitFor(() => {
-              expect(getPopup()).toHaveAttribute(openAttribute, openValue);
+              expect(getPopup()).toHaveAttribute('data-open', '');
             });
             expect(trigger).toHaveAttribute('aria-expanded', 'true');
           });
@@ -942,10 +938,6 @@ export interface PopupTestConfig {
    * Set to `'only-after-open'` when the popup stays mounted (inaccessible) after it first closes.
    */
   alwaysMounted?: 'only-after-open';
-  /**
-   * Whether the popup is a combobox.
-   */
-  combobox?: boolean;
   /**
    * Whether the element receiving the `popup` props plays the enter and exit animations.
    * @default true
