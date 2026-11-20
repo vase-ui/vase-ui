@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { Toggle } from '@vase-ui/vue/toggle';
+import { Dialog } from '@vase-ui/vue/dialog';
 </script>
 
 <template>
-  <Toggle aria-label="Bold">
-    <template #render="{ props, state }">
-      <button v-bind="props" :ref="props.ref" :class="state.pressed ? 'pressed' : 'unpressed'" />
-    </template>
-  </Toggle>
+  <Dialog.Root>
+    <Dialog.Trigger>
+      <template #render="{ props, state }">
+        <button v-bind="props" :ref="props.ref" :class="state.open ? 'open' : 'closed'">
+          Settings
+        </button>
+      </template>
+    </Dialog.Trigger>
+  </Dialog.Root>
 </template>

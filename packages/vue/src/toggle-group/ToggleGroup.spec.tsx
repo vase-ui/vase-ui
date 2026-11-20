@@ -1,10 +1,15 @@
 import { expectType } from '#test-utils';
-import { ToggleGroup } from '@vase-ui/vue/toggle-group';
+import type { Toggle, ToggleProps } from '@vase-ui/vue/toggle';
+import {
+  ToggleGroup,
+  type ToggleGroupChangeEventDetails,
+  type ToggleGroupProps,
+} from '@vase-ui/vue/toggle-group';
 
-const toggleDefaultValueReadonly = (value: NonNullable<ToggleGroup.Props['defaultValue']>) =>
+const toggleDefaultValueReadonly = (value: NonNullable<ToggleGroupProps['defaultValue']>) =>
   expectType<readonly string[], typeof value>(value);
 
-const toggleValueReadonly = (value: NonNullable<ToggleGroup.Props['modelValue']>) =>
+const toggleValueReadonly = (value: NonNullable<ToggleGroupProps['modelValue']>) =>
   expectType<readonly string[], typeof value>(value);
 
 const values = ['a', 'b', 'c'];
@@ -14,8 +19,9 @@ const values = ['a', 'b', 'c'];
 
 <ToggleGroup
   modelValue={values}
-  onValueChange={(value) => {
+  onValueChange={(value, details) => {
     expectType<string[], typeof value>(value);
+    expectType<ToggleGroupChangeEventDetails, typeof details>(details);
   }}
 />;
 
@@ -28,3 +34,13 @@ type ReadonlyValue = (typeof narrowedValues)[number];
     expectType<ReadonlyValue[], typeof value>(value);
   }}
 />;
+
+// The type parameter of the props reaches the types on the parts.
+const groupProps = null as unknown as ToggleGroup.Props<ReadonlyValue>;
+expectType<ToggleGroupProps<ReadonlyValue>, typeof groupProps>(groupProps);
+const toggleProps = null as unknown as Toggle.Props<ReadonlyValue>;
+expectType<ToggleProps<ReadonlyValue>, typeof toggleProps>(toggleProps);
+
+// The exposed `element` is the element of the part, so a template ref can read it.
+const toggle = null as unknown as InstanceType<typeof Toggle>;
+expectType<HTMLElement | null, typeof toggle.element>(toggle.element);

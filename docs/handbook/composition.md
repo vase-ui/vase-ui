@@ -75,7 +75,7 @@ Each Vase UI part renders the most appropriate element by default. In most cases
 
 The `#render` slot gives you `props` and `state`. Bind `props` on your element. In a Vapor template, also bind `:ref="props.ref"`. Use `state` for the content, class or style.
 
-<<< ../examples/composition/RenderSlot.vue{8-11}
+<<< ../examples/composition/RenderSlot.vue{9-12}
 
 The default slot also gets `{ state }`. Some parts give `#render` a third slot prop, `children`, for nodes they supply. For example, mount the `children` of `Slider.Thumb` inside your element to keep its range input. A development build warns if the slot opens without those children.
 
