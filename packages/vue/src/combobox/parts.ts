@@ -127,10 +127,10 @@ export namespace Label {
  * @selector `:read-only` The combobox is read-only.
  * @selector `[aria-required="true"]` The combobox is required, and the input is the control.
  * @selector `[aria-invalid="true"]` In a `Field.Root`, the input is the control, and the value is invalid.
- * @selector `[data-valid]` In a `Field.Root`, the value is valid.
- * @selector `[data-touched]` In a `Field.Root`, the focus left the control one time or more.
- * @selector `[data-dirty]` In a `Field.Root`, the value differs from the first value.
- * @selector `[data-filled]` In a `Field.Root`, the combobox has a value.
+ * @selector `[data-valid]` In a `Field.Root`, the input is the control, and the value is valid.
+ * @selector `[data-touched]` In a `Field.Root`, the input is the control, and the focus left it one time or more.
+ * @selector `[data-dirty]` In a `Field.Root`, the input is the control, and the value differs from the first value.
+ * @selector `[data-filled]` In a `Field.Root`, the input is the control, and the combobox has a value.
  */
 export const Input: typeof ComboboxInput = ComboboxInput;
 export namespace Input {
@@ -257,6 +257,8 @@ export namespace ChipRemove {
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
  * Renders no element.
+ * With `keepMounted`, the closed popup keeps its list and the text of an input in it until the next
+ * open.
  */
 export const Portal: typeof ComboboxPortal = ComboboxPortal;
 export namespace Portal {

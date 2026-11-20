@@ -75,7 +75,7 @@ Import the component and assemble its parts:
 
 ## Item values
 
-Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item that the slot renders. To render each filtered item, give `<Combobox.List>` the `item` slot. The slot gets `{ item, index }`:
+Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item that the `item` slot of `<Combobox.List>` renders. The slot renders each filtered item, and gets `{ item, index }`:
 
 <<< ./combobox/ItemObjects.vue{19}
 
@@ -240,7 +240,7 @@ In this pattern, use `<Combobox.Label>` to give the trigger a visible label:
 
 `<Combobox.Label>` renders a `<div>`. With the input inside the popup, a click on the label focuses the trigger and does not open the popup.
 
-With the input outside the popup, use a native `<label>` or `<Field.Label>` for the input. In a `<Field.Root>`, a click on `<Combobox.Label>` then focuses the input, and not the trigger.
+With the input outside the popup, use a native `<label>` or `<Field.Label>` for the input. A click on `<Combobox.Label>` then focuses the input, and not the trigger.
 
 ### Grouped
 

@@ -55,7 +55,7 @@ A form control that selects a predefined value from a dropdown menu.
 
 - **Use Combobox for a long list**: Select has no filter, only the keyboard typeahead. When the list needs a filter, use [Combobox](/components/combobox).
 - **Special positioning**: By default, the popup covers its trigger, with the text of the selected item over the text of the value. See [Positioning](#positioning) to turn this off or to change it.
-- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when no label is visible. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when no label is visible. See [Labeling a select](#labeling-a-select) and the [forms guide](/handbook/forms).
 - **Closing animations**: Put a `<Transition>` around `<Select.Popup>`. The popup stays visible until its leave ends. See the [animation guide](/handbook/animation).
 
 ## Anatomy
@@ -70,11 +70,11 @@ Import the component and assemble its parts:
 
 While this mode is active, `data-side` is `"none"` on `Select.Popup` and `Select.Positioner`.
 
-To stop the popup from covering the trigger, set `alignItemWithTrigger` to `false`. While it is `true` (the default), these rules apply:
+To place the popup at a side of the trigger, set `alignItemWithTrigger` to `false`. While it is `true` (the default), these rules apply:
 
 - **Interaction type**: The mode is off when the popup opens with a touch pointer.
-- **Viewport space**: The viewport must have enough room to put the selected item over the text of the value with a popup that is not too short. If it does not, the popup goes back to the default positioning. Set `min-height` on `<Select.Positioner>` to change the limit. A smaller value makes this happen less often. The trigger must also be at least 20px from the top and from the bottom of the viewport. If it is not, the popup goes back to the default positioning.
-- **Other positioning props**: Props such as `side` and `align` have no effect while the mode is active. They apply when the prop is `false`, and when the popup goes back to the default positioning.
+- **Viewport space**: The viewport must have enough room to put the selected item over the text of the value with a popup that is not too short. If it does not, the popup uses the default positioning. Set `min-height` on `<Select.Positioner>` to change the limit. A smaller value makes this occur less often. The trigger must also be at least 20px from the top and from the bottom of the viewport. If it is not, the popup uses the default positioning.
+- **Other positioning props**: Props such as `side` and `align` have no effect while the mode is active. They apply when the prop is `false`, and when the popup uses the default positioning.
 
 ## Examples
 

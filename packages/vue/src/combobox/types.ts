@@ -192,7 +192,8 @@ export interface ComboboxRootProps<
   /**
    * The autofill purpose of the hidden text input, such as `'country-name'`. The input has no
    * name, so a browser reads its purpose from this attribute. Without `multiple`, an autofill selects
-   * the item whose value or label is the filled text.
+   * the item whose value or label is the filled text. The labels come from `items`, else from the
+   * items of a popup that `keepMounted` keeps.
    */
   autocomplete?: string | undefined;
   /**

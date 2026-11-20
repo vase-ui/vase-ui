@@ -62,8 +62,8 @@ import type {
 /**
  * Groups the parts of the select, and holds its value and its form inputs.
  * Renders a `<div>` element.
- * A `<p>` cannot hold the root: the HTML parser closes the paragraph at the `<div>`, and the
- * hydration fails.
+ * A `<p>` cannot hold the `<div>` of the root: the HTML parser closes the paragraph at the `<div>`,
+ * and the hydration fails.
  */
 export const Root: typeof SelectRoot = SelectRoot;
 export namespace Root {
@@ -97,8 +97,8 @@ export namespace Label {
 /**
  * A button that opens the popup.
  * Renders a `<button>` element.
- * Without `multiple`, a key on the closed trigger selects the next item whose text starts with
- * the key, as on a native `<select>`.
+ * Without `multiple` and `readonly`, a key on the closed trigger selects the next item whose text
+ * starts with the typed text, as on a native `<select>`.
  * @selector `[aria-expanded="true"]` The popup is open.
  * @selector `[data-pressed]` The popup is open.
  * @selector `[data-popup-side]` The side of the trigger that the open popup is on, or `none` while the popup covers the trigger.
