@@ -123,14 +123,19 @@ describe('the parts', () => {
       endName: 'to',
       modelValue: range('2026-11-20', '2026-11-18'),
     });
-    const { inputs, trigger, form } = await mountPicker({ root: props, fieldRoot: { name: 'trip' } });
+    const { inputs, trigger, form } = await mountPicker({
+      root: props,
+      fieldRoot: { name: 'trip' },
+    });
     expect(inputs().map((input) => input.name)).toEqual(['from', 'to']);
     expect([...new FormData(form).entries()]).toEqual([
       ['from', '2026-11-20'],
       ['to', '2026-11-18'],
     ]);
     const format = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeZone: 'UTC' });
-    expect(trigger).toHaveTextContent(format.formatRange(Date.UTC(2026, 10, 20), Date.UTC(2026, 10, 18)));
+    expect(trigger).toHaveTextContent(
+      format.formatRange(Date.UTC(2026, 10, 20), Date.UTC(2026, 10, 18)),
+    );
     props.modelValue = range('2026-11-18', null);
     await nextTick();
     expect(trigger).toHaveTextContent('Choose');
@@ -243,7 +248,11 @@ describe('the Escape key', () => {
     await userEvent.keyboard('{Escape}');
     await settle();
     expect(popup()).not.toBe(null);
-    expect(log.slice(-3)).toEqual(['valueChange null null keyboard', 'update null null', 'openChange false escape-key']);
+    expect(log.slice(-3)).toEqual([
+      'valueChange null null keyboard',
+      'update null null',
+      'openChange false escape-key',
+    ]);
   });
 
   test('an Escape in a drag ends the drag and closes the popup', async () => {
@@ -267,17 +276,24 @@ describe('the fields', () => {
   test('a typed end changes that end; Alt+ArrowDown in the end field opens the popup', async () => {
     mockToday('2026-11-18');
     const log: string[] = [];
-    const { segments } = await mountPicker({ root: logged(log, { defaultValue: range('2026-11-18', '2026-11-20') }) });
+    const { segments } = await mountPicker({
+      root: logged(log, { defaultValue: range('2026-11-18', '2026-11-20') }),
+    });
     segments('end')[1]!.focus();
     await userEvent.keyboard('{ArrowUp}');
-    expect(log).toEqual(['valueChange 2026-11-18 2026-11-21 keyboard', 'update 2026-11-18 2026-11-21']);
+    expect(log).toEqual([
+      'valueChange 2026-11-18 2026-11-21 keyboard',
+      'update 2026-11-18 2026-11-21',
+    ]);
     await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
     await opened();
   });
 
   test('clear() of a field empties that end with update only', async () => {
     const log: string[] = [];
-    const { exposed } = await mountPicker({ root: logged(log, { defaultValue: range('2026-11-18', '2026-11-20') }) });
+    const { exposed } = await mountPicker({
+      root: logged(log, { defaultValue: range('2026-11-18', '2026-11-20') }),
+    });
     exposed.start.clear();
     await nextTick();
     expect(log).toEqual(['update null 2026-11-20']);
@@ -285,7 +301,9 @@ describe('the fields', () => {
 
   test('a reset of a form with the two fields gives one update, also for a controlled picker', async () => {
     const log: string[] = [];
-    const { segments, form } = await mountPicker({ root: model(log, range('2026-11-18', '2026-11-20')) });
+    const { segments, form } = await mountPicker({
+      root: model(log, range('2026-11-18', '2026-11-20')),
+    });
     segments('start')[1]!.focus();
     await userEvent.keyboard('{ArrowUp}');
     segments('end')[1]!.focus();
@@ -299,7 +317,10 @@ describe('the fields', () => {
     const { start } = await mountPicker({ root: { locale: 'en-US', defaultOpen: true } });
     await opened();
     await waitFor(() =>
-      expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(start.getBoundingClientRect().left, 0),
+      expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(
+        start.getBoundingClientRect().left,
+        0,
+      ),
     );
   });
 });
@@ -334,7 +355,12 @@ describe('in a Field', () => {
     const check = vi.fn((_: unknown) => null);
     const { inputs, fieldRoot } = await mountPicker({
       root: { locale: 'en-US', defaultValue: range('2026-11-18', '2026-11-20') },
-      fieldRoot: { name: 'trip', validate: check, validationMode: 'change', 'data-testid': 'field' },
+      fieldRoot: {
+        name: 'trip',
+        validate: check,
+        validationMode: 'change',
+        'data-testid': 'field',
+      },
     });
     await fill(inputs()[1]!, '2026-11-21');
     expect(fieldRoot()).toHaveAttribute('data-dirty');
@@ -371,7 +397,12 @@ describe('in a Field', () => {
       const check = vi.fn(() => 'Wrong range');
       const { form, inputs, error, fieldRoot } = await mountPicker({
         root: { locale: 'en-US', defaultValue: first },
-        fieldRoot: { name: 'trip', validate: check, validationMode: 'change', 'data-testid': 'field' },
+        fieldRoot: {
+          name: 'trip',
+          validate: check,
+          validationMode: 'change',
+          'data-testid': 'field',
+        },
       });
       await fill(inputs()[1]!, '2026-11-25');
       expect(error()).toHaveTextContent('Wrong range');
@@ -393,7 +424,11 @@ describe('VUE-112: a disabled fieldset', () => {
   ])('disables the picker $name, with the calendar in the popup', async ({ noFields }) => {
     mockToday('2026-11-18');
     const log: string[] = [];
-    const { trigger } = await mountPicker({ root: logged(log, { open: true }), fieldsetDisabled: true, noFields });
+    const { trigger } = await mountPicker({
+      root: logged(log, { open: true }),
+      fieldsetDisabled: true,
+      noFields,
+    });
     await opened();
     await waitFor(() => expect(trigger).toBeDisabled());
     expect(dayButton('2026-11-20')).toBeDisabled();

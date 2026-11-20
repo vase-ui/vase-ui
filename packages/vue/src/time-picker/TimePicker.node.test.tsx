@@ -12,7 +12,12 @@ const nativeTemporal = globalThis.Temporal;
 
 const SERVER_CASES: Record<string, () => VNode> = {
   'an open picker with a time': () => (
-    <TimePicker.Root defaultOpen defaultValue={Temporal.PlainTime.from('15:04')} name="start" required>
+    <TimePicker.Root
+      defaultOpen
+      defaultValue={Temporal.PlainTime.from('15:04')}
+      name="start"
+      required
+    >
       <TimePicker.Field>
         <TimeField.Input />
       </TimePicker.Field>
@@ -56,7 +61,9 @@ describe('<TimePicker.Root /> on a server', () => {
     const html = await renderToString(SERVER_CASES['an open picker with a time']!());
     expect(formInputOf(html)).toMatch(/^<input type="time" name="start"[^>]* value="15:04"/);
     expect(formInputOf(html)).toMatch(/ required[ >]/);
-    expect(html).toMatch(/<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose time"/);
+    expect(html).toMatch(
+      /<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose time"/,
+    );
     expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain('role="listbox"');
     expect(html).not.toContain('Clock content');

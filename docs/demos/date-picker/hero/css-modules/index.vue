@@ -8,6 +8,8 @@ import styles from '../../_index.module.css';
 
 const id = useId();
 const defaultValue = Temporal.PlainDate.from('2026-11-18');
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -45,8 +47,8 @@ const defaultValue = Temporal.PlainDate.from('2026-11-18');
       <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <DatePicker.Popup aria-label="Choose a departure date" :class="styles.Popup">

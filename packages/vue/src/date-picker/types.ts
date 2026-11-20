@@ -31,9 +31,7 @@ export type DatePickerRootValue = DateValue | Temporal.PlainYearMonth;
 export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
 export type DatePickerRootChangeEventReason =
-  | 'day-press'
-  | 'month-press'
-  | DateTimeFieldChangeEventReason;
+  'day-press' | 'month-press' | DateTimeFieldChangeEventReason;
 
 export type DatePickerRootChangeEventDetails = ChangeEventDetails<DatePickerRootChangeEventReason>;
 
@@ -261,22 +259,20 @@ type CalendarOwned = OwnedKeys<
 /** The events of `Calendar.Root` that reach it from the part. */
 interface CalendarListeners {
   onMonthChange?:
-    | ((month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => void)
-    | undefined;
+    ((month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails) => void) | undefined;
   'onUpdate:month'?: ((month: Temporal.PlainYearMonth) => void) | undefined;
   onFocusedDateChange?:
-    | ((date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) => void)
-    | undefined;
+    ((date: Temporal.PlainDate, details: CalendarRootChangeEventDetails) => void) | undefined;
   'onUpdate:focusedDate'?: ((date: Temporal.PlainDate) => void) | undefined;
   onViewChange?:
-    | ((view: CalendarRootView, details: CalendarRootChangeEventDetails) => void)
-    | undefined;
+    ((view: CalendarRootView, details: CalendarRootChangeEventDetails) => void) | undefined;
   'onUpdate:view'?: ((view: CalendarRootView) => void) | undefined;
 }
 
 export interface DatePickerCalendarProps
+  /* @vue-ignore */
   extends
-    /* @vue-ignore */ Omit<CalendarRootProps<DatePickerRootValue>, CalendarOwned>,
+    Omit<CalendarRootProps<DatePickerRootValue>, CalendarOwned>,
     /* @vue-ignore */ CalendarListeners {}
 
 export interface DatePickerCalendarState extends CalendarRootState {}

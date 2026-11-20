@@ -64,7 +64,9 @@ async function mountPicker(setup: Props = {}) {
     root,
     exposed,
     group: query('[role="group"]')!,
-    segments: () => [...query('[role="group"]')!.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')],
+    segments: () => [
+      ...query('[role="group"]')!.querySelectorAll<HTMLInputElement>('[role="spinbutton"]'),
+    ],
     formInput: query<HTMLInputElement>('input[aria-hidden]')!,
     trigger: query<HTMLButtonElement>('[data-testid="trigger"]')!,
     form: query<HTMLFormElement>('form')!,
@@ -125,18 +127,21 @@ describe('the parts', () => {
     { name: 'min-days', part: 'calendar', attrs: { 'min-days': 2, minDays: 2 } },
     { name: 'autofocus', part: 'calendar', attrs: { autofocus: '' } },
     { name: 'handle', part: 'trigger', attrs: { handle: {}, 'open-on-hover': '' } },
-  ])('an attribute $name with the name of a prop that the picker keeps out does not reach the inner part', async ({ part, attrs }) => {
-    mockToday('2026-11-18');
-    const { trigger } = await mountPicker({
-      root: { locale: 'en-US', defaultOpen: true, defaultValue: day('2026-11-18') },
-      [part]: attrs,
-    });
-    const element = await opened();
-    // One value: `multiple` and `minDays` would keep two days.
-    await userEvent.click(dayButton('2026-11-20'));
-    expect(element.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
-    expect(trigger).not.toHaveAttribute('handle');
-  });
+  ])(
+    'an attribute $name with the name of a prop that the picker keeps out does not reach the inner part',
+    async ({ part, attrs }) => {
+      mockToday('2026-11-18');
+      const { trigger } = await mountPicker({
+        root: { locale: 'en-US', defaultOpen: true, defaultValue: day('2026-11-18') },
+        [part]: attrs,
+      });
+      const element = await opened();
+      // One value: `multiple` and `minDays` would keep two days.
+      await userEvent.click(dayButton('2026-11-20'));
+      expect(element.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
+      expect(trigger).not.toHaveAttribute('handle');
+    },
+  );
 
   test('an attribute name on the time field does not reach the form', async () => {
     const { form } = await mountPicker({
@@ -167,7 +172,11 @@ describe('the trigger', () => {
     expect(trigger).toHaveTextContent(date.format(Date.UTC(2026, 10, 18)));
     props.modelValue = Temporal.PlainYearMonth.from('2026-11');
     await nextTick();
-    const month = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const month = new Intl.DateTimeFormat('de-DE', {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
     expect(trigger).toHaveTextContent(month.format(Date.UTC(2026, 10, 1)));
     props.modelValue = null;
     await nextTick();
@@ -242,7 +251,9 @@ describe('the value', () => {
 
   test('a typed date gives the root the details of the field, with no second update', async () => {
     const log: string[] = [];
-    const { segments } = await mountPicker({ root: logged(log, { defaultValue: day('2026-11-18') }) });
+    const { segments } = await mountPicker({
+      root: logged(log, { defaultValue: day('2026-11-18') }),
+    });
     segments()[1]!.focus();
     await userEvent.keyboard('{ArrowUp}');
     expect(log).toEqual(['valueChange 2026-11-19 keyboard', 'update 2026-11-19']);
@@ -263,20 +274,34 @@ describe('the value', () => {
   });
 
   test.each([
-    { name: 'the granularity month', root: { granularity: 'month' }, months: true, value: '2026-12' },
-    { name: 'the granularity minute', root: { granularity: 'minute' }, value: '2026-11-20T00:00:00' },
+    {
+      name: 'the granularity month',
+      root: { granularity: 'month' },
+      months: true,
+      value: '2026-12',
+    },
+    {
+      name: 'the granularity minute',
+      root: { granularity: 'minute' },
+      value: '2026-11-20T00:00:00',
+    },
     {
       name: 'a reference date',
       root: { referenceDate: Temporal.ZonedDateTime.from('2026-01-01T09:15[Europe/Paris]') },
       value: '2026-11-20T09:15:00+01:00[Europe/Paris]',
     },
-    { name: 'the default value', root: { defaultValue: at('2026-11-01T08:00') }, value: '2026-11-20T08:00:00' },
+    {
+      name: 'the default value',
+      root: { defaultValue: at('2026-11-01T08:00') },
+      value: '2026-11-20T08:00:00',
+    },
   ])('a new value has the kind of $name', async ({ root, months, value }) => {
     mockToday('2026-11-18');
     const log: string[] = [];
     await mountPicker({ root: logged(log, { open: true, closeOnSelect: false, ...root }), months });
     await opened();
-    if (months) await userEvent.click(document.querySelector<HTMLElement>('[data-month="2026-12"]')!);
+    if (months)
+      await userEvent.click(document.querySelector<HTMLElement>('[data-month="2026-12"]')!);
     else await userEvent.click(dayButton('2026-11-20'));
     expect(log[0]).toBe(`valueChange ${value} ${months ? 'month-press' : 'day-press'}`);
   });
@@ -291,7 +316,11 @@ describe('the value', () => {
     props.open = true;
     await opened();
     await userEvent.click(dayButton('2026-11-20'));
-    expect(log).toEqual(['update null', 'valueChange 2026-11-20T07:45:00 day-press', 'update 2026-11-20T07:45:00']);
+    expect(log).toEqual([
+      'update null',
+      'valueChange 2026-11-20T07:45:00 day-press',
+      'update 2026-11-20T07:45:00',
+    ]);
   });
 });
 
@@ -339,20 +368,32 @@ describe('today and the first focus', () => {
   });
 
   test.each([
-    { name: 'an element', target: () => popup()!.querySelector<HTMLElement>('button'), focus: 'previous' },
+    {
+      name: 'an element',
+      target: () => popup()!.querySelector<HTMLElement>('button'),
+      focus: 'previous',
+    },
     { name: 'false', target: false, focus: 'trigger' },
   ])('an initialFocus of $name replaces the focus of the picker', async ({ target, focus }) => {
     mockToday('2026-11-18');
-    const { trigger } = await mountPicker({ root: { locale: 'en-US' }, popup: { initialFocus: target } });
+    const { trigger } = await mountPicker({
+      root: { locale: 'en-US' },
+      popup: { initialFocus: target },
+    });
     await userEvent.click(trigger);
     const element = await opened();
     await settle();
-    expect(document.activeElement).toBe(focus === 'trigger' ? trigger : element.querySelector('button'));
+    expect(document.activeElement).toBe(
+      focus === 'trigger' ? trigger : element.querySelector('button'),
+    );
   });
 
   test('an initialFocus that gives true asks for the focus of the picker', async () => {
     mockToday('2026-11-18');
-    const { trigger } = await mountPicker({ root: { locale: 'en-US' }, popup: { initialFocus: () => true } });
+    const { trigger } = await mountPicker({
+      root: { locale: 'en-US' },
+      popup: { initialFocus: () => true },
+    });
     await userEvent.click(trigger);
     await opened();
     await waitFor(() => expect(dayButton('2026-11-18')).toHaveFocus());
@@ -374,9 +415,21 @@ describe('today and the first focus', () => {
 
 describe('the popup', () => {
   test.each([
-    { name: 'Alt+ArrowDown opens the popup for the first trigger', keys: '{Alt>}{ArrowDown}{/Alt}', opens: true },
-    { name: 'Shift does not open it', keys: '{Shift>}{Alt>}{ArrowDown}{/Alt}{/Shift}', opens: false },
-    { name: 'Control does not open it', keys: '{Control>}{Alt>}{ArrowDown}{/Alt}{/Control}', opens: false },
+    {
+      name: 'Alt+ArrowDown opens the popup for the first trigger',
+      keys: '{Alt>}{ArrowDown}{/Alt}',
+      opens: true,
+    },
+    {
+      name: 'Shift does not open it',
+      keys: '{Shift>}{Alt>}{ArrowDown}{/Alt}{/Shift}',
+      opens: false,
+    },
+    {
+      name: 'Control does not open it',
+      keys: '{Control>}{Alt>}{ArrowDown}{/Alt}{/Control}',
+      opens: false,
+    },
     { name: 'ArrowDown alone changes the segment', keys: '{ArrowDown}', opens: false },
   ])('$name', async ({ keys, opens }) => {
     mockToday('2026-11-18');
@@ -409,7 +462,10 @@ describe('the popup', () => {
 
   test('Alt+ArrowDown with no trigger opens the popup, and the focus returns to the segment', async () => {
     mockToday('2026-11-18');
-    const { segments } = await mountPicker({ root: { locale: 'en-US', readonly: false }, noTrigger: true });
+    const { segments } = await mountPicker({
+      root: { locale: 'en-US', readonly: false },
+      noTrigger: true,
+    });
     segments()[1]!.focus();
     await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
     await opened();
@@ -436,8 +492,16 @@ describe('the popup', () => {
   });
 
   test.each([
-    { name: 'a press on the selected day closes the popup', value: day('2026-11-18'), closes: true },
-    { name: 'a value with a time keeps the popup open', value: at('2026-11-18T10:00'), closes: false },
+    {
+      name: 'a press on the selected day closes the popup',
+      value: day('2026-11-18'),
+      closes: true,
+    },
+    {
+      name: 'a value with a time keeps the popup open',
+      value: at('2026-11-18T10:00'),
+      closes: false,
+    },
   ])('$name', async ({ value, closes }) => {
     mockToday('2026-11-18');
     const log: string[] = [];
@@ -452,11 +516,18 @@ describe('the popup', () => {
   test('a press on a month of a year and month picker closes the popup', async () => {
     mockToday('2026-11-18');
     const log: string[] = [];
-    await mountPicker({ root: logged(log, { granularity: 'month', defaultOpen: true }), months: true });
+    await mountPicker({
+      root: logged(log, { granularity: 'month', defaultOpen: true }),
+      months: true,
+    });
     await opened();
     await userEvent.click(document.querySelector<HTMLElement>('[data-month="2026-02"]')!);
     await closed();
-    expect(log).toEqual(['valueChange 2026-02 month-press', 'update 2026-02', 'openChange false imperative-action']);
+    expect(log).toEqual([
+      'valueChange 2026-02 month-press',
+      'update 2026-02',
+      'openChange false imperative-action',
+    ]);
   });
 
   test('a cancel of openChange keeps the popup open, and the value stays changed', async () => {
@@ -517,7 +588,12 @@ describe('the popup', () => {
   test('the positioner is at the start of the field, and at the trigger with no field', async () => {
     const { group } = await mountPicker({ root: { locale: 'en-US', defaultOpen: true } });
     await opened();
-    await waitFor(() => expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(group.getBoundingClientRect().left, 0));
+    await waitFor(() =>
+      expect(positioner()!.getBoundingClientRect().left).toBeCloseTo(
+        group.getBoundingClientRect().left,
+        0,
+      ),
+    );
     expect(positioner()).toHaveAttribute('data-align', 'start');
   });
 });
@@ -538,11 +614,11 @@ describe('the calendar', () => {
     const element = await opened();
     const [previous, next] = element.querySelectorAll<HTMLButtonElement>('[role="group"] > button');
     await userEvent.click(next!);
-    expect(calendar.month!.toString()).toBe('2026-12');
+    expect(String(calendar.month)).toBe('2026-12');
     await userEvent.click(previous!);
     await userEvent.click(previous!);
     expect(log).toEqual(['monthChange 2026-12', 'monthChange 2026-11', 'monthChange 2026-10']);
-    expect(calendar.month!.toString()).toBe('2026-11');
+    expect(String(calendar.month)).toBe('2026-11');
   });
 
   test('focus() of the template ref gives the focus to a day', async () => {
@@ -579,7 +655,9 @@ describe('the time field', () => {
     const { exposed } = await mountPicker({ root: props, timeField: {} });
     const element = await opened();
     await waitFor(() => expect(dayButton('2026-11-18')).toHaveFocus());
-    const [hour] = element.querySelectorAll<HTMLInputElement>('[aria-label="Time"] [role="spinbutton"]');
+    const [hour] = element.querySelectorAll<HTMLInputElement>(
+      '[aria-label="Time"] [role="spinbutton"]',
+    );
     expect(hour!.value).toBe('10');
     hour!.focus();
     await userEvent.keyboard('{ArrowUp}');
@@ -594,11 +672,9 @@ describe('the time field', () => {
     expect(log.at(-1)).toMatch(/^update 2026-11-18T/);
   });
 
-  test('a picker whose value has no time throws for a time field in a development build', async () => {
+  test('a picker whose value has no time throws for a time field in a development build', () => {
     expect(
-      String(
-        mountError(DatePickerParts, { root: { locale: 'en-US' }, inlineTimeField: {} }),
-      ),
+      String(mountError(DatePickerParts, { root: { locale: 'en-US' }, inlineTimeField: {} })),
     ).toMatch('<DatePicker.TimeField> needs a picker whose value has a time');
     takeReportedMessages();
   });
@@ -606,25 +682,37 @@ describe('the time field', () => {
 
 describe('the form', () => {
   test.each([
-    { name: 'an uncontrolled picker', root: { defaultValue: day('2026-11-18') }, log: ['update 2026-11-18'] },
-    { name: 'a controlled picker', root: { modelValue: day('2026-11-18'), write: true }, log: ['update 2026-11-18'] },
-  ])('a reset of the form gives one update of $name, and no valueChange', async ({ root, log: expected }) => {
-    const log: string[] = [];
-    const props =
-      'modelValue' in root ? model(log, root.modelValue) : logged(log, root);
-    const { segments, form, formInput } = await mountPicker({ root: props });
-    segments()[1]!.focus();
-    await userEvent.keyboard('{ArrowUp}');
-    log.length = 0;
-    await resetForm(form);
-    expect(log).toEqual(expected);
-    expect(formInput.value).toBe('2026-11-18');
-    expect(segments()[1]!.value).toBe('18');
-  });
+    {
+      name: 'an uncontrolled picker',
+      root: { defaultValue: day('2026-11-18') },
+      log: ['update 2026-11-18'],
+    },
+    {
+      name: 'a controlled picker',
+      root: { modelValue: day('2026-11-18'), write: true },
+      log: ['update 2026-11-18'],
+    },
+  ])(
+    'a reset of the form gives one update of $name, and no valueChange',
+    async ({ root, log: expected }) => {
+      const log: string[] = [];
+      const props = 'modelValue' in root ? model(log, root.modelValue) : logged(log, root);
+      const { segments, form, formInput } = await mountPicker({ root: props });
+      segments()[1]!.focus();
+      await userEvent.keyboard('{ArrowUp}');
+      log.length = 0;
+      await resetForm(form);
+      expect(log).toEqual(expected);
+      expect(formInput.value).toBe('2026-11-18');
+      expect(segments()[1]!.value).toBe('18');
+    },
+  );
 
   test('clear() of the field gives update only', async () => {
     const log: string[] = [];
-    const { exposed, segments } = await mountPicker({ root: logged(log, { defaultValue: day('2026-11-18') }) });
+    const { exposed, segments } = await mountPicker({
+      root: logged(log, { defaultValue: day('2026-11-18') }),
+    });
     exposed.field.clear();
     await nextTick();
     expect(log).toEqual(['update null']);
@@ -635,30 +723,39 @@ describe('the form', () => {
     { order: 'the field root first', reversed: false },
     { order: 'the field part first', reversed: true },
   ])('VUE-21: a native reset clears the error of the field, with $order', ({ reversed }) => {
-    const validate = () => vi.fn((value: unknown) => (value === null ? 'Choose a date' : 'Wrong date'));
+    const validate = () =>
+      vi.fn((value: unknown) => (value === null ? 'Choose a date' : 'Wrong date'));
 
     test.each([
       { name: 'with a first value', first: day('2026-11-14') },
       { name: 'with no first value', first: undefined },
-    ])('starts no validation for the value of the reset, and validates the next entry, $name', async ({ first }) => {
-      const check = validate();
-      const { form, formInput, error, fieldRoot } = await mountPicker({
-        root: { locale: 'en-US', defaultValue: first },
-        fieldRoot: { name: 'when', validate: check, validationMode: 'change', 'data-testid': 'field' },
-      });
-      await fill(formInput, '2026-11-15');
-      expect(error()).toHaveTextContent('Wrong date');
-      check.mockClear();
-      await resetForm(form, reversed);
-      expect(formInput.value).toBe(first?.toString() ?? '');
-      expect(check).not.toHaveBeenCalled();
-      expect(error()).toBe(null);
-      expect(fieldRoot()).not.toHaveAttribute('data-dirty');
-      expect(fieldRoot()).not.toHaveAttribute('data-invalid');
-      await fill(formInput, '2026-11-16');
-      expect(check).toHaveBeenCalledTimes(1);
-      expect(error()).toHaveTextContent('Wrong date');
-    });
+    ])(
+      'starts no validation for the value of the reset, and validates the next entry, $name',
+      async ({ first }) => {
+        const check = validate();
+        const { form, formInput, error, fieldRoot } = await mountPicker({
+          root: { locale: 'en-US', defaultValue: first },
+          fieldRoot: {
+            name: 'when',
+            validate: check,
+            validationMode: 'change',
+            'data-testid': 'field',
+          },
+        });
+        await fill(formInput, '2026-11-15');
+        expect(error()).toHaveTextContent('Wrong date');
+        check.mockClear();
+        await resetForm(form, reversed);
+        expect(formInput.value).toBe(first?.toString() ?? '');
+        expect(check).not.toHaveBeenCalled();
+        expect(error()).toBe(null);
+        expect(fieldRoot()).not.toHaveAttribute('data-dirty');
+        expect(fieldRoot()).not.toHaveAttribute('data-invalid');
+        await fill(formInput, '2026-11-16');
+        expect(check).toHaveBeenCalledTimes(1);
+        expect(error()).toHaveTextContent('Wrong date');
+      },
+    );
   });
 
   test('in a Field, a press on a day removes the error that a submit showed', async () => {

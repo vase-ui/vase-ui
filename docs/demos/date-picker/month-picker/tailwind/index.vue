@@ -14,6 +14,8 @@ const titleClassName =
   'h-8 cursor-pointer rounded-md px-2 font-semibold outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white';
 const cellClassName =
   'box-border h-10 flex-1 cursor-pointer rounded-md border border-transparent outline-0 hover:enabled:not-aria-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 aria-[current=date]:border-neutral-400 data-disabled:cursor-default data-disabled:opacity-40 aria-selected:bg-neutral-950 aria-selected:text-white dark:hover:enabled:not-aria-selected:bg-neutral-800 dark:focus-visible:outline-white dark:aria-selected:bg-white dark:aria-selected:text-neutral-950';
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -64,8 +66,8 @@ const cellClassName =
       <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
           <Transition
-            enter-from-class="opacity-0 scale-[0.98]"
-            leave-to-class="opacity-0 scale-[0.98]"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <DatePicker.Popup

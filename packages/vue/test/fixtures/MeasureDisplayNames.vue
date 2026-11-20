@@ -10,6 +10,8 @@ const names = (locale: string) =>
 
 <template>
   <ul>
-    <li v-for="locale in locales" :key="locale" :data-locale="locale">{{ names(locale).join('|') }}</li>
+    <li v-for="locale in locales" :key="locale" :data-locale="locale">
+      {{ names(locale).join('|') }}
+    </li>
   </ul>
 </template>

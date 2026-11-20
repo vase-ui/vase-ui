@@ -33,13 +33,13 @@ const picker = injectTimePicker('Clock');
 const popup = usePickerPopup('Clock');
 const attrs = useAttrs();
 const part = usePickerPart();
-const view = useModel(() => props.view, props.defaultView);
+const shownView = useModel(() => props.view, props.defaultView);
 
 // An uncontrolled clock starts at its first view at each open, also in a popup that stays mounted.
 watch(
   () => popup.open,
   (open) => {
-    if (open) view.setOwn(props.defaultView);
+    if (open) shownView.setOwn(props.defaultView);
   },
 );
 
@@ -55,7 +55,7 @@ function clockProps() {
     modelValue: picker.value,
     defaultValue: undefined,
     referenceDate: withTime(picker.template, picker.time),
-    view: view.value.value,
+    view: shownView.value.value,
     granularity: root.granularity,
     hourCycle: root.hourCycle,
     min: root.min,
@@ -67,12 +67,12 @@ function clockProps() {
       picker.commit(value, details),
     // The view of the commit is the view before the commit shows the next one.
     onValueCommitted: (_: TimePickerRootValue, details: { event: Event }) => {
-      if (!nextView(view.value.value, root.granularity ?? 'minute') && picker.closeOnSelect) {
+      if (!nextView(shownView.value.value, root.granularity ?? 'minute') && picker.closeOnSelect) {
         popup.closeAfterPick(details.event);
       }
     },
     'onUpdate:view': (next: TimeClockView) => {
-      view.setOwn(next);
+      shownView.setOwn(next);
       emit('update:view', next);
     },
   });

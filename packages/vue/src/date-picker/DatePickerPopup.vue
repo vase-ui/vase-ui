@@ -20,13 +20,13 @@ defineSlots<{
 injectDatePicker('Popup');
 const attrs = useAttrs();
 const part = usePickerPart();
-const initialFocus = usePopupFocusTargets(
+const focusTarget = usePopupFocusTargets(
   () => props.initialFocus,
   () => part.element.value,
 );
 
 function popupProps() {
-  return mergeProps(attrs, { initialFocus });
+  return mergeProps(attrs, { initialFocus: focusTarget });
 }
 
 defineExpose({ element: part.element });

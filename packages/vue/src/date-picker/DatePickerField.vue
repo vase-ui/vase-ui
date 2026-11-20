@@ -4,11 +4,7 @@ import type { DateTimeFieldChangeEventDetails } from '../common/date-time-field/
 import { usePickerField } from '../common/picker/field';
 import DateFieldRoot from '../date-field/DateFieldRoot.vue';
 import { injectDatePicker } from './root';
-import type {
-  DatePickerFieldProps,
-  DatePickerFieldState,
-  DatePickerRootValue,
-} from './types';
+import type { DatePickerFieldProps, DatePickerFieldState, DatePickerRootValue } from './types';
 
 defineOptions({ inheritAttrs: false });
 

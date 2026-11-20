@@ -6,6 +6,8 @@ import { Popover } from '@vase-ui/vue/popover';
 
 const id = useId();
 const defaultValue = Temporal.PlainTime.from('09:30');
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -54,8 +56,8 @@ const defaultValue = Temporal.PlainTime.from('09:30');
       <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
           <Transition
-            enter-from-class="opacity-0 scale-[0.98]"
-            leave-to-class="opacity-0 scale-[0.98]"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <TimePicker.Popup

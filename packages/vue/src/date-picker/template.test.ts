@@ -12,9 +12,12 @@ describe('templateOf', () => {
     { granularity: 'hour', kind: 'dateTime' },
     { granularity: 'minute', kind: 'dateTime' },
     { granularity: 'second', kind: 'dateTime' },
-  ] as const)('is a value of the kind $kind for the granularity $granularity', ({ granularity, kind }) => {
-    expect(kindOf(templateOf(granularity, undefined, today))).toBe(kind);
-  });
+  ] as const)(
+    'is a value of the kind $kind for the granularity $granularity',
+    ({ granularity, kind }) => {
+      expect(kindOf(templateOf(granularity, undefined, today))).toBe(kind);
+    },
+  );
 
   test('is today at midnight for a date with a time', () => {
     expect(templateOf('minute', undefined, today).toString()).toBe('2026-11-14T00:00:00');
@@ -42,7 +45,11 @@ describe('hasTime', () => {
   test.each([
     { name: 'a date', value: Temporal.PlainDate.from('2026-11-14'), expected: false },
     { name: 'a year and month', value: Temporal.PlainYearMonth.from('2026-11'), expected: false },
-    { name: 'a date and time', value: Temporal.PlainDateTime.from('2026-11-14T15:04'), expected: true },
+    {
+      name: 'a date and time',
+      value: Temporal.PlainDateTime.from('2026-11-14T15:04'),
+      expected: true,
+    },
     {
       name: 'a date and time in a zone',
       value: Temporal.ZonedDateTime.from('2026-11-14T15:04[UTC]'),

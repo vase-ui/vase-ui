@@ -14,7 +14,12 @@ const nativeTemporal = globalThis.Temporal;
 // Each case reads `Temporal` when it runs: the native one first, and then the polyfill.
 const SERVER_CASES: Record<string, () => VNode> = {
   'an open picker with a date': () => (
-    <DatePicker.Root defaultOpen defaultValue={Temporal.PlainDate.from('2026-11-18')} name="when" required>
+    <DatePicker.Root
+      defaultOpen
+      defaultValue={Temporal.PlainDate.from('2026-11-18')}
+      name="when"
+      required
+    >
       <DatePicker.Field>
         <DateField.Input />
       </DatePicker.Field>
@@ -30,7 +35,13 @@ const SERVER_CASES: Record<string, () => VNode> = {
     <DatePicker.Root defaultValue={Temporal.PlainDate.from('2026-11-18')} locale="de-DE">
       <DatePicker.Calendar>
         <Calendar.Months
-          v-slots={{ month: ({ month }: { month: Calendar.Month.Props['month'] }) => <Calendar.Month month={month}><Calendar.Caption /></Calendar.Month> }}
+          v-slots={{
+            month: ({ month }: { month: Calendar.Month.Props['month'] }) => (
+              <Calendar.Month month={month}>
+                <Calendar.Caption />
+              </Calendar.Month>
+            ),
+          }}
         />
       </DatePicker.Calendar>
     </DatePicker.Root>
@@ -65,7 +76,9 @@ describe('<DatePicker.Root /> on a server', () => {
     expect(html).toContain('role="group"');
     expect(formInputOf(html)).toMatch(/^<input type="date" name="when"[^>]* value="2026-11-18"/);
     expect(formInputOf(html)).toMatch(/ required[ >]/);
-    expect(html).toMatch(/<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose date"/);
+    expect(html).toMatch(
+      /<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose date"/,
+    );
     expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain('Popup content');
   });

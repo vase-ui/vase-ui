@@ -17,7 +17,9 @@ const time = (text: string) => Temporal.PlainTime.from(text);
 
 const popup = () => document.querySelector<HTMLElement>('[data-testid="popup"]');
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
-const options = (id: string) => [...byTestId(id).querySelectorAll<HTMLButtonElement>('[role="option"]')];
+const options = (id: string) => [
+  ...byTestId(id).querySelectorAll<HTMLButtonElement>('[role="option"]'),
+];
 const option = (id: string, text: string) => options(id).find((each) => each.textContent === text)!;
 
 async function opened() {
@@ -60,7 +62,9 @@ async function mountPicker(setup: Props = {}) {
   return {
     root,
     exposed,
-    segments: () => [...root.querySelectorAll<HTMLInputElement>('[role="group"] [role="spinbutton"]')],
+    segments: () => [
+      ...root.querySelectorAll<HTMLInputElement>('[role="group"] [role="spinbutton"]'),
+    ],
     formInput: query<HTMLInputElement>('input[aria-hidden]')!,
     trigger: query<HTMLButtonElement>('[data-testid="trigger"]')!,
     form: query<HTMLFormElement>('form')!,
@@ -87,15 +91,22 @@ async function fill(input: HTMLInputElement, text: string) {
 }
 
 describe('the parts', () => {
-  test.each(['Field', 'Trigger', 'Positioner', 'Popup', 'List', 'Item', 'Column', 'ColumnItem', 'Clock'])(
-    'TimePicker.%s outside TimePicker.Root throws an error that names both',
-    (part) => {
-      expect(String(mountError(PickerPartAlone, { family: 'TimePicker', part }))).toMatch(
-        `<TimePicker.${part}> must be inside <TimePicker.Root>`,
-      );
-      takeReportedMessages();
-    },
-  );
+  test.each([
+    'Field',
+    'Trigger',
+    'Positioner',
+    'Popup',
+    'List',
+    'Item',
+    'Column',
+    'ColumnItem',
+    'Clock',
+  ])('TimePicker.%s outside TimePicker.Root throws an error that names both', (part) => {
+    expect(String(mountError(PickerPartAlone, { family: 'TimePicker', part }))).toMatch(
+      `<TimePicker.${part}> must be inside <TimePicker.Root>`,
+    );
+    takeReportedMessages();
+  });
 
   test('the slots of the trigger have the time in the locale, with the seconds and the zone', async () => {
     const props = reactive<Props>({ locale: 'en-US', modelValue: time('15:04') });
@@ -116,13 +127,22 @@ describe('the parts', () => {
 
 describe('the list', () => {
   test('a listbox of buttons with the role option, in the locale and the hour cycle, by the step from min to max', async () => {
-    const props = reactive<Props>({ locale: 'en-US', defaultOpen: true, min: time('09:00'), max: time('11:00') });
+    const props = reactive<Props>({
+      locale: 'en-US',
+      defaultOpen: true,
+      min: time('09:00'),
+      max: time('11:00'),
+    });
     await mountPicker({ root: props, list: { step: 45 } });
     await opened();
     const list = byTestId('list');
     expect(list).toHaveAttribute('role', 'listbox');
     expect(list).toHaveAttribute('aria-label', 'Times');
-    expect(options('list').map((each) => each.textContent)).toEqual(['9:00 AM', '9:45 AM', '10:30 AM']);
+    expect(options('list').map((each) => each.textContent)).toEqual([
+      '9:00 AM',
+      '9:45 AM',
+      '10:30 AM',
+    ]);
     const [first] = options('list');
     expect(first).toHaveAttribute('type', 'button');
     expect(first).toHaveAttribute('aria-selected', 'false');
@@ -182,7 +202,9 @@ describe('the list', () => {
   });
 
   test('the tab stop is the selected item, else the first enabled item; the keys move it and go over a disabled item', async () => {
-    const { root } = await mountPicker({ root: { locale: 'en-US', defaultOpen: true, max: time('01:30') } });
+    const { root } = await mountPicker({
+      root: { locale: 'en-US', defaultOpen: true, max: time('01:30') },
+    });
     await opened();
     const items = options('list');
     expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1, -1]);
@@ -242,7 +264,11 @@ describe('the list', () => {
 describe('the columns', () => {
   test('a column is a listbox named by Intl; a column of day periods renders nothing in a 24-hour cycle', async () => {
     const props = reactive<Props>({ locale: 'en-US', defaultOpen: true });
-    await mountPicker({ root: props, parts: ['hour', 'minute', 'dayPeriod'], column: { step: 15 } });
+    await mountPicker({
+      root: props,
+      parts: ['hour', 'minute', 'dayPeriod'],
+      column: { step: 15 },
+    });
     await opened();
     expect(byTestId('hour')).toHaveAttribute('role', 'listbox');
     expect(byTestId('hour')).toHaveAttribute('aria-label', 'hour');
@@ -281,7 +307,11 @@ describe('the columns', () => {
   test('an item with no time in min and max is disabled, and a press puts the time into the limits', async () => {
     const log: string[] = [];
     await mountPicker({
-      root: model(log, time('09:50'), { defaultOpen: true, min: time('09:10'), max: time('10:20') }),
+      root: model(log, time('09:50'), {
+        defaultOpen: true,
+        min: time('09:10'),
+        max: time('10:20'),
+      }),
       parts: ['hour', 'minute'],
     });
     await opened();
@@ -364,10 +394,15 @@ describe('the first focus', () => {
     { parts: ['hour', 'list', 'clock'], first: 'hour' },
     { parts: ['clock', 'hour', 'list'], first: 'clock' },
   ] as const)('goes to the first of $parts', async ({ parts, first }) => {
-    await mountPicker({ root: { locale: 'en-US', defaultOpen: true, defaultValue: time('01:00') }, parts: [...parts] });
+    await mountPicker({
+      root: { locale: 'en-US', defaultOpen: true, defaultValue: time('01:00') },
+      parts: [...parts],
+    });
     await opened();
     const target =
-      first === 'clock' ? byTestId('face').querySelector('input')! : byTestId(first).querySelector('[tabindex="0"]')!;
+      first === 'clock'
+        ? byTestId('face').querySelector('input')!
+        : byTestId(first).querySelector('[tabindex="0"]')!;
     await waitFor(() => expect(target).toHaveFocus());
   });
 
@@ -385,7 +420,9 @@ describe('the first focus', () => {
 describe('the form', () => {
   test('a reset gives one update of an uncontrolled picker and no valueChange; clear() gives update only', async () => {
     const log: string[] = [];
-    const { segments, form, exposed } = await mountPicker({ root: logged(log, { defaultValue: time('09:30') }) });
+    const { segments, form, exposed } = await mountPicker({
+      root: logged(log, { defaultValue: time('09:30') }),
+    });
     segments()[0]!.focus();
     await userEvent.keyboard('{ArrowUp}');
     log.length = 0;
@@ -404,21 +441,24 @@ describe('the form', () => {
     test.each([
       { name: 'with a first value', first: time('09:30') },
       { name: 'with no first value', first: undefined },
-    ])('starts no validation for the value of the reset, and validates the next entry, $name', async ({ first }) => {
-      const check = vi.fn((value: unknown) => (value === null ? 'Choose a time' : 'Wrong time'));
-      const { form, formInput, error } = await mountPicker({
-        root: { locale: 'en-US', defaultValue: first },
-        fieldRoot: { name: 'when', validate: check, validationMode: 'change' },
-      });
-      await fill(formInput, '10:15');
-      expect(error()).toHaveTextContent('Wrong time');
-      check.mockClear();
-      await resetForm(form, reversed);
-      expect(check).not.toHaveBeenCalled();
-      expect(error()).toBe(null);
-      await fill(formInput, '10:45');
-      expect(check).toHaveBeenCalledTimes(1);
-    });
+    ])(
+      'starts no validation for the value of the reset, and validates the next entry, $name',
+      async ({ first }) => {
+        const check = vi.fn((value: unknown) => (value === null ? 'Choose a time' : 'Wrong time'));
+        const { form, formInput, error } = await mountPicker({
+          root: { locale: 'en-US', defaultValue: first },
+          fieldRoot: { name: 'when', validate: check, validationMode: 'change' },
+        });
+        await fill(formInput, '10:15');
+        expect(error()).toHaveTextContent('Wrong time');
+        check.mockClear();
+        await resetForm(form, reversed);
+        expect(check).not.toHaveBeenCalled();
+        expect(error()).toBe(null);
+        await fill(formInput, '10:45');
+        expect(check).toHaveBeenCalledTimes(1);
+      },
+    );
   });
 });
 

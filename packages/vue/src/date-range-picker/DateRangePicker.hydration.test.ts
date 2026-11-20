@@ -7,7 +7,10 @@ describe('server render and hydration', () => {
   test.each([
     { name: 'a range', props: { value: '2026-11-18 2026-11-20' } },
     { name: 'no value', props: {} },
-    { name: 'a calendar outside the popup', props: { value: '2026-11-18 2026-11-20', inline: true } },
+    {
+      name: 'a calendar outside the popup',
+      props: { value: '2026-11-18 2026-11-20', inline: true },
+    },
   ])('hydrates a picker with $name, with no message and with each element', async ({ props }) => {
     const fixtureProps = { family: 'range', locale: 'en-US', ...props };
     const root = await renderOnServer('PickersOnServer', fixtureProps);

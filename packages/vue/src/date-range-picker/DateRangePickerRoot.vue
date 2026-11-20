@@ -47,7 +47,7 @@ type Range = DateRangePickerRootValue;
 const EMPTY: Range = [null, null];
 
 const attrs = useAttrs();
-const locale = useLocale(() => props.locale);
+const shownLocale = useLocale(() => props.locale);
 const { picker, field, readClock } = usePicker<Range, DateValue>(props, {
   emitChange: (value, details) =>
     emit(
@@ -55,7 +55,8 @@ const { picker, field, readClock } = usePicker<Range, DateValue>(props, {
       (value ?? EMPTY) as DateRangePickerRootValue<Value>,
       details as DateRangePickerRootChangeEventDetails,
     ),
-  emitModel: (value) => emit('update:modelValue', (value ?? EMPTY) as DateRangePickerRootValue<Value>),
+  emitModel: (value) =>
+    emit('update:modelValue', (value ?? EMPTY) as DateRangePickerRootValue<Value>),
   templateOf: ([start, end]) => start ?? end,
   same: sameRange,
   fallback: (today) =>
@@ -81,7 +82,7 @@ provide(
   extendPicker(extendPicker(picker, control), {
     props,
     get calendar() {
-      return displayCalendar(props.calendar, picker.template, locale.value);
+      return displayCalendar(props.calendar, picker.template, shownLocale.value);
     },
     get range() {
       return range.value;

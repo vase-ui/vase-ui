@@ -67,7 +67,8 @@ export function usePicker<Value, Template = Value>(
 ) {
   const field = inject(fieldKey, null);
   const first = (props.modelValue !== undefined ? props.modelValue : props.defaultValue) ?? null;
-  const { value, setOwn } = useModel<Value | null>(() => props.modelValue, first);
+  const model = useModel<Value | null>(() => props.modelValue, first);
+  const value = model.value;
   const templateOf = options.templateOf ?? ((candidate: Value) => candidate as unknown as Template);
   const filled = (candidate: Value | null | undefined) =>
     candidate == null ? undefined : (templateOf(candidate) ?? undefined);
@@ -111,7 +112,7 @@ export function usePicker<Value, Template = Value>(
     if (details.isCanceled) return false;
     options.emitChange(next, details);
     if (details.isCanceled) return false;
-    setOwn(next);
+    model.setOwn(next);
     options.emitModel(next);
     // A controlled parent answers in its next render.
     if (field && !fromField) void nextTick(() => field.onEdit());
@@ -120,7 +121,7 @@ export function usePicker<Value, Template = Value>(
 
   function set(next: Value | null) {
     if (options.same(next, value.value)) return;
-    setOwn(next);
+    model.setOwn(next);
     options.emitModel(next);
   }
 

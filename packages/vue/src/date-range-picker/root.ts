@@ -25,8 +25,7 @@ export interface DateRangePickerForPart extends PickerForPart<DateRangePickerRoo
   onFocusout(event: FocusEvent): void;
 }
 
-export const dateRangePickerKey: InjectionKey<DateRangePickerForPart> =
-  Symbol('date range picker');
+export const dateRangePickerKey: InjectionKey<DateRangePickerForPart> = Symbol('date range picker');
 
 /** The root of the part. A part with no root throws an error that names it. */
 export function injectDateRangePicker(part: string): DateRangePickerForPart {
@@ -53,10 +52,16 @@ export function useRangeControl(
 ) {
   const ends = [shallowReactive<HTMLElement[]>([]), shallowReactive<HTMLElement[]>([])] as const;
   const firstEnds = computed(
-    () => ends.map((list) => [...list].sort(byDocumentOrder)[0]) as [HTMLElement | undefined, HTMLElement | undefined],
+    () =>
+      ends.map((list) => [...list].sort(byDocumentOrder)[0]) as [
+        HTMLElement | undefined,
+        HTMLElement | undefined,
+      ],
   );
   const controls = shallowReactive<FieldControl[]>([]);
-  const ordered = computed(() => [...controls].sort((a, b) => byDocumentOrder(a.element, b.element)));
+  const ordered = computed(() =>
+    [...controls].sort((a, b) => byDocumentOrder(a.element, b.element)),
+  );
 
   if (field) {
     provide(fieldKey, {
@@ -82,11 +87,9 @@ export function useRangeControl(
       onLeave() {},
       onReset() {},
     });
-    watch(
-      range,
-      (next) => field.setValue(next, next[0] !== null || next[1] !== null),
-      { immediate: true },
-    );
+    watch(range, (next) => field.setValue(next, next[0] !== null || next[1] !== null), {
+      immediate: true,
+    });
     watch(
       () => ordered.value[0],
       (first, _, onCleanup) => {

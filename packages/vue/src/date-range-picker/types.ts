@@ -232,8 +232,7 @@ interface CalendarListeners {
     | undefined;
   'onUpdate:month'?: ((month: Temporal.PlainYearMonth) => void) | undefined;
   onFocusedDateChange?:
-    | ((date: Temporal.PlainDate, details: RangeCalendarRootChangeEventDetails) => void)
-    | undefined;
+    ((date: Temporal.PlainDate, details: RangeCalendarRootChangeEventDetails) => void) | undefined;
   'onUpdate:focusedDate'?: ((date: Temporal.PlainDate) => void) | undefined;
 }
 
@@ -252,8 +251,9 @@ type CalendarOwned = OwnedKeys<
 >;
 
 export interface DateRangePickerCalendarProps
+  /* @vue-ignore */
   extends
-    /* @vue-ignore */ Omit<RangeCalendarRootProps<DateValue>, CalendarOwned>,
+    Omit<RangeCalendarRootProps<DateValue>, CalendarOwned>,
     /* @vue-ignore */ CalendarListeners {}
 
 export interface DateRangePickerCalendarState extends RangeCalendarRootState {}

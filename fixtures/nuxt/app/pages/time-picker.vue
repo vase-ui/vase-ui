@@ -23,7 +23,9 @@ const time = shallowRef<Temporal.PlainTime | null>(Temporal.PlainTime.from('15:0
             </template>
           </TimeField.Input>
         </TimePicker.Field>
-        <TimePicker.Trigger data-testid="start-trigger" aria-label="Choose time">Open</TimePicker.Trigger>
+        <TimePicker.Trigger data-testid="start-trigger" aria-label="Choose time"
+          >Open</TimePicker.Trigger
+        >
         <Popover.Portal>
           <TimePicker.Positioner>
             <TimePicker.Popup aria-label="Choose time" data-testid="start-popup">

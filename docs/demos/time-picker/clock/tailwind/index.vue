@@ -14,6 +14,8 @@ const triggerClass =
   'text-xl hover:not-disabled:not-aria-pressed:bg-neutral-100 aria-pressed:bg-neutral-950 aria-pressed:not-disabled:text-white dark:hover:not-disabled:not-aria-pressed:bg-neutral-800 dark:aria-pressed:bg-white dark:aria-pressed:not-disabled:text-neutral-950';
 const dayPeriodClass =
   'text-sm hover:not-disabled:not-aria-pressed:bg-neutral-100 aria-pressed:bg-neutral-950 aria-pressed:not-disabled:text-white dark:hover:not-disabled:not-aria-pressed:bg-neutral-800 dark:aria-pressed:bg-white dark:aria-pressed:not-disabled:text-neutral-950';
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -64,8 +66,8 @@ const dayPeriodClass =
       <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
           <Transition
-            enter-from-class="opacity-0 scale-[0.98]"
-            leave-to-class="opacity-0 scale-[0.98]"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <TimePicker.Popup

@@ -21,7 +21,10 @@ defineProps({
   list: Object as PropType<Props>,
   column: Object as PropType<Props>,
   clock: Object as PropType<Props>,
-  parts: { type: Array as PropType<('list' | 'clock' | TimePickerColumnUnit)[]>, default: () => ['list'] },
+  parts: {
+    type: Array as PropType<('list' | 'clock' | TimePickerColumnUnit)[]>,
+    default: () => ['list'],
+  },
   fieldRoot: Object as PropType<Props>,
   vaseForm: Boolean,
   listBefore: Boolean,

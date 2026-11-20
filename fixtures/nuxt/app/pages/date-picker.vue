@@ -25,7 +25,9 @@ const day = shallowRef<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-
             </template>
           </DateField.Input>
         </DatePicker.Field>
-        <DatePicker.Trigger data-testid="when-trigger" aria-label="Choose date">Open</DatePicker.Trigger>
+        <DatePicker.Trigger data-testid="when-trigger" aria-label="Choose date"
+          >Open</DatePicker.Trigger
+        >
         <Popover.Portal>
           <DatePicker.Positioner>
             <DatePicker.Popup aria-label="Choose date" data-testid="when-popup">

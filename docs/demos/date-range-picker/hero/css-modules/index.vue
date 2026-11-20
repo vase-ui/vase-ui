@@ -11,6 +11,8 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
   Temporal.PlainDate.from('2026-11-18'),
   Temporal.PlainDate.from('2026-11-22'),
 ];
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -61,8 +63,8 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
       <Popover.Portal>
         <DateRangePicker.Positioner :side-offset="4">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <DateRangePicker.Popup aria-label="Choose trip dates" :class="styles.Popup">

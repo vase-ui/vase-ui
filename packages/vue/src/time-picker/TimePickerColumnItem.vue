@@ -40,9 +40,7 @@ const option = useOption(picker, column, {
   as: () => props.as,
 });
 const { setElement, state, elementProps } = option;
-const text = computed(() =>
-  columnText(column.unit, picker.hourCycle, props.value, picker.locale),
-);
+const text = computed(() => columnText(column.unit, picker.hourCycle, props.value, picker.locale));
 
 defineExpose({ element: option.element });
 </script>

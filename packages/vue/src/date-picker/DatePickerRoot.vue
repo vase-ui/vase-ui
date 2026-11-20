@@ -42,7 +42,7 @@ defineSlots<{ default?(): unknown }>();
 assertTemporal('DatePicker.Root');
 
 const attrs = useAttrs();
-const locale = useLocale(() => props.locale);
+const shownLocale = useLocale(() => props.locale);
 const { picker, readClock } = usePicker<DatePickerRootValue>(props, {
   emitChange: (value, details) =>
     emit('valueChange', value as Value | null, details as DatePickerRootChangeEventDetails),
@@ -62,7 +62,7 @@ provide(
   extendPicker(picker, {
     props,
     get calendar() {
-      return displayCalendar(props.calendar, picker.template, locale.value);
+      return displayCalendar(props.calendar, picker.template, shownLocale.value);
     },
   }),
 );

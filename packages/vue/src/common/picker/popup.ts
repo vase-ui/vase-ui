@@ -1,4 +1,12 @@
-import { computed, inject, provide, shallowReactive, shallowRef, watch, type InjectionKey } from 'vue';
+import {
+  computed,
+  inject,
+  provide,
+  shallowReactive,
+  shallowRef,
+  watch,
+  type InjectionKey,
+} from 'vue';
 import { injectPopoverRoot } from '../../popover/root';
 import type { FocusTarget } from '../../popup/focus';
 import { byDocumentOrder } from '../element';
@@ -111,7 +119,7 @@ export function usePickerTrigger(picker: PickerForPart<unknown>) {
 export function usePickerPart() {
   const part = shallowRef<{ element: HTMLElement | null } | null>(null);
   return {
-    setPart(value: unknown) {
+    setPart: (value: unknown) => {
       part.value = value as { element: HTMLElement | null } | null;
     },
     element: computed(() => part.value?.element ?? null),

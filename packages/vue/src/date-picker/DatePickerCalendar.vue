@@ -6,7 +6,11 @@ import type { DateValue } from '../common/date-time/temporal';
 import { pickerControlKey } from '../common/picker/control';
 import { addPopupFocusTarget, usePickerPopup } from '../common/picker/popup';
 import { injectDatePicker } from './root';
-import type { DatePickerCalendarProps, DatePickerCalendarState, DatePickerRootValue } from './types';
+import type {
+  DatePickerCalendarProps,
+  DatePickerCalendarState,
+  DatePickerRootValue,
+} from './types';
 
 defineOptions({ inheritAttrs: false });
 

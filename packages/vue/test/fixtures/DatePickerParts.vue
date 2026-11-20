@@ -37,7 +37,12 @@ const rootPart = useTemplateRef('rootPart');
 const fieldPart = useTemplateRef('fieldPart');
 const calendarPart = useTemplateRef('calendarPart');
 const timeFieldPart = useTemplateRef('timeFieldPart');
-defineExpose({ root: rootPart, field: fieldPart, calendar: calendarPart, timeField: timeFieldPart });
+defineExpose({
+  root: rootPart,
+  field: fieldPart,
+  calendar: calendarPart,
+  timeField: timeFieldPart,
+});
 </script>
 
 <template>

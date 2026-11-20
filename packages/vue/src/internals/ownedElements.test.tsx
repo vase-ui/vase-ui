@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef, Teleport } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor, within } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
 import { TestElement } from '../../test/testElement';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';

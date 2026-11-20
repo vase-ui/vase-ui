@@ -8,6 +8,8 @@ import styles from '../../_index.module.css';
 
 const id = useId();
 const defaultValue = Temporal.PlainTime.from('10:30');
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -45,8 +47,8 @@ const defaultValue = Temporal.PlainTime.from('10:30');
       <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <TimePicker.Popup aria-label="Choose a reminder time" :class="styles.Popup">

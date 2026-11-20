@@ -39,7 +39,10 @@ describe('server render and hydration', () => {
     const props = { family: 'date', value: '2026-11-18', open: true, portalDisabled: true };
     const root = await renderOnServer('PickersOnServer', props);
     const dialog = root.querySelector('[role="dialog"]');
-    expect(dialog?.querySelector('[data-date="2026-11-18"]')).toHaveAttribute('aria-selected', 'true');
+    expect(dialog?.querySelector('[data-date="2026-11-18"]')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     hydrate(PickersOnServer, props, root);
     await settle();
     expect(root.querySelector('[role="dialog"]')).toBe(dialog);

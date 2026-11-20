@@ -67,7 +67,7 @@ export function useRangeField(end: RangeEnd, part: string) {
       onValueChange: (value: DateValue | null, details: DateTimeFieldChangeEventDetails) =>
         picker.commit(withEnd(value), details),
       onKeydown: field.onKeydown,
-      onFocusout: picker.onFocusout,
+      onFocusout: (event: FocusEvent) => picker.onFocusout(event),
     });
   }
 

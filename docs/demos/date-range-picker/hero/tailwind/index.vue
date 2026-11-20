@@ -20,6 +20,8 @@ const segmentClassName =
 const literalClassName = 'whitespace-pre text-neutral-600 dark:text-neutral-400';
 const inputClassName =
   'flex items-center text-sm font-normal tabular-nums any-pointer-coarse:text-base';
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -77,8 +79,8 @@ const inputClassName =
       <Popover.Portal>
         <DateRangePicker.Positioner :side-offset="4">
           <Transition
-            enter-from-class="opacity-0 scale-[0.98]"
-            leave-to-class="opacity-0 scale-[0.98]"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <DateRangePicker.Popup

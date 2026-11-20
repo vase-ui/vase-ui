@@ -32,7 +32,8 @@ if (process.env.NODE_ENV !== 'production' && !hasTime(picker.template)) {
 // control. This field is no control of it.
 provide(fieldKey, null);
 
-const timeOf = (value: unknown) => (value && hasTime(value as TimeValue) ? (value as TimeValue) : null);
+const timeOf = (value: unknown) =>
+  value && hasTime(value as TimeValue) ? (value as TimeValue) : null;
 
 function fieldProps() {
   const root = picker.props;

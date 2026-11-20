@@ -11,6 +11,8 @@ const minDate = Temporal.PlainDate.from('2026-11-01');
 const maxDate = Temporal.PlainDate.from('2026-11-30');
 // Saturday and Sunday.
 const unavailableDates = { dayOfWeek: [6, 7] };
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -55,8 +57,8 @@ const unavailableDates = { dayOfWeek: [6, 7] };
       <Popover.Portal>
         <DatePicker.Positioner :side-offset="4">
           <Transition
-            :enter-from-class="styles.PopupHidden"
-            :leave-to-class="styles.PopupHidden"
+            :enter-from-class="popupHiddenClass"
+            :leave-to-class="popupHiddenClass"
             appear
           >
             <DatePicker.Popup aria-label="Choose a check-in date" :class="styles.Popup">

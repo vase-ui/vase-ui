@@ -17,6 +17,8 @@ const value = computed(() =>
     ? meetingDate.value.toPlainDateTime(meetingTime.value)
     : null,
 );
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -55,8 +57,8 @@ const value = computed(() =>
         <Popover.Portal>
           <DatePicker.Positioner :side-offset="4">
             <Transition
-              :enter-from-class="styles.PopupHidden"
-              :leave-to-class="styles.PopupHidden"
+              :enter-from-class="popupHiddenClass"
+              :leave-to-class="popupHiddenClass"
               appear
             >
               <DatePicker.Popup aria-label="Choose a meeting date" :class="styles.Popup">
@@ -132,8 +134,8 @@ const value = computed(() =>
         <Popover.Portal>
           <TimePicker.Positioner :side-offset="4">
             <Transition
-              :enter-from-class="styles.PopupHidden"
-              :leave-to-class="styles.PopupHidden"
+              :enter-from-class="popupHiddenClass"
+              :leave-to-class="popupHiddenClass"
               appear
             >
               <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">

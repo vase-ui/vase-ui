@@ -29,6 +29,9 @@ function toValue(text: string | undefined) {
 }
 const value = toValue(props.value?.split(' ')[0]);
 const end = toValue(props.value?.split(' ')[1]);
+const date = value as Temporal.PlainDate | undefined;
+const range = date && ([date, (end as Temporal.PlainDate | undefined) ?? null] as const);
+const time = value as Temporal.PlainTime | undefined;
 // A template reads only the globals that Vue lists, and `Temporal` is not one of them.
 const today = Temporal.PlainDate.from('2026-11-18');
 </script>
@@ -36,7 +39,7 @@ const today = Temporal.PlainDate.from('2026-11-18');
 <template>
   <DatePicker.Root
     v-if="family === 'date'"
-    :default-value="value as Temporal.PlainDate | undefined"
+    :default-value="date"
     :default-open="open"
     :locale="locale"
     :disabled="disabled"
@@ -55,21 +58,23 @@ const today = Temporal.PlainDate.from('2026-11-18');
   </DatePicker.Root>
   <DateRangePicker.Root
     v-else-if="family === 'range'"
-    :default-value="value && [value as Temporal.PlainDate, (end as Temporal.PlainDate) ?? null]"
+    :default-value="range"
     :default-open="open"
     :locale="locale"
     :disabled="disabled"
   >
     <DateRangePicker.StartField aria-label="Start"><DateField.Input /></DateRangePicker.StartField>
     <DateRangePicker.EndField aria-label="End"><DateField.Input /></DateRangePicker.EndField>
-    <DateRangePicker.Trigger data-testid="trigger" aria-label="Choose dates">Open</DateRangePicker.Trigger>
+    <DateRangePicker.Trigger data-testid="trigger" aria-label="Choose dates"
+      >Open</DateRangePicker.Trigger
+    >
     <DateRangePicker.Calendar v-if="inline" :today="today">
       <PickerCalendarGrid />
     </DateRangePicker.Calendar>
   </DateRangePicker.Root>
   <TimePicker.Root
     v-else
-    :default-value="value as Temporal.PlainTime | undefined"
+    :default-value="time"
     :default-open="open"
     :locale="locale"
     :hour-cycle="hourCycle"

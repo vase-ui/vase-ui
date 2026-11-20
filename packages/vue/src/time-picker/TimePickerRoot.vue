@@ -42,7 +42,7 @@ defineSlots<{ default?(): unknown }>();
 assertTemporal('TimePicker.Root');
 
 const attrs = useAttrs();
-const locale = useLocale(() => props.locale);
+const shownLocale = useLocale(() => props.locale);
 const { picker } = usePicker<TimePickerRootValue>(props, {
   emitChange: (value, details) =>
     emit('valueChange', value as Value | null, details as TimePickerRootChangeEventDetails),
@@ -51,7 +51,7 @@ const { picker } = usePicker<TimePickerRootValue>(props, {
   fallback: () => props.referenceDate ?? new Temporal.PlainTime(),
   closes: () => true,
 });
-const hourCycle = computed(() => props.hourCycle ?? hourCycleOf(locale.value));
+const shownHourCycle = computed(() => props.hourCycle ?? hourCycleOf(shownLocale.value));
 const time = computed(() => {
   const like = picker.value ?? props.referenceDate;
   return like ? toPlainTime(like) : new Temporal.PlainTime();
@@ -61,10 +61,10 @@ provide(
   extendPicker(picker, {
     props,
     get locale() {
-      return locale.value;
+      return shownLocale.value;
     },
     get hourCycle() {
-      return hourCycle.value;
+      return shownHourCycle.value;
     },
     get time() {
       return time.value;

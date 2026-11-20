@@ -18,13 +18,16 @@ afterEach(() => {
 describe('focus({ preventScroll: true }) on a button below the view of an element that scrolls', () => {
   function scroller(nested: boolean) {
     root = document.body.appendChild(document.createElement('div'));
-    const list = '<div class="list" style="height: 60px; overflow: auto"><div style="height: 200px"></div><button>Late</button></div>';
+    const list =
+      '<div class="list" style="height: 60px; overflow: auto"><div style="height: 200px"></div><button>Late</button></div>';
     root.innerHTML = nested
       ? `<div class="outer" style="height: 80px; overflow: auto"><div style="height: 200px"></div>${list}</div>`
       : list;
     const button = root.querySelector('button')!;
     button.focus({ preventScroll: true });
-    return [...root.querySelectorAll<HTMLElement>('.list, .outer')].map((element) => element.scrollTop);
+    return [...root.querySelectorAll<HTMLElement>('.list, .outer')].map(
+      (element) => element.scrollTop,
+    );
   }
 
   test('scrolls no element, alone and in a second element that scrolls, in the three browsers', () => {

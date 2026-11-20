@@ -21,6 +21,8 @@ const buttonClassName =
   'h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white';
 const dayButtonClassName =
   'box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:enabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white aria-[current=date]:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:enabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950';
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -70,8 +72,8 @@ const dayButtonClassName =
         <Popover.Portal>
           <DatePicker.Positioner :side-offset="4">
             <Transition
-              enter-from-class="opacity-0 scale-[0.98]"
-              leave-to-class="opacity-0 scale-[0.98]"
+              :enter-from-class="popupHiddenClass"
+              :leave-to-class="popupHiddenClass"
               appear
             >
               <DatePicker.Popup
@@ -164,8 +166,8 @@ const dayButtonClassName =
         <Popover.Portal>
           <TimePicker.Positioner :side-offset="4">
             <Transition
-              enter-from-class="opacity-0 scale-[0.98]"
-              leave-to-class="opacity-0 scale-[0.98]"
+              :enter-from-class="popupHiddenClass"
+              :leave-to-class="popupHiddenClass"
               appear
             >
               <TimePicker.Popup

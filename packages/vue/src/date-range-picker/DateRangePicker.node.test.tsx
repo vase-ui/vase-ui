@@ -51,7 +51,9 @@ describe('<DateRangePicker.Root /> on a server', () => {
     expect(end).toMatch(/^<input type="date" name="to"[^>]* value="2026-11-20"/);
     // An end before the first end makes the end field invalid.
     expect(end).toContain('min="2026-11-18"');
-    expect(html).toMatch(/<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose dates"/);
+    expect(html).toMatch(
+      /<button[^>]* aria-haspopup="dialog"[^>]* aria-expanded="true"[^>]* aria-label="Choose dates"/,
+    );
     expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain('Popup content');
   });

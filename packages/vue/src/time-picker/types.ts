@@ -275,11 +275,9 @@ export interface TimePickerColumnItemProps
 /** The events of `TimeClock.Root` that reach it from the part. */
 interface ClockListeners {
   onValueCommitted?:
-    | ((value: TimePickerRootValue, details: TimeClockRootCommitEventDetails) => void)
-    | undefined;
+    ((value: TimePickerRootValue, details: TimeClockRootCommitEventDetails) => void) | undefined;
   onViewChange?:
-    | ((view: TimeClockView, details: TimeClockRootViewChangeEventDetails) => void)
-    | undefined;
+    ((view: TimeClockView, details: TimeClockRootViewChangeEventDetails) => void) | undefined;
 }
 
 type ClockOwned = OwnedKeys<
@@ -299,9 +297,8 @@ type ClockOwned = OwnedKeys<
 >;
 
 export interface TimePickerClockProps
-  extends
-    /* @vue-ignore */ Omit<TimeClockRootProps, ClockOwned>,
-    /* @vue-ignore */ ClockListeners {
+  /* @vue-ignore */
+  extends Omit<TimeClockRootProps, ClockOwned>, /* @vue-ignore */ ClockListeners {
   /** The unit that the face shows. `v-model:view` binds it. */
   view?: TimeClockView | undefined;
   /**
