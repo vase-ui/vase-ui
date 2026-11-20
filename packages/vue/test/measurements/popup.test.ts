@@ -362,8 +362,13 @@ describe('a mouse press on a scrollbar that takes room (N10)', () => {
 });
 
 describe('a real touch outside (N11)', () => {
+  // The protocol injects a touch with no long press, so a rest is a tap
+  // (https://chromium.googlesource.com/chromium/src/+/main/content/browser/renderer_host/input/touch_emulator_impl.cc).
+  // On Linux, Windows and ChromeOS, a touch that stops a fling sends no `click`
+  // (https://chromium.googlesource.com/chromium/src/+/main/ui/events/gesture_detection/gesture_configuration_aura.cc).
+  // The drag ends with a fling, so the rest comes before the drag.
   test.skipIf(server.browser !== 'chromium')(
-    'sends `pointerdown`, `pointerup` and `click` for a tap, `pointerdown` and `pointerup` for a rest of 1.5 s with a `click` only on macOS, and `pointercancel` for a drag on a page that scrolls',
+    'sends `pointerdown`, `pointerup` and `click` for a tap and for a rest of 1.5 s, and `pointercancel` for a drag on a page that scrolls',
     async () => {
       html(`<div id="page" style="height: 3000px"></div>`);
       const log: string[] = [];
@@ -374,22 +379,15 @@ describe('a real touch outside (N11)', () => {
       await touchDrag(start, start, 1);
       await new Promise((resolve) => setTimeout(resolve, 50));
       const tap = log.splice(0);
+      await touchDrag(start, start, 0, 1500);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const rest = log.splice(0);
       await touchDrag(start, { x: 100, y: 100 }, 6);
       await new Promise((resolve) => setTimeout(resolve, 50));
-      const drag = log.splice(0);
-      const { cdp } = await import('vitest/browser');
-      const session = cdp();
-      const frame = window.frameElement!.getBoundingClientRect();
-      const scale = frame.width / window.innerWidth || 1;
-      const point = { x: frame.left + start.x * scale, y: frame.top + start.y * scale };
-      await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect({ tap, drag, rest: log }).toEqual({
+      expect({ tap, rest, drag: log }).toEqual({
         tap: ['pointerdown', 'pointerup', 'click'],
+        rest: ['pointerdown', 'pointerup', 'click'],
         drag: ['pointerdown', 'pointercancel'],
-        rest: ['pointerdown', 'pointerup', ...(server.platform === 'darwin' ? ['click'] : [])],
       });
     },
   );
