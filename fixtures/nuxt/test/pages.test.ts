@@ -12,6 +12,7 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 );
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
+const PROVIDER_TEXT = new Intl.NumberFormat('fr-FR', { style: 'percent' }).format(0.42);
 const EURO_FORMAT = { style: 'currency', currency: 'EUR' } as const;
 const EURO_TEXT = new Intl.NumberFormat('en-US', EURO_FORMAT).format(1234.5);
 
@@ -95,8 +96,17 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
   ).toBe('25%');
 }
 
+// A root in a `LocaleProvider` has the locale of the provider.
+async function expectProviderRoot(page: Page) {
+  expect(await page.getByTestId('provider-value').textContent()).toBe(PROVIDER_TEXT);
+  expect(await page.getByTestId('provider-root').getAttribute('aria-valuetext')).toBe(
+    PROVIDER_TEXT,
+  );
+}
+
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
+  await expectProviderRoot(page);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
   expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
@@ -2694,7 +2704,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
   });
 
   it.each(RANGE_PAGES)(
-    'keeps the en-US text of $path for a visitor in de-DE after hydration',
+    'keeps the text of $path in the locale of each root for a visitor in de-DE after hydration',
     async ({ path, rootAttributes }) => {
       const page = await createPage(undefined, { locale: 'de-DE' });
       const messages = collectMessages(page);
@@ -2711,6 +2721,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
         PERCENT_TEXT,
       );
       await expectCurrencyRoot(page, rootAttributes);
+      await expectProviderRoot(page);
       expect(messages).toEqual([]);
     },
   );

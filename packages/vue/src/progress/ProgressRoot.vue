@@ -12,6 +12,7 @@ import {
 import { clamp } from '../common/clamp';
 import { useElement } from '../common/element';
 import { visuallyHidden } from '../common/visuallyHidden';
+import { useLocale } from '../locale-provider/part';
 import { progressKey, statusAttributes } from './root';
 import type { ProgressRootProps, ProgressRootState } from './types';
 
@@ -21,7 +22,6 @@ const props = withDefaults(defineProps<ProgressRootProps>(), {
   value: null,
   min: 0,
   max: 100,
-  locale: 'en-US',
 });
 defineSlots<{
   default?(scope: { state: ProgressRootState }): unknown;
@@ -35,6 +35,7 @@ defineSlots<{
 const attrs = useAttrs();
 const labelId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
+const textLocale = useLocale(() => props.locale);
 const labels = shallowReactive<{ readonly id: string }[]>([]);
 const mounted = shallowRef(false);
 onMounted(() => (mounted.value = true));
@@ -49,7 +50,7 @@ const percent = computed(() =>
   valueInRange.value === null ? null : percentOf(valueInRange.value),
 );
 const formatter = computed(
-  () => new Intl.NumberFormat(props.locale, props.format ?? { style: 'percent' }),
+  () => new Intl.NumberFormat(textLocale.value, props.format ?? { style: 'percent' }),
 );
 const formattedValue = computed(() => {
   const value = valueInRange.value;

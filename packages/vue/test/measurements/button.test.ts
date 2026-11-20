@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextEvent } from '../animation';
 import MeasureMergedClick from '../fixtures/MeasureMergedClick.vue';
-import { mount, settle } from '../render';
+import { mount } from '../render';
 
 let root: HTMLElement | undefined;
 
@@ -210,7 +210,6 @@ describe('the keys of a link', () => {
     const { button, log } = recordKeys();
     button.focus();
     await userEvent.keyboard('{Enter}');
-    await settle();
     // Firefox gives the detail 1 to the click of a key on a link.
     expect(log.slice(0, 2)).toEqual([
       'keydown Enter',
@@ -222,7 +221,11 @@ describe('the keys of a link', () => {
     await nextEvent(window, 'scroll', { action: () => window.scrollTo(0, 0) });
     log.length = 0;
     button.focus();
-    await nextEvent(window, 'scroll', { action: () => userEvent.keyboard(' ') });
+    let typing: Promise<void> | undefined;
+    await nextEvent(window, 'scroll', { action: () => (typing = userEvent.keyboard(' ')) });
+    // The scroll event can come before the keyup, and in Chromium before the keydown. The command
+    // ends after both.
+    await typing;
     expect(log).toEqual(['keydown Space', 'keyup Space']);
     expect(location.hash).toBe('');
     expect(window.scrollY).toBeGreaterThan(0);
