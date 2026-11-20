@@ -689,7 +689,7 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 
 #### The rules of the refactored families
 
-Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button, Collapsible and Accordion follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
+Avatar, Input, Field, Form, Fieldset, Checkbox, Checkbox Group, Radio, Radio Group, Separator, Switch, Progress, Meter, Scroll Area, Tabs, Button, Collapsible, Accordion and Locale Provider follow the rules of this part. Each other family moves to them in its own change. Until then, the sections that state the older form hold for that family: [Entry points](#entry-points), [API convention](#api-convention), [Files](#files) and [Parts with a hidden input](#parts-with-a-hidden-input).
 
 Lifetime:
 
@@ -703,7 +703,7 @@ The element of a part:
 - The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part.
 - A template ref on a part has `element`.
 - The attributes and the listeners of the developer reach the element, merged with those of the part. The value of the developer wins, `undefined` too. The props type of a part extends the attributes of its element with `/* @vue-ignore */`, so a template can give them.
-- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset).
+- Two families share a contract through `provide` and `inject`, with a typed key in one module for each contract: `field/control.ts` (a control and its field), `form/field.ts` (a field and its form), `fieldset/part.ts` (a part and its fieldset), `locale-provider/part.ts` (a part and its locale provider).
 - `src/common/` holds only what two callers use.
 - A part that acts as a button takes `useButton` of `common/button.ts`. A `<button>`, an `<input>` of a button type, and an element that the part does not know yet are native buttons. Before the mount, a tag in `as` is the element, and an `<input>` is a native button. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
 - A disabled button that keeps the focus has `aria-disabled="true"` and no `disabled`. While a button is disabled, the first listeners of the part stop `click`, `mousedown` and `mouseup`, as the browser does for a native disabled button.
@@ -724,6 +724,7 @@ The public form:
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes is the hook for its state, such as `[aria-invalid="true"]`.
 12. The moments of validation are `'submit'`, `'blur'` and `'change'`.
 13. A form gives the typed values of its fields at its submit: `submit(event, values)`. `validate` of a field gets the value of its control and the same values.
+14. A part that formats a text in a locale gets the locale from `useLocale` of `locale-provider/part.ts`. The locale is the `locale` prop of the part, else the nearest `LocaleProvider`, else `en-US`. No part uses the locale of the visitor, so the server and the browser write the same text.
 
 Measure before you write code that guards, tracks, repairs or copies a behavior:
 
@@ -858,7 +859,7 @@ The hydration state:
 - The first render of a client-only mount also reads `true` from `useIsHydrating()`. The component renders again in the flush after the mount, before a paint.
 - Each call is for the component that calls it. A part that can hydrate after its root calls the helper itself. An example is an async component in `<Suspense>`.
 - Do not keep the result in a module variable or in the context of the root.
-- For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
+- For a value in a locale format, a family that is not refactored calls `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
 - The server HTML and the first client render then have the same text.
 - A composable that filters text with a locale calls `useFormatLocale` too. The first client render then gives the list that the server HTML has. `Combobox.useFilter` and `Autocomplete.useFilter` are examples.
 - Read browser values in `onMounted` so the first client render uses the server value. By default, `useMediaQuery` takes its initial value from `ssrMatchMedia` or `defaultMatches` and updates at mount if the values differ. With `noSsr`, it uses an available `matchMedia` for the initial value.
@@ -902,19 +903,21 @@ A part whose style or attribute depends on the parts beside it:
 
 The label of a root:
 
-- A root with a label part calls `useLabelId()` of `src/utils/useRegisteredLabelId.ts`. The root binds `getAriaLabelledBy(attrs)` to `aria-labelledby`, in the `props` function that it gives to `useRenderElement`. It provides `labelRoot` in its context. `Fieldset.Root` names it `legendRoot`.
+- A root with a label part calls `useLabelId()` of `src/utils/useRegisteredLabelId.ts`. The root binds `getAriaLabelledBy(attrs)` to `aria-labelledby`, in the `props` function that it gives to `useRenderElement`. It provides `labelRoot` in its context.
 - The label calls `useRegisteredLabelId(() => props.id, labelRoot, () => element.value)` and binds the result to `id`. The result is the `id` prop, or the id that the root made.
 - Each label has its own entry in the root. From the mount on, the entry gives the `id` that the element of the label has now (`VUE-121`). A label gives no id while `KeepAlive` holds it or while its element has an empty `id`.
 - The root names the last label in the document that has an id (`VUE-131`). When that label unmounts, `KeepAlive` holds it, or its element gets an empty `id`, the root names the last label that stays. Before a label has an element, it counts in the order of the registrations. A move of the label elements with no other change does not update the order.
 - A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
-- This rule covers `Fieldset.Root` and `Slider.Root`.
-- `Progress.Root` and `Meter.Root` make the same assumption with no `useLabelId()`. Each makes an id with `useId()`, and a label with no `id` prop takes that id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name. `test/measurements/range.test.ts` shows that the server HTML has no id that a label gives in `setup`.
+- This rule covers `Slider.Root`.
+- `Fieldset.Root`, `Progress.Root` and `Meter.Root` make the same assumption with no `useLabelId()`. Each makes an id with `useId()`, and a label with no `id` prop takes that id. Only the first `Fieldset.Legend` of a root takes it, so two legends do not share an id. The root names the first label in the order of the registrations. It names the `id` prop of that label, or the id that it made. An `id` that the `element` slot gives the label does not change the name. `test/measurements/range.test.ts` shows that the server HTML has no id that a label gives in `setup`.
 - An `aria-label` of the consumer on such a root, also a blank one, replaces the name of the label, before and after the mount. An `aria-label` of `null` or `undefined` does not replace it. An `aria-labelledby` of the consumer replaces the id of the label, also a blank one, and `undefined` removes it.
 - A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
 - The first render in a browser makes the same assumption so its `aria-labelledby` matches the server HTML.
 - `Slider.Root` is the exception while Vue hydrates it. The label of its field can come after the control, and a `Slider.Label` before it then gives another id in the first client render. `useRenderElement` gives that render the value of the server HTML.
-- `labelId` of `useLabelId` is the id of the label that the root names, with no assumption. `legendId` in the context of `Fieldset.Root` is that id.
+- `labelId` of `useLabelId` is the id of the label that the root names, with no assumption. `legendId` in the context of `Fieldset.Root` is the id of its first legend, with no assumption.
+- `Fieldset.Legend` renders a `<div>`, and `Fieldset.Root` names its element with `aria-labelledby`. HTML names a fieldset only by a `<legend>` that is its first child, so a `<legend>` in a wrapper or in another element gives no name. A `<legend>` is also not a flex item or a grid item of its fieldset (`test/measurements/fieldset.test.ts`).
+- A group that the `element` slot of `Fieldset.Root` renders gets the `aria-labelledby` of the root as an attribute. `RadioGroup`, `CheckboxGroup` and `Slider.Root` then write no name of their own. A root with no legend after the mount gives no `aria-labelledby`, so the label of a field can name the group. A group in the root that nothing else names takes `legendId`. An `aria-label` or an `aria-labelledby` of the developer on the group, also a blank one, stops that name.
 - After the mount, a root with no label has no `aria-labelledby`. A root whose label has an `id` prop has that id. Vue gives no warning, and the hydrated DOM is equal to a client-only render.
 - Until the page hydrates, the server HTML of those two roots points at the generated id, unless the consumer gives the root a non-blank `aria-label`.
 - No element has that id then. An `aria-labelledby` with no valid IDREF gives no name ([step 2B of the name computation](https://www.w3.org/TR/accname-1.2/#computation-steps)). Each of those roots thus has the name that it has with no `aria-labelledby`, as in Base UI.

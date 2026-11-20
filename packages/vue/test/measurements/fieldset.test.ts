@@ -1,6 +1,7 @@
 // Measurements with native elements and plain Vue, with no code of the library. Each one states
 // what the browser or Vue does, so that a part has code only where they do not do it.
 import { afterEach, describe, expect, test } from 'vitest';
+import { cdp, server } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureFieldsetToggle from '../fixtures/MeasureFieldsetToggle.vue';
 import { mount, settle } from '../render';
@@ -50,3 +51,70 @@ describe('a disabled fieldset', () => {
     expect(shown()).toBe('false');
   });
 });
+
+describe('a legend', () => {
+  // The CSS of the demo of Fieldset.
+  const css = `<style>
+    .Fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; width: 16rem; }
+    .Legend { border-bottom: 1px solid; padding: 0; font-size: 1rem; line-height: 1.5rem; }
+    .Field { display: flex; flex-direction: column; gap: 0.25rem; }
+  </style>`;
+
+  test('a <legend> is not a flex item of its fieldset: no gap follows it, and in Chromium and Firefox it is as wide as its text; a <div> is', () => {
+    const measure = (tag: string) => {
+      html(`${css}<fieldset class="Fieldset"><${tag} class="Legend">Billing details</${tag}>
+        <div class="Field"><label>Company <input></label></div></fieldset>`);
+      const legend = root.querySelector('.Legend')!.getBoundingClientRect();
+      const field = root.querySelector('.Field')!.getBoundingClientRect();
+      root.remove();
+      return { width: Math.round(legend.width), gap: Math.round(field.top - legend.bottom) };
+    };
+    const legend = measure('legend');
+    expect(legend.gap).toBe(0);
+    if (server.browser === 'webkit') {
+      expect(legend.width).toBe(256);
+    } else {
+      expect(legend.width).toBeLessThan(128);
+    }
+    expect(measure('div')).toEqual({ width: 256, gap: 16 });
+  });
+
+  // Playwright reads the accessibility tree of Chromium only.
+  test.runIf(server.browser === 'chromium')(
+    'a fieldset takes its name from aria-labelledby that names a <div>, and from no <legend> in a wrapper; aria-labelledby wins over aria-label',
+    async () => {
+      html(`
+        <fieldset aria-labelledby="div"><div id="div">By a div</div></fieldset>
+        <fieldset><div><legend>In a wrapper</legend></div></fieldset>
+        <fieldset aria-labelledby="native"><legend id="native">By a legend</legend></fieldset>
+        <fieldset aria-labelledby="both" aria-label="By aria-label"><div id="both">By aria-labelledby</div></fieldset>`);
+      expect(await chromiumGroupNames()).toEqual([
+        'By a div',
+        '',
+        'By a legend',
+        'By aria-labelledby',
+      ]);
+    },
+  );
+});
+
+type FrameTree = { frame: { id: string }; childFrames?: FrameTree[] };
+
+/** The names of the groups in the accessibility tree of Chromium, in each frame. */
+async function chromiumGroupNames() {
+  const session = cdp();
+  await session.send('Accessibility.enable');
+  const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: FrameTree };
+  const names: string[] = [];
+  const visit = async (tree: FrameTree) => {
+    const { nodes } = (await session.send('Accessibility.getFullAXTree', {
+      frameId: tree.frame.id,
+    })) as { nodes: { role?: { value: string }; name?: { value: string } }[] };
+    for (const node of nodes) {
+      if (node.role?.value === 'group') names.push(node.name?.value ?? '');
+    }
+    for (const child of tree.childFrames ?? []) await visit(child);
+  };
+  await visit(frameTree);
+  return names;
+}

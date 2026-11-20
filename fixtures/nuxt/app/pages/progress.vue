@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LocaleProvider } from '@vase-ui/vue/locale-provider';
 import { Progress } from '@vase-ui/vue/progress';
 </script>
 
@@ -21,5 +22,10 @@ import { Progress } from '@vase-ui/vue/progress';
     <Progress.Root data-testid="percent-root" :value="42" aria-label="Storage">
       <Progress.Value data-testid="percent-value" />
     </Progress.Root>
+    <LocaleProvider locale="fr-FR">
+      <Progress.Root data-testid="provider-root" :value="42" aria-label="Load">
+        <Progress.Value data-testid="provider-value" />
+      </Progress.Root>
+    </LocaleProvider>
   </main>
 </template>
