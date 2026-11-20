@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { DialogTriggerProps } from '../../dialog/trigger/DialogTrigger.vue';
+import type { DialogTriggerProps } from '../dialog/trigger/DialogTrigger.vue';
 import type { DrawerHandle } from '../handle';
 
 export interface DrawerTriggerProps<Payload = unknown> extends Omit<
@@ -36,7 +36,7 @@ export interface DrawerTriggerState {
 
 <script setup lang="ts" generic="Payload = unknown">
 import { computed, useTemplateRef } from 'vue';
-import DialogTrigger from '../../dialog/trigger/DialogTrigger.vue';
+import DialogTrigger from '../dialog/trigger/DialogTrigger.vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';

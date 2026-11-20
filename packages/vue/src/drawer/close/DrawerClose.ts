@@ -1,5 +1,5 @@
-import DialogClose from '../../dialog/close/DialogClose.vue';
-import type { DialogCloseProps, DialogCloseState } from '../../dialog/close/DialogClose.vue';
+import DialogClose from '../dialog/close/DialogClose.vue';
+import type { DialogCloseProps, DialogCloseState } from '../dialog/close/DialogClose.vue';
 
 export const DrawerClose: typeof DialogClose = DialogClose;
 

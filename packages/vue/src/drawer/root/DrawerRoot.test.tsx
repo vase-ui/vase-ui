@@ -18,10 +18,10 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { platform } from '../../common/platform';
-import * as DrawerCloseDataAttributes from '../../dialog/close/DialogCloseDataAttributes';
+import * as DrawerCloseDataAttributes from '../dialog/close/DialogCloseDataAttributes';
 import * as Dialog from '../../dialog/index.parts';
-import type { DialogStore } from '../../dialog/store/DialogStore';
-import * as DrawerTriggerDataAttributes from '../../dialog/trigger/DialogTriggerDataAttributes';
+import type { DialogStore } from '../dialog/store/DialogStore';
+import * as DrawerTriggerDataAttributes from '../dialog/trigger/DialogTriggerDataAttributes';
 import { createChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';

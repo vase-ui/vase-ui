@@ -19,7 +19,7 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../../dialog/index.parts';
-import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DialogStore } from '../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from '../root/DrawerRootContext';

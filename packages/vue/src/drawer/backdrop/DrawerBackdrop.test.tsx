@@ -14,7 +14,7 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../../dialog/index.parts';
-import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { DialogStore } from '../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import DrawerBackdropHydration from './DrawerBackdropHydration.test.vue';
 import DrawerBackdropReplacement from './DrawerBackdropReplacement.test.vue';
