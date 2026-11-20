@@ -31,13 +31,9 @@ const HeartOutlineIcon: FunctionalComponent = () =>
 
 <template>
   <div :class="styles.Panel">
-    <Toggle aria-label="Favorite" :class="styles.Button">
-      <template #render="{ props, state }">
-        <button type="button" v-bind="props">
-          <HeartFilledIcon v-if="state.pressed" />
-          <HeartOutlineIcon v-else />
-        </button>
-      </template>
+    <Toggle v-slot="{ state }" aria-label="Favorite" :class="styles.Button">
+      <HeartFilledIcon v-if="state.pressed" />
+      <HeartOutlineIcon v-else />
     </Toggle>
   </div>
 </template>

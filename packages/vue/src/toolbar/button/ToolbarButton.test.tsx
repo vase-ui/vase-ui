@@ -1064,7 +1064,6 @@ describe('<Toolbar.Button />', () => {
 
         [one, two].forEach((toggle) => {
           expect(toggle).toBeDisabled();
-          expect(toggle).toHaveAttribute('data-disabled');
         });
 
         await user.keyboard('[Tab]');

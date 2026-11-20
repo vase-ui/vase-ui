@@ -13,6 +13,7 @@ export const withReason = (
   <Input
     onValueChange={(_value, details) => {
       expectType<'none', typeof details.reason>(details.reason);
+      expectType<Input.ChangeEventDetails, typeof details>(details);
     }}
   />
 );

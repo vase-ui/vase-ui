@@ -6,12 +6,16 @@ import type { FormProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<FormProps>(), { validationMode: 'submit' });
+const props = withDefaults(defineProps<FormProps<Values>>(), { validationMode: 'submit' });
 // A declared `submit` takes the native listener of the developer off the element, so the
-// listener gets only the submits that pass. Vue gives each argument to a listener with an event
-// modifier, so `@submit.prevent="save"` calls `save(event, values)`.
+// listener gets only the submits that pass.
 const emit = defineEmits<{
-  /** A submit with each field valid. `values` has the value of each named field of the form. */
+  /**
+   * A submit with each field valid. `values` has the value of each named field of the form. The
+   * form prevents the native submit while it has a `submit` listener. With no listener, the browser
+   * submits the form. Give `@submit` a function, because the form can miss a listener that you add
+   * or remove after the mount.
+   */
   submit: [event: SubmitEvent, values: Values];
   /** An edit or a reset removes the errors of a field. `v-model:errors` uses it. */
   'update:errors': [errors: FormErrors];
@@ -71,7 +75,7 @@ function validate(name?: string) {
 }
 
 function elementProps() {
-  return mergeProps({ novalidate: true, onSubmit, onReset }, attrs);
+  return mergeProps({ novalidate: true, onSubmit: onNativeSubmit, onReset }, attrs);
 }
 
 /**
@@ -101,7 +105,7 @@ function firstInvalid(fields: Set<FormField>) {
   return [...fields].find((field) => field.invalid);
 }
 
-function onSubmit(event: Event) {
+function onNativeSubmit(event: Event) {
   submitted.value = true;
   const fields = fieldsOfForm();
   for (const field of fields) field.validate();
@@ -112,6 +116,7 @@ function onSubmit(event: Event) {
     return;
   }
   focusAtAnswer = true;
+  if (props.onSubmit || props.onSubmitOnce) event.preventDefault();
   emit('submit', event as SubmitEvent, values() as Values);
 }
 

@@ -72,7 +72,6 @@ describe('toolbar activation', () => {
         >
           <Toggle
             as="span"
-            nativeButton={false}
             value="bold"
             onPressedChange={() => events.push('item')}
             onUpdate:modelValue={() => events.push('item update')}
