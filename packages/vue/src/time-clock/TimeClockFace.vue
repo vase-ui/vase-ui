@@ -229,7 +229,11 @@ onMounted(() => {
   if (inputElement.value) writeAttributes(inputElement.value, inputProps());
 });
 
-defineExpose({ element, inputElement });
+defineExpose({
+  element,
+  /** The range input of the face, or `null` while it is not mounted. */
+  inputElement,
+});
 
 function elementProps() {
   return mergeProps(

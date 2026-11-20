@@ -66,7 +66,15 @@ export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime
    * `LocaleProvider`, else `en-US`.
    */
   locale?: Intl.LocalesArgument;
+  /**
+   * The user cannot change the time or the view, and no part of the clock takes the focus.
+   * @default false
+   */
   disabled?: boolean;
+  /**
+   * The user cannot change the time. The range input takes the focus, and the view triggers work.
+   * @default false
+   */
   readonly?: boolean;
 }
 

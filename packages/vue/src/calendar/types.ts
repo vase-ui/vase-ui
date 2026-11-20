@@ -191,7 +191,8 @@ export interface CalendarBaseProps extends AsProps, /* @vue-ignore */ Omit<HTMLA
   locale?: Intl.LocalesArgument | undefined;
   /**
    * The calendar of the grid, such as `gregory` or `persian`. The default is the calendar of a
-   * value that is not ISO, else `gregory`. The value keeps its own calendar.
+   * value that is not ISO, else `gregory`. The value keeps its own calendar. A year and month shows
+   * in this calendar only when the two calendars have the same months, as `buddhist` and `gregory` do.
    */
   calendar?: string | undefined;
   /**
@@ -224,13 +225,14 @@ export interface CalendarRootProps<
    * The selected value, or the list of selected values with `multiple`. `v-model` binds it. A
    * `Temporal.PlainYearMonth` selects a month in the grid of months. A new value has the kind, the
    * calendar, the time and the zone of the first value, else of `defaultValue`, else of the last
-   * value.
+   * value. With none of them, it is a `Temporal.PlainDate`.
    */
   modelValue?: (Multiple extends true ? readonly Value[] : Value | null) | undefined;
   /** The value at the mount of an uncontrolled calendar. It also gives the kind of a new value. */
   defaultValue?: (Multiple extends true ? readonly Value[] : Value | null) | undefined;
   /**
-   * The user selects a list of days or months. A press on a selected day removes it.
+   * The user selects a list of days or months. A press on a selected day removes it. Without it, a
+   * press on the selected day keeps it.
    * @default false
    */
   multiple?: (Multiple & boolean) | undefined;

@@ -11,6 +11,12 @@ import type {
 /**
  * Groups the parts of `Calendar` for a range of days.
  * Renders a `<div>` element.
+ * @selector `[data-selecting]` The user picked the first day and not the last day, or drags a range.
+ * @selector `[data-navigation-direction]` The side of the last move of the page: `previous`, `next` or `none`.
+ * @selector `[data-disabled]` The calendar is disabled.
+ * @selector `[data-readonly]` The calendar is read-only.
+ * @selector `[data-invalid]` The value of the calendar is not valid.
+ * @selector `[data-empty]` No day is selected.
  */
 export const Root: typeof RangeCalendarRoot = RangeCalendarRoot;
 export namespace Root {

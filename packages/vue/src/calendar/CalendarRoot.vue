@@ -138,7 +138,11 @@ const {
 });
 provide(calendarKey, forParts);
 
-defineExpose({ element, focus });
+defineExpose({
+  element,
+  /** Focuses the day or the cell that has the tab stop. With `date`, shows its page and focuses it, when it can take the focus. */
+  focus,
+});
 
 function elementProps() {
   return mergeProps(rootProps(), attrs);

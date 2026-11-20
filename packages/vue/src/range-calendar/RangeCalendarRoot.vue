@@ -70,7 +70,11 @@ const state = computed<RangeCalendarRootState>(() => ({
   selecting: range.selecting.value,
 }));
 
-defineExpose({ element, focus });
+defineExpose({
+  element,
+  /** Focuses the day that has the tab stop. With `date`, shows its page and focuses it, when it can take the focus. */
+  focus,
+});
 
 // The root handles Escape for each element in it, such as a navigation button.
 function onKeydown(event: KeyboardEvent) {
