@@ -20,7 +20,7 @@ For example, a tab renders a `<button>` by default. The sample below gives a com
 
 <<< ../examples/composition/CustomTab.vue{9-14}
 
-A native form control, a form element and an image have only the `element` slot, such as `Input`, `Checkbox`, `Form`, `Field.Label` and `Avatar.Image`.
+A native form control, a form element and an image have only the `element` slot. Examples are `Input`, `Checkbox`, `Form`, `Field.Label` and `Avatar.Image`.
 
 With `strictTemplates`, the attributes of a part have the types of its default element. The type check can refuse an attribute that this element does not have, such as `href` on `<Separator as="a">`. Give such an attribute on your element in the `element` slot.
 

@@ -700,7 +700,7 @@ Lifetime:
 The element of a part:
 
 - A part renders one root element. Scoped styles, `v-show`, directives, `<Transition>` and the attributes of the developer reach it. A part with a form value is the native input itself.
-- Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element and an image take no `as`, such as `Input`, `Checkbox`, `Form`, `Fieldset.Root`, `Field.Label`, `Avatar.Image` and each hidden input. The part keeps its content, its own nodes and its attributes on the element of `as`.
+- Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element, an image and a hidden input take no `as`. Examples are `Input`, `Checkbox`, `Form`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. The part keeps its content, its own nodes and its attributes on the element of `as`.
 - The named slot `element` gets `{ props, elementRef, state }`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The default slot is the content of the part. The slot wins over `as`.
 - A component in `as` or in the slot gives its element as an exposed `element`, else as its `$el`. A Vapor component has no `$el`, so it exposes `element`. `useElement` of `src/common/element.ts` reads both.
 - A part that reads its element in its render reads a tag in `as` before the mount, so the server HTML has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`, and `Button` gives the tag to the option `tag` of `useButton`.
