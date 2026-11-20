@@ -71,6 +71,25 @@ describe('a drag with the real pointer', () => {
     expect(shown()).toEqual({ start: [], end: [] });
   });
 
+  test('ends at a move with no button down, as Firefox gives for a release outside the page', async () => {
+    const { at, log, button } = await mountRange();
+    const first = button('2026-11-10');
+    const pointer = (date: string, buttons: number) => ({
+      pointerId: 9,
+      pointerType: 'mouse',
+      button: 0,
+      buttons,
+      bubbles: true,
+      clientX: at(date).x,
+      clientY: at(date).y,
+    });
+    first.dispatchEvent(new PointerEvent('pointerdown', pointer('2026-11-10', 1)));
+    first.dispatchEvent(new PointerEvent('pointermove', pointer('2026-11-12', 1)));
+    first.dispatchEvent(new PointerEvent('pointermove', pointer('2026-11-14', 0)));
+    await nextTick();
+    expect(log).toEqual(['valueChange 2026-11-10 2026-11-12 drag']);
+  });
+
   test('stops at the last day that maxDays allows', async () => {
     const { at, log } = await mountRange({ maxDays: 2 });
     await userEvent.pointer([

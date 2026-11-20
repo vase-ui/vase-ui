@@ -327,6 +327,28 @@ describe('the navigation buttons', () => {
     expect(log).toEqual(['update:month 2026-12']);
   });
 
+  test('a hold stops after a step that does nothing, such as a step that a listener cancels', async () => {
+    const log: string[] = [];
+    const { next } = await mountCalendar({
+      root: logged(log, {
+        // The listener takes the first move, and cancels the next ones.
+        onMonthChange: (_: unknown, details: CalendarRootChangeEventDetails) => {
+          if (log.includes('monthChange')) details.cancel();
+          log.push('monthChange');
+        },
+      }),
+    });
+    const rect = next().getBoundingClientRect();
+    await userEvent.pointer({
+      coords: { x: rect.left + 4, y: rect.top + 4 },
+      keys: '[MouseLeft>]',
+    });
+    // Four repeats would come in this time.
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(log).toEqual(['monthChange', 'update:month 2026-12', 'monthChange']);
+  });
+
   test('a hold pauses while the pointer is out of the button', async () => {
     const log: string[] = [];
     const { next } = await mountCalendar({ root: logged(log) });
@@ -338,8 +360,8 @@ describe('the navigation buttons', () => {
       { coords: { x: rect.left + 4, y: rect.bottom + 40 } },
     ]);
     await waitFor(() => expect(movesAtLeave).toBeGreaterThan(0));
-    // Five repeats would come in this time.
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Four repeats would come in this time.
+    await new Promise((resolve) => setTimeout(resolve, 700));
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     expect(log).toHaveLength(movesAtLeave);
   });

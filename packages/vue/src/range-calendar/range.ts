@@ -304,12 +304,19 @@ export function useRange(
             current: day,
             moved: false,
           };
-          // The browser knows no pointer of an event that a script dispatches, and the method then
-          // throws. The drag goes on with the events of the button.
+          // The method throws for the pointer of an event that a script dispatches
+          // (test/measurements/pointer-press.test.ts). The drag goes on with the events of the button.
           if (event.isTrusted) element.setPointerCapture(event.pointerId);
         },
         onPointermove(event: PointerEvent) {
-          const date = isDragging(event) && dayAtPoint(event);
+          if (!isDragging(event)) return;
+          // Firefox gives the page no `pointerup` for a release outside its view, and the next
+          // move has no button down (test/measurements/pointer-press.test.ts).
+          if (event.buttons === 0) {
+            endDrag(null, event);
+            return;
+          }
+          const date = dayAtPoint(event);
           if (date) dragTo(date);
         },
         onPointerup(event: PointerEvent) {
