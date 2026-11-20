@@ -5,11 +5,11 @@ import { PreviewCard } from '../../src/preview-card';
 // Two links of one root. The second link renders its element in the `element` slot, and the slot
 // writes each of its renders. The popup renders a `<section>` in its `element` slot.
 const props = defineProps({
-  renders: { type: Array as PropType<string[]>, required: true },
+  renders: { type: Object as PropType<{ add(entry: string): void }>, required: true },
 });
 
 function rendered(open: boolean) {
-  props.renders.push(`second ${open}`);
+  props.renders.add(`second ${open}`);
   return 'Second';
 }
 </script>

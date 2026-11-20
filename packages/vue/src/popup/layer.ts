@@ -277,7 +277,8 @@ function closeOutside(event: Event, entries: Entry[]) {
 function outsideEntries(event: Event) {
   const path = event.composedPath();
   return fromTop().filter(
-    (entry) => entry.layer.outsidePress && !isPathInside(entry, path) && !isAddedElement(entry, path),
+    (entry) =>
+      entry.layer.outsidePress && !isPathInside(entry, path) && !isAddedElement(entry, path),
   );
 }
 

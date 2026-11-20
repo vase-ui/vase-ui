@@ -136,7 +136,7 @@ describe('the parts', () => {
 describe('the element slot', () => {
   test('renders the element of the developer with the props of the part; a hover open and close of one link renders no other link again', async () => {
     const renders: string[] = [];
-    mount(PreviewCardSlots, { renders });
+    mount(PreviewCardSlots, { renders: { add: (entry: string) => renders.push(entry) } });
     await nextTick();
     expect(byId('second').localName).toBe('a');
     expect(byId('second')).toHaveAttribute('href', '#second');

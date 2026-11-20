@@ -53,11 +53,13 @@ describe('the rectangles of a link that wraps (P1)', () => {
     );
     const extra = (id: string) => element(id).getClientRects().length - linesOf(element(id));
     expect(linesOf(element('plain'))).toBeGreaterThan(2);
-    expect({ plain: extra('plain'), nested: extra('nested') > 0, bidi: extra('bidi') > 0 }).toEqual({
-      plain: 0,
-      nested: server.browser === 'chromium',
-      bidi: server.browser !== 'webkit',
-    });
+    expect({ plain: extra('plain'), nested: extra('nested') > 0, bidi: extra('bidi') > 0 }).toEqual(
+      {
+        plain: 0,
+        nested: server.browser === 'chromium',
+        bidi: server.browser !== 'webkit',
+      },
+    );
   });
 });
 
@@ -88,12 +90,12 @@ describe(':focus-visible of a link in its `focusin` listener (P2)', () => {
     );
     const log: string[] = [];
     element('link').addEventListener('focusin', (event) =>
-      log.push(`${element('link').matches(':focus-visible')} ${event.relatedTarget}`),
+      log.push(`${element('link').matches(':focus-visible')} ${event.relatedTarget === null}`),
     );
     await userEvent.click(element('start'));
     expect(activeId()).toBe('body');
     await userEvent.keyboard(tab);
-    expect(log).toEqual(['true null']);
+    expect(log).toEqual(['true true']);
   });
 
   test('of focus() follows the last input: true after a key, false after a mouse press', async () => {
@@ -159,9 +161,7 @@ describe('inline() of Floating UI (P4)', () => {
       expect((await anchorOf(element('three'), 'bottom', point)).rect).toBe(
         join(first, last, last),
       );
-      expect((await anchorOf(element('three'), 'top', point)).rect).toBe(
-        join(first, last, first),
-      );
+      expect((await anchorOf(element('three'), 'top', point)).rect).toBe(join(first, last, first));
     }
   });
 
@@ -258,9 +258,7 @@ describe('pointerenter while a mouse moves in one element (P7)', () => {
     await userEvent.pointer({ coords: { x: 90, y: 120 } });
     let enters = 0;
     element('link').addEventListener('pointerenter', () => (enters += 1));
-    await userEvent.pointer(
-      [100, 110, 120, 130, 140, 150].map((x) => ({ coords: { x, y: 120 } })),
-    );
+    await userEvent.pointer([100, 110, 120, 130, 140, 150].map((x) => ({ coords: { x, y: 120 } })));
     if (server.browser === 'chromium') expect(enters).toBeGreaterThanOrEqual(1);
     else expect(enters).toBe(1);
   });
@@ -326,7 +324,7 @@ describe('a link that a `v-if` with a new `key` replaces in one update (Q1)', ()
   test('a `flush: post` watcher of "a mounted link has the id" reads no `false`; the removal of the link gives `false`', async () => {
     const scene = reactive({ shown: true, key: 0 });
     const log: boolean[] = [];
-    mount(MeasureKeyedLink, { scene, log });
+    mount(MeasureKeyedLink, { scene, log: { add: (value: boolean) => log.push(value) } });
     await nextTick();
     expect(log).toEqual([true]);
     log.length = 0;
@@ -349,9 +347,11 @@ describe('a kept element that leaves with CSS (Q2)', () => {
     element('kept').getBoundingClientRect();
     element('kept').hidden = true;
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    expect(element('kept').getAnimations().map((animation) => animation.playState)).toEqual([
-      'running',
-    ]);
+    expect(
+      element('kept')
+        .getAnimations()
+        .map((animation) => animation.playState),
+    ).toEqual(['running']);
   });
 
   test('an animation that fills forwards is in getAnimations() after its end, and it is not running', async () => {
@@ -362,7 +362,11 @@ describe('a kept element that leaves with CSS (Q2)', () => {
     const [animation] = element('kept').getAnimations();
     expect(animation?.playState).toBe('running');
     await animation!.finished;
-    expect(element('kept').getAnimations().map((each) => each.playState)).toEqual(['finished']);
+    expect(
+      element('kept')
+        .getAnimations()
+        .map((each) => each.playState),
+    ).toEqual(['finished']);
   });
 });
 
@@ -370,7 +374,7 @@ describe('a focused link that Vue removes (Q3)', () => {
   test('gets `focusout` only in Chromium, after the scope of its component stopped, while it is in the document; one task later it is out of the document', async () => {
     const scene = reactive({ shown: true });
     const log: string[] = [];
-    mount(MeasureRemovedLink, { scene, log });
+    mount(MeasureRemovedLink, { scene, log: { add: (entry: string) => log.push(entry) } });
     element('removed').focus();
     scene.shown = false;
     await nextTick();

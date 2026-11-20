@@ -368,8 +368,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     get payload() {
       const entry = activeEntry.value ?? lastPayload.value;
       return (entry?.id === activeTriggerId.value ? entry?.payload : undefined) as
-        | Payload
-        | undefined;
+        Payload | undefined;
     },
     get popup() {
       return popup.value;
