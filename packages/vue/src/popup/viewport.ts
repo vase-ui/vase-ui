@@ -24,9 +24,9 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
 
 /**
  * The sizes of a popup whose content changes while it is open. At rest, the positioner has the
- * size of the popup. `resize()`, called before or after the DOM update of the new content, gives
- * the popup the size that it has, gives the positioner and then the popup the size of the new
- * content, and gives the popup no size when its animations end.
+ * size of the popup. Call `resize()` before or after the DOM update of the new content. It gives
+ * the popup its present size, then the positioner and the popup the size of the new content. When
+ * the animations of the popup end, the popup has no size.
  */
 export function usePopupSizes(element: () => HTMLElement | null) {
   const popup = shallowRef<Size>();

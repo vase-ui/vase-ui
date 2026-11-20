@@ -1,7 +1,7 @@
 // Measurements for Navigation Menu. M1 to M6, N2, N3 and N4 use native elements and plain Vue, with
 // no code of the library. N1, N5, N6 and N9 measure the parts. N7 and N8 are cases of
 // `NavigationMenu.test.ts`.
-import { afterEach, describe, expect, inject, onTestFinished, test } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive, version } from 'vue';
 import MeasureScopedTeleport from '../fixtures/MeasureScopedTeleport.vue';
@@ -234,8 +234,6 @@ describe('a MutationObserver of new content (N4)', () => {
 });
 
 describe('the parts', () => {
-  const app = inject('app');
-
   test('N1: the classes of `transition` on a content, in each setup of the app', async () => {
     mount(NavigationMenuParts, {
       root: { defaultValue: 'one' },
@@ -250,7 +248,6 @@ describe('the parts', () => {
     await frame();
     await frame();
     expect(get('content-two').className).toContain('slide-enter-to');
-    expect(app).toBeDefined();
   });
 
   test('N5: 200 fast opens, changes and closes give no size of zero, and the last size is that of the content', async () => {

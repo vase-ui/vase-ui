@@ -171,7 +171,10 @@ export interface NavigationMenuPositionerState {
   align: Align;
   /** The anchor is out of view. */
   anchorHidden: boolean;
-  /** The window changes its size: a style should skip its animation. */
+  /**
+   * The popup takes its first place of an open, or the window changes its size: a style should skip
+   * its animation.
+   */
   instant: boolean;
 }
 
