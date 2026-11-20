@@ -72,13 +72,15 @@ Import the component and assemble its parts:
 
 Each panel and each handle must be a flex item of the root element. A wrapper element between them needs `display: contents`. The root gives its element `display: flex` and the direction of its `orientation`.
 
-A panel needs an `id` only when a layout names it. A panel with no `id` gets a generated one. A handle resizes the panels beside it.
+A panel needs an `id` only when a layout names it. A panel with no `id` gets a generated one. A handle resizes the panels beside it. Each part renders one `<div>`. The `element` slot renders an element of your own, and a template ref on a part has `element`.
 
 ## Sizes and units
 
 A size is a number, or a string of a number with a unit. A number, a string with no unit, such as `'30'`, and a string with `%`, such as `'30%'`, are percent of the panel space. The panel space is the room that the panels share: the room of the root, less the handles, the elements that are not panels, and the padding and the border of each panel.
 
-A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is the font size of the panel, and `rem` is the font size of the root element of the document. `vh` is 1% of `innerHeight`, which differs from the CSS `vh` on a phone while its toolbar shows. A size in another form throws an error that starts with `Vase UI:`. A layout is the exception, because an app can read it from a cookie or a storage. The root ignores an entry of a layout in another form, and the panel of the entry takes its `defaultSize`, or an equal share of the space that is left. A development build shows a warning.
+A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is the font size of the panel, and `rem` is the font size of the root element of the document. `vh` is 1% of `innerHeight`, which differs from the CSS `vh` on a phone while its toolbar shows.
+
+A size in another form has no effect, and a development build shows a warning. A size prop then has its default, and the panel of an entry of the layout takes its `defaultSize`, or an equal share of the space that is left. An app can read a layout from a cookie or a storage, so the entries of a saved layout need no check.
 
 <<< ./resizable/Sizes.vue
 
@@ -88,9 +90,9 @@ A length is `px`, `em`, `rem`, `vh` or `vw`. `em` is the font size of the panel,
 
 A panel with `collapsible` collapses to its `collapsedSize`, which is 0 by default. A drag collapses the panel when it goes below `minSize` by more than `collapseThreshold`. A drag expands a collapsed panel when it goes above `collapsedSize` by more than `collapseThreshold`. The default threshold is half of the distance between `collapsedSize` and `minSize`. The panel needs a `minSize` that is greater than its `collapsedSize`.
 
-Enter on a handle collapses its primary panel when that panel is collapsible, or gives it back its size. `collapse()` and `expand()` do the same from a script. A `defaultSize` equal to the `collapsedSize` shows the panel collapsed at the start, with no event.
+Enter on a handle collapses its primary panel when that panel is collapsible, or gives it its size again. `collapse()` and `expand()` of a template ref do the same from a script. The `state` of the default slot of the panel has `collapsed`. A `defaultSize` equal to the `collapsedSize` shows the panel collapsed at the start, with no event.
 
-The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The root has `data-dragging` during a drag. Turn the transition off then, or each move of the pointer animates.
+The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The panels get their sizes at the mount. Add the class of the transition in the second animation frame after the mount, so that it does not animate them. The root has `data-dragging` during a drag. Turn the transition off then, or each move of the pointer animates.
 
 <DemoFrame>
   <DemoResizableCollapsible />
@@ -125,7 +127,7 @@ The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` anima
 
 </DemoSource>
 
-Three collapsible panels in a vertical root make an accordion. Each header button reads its panel with `Resizable.useParentPanel()`.
+Three collapsible panels in a vertical root make an accordion. Each header button gets the state of its panel and asks the template ref of the panel to collapse or expand.
 
 <DemoFrame>
   <DemoResizableAccordion />
@@ -166,7 +168,7 @@ To hide a pane and keep it mounted, give it `collapsible` and a `collapsedSize` 
 
 A panel with `rootResizeBehavior="fixed"` keeps its pixels when the root changes size. The other panels share the rest in the ratio that they have. When the other panels cannot take a change of the root, the fixed panels give way in the order of `rootResizePriority`: the greater number first.
 
-A drag, a key, a method and the layout of the app give a fixed panel new pixels. `details.snapshot` of `layoutCommitted` has the size of each fixed panel in whole pixels, such as `'240px'`. Give the snapshot to `layout` or to `defaultLayout`, and each fixed panel gets its pixels again.
+A drag, a key, a method and the layout of the app give a fixed panel new pixels. The layout of each event gives a fixed panel in pixels, with three decimals at the most, such as `'240px'`. Give that layout back to `v-model` or to `defaultLayout`, and each fixed panel gets its pixels again at each size of the root. The panels with a number share the rest in the ratio of their numbers.
 
 <DemoFrame>
   <DemoResizableFixed />
@@ -201,13 +203,13 @@ A drag, a key, a method and the layout of the app give a fixed panel new pixels.
 
 `snapPoints` gives a panel the sizes that a drag snaps to. A drag that comes within `snapTolerance` of a snap point gives the panel that size. The default tolerance is `'10px'`. `dragStep` on the root moves a dragged handle to the nearest multiple of its size. A key and a method do not snap, and they do not use `dragStep`.
 
-For a snap rule of your own, call `details.cancel()` in `layoutChange` and write the layout that you want to `layout`.
+For a snap rule of your own, call `details.cancel()` in `layoutChange` and write the layout that you want to `v-model`.
 
 ## Disabled panels
 
-A move of a handle goes through a panel with `disabled` to the next panel, and leaves its size as it is. The methods of the panel and the `layout` of the root still change its size.
+A move of a handle goes through a panel with `disabled` to the next panel, and leaves its size as it is. The methods of the panel and the layout of the root still change its size.
 
-`disabled` on a handle stops that handle. `disabled` on the root stops each handle and each edge of the root. A disabled handle has `aria-disabled="true"` and no tab stop.
+`disabled` on a handle stops that handle. `disabled` on the root stops each handle of the root. A disabled handle has `aria-disabled="true"` and no tab stop.
 
 ## Vertical
 
@@ -244,7 +246,7 @@ A move of a handle goes through a panel with `disabled` to the next panel, and l
 
 ## Nested groups
 
-A root can be in a panel of another root. Each root keeps its own layout. Where a handle of one root meets a handle or an edge of the other root, a press at the crossing drags both. Each handle at the crossing has `data-crossing` while the pointer is there.
+A root can be in a panel of another root. Each root keeps its own layout. Where the pointer target of a handle of one root meets the pointer target of a handle of the other root, a press drags both. Each handle at the crossing has `data-crossing` while the pointer is there. A layer over the page, such as a dialog, covers the handles under it.
 
 <DemoFrame>
   <DemoResizableNested />
@@ -275,11 +277,9 @@ A root can be in a panel of another root. Each root keeps its own layout. Where 
 
 </DemoSource>
 
-## Edges with no handle
+## A handle with no size
 
-With `dragEdges`, an enabled root adds hit areas between panels where there is no handle and at least one enabled panel lies on each side. If a control separates the panels by more than the hit area size, each panel edge gets its own hit area. Drag either edge to resize the panels. The middle of the control stays clickable. `dragEdges` is off by default.
-
-An edge works with a pointer only. It has no key, no focus, no ARIA role and no double click. Give a boundary a `Resizable.Handle` where you can. A handle can have a size of 0, because its hit area takes the press.
+A handle can have no size, such as a handle at the border of two panels. Its pointer target takes a press within 5 px of its center. The handle also has the keys, the focus and the role of each handle.
 
 <DemoFrame>
   <DemoResizableEdges />
@@ -312,11 +312,11 @@ An edge works with a pointer only. It has no key, no focus, no ARIA role and no 
 
 ## Elements that are not panels
 
-An element in the root that is not a panel or a handle, such as a toolbar, keeps its CSS size. The panel space does not hold it. A handle before the first panel or after the last panel moves nothing. It has no tab stop and no value, and its hit area does not take a press. It has `data-at-min` and `data-at-max`, or `data-disabled` when it is disabled, so a style sheet can show that it cannot move.
+An element in the root that is not a panel or a handle, such as a toolbar, keeps its CSS size. The panel space does not hold it. A handle before the first panel or after the last panel moves nothing. It has no tab stop and no value, and its pointer target does not take a press. It has `data-at-min` and `data-at-max`, or `[aria-disabled="true"]` when it is disabled, so a style sheet can show that it cannot move.
 
 ## Panels that mount later
 
-A panel that mounts with no entry in the layout gets its `defaultSize`, or an equal share, and the other panels make room for it. The root then emits `layoutChange` with the reason `'none'`. A panel that unmounts keeps its entry in the layout, so it gets its size back when it mounts again. A keyed list that moves its panels keeps the size of each panel.
+A panel that mounts with no entry in the layout gets its `defaultSize`, or an equal share, and the other panels make room for it. The root then emits `update:modelValue` alone, so `v-model` follows. A panel that unmounts keeps its entry in the layout, so it gets its size again when it mounts again. A keyed list that moves its panels keeps the size of each panel. A panel that `KeepAlive` holds gives its room to the other panels, and gets it again when it shows.
 
 <DemoFrame>
   <DemoResizableConditional />
@@ -349,62 +349,49 @@ A panel that mounts with no entry in the layout gets its `defaultSize`, or an eq
 
 ## Controlled layout
 
-`v-model:layout` makes the layout controlled. Start with an empty layout, `ref({})`, and each panel takes its `defaultSize`, or an equal share. After the first change, the ref holds percent. Write `{}` to give each panel its `defaultSize`, or an equal share, again. `null` has the same effect as `{}`, and the layout stays controlled.
+`v-model` makes the layout controlled. Start with an empty layout, `ref({})`, and each panel takes its `defaultSize`, or an equal share. Write `{}` to give each panel its first size again. `null` has the same effect as `{}`, and the layout stays controlled.
 
 <<< ./resizable/ControlledLayout.vue
 
-`layout` is the layout that the app asks for. The panels show it as far as their constraints allow, and each fixed panel keeps its pixels until the next change of the layout.
+The layout is the layout that the app asks for. The panels show it as far as their constraints allow. A new object with the same entries changes nothing, so each fixed panel keeps its pixels until the next change of the layout.
+
+The default slot of the root has `sizes`: the size of each mounted panel in percent, from the mount. Use it to show the sizes, or to make an `aria-valuetext`.
 
 For equal sizes, give no size. For a preferred size, give a `defaultSize` and a `minSize`.
 
 ## Events
 
-| Event             | Part  | When                                                                               |
-| ----------------- | ----- | ---------------------------------------------------------------------------------- |
-| `layoutChange`    | Root  | At each change of the layout. Call `details.cancel()` to keep the layout as it is. |
-| `update:layout`   | Root  | After each change that no listener canceled. `v-model:layout` uses it.             |
-| `layoutCommitted` | Root  | At the end of a change: the release of a drag, a key, a double click or a method.  |
-| `draggingChange`  | Root  | When a drag starts and when it ends.                                               |
-| `resize`          | Panel | When the size of the panel changes in percent or in pixels, after the DOM update.  |
-| `collapsedChange` | Panel | When the panel collapses or expands, after the DOM update.                         |
+| Event               | Part  | When                                                                                |
+| ------------------- | ----- | ----------------------------------------------------------------------------------- |
+| `layoutChange`      | Root  | At each change of the user. Call `details.cancel()` to keep the layout as it is.    |
+| `update:modelValue` | Root  | After each change that no listener cancelled, and after a change that no user made. |
+| `layoutCommitted`   | Root  | At the end of a change of the user: the release of a drag, a key, a double click.   |
+| `draggingChange`    | Root  | When a drag starts and when it ends.                                                |
+| `collapsedChange`   | Panel | When the panel collapses or expands, after the DOM update.                          |
 
-A size change of the root emits no layout event. It changes the pixels of the panels, so each panel emits `resize`.
+`details.reason` tells what the user did:
 
-`details.reason` tells what made the change. `layoutCommitted` has each reason but `'none'`.
+| Reason       | Change                     |
+| ------------ | -------------------------- |
+| `'drag'`     | A drag of a handle         |
+| `'keyboard'` | A key on a handle          |
+| `'reset'`    | A double click on a handle |
 
-| Reason                | Change                             |
-| --------------------- | ---------------------------------- |
-| `'drag'`              | A drag of a handle or of an edge   |
-| `'keyboard'`          | A key on a handle                  |
-| `'reset'`             | A double click on a handle         |
-| `'imperative-action'` | A method of a panel or of the root |
-| `'none'`              | A panel that mounts with no entry  |
+`details.event` is the native event. A method of a panel and a panel that mounts with no entry make a change that no user made: the root emits `update:modelValue` alone, as a native reset does. A size change of the root emits no layout event. To read the size of a panel in pixels, observe its `element` with a `ResizeObserver`.
 
-To tell a change of the user from a change of the app, read `details.reason`. `details.event` is the native event, or `new Event('vase-ui')` when there is none. `details` of `layoutCommitted` also has `snapshot`, the layout with the size of each fixed panel in pixels.
+## Methods of a panel
 
-## Actions and composables
-
-A template ref of the root gives `getLayout()`, `setLayout(layout)` and `reset()`. A template ref of a panel gives `collapse()`, `expand()`, `resize(size)`, `isCollapsed()` and `getSize()`. Each part also exposes its `element`.
-
-`Resizable.useParentPanel()` gives the id, the state and the methods of the nearest panel above the caller. `Resizable.useParentRoot()` gives the orientation and the methods of the nearest root. Each gives `null` outside such a part.
+A template ref of a panel gives `collapse()`, `expand()`, `resize(size)` and `isCollapsed()`. A method does not snap, and it does not collapse another panel. It works on a disabled panel and in a disabled root.
 
 <<< ./resizable/Actions.vue
 
-<<< ./resizable/ResetLayoutButton.vue
+In an uncontrolled root, a second method starts from the layout of the first. In a controlled root, each method starts from the layout of the parent, and the panel shows the change only after the parent writes it. Call a second method after `await nextTick()`, and read `isCollapsed()` after it.
 
-A double click on a handle gives its primary panel the size of the first layout. For another action, call `event.preventVaseUIHandler()` in a `dblclick` listener of the handle, as the sample does to make the navigation fill the root.
+A double click on a handle gives its primary panel the size of the first layout.
 
 ## Save the layout
 
-`Resizable.useLayoutStorage()` keeps the layout in a storage, so that the user gets it again at the next visit. Give `layout` to `v-model:layout` and `save` to `@layout-committed`. A commit comes one time for each change of the user, so the save needs no debounce.
-
-| Option            | Default        | Description                                                          |
-| ----------------- | -------------- | -------------------------------------------------------------------- |
-| `key`             |                | The key of the item. A new key reads the item of that key.           |
-| `storage`         | `localStorage` | A storage with `getItem` and `setItem`, such as `sessionStorage`.    |
-| `userChangesOnly` | `false`        | Whether `save` ignores a change of a method (`'imperative-action'`). |
-
-The composable ignores an item that is not a layout, and a storage that throws, such as the `localStorage` of a browser that blocks the data of the site. It writes the `snapshot` of each commit, so each fixed panel keeps its pixels.
+Give `v-model` a ref that you keep in a storage, so that the user gets the layout again at the next visit. Read the storage after the mount, because a server has no storage. Put `try` and `catch` around the read, `JSON.parse` and the write: a browser that blocks the data of the site throws. Save at `layoutCommitted` to write one time for each change of the user.
 
 <DemoFrame>
   <DemoResizableStorage />
@@ -435,13 +422,13 @@ The composable ignores an item that is not a layout, and a storage that throws, 
 
 </DemoSource>
 
-The composable reads the storage after the mount, because a server has no storage. The server HTML thus has the default layout, and the panels move to the stored layout at the mount. For an exact server HTML, keep the layout in a cookie and give it to `defaultLayout`, as this Nuxt component does. The component does not check the cookie, because the root ignores an entry that is not a size:
+The layout of each event has the pixels of each fixed panel, so each fixed panel keeps its pixels. The page reads the storage after the mount, so the server HTML has the first layout, and the panels move to the stored layout at the mount. For an exact server HTML, keep the layout in a cookie and give it to `v-model`, as this Nuxt component does. The `useCookie` ref of Nuxt is a ref that the server reads too:
 
 <<< ../../fixtures/nuxt/app/components/ResizableCookieLayout.vue
 
 ## Resize at the release
 
-With `resizeMode="on-release"`, a drag leaves the layout as it is, and the release changes it one time. During the drag, each handle and edge that the drag moves has the CSS variable `--resizable-handle-preview-offset`: the distance to the place that the release gives it. Use it to show a line at that place.
+With `resizeMode="on-release"`, a drag leaves the layout as it is, and the release changes it one time. During the drag, each handle that the drag moves has the CSS variable `--resizable-handle-preview-offset`: the distance to the place that the release gives it. Use it to show a line at that place.
 
 <DemoFrame>
   <DemoResizableOnRelease />
@@ -476,17 +463,16 @@ A key, a double click and a method change the layout at once in both modes.
 
 ## Server render
 
-The server HTML has the layout of each mix of sizes in percent. A server cannot measure the page, so a panel whose first size is a length renders `flex: 0 1 <length>` until the first measurement, which comes after the mount. The other panels share the rest. With a length panel, give the other panels no default size, or give each of them but one a length. The rectangles of the server HTML are then the rectangles after the mount.
+The server HTML has the layout of all the parts: the size of each panel, and the value and the ends of each handle. A server cannot measure the page, so a panel whose first size is a length renders `flex: 0 1 <length>` until the first measurement, which comes after the mount. The other panels share the rest. Each handle of that root gets its value at the first measurement.
+
+The first client render has what each part knows alone, so the server HTML and the first client render can differ in the style of a panel. A panel has `data-allow-mismatch="style"` until the root is mounted, so the hydration gives no message. The hydration moves no panel, and after the mount each attribute follows the client.
 
 These can move at the mount:
 
-- A panel below an async `setup` or in a lazy component. Its root renders the server HTML without it.
+- A panel below an async `setup` or in a lazy component. The panels beside it render the server HTML without it.
 - A length constraint, such as `minSize="12rem"`, that the first layout breaks. A length constraint applies from the first measurement.
-- The stored layout of `Resizable.useLayoutStorage()`.
-- The hit area, when the main pointer is coarse. The server HTML has the `fine` size.
-- The value attributes of each handle of a root with a length panel. A handle gets its value at the first measurement.
-- The `aria-valuetext` of `getAriaValueText` when it uses `pixelSize` or the locale. `pixelSize` is `undefined` and the locale is `en-US` until the mount.
-- The state of a handle that is not disabled, before the first panel or after the last panel. The server HTML gives it a tab stop, a hit area that takes a press and no end attribute. After the mount, it has no tab stop, its hit area does not take a press, and it has `data-at-min` and `data-at-max`.
+- A layout that the page reads after the mount, such as a layout in a storage.
+- A handle that is not disabled, before the first panel or after the last panel. The server HTML gives it a tab stop and a pointer target that takes a press. After the mount, it has neither.
 
 ## Keyboard
 
@@ -496,103 +482,61 @@ These can move at the mount:
 | Shift and an arrow key | Move the handle by `largeStep`.                                                               |
 | Page Up and Page Down  | Grow and shrink the primary panel by `largeStep`.                                             |
 | Home and End           | Give the primary panel its least and its greatest size.                                       |
-| Enter                  | Collapse a collapsible primary panel, or give it back its size.                               |
+| Enter                  | Collapse a collapsible primary panel, or give it its size again.                              |
 | F6 and Shift+F6        | Move the focus to the first control of the next or the previous panel.                        |
 
-The primary panel of a handle is the panel before it, or the panel after it with `primaryPanel="next"`.
+The primary panel of a handle is the panel before it, or the panel after it with `primaryPanel="next"`. The handle prevents the default action of each key that it handles. A key with Ctrl, Alt or Meta stays a key of the browser.
 
-F6 passes over a panel with a size of 0 and a panel with no control. A root in a panel of another root gives the key to that root after its last panel, or before its first panel with Shift+F6, so F6 goes on through the outer panels. A root that is not in a panel of another root goes on from its other end. A disabled root keeps F6, because F6 changes no size. To stop F6, call `event.preventVaseUIHandler()` in a `keydown` listener of the root:
+F6 passes over a panel with a size of 0 and a panel with no control. A root in a panel of another root gives the key to that root after its last panel, or before its first panel with Shift+F6, so F6 goes on through the outer panels. A root that is not in a panel of another root goes on from its other end. A disabled root keeps F6, because F6 changes no size. To stop F6, call `event.preventDefault()` in a `keydown` listener in a panel, or in a capture listener of the root:
 
 <<< ./resizable/StopF6.vue
-
-The key still goes on to a root around it, and then to the browser. To stop the key for each root and for the browser, call `event.preventDefault()`.
 
 ## Accessibility
 
 Each handle is a focusable `separator`. Give each handle a name that says which panel it resizes, such as `aria-label="Resize the navigation"`. Its value is the size of its primary panel in percent, and `aria-controls` names that panel.
 
-With no value text, a screen reader reads the number of `aria-valuenow`. To give it words, such as the size in pixels, use `getAriaValueText`. It gets the size as text in the locale of the browser, such as `'30%'`, the size as a number, and `{ collapsed, pixelSize }`. `ariaValuetext` gives one fixed text. A handle has `aria-valuetext` only while it has `aria-valuenow`.
+With no value text, a screen reader reads the number of `aria-valuenow`. To give it words, bind `aria-valuetext` to a text that you make from `sizes` of the default slot of the root, in your own format. The handle has the attribute that you give.
 
-The hit area of a handle takes presses beyond the handle. `hitAreaSize` is its least size on the axis of the move, by default `{ fine: 10, coarse: 24 }` pixels. The root uses `coarse` while the main pointer of the device is coarse, such as a finger. [WCAG 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum) asks for a target of at least 24 by 24 CSS pixels. Give `hitAreaSize` a number to use one size for each pointer. A dialog or another element over a handle takes the press, as for each other control.
-
-An edge has no key. Keep a handle at each boundary that a keyboard user must resize.
+The pointer target of a handle takes presses beyond the handle: at the least 10 px on the axis of the move. The CSS variable `--resizable-handle-hit-area-size` gives another least size. [WCAG 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum) asks for a target of at least 24 by 24 CSS pixels, so set the variable to `24px` in `@media (pointer: coarse)`, as each demo does. A dialog or another element over a handle takes the press, as for each other control.
 
 ## Styling
 
-The parts write no style sheet and no cursor, so a page with a Content Security Policy needs no nonce for them. Give each part a class, and style its states with its data attributes:
+The parts write no style sheet and no cursor, so a page with a Content Security Policy needs no nonce for them. Give each part a class, and style its states with its attributes:
 
 - The root has `data-orientation`, `data-disabled` and `data-dragging`.
 - A panel has `data-orientation`, `data-collapsed` and `data-disabled`, and the variable `--resizable-panel-size`.
-- A handle has `data-orientation`, `data-disabled`, `data-dragging`, `data-crossing`, `data-at-min` and `data-at-max`, and the variable `--resizable-handle-preview-offset`.
+- A handle has `[aria-orientation]`, `[aria-disabled="true"]`, `data-dragging`, `data-crossing`, `data-at-min` and `data-at-max`, and the variable `--resizable-handle-preview-offset`.
 
 `data-at-min` means that the handle cannot move to the left, or up in a vertical root. `data-at-max` means that it cannot move to the right, or down. The sides are sides of the screen, also in a right-to-left root. A cursor of `e-resize` for `data-at-min` and `w-resize` for `data-at-max` thus shows the one way that the handle can move. A handle with both attributes cannot move, and the demos give it the cursor `default` except at a crossing, where a press moves the other handle.
 
-The handle has `position: relative`, because it is the containing block of its hit area. Do not give it `position: static`: the hit area then has another place. A root with `dragEdges` has `position: relative` too, and its edge nodes are `[data-vase-ui-resizable-edge]` elements in it. An edge node has `data-orientation`, `data-dragging`, `data-crossing`, `data-at-min` and `data-at-max`. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle.
+The handle has `position: relative`, because it is the containing block of its pointer target, the last `<span>` in it. Do not give the handle `position: static`: the pointer target then has another place. Use `:hover` and `:focus-visible` on a handle for the states of the pointer and the keyboard. To show a grip, put it in the default slot of the handle. A press gives the handle the focus with no focus ring. A browser without the `focusVisible` option of `focus()` can show a ring for that focus.
 
 ## RTL
 
-The root reads the direction from [`DirectionProvider`](/utils/direction-provider). Also set `dir="rtl"` on an element around the root, so that the row of panels starts on the right. ArrowLeft then moves the handle to the left on the screen, as in a left-to-right root.
+The root reads the direction of its own element. Set `dir="rtl"` on the root or on an element around it, so that the row of panels starts on the right. ArrowLeft then moves the handle to the left on the screen, as in a left-to-right root. A server reads only the `dir` attribute of `Resizable.Root`.
 
 ## API reference
 
 <ApiReference />
 
-### Resizable.useParentPanel
-
-Gives the id, the state and the methods of the nearest panel above the caller, or `null` outside a panel. Call it in `setup`.
-
-<ApiReference name="Resizable.useParentPanel" :heading-level="4" />
-
-### Resizable.useParentRoot
-
-Gives the orientation and the methods of the nearest root above the caller, or `null` outside a root. Call it in `setup`.
-
-<ApiReference name="Resizable.useParentRoot" :heading-level="4" />
-
-### Resizable.useLayoutStorage
-
-Keeps the layout of a root in a storage. Call it in `setup`. See [Save the layout](#save-the-layout).
-
-<ApiReference name="Resizable.useLayoutStorage" :heading-level="4" />
-
 ## Additional types
 
-### Resizable.Root.ResizeMode
+### ResizableLayout
 
-<ApiReference name="Resizable.Root.ResizeMode" />
+The size of each panel by panel `id`. An entry is a number in percent, or a string of a number with a unit, such as `'240px'`.
 
-### Resizable.Root.ChangeEventReason
+### ResizableRootResizeMode
 
-<ApiReference name="Resizable.Root.ChangeEventReason" />
+<ApiReference name="ResizableRootResizeMode" />
 
-### Resizable.Root.CommitEventReason
+### ResizableRootChangeEventReason
 
-<ApiReference name="Resizable.Root.CommitEventReason" />
+<ApiReference name="ResizableRootChangeEventReason" />
 
-### Resizable.Root.Actions
+### ResizableRootChangeEventDetails
 
-<ApiReference name="Resizable.Root.Actions" />
+<ApiReference name="ResizableRootChangeEventDetails" />
 
-### Resizable.Panel.Size
+### ResizableRootCommitEventDetails
 
-<ApiReference name="Resizable.Panel.Size" />
-
-### Resizable.Panel.Actions
-
-<ApiReference name="Resizable.Panel.Actions" />
-
-### ResizableParentPanel
-
-<ApiReference name="ResizableParentPanel" />
-
-### ResizableParentRoot
-
-<ApiReference name="ResizableParentRoot" />
-
-### ResizableLayoutStorageOptions
-
-<ApiReference name="ResizableLayoutStorageOptions" />
-
-### ResizableLayoutStorageReturnValue
-
-<ApiReference name="ResizableLayoutStorageReturnValue" />
+<ApiReference name="ResizableRootCommitEventDetails" />

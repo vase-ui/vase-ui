@@ -27,7 +27,6 @@ import * as FilterDropdown from '../../test/filterDropdown';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
 import { NOOP } from '../common/empty';
-import * as Resizable from '../resizable/index.parts';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
 
@@ -254,18 +253,6 @@ const rows: Row[] = [
       </PreviewCard.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'Resizable.Handle role',
-    attribute: 'role',
-    createNode: () => (
-      <Resizable.Root>
-        <Resizable.Panel id="a" />
-        <Resizable.Handle role={undefined} aria-label="Resize" data-testid="part" />
-        <Resizable.Panel id="b" />
-      </Resizable.Root>
-    ),
-    expected: () => 'separator',
   },
   {
     name: 'Select.Trigger aria-haspopup',

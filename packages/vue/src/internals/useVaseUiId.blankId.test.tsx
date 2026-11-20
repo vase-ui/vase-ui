@@ -16,7 +16,6 @@ import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import * as Calendar from '../calendar/index.parts';
 import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
-import * as Resizable from '../resizable/index.parts';
 
 interface BlankId {
   id: string;
@@ -410,19 +409,6 @@ const rows: Row[] = [
       </CalendarAncestors>
     ),
     named: () => ({ testId: 'grid', name: 'November 2026' }),
-  },
-  {
-    // Two panels with one id would share one size of the layout.
-    name: 'Resizable.Panel',
-    tree: (_k, blankId) => (
-      <div style={{ width: '600px', height: '100px' }}>
-        <Resizable.Root style={{ height: '100%' }}>
-          <Resizable.Panel {...blankId} />
-          <Resizable.Handle />
-          <Resizable.Panel {...blankId} />
-        </Resizable.Root>
-      </div>
-    ),
   },
 ];
 

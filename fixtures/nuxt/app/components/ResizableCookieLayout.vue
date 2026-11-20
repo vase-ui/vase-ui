@@ -1,27 +1,23 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useCookie } from '#imports';
-import { Resizable } from '@vase-ui/vue/resizable';
-import type {
-  ResizableRootCommitEventDetails,
-  ResizableRootLayout,
-  ResizableRootLayoutSnapshot,
-} from '@vase-ui/vue/resizable';
+import { Resizable, type ResizableLayout } from '@vase-ui/vue/resizable';
 
-const saved = useCookie<ResizableRootLayoutSnapshot | undefined>('resizable-layout');
-// The root reads its default layout one time, at the start.
-// A visitor can change the cookie. The root ignores an entry that is not a size, so the cookie
-// needs no check.
-const defaultLayout = saved.value ?? { 'c-a': 25, 'c-b': 75 };
+const saved = useCookie<ResizableLayout | undefined>('resizable-layout');
+// The server reads the cookie too, so its HTML has the saved layout. A visitor can change the
+// cookie. The root ignores an entry that is not a size, so the cookie needs no check.
+const layout = ref<ResizableLayout>(saved.value ?? { 'c-a': 25, 'c-b': 75 });
 
-// The snapshot has the pixels of the fixed panel, so it keeps its width at the next visit.
-function save(_layout: ResizableRootLayout, details: ResizableRootCommitEventDetails) {
-  saved.value = details.snapshot;
+// One commit comes for each change of the user. The layout has the pixels of the fixed panel,
+// so the panel keeps its width at the next visit.
+function save(committed: ResizableLayout) {
+  saved.value = committed;
 }
 </script>
 
 <template>
   <Resizable.Root
-    :default-layout="defaultLayout"
+    v-model="layout"
     data-testid="cookie"
     style="width: 600px; height: 80px"
     @layout-committed="save"

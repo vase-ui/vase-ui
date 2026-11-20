@@ -1,12 +1,34 @@
 <script setup lang="ts">
-import { Resizable } from '@vase-ui/vue/resizable';
+import { onMounted, ref } from 'vue';
+import { Resizable, type ResizableLayout } from '@vase-ui/vue/resizable';
 import styles from './index.module.css';
 
-const { layout, save } = Resizable.useLayoutStorage({ key: 'vase-ui-docs-resizable' });
+const key = 'vase-ui-docs-resizable';
+const layout = ref<ResizableLayout>({});
+
+// A server has no storage, so the page reads it after the mount. A browser that blocks the data
+// of the site throws. The root ignores an entry that is not a size.
+onMounted(() => {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(key) ?? '{}');
+    if (saved !== null && typeof saved === 'object') layout.value = saved as ResizableLayout;
+  } catch {
+    layout.value = {};
+  }
+});
+
+// One commit comes for each change of the user.
+function save(committed: ResizableLayout) {
+  try {
+    localStorage.setItem(key, JSON.stringify(committed));
+  } catch {
+    // The layout stays for this visit only.
+  }
+}
 </script>
 
 <template>
-  <Resizable.Root v-model:layout="layout" :class="styles.Root" @layout-committed="save">
+  <Resizable.Root v-model="layout" :class="styles.Root" @layout-committed="save">
     <Resizable.Panel id="navigation" default-size="30" :class="styles.Panel">
       <p :class="styles.Label">Navigation</p>
       <p :class="styles.Description">Resize the panels, then load the page again.</p>
