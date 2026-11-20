@@ -144,7 +144,7 @@ async function dropOnEdge() {
   handle.style.cssText =
     'position: fixed; z-index: 2147483647; left: 0; top: 0; width: 20px; height: 20px';
   try {
-    // Playwright drops a release past the edge of the page.
+    // Playwright ignores a release past the edge of the page.
     await userEvent.pointer([
       { coords: { x: 10, y: 10 }, keys: '[MouseLeft>]' },
       { coords: { x: 30, y: 30 } },
