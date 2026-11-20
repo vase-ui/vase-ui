@@ -43,6 +43,28 @@ async function rightRelease(point?: { x: number; y: number }) {
 }
 
 const LONG_PRESS = 600;
+const POINT = { x: 100, y: 80 };
+
+/**
+ * The time in milliseconds from the first `pointerdown` of the steps to the next `pointerdown`,
+ * `pointerup` or `pointercancel`, which stops a long press.
+ */
+async function stopTime(steps: () => Promise<unknown>) {
+  let down: number | undefined;
+  let stop = Infinity;
+  const record = () => {
+    if (down === undefined) down = performance.now();
+    else stop = Math.min(stop, performance.now() - down);
+  };
+  const types = ['pointerdown', 'pointerup', 'pointercancel'];
+  for (const type of types) window.addEventListener(type, record, true);
+  try {
+    await steps();
+  } finally {
+    for (const type of types) window.removeEventListener(type, record, true);
+  }
+  return stop;
+}
 
 describe('the open', () => {
   test('a right press opens the menu at the pointer; the popup takes the focus; the rest of the page is hidden and blocked', async () => {
@@ -316,26 +338,33 @@ describe('a long press', () => {
     },
   );
 
-  test.skipIf(server.browser !== 'chromium')(
-    'a tap, a second finger and a canceled touch open nothing',
-    async () => {
-      const point = { x: 100, y: 80 };
-      const rest = () => new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
-      await mountContextMenu();
-      await touchDrag(point, point, 0, 100);
-      await rest();
-      expect(popup()).toBe(null);
-      await sendTouch('touchStart', [point]);
-      await sendTouch('touchStart', [point, { x: 150, y: 80 }]);
-      await rest();
-      await sendTouch('touchEnd', []);
-      expect(popup()).toBe(null);
-      await sendTouch('touchStart', [point]);
-      await sendTouch('touchCancel', []);
-      await rest();
-      expect(popup()).toBe(null);
+  test.skipIf(server.browser !== 'chromium').for([
+    { name: 'a tap', touch: () => touchDrag(POINT, POINT, 0), lift: false },
+    {
+      name: 'a second finger',
+      touch: async () => {
+        await sendTouch('touchStart', [POINT]);
+        await sendTouch('touchStart', [POINT, { x: 150, y: 80 }]);
+      },
+      lift: true,
     },
-  );
+    {
+      name: 'a canceled touch',
+      touch: async () => {
+        await sendTouch('touchStart', [POINT]);
+        await sendTouch('touchCancel', []);
+      },
+      lift: false,
+    },
+  ])('$name opens nothing', async ({ touch, lift }, { skip }) => {
+    await mountContextMenu();
+    const stopped = await stopTime(touch);
+    await new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
+    if (lift) await sendTouch('touchEnd', []);
+    // A busy runner can send the event that stops the press after the time of a long press.
+    skip(stopped >= 500, 'The event that stops the press came after the long press.');
+    expect(popup()).toBe(null);
+  });
 
   test.skipIf(server.browser !== 'chromium')(
     'of a touch in a trigger in a trigger opens the inner menu only',
