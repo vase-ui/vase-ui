@@ -26,8 +26,9 @@ export interface OTPFieldRootProps
    * Changes the code after the field removes whitespace and each character that `validationType`
    * refuses. It runs for the first code, for each model value and for each edit. The filter of
    * `validationType` then runs on its result again, and the field cuts the result to `length`.
-   * The field can run it more than one time on the same code, so give it the same result for its
-   * own result. `valueInvalid` tells when it refuses a character of typed or pasted text.
+   * The field can run it more than one time on the same code, so its result must not change when
+   * it runs on its own result. `valueInvalid` tells when it refuses a character of typed or pasted
+   * text.
    */
   normalizeValue?: (value: string) => string;
   /**
@@ -45,7 +46,7 @@ export interface OTPFieldRootProps
    * @default false
    */
   autoSubmit?: boolean;
-  /** The `id` of the first slot. The other slots get `{id}-2`, `{id}-3`, and on. */
+  /** The `id` of the first slot. The other slots get `{id}-2`, `{id}-3` and the next numbers. */
   id?: string;
   /**
    * The name of the code in the form data. The form input gives the whole code, and the slots have
