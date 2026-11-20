@@ -74,7 +74,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the handle: triggers outside the root, `open(id)`, `open(null)`, an unknown id, `openWithPayload()`, `close()`, `isOpen`, a handle with no root, a root that gets or loses its handle, and a `<Suspense>` that replaces a page."
+      "reason": "`Dialog.test.ts` tests the handle: triggers outside the root, `open(id)`, `open(null)`, an unknown id, `openWithPayload()`, `close()`, `isOpen`, a handle with no root, a root that gets or loses its handle, two mounted roots with one handle, and a `<Suspense>` that replaces a page."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",

@@ -68,7 +68,7 @@ A trigger can be inside or outside `AlertDialog.Root`. For a simple interaction,
 
 When the content of the alert dialog cannot be next to its trigger, use a detached trigger. Put `AlertDialog.Trigger` outside `AlertDialog.Root`, and connect the two with a handle from `AlertDialog.createHandle()`.
 
-The methods of the handle, such as `open()` and `openWithPayload()`, act only while an `AlertDialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `openWithPayload()`, act only while an `AlertDialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. When two mounted roots have the same handle, the handle acts on the root that took it last. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./alert-dialog/DetachedTriggers.vue{4,8,10}
 

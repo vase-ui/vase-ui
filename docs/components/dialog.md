@@ -72,7 +72,7 @@ Import the component and assemble its parts:
 
 ## Animation
 
-The popup and the backdrop are in the DOM only while the dialog is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at the open, so `<Transition>` needs `appear` to run the enter of the first open.
+The popup and the backdrop are in the DOM only while the dialog is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at each open, so `<Transition>` needs `appear` to run the enter.
 
 `Dialog.Viewport` stays in the DOM while its popup leaves. To animate its leave, select it with `:has(> .v-leave-active)`, with the leave class of the `<Transition>` around the popup.
 
@@ -327,7 +327,7 @@ A trigger can be inside or outside `Dialog.Root`. For a simple interaction, put 
 
 When the content of the dialog cannot be next to its trigger, use a detached trigger. Put `Dialog.Trigger` outside `Dialog.Root`, and connect the two with a handle from `Dialog.createHandle()`.
 
-The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Dialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
+The methods of the handle, such as `open()` and `openWithPayload()`, act only while a `Dialog.Root` with the same handle is mounted. The handle ignores a call before a root mounts or after it unmounts. When two mounted roots have the same handle, the handle acts on the root that took it last. Each root that mounts starts from a new state. It does not run an ignored call, and it does not keep the open state of an earlier root.
 
 <<< ./dialog/DetachedTriggers.vue{4,8,10}
 

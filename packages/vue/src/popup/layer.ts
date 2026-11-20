@@ -483,7 +483,7 @@ function onKeydown(event: KeyboardEvent) {
 let hideScope: EffectScope | undefined;
 const written = new Map<Element, 'inert' | 'aria-hidden'>();
 // The root of each marked element of a layer below. A part of a closed root writes `inert` itself
-// for its leave, so the layer leaves the attribute there.
+// for its leave, so the layer leaves that attribute there.
 const rootsOfMarks = new WeakMap<Element, PopupRoot>();
 
 function startHide() {
@@ -544,8 +544,11 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   }
   for (const [element, attribute] of written) {
     if (wanted.get(element) === attribute) continue;
-    if (rootsOfMarks.get(element)?.open !== false) element.removeAttribute(attribute);
+    if (attribute !== 'inert' || rootsOfMarks.get(element)?.open !== false) {
+      element.removeAttribute(attribute);
+    }
     written.delete(element);
+    rootsOfMarks.delete(element);
   }
   for (const [element, attribute] of wanted) {
     if (written.has(element) || element.hasAttribute(attribute)) continue;

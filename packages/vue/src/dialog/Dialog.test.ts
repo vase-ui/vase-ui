@@ -437,6 +437,17 @@ describe('the handle', () => {
     expect(popup()).toBe(null);
   });
 
+  test('a root that unmounts leaves the handle to a root that took it later', async () => {
+    const handle = Dialog.createHandle<string>();
+    const first = mount(DialogHandles, { handle });
+    const second = mount(DialogHandles, { handle });
+    await nextTick();
+    first.unmount();
+    handle.openWithPayload('given');
+    await opened();
+    expect(second.root.querySelector('[data-testid="root-payload"]')).toHaveTextContent('given');
+  });
+
   test('open(null) on a root with one trigger opens with no active trigger', async () => {
     const handle = Dialog.createHandle();
     const { trigger } = await mountDialog({ root: { handle } });
@@ -884,7 +895,7 @@ describe('the dismissal', () => {
 });
 
 describe('the focus', () => {
-  test('goes to the first tab stop at a press open, to the popup after a touch open, and back to the trigger at the close', async () => {
+  test('goes to the first tab stop at a press open, and back to the trigger with a focus ring at a close by a key', async () => {
     const { trigger } = await mountDialog({ root: { modal: false } });
     await userEvent.click(trigger());
     await opened();
@@ -921,12 +932,11 @@ describe('the focus', () => {
   });
 
   test('`finalFocus` replaces the return target', async () => {
-    const { trigger } = await mountDialog({
+    await mountDialog({
       root: { defaultOpen: true },
       popup: { finalFocus: () => byId('after') },
     });
     await opened();
-    void trigger;
     await userEvent.keyboard('{Escape}');
     await closed();
     await waitFor(() => expect(byId('after')).toHaveFocus());
@@ -1121,7 +1131,7 @@ describe('nested dialogs', () => {
   const nestedCount = (element: HTMLElement) => element.style.getPropertyValue('--nested-dialogs');
 
   test('a dialog in another one is nested; the dialog below counts each dialog above it', async () => {
-    const { trigger } = await mountDialog({
+    await mountDialog({
       root: { defaultOpen: true, modal: false },
       viewport: {},
       nested: { root: { modal: false }, viewport: {} },
@@ -1141,10 +1151,9 @@ describe('nested dialogs', () => {
     expect(byTestId('viewport')).toHaveAttribute('data-nested-dialog-open');
     expect(nestedCount(element)).toBe('1');
     expect(nestedCount(child)).toBe('0');
-    void trigger;
   });
 
-  test('a child that was open before its parent does not count; a child that opens above it does', async () => {
+  test('a child that was open before its parent does not count', async () => {
     const root = reactive<Props>({ open: false, modal: false });
     await mountDialog({ root, inTree: { root: { defaultOpen: true, modal: false } } });
     await opened('nested-popup');
@@ -1374,6 +1383,28 @@ describe('the viewport, the backdrop and the leave', () => {
     expect(viewport).toHaveAttribute('inert');
     expect(backdrop).toHaveAttribute('inert');
   });
+
+  test("a kept dialog that closes under a `'trap-focus'` dialog is not hidden from assistive tools when it opens again", async () => {
+    const scene = siblings({ 0: true });
+    mount(DialogSiblings, {
+      dialogs: [
+        { root: { modal: false }, portal: { keepMounted: true } },
+        { root: { modal: 'trap-focus' } },
+      ],
+      scene,
+    });
+    const lower = await opened('popup-0');
+    scene.set(1, true);
+    await opened('popup-1');
+    await waitFor(() => expect(hidden(lower)).toBe(true));
+    scene.set(0, false);
+    await waitFor(() => expect(lower).toHaveAttribute('hidden'));
+    scene.set(1, false);
+    await closed('popup-1');
+    scene.set(0, true);
+    await waitFor(() => expect(lower).not.toHaveAttribute('hidden'));
+    expect(hidden(lower)).toBe(false);
+  });
 });
 
 describe('the portal', () => {
@@ -1465,7 +1496,7 @@ describe('the title, the description, the close and the trigger', () => {
     expect(log).toEqual(['openChange false close-press', 'update false']);
   });
 
-  test('a disabled trigger and a trigger in a disabled fieldset open nothing; Enter and Space open a trigger that is not a button', async () => {
+  test('a disabled trigger opens nothing; Enter and Space open a trigger that is not a button', async () => {
     const { trigger } = await mountDialog({
       root: { modal: false },
       triggers: [

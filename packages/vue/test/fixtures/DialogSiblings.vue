@@ -8,6 +8,7 @@ type Sibling = {
   alert?: boolean;
   root?: Props;
   trigger?: false;
+  portal?: Props;
   backdrop?: Props;
   viewport?: Props;
   popup?: Props;
@@ -50,7 +51,7 @@ defineProps({
     >
       {{ index }}
     </component>
-    <Dialog.Portal>
+    <Dialog.Portal v-bind="dialog.portal">
       <Dialog.Backdrop
         v-if="dialog.backdrop"
         :data-testid="`backdrop-${index}`"

@@ -438,13 +438,16 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // A post-flush effect runs only on the client, so a handle in a module of a server holds no root
   // of a request. It runs before `onMounted` of the children, and not while a `<Suspense>` waits
   // for the page of the root. When a `<Suspense>` replaces a page, the old root releases its handle
-  // before the new root takes it (test/measurements/dialog.test.ts).
+  // before the new root takes it (test/measurements/dialog.test.ts). Of two mounted roots with one
+  // handle, the last one holds it.
   watchPostEffect((onCleanup) => {
     const handle = options.handle();
     const holder = handle && handleRoots.get(handle);
     if (!holder) return;
     holder.value = root;
-    onCleanup(() => (holder.value = null));
+    onCleanup(() => {
+      if (holder.value === root) holder.value = null;
+    });
   });
 
   return root;
