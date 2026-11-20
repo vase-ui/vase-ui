@@ -8,7 +8,6 @@ import * as NavigationMenu from '../../../navigation-menu/index.parts';
 import * as Popover from '../../../popover/parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
-import * as Tooltip from '../../../tooltip/index.parts';
 
 type Change = [open: boolean, reason: string];
 type Recorder = (open: boolean, details: { reason: string }) => void;
@@ -107,16 +106,6 @@ const children = {
         </PreviewCard.Positioner>
       </PreviewCard.Portal>
     </PreviewCard.Root>
-  ),
-  tooltip: (record: Recorder) => (
-    <Tooltip.Root defaultOpen onOpenChange={record}>
-      <Tooltip.Trigger>Child trigger</Tooltip.Trigger>
-      <Tooltip.Portal>
-        <Tooltip.Positioner data-testid="positioner">
-          <Tooltip.Popup data-testid="popup">Tip</Tooltip.Popup>
-        </Tooltip.Positioner>
-      </Tooltip.Portal>
-    </Tooltip.Root>
   ),
   // The list calls `useDismissLayer`, and the portal is not below the list.
   navigationMenu: (record: Recorder) => (

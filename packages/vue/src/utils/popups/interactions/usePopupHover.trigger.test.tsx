@@ -1,4 +1,3 @@
-import { tooltipTriggers } from '../registeredParts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType, ShallowRef } from 'vue';
@@ -180,46 +179,6 @@ describe('useHoverTriggerInteraction', () => {
 
     expect(onOpenChange).toHaveBeenCalledTimes(0);
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
-  });
-
-  it('treats disabled child trigger as inactive in wrapper fallback mode', async () => {
-    const onOpenChange = vi.fn();
-
-    const App = defineComponent({
-      setup() {
-        const { open, refs, hoverProps, triggerElement, register } = useWrapped(onOpenChange);
-
-        function setActiveTrigger(node: unknown) {
-          refs.setReference(node);
-          triggerElement.value = node as Element | null;
-        }
-
-        return () => (
-          <>
-            <button data-testid="active-trigger" ref={setActiveTrigger} />
-            <div data-testid="inactive-wrapper" {...hoverProps}>
-              <button data-testid="disabled-trigger" ref={register('disabled-trigger')} />
-            </div>
-            {open.value && <div role="tooltip" ref={refs.setFloating} />}
-          </>
-        );
-      },
-    });
-
-    await render(<App />);
-
-    const wrapper = screen.getByTestId('inactive-wrapper');
-    const disabledTrigger = screen.getByTestId('disabled-trigger');
-    tooltipTriggers.set(disabledTrigger, () => true);
-
-    await fireEvent.pointerEnter(wrapper, { pointerType: 'mouse' });
-    await fireEvent.mouseEnter(wrapper);
-    await fireEvent.mouseMove(disabledTrigger, { movementX: 10, movementY: 0 });
-
-    await flushMicrotasks();
-
-    expect(onOpenChange).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('tooltip')).not.toBe(null);
   });
 
   it('reopens immediately for same trigger in delegated wrapper mode during close transition', async () => {

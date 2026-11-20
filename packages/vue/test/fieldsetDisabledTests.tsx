@@ -28,8 +28,6 @@ export interface FieldsetDisabledTestsConfig {
    * `children`, so the providers are outside the fieldset.
    */
   root: (children: VNode) => VNode;
-  /** Set it for `Tooltip.Trigger`. Its `disabled` prop disables the tooltip and not the button. */
-  tooltip?: boolean;
   /**
    * Set it for a trigger that opens its popup 100 ms after a hover. The suite then also asserts
    * that a disabled fieldset stops that open.
@@ -39,7 +37,7 @@ export interface FieldsetDisabledTestsConfig {
 
 /** The shared suite of a native button part in a disabled fieldset (`VUE-112`). */
 export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
-  const { render, part, root, tooltip, hover } = config;
+  const { render, part, root, hover } = config;
 
   function target(props: Partial<FieldsetButtonTestProps> = {}) {
     return part(
@@ -51,13 +49,10 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
   function expectDisabled(element: HTMLElement, disabled: boolean) {
     expect(element.hasAttribute('data-disabled')).toBe(disabled);
     expect(element.textContent).toBe(disabled ? 'Disabled' : 'Enabled');
-    if (disabled && !tooltip) {
+    if (disabled) {
       expect(
         element.hasAttribute('disabled') || element.getAttribute('aria-disabled') === 'true',
       ).toBe(true);
-    }
-    if (disabled && tooltip) {
-      expect(element).toHaveAttribute('data-trigger-disabled');
     }
   }
 
@@ -115,16 +110,11 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
       ownDisabled.value = true;
       disabled.value = false;
       await flushMicrotasks();
-      expectDisabled(button, !tooltip);
-      if (tooltip) {
-        expect(button).toHaveAttribute('data-trigger-disabled');
-        expect(button).not.toHaveAttribute('disabled');
-      }
+      expectDisabled(button, true);
 
       ownDisabled.value = false;
       await flushMicrotasks();
       expectDisabled(button, false);
-      expect(button).not.toHaveAttribute('data-trigger-disabled');
     });
 
     it('leaves a replacement non-native element enabled', async () => {
@@ -135,7 +125,7 @@ export function fieldsetDisabledTests(config: FieldsetDisabledTestsConfig) {
           <fieldset disabled>
             {target({
               as: native.value ? 'button' : 'span',
-              ...(!tooltip && { nativeButton: native.value }),
+              nativeButton: native.value,
               onClick: click,
             })}
           </fieldset>,

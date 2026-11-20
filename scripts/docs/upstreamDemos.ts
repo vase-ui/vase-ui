@@ -57,6 +57,7 @@ const RESTYLED_FAMILIES = new Set([
   'tabs',
   'toggle',
   'toggle-group',
+  'tooltip',
 ]);
 
 /**

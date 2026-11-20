@@ -68,18 +68,11 @@ function click(element: HTMLElement) {
   return (user: User) => user.click(element);
 }
 
-function focus(element: HTMLElement) {
-  return () => {
-    element.focus();
-    return Promise.resolve();
-  };
-}
-
 /** The triggers of `root` that a part marks with an attribute and that have no open popup. */
 function markedTriggers(root: ParentNode): Trigger[] {
   return [
     ...root.querySelectorAll<HTMLElement>(
-      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger], [data-vase-ui-tooltip-trigger]',
+      '[aria-haspopup], [data-vase-ui-navigation-menu-trigger]',
     ),
   ]
     .filter((element) =>
@@ -88,9 +81,6 @@ function markedTriggers(root: ParentNode): Trigger[] {
       ),
     )
     .map((element) => {
-      if (element.matches('[data-vase-ui-tooltip-trigger]')) {
-        return { element, open: focus(element) };
-      }
       if (element.matches('input')) {
         return {
           element,
@@ -160,6 +150,20 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
       },
     }));
   }
+  if (depth === 0 && family === 'tooltip') {
+    // A tooltip trigger has a name of its own. A Tab from an element just before it gives it the
+    // focus of a key, which opens its tooltip at once.
+    return [...root.querySelectorAll<HTMLElement>('button[aria-label]')].map((element) => ({
+      element,
+      open: async (user: User) => {
+        const start = element.parentNode!.insertBefore(document.createElement('span'), element);
+        start.tabIndex = -1;
+        start.focus();
+        await user.keyboard('{Tab}');
+        start.remove();
+      },
+    }));
+  }
   if (depth === 0 && family === 'toast') {
     return [...root.querySelectorAll<HTMLElement>('button')].map((element) => ({
       element,
@@ -193,8 +197,10 @@ function portals() {
 
 // A closed popup that stays in the DOM is `hidden`. A popup of the popup layer can be a child of
 // `<body>`, and a portal can move it to a container in the demo, so the case reads the dialogs of the
-// whole document. The older popups have `data-open`.
-function openPopups() {
+// whole document. The older popups have `data-open`. A tooltip popup has no role: it is the element
+// with a side in its positioner.
+function openPopups(family: string | undefined) {
+  const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
   return [
     ...new Set([
       ...portals().flatMap((portal) =>
@@ -203,7 +209,7 @@ function openPopups() {
         ),
       ),
       ...document.querySelectorAll<HTMLElement>(
-        '[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])',
+        `[role="dialog"]:not([hidden]), [role="alertdialog"]:not([hidden])${tooltip}`,
       ),
     ]),
   ];
@@ -314,6 +320,7 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
     const { render } = createRenderer();
 
     it('opens each popup with no Vue warning, no axe violation and no cut option', async () => {
+      const family = name.split('/')[0];
       mockToday('2026-11-14');
       // A path is the index of the trigger at each depth. The case opens each path in a new mount,
       // and it adds the triggers of the popup at the end of a path as new paths.
@@ -338,13 +345,15 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
           portalElementsBeforeOpen = new Set(
             portals().flatMap((portal) => [...portal.querySelectorAll('*')]),
           );
-          const openBefore = new Set(openPopups());
+          const openBefore = new Set(openPopups(family));
           // The next open can click a trigger of this popup. Vue skips a listener for an event in
           // the millisecond in which Vue attached the listener.
           await waitForLaterMillisecond(async () => {
             await trigger.open(view.user);
             await waitFor(() => {
-              expect(openPopups().filter((popup) => !openBefore.has(popup))).not.toHaveLength(0);
+              expect(openPopups(family).filter((popup) => !openBefore.has(popup))).not.toHaveLength(
+                0,
+              );
             });
             // A popup has its starting style until the frame after its mount. A style sheet gives
             // that style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.

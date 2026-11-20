@@ -1,7 +1,6 @@
 import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { platform } from '../../common/platform';
 import { closest, contains } from '../../common/shadowDom';
-import { tooltipTriggers } from './registeredParts';
 import { FOCUSABLE_ATTRIBUTE, TYPEABLE_SELECTOR } from './constants';
 import type { PopupTriggerMap } from './usePopupRoot';
 
@@ -13,8 +12,7 @@ export function isTargetInsideEnabledTrigger(
     return false;
   }
 
-  const trigger = closest(target, (element) => triggerElements.hasElement(element));
-  return trigger !== null && !tooltipTriggers.get(trigger)?.();
+  return closest(target, (element) => triggerElements.hasElement(element)) !== null;
 }
 
 export function isEventTargetWithin(event: Event, node: Node | null | undefined) {

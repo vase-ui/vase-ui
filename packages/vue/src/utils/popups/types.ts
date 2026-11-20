@@ -35,8 +35,8 @@ export interface PopupInteractionReader {
    */
   (key: 'anchorElement'): Element | null;
   /**
-   * The anchor that the interaction composables see. It is the anchor override, such as the cursor
-   * position from the Tooltip cursor, or else the anchor of the owner, usually the active trigger.
+   * The anchor that the interaction composables see. It is the anchor override, or else the anchor
+   * of the owner, usually the active trigger.
    * It does not include the `anchor` prop of a positioner, because positioning applies that prop
    * itself.
    */
