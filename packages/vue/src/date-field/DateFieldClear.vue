@@ -20,13 +20,13 @@ defineSlots<{
 const attrs = useAttrs();
 const field = injectDateTimeField();
 const { element, setElement } = useElement<HTMLElement>();
-const { disabled, mergeAttributes } = useButton({
+const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () =>
     props.disabled || field.state.disabled || field.state.readonly || field.state.empty,
   type: 'button',
 });
-const state = computed<DateFieldClearState>(() => ({ ...field.state, disabled: disabled.value }));
+const state = computed<DateFieldClearState>(() => ({ ...field.state, disabled: isDisabled.value }));
 
 defineExpose({ element });
 

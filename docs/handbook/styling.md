@@ -60,7 +60,7 @@ For example, `ScrollArea.Viewport` suspends `scroll-snap-type` during a drag.
 
 Each part that renders an element has one root node, except the parts that this section names. A rule of `<style scoped>` thus matches the element of the part. `v-show`, a custom directive and `<Transition>` on the part apply to that element too. This also applies to a part that renders its element only in some states, such as `Collapsible.Panel`, `Dialog.Backdrop` or `Tabs.Indicator`.
 
-A part that renders a hidden input beside its element has more than one root node. These parts are `NumberField.Root`, `OTPField.Root`, `DateField.Root`, `TimeField.Root`, `DatePicker.Field`, `DatePicker.TimeField`, `DateRangePicker.StartField`, `DateRangePicker.EndField` and `TimePicker.Field`. A rule of `<style scoped>` does not match the element of such a part. `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
+A part that renders a hidden input beside its element has more than one root node. These parts are `NumberField.Root` and `OTPField.Root`. A rule of `<style scoped>` does not match the element of such a part. `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
 
 `Tabs.Indicator` with `renderBeforeHydration` keeps one root node: its script is the last child of its element. With the `element` slot, the script follows the element of the slot, so the part has two root nodes. The element of the slot has the scope of the developer, so a rule of `<style scoped>` still matches it.
 

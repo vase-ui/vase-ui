@@ -374,7 +374,7 @@ describe('in a Field', () => {
     expect(submitted).toEqual([{ when: day('2026-11-14') }]);
   });
 
-  test('a disabled fieldset disables each segment, Clear and the form input', async () => {
+  test('VUE-112: a disabled fieldset disables each segment, Clear and the form input', async () => {
     const { root, group, segments, formInput } = await mountInField({
       date: { defaultValue: day('2026-11-14') },
       fieldsetDisabled: true,

@@ -58,7 +58,7 @@ Base UI has no date field. This one follows the [spinbutton pattern](https://www
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, or give `DateField.Root` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, give `DateField.Root` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of the root. A native label names the group after the mount, so the server HTML has no name for it. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 
@@ -66,13 +66,13 @@ Import the component and assemble its parts:
 
 <<< ./date-field/Anatomy.vue
 
-`DateField.Root` renders its element and a hidden `<input>` after it. The hidden input has the `name` of the field and the native validation, so a form submits the date one time. The segments have no `name`. Read `inputElement` on the root ref after mount to get the hidden input.
+`DateField.Root` renders one `<div role="group">`. Its last child is the form input: a hidden native `<input>` with the `name`, the value and the native validation of the field, so a form submits the date one time. The segments have no `name`. Read `inputElement` on the root ref after mount to get the form input. Each attribute of the root goes to the group, but `id` goes to the first segment.
 
 `DateField.Input` renders the layout of the locale: a segment for each part of the date, and the text between them. With no `segment` slot, it renders each part with no class. Use the slot to give a class to a segment and to a separator. The slot gets each part of the layout and its `index`. A part that the user edits has `editable: true`. The other parts have `editable: false` and a `text`: a separator, an era or the name of a time zone.
 
-A segment is an `<input>`. The part sets `field-sizing: content` in the `style` of the segment, so the box of a segment follows its text and your styles need no rule for its width. A `width` or a `min-width` in your styles still applies. Chrome and Edge before 123, Firefox before 152 and Safari before 26.2 do not have `field-sizing`. In those browsers the `size` attribute gives the width, and that width is too narrow for `AM` in some fonts. Give the segment a width if you support them. To remove the declaration, see [Inline style attributes](/utils/csp-provider#inline-style-attributes).
+A segment is an `<input type="text" role="spinbutton">`. Its `size` attribute fits its greatest number and its placeholder. To make the box follow the text, add `field-sizing: content` to your styles. Chrome 123, Firefox 152 and Safari 26.2 have it, and an older browser keeps the width of `size`.
 
-Because of the hidden input, `DateField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+To render your own element for a part, use its `element` slot. The slot of `DateField.Input` also gets the `segments` of the layout to render.
 
 ## Value
 
@@ -192,7 +192,24 @@ A `Temporal.PlainYearMonth` value has no day. A `Temporal.PlainDate` with the `g
 
 ### Validation in a Field
 
-Put the field in a `Field` to show the errors of its validation. The hidden input has the type of the value, so `minDate` and `maxDate` give `rangeUnderflow` and `rangeOverflow`, and `required` gives `valueMissing`. A `Temporal.PlainDate` limits whole days. A limit with a time, such as a `Temporal.PlainDateTime`, also limits the time of a field that shows a time. A field that shows no time compares days. A zoned limit limits a zoned value by the moment, also in another time zone. The field sets a `customError` for a date that `unavailableDates` matches, for a field with some segments empty, and for the limits that the input type cannot check.
+Put the field in a `Field` to show the errors of its validation. The form input has the type of the value:
+
+| Value                     | Form input       | Form text                            | Checks                                 |
+| ------------------------- | ---------------- | ------------------------------------ | -------------------------------------- |
+| `Temporal.PlainDate`      | `date`           | `2026-11-14`                         | Native                                 |
+| `Temporal.PlainDateTime`  | `datetime-local` | `2026-11-14T15:04`                   | Native                                 |
+| `Temporal.ZonedDateTime`  | `text`           | `2026-11-14T15:04+09:00[Asia/Tokyo]` | `required` native, the limits by field |
+| `Temporal.PlainYearMonth` | `text`           | `2026-11`                            | `required` native, the limits by field |
+
+A `Temporal.PlainDate` in `min` or `max` limits whole days. A limit with a time also limits the time of a field that shows a time. A field that shows no time compares days. A limit in a time zone counts as its local time in the zone of a zoned value. A year and month is in the limits when one of its days is.
+
+For a check that its type cannot make, the field asks a native input that is not in the document, and sets its failure as a custom error of the form input. The message is the message of the browser, in the language of the browser. In a `Field`, `Field.Error` with `match` reads each failure as a native one:
+
+- `badInput`: some segments are empty, as in a native date input.
+- `rangeUnderflow` and `rangeOverflow`: a limit, for each kind of value.
+- `customError`: a date that `unavailableDates` matches. Give the reason in the content of `<Field.Error match="customError">`.
+
+Outside a `Field`, `inputElement.validity.customError` is `true` for each of these failures, and `validationMessage` says which. A disabled or read-only field is not validated.
 
 <DemoFrame>
   <DemoDateFieldValidation />
@@ -225,7 +242,9 @@ Put the field in a `Field` to show the errors of its validation. The hidden inpu
 
 ### Clear button
 
-`DateField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no content and no `#render` slot, it shows `x` and has the `aria-label` `Clear`. With content or a `#render` slot, give the button an `aria-label` of your own.
+`DateField.Clear` is a `<button type="button">`. It empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. It has no content and no name of its own, so give it content and an `aria-label` in the language of the page.
+
+The `clear()` method of the root ref empties each segment. It emits `update:modelValue` with `null` when the field had a value, and no `valueChange`.
 
 <DemoFrame>
   <DemoDateFieldClear />
@@ -258,17 +277,11 @@ Put the field in a `Field` to show the errors of its validation. The hidden inpu
 
 ## Server render
 
-The field renders with `renderToString`. The server HTML has the segments, the numbers and the hidden input value.
+The field renders with `renderToString`. The server HTML has the segments, their numbers, the literals and the form input.
 
-A server does not know the locale of the visitor. With no `locale` prop, the field uses `en-US` until it mounts, and then the locale of the browser. Give a `locale` prop to render the same layout in each place.
+The locale of the field is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The field never reads the locale of the visitor. No render reads today or the time zone of the runtime either: only an arrow key in an empty segment reads today. So the server HTML and the first render of the browser agree.
 
-A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser. While the field hydrates, it marks the elements that can differ. After it mounts, it compares its elements with its layout and makes them again where they differ. The hydration gives no warning.
-
-`DateField.Input` renders its parts in a list of fixed length, with a comment in each place after the last part. A layout with more or fewer parts thus hydrates with no message, also in the `children` component of a `#render` slot.
-
-Digits that a visitor types, or that the browser fills, before the page hydrates stay in the segments. After the hydration, the field takes their numbers. When each segment then has a number, the root emits `valueChange` and `update:modelValue`. When the visitor left a segment before the page hydrated, the segment then also gets `change`, `blur` and `focusout`.
-
-The root also takes a date that a program or the browser writes into its hidden input before the page hydrates. It takes a date that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+A server and a browser can have other `Intl` data for the same locale. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -280,23 +293,28 @@ Each segment is a stop of the Tab key. Left and Right swap in a right-to-left do
 
 | Key                | Result                                                                                                                        |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from today. |
+| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from today. A year does not wrap. |
 | Page Up, Page Down | Adds or takes 5 for a year, 2 for a month, 7 for a day, 2 for an hour, and 15 for a minute or a second.                       |
 | Home, End          | The least and the greatest number of the segment.                                                                             |
 | Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number.              |
-| Backspace, Delete  | Removes the last digit. Backspace in an empty segment moves to the segment before.                                            |
+| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                               |
 | Left, Right        | The segment before or after.                                                                                                  |
 | A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.                |
 
-The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments.
+The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments. Enter submits the form, as in a native date input. A key with Control, Alt or Meta keeps its native action.
+
+## Styling
+
+The root, `DateField.Input` and `DateField.Literal` have the attributes `data-empty`, `data-complete`, `data-disabled`, `data-readonly`, `data-required`, `data-invalid`, `data-valid`, `data-touched`, `data-dirty` and `data-filled`. A literal also has `data-type`. A segment has `data-type`, `data-empty`, `data-complete`, `data-valid`, `data-touched`, `data-dirty` and `data-filled`. For the rest of its state, use CSS: `:placeholder-shown`, `:focus`, `:disabled`, `:read-only`, `[aria-required="true"]` and `[aria-invalid="true"]`. `DateField.Clear` matches `:disabled`. A field has the focus when it matches `:focus-within`.
+
+The placeholder of a date segment is the short name of its unit, such as `mo` in `en-US`, and `--` for a time segment and a day period. A `placeholder` attribute on `DateField.Segment` wins.
 
 ## Accessibility
 
-- `DateField.Root` has `role="group"`. Its name is the label of the field, or the elements of `aria-labelledby`.
-- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`. A month has its name as `aria-valuetext`, a day period has its text, and a segment with no number has `Empty`.
+- `DateField.Root` has `role="group"`. Its name is the label of a `Field`, the name of `aria-label` or `aria-labelledby`, or else the `<label>` of the first segment.
+- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`. A month has its name as `aria-valuetext`, and a day period its text. An empty segment has no `aria-valuenow`.
 - A separator has `aria-hidden`. An era and a time zone name do not.
-- Each segment selects its whole text when it gets the focus.
-- The default `Clear` label is in English. Give the button an `aria-label` to change it.
+- Each segment selects its whole text when it gets the focus or a press.
 
 ## API reference
 

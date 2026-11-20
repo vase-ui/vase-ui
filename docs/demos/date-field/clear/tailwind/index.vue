@@ -28,7 +28,7 @@ const defaultValue = Temporal.PlainDate.from('2026-11-21');
       </DateField.Input>
       <DateField.Clear
         aria-label="Clear the return date"
-        class="ml-1 flex size-8 items-center justify-center border border-neutral-950 bg-white text-neutral-950 hover:not-data-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:focus-visible:outline-white dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400"
+        class="ml-1 flex size-8 items-center justify-center border border-neutral-950 bg-white text-neutral-950 hover:not-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 disabled:border-neutral-500 disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-disabled:bg-neutral-800 dark:focus-visible:outline-white dark:disabled:border-neutral-400 dark:disabled:text-neutral-400"
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
           <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" />

@@ -49,7 +49,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled], [data-active], [data-selected]) {
+    &:hover:not(:disabled, [aria-pressed='true']) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -68,8 +68,7 @@
     }
   }
 
-  &[data-active],
-  &[data-selected] {
+  &[aria-pressed='true'] {
     background-color: oklch(14.5% 0 0deg);
     color: white;
 
@@ -79,7 +78,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:disabled {
     color: oklch(55.6% 0 0deg);
     border-color: oklch(55.6% 0 0deg);
 

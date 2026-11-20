@@ -8,11 +8,11 @@ const id = useId();
 const defaultValue = Temporal.PlainTime.from('10:30');
 
 const buttonClass =
-  'flex h-10 min-w-10 items-center justify-center border border-neutral-950 bg-white px-2 leading-6 text-neutral-950 tabular-nums select-none focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:border-neutral-500 data-disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-visible:outline-white dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400';
+  'flex h-10 min-w-10 items-center justify-center border border-neutral-950 bg-white px-2 leading-6 text-neutral-950 tabular-nums select-none focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:border-neutral-500 disabled:text-neutral-500 dark:border-white dark:bg-neutral-950 dark:text-white dark:focus-visible:outline-white dark:disabled:border-neutral-400 dark:disabled:text-neutral-400';
 const triggerClass =
-  'text-xl hover:not-data-disabled:not-data-active:bg-neutral-100 data-active:bg-neutral-950 data-active:not-data-disabled:text-white dark:hover:not-data-disabled:not-data-active:bg-neutral-800 dark:data-active:bg-white dark:data-active:not-data-disabled:text-neutral-950';
+  'text-xl hover:not-disabled:not-aria-pressed:bg-neutral-100 aria-pressed:bg-neutral-950 aria-pressed:not-disabled:text-white dark:hover:not-disabled:not-aria-pressed:bg-neutral-800 dark:aria-pressed:bg-white dark:aria-pressed:not-disabled:text-neutral-950';
 const dayPeriodClass =
-  'text-sm hover:not-data-disabled:not-data-selected:bg-neutral-100 data-selected:bg-neutral-950 data-selected:not-data-disabled:text-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:data-selected:bg-white dark:data-selected:not-data-disabled:text-neutral-950';
+  'text-sm hover:not-disabled:not-aria-pressed:bg-neutral-100 aria-pressed:bg-neutral-950 aria-pressed:not-disabled:text-white dark:hover:not-disabled:not-aria-pressed:bg-neutral-800 dark:aria-pressed:bg-white dark:aria-pressed:not-disabled:text-neutral-950';
 </script>
 
 <template>

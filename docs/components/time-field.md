@@ -52,7 +52,7 @@ Base UI has no time field. This one follows the [spinbutton pattern](https://www
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, or give `TimeField.Root` an `aria-labelledby`. A `<label>` element outside a `Field` does not name the group. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the field in a `Field` with a `Field.Label`, give `TimeField.Root` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of the root. A native label names the group after the mount, so the server HTML has no name for it. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 
@@ -60,13 +60,13 @@ Import the component and assemble its parts:
 
 <<< ./time-field/Anatomy.vue
 
-`TimeField.Root` renders its element and a hidden `<input>` after it. The hidden input has the `name` of the field and the native validation, so a form submits the time one time. The segments have no `name`. Read `inputElement` on the root ref after mount to get the hidden input.
+`TimeField.Root` renders one `<div role="group">`. Its last child is the form input: a hidden native `<input>` with the `name`, the value and the native validation of the field, so a form submits the time one time. The segments have no `name`. Read `inputElement` on the root ref after mount to get the form input. Each attribute of the root goes to the group, but `id` goes to the first segment.
 
 `TimeField.Input` renders the layout of the locale: a segment for each part of the time, and the text between them. With no `segment` slot, it renders each part with no class. Use the slot to give a class to a segment and to a separator. The slot gets each part of the layout and its `index`. A part that the user edits has `editable: true`. The other parts have `editable: false` and a `text`: a separator, or the name of a time zone.
 
-A segment is an `<input>`. The part sets `field-sizing: content` in the `style` of the segment, so the box of a segment follows its text and your styles need no rule for its width. A `width` or a `min-width` in your styles still applies. Chrome and Edge before 123, Firefox before 152 and Safari before 26.2 do not have `field-sizing`. In those browsers the `size` attribute gives the width, and that width is too narrow for `AM` in some fonts. Give the segment a width if you support them. To remove the declaration, see [Inline style attributes](/utils/csp-provider#inline-style-attributes).
+A segment is an `<input type="text" role="spinbutton">`. Its `size` attribute fits its greatest number and its placeholder. To make the box follow the text, add `field-sizing: content` to your styles. Chrome 123, Firefox 152 and Safari 26.2 have it, and an older browser keeps the width of `size`.
 
-Because of the hidden input, `TimeField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+To render your own element for a part, use its `element` slot. The slot of `TimeField.Input` also gets the `segments` of the layout to render.
 
 ## Value
 
@@ -152,27 +152,25 @@ A 12-hour cycle adds a day period segment. The locale sets where the segment goe
 
 ### Limits and steps
 
-Give `minTime` and `maxTime` to limit the time. The hidden input has the type `time`, so an earlier time gives `rangeUnderflow` and a later time gives `rangeOverflow`. The `step` prop is the `step` of the hidden input, in seconds. A time that is not a multiple of the step from `minTime`, or from midnight with no `minTime`, gives `stepMismatch`. Put the field in a `Field` to show these errors.
+Give `min` and `max` to limit the time. A `max` before `min` gives a range through midnight. The form input of a `Temporal.PlainTime` has the type `time`, so an earlier time gives `rangeUnderflow` and a later time gives `rangeOverflow`. The `step` prop is the step of the time, in seconds. A time that is not a multiple of the step from `min`, or from midnight with no `min`, gives `stepMismatch`. Put the field in a `Field` to show these errors with `Field.Error` and its `match`.
 
-For a value that has a date, the hidden input has the type `datetime-local`, or the type `text` for a value in a time zone. The field then sets a `customError` for a time outside `minTime` and `maxTime`.
+For a value that has a date, the form input has the type `datetime-local` with the date and the time, or the type `text` for a value in a time zone. The field then asks a native `time` input that is not in the document for `min`, `max` and `step`, and sets its failure as a custom error of the form input, with the message of the browser. `Field.Error` with `match` reads it as `rangeUnderflow`, `rangeOverflow` or `stepMismatch`.
 
-A field that has a number in some segments and not in all of them sets a `customError`, for each kind of value.
+A field with some segments empty has the failure `badInput`, as a native time input reports it. Outside a `Field`, `inputElement.validity.customError` is `true` for each failure that the field finds, and `validationMessage` says which.
 
 ### Clear button
 
-`TimeField.Clear` empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. With no default slot and no `#render` slot, it shows `x` and has the `aria-label` `Clear`. Give an `aria-label` to a button whose content has no text, such as an icon or the `x` of the `children` component of the `#render` slot.
+`TimeField.Clear` is a `<button type="button">`. It empties the field and gives the focus to the first segment. It is disabled while the field is empty, disabled or read-only. It has no content and no name of its own, so give it content and an `aria-label` in the language of the page.
+
+The `clear()` method of the root ref empties each segment. It emits `update:modelValue` with `null` when the field had a value, and no `valueChange`.
 
 ## Server render
 
-The field renders with `renderToString`. The server HTML has the segments, the numbers and the hidden input value.
+The field renders with `renderToString`. The server HTML has the segments, their numbers, the literals and the form input.
 
-A server does not know the locale of the visitor. With no `locale` prop, the field uses `en-US` until it mounts, and then the locale of the browser. Give a `locale` prop to render the same layout in each place.
+The locale of the field is its `locale` prop, else the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. The field never reads the locale of the visitor, so the server HTML and the first render of the browser agree. Give the locale of your app to render it.
 
-A server and a browser can have other `Intl` data for the same locale. The layout of the server can then differ from the layout of the browser, also in the number of its parts. The field marks the elements that can differ while it hydrates. After it mounts, the field compares its segments with its layout and makes them again where they differ. The hydration gives no warning.
-
-Digits that a visitor types into a segment before the page hydrates stay in the segment. After the hydration, the segment takes them as typed digits, and the root emits `valueChange` and `update:modelValue` with the new value.
-
-The root also takes a time that a program or the browser writes into its hidden input before the page hydrates. It takes a time that the browser restores after a move back in the history or a reload too. It then emits `valueChange` and `update:modelValue` one time. A `valueChange` listener can thus run after a move back with no action of the visitor.
+A server and a browser can have other `Intl` data for the same locale, such as another hour cycle. The layout of the browser then wins: after the mount, each segment writes its attributes again, and Vue writes the text of each literal. When the layout of the browser has another number of parts, Vue logs one message for a part that compiles to the virtual DOM, `Hydration completed but contains mismatches`, and the DOM is correct.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
@@ -182,23 +180,28 @@ Each segment is a stop of the Tab key. Left and Right swap in a right-to-left do
 
 | Key                | Result                                                                                                           |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`.   |
+| Up, Down           | Adds or takes 1 and wraps in the range of the segment. An empty segment takes its number from `referenceDate`, or from midnight. |
 | Page Up, Page Down | Adds or takes 2 for an hour, and 15 for a minute or a second.                                                    |
 | Home, End          | The least and the greatest number of the segment.                                                                |
 | Digit              | Adds the digit. The focus goes to the next segment when the segment is full, or when no digit can make a number. |
-| Backspace, Delete  | Removes the last digit. Backspace in an empty segment moves to the segment before.                               |
+| Backspace, Delete  | Empties the segment. Backspace in an empty segment moves to the segment before.                                  |
 | Left, Right        | The segment before or after.                                                                                     |
 | A letter           | In a day period segment, selects the period whose text starts with that letter. Up and Down toggle the period.   |
 
-The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments.
+The digits are those of the numbering system of the locale, such as the digits of `ar-EG`. A paste of an ISO 8601 text, or of a text in the layout of the locale, fills the segments. Enter submits the form, as in a native time input. A key with Control, Alt or Meta keeps its native action.
+
+## Styling
+
+The root, `TimeField.Input` and `TimeField.Literal` have the attributes `data-empty`, `data-complete`, `data-disabled`, `data-readonly`, `data-required`, `data-invalid`, `data-valid`, `data-touched`, `data-dirty` and `data-filled`. A literal also has `data-type`. A segment has `data-type`, `data-empty`, `data-complete`, `data-valid`, `data-touched`, `data-dirty` and `data-filled`. For the rest of its state, use CSS: `:placeholder-shown`, `:focus`, `:disabled`, `:read-only`, `[aria-required="true"]` and `[aria-invalid="true"]`. `TimeField.Clear` matches `:disabled`. A field has the focus when it matches `:focus-within`.
+
+The placeholder of each segment is `--`. A `placeholder` attribute on `TimeField.Segment` wins.
 
 ## Accessibility
 
-- `TimeField.Root` has `role="group"`. Its name is the label of the field, or the elements of `aria-labelledby`.
-- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`, and its `aria-valuetext` is the name of the day period, or `Empty`.
+- `TimeField.Root` has `role="group"`. Its name is the label of a `Field`, the name of `aria-label` or `aria-labelledby`, or else the `<label>` of the first segment.
+- A segment is an `<input>` with `role="spinbutton"`. Its name comes from `Intl.DisplayNames`. A day period has its text as `aria-valuetext`. An empty segment has no `aria-valuenow`.
 - A separator has `aria-hidden`. The name of a time zone does not.
-- Each segment selects its whole text when it gets the focus.
-- The default `Clear` label is in English. Give the button an `aria-label` to change it.
+- Each segment selects its whole text when it gets the focus or a press.
 
 ## API reference
 
