@@ -5,9 +5,15 @@ import { useLocale } from '../locale-provider/part';
 
 export type { Filter };
 
-export interface AutocompleteFilterOptions extends GetFilterParameters {}
+export interface AutocompleteFilterOptions extends GetFilterParameters {
+  /**
+   * The locale of the comparison. Without it, the filter uses the locale of the nearest
+   * `LocaleProvider`, else `'en-US'`.
+   */
+  locale?: Intl.LocalesArgument | undefined;
+}
 
-export interface ComboboxFilterOptions extends GetFilterParameters {
+export interface ComboboxFilterOptions extends AutocompleteFilterOptions {
   /**
    * The root selects more than one value. The rule of `value` then does not apply.
    * @default false

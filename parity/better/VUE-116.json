@@ -5,6 +5,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/label/ComboboxLabel.tsx#L38",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useRenderElement.tsx#L171"
   ],
-  "behavior": "A click on `Combobox.Label` focuses the control of its root: the input, or the trigger while the input is inside the popup. The id of the trigger element does not matter. Base UI finds the trigger by an id: the control id of the field, or the id of the trigger element with no field. The props of the `render` element win over those of the part, so its `id` replaces the id of the trigger. In a field, the click then focuses nothing when the `render` element has another id than the control id of the field. With no field, it focuses nothing when the `render` element has an empty id.",
+  "behavior": "A click on `Combobox.Label` focuses the control of its root: the input, or the trigger while the input is inside the popup. The id of the trigger element does not matter. Base UI finds the trigger by an id: the control id of the field, or the id of the trigger element with no field. A custom element of the trigger can give another id. In a field, the click then focuses nothing when that id differs from the control id of the field. With no field, the click focuses nothing when the id is empty.",
   "dueWith": "packages/react/src/combobox/label/ComboboxLabel.tsx"
 }

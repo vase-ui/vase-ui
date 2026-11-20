@@ -146,7 +146,7 @@ export interface ComboboxSharedRootProps<Item> {
    */
   required?: boolean | undefined;
   /**
-   * The user cannot change the value.
+   * The user cannot change the value, and the form gets no value.
    * @default false
    */
   disabled?: boolean | undefined;
@@ -169,17 +169,17 @@ export interface ComboboxRootProps<
   extends ComboboxSharedRootProps<Item>, AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The selected value. `v-model` binds it. With `multiple`, `null` is no value. */
   modelValue?: ComboboxValue<Value, Multiple> | null | undefined;
-  /** The value at the mount of an uncontrolled root. */
+  /** The value at the mount of an uncontrolled root. A native reset of the form gives it back. */
   defaultValue?: ComboboxValue<Value, Multiple> | null | undefined;
   /** The text of the input. `v-model:input-value` binds it. */
   inputValue?: string | undefined;
   /**
    * The text at the mount, when the text is uncontrolled. With neither, the text of a single
-   * combobox starts as the label of its value.
+   * combobox starts as the label of its value. A native reset of the form gives it back.
    */
   defaultInputValue?: string | undefined;
   /**
-   * The user selects more than one value.
+   * The user selects more than one value. The form data then has one entry for each selected value.
    * @default false
    */
   multiple?: (Multiple & boolean) | undefined;
@@ -191,7 +191,9 @@ export interface ComboboxRootProps<
   itemToStringValue?: ((itemValue: Value) => string) | undefined;
   /**
    * The autofill purpose of the hidden text input, such as `'country-name'`. The input has no
-   * name, so a browser reads its purpose from this attribute.
+   * name, so a browser reads its purpose from this attribute. Without `multiple`, an autofill selects
+   * the item whose value or label is the filled text. The labels come from `items`, else from the
+   * items of a popup that `keepMounted` keeps.
    */
   autocomplete?: string | undefined;
   /**
@@ -210,6 +212,7 @@ export interface ComboboxRootState {}
 
 export interface ComboboxLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the label. The default is a generated id. */
   id?: string | undefined;
 }
 
@@ -235,6 +238,10 @@ type InputAttributes = Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomple
 type ChipAttributes = Omit<HTMLAttributes, 'as'> & AriaDescriptionAttribute;
 
 export interface ComboboxInputProps extends /* @vue-ignore */ InputAttributes {
+  /**
+   * The `id` of the input. The default is the control id of the field, else a generated id. In the
+   * popup, the default is a generated id.
+   */
   id?: string | undefined;
   /**
    * The user cannot use the input.
@@ -267,6 +274,10 @@ export interface ComboboxInputGroupState extends FieldState {
 
 export interface ComboboxTriggerProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /**
+   * The `id` of the trigger. When the trigger is the control, the default is the control id of the
+   * field, else a generated id. Beside an input, the default is a generated id.
+   */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -357,6 +368,7 @@ export interface ComboboxPositionerState {
 
 export interface ComboboxPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the popup. The default is a generated id while the trigger is the control. */
   id?: string | undefined;
   /**
    * The element that gets the focus at the open, while the trigger is the control. By default: the
@@ -381,6 +393,7 @@ export interface ComboboxArrowState {
 
 export interface ComboboxListProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the list. The default is a generated id. */
   id?: string | undefined;
 }
 
@@ -390,6 +403,7 @@ export interface ComboboxListState {
 
 export interface ComboboxItemProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the item. The default is a generated id. */
   id?: string | undefined;
   /**
    * The value of a pick.
@@ -422,6 +436,7 @@ export interface ComboboxGroupState {}
 
 export interface ComboboxGroupLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the label, which names its group. The default is a generated id. */
   id?: string | undefined;
 }
 
@@ -429,7 +444,10 @@ export interface ComboboxGroupLabelState {}
 
 export interface ComboboxSeparatorProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
-  /** @default 'horizontal' */
+  /**
+   * The orientation of the separator.
+   * @default 'horizontal'
+   */
   orientation?: Orientation | undefined;
 }
 

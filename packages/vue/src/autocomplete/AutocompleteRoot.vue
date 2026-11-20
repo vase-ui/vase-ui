@@ -36,7 +36,10 @@ const props = withDefaults(defineProps<AutocompleteRootProps<Item>>(), {
   readonly: false,
 });
 const emit = defineEmits<{
-  /** The text changes. `details.cancel()` keeps the text as it was. */
+  /**
+   * The text changes. `details.cancel()` keeps the text as it was. An action that gives the text
+   * that the root has, such as a press of the item with that text, sends no event.
+   */
   valueChange: [value: string, details: AutocompleteRootChangeEventDetails];
   /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: string];
@@ -162,8 +165,10 @@ const setTextInput = (input: unknown) =>
   (context.textInput.value = input as HTMLInputElement | null);
 
 defineExpose({
+  /** Closes the popup with the reason `'imperative-action'`. */
   close,
   element,
+  /** The visually hidden text input of the form, while the root renders one. */
   get inputElement() {
     return context.textInput.value;
   },

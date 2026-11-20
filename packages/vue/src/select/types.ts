@@ -62,7 +62,8 @@ export type SelectOutputValue<Value, Multiple extends boolean | undefined> = Mul
 export interface SelectRootProps<Value = any, Multiple extends boolean | undefined = false>
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   /**
-   * The value. `v-model` binds it. With `multiple`, an array, and `null` is the empty array.
+   * The value. `v-model` binds it. With `multiple`, an array, and `null` is the empty array. A
+   * native reset of the form gives back the value of the mount.
    */
   modelValue?: SelectValue<Value, Multiple> | null | undefined;
   /**
@@ -109,14 +110,21 @@ export interface SelectRootProps<Value = any, Multiple extends boolean | undefin
   isItemEqualToValue?: ((itemValue: Value, value: Value) => boolean) | undefined;
   /** The `id` of the trigger, when the trigger has no `id`. */
   id?: string | undefined;
-  /** The name of the value in the form data. A `Field.Root` gives its own name. */
+  /**
+   * The name of the value in the form data. With `multiple`, the form data has one entry for each
+   * selected value. A `Field.Root` gives its own name.
+   */
   name?: string | undefined;
   /** The `id` of the form that the inputs belong to. */
   form?: string | undefined;
-  /** The `autocomplete` of the input that the browser fills. */
+  /**
+   * The `autocomplete` of the visually hidden text input. The browser fills that input. Without
+   * `multiple`, the select then takes the item whose value, label or text is the filled text.
+   */
   autocomplete?: string | undefined;
   /**
-   * The form refuses a submit while the select has no value.
+   * The form refuses a submit while the select has no value. A visually hidden text input has the
+   * constraint validation.
    * @default false
    */
   required?: boolean | undefined;
@@ -146,6 +154,7 @@ export interface SelectFieldState {
 
 export interface SelectLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the label. The default is a generated id. */
   id?: string | undefined;
 }
 
@@ -229,6 +238,7 @@ export interface SelectPositionerState {
 
 export interface SelectPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the popup. The default is a generated id. */
   id?: string | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
@@ -255,6 +265,7 @@ export interface SelectArrowState {
 
 export interface SelectListProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the list. The default is a generated id. */
   id?: string | undefined;
 }
 
@@ -292,6 +303,7 @@ export interface SelectGroupState {}
 
 export interface SelectGroupLabelProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The `id` of the label, which names its group. The default is a generated id. */
   id?: string | undefined;
 }
 

@@ -37,11 +37,18 @@ const props = withDefaults(defineProps<ComboboxRootProps<Value, Multiple, Item>>
   readonly: false,
 });
 const emit = defineEmits<{
-  /** The user changes the value. `details.cancel()` keeps the value as it was. */
+  /**
+   * The user changes the value. `details.cancel()` keeps the value as it was. An action that gives
+   * the value that the root has sends no event, such as a pick of the selected item without
+   * `multiple`.
+   */
   valueChange: [value: ValueChange, details: ComboboxRootChangeEventDetails];
   /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: ValueChange];
-  /** The text of the input changes. `details.cancel()` keeps the text as it was. */
+  /**
+   * The text of the input changes. `details.cancel()` keeps the text as it was. An action that gives
+   * the text that the input has sends no event.
+   */
   inputValueChange: [text: string, details: ComboboxRootChangeEventDetails];
   /** Comes after `inputValueChange`, unless a listener cancels it. `v-model:input-value` uses it. */
   'update:inputValue': [text: string];
@@ -170,8 +177,10 @@ const setTextInput = (input: unknown) =>
   (context.textInput.value = input as HTMLInputElement | null);
 
 defineExpose({
+  /** Closes the popup with the reason `'imperative-action'`. */
   close,
   element,
+  /** The visually hidden text input of the form, while the root renders one. */
   get inputElement() {
     return context.textInput.value;
   },

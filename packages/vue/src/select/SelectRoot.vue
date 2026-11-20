@@ -30,7 +30,10 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   disabled: false,
 });
 const emit = defineEmits<{
-  /** The user changes the value. `details.cancel()` keeps the value as it was. */
+  /**
+   * The user changes the value. `details.cancel()` keeps the value as it was. Without `multiple`, a
+   * press of the selected item sends no event.
+   */
   valueChange: [value: SelectOutputValue<Value, Multiple>, details: SelectRootChangeEventDetails];
   /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: SelectOutputValue<Value, Multiple>];
@@ -94,7 +97,13 @@ const inputs = useSelectForm(
   },
 );
 
-defineExpose({ element, inputElement: input, close });
+defineExpose({
+  element,
+  /** The visually hidden text input of the form. */
+  inputElement: input,
+  /** Closes the popup with the reason `'imperative-action'`. */
+  close,
+});
 </script>
 
 <template>
