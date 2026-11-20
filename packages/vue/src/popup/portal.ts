@@ -60,8 +60,12 @@ export function usePopupPortal(
       target.value !== null &&
       (root.open || root.leaving || root.keepMounted),
   );
-  const sentinels = computed(() => root.open && options.takesFocus() && !!root.popup);
-  const blocks = computed(() => root.open && layer.block);
+  // The server HTML of a disabled portal has no sentinels and no block, because the server has no
+  // popup element and no layer.
+  const sentinels = computed(
+    () => mounted.value && root.open && options.takesFocus() && !!root.popup,
+  );
+  const blocks = computed(() => mounted.value && root.open && layer.block);
 
   const blockElement = shallowRef<HTMLElement | null>(null);
   const hole = shallowRef<DOMRect>();

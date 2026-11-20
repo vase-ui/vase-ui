@@ -1,7 +1,7 @@
 import { onScopeDispose, watch, type Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
-import { ownerDocument } from '../common/owner';
+import { ownerDocument, ownerWindow } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
 import type { PopupRoot } from './root';
 
@@ -56,7 +56,9 @@ export function usePopupHover(
       if (!element || !current || !options.enabled()) return;
       if (element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true') return;
       current.request(true, 'trigger-hover', event, element);
-      if (current.open && current.reason === 'trigger-hover') openedAt = event.timeStamp;
+      if (current.open && current.reason === 'trigger-hover') {
+        openedAt = ownerWindow(element).performance.now();
+      }
     });
   }
 

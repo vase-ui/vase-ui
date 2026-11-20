@@ -298,7 +298,14 @@ export function usePlacement(
     ];
   });
 
-  const floating = useFloating(reference, options.positioner, {
+  // Vapor sets a template ref before it inserts the element. Floating UI reads the ancestors of the
+  // positioner, so the positioner goes to Floating UI after the render.
+  const positioner = shallowRef<HTMLElement | null>(null);
+  watch(options.positioner, (element) => (positioner.value = element), {
+    flush: 'post',
+    immediate: true,
+  });
+  const floating = useFloating(reference, positioner, {
     placement,
     strategy: () => props.positionMethod,
     middleware,
