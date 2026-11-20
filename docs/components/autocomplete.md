@@ -62,7 +62,6 @@ An input that suggests options as you type.
 
 - **Avoid when selection state is needed**: Use [Combobox](/components/combobox) in place of Autocomplete if the selection should be remembered and the input value cannot be custom. Unlike Combobox, the input of Autocomplete can contain free-form text, as its suggestions only _optionally_ autocomplete the text.
 - **Form controls must have an accessible name**: Create it with a `<label>` element or with [Field](/components/field). See the [forms guide](/handbook/forms).
-- **Animations**: Put `<Autocomplete.Popup>` in a `<Transition>` to animate it. A popup in a portal with `keepMounted` stays in the DOM with `hidden`, so a style on `[hidden]` animates it.
 
 ## Anatomy
 
@@ -72,13 +71,25 @@ Import the component and assemble its parts:
 
 Bind the text with `v-model`. An inline completion that the input shows is not the value. The root emits no `valueChange` and no `update:modelValue` for an action that gives the text that it has, such as a press of the item with that text.
 
-`Autocomplete.Root` renders a `<div>`. The input is the form control: it has the `name` and the text. When the input is in the popup, the root holds the inputs of its form after its mount.
+`Autocomplete.Root` renders a `<div>` (see [Forms](#forms)).
 
 ## Item values
 
 Each `Autocomplete.Item` takes a `value` prop that identifies it. Pass the item being rendered, so that props like `itemToStringValue` receive it.
 
 To render each filtered item, give `Autocomplete.List` the `item` slot. The slot gets `{ item, index }`.
+
+## Animation
+
+The popup and the backdrop are in the DOM only while the autocomplete is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. With `keepMounted` on `Autocomplete.Portal`, the closed popup stays in the DOM with `hidden` and `inert`, so animate it with CSS on `[hidden]`. See [Animation](/components/combobox#animation) of Combobox.
+
+## Styling
+
+The parts have the selectors of [Combobox](/components/combobox#styling), but an item has no `[aria-selected]`. The input is a text input: select its states with `:read-only`, `:required` and `:disabled`.
+
+## Forms
+
+The input is the form control: it has the `name`, `required` and the text. When the input is in the popup, the root renders an `<input type="hidden">` with the `name` and a visually hidden text input for `required`, after its mount. The server HTML thus has one input with the `name`.
 
 ## Examples
 

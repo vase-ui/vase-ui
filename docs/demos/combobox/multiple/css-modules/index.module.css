@@ -222,12 +222,12 @@
     border: 1px solid white;
     box-shadow: none;
   }
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.95);
-  }
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
 .Item {

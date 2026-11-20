@@ -74,6 +74,8 @@ function groupProduce(items: Produce[]): ProduceGroup[] {
 }
 
 const groupedProduce: ProduceGroup[] = groupProduce(produceData);
+
+const popupHiddenClass = 'scale-95 opacity-0';
 </script>
 
 <template>
@@ -111,43 +113,45 @@ const groupedProduce: ProduceGroup[] = groupProduce(produceData);
 
     <Combobox.Portal>
       <Combobox.Positioner class="outline-none" :side-offset="4">
-        <Combobox.Popup
-          class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-        >
-          <Combobox.Empty>
-            <div class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
-              No produce found.
-            </div>
-          </Combobox.Empty>
-          <Combobox.List
-            class="max-h-[min(22.5rem,var(--available-height))] overflow-auto overscroll-contain py-1 scroll-py-1 outline-0"
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup
+            class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <template #item="{ item: group }">
-              <Combobox.Group class="block pb-2 last:pb-0">
-                <Combobox.GroupLabel
-                  class="py-2 pr-2 pl-8 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
-                >
-                  {{ group.value }}
-                </Combobox.GroupLabel>
-                <template v-for="item in group.items" :key="item.value">
-                  <Combobox.Item
-                    v-slot="{ state }"
-                    class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
-                    :value="item"
+            <Combobox.Empty>
+              <div class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
+                No produce found.
+              </div>
+            </Combobox.Empty>
+            <Combobox.List
+              class="max-h-[min(22.5rem,var(--available-height))] overflow-auto overscroll-contain py-1 scroll-py-1 outline-0"
+            >
+              <template #item="{ item: group }">
+                <Combobox.Group class="block pb-2 last:pb-0">
+                  <Combobox.GroupLabel
+                    class="py-2 pr-2 pl-8 text-sm leading-4 text-neutral-500 select-none dark:text-neutral-400"
                   >
-                    <span
-                      v-if="state.selected"
-                      class="col-start-1 flex items-center justify-center"
+                    {{ group.value }}
+                  </Combobox.GroupLabel>
+                  <template v-for="item in group.items" :key="item.value">
+                    <Combobox.Item
+                      v-slot="{ state }"
+                      class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+                      :value="item"
                     >
-                      <CheckIcon />
-                    </span>
-                    <span class="col-start-2">{{ item.label }}</span>
-                  </Combobox.Item>
-                </template>
-              </Combobox.Group>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+                      <span
+                        v-if="state.selected"
+                        class="col-start-1 flex items-center justify-center"
+                      >
+                        <CheckIcon />
+                      </span>
+                      <span class="col-start-2">{{ item.label }}</span>
+                    </Combobox.Item>
+                  </template>
+                </Combobox.Group>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

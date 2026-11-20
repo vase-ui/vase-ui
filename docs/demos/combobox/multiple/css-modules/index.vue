@@ -94,21 +94,27 @@ const langs: ProgrammingLanguage[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup">
-          <Combobox.Empty>
-            <div :class="styles.Empty">No languages found.</div>
-          </Combobox.Empty>
-          <Combobox.List>
-            <template #item="{ item: language }">
-              <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="language">
-                <span v-if="state.selected" :class="styles.ItemIndicator">
-                  <CheckIcon />
-                </span>
-                <span :class="styles.ItemText">{{ language.value }}</span>
-              </Combobox.Item>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+        <Transition
+          :enter-from-class="styles.PopupHidden"
+          :leave-to-class="styles.PopupHidden"
+          appear
+        >
+          <Combobox.Popup :class="styles.Popup">
+            <Combobox.Empty>
+              <div :class="styles.Empty">No languages found.</div>
+            </Combobox.Empty>
+            <Combobox.List>
+              <template #item="{ item: language }">
+                <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="language">
+                  <span v-if="state.selected" :class="styles.ItemIndicator">
+                    <CheckIcon />
+                  </span>
+                  <span :class="styles.ItemText">{{ language.value }}</span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

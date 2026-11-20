@@ -288,39 +288,45 @@ const allUsers: DirectoryUser[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
-          <div :class="styles.Viewport">
-            <Combobox.Status>
-              <div v-if="isPending || statusText" :class="styles.Status">
-                <template v-if="isPending">
-                  <span :class="styles.Spinner" aria-hidden="true" />
-                  Searching…
-                </template>
-                <template v-else>{{ statusText }}</template>
-              </div>
-            </Combobox.Status>
-            <Combobox.Empty>
-              <div v-if="emptyMessage" :class="styles.Empty">{{ emptyMessage }}</div>
-            </Combobox.Empty>
-            <Combobox.List>
-              <template #item="{ item: user }">
-                <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="user">
-                  <span v-if="state.selected" :class="styles.ItemIndicator">
-                    <CheckIcon />
-                  </span>
-                  <span :class="styles.ItemText">
-                    <span :class="styles.ItemTitle">{{ user.name }}</span>
-                    <span :class="styles.ItemEmail">{{ user.email }}</span>
-                    <span :class="styles.ItemSubtitle">
-                      <span>@{{ user.username }}</span>
-                      <span>{{ user.title }}</span>
+        <Transition
+          :enter-from-class="styles.PopupHidden"
+          :leave-active-class="styles.PopupInstant"
+          appear
+        >
+          <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
+            <div :class="styles.Viewport">
+              <Combobox.Status>
+                <div v-if="isPending || statusText" :class="styles.Status">
+                  <template v-if="isPending">
+                    <span :class="styles.Spinner" aria-hidden="true" />
+                    Searching…
+                  </template>
+                  <template v-else>{{ statusText }}</template>
+                </div>
+              </Combobox.Status>
+              <Combobox.Empty>
+                <div v-if="emptyMessage" :class="styles.Empty">{{ emptyMessage }}</div>
+              </Combobox.Empty>
+              <Combobox.List>
+                <template #item="{ item: user }">
+                  <Combobox.Item v-slot="{ state }" :class="styles.Item" :value="user">
+                    <span v-if="state.selected" :class="styles.ItemIndicator">
+                      <CheckIcon />
                     </span>
-                  </span>
-                </Combobox.Item>
-              </template>
-            </Combobox.List>
-          </div>
-        </Combobox.Popup>
+                    <span :class="styles.ItemText">
+                      <span :class="styles.ItemTitle">{{ user.name }}</span>
+                      <span :class="styles.ItemEmail">{{ user.email }}</span>
+                      <span :class="styles.ItemSubtitle">
+                        <span>@{{ user.username }}</span>
+                        <span>{{ user.title }}</span>
+                      </span>
+                    </span>
+                  </Combobox.Item>
+                </template>
+              </Combobox.List>
+            </div>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

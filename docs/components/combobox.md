@@ -64,7 +64,6 @@ An input combined with a list of predefined items to select.
 - **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
 - **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
 - **Form controls must have an accessible name**: Label the control with a native `<label>`, `<Field.Label>` or `<Combobox.Label>`. `<Combobox.Label>` names the control: the input, or the trigger when the input is in the popup. When no label is visible, give the control an `aria-label`. See the [forms guide](/handbook/forms).
-- **Animations**: Put `<Combobox.Popup>` in a `<Transition>` to animate it. A popup in a portal with `keepMounted` stays in the DOM with `hidden`, so a style on `[hidden]` animates it.
 
 ## Anatomy
 
@@ -72,13 +71,11 @@ Import the component and assemble its parts:
 
 <<< ./combobox/Anatomy.vue
 
-`Combobox.Root` renders a `<div>`. The inputs of its form are its last children. A combobox with a `name` submits its value with the form. With `multiple`, it submits one entry for each selected item. A hidden text input with no name has the constraint validation and takes an autofill. Give `autocomplete` to the root for an autofill.
+`Combobox.Root` renders a `<div>`. The inputs of its form are its last children (see [Forms](#forms)).
 
 Bind the value with `v-model`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:modelValue`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event. Without `multiple`, a pick of the selected item emits no `valueChange` and no `update:modelValue`. For the text that the input has, the root emits no `inputValueChange` and no `update:inputValue`. A press of `Combobox.Clear`, or Escape in a closed input, emits no `valueChange` and no `update:modelValue` when the combobox has no value.
 
 An item shows its selected state in its default slot: `<Combobox.Item v-slot="{ state }">` gives `state.selected`. A style can read `[aria-selected="true"]` on the item.
-
-The typeahead of a closed trigger and an autofill by the label of an item read the labels of `items`, or the items of a popup that stays in the DOM (`keepMounted` on the portal).
 
 ## Item values
 
@@ -87,6 +84,54 @@ Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item be
 <<< ./combobox/ItemObjects.vue{19}
 
 That item is the selected value. The `modelValue` and `defaultValue` props take it, and `valueChange` gives it. To store IDs instead, see [Value selection with IDs](#value-selection-with-ids).
+
+## Animation
+
+The popup and the backdrop are in the DOM only while the combobox is open. Put each of them in a `<Transition appear>`, and animate them with the classes of `<Transition>`. The portal renders its content at the open, so `<Transition>` needs `appear` to run the enter of the first open.
+
+With `keepMounted` on `Combobox.Portal`, the closed popup and backdrop stay in the DOM with `hidden` and `inert`. Vue then runs no transition, so animate them with CSS on `[hidden]`. The list and the text of an input in the popup stay as they were at the close until the next open.
+
+`Combobox.Clear` is in the DOM only while the combobox has a value. Put it in a `<Transition>` to animate it. With `keepMounted`, it stays with `hidden`.
+
+## Styling
+
+Select the states of the parts with these selectors:
+
+| Selector                                                          | On                                                           | State                                                               |
+| ----------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `[aria-expanded="true"]`                                          | input, trigger                                               | The popup is open.                                                  |
+| `[data-popup-open]`                                               | input group, clear                                           | The popup is open.                                                  |
+| `[data-popup-side]`                                               | input, input group, trigger                                  | The side of the open popup.                                         |
+| `[data-list-empty]`                                               | input, input group, trigger                                  | The list has no item to show.                                       |
+| `[data-placeholder]`                                              | input group, trigger                                         | The combobox has no value.                                          |
+| `:read-only`, `[data-readonly]`                                   | input; input group, trigger                                  | The combobox is read-only.                                          |
+| `[aria-required="true"]`, `[data-required]`                       | input; trigger                                               | The combobox needs a value.                                         |
+| `:disabled`, `[data-disabled]`                                    | input, trigger, clear, chip remove; input group, label, chip | The part is disabled.                                               |
+| `[aria-invalid="true"]`, `[data-invalid]`                         | the control; the other parts in a field                      | The field is invalid.                                               |
+| `[data-touched]`, `[data-dirty]`, `[data-valid]`, `[data-filled]` | the parts in a field                                         | The state of the field.                                             |
+| `[data-highlighted]`                                              | item                                                         | The item has the highlight.                                         |
+| `[aria-selected="true"]`                                          | item                                                         | The item is selected.                                               |
+| `[aria-disabled="true"]`                                          | item                                                         | The item is disabled.                                               |
+| `[data-side]`, `[data-align]`                                     | positioner, popup, arrow                                     | The side of the anchor and the alignment of the popup.              |
+| `[data-anchor-hidden]`                                            | positioner, popup                                            | The anchor is out of view.                                          |
+| `[data-empty]`                                                    | positioner, popup, list                                      | The list has no item to show.                                       |
+| `[data-uncentered]`                                               | arrow                                                        | The arrow cannot point at the center of the anchor.                 |
+| `[data-orientation]`                                              | separator                                                    | `horizontal` or `vertical`.                                         |
+| `[hidden]`                                                        | popup, backdrop, clear                                       | The part stays in the DOM with `keepMounted`, and it does not show. |
+
+The positioner has the CSS variables `--anchor-width`, `--anchor-height`, `--available-width`, `--available-height` and `--transform-origin`, as the positioner of [Popover](/components/popover#styling).
+
+## Forms
+
+`Combobox.Root` renders the inputs of its form after its parts. With a `name`, it submits its value in an `<input type="hidden">`. With `multiple`, it submits one input for each selected item. A disabled combobox submits nothing.
+
+A visually hidden text input with no name has the constraint validation of `required`. It also takes an autofill of the browser, and selects the item whose value or label is the text. The input has no name, so give `autocomplete` to the root for an autofill, such as `autocomplete="country-name"`.
+
+A native reset of the form puts back `defaultValue` and `defaultInputValue`. The root then emits `update:modelValue` and `update:inputValue`, and no change event.
+
+## Typeahead and autofill
+
+A typed character on a closed trigger that is the control selects the next item whose label starts with the typed text. The typeahead and an autofill read the labels of `items`, or of the items of a popup that stays in the DOM (`keepMounted` on `Combobox.Portal`). The popup is not in the DOM before its first open. So with neither, they find no item.
 
 ## Examples
 

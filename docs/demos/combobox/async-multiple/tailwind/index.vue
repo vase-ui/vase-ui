@@ -272,6 +272,8 @@ const allUsers: DirectoryUser[] = [
     title: 'DevOps Engineer',
   },
 ];
+
+const popupHiddenClass = 'scale-95 opacity-0';
 </script>
 
 <template>
@@ -331,61 +333,63 @@ const allUsers: DirectoryUser[] = [
 
     <Combobox.Portal>
       <Combobox.Positioner class="outline-none" :side-offset="4">
-        <Combobox.Popup
-          class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-          :aria-busy="isPending || undefined"
-        >
-          <div
-            class="max-h-[min(var(--available-height),24.5rem)] overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1"
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup
+            class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
+            :aria-busy="isPending || undefined"
           >
-            <Combobox.Status>
-              <div
-                v-if="isPending || statusText"
-                class="flex items-center gap-2 py-1 pr-5 pl-2 text-sm leading-5 text-neutral-500 dark:text-neutral-400"
-              >
-                <template v-if="isPending">
-                  <span
-                    class="inline-block size-3 animate-[spin_0.75s_linear_infinite] rounded-full border border-current border-r-transparent"
-                    aria-hidden="true"
-                  />
-                  Searching…
-                </template>
-                <template v-else>{{ statusText }}</template>
-              </div>
-            </Combobox.Status>
-            <Combobox.Empty>
-              <div
-                v-if="emptyMessage"
-                class="py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"
-              >
-                {{ emptyMessage }}
-              </div>
-            </Combobox.Empty>
-            <Combobox.List>
-              <template #item="{ item: user }">
-                <Combobox.Item
-                  v-slot="{ state }"
-                  class="grid cursor-default grid-cols-[1rem_1fr] items-start gap-2 px-2 py-2 text-sm leading-[1.2rem] outline-none select-none [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-neutral-950 [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-100 dark:[@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:before:bg-neutral-800"
-                  :value="user"
+            <div
+              class="max-h-[min(var(--available-height),24.5rem)] overflow-y-auto overscroll-contain py-1 scroll-pt-1 scroll-pb-1"
+            >
+              <Combobox.Status>
+                <div
+                  v-if="isPending || statusText"
+                  class="flex items-center gap-2 py-1 pr-5 pl-2 text-sm leading-5 text-neutral-500 dark:text-neutral-400"
                 >
-                  <span v-if="state.selected" class="col-start-1 mt-1">
-                    <CheckIcon />
-                  </span>
-                  <span class="col-start-2 flex flex-col gap-1">
-                    <span class="text-sm leading-5 font-bold">{{ user.name }}</span>
-                    <span class="text-xs">{{ user.email }}</span>
+                  <template v-if="isPending">
                     <span
-                      class="flex flex-wrap gap-2 text-xs text-neutral-500 dark:text-neutral-400"
-                    >
-                      <span>@{{ user.username }}</span>
-                      <span>{{ user.title }}</span>
+                      class="inline-block size-3 animate-[spin_0.75s_linear_infinite] rounded-full border border-current border-r-transparent"
+                      aria-hidden="true"
+                    />
+                    Searching…
+                  </template>
+                  <template v-else>{{ statusText }}</template>
+                </div>
+              </Combobox.Status>
+              <Combobox.Empty>
+                <div
+                  v-if="emptyMessage"
+                  class="py-2 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400"
+                >
+                  {{ emptyMessage }}
+                </div>
+              </Combobox.Empty>
+              <Combobox.List>
+                <template #item="{ item: user }">
+                  <Combobox.Item
+                    v-slot="{ state }"
+                    class="grid cursor-default grid-cols-[1rem_1fr] items-start gap-2 px-2 py-2 text-sm leading-[1.2rem] outline-none select-none [@media(hover:hover)]:data-highlighted:relative [@media(hover:hover)]:data-highlighted:z-0 [@media(hover:hover)]:data-highlighted:text-neutral-950 [@media(hover:hover)]:data-highlighted:before:absolute [@media(hover:hover)]:data-highlighted:before:inset-0 [@media(hover:hover)]:data-highlighted:before:z-[-1] [@media(hover:hover)]:data-highlighted:before:bg-neutral-100 dark:[@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:before:bg-neutral-800"
+                    :value="user"
+                  >
+                    <span v-if="state.selected" class="col-start-1 mt-1">
+                      <CheckIcon />
                     </span>
-                  </span>
-                </Combobox.Item>
-              </template>
-            </Combobox.List>
-          </div>
-        </Combobox.Popup>
+                    <span class="col-start-2 flex flex-col gap-1">
+                      <span class="text-sm leading-5 font-bold">{{ user.name }}</span>
+                      <span class="text-xs">{{ user.email }}</span>
+                      <span
+                        class="flex flex-wrap gap-2 text-xs text-neutral-500 dark:text-neutral-400"
+                      >
+                        <span>@{{ user.username }}</span>
+                        <span>{{ user.title }}</span>
+                      </span>
+                    </span>
+                  </Combobox.Item>
+                </template>
+              </Combobox.List>
+            </div>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

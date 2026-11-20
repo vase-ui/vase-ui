@@ -62,6 +62,8 @@ const items = Combobox.createItems(fruits, {
   getValue: (fruit) => fruit.id,
   getLabel: (fruit) => fruit.name,
 });
+
+const popupHiddenClass = 'scale-95 opacity-0';
 </script>
 
 <template>
@@ -99,31 +101,33 @@ const items = Combobox.createItems(fruits, {
 
     <Combobox.Portal>
       <Combobox.Positioner class="outline-none" :side-offset="4">
-        <Combobox.Popup
-          class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-        >
-          <Combobox.Empty>
-            <div class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
-              No fruits found.
-            </div>
-          </Combobox.Empty>
-          <Combobox.List
-            class="max-h-[min(22.5rem,var(--available-height))] overflow-y-auto overscroll-contain py-1 scroll-py-1 outline-0 data-empty:p-0"
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <Combobox.Popup
+            class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >
-            <template #item="{ item }">
-              <Combobox.Item
-                v-slot="{ state }"
-                :value="item.id"
-                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
-              >
-                <span v-if="state.selected" class="col-start-1">
-                  <CheckIcon />
-                </span>
-                <span class="col-start-2">{{ item.name }}</span>
-              </Combobox.Item>
-            </template>
-          </Combobox.List>
-        </Combobox.Popup>
+            <Combobox.Empty>
+              <div class="py-4 pr-4 pl-2 text-sm leading-4 text-neutral-500 dark:text-neutral-400">
+                No fruits found.
+              </div>
+            </Combobox.Empty>
+            <Combobox.List
+              class="max-h-[min(22.5rem,var(--available-height))] overflow-y-auto overscroll-contain py-1 scroll-py-1 outline-0 data-empty:p-0"
+            >
+              <template #item="{ item }">
+                <Combobox.Item
+                  v-slot="{ state }"
+                  :value="item.id"
+                  class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 p-2 text-sm leading-4 outline-none select-none data-highlighted:relative data-highlighted:z-0 data-highlighted:text-white data-highlighted:before:absolute data-highlighted:before:inset-0 data-highlighted:before:z-[-1] data-highlighted:before:bg-neutral-950 dark:data-highlighted:text-neutral-950 dark:data-highlighted:before:bg-white"
+                >
+                  <span v-if="state.selected" class="col-start-1">
+                    <CheckIcon />
+                  </span>
+                  <span class="col-start-2">{{ item.name }}</span>
+                </Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </Transition>
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>

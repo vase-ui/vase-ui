@@ -43,7 +43,7 @@ The render slot passes its state to a typed function that selects the class of t
 The namespace of a part also exports the types of the custom events.
 
 - `ChangeEventDetails` (such as `Combobox.Root.ChangeEventDetails`) is the object that a part gives to a change listener, such as `valueChange`.
-- `OpenChangeEventDetails` (such as `Combobox.Root.OpenChangeEventDetails`) is the object that a part gives to `openChange`, on a part whose `ChangeEventDetails` also serves other listeners. It has the members of `ChangeEventDetails` and `preventUnmountOnClose()`.
+- `OpenChangeEventDetails` (such as `Combobox.Root.OpenChangeEventDetails`) is the object that a part gives to `openChange`, on a part whose `ChangeEventDetails` also serves other listeners. It has the members of `ChangeEventDetails` and `trigger`, the element of the action.
 - `ChangeEventReason` (such as `Combobox.Root.ChangeEventReason`) is the union of the possible reason strings of a change event.
 
 <<< ../examples/typescript/ChangeEvents.vue{6,7,11}
