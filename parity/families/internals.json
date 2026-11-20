@@ -439,6 +439,13 @@
       "destination": "packages/vue/src/field/FieldRoot.vue",
       "behavior": "The field gives its control an id, and the control can give its own.",
       "witness": "packages/vue/src/field/Field.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/internals/usePressAndHold.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/hold.ts",
+      "behavior": "A press of the main button on a step button steps, and a hold repeats the step after 460 ms and then each 60 ms. NumberField and the navigation buttons of Calendar share it.",
+      "witness": "packages/vue/src/calendar/Calendar.test.ts"
     }
   ]
 }

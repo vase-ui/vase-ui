@@ -1,83 +1,67 @@
 /// <reference lib="esnext.temporal" preserve="true" />
-export * as Calendar from './index.parts';
-
-export { default as CalendarRoot } from './root/CalendarRoot.vue';
-export { default as CalendarMonths } from './months/CalendarMonths.vue';
-export { default as CalendarMonth } from './month/CalendarMonth.vue';
-export { default as CalendarGrid } from './grid/CalendarGrid.vue';
-export { default as CalendarGridHeader } from './grid-header/CalendarGridHeader.vue';
-export { default as CalendarGridHeaderRow } from './grid-header-row/CalendarGridHeaderRow.vue';
-export { default as CalendarWeekday } from './weekday/CalendarWeekday.vue';
-export { default as CalendarWeekNumberHeader } from './week-number-header/CalendarWeekNumberHeader.vue';
-export { default as CalendarGridBody } from './grid-body/CalendarGridBody.vue';
-export { default as CalendarWeek } from './week/CalendarWeek.vue';
-export { default as CalendarWeekNumber } from './week-number/CalendarWeekNumber.vue';
-export { default as CalendarDay } from './day/CalendarDay.vue';
-export { default as CalendarDayButton } from './day-button/CalendarDayButton.vue';
-export { default as CalendarCaption } from './caption/CalendarCaption.vue';
-export { default as CalendarMonthSelect } from './month-select/CalendarMonthSelect.vue';
-export { default as CalendarYearSelect } from './year-select/CalendarYearSelect.vue';
-export { default as CalendarPreviousButton } from './previous-button/CalendarPreviousButton.vue';
-export { default as CalendarNextButton } from './next-button/CalendarNextButton.vue';
-export { default as CalendarFooter } from './footer/CalendarFooter.vue';
-export { default as CalendarViewTrigger } from './view-trigger/CalendarViewTrigger.vue';
-export { default as CalendarMonthGrid } from './month-grid/CalendarMonthGrid.vue';
-export { default as CalendarMonthGridRow } from './month-grid-row/CalendarMonthGridRow.vue';
-export { default as CalendarMonthCell } from './month-cell/CalendarMonthCell.vue';
-export { default as CalendarYearGrid } from './year-grid/CalendarYearGrid.vue';
-export { default as CalendarYearGridRow } from './year-grid-row/CalendarYearGridRow.vue';
-export { default as CalendarYearCell } from './year-cell/CalendarYearCell.vue';
-
-export type * from './root/CalendarRoot.vue';
-export type * from './months/CalendarMonths.vue';
-export type * from './month/CalendarMonth.vue';
-export type * from './grid/CalendarGrid.vue';
-export type * from './grid-header/CalendarGridHeader.vue';
-export type * from './grid-header-row/CalendarGridHeaderRow.vue';
-export type * from './weekday/CalendarWeekday.vue';
-export type * from './week-number-header/CalendarWeekNumberHeader.vue';
-export type * from './grid-body/CalendarGridBody.vue';
-export type * from './week/CalendarWeek.vue';
-export type * from './week-number/CalendarWeekNumber.vue';
-export type * from './day/CalendarDay.vue';
-export type * from './day-button/CalendarDayButton.vue';
-export type * from './caption/CalendarCaption.vue';
-export type * from './month-select/CalendarMonthSelect.vue';
-export type * from './year-select/CalendarYearSelect.vue';
-export type * from './previous-button/CalendarPreviousButton.vue';
-export type * from './next-button/CalendarNextButton.vue';
-export type * from './footer/CalendarFooter.vue';
-export type * from './view-trigger/CalendarViewTrigger.vue';
-export type * from './month-grid/CalendarMonthGrid.vue';
-export type * from './month-grid-row/CalendarMonthGridRow.vue';
-export type * from './month-cell/CalendarMonthCell.vue';
-export type * from './year-grid/CalendarYearGrid.vue';
-export type * from './year-grid-row/CalendarYearGridRow.vue';
-export type * from './year-cell/CalendarYearCell.vue';
-
-export * as CalendarRootDataAttributes from './root/CalendarRootDataAttributes';
-export * as CalendarMonthsDataAttributes from './months/CalendarMonthsDataAttributes';
-export * as CalendarMonthDataAttributes from './month/CalendarMonthDataAttributes';
-export * as CalendarGridDataAttributes from './grid/CalendarGridDataAttributes';
-export * as CalendarGridHeaderDataAttributes from './grid-header/CalendarGridHeaderDataAttributes';
-export * as CalendarGridHeaderRowDataAttributes from './grid-header-row/CalendarGridHeaderRowDataAttributes';
-export * as CalendarWeekdayDataAttributes from './weekday/CalendarWeekdayDataAttributes';
-export * as CalendarWeekNumberHeaderDataAttributes from './week-number-header/CalendarWeekNumberHeaderDataAttributes';
-export * as CalendarGridBodyDataAttributes from './grid-body/CalendarGridBodyDataAttributes';
-export * as CalendarWeekDataAttributes from './week/CalendarWeekDataAttributes';
-export * as CalendarWeekNumberDataAttributes from './week-number/CalendarWeekNumberDataAttributes';
-export * as CalendarDayDataAttributes from './day/CalendarDayDataAttributes';
-export * as CalendarDayButtonDataAttributes from './day-button/CalendarDayButtonDataAttributes';
-export * as CalendarCaptionDataAttributes from './caption/CalendarCaptionDataAttributes';
-export * as CalendarMonthSelectDataAttributes from './month-select/CalendarMonthSelectDataAttributes';
-export * as CalendarYearSelectDataAttributes from './year-select/CalendarYearSelectDataAttributes';
-export * as CalendarPreviousButtonDataAttributes from './previous-button/CalendarPreviousButtonDataAttributes';
-export * as CalendarNextButtonDataAttributes from './next-button/CalendarNextButtonDataAttributes';
-export * as CalendarFooterDataAttributes from './footer/CalendarFooterDataAttributes';
-export * as CalendarViewTriggerDataAttributes from './view-trigger/CalendarViewTriggerDataAttributes';
-export * as CalendarMonthGridDataAttributes from './month-grid/CalendarMonthGridDataAttributes';
-export * as CalendarMonthGridRowDataAttributes from './month-grid-row/CalendarMonthGridRowDataAttributes';
-export * as CalendarMonthCellDataAttributes from './month-cell/CalendarMonthCellDataAttributes';
-export * as CalendarYearGridDataAttributes from './year-grid/CalendarYearGridDataAttributes';
-export * as CalendarYearGridRowDataAttributes from './year-grid-row/CalendarYearGridRowDataAttributes';
-export * as CalendarYearCellDataAttributes from './year-cell/CalendarYearCellDataAttributes';
+export * as Calendar from './parts';
+export type {
+  CalendarCaptionProps,
+  CalendarCaptionState,
+  CalendarCellState,
+  CalendarDateMatcher,
+  CalendarDayButtonProps,
+  CalendarDayButtonState,
+  CalendarDayProps,
+  CalendarDayState,
+  CalendarFooterProps,
+  CalendarFooterState,
+  CalendarGridBodyProps,
+  CalendarGridBodyState,
+  CalendarGridHeaderProps,
+  CalendarGridHeaderRowProps,
+  CalendarGridHeaderRowState,
+  CalendarGridHeaderState,
+  CalendarGridProps,
+  CalendarGridState,
+  CalendarMonthCellProps,
+  CalendarMonthCellState,
+  CalendarMonthGridProps,
+  CalendarMonthGridRowProps,
+  CalendarMonthGridRowState,
+  CalendarMonthGridState,
+  CalendarMonthProps,
+  CalendarMonthSelectProps,
+  CalendarMonthSelectState,
+  CalendarMonthState,
+  CalendarMonthsProps,
+  CalendarMonthsState,
+  CalendarNextButtonProps,
+  CalendarNextButtonState,
+  CalendarPage,
+  CalendarPreviousButtonProps,
+  CalendarPreviousButtonState,
+  CalendarRootChangeEventDetails,
+  CalendarRootChangeEventReason,
+  CalendarRootProps,
+  CalendarRootState,
+  CalendarRootView,
+  CalendarSelectOption,
+  CalendarState,
+  CalendarValue,
+  CalendarViewTriggerProps,
+  CalendarViewTriggerState,
+  CalendarVisibleDuration,
+  CalendarWeek,
+  CalendarWeekNumberHeaderProps,
+  CalendarWeekNumberHeaderState,
+  CalendarWeekNumberProps,
+  CalendarWeekNumberState,
+  CalendarWeekProps,
+  CalendarWeekState,
+  CalendarWeekdayProps,
+  CalendarWeekdayState,
+  CalendarYearCellProps,
+  CalendarYearCellState,
+  CalendarYearGridProps,
+  CalendarYearGridRowProps,
+  CalendarYearGridRowState,
+  CalendarYearGridState,
+  CalendarYearSelectProps,
+  CalendarYearSelectState,
+} from './types';

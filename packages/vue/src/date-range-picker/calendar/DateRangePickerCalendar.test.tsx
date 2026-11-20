@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import { formatText } from '../../internals/date-time/calendar/formatText';
 import DateRangePickerAnatomy from '../root/DateRangePickerAnatomy.test.vue';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -53,6 +54,38 @@ describe('<DateRangePicker.Calendar />', () => {
       />,
     );
   }
+
+  it('shows the calendar of the locale of the picker, as the fields do', async () => {
+    await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20'), locale: 'fa-IR' });
+    const month = day('2026-11-18').withCalendar('persian').toPlainYearMonth();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('calendar')).toHaveAttribute(
+        'aria-label',
+        formatText(month, { month: 'long', year: 'numeric' }, 'fa-IR'),
+      );
+    });
+  });
+
+  it('shows the locale of the browser with no locale, as the fields do', async () => {
+    const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    // The browser of the test has the locale `fr`.
+    const spy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions')
+      .mockImplementation(function (this: Intl.DateTimeFormat) {
+        return { ...resolvedOptions.call(this), locale: 'fr' };
+      });
+    onTestFinished(() => spy.mockRestore());
+    await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20'), locale: undefined });
+    const month = Temporal.PlainYearMonth.from('2026-11');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('calendar')).toHaveAttribute(
+        'aria-label',
+        formatText(month, { month: 'long', year: 'numeric' }, 'fr'),
+      );
+    });
+  });
 
   it('shows the range of the picker', async () => {
     await renderPicker({ defaultValue: range('2026-11-18', '2026-11-20') });
@@ -168,9 +201,9 @@ describe('<DateRangePicker.Calendar />', () => {
       expect(dayButton('2026-11-10')).not.toBe(null);
     });
 
-    expect(dayButton('2026-11-10')).toHaveAttribute('data-disabled');
-    expect(dayButton('2026-11-12')).not.toHaveAttribute('data-disabled');
-    expect(dayButton('2026-11-26')).toHaveAttribute('data-disabled');
+    expect(dayButton('2026-11-10')).toBeDisabled();
+    expect(dayButton('2026-11-12')).not.toBeDisabled();
+    expect(dayButton('2026-11-26')).toBeDisabled();
   });
 
   it('is disabled with the picker', async () => {

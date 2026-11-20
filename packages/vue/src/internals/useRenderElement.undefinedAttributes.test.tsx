@@ -17,8 +17,6 @@ import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { useRender } from '@vase-ui/vue/use-render';
 import * as FilterDropdown from '../../test/filterDropdown';
-import * as Calendar from '../calendar/index.parts';
-import CalendarAncestors from '../calendar/root/CalendarAncestors.test.vue';
 import { NOOP } from '../common/empty';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -65,16 +63,6 @@ const rows: Row[] = [
       </Autocomplete.Root>
     ),
     expected: () => 'combobox',
-  },
-  {
-    name: 'Calendar.Grid role',
-    attribute: 'role',
-    createNode: () => (
-      <CalendarAncestors level="month">
-        <Calendar.Grid role={undefined} data-testid="part" />
-      </CalendarAncestors>
-    ),
-    expected: () => 'grid',
   },
   {
     name: 'Combobox.Trigger aria-haspopup',

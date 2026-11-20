@@ -1,24 +1,15 @@
-import { computed, onBeforeUnmount, useAttrs, watch } from 'vue';
+import { computed, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement } from '../common/element';
-import { ownerWindow } from '../common/owner';
+import { useHold } from '../common/hold';
 import { injectNumberFieldRoot, stateAttributes, type StepKeys } from './root';
 import type { NumberFieldIncrementProps, NumberFieldRootState } from './types';
 
-const firstRepeat = 460;
-const repeat = 60;
-
-interface Hold {
-  readonly window: Window;
-  readonly pointerId: number;
+/** A press of a step button: the value at its start, and its keys. */
+interface StepPress {
   readonly start: number | null;
   readonly keys: StepKeys;
   readonly event: PointerEvent;
-  readonly mouse: boolean;
-  steps: number;
-  /** The pointer is out of the button. */
-  out: boolean;
-  timer?: ReturnType<typeof setTimeout>;
 }
 
 /** The increment or the decrement button. */
@@ -40,18 +31,35 @@ export function useStepButton(
   });
   const { disabled } = button;
   const state = computed<NumberFieldRootState>(() => ({ ...root.state, disabled: disabled.value }));
-  let hold: Hold | undefined;
-  // The press stepped, so the click that follows its release does not step again.
-  let pressed = false;
+  const hold = useHold<StepPress>({
+    start(event, mouse) {
+      if (disabled.value) return undefined;
+      if (mouse) {
+        // A press on a button takes the focus from the text input (measured). A touch opens no
+        // software keyboard, so it does not move the focus.
+        event.preventDefault();
+        root.focusInput();
+      }
+      return {
+        start: root.state.value,
+        keys: { altKey: event.altKey, shiftKey: event.shiftKey },
+        event,
+      };
+    },
+    step: (press) => root.step(direction, press.keys, reason, press.event) !== undefined,
+    release(press, event) {
+      const { value } = root.state;
+      if (value !== press.start) root.commit(value, reason, event);
+    },
+  });
 
   // A hold ends with no commit when the field becomes disabled or read-only.
   watch(
     () => root.state.disabled || root.state.readonly,
     (off) => {
-      if (off) endHold();
+      if (off) hold.end();
     },
   );
-  onBeforeUnmount(endHold);
 
   const ownProps = computed(() => ({
     // The text input is the one tab stop of the field.
@@ -59,79 +67,12 @@ export function useStepButton(
     'aria-controls': root.inputId,
     style: { userSelect: 'none', '-webkit-user-select': 'none' },
     ...stateAttributes(state.value, ['disabled']),
-    onPointerdown,
-    onPointerleave: () => hold && (hold.out = true),
-    onPointerenter: () => hold && (hold.out = false),
+    ...hold.listeners,
     onClick,
   }));
 
-  function stepHeld(current: Hold) {
-    if (root.step(direction, current.keys, reason, current.event) !== undefined) current.steps++;
-  }
-
-  function onPointerdown(event: PointerEvent) {
-    if (event.button !== 0 || disabled.value) return;
-    const mouse = event.pointerType === 'mouse';
-    if (mouse) {
-      // A press on a button takes the focus from the text input (measured). A touch opens no
-      // software keyboard, so it does not move the focus.
-      event.preventDefault();
-      root.focusInput();
-    }
-    endHold();
-    const current: Hold = {
-      window: ownerWindow(event.currentTarget),
-      pointerId: event.pointerId,
-      start: root.state.value,
-      keys: { altKey: event.altKey, shiftKey: event.shiftKey },
-      event,
-      mouse,
-      steps: 0,
-      out: false,
-    };
-    hold = current;
-    // A touch steps at its click, or at the first repeat when it stays. The browser cancels a
-    // touch that becomes a scroll before then (measured).
-    if (mouse) stepHeld(current);
-    const next = () => {
-      if (!current.out) stepHeld(current);
-      current.timer = setTimeout(next, repeat);
-    };
-    current.timer = setTimeout(next, firstRepeat);
-    // An ancestor can stop `pointerup` before it gets to the button (measured).
-    current.window.addEventListener('pointerup', onRelease, true);
-    current.window.addEventListener('pointercancel', onCancel, true);
-  }
-
-  function onRelease(event: PointerEvent) {
-    const current = hold;
-    if (event.pointerId !== current?.pointerId) return;
-    endHold();
-    // A tap that did not step steps at its click. The click of a press comes before a timer that
-    // starts at its release (measured).
-    pressed = current.mouse || current.steps > 0;
-    if (pressed) setTimeout(() => (pressed = false));
-    const { value } = root.state;
-    if (value !== current.start) root.commit(value, reason, event);
-  }
-
-  function onCancel(event: PointerEvent) {
-    if (event.pointerId === hold?.pointerId) endHold();
-  }
-
-  function endHold() {
-    if (!hold) return;
-    clearTimeout(hold.timer);
-    hold.window.removeEventListener('pointerup', onRelease, true);
-    hold.window.removeEventListener('pointercancel', onCancel, true);
-    hold = undefined;
-  }
-
   function onClick(event: MouseEvent) {
-    if (pressed) {
-      pressed = false;
-      return;
-    }
+    if (hold.takeClick()) return;
     const next = root.step(direction, event, reason, event);
     if (next !== undefined) root.commit(next, reason, event);
   }

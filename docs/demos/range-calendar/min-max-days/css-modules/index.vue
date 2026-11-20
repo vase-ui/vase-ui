@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue';
+import { Calendar } from '@vase-ui/vue/calendar';
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 import styles from '../../_index.module.css';
 
@@ -37,7 +38,7 @@ const summary = computed(() => {
     :max-days="7"
     locale="en-US"
   >
-    <RangeCalendar.PreviousButton :class="[styles.Navigation, styles.Previous]">
+    <Calendar.PreviousButton :class="[styles.Navigation, styles.Previous]">
       <svg
         aria-hidden="true"
         width="16"
@@ -51,8 +52,8 @@ const summary = computed(() => {
       >
         <path d="M10 3 5 8l5 5" />
       </svg>
-    </RangeCalendar.PreviousButton>
-    <RangeCalendar.NextButton :class="[styles.Navigation, styles.Next]">
+    </Calendar.PreviousButton>
+    <Calendar.NextButton :class="[styles.Navigation, styles.Next]">
       <svg
         aria-hidden="true"
         width="16"
@@ -66,34 +67,34 @@ const summary = computed(() => {
       >
         <path d="m6 3 5 5-5 5" />
       </svg>
-    </RangeCalendar.NextButton>
-    <RangeCalendar.Months :class="styles.Months">
+    </Calendar.NextButton>
+    <Calendar.Months :class="styles.Months">
       <template #month="{ month }">
-        <RangeCalendar.Month :month="month" :class="styles.Month">
-          <RangeCalendar.Caption :class="styles.Caption" />
-          <RangeCalendar.Grid :class="styles.Grid">
-            <RangeCalendar.GridHeader>
-              <RangeCalendar.GridHeaderRow>
+        <Calendar.Month :month="month" :class="styles.Month">
+          <Calendar.Caption :class="styles.Caption" />
+          <Calendar.Grid :class="styles.Grid">
+            <Calendar.GridHeader>
+              <Calendar.GridHeaderRow>
                 <template #weekday="{ weekday }">
-                  <RangeCalendar.Weekday :weekday="weekday" :class="styles.Weekday" />
+                  <Calendar.Weekday :weekday="weekday" :class="styles.Weekday" />
                 </template>
-              </RangeCalendar.GridHeaderRow>
-            </RangeCalendar.GridHeader>
-            <RangeCalendar.GridBody>
+              </Calendar.GridHeaderRow>
+            </Calendar.GridHeader>
+            <Calendar.GridBody>
               <template #week="{ week }">
-                <RangeCalendar.Week :week="week">
+                <Calendar.Week :week="week">
                   <template #day="{ day }">
-                    <RangeCalendar.Day :day="day" :class="styles.Day">
-                      <RangeCalendar.DayButton :class="styles.DayButton" />
-                    </RangeCalendar.Day>
+                    <Calendar.Day :day="day" :class="styles.Day">
+                      <Calendar.DayButton :class="styles.DayButton" />
+                    </Calendar.Day>
                   </template>
-                </RangeCalendar.Week>
+                </Calendar.Week>
               </template>
-            </RangeCalendar.GridBody>
-          </RangeCalendar.Grid>
-        </RangeCalendar.Month>
+            </Calendar.GridBody>
+          </Calendar.Grid>
+        </Calendar.Month>
       </template>
-    </RangeCalendar.Months>
-    <RangeCalendar.Footer :class="styles.Footer">{{ summary }}</RangeCalendar.Footer>
+    </Calendar.Months>
+    <Calendar.Footer :class="styles.Footer">{{ summary }}</Calendar.Footer>
   </RangeCalendar.Root>
 </template>

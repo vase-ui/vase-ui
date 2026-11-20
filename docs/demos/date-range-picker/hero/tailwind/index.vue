@@ -2,7 +2,7 @@
 import { useId } from 'vue';
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import { RangeCalendar } from '@vase-ui/vue/range-calendar';
+import { Calendar } from '@vase-ui/vue/calendar';
 
 const id = useId();
 const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
@@ -11,9 +11,9 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
 ];
 
 const buttonClassName =
-  'h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-data-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 dark:hover:not-data-disabled:bg-neutral-800 dark:focus-visible:outline-white';
+  'h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white';
 const dayButtonClassName =
-  'm-0 box-border size-9 cursor-pointer select-none rounded-md border-0 bg-transparent p-0 font-[inherit] text-inherit focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-range-end:bg-neutral-950 data-range-end:text-white data-range-middle:rounded-none data-range-middle:bg-neutral-100 data-range-start:bg-neutral-950 data-range-start:text-white data-today:font-bold data-today:underline data-unavailable:line-through dark:focus-visible:outline-white dark:data-range-end:bg-white dark:data-range-end:text-neutral-950 dark:data-range-middle:bg-neutral-800 dark:data-range-start:bg-white dark:data-range-start:text-neutral-950';
+  'm-0 box-border size-9 cursor-pointer select-none rounded-md border-0 bg-transparent p-0 font-[inherit] text-inherit focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 data-range-end:bg-neutral-950 data-range-end:text-white data-range-middle:rounded-none data-range-middle:bg-neutral-100 data-range-start:bg-neutral-950 data-range-start:text-white aria-[current=date]:font-bold aria-[current=date]:underline data-unavailable:line-through dark:focus-visible:outline-white dark:data-range-end:bg-white dark:data-range-end:text-neutral-950 dark:data-range-middle:bg-neutral-800 dark:data-range-start:bg-white dark:data-range-start:text-neutral-950';
 const segmentClassName =
   'field-sizing-content px-0.5 text-center caret-transparent outline-0 placeholder:text-neutral-500 focus:bg-neutral-950 focus:text-white focus:placeholder:text-neutral-400 dark:placeholder:text-neutral-400 dark:focus:bg-white dark:focus:text-neutral-950 dark:focus:placeholder:text-neutral-600';
 const literalClassName = 'whitespace-pre text-neutral-600 dark:text-neutral-400';
@@ -80,43 +80,41 @@ const inputClassName =
           >
             <DateRangePicker.Calendar class="relative box-border text-sm">
               <div class="absolute top-0 right-0 flex gap-1">
-                <RangeCalendar.PreviousButton :class="buttonClassName">
+                <Calendar.PreviousButton :class="buttonClassName">
                   &lsaquo;
-                </RangeCalendar.PreviousButton>
-                <RangeCalendar.NextButton :class="buttonClassName"
-                  >&rsaquo;</RangeCalendar.NextButton
-                >
+                </Calendar.PreviousButton>
+                <Calendar.NextButton :class="buttonClassName">&rsaquo;</Calendar.NextButton>
               </div>
-              <RangeCalendar.Months>
+              <Calendar.Months>
                 <template #month="{ month }">
-                  <RangeCalendar.Month :month="month">
-                    <RangeCalendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
-                    <RangeCalendar.Grid class="border-collapse">
-                      <RangeCalendar.GridHeader>
-                        <RangeCalendar.GridHeaderRow>
+                  <Calendar.Month :month="month">
+                    <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
+                    <Calendar.Grid class="border-collapse">
+                      <Calendar.GridHeader>
+                        <Calendar.GridHeaderRow>
                           <template #weekday="{ weekday }">
-                            <RangeCalendar.Weekday
+                            <Calendar.Weekday
                               :weekday="weekday"
                               class="h-8 w-9 p-0 text-xs font-normal text-neutral-600 dark:text-neutral-400"
                             />
                           </template>
-                        </RangeCalendar.GridHeaderRow>
-                      </RangeCalendar.GridHeader>
-                      <RangeCalendar.GridBody>
+                        </Calendar.GridHeaderRow>
+                      </Calendar.GridHeader>
+                      <Calendar.GridBody>
                         <template #week="{ week }">
-                          <RangeCalendar.Week :week="week">
+                          <Calendar.Week :week="week">
                             <template #day="{ day }">
-                              <RangeCalendar.Day :day="day" class="p-0 text-center">
-                                <RangeCalendar.DayButton :class="dayButtonClassName" />
-                              </RangeCalendar.Day>
+                              <Calendar.Day :day="day" class="p-0 text-center">
+                                <Calendar.DayButton :class="dayButtonClassName" />
+                              </Calendar.Day>
                             </template>
-                          </RangeCalendar.Week>
+                          </Calendar.Week>
                         </template>
-                      </RangeCalendar.GridBody>
-                    </RangeCalendar.Grid>
-                  </RangeCalendar.Month>
+                      </Calendar.GridBody>
+                    </Calendar.Grid>
+                  </Calendar.Month>
                 </template>
-              </RangeCalendar.Months>
+              </Calendar.Months>
             </DateRangePicker.Calendar>
           </DateRangePicker.Popup>
         </DateRangePicker.Positioner>

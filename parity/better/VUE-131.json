@@ -6,6 +6,6 @@
     "https://www.w3.org/TR/wai-aria-1.2/#meter",
     "https://dom.spec.whatwg.org/#dom-node-comparedocumentposition"
   ],
-  "behavior": "`Calendar.Grid` names the last label in the document that has an id. When that label unmounts, `KeepAlive` holds it, or its element gets an empty `id`, the root names the last label that stays. Two labels with no `id` prop share the id that the root makes, and the root keeps that name when one unmounts. The name does not depend on mount or show order, so an earlier label that mounts later or that `KeepAlive` shows does not win. Moving the existing label elements without another change keeps the selected id. `Fieldset.Root` names its first legend, and the next legend when that legend unmounts. Base UI names the label whose effect ran last, and it removes `aria-labelledby` after that label unmounts while another label stays in the document.",
+  "behavior": "`Fieldset.Root` names its first legend, and the next legend when that legend unmounts. Base UI names the label whose effect ran last, and it removes `aria-labelledby` after that label unmounts while another label stays in the document.",
   "dueWith": "packages/react/src/utils/useRegisteredLabelId.ts"
 }

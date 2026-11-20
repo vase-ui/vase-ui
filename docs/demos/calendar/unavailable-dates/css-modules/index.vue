@@ -22,11 +22,11 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 <template>
   <Calendar.Root
     v-model="selected"
-    :min-date="today"
+    :min="today"
     :unavailable-dates="booked"
     locale="en-US"
     aria-label="Appointment day"
-    :class="styles.Root"
+    :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>

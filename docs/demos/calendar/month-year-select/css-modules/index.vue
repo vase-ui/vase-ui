@@ -15,11 +15,11 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
 <template>
   <Calendar.Root
     v-model="selected"
-    :min-date="firstDay"
-    :max-date="today"
+    :min="firstDay"
+    :max="today"
     locale="en-US"
     aria-label="Date of birth"
-    :class="styles.Root"
+    :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Selects">
       <Calendar.MonthSelect format="short" :class="styles.Select" />

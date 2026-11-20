@@ -23,7 +23,9 @@ const selectedMonth = shallowRef<Temporal.PlainYearMonth | null>(
                 <template #week="{ week }">
                   <Calendar.Week :week="week">
                     <template #day="{ day }">
-                      <Calendar.Day :day="day"><Calendar.DayButton /></Calendar.Day>
+                      <Calendar.Day :day="day" :data-date="day.toString()"
+                        ><Calendar.DayButton
+                      /></Calendar.Day>
                     </template>
                   </Calendar.Week>
                 </template>

@@ -16,10 +16,10 @@ const days = shallowRef<Temporal.PlainDate[]>([]);
     v-model="days"
     multiple
     :max-days="3"
-    :min-date="today"
+    :min="today"
     locale="en-US"
     aria-label="Interview days"
-    :class="styles.Root"
+    :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>

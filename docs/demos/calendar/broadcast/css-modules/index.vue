@@ -13,7 +13,7 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     :first-week-contains-date="1"
     locale="en-US"
     aria-label="Air date"
-    :class="[styles.Root, styles.WithWeekNumbers]"
+    :class="[styles.Root, styles.SixWeeks, styles.WithWeekNumbers]"
   >
     <div :class="styles.Nav">
       <Calendar.PreviousButton :class="styles.Button">&lsaquo;</Calendar.PreviousButton>
