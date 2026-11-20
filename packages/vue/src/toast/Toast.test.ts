@@ -528,10 +528,15 @@ describe('hover, focus and the window (B5)', () => {
   });
 
   test('the hover ends when the toast under the pointer leaves the document', async () => {
+    // As in the demos, the viewport has no height, the toasts are absolute, and a toast leaves with
+    // a transition. The older toast is the lower one, so no toast is under the pointer after its
+    // close. The pointer rests on the root itself, not on its content.
+    style(
+      '[data-testid="viewport"] { position: fixed; top: 200px; left: 200px; width: 200px; height: 0 } [data-id] { position: absolute; left: 0; width: 200px; padding: 10px } [data-id="a"] { top: 80px } [data-id="b"] { top: 0 } .toast-leave-active { transition: opacity 100ms } .toast-leave-to { opacity: 0 }',
+    );
     const { manager } = await mountToasts();
-    // The older toast is the lower one, so no toast is under the pointer after its close.
     await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
-    await userEvent.hover(toastRoot('a')!);
+    await userEvent.hover(toastRoot('a')!, { position: { x: 2, y: 2 } });
     await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
     const leaving = toastRoot('a')!;
     manager.close('a');
