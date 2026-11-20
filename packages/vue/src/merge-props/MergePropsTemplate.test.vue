@@ -4,18 +4,9 @@
 // The first line of the file sets `strictTemplates` for this file only.
 import { Button } from '@vase-ui/vue/button';
 import { mergeProps } from '@vase-ui/vue/merge-props';
-import type { HTMLProps } from '@vase-ui/vue/types';
 
 const first = { class: 'first', onClick: () => {} };
 const second = { class: 'second', onClick: () => {} };
-
-function getPropsWithHandler(props: HTMLProps) {
-  return mergeProps<'div'>(props, {
-    onKeydown(event) {
-      event.preventVaseUIHandler();
-    },
-  });
-}
 </script>
 
 <template>
@@ -23,18 +14,17 @@ function getPropsWithHandler(props: HTMLProps) {
   <button type="button" v-bind="mergeProps<'button'>(first, second)">Type argument</button>
   <Button v-bind="mergeProps(first, second)">Part</Button>
   <Button>
-    <template #render="{ props }">
-      <button v-bind="mergeProps(props, { class: 'button' })">No type argument</button>
+    <template #element="{ props, elementRef }">
+      <button v-bind="mergeProps(props, { class: 'button' })" :ref="elementRef">
+        No type argument
+      </button>
     </template>
   </Button>
   <Button>
-    <template #render="{ props }">
-      <button v-bind="mergeProps<'button'>(props, { class: 'button' })">Type argument</button>
-    </template>
-  </Button>
-  <Button :native-button="false">
-    <template #render="{ props }">
-      <div v-bind="getPropsWithHandler(props)">Handler</div>
+    <template #element="{ props, elementRef }">
+      <button v-bind="mergeProps<'button'>(props, { class: 'button' })" :ref="elementRef">
+        Type argument
+      </button>
     </template>
   </Button>
   <a v-bind="mergeProps({ href: '/' }, second)">Attribute of a link</a>
@@ -43,9 +33,9 @@ function getPropsWithHandler(props: HTMLProps) {
   <input v-bind="mergeProps({ value: 1 }, second)" />
   <div v-bind="mergeProps({ 'data-state': 'on' }, second)">Data attribute</div>
   <Button v-bind="mergeProps({ type: 'submit' }, second)">Part</Button>
-  <Button :native-button="false">
-    <template #render="{ props }">
-      <a v-bind="mergeProps(props, { href: '/' })">Attribute of a link</a>
+  <Button>
+    <template #element="{ props, elementRef }">
+      <a v-bind="mergeProps(props, { href: '/' })" :ref="elementRef">Attribute of a link</a>
     </template>
   </Button>
 </template>

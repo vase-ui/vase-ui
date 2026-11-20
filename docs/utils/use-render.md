@@ -60,9 +60,9 @@ In a development build, `useRender` warns when the `#render` slot gives no eleme
 
 ## Merging props
 
-The `mergeProps` function merges two or more sets of Vue props. Event handlers, `class` values and `style` values have rules of their own. For the other keys, a later set overwrites an earlier set. See [mergeProps](/utils/merge-props) for the rules. Merging props is useful when you create custom components. It is also useful in the `#render` slot of any Vase UI part.
+The `mergeProps` function merges two or more sets of Vue props. Event handlers, `class` values and `style` values have rules of their own. For the other keys, a later set overwrites an earlier set. See [mergeProps](/utils/merge-props) for the rules. Merging props is useful when you create custom components. It is also useful in the `#render` slot or the `element` slot of a Vase UI part.
 
-In this sample, `mergeProps` adds a class to the `props` that the `#render` slot of Button gives:
+In this sample, `mergeProps` adds a class to the `props` that the `element` slot of Button gives:
 
 <<< ./use-render/MergingProps.vue
 
@@ -106,7 +106,7 @@ The `#render` slot is mainly for composing event handlers and behavioral props. 
 
 To render a different tag with the `as` prop or the `#render` slot, take more care. Some default props are not valid on the new element. For example, `type="button"` is valid only on a `<button>`. `useRender` gives `type="button"` to a default `button` tag and `alt=""` to a default `img` tag. A different tag does not get them.
 
-A part cannot know which element the `as` prop or the `#render` slot gives. [Button](/components/button) has the `nativeButton` prop to tell it which defaults to apply.
+A part cannot know which element the `as` prop or the `#render` slot gives. [Toggle](/components/toggle) has the `nativeButton` prop to tell it which defaults to apply.
 
 ## API reference
 
