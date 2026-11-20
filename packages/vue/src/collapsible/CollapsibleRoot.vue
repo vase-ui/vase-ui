@@ -37,9 +37,7 @@ defineSlots<{
 
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const { value, setOwn } = useModel(() => props.open, props.defaultOpen);
-// JavaScript can give `null`.
-const isOpen = computed(() => !!value.value);
+const { value: isOpen, setOwn } = useModel(() => props.open, props.defaultOpen);
 const panels = shallowReactive<CollapsiblePanelEntry[]>([]);
 const state = computed<CollapsibleRootState>(() => ({
   open: isOpen.value,

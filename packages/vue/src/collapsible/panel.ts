@@ -43,7 +43,7 @@ export function useCollapsiblePanel(
         return;
       }
       const gone = leaving;
-      const parent = gone?.isConnected ? gone.parentNode : null;
+      const parent = gone?.parentNode;
       // A kept element stays in the DOM, so it does not leave.
       if (!gone || !parent || gone === options.element.value) return;
       waiting.value = true;
