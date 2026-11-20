@@ -34,6 +34,7 @@
     {
       "entry": "Button",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for the attributes of its element, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     }
   ],

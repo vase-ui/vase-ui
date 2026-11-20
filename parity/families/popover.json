@@ -251,21 +251,25 @@
     {
       "entry": "Trigger",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Title",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-labelledby`. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The popup names the `id` that the element has in `aria-describedby`. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     },
     {
@@ -286,6 +290,7 @@
     {
       "entry": "Popup",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     },
     {

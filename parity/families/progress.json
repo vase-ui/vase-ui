@@ -149,6 +149,7 @@
     {
       "entry": "Label",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
     }
   ],

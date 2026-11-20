@@ -6,5 +6,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/trigger/MenuTrigger.tsx#L203-L205"
   ],
   "behavior": "In Safari on a Mac, a focus with no related target opens the popup of a trigger only when the last input of the window was a key. Each trigger records that input while it is mounted, also while it is not enabled. Base UI records it only while the trigger is enabled, and it assumes a key before the first record. A trigger of a menubar is enabled only while a menu of the menubar is open, so it misses the press that opened the menu. A hover on the next trigger then opens the next menu, the first menu gives the focus back to its trigger, and that focus opens the first menu again. Both menus then close.",
-  "dueWith": "packages/react/src/utils/popups/interactions/useFocus.ts"
+  "dueWith": "packages/react/src/utils/popups/interactions/useFocus.ts",
+  "families": ["menubar"]
 }

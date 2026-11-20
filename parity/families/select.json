@@ -535,6 +535,7 @@
     {
       "entry": "Trigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give the trigger its own id, which the labels of the select and of the field name, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the trigger."
     },
     {
@@ -550,21 +551,25 @@
     {
       "entry": "List",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "Popup",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "Label",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to give it to its element, or a generated id when `id` is absent, so it is a declared prop. The trigger names it in `aria-labelledby`."
     },
     {
       "entry": "GroupLabel",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the group for `aria-labelledby`, or a generated id when `id` is absent, so it is a declared prop."
     },
     {

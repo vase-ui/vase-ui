@@ -177,16 +177,19 @@
     {
       "entry": "Input",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "`Toolbar.Input` gives `id` to the `Input` that it renders, or to the element of its `element` slot. The `id` names the element that takes the focus (rule 8.4)."
     },
     {
       "entry": "Input",
       "prop": "name",
+      "nativeAttribute": true,
       "reason": "`Toolbar.Input` gives `name` to the `Input` that it renders, or to the element of its `element` slot, for the form data."
     },
     {
       "entry": "Input",
       "prop": "readonly",
+      "nativeAttribute": true,
       "reason": "`Toolbar.Input` adds `readonly` to the read-only state of a disabled input that keeps the focus, so the part declares it."
     },
     {

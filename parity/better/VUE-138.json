@@ -7,5 +7,6 @@
     "https://dom.spec.whatwg.org/#dom-slottable-assignedslot"
   ],
   "behavior": "A control that a slot in an open shadow root projects into a popup counts as inside it. Both `contains` and `closest` follow the assigned slot before the DOM parent. They cross a shadow root at its host. Typeahead keeps the typed prefix when focus moves into the popup slot. Base UI checks DOM parents and shadow hosts, so that move ends the typeahead session. A registered part uses its nearest portal or hover scope in the composed tree, including when a slot or a shadow root separates it from that ancestor.",
-  "dueWith": "packages/react/src/utils/popups/element.ts"
+  "dueWith": "packages/react/src/utils/popups/element.ts",
+  "families": []
 }

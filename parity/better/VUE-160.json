@@ -5,5 +5,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/preview-card/arrow/PreviewCardArrow.tsx#L16-L36"
   ],
   "behavior": "Each arrow releases its own element. A replacement arrow keeps its width and center after the previous arrow leaves. Base UI passes one arrow ref to both parts.",
-  "dueWith": "packages/react/src/internals/useAnchorPositioning.ts"
+  "dueWith": "packages/react/src/internals/useAnchorPositioning.ts",
+  "families": []
 }

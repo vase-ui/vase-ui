@@ -7,6 +7,9 @@ const IGNORED_DOCS_FOLDERS = new Set(['.vitepress', 'node_modules']);
 const SAMPLE_SCOPE_ID = 'sample';
 
 const SNIPPET_LINE = /^\s*<<<\s*(.+?)\s*$/;
+const VUE_IMPORT = /\b(?:from|import)\s*['"]([^'"]+\.vue)['"]/g;
+// The type check of the docs package reads `docs/examples/type-check`, so no page shows it.
+const SAMPLE_FOLDER = /^docs\/(?:(?:components|utils)\/[^/]+|examples\/(?!type-check\/)[^/]+)\//;
 const SNIPPET_TITLE = /\s*\[.+\]$/;
 const SNIPPET_REGION = /#[\w.-]+$/;
 
@@ -69,6 +72,21 @@ function walkDocsDirectory(
   }
 }
 
+/** The Vue files that `file` imports by a relative path, from the repository root. */
+function readVueImports(root: string, file: string): string[] {
+  const text = readFileSync(join(root, file), 'utf8');
+  return [...text.matchAll(VUE_IMPORT)].flatMap(([, path]) =>
+    path.startsWith('.')
+      ? [toPosixPath(relative(root, resolve(dirname(join(root, file)), path)))]
+      : [],
+  );
+}
+
+/**
+ * Lists the Vue files that `pnpm docs:typecheck` compiles: each Vue file in `docs`, and each Vue
+ * file that a page shows with `<<<`. A problem is a `<<<` line that names an absent file, or a
+ * sample in a sample folder that no page shows or imports and no shown sample imports.
+ */
 export function listSampleFiles(root: string): SampleFiles {
   const docsRoot = join(root, 'docs');
   const vueFiles = new Set<string>();
@@ -76,6 +94,7 @@ export function listSampleFiles(root: string): SampleFiles {
   const problems: string[] = [];
   walkDocsDirectory(root, docsRoot, vueFiles, pages);
   pages.sort();
+  const reached = new Set<string>();
   for (const page of pages) {
     const pageFile = join(root, page);
     for (const { line, path: snippetPath } of readPageSnippets(readFileSync(pageFile, 'utf8'))) {
@@ -90,7 +109,25 @@ export function listSampleFiles(root: string): SampleFiles {
         problems.push(`${page}:${line}: ${relativeTarget} does not exist.`);
       } else {
         vueFiles.add(relativeTarget);
+        reached.add(relativeTarget);
       }
+    }
+    for (const path of readVueImports(root, page)) {
+      reached.add(path);
+    }
+  }
+  for (const file of reached) {
+    if (existsSync(join(root, file))) {
+      for (const path of readVueImports(root, file)) {
+        reached.add(path);
+      }
+    }
+  }
+  for (const file of [...vueFiles].sort()) {
+    if (SAMPLE_FOLDER.test(file) && !reached.has(file)) {
+      problems.push(
+        `${file}: no page shows or imports this sample, and no shown sample imports it. Show it on a page with <<<, or delete it.`,
+      );
     }
   }
   return { files: [...vueFiles].sort(), problems };

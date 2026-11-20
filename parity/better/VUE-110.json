@@ -9,5 +9,6 @@
     "https://html.spec.whatwg.org/multipage/dom.html#the-id-attribute"
   ],
   "behavior": "A part keeps its own value of an ID reference attribute when the consumer gives that attribute a blank value: an empty string, or a string of white space only. The attributes are `aria-activedescendant`, `aria-controls`, `aria-describedby`, `aria-details`, `aria-errormessage`, `aria-flowto`, `aria-owns` and `for`. `aria-labelledby` has the same rule (`VUE-106`). An id has one character or more and no white space, so a blank value refers to no element. It thus counts as not given. A wrapper that gives its optional description prop the default `''` thus keeps the description of a dialog and of a popover. A trigger keeps the `aria-controls` that names its popup or its panel. `Field.Label` keeps its control, so a click on the label moves the focus to the control. `null` removes the value of the part (`VUE-103`). In Base UI, a blank value replaces the value of the part. Base UI ignores an empty `aria-describedby` only for a control of a field.",
-  "dueWith": "packages/react/src/internals/useRenderElement.tsx"
+  "dueWith": "packages/react/src/internals/useRenderElement.tsx",
+  "families": []
 }

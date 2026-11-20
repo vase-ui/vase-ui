@@ -354,21 +354,25 @@
     {
       "entry": "Title",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the root for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Description",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part gives `id` to the root for `aria-describedby`, or for `aria-labelledby` when the toast has no title and no name of its own, and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Close",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Action",
       "prop": "disabled",
+      "nativeAttribute": true,
       "reason": "The part reads `disabled` for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     },
     {

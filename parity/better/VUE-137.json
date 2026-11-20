@@ -9,5 +9,6 @@
     "https://vuejs.org/guide/built-ins/keep-alive.html#lifecycle-of-cached-instance"
   ],
   "behavior": "A popup can finish opening or closing while `KeepAlive` holds its popup part, even if the part first mounts in the held branch. Dialog, Alert Dialog and Drawer have no positioner. With no backdrop part, these roots wait on the held popup element. It has no CSS animations outside the document. With no finite animation to wait for, the close ends in the next frame. These roots can emit `openChangeComplete(true)` and `openChangeComplete(false)` during the hold. After a completed close, the popup is absent or, if kept mounted, hidden at activation. Base UI waits in a React effect. React destroys the effects of a root inside a hidden `Activity` and restores them at reveal, when a pending close can finish.",
-  "dueWith": "packages/react/src/utils/popups/popupRoot.tsx"
+  "dueWith": "packages/react/src/utils/popups/popupRoot.tsx",
+  "families": ["dialog", "alert-dialog", "drawer"]
 }

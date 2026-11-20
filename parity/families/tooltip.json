@@ -199,6 +199,7 @@
     {
       "entry": "Trigger",
       "prop": "id",
+      "nativeAttribute": true,
       "reason": "The part reads `id` to name the trigger in the root, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {

@@ -30,11 +30,13 @@ const TAILWIND_FOLDER = 'tailwind';
 const VUE_DEMO_NAMES = new Map([['handbook-forms/react-hook-form', 'vee-validate']]);
 
 /**
- * The families whose demos style the parts with the selectors of native elements and ARIA
- * attributes, such as `:checked` and `[aria-selected="true"]`, in place of the data attributes of
- * Base UI. A demo can add an element of its own for a mark or a thumb, and animate a part with
- * `<Transition>` or `<TransitionGroup>`. Its classes and its style sheets thus differ from those of the Base UI demo. A
- * demo of another family that imports such a family styles its parts in the same way.
+ * The families whose demos style a state with CSS in place of a data attribute of Base UI: the
+ * selectors of native elements and ARIA attributes, such as `:checked` and
+ * `[aria-selected="true"]`, or a selector such as `:hover` of the root in place of
+ * `data-hovering`. A demo can add an element of its own for a mark or a thumb, and animate a part
+ * with `<Transition>` or `<TransitionGroup>`. Its classes and its style sheets thus differ from
+ * those of the Base UI demo. A demo of another family that imports such a family styles its parts
+ * in the same way.
  */
 const RESTYLED_FAMILIES = new Set([
   'accordion',
@@ -60,6 +62,7 @@ const RESTYLED_FAMILIES = new Set([
   'popover',
   'preview-card',
   'radio-group',
+  'scroll-area',
   'select',
   'switch',
   'tabs',
@@ -70,25 +73,20 @@ const RESTYLED_FAMILIES = new Set([
 ]);
 
 /**
- * The families whose demos select a state with CSS in place of an attribute that the parts no
- * longer write, such as `:hover` of the root in place of `data-hovering`. Their classes and their
- * style sheets thus differ from those of the Base UI demo.
- */
-const CSS_STATE_FAMILIES = new Set(['scroll-area']);
-
-/**
  * Whether a demo may differ from the classes and style sheets of Base UI, by a path from the folder
  * of its family.
  */
 function hasOwnStyles(name: string, record: DemoRecord, path: string): boolean {
   const demo = path.split('/')[0];
-  return (
-    CSS_STATE_FAMILIES.has(name) ||
-    [name, ...(record.entryPoints?.[demo] ?? [])].some((family) => RESTYLED_FAMILIES.has(family))
+  return [name, ...(record.entryPoints?.[demo] ?? [])].some((family) =>
+    RESTYLED_FAMILIES.has(family),
   );
 }
 
 const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
+
+/** The variant folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
+const VARIANT_FOLDER_PATH = /^[^/]+\/(?:css-modules|tailwind)(?=\/)/;
 
 /** The Tailwind folder at the start of a path from the folder of a family, such as `hero/tailwind`. */
 const TAILWIND_FOLDER_PATH = /^[^/]+\/tailwind(?=\/)/;
@@ -429,18 +427,16 @@ export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<stri
         );
       }
     }
+    const variantFolders = (paths: Iterable<string>): Set<string> =>
+      new Set([...paths].flatMap((path) => VARIANT_FOLDER_PATH.exec(path)?.[0] ?? []));
     const recordedFolders = new Set(
-      Object.keys(record.files)
-        .flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? [])
-        .map((demo) => vueDemoPath(name, demo)),
+      [...variantFolders(Object.keys(record.files))].map((path) => vueDemoPath(name, path)),
     );
-    const vueFolders = new Set(
-      [...files.keys()].flatMap((path) => /^([^/]+)\/tailwind\//.exec(path)?.[1] ?? []),
-    );
-    for (const vueDemo of vueFolders) {
-      if (!recordedFolders.has(vueDemo)) {
+    for (const vueFolder of variantFolders(files.keys())) {
+      if (!recordedFolders.has(vueFolder)) {
+        const kind = vueFolder.endsWith(TAILWIND_FOLDER) ? 'Tailwind demo' : 'demo';
         problems.push(
-          `${folder}/${vueDemo}/${TAILWIND_FOLDER} is not in ${recordPath(name)}. ${rerun} When the record still lacks the folder, Base UI has no such Tailwind demo. Delete the folder.`,
+          `${folder}/${vueFolder} is not in ${recordPath(name)}. ${rerun} When the record still lacks the folder, Base UI has no such ${kind}. Delete the folder.`,
         );
       }
     }

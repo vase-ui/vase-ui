@@ -60,7 +60,7 @@ Import the component and assemble its parts:
 
 Put each panel in a `<Transition>`, as the demo above does. Before each open and each close, a panel writes the size of its content in the CSS variables `--accordion-panel-height` and `--accordion-panel-width`. The [Collapsible page](/components/collapsible#animate-the-panel) shows the classes. When one item opens and another closes, one panel leaves while the other enters.
 
-With `keepMounted` on the root or on a panel, a closed panel stays in the DOM with `hidden` and `inert`. Animate a kept panel with CSS on `[hidden]`, as the [Collapsible page](/components/collapsible#keep-the-panel-mounted) shows.
+With `keepMounted` on the root or on a panel, a closed panel stays in the DOM with `hidden` and `inert`. Animate a kept panel with CSS on `[hidden]`.
 
 ### Open multiple panels
 
@@ -101,7 +101,7 @@ The `hiddenUntilFound` prop hides the closed panels with [`hidden="until-found"`
 
 To try it, press <kbd>Ctrl</kbd>+<kbd>F</kbd> (<kbd>Cmd</kbd>+<kbd>F</kbd> on macOS) and search for "restocking". The browser opens the closed panel that has the match. With the prop, a closed panel always stays mounted in the DOM, so search engines can also index its contents.
 
-The panels of this demo have no `<Transition>` and no size transition. The [Collapsible page](/components/collapsible#hidden-until-found) gives the reasons, and what a browser without the feature and an earlier Vue do.
+The panels of this demo have no `<Transition>` and no size transition. The [Collapsible page](/components/collapsible#hidden-until-found) gives the reasons, and what a browser without the feature does.
 
 In a [wrapper of `Accordion.Panel`](/handbook/composition#wrap-a-part), give `keepMounted` and `hiddenUntilFound` the default `undefined` to keep the root values.
 

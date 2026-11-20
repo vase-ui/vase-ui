@@ -7,6 +7,7 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/description/FieldDescription.tsx#L25-L46",
     "https://html.spec.whatwg.org/multipage/forms.html#attr-label-for"
   ],
-  "behavior": "In a field, the `element` slot can give the element of the control, of the label or of a message another `id` than the part gives. After the mount, the `for` of the label names the `id` of the control element, and a click on a label that is not native focuses that element. The control names the `id` of the label element in `aria-labelledby` and the `id` of each message element in `aria-describedby`. Base UI keeps the `id` of the part in each reference, and the `id` of the `render` element wins on the element. The label then names no element, and a click on it does not reach the control.",
-  "dueWith": "packages/react/src/internals/labelable-provider/useLabelableId.ts"
+  "behavior": "In a field, the `element` slot can give the element of the control, of the label or of a message another `id` than the part gives. After the mount, the `for` of the label names the `id` of the control element, and a click on a label that is not native focuses that element. The control names the `id` of the label element in `aria-labelledby` and the `id` of each message element in `aria-describedby`. Base UI keeps the `id` of the part in each reference, and the `id` of the element of the developer wins on the element. The label then names no element, and a click on it does not reach the control.",
+  "dueWith": "packages/react/src/internals/labelable-provider/useLabelableId.ts",
+  "families": ["field"]
 }

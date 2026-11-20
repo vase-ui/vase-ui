@@ -19,6 +19,7 @@ import { createVaseProject } from '../parity/vaseSurface.ts';
 import type {
   ClassSurface,
   ComponentSurface,
+  ExportMatch,
   FunctionSurface,
   MemberSurface,
   PropertySurface,
@@ -48,10 +49,10 @@ export interface ApiSlot {
   props: { name: string; type: string }[];
 }
 
-export interface ApiConstant {
-  /** The value of the constant, such as `data-disabled`. */
+/** A selector or a CSS variable of a part, from a `@selector` or a `@cssVariable` tag of its export. */
+export interface ApiStyleHook {
+  /** The text in backticks at the start of the tag, such as `[hidden]`, or `''` when the tag has none. */
   name: string;
-  type: string | null;
   description: string;
 }
 
@@ -61,14 +62,12 @@ export interface ApiPart {
   /** The badge that the Base UI page shows on the heading of the part, or `null`. */
   badge: HeadingBadge | null;
   description: string;
-  /** Whether the `#render` slot of the part gets the `children` slot prop, which the slot must mount in its element. */
-  hasChildren: boolean;
   props: ApiProp[];
   events: ApiMember[];
   slots: ApiSlot[];
   exposed: ApiMember[];
-  dataAttributes: ApiConstant[];
-  cssVariables: ApiConstant[];
+  selectors: ApiStyleHook[];
+  cssVariables: ApiStyleHook[];
 }
 
 export interface ApiFunction extends FunctionSurface {
@@ -94,6 +93,12 @@ export interface ApiReference {
   functions: ApiFunction[];
   classes: ApiClass[];
   types: ApiType[];
+  /**
+   * The family that ports each part of the Base UI page, in the sequence of the page: the family of
+   * the page, or the family whose `types.md` has the same part. A part with no export has a family
+   * too. Empty for a component of Vase UI's own.
+   */
+  homes: { part: string; family: string }[];
 }
 
 // Vue gives `undefined` to a controlled prop, and a composable can calculate a default. The `@default`
@@ -109,8 +114,27 @@ function propsOf({ props }: ComponentSurface, defaults: Map<string, string | nul
     );
 }
 
-function membersOf(members: Map<string, MemberSurface>): ApiMember[] {
-  return [...members].map(([name, { type, description }]) => ({ name, type, description }));
+// Each part that renders an element has these members, so the source gives them no JSDoc.
+const SHARED_SLOT_DESCRIPTIONS = new Map([
+  ['default', 'The content of the part.'],
+  [
+    'element',
+    'Renders your element in place of the element of the part. Bind `props` with `v-bind` and `elementRef` with `:ref`.',
+  ],
+]);
+const SHARED_EXPOSED_DESCRIPTIONS = new Map([
+  ['element', 'The element of the part, or `null` while it is not mounted.'],
+]);
+
+function membersOf(
+  members: Map<string, MemberSurface>,
+  shared: ReadonlyMap<string, string> = new Map(),
+): ApiMember[] {
+  return [...members].map(([name, { type, description }]) => ({
+    name,
+    type,
+    description: description || (shared.get(name) ?? ''),
+  }));
 }
 
 /** The text of the `@default` tag of each property of the exported type `typeName`. */
@@ -124,11 +148,17 @@ function documentedDefaults(
   return new Map(properties.map(({ name, default: text }) => [name, text]));
 }
 
-function constantsOf(project: VaseProject, entryFile: string, namespace: string): ApiConstant[] {
-  return (project.readConstants(entryFile, namespace) ?? []).flatMap(
-    ({ value, type, description }) =>
-      value === undefined ? [] : [{ name: value, type, description }],
-  );
+const STYLE_HOOK_TAG = /^`([^`]+)`\s*(.*)$/;
+
+/** The `@selector` or `@cssVariable` tags of an export: `@selector \`[hidden]\` The panel is closed.` */
+function styleHooksOf(project: VaseProject, match: ExportMatch, tagName: string): ApiStyleHook[] {
+  return project.readTags(match).flatMap(({ name, text }) => {
+    if (name !== tagName) {
+      return [];
+    }
+    const [, hook = '', description = text] = STYLE_HOOK_TAG.exec(text) ?? [];
+    return [{ name: hook, description }];
+  });
 }
 
 /** The title of an entry of a `types.md`, or a name of the record of a component of Vase UI's own. */
@@ -174,48 +204,49 @@ export function buildApiParts(
         name: match.path,
         badge: badges.get(title) ?? null,
         description: component.description,
-        hasChildren:
-          component.slots.get('render')?.props.some(({ name }) => name === 'children') === true,
         props: propsOf(component, documentedDefaults(project, entryFile, `${flatName}Props`)),
         events: membersOf(component.emits),
-        slots: [...component.slots].map(([name, slot]) => ({ name, ...slot })),
-        exposed: membersOf(component.exposed),
-        dataAttributes: constantsOf(project, entryFile, `${flatName}DataAttributes`),
-        cssVariables: constantsOf(project, entryFile, `${flatName}CssVariables`),
+        slots: [...component.slots].map(([name, { description, props }]) => ({
+          name,
+          description: description || (SHARED_SLOT_DESCRIPTIONS.get(name) ?? ''),
+          props,
+        })),
+        exposed: membersOf(component.exposed, SHARED_EXPOSED_DESCRIPTIONS),
+        selectors: styleHooksOf(project, match, 'selector'),
+        cssVariables: styleHooksOf(project, match, 'cssVariable'),
       },
     ];
   });
 }
 
 /** A `types.md` with the entry file of the family that its folder names. */
-interface EntryTypesFile {
+export interface EntryTypesFile {
+  family: string;
   entryFile: string;
   file: SurfaceFile;
 }
 
 /**
- * The entry file that exports `part`. It is `entryFile`, the entry file of the family of the
- * `types.md`, when that file exports the part. A `types.md` can repeat a part of another family: the
- * `types.md` of Radio Group has `Root` and `Indicator` of Radio. The entry file of the family whose
- * `types.md` has the same part, with the same text, then exports it. When no file exports the part,
- * the result is `entryFile`.
+ * The `types.md` that ports `part`. It is the `types.md` of the page, `page`, when its entry file
+ * exports the part. A `types.md` can repeat a part of another family: the `types.md` of Radio Group
+ * has `Root` and `Indicator` of Radio. The `types.md` of another family that has the same part, with
+ * the same text, then ports it. The result is `page` when no other `types.md` has the part.
  */
-function findEntryFileOfPart(
+export function findHomeOfPart(
   project: VaseProject,
-  entryFile: string,
+  page: EntryTypesFile,
   part: SurfacePart,
   typesFiles: EntryTypesFile[],
-): string {
-  if (project.findExports(entryFile, part.name).length > 0) {
-    return entryFile;
+): EntryTypesFile {
+  if (project.findExports(page.entryFile, part.name).length > 0) {
+    return page;
   }
   const repeated = typesFiles.find(
-    ({ entryFile: otherEntryFile, file }) =>
-      otherEntryFile !== entryFile &&
-      file.parts.some((candidate) => isDeepStrictEqual(candidate, part)) &&
-      findPartExport(project, otherEntryFile, part.name) !== undefined,
+    ({ entryFile, file }) =>
+      entryFile !== page.entryFile &&
+      file.parts.some((candidate) => isDeepStrictEqual(candidate, part)),
   );
-  return repeated?.entryFile ?? entryFile;
+  return repeated ?? page;
 }
 
 /**
@@ -344,6 +375,7 @@ export function buildOwnApiReference(
       types: named(record.types),
       additionalTypes: [],
     }),
+    homes: [],
   };
 }
 
@@ -420,30 +452,40 @@ export function createApiReferenceReader(
       );
     }
     const vaseProject = readProject();
-    const entryFileOf = (file: SurfaceFile): string =>
-      join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts');
+    const entryTypesFile = (name: string, file: SurfaceFile): EntryTypesFile => ({
+      family: name,
+      entryFile: join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'),
+      file,
+    });
+    const pageFiles = typesFiles.map((file) => entryTypesFile(family, file));
     const build = <T>(
       read: (project: VaseProject, entryFile: string, file: SurfaceFile) => T[],
-    ): T[] => typesFiles.flatMap((file) => read(vaseProject, entryFileOf(file), file));
-    const allTypesFiles = families.flatMap(({ extract }) =>
-      (extract?.surface ?? []).map((file) => ({ entryFile: entryFileOf(file), file })),
+    ): T[] => pageFiles.flatMap(({ entryFile, file }) => read(vaseProject, entryFile, file));
+    const allTypesFiles = families.flatMap(({ name, extract }) =>
+      (extract?.surface ?? []).map((file) => entryTypesFile(name, file)),
     );
+    const homes = pageFiles.flatMap((page) => {
+      const badges = readPartBadges(page.file, pages);
+      return page.file.parts.map((part) => ({
+        part,
+        page,
+        badges,
+        home: findHomeOfPart(vaseProject, page, part, allTypesFiles),
+      }));
+    });
     return {
       // A part is read from the entry file that exports it. The parts keep the sequence of the file.
-      parts: typesFiles.flatMap((file) => {
-        const badges = readPartBadges(file, pages);
-        return file.parts.flatMap((part) =>
-          buildApiParts(
-            vaseProject,
-            findEntryFileOfPart(vaseProject, entryFileOf(file), part, allTypesFiles),
-            { ...file, parts: [part] },
-            badges,
-          ),
-        );
+      parts: homes.flatMap(({ part, page, badges, home }) => {
+        const entryFile =
+          home !== page && findPartExport(vaseProject, home.entryFile, part.name)
+            ? home.entryFile
+            : page.entryFile;
+        return buildApiParts(vaseProject, entryFile, { parts: [part] }, badges);
       }),
       functions: build(buildApiFunctions),
       classes: build(buildApiClasses),
       types: build(buildApiTypes),
+      homes: homes.map(({ part, home }) => ({ part: part.name, family: home.family })),
     };
   };
 
