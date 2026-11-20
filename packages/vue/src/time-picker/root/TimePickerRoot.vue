@@ -22,9 +22,7 @@ export type TimePickerRootGranularity = TimeFieldRootGranularity;
 
 // `none` is the reason of a native reset of the form of the picker.
 export type TimePickerRootChangeEventReason =
-  | TimeFieldRootChangeEventReason
-  | TimeClockRootChangeEventReason
-  | 'none';
+  TimeFieldRootChangeEventReason | TimeClockRootChangeEventReason | 'none';
 export type TimePickerRootChangeEventDetails = ChangeEventDetails<TimePickerRootChangeEventReason>;
 
 export type TimePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;

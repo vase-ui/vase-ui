@@ -14,7 +14,12 @@ defineExpose({ root, input, clear });
   <DateField.Root ref="root" v-bind="date">
     <DateField.Input ref="input">
       <template #element="{ props, elementRef, state, segments }">
-        <section v-bind="props" :ref="elementRef" :data-items="segments.length" :data-empty-field="state.empty">
+        <section
+          v-bind="props"
+          :ref="elementRef"
+          :data-items="segments.length"
+          :data-empty-field="state.empty"
+        >
           <template v-for="(segment, index) in segments" :key="index">
             <DateField.Segment v-if="segment.editable" :segment="segment">
               <template #element="slot">

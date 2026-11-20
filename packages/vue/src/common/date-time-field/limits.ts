@@ -61,7 +61,10 @@ export function getInputLimits(
       least &&
       (isKind(least, 'date')
         ? `${day(least)}T00:00`
-        : toInputText(toWallClock(least).round({ smallestUnit, roundingMode: 'ceil' }), showSeconds)),
+        : toInputText(
+            toWallClock(least).round({ smallestUnit, roundingMode: 'ceil' }),
+            showSeconds,
+          )),
     // The text of a moment has no unit below `smallestUnit`, so it rounds down.
     max:
       greatest &&

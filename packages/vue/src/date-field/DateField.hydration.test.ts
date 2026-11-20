@@ -7,7 +7,9 @@ import { takeReportedMessages } from '../../test/reportedMessages';
 // The parts compile as Vapor components in these setups of `vitest.vue-3.6.config.ts`.
 const isVaporParts = ['vapor', 'vdom-interop'].includes(inject('app'));
 
-const segmentsOf = (root: Element) => [...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')];
+const segmentsOf = (root: Element) => [
+  ...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]'),
+];
 const layoutOf = (root: Element) =>
   [...root.querySelectorAll('[role="group"] > div > *')].map((element) =>
     element.localName === 'input'
@@ -61,7 +63,11 @@ describe('server render and hydration', () => {
       locale: 'en-GB',
     });
     expect(segmentsOf(root)).toHaveLength(5);
-    hydrate(DateTimeFieldsOnServer, { family: 'date', value: '2026-11-14T15:04', locale: 'en-US' }, root);
+    hydrate(
+      DateTimeFieldsOnServer,
+      { family: 'date', value: '2026-11-14T15:04', locale: 'en-US' },
+      root,
+    );
     await nextTick();
     expect(layoutOf(root)).toEqual([
       'month month',

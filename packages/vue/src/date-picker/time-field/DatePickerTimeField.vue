@@ -1,8 +1,5 @@
 <script lang="ts">
-import type {
-  TimeFieldRootProps,
-  TimeFieldRootState,
-} from '../../time-field/types';
+import type { TimeFieldRootProps, TimeFieldRootState } from '../../time-field/types';
 
 export interface DatePickerTimeFieldState extends TimeFieldRootState {}
 

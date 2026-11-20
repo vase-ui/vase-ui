@@ -11,11 +11,7 @@ export type DateTimeFieldSegment =
   | { type: 'literal' | 'era' | 'timeZoneName'; editable: false; text: string };
 
 export type DateTimeFieldChangeEventReason =
-  | 'input-change'
-  | 'input-clear'
-  | 'input-paste'
-  | 'keyboard'
-  | 'clear-press';
+  'input-change' | 'input-clear' | 'input-paste' | 'keyboard' | 'clear-press';
 
 export type DateTimeFieldChangeEventDetails = ChangeEventDetails<DateTimeFieldChangeEventReason>;
 
@@ -83,7 +79,11 @@ export interface DateTimeFieldForPart {
     details: DateTimeFieldChangeEventDetails,
   ): boolean;
   setDayPeriod(dayPeriod: DayPeriod | undefined, details: DateTimeFieldChangeEventDetails): boolean;
-  spin(type: EditableSegmentType, spin: SegmentSpin, details: DateTimeFieldChangeEventDetails): void;
+  spin(
+    type: EditableSegmentType,
+    spin: SegmentSpin,
+    details: DateTimeFieldChangeEventDetails,
+  ): void;
   paste(text: string, event: ClipboardEvent): void;
   clear(event: Event): void;
   /** Adds the element of a segment. Returns the function that removes it. */

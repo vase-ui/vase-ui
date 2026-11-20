@@ -25,7 +25,11 @@ describe('server render and hydration', () => {
   test.each([{ content: false }, { content: true }])(
     'a server with other texts: the texts of the browser with no message, content $content',
     async ({ content }) => {
-      const root = await renderOnServer('TimeClockOnServer', { value: '15:30', locale: 'ar-EG', content });
+      const root = await renderOnServer('TimeClockOnServer', {
+        value: '15:30',
+        locale: 'ar-EG',
+        content,
+      });
       hydrate(TimeClockOnServer, { value: '15:30', locale: 'en-US', content }, root);
       await nextTick();
       const texts = textsOf(root);

@@ -58,10 +58,13 @@ describe('a native date input', () => {
     withMin.setAttribute('value', '15:04');
     withMin.min = '00:00';
     withMin.step = '300';
-    expect([withAttribute.validity.stepMismatch, withMin.validity.stepMismatch]).toEqual([false, true]);
+    expect([withAttribute.validity.stepMismatch, withMin.validity.stepMismatch]).toEqual([
+      false,
+      true,
+    ]);
   });
 
-  test('a blocked submit gives the focus to an invalid input of 1 px that is hidden from assistive technology', async () => {
+  test('a blocked submit gives the focus to an invalid input of 1 px that is hidden from assistive technology', () => {
     const form = html(
       '<form><input required aria-hidden="true" tabindex="-1" style="position:absolute;width:1px;height:1px"><button>Go</button></form>',
     ).querySelector('form')!;
@@ -157,7 +160,11 @@ const input = (label: string, max: string, value: string, placeholder = '--'): M
   attrs: { 'aria-label': label, 'aria-valuemax': max, placeholder },
   value,
 });
-const text = (value: string, hidden = true): MeasuredItem => ({ input: false, text: value, hidden });
+const text = (value: string, hidden = true): MeasuredItem => ({
+  input: false,
+  text: value,
+  hidden,
+});
 
 // Each case: the items of the server, then the items of the browser.
 const CASES: Record<string, [MeasuredItem[], MeasuredItem[]]> = {
@@ -179,7 +186,13 @@ const CASES: Record<string, [MeasuredItem[], MeasuredItem[]]> = {
   ],
   'another count': [
     [input('hour', '23', '15'), text(':'), input('minute', '59', '04')],
-    [input('hour', '12', '3'), text(':'), input('minute', '59', '04'), text(' '), input('AM/PM', '1', 'PM')],
+    [
+      input('hour', '12', '3'),
+      text(':'),
+      input('minute', '59', '04'),
+      text(' '),
+      input('AM/PM', '1', 'PM'),
+    ],
   ],
 };
 

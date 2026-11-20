@@ -45,7 +45,8 @@ export interface FieldControl {
    */
   readonly customError?:
     | {
-        readonly flag: 'badInput' | 'rangeUnderflow' | 'rangeOverflow' | 'stepMismatch' | 'customError';
+        readonly flag:
+          'badInput' | 'rangeUnderflow' | 'rangeOverflow' | 'stepMismatch' | 'customError';
         readonly message: string;
       }
     | undefined;

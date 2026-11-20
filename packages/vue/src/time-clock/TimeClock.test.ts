@@ -161,7 +161,11 @@ describe('press and drag', () => {
     const init = { ...point, button: 0, pointerId: 7, bubbles: true, cancelable: true };
     face().dispatchEvent(new PointerEvent('pointerdown', init));
     face().dispatchEvent(new PointerEvent('pointerup', init));
-    expect(log).toEqual(['valueChange 06:00:00 drag', 'valueCommitted 06:00:00 drag', 'viewChange minute drag']);
+    expect(log).toEqual([
+      'valueChange 06:00:00 drag',
+      'valueCommitted 06:00:00 drag',
+      'viewChange minute drag',
+    ]);
   });
 
   test('a press that selects a disabled number commits nothing, and a selection goes into the limits', async () => {

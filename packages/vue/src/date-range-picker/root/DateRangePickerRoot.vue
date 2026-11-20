@@ -23,10 +23,9 @@ export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second
 
 // `none` is the reason of a native reset of the form of the picker.
 export type DateRangePickerRootChangeEventReason =
-  | RangeChangeEventReason
-  | DateTimeFieldChangeEventReason
-  | 'none';
-export type DateRangePickerRootChangeEventDetails = ChangeEventDetails<DateRangePickerRootChangeEventReason>;
+  RangeChangeEventReason | DateTimeFieldChangeEventReason | 'none';
+export type DateRangePickerRootChangeEventDetails =
+  ChangeEventDetails<DateRangePickerRootChangeEventReason>;
 
 export type DateRangePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type DateRangePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;

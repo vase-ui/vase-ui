@@ -11,6 +11,7 @@ import * as TimePicker from '../src/time-picker/index.parts';
 const id = 'id';
 </script>
 
+<template>
   <DatePicker.Field aria-labelledby="id" />
   <DatePicker.Field :aria-labelledby="id" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->

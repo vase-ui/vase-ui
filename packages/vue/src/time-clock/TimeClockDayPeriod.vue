@@ -56,17 +56,21 @@ function elementProps() {
 <!-- A 24-hour face has no day period. Vue allows a text mismatch only for an element whose one
 child is the text, so the text has a branch with no slot. -->
 <template>
-  <template v-if="clock.hourCycle === 12">
-    <slot
-      v-if="$slots.element"
-      name="element"
-      :props="elementProps()"
-      :elementRef="setElement"
-      :state="state"
-    />
-    <button v-else-if="$slots.default" v-bind="elementProps()" :ref="setElement">
-      <slot :state="state" />
-    </button>
-    <button v-else v-bind="elementProps()" :ref="setElement">{{ text }}</button>
-  </template>
+  <slot
+    v-if="clock.hourCycle === 12 && $slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <button
+    v-else-if="clock.hourCycle === 12 && $slots.default"
+    v-bind="elementProps()"
+    :ref="setElement"
+  >
+    <slot :state="state" />
+  </button>
+  <button v-else-if="clock.hourCycle === 12" v-bind="elementProps()" :ref="setElement">
+    {{ text }}
+  </button>
 </template>

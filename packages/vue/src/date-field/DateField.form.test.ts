@@ -215,13 +215,16 @@ describe('validity', () => {
       field: { defaultValue: day('2026-11-14'), unavailableDates: [day('2026-11-14')] },
       message: PATTERN,
     },
-  ])('outside a Field, $name is a custom error of the form input with the message of the browser', async ({ field, message, type }) => {
-    const { formInput, segments } = await mountFields([field]);
-    await type?.(segments);
-    await settle();
-    expect(formInput.validity.customError).toBe(true);
-    expect(formInput.validationMessage).toBe(message());
-  });
+  ])(
+    'outside a Field, $name is a custom error of the form input with the message of the browser',
+    async ({ field, message, type }) => {
+      const { formInput, segments } = await mountFields([field]);
+      await type?.(segments);
+      await settle();
+      expect(formInput.validity.customError).toBe(true);
+      expect(formInput.validationMessage).toBe(message());
+    },
+  );
 
   test('a read-only or disabled field is not validated', async () => {
     const field = reactive<Record<string, unknown>>({ required: true, readonly: true });
@@ -297,10 +300,18 @@ describe('in a Field', () => {
     {
       name: 'a date that is not available',
       match: 'customError',
-      date: { defaultValue: day('2026-11-14'), unavailableDates: (date: Temporal.PlainDate) => date.day === 14 },
+      date: {
+        defaultValue: day('2026-11-14'),
+        unavailableDates: (date: Temporal.PlainDate) => date.day === 14,
+      },
     },
   ])('$name shows the error of `match="$match"` at a submit', async ({ match, date, partial }) => {
-    const { segments, match: matched, error, submit } = await mountInField({
+    const {
+      segments,
+      match: matched,
+      error,
+      submit,
+    } = await mountInField({
       vaseForm: true,
       field: { name: 'when' },
       date,
@@ -352,7 +363,9 @@ describe('in a Field', () => {
     const submitted: unknown[] = [];
     const { submit } = await mountInField({
       vaseForm: true,
-      formAttrs: { onSubmit: (_event: Event, values: Record<string, unknown>) => submitted.push(values) },
+      formAttrs: {
+        onSubmit: (_event: Event, values: Record<string, unknown>) => submitted.push(values),
+      },
       field: { name: 'when' },
       date: { defaultValue: day('2026-11-14') },
     });

@@ -177,10 +177,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   const firstValue = (
     props.modelValue === undefined ? (props.defaultValue ?? null) : props.modelValue
   ) as Value | null;
-  const { value, setOwn } = useModel<Value | null>(
+  const model = useModel<Value | null>(
     () => props.modelValue as Value | null | undefined,
     firstValue,
   );
+  const value = model.value;
   // The numbers of a partial entry. The field has no value until each segment has a number.
   const draft = shallowRef<SegmentNumbers | null>(null);
 
@@ -225,9 +226,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   // A field shows the era of its date when it is not the era of the reference date. A Gregorian
   // date before the year 1 then has an era segment.
   const referenceEra = computed(() => eraOf(props.referenceDate ?? fixedDay()));
-  const shownEra = computed(() =>
-    value.value === null ? draft.value?.era : eraOf(value.value),
-  );
+  const shownEra = computed(() => (value.value === null ? draft.value?.era : eraOf(value.value)));
 
   const layoutOptions = computed<SegmentLayoutOptions>(() => {
     const unit = granularity.value;
@@ -261,8 +260,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   );
   const hasDraft = computed(
     () =>
-      value.value === null &&
-      editableTypes.value.some((type) => draft.value?.[type] !== undefined),
+      value.value === null && editableTypes.value.some((type) => draft.value?.[type] !== undefined),
   );
 
   // The numbers of an empty segment at an arrow key, and the era of a typed year: those of
@@ -382,17 +380,20 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     if (sameTemporal(next, value.value)) return true;
     options.emitChange(next, details);
     if (details.isCanceled) return false;
-    setOwn(next);
+    model.setOwn(next);
     options.emitModel(next);
     // A controlled parent answers in its next render.
-    nextTick(() => field?.onEdit());
+    void nextTick(() => field?.onEdit());
     return true;
   }
 
   function applyNumbers(next: SegmentNumbers, details: DateTimeFieldChangeEventDetails) {
     const types = editableTypes.value;
     if (types.every((type) => next[type] !== undefined)) {
-      const accepted = change(fromNumbers(next, template(), numbersContext.value) as Value, details);
+      const accepted = change(
+        fromNumbers(next, template(), numbersContext.value) as Value,
+        details,
+      );
       if (accepted) draft.value = null;
       return accepted;
     }
@@ -444,7 +445,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   // `2027/05/17` for the layout month, day, year.
   function isInRanges(next: SegmentNumbers): boolean {
     const types = editableTypes.value.filter(isNumericType);
-    const inRange = (type: NumericSegmentType, limits: { monthsInYear: number; daysInMonth: number }) => {
+    const inRange = (
+      type: NumericSegmentType,
+      limits: { monthsInYear: number; daysInMonth: number },
+    ) => {
       const number = next[type];
       const { min, max } = getRange(type, limits, hourCycle.value);
       return number !== undefined && number >= min && number <= max;
@@ -483,7 +487,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   function focusEmpty() {
     const ordered = orderedSegments();
     const emptyType = editableTypes.value.find((type) => numbers.value[type] === undefined);
-    focusSegment(ordered.find((element) => segmentElements.get(element)?.() === emptyType) ?? ordered[0]);
+    focusSegment(
+      ordered.find((element) => segmentElements.get(element)?.() === emptyType) ?? ordered[0],
+    );
   }
 
   const limitOf = (limit: DateValue | Temporal.PlainTime | undefined) =>
@@ -592,20 +598,18 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
 
   // A `<label>` names no segment, because each segment has an `aria-label`. The labels of the first
   // segment thus name the group. The server HTML has no such name. WebKit keeps the old `labels` of
-  // an input whose `id` changes (test/measurements/date-time-field.test.ts), so the root looks for
-  // the labels itself.
+  // an input whose `id` changes (test/measurements/date-time-field.test.ts), so the root also looks
+  // for the labels of the document.
   const nativeLabelIds = shallowRef<string>();
   watch(
     [firstSegment, id],
     ([segment]) => {
-      const scope = segment?.getRootNode() as Document | ShadowRoot | undefined;
+      if (!segment) return;
       const candidates = [
-        segment?.closest('label'),
-        ...(scope?.querySelectorAll<HTMLLabelElement>('label[for]') ?? []),
+        ...(segment.labels ?? []),
+        ...segment.ownerDocument.querySelectorAll<HTMLLabelElement>('label[for]'),
       ];
-      const labels = [...new Set(candidates)].filter(
-        (label): label is HTMLLabelElement => !!segment && label?.control === segment,
-      );
+      const labels = [...new Set(candidates)].filter((label) => label.control === segment);
       labels.forEach((label, index) => {
         label.id ||= index === 0 ? `${id.value}-label` : `${id.value}-label-${index + 1}`;
       });
@@ -618,7 +622,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     draft.value = null;
     field?.onReset(firstValue);
     if (sameTemporal(value.value, firstValue)) return;
-    setOwn(firstValue);
+    model.setOwn(firstValue);
     options.emitModel(firstValue);
   });
 
@@ -756,7 +760,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     clear() {
       draft.value = null;
       if (value.value === null) return;
-      setOwn(null);
+      model.setOwn(null);
       options.emitModel(null);
     },
   };
@@ -775,7 +779,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
       }
     }
     // The input shows the value of the field again, also after a value that the parent refused.
-    nextTick(() => {
+    void nextTick(() => {
       const shown = value.value === null ? '' : toInputText(value.value, showSeconds.value);
       if (input.value !== shown) input.value = shown;
     });

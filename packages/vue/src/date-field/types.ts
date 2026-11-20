@@ -21,8 +21,9 @@ export type DateFieldRootChangeEventDetails = DateTimeFieldChangeEventDetails;
 
 export interface DateFieldRootState extends DateTimeFieldState {}
 
-export interface DateFieldRootProps<Value extends DateFieldRootValue = DateFieldRootValue>
-  extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
+export interface DateFieldRootProps<
+  Value extends DateFieldRootValue = DateFieldRootValue,
+> extends /* @vue-ignore */ Omit<HTMLAttributes, 'id'> {
   /**
    * The value: a `Temporal.PlainDate`, `PlainDateTime`, `ZonedDateTime` or `PlainYearMonth`, or
    * `null` for no value. The field gives a value of the same kind, calendar, time and time zone.
@@ -120,7 +121,10 @@ export interface DateFieldLiteralProps extends /* @vue-ignore */ HTMLAttributes 
 
 export interface DateFieldClearState extends DateFieldRootState {}
 
-export interface DateFieldClearProps extends /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'disabled'> {
+export interface DateFieldClearProps extends /* @vue-ignore */ Omit<
+  ButtonHTMLAttributes,
+  'disabled'
+> {
   /** The user cannot press the button. It is also disabled while the field is empty. */
   disabled?: boolean;
 }

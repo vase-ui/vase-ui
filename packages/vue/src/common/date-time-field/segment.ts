@@ -43,7 +43,10 @@ export function writeAttributes(element: Element, attributes: Record<string, unk
   for (const [name, value] of Object.entries(attributes)) {
     if (/^on[A-Z]/.test(name) || name === 'value') continue;
     if (value == null || value === false) element.removeAttribute(name);
-    else if (typeof value !== 'object') element.setAttribute(name, value === true ? '' : String(value));
+    else if (value === true) element.setAttribute(name, '');
+    else if (typeof value === 'string' || typeof value === 'number') {
+      element.setAttribute(name, String(value));
+    }
   }
 }
 
@@ -102,7 +105,8 @@ export function useDateTimeFieldSegment(
       if (number !== undefined) accepted = field.setNumber(segmentType, number, details);
     } else {
       let dayPeriod: DayPeriod | undefined;
-      for (const character of text) dayPeriod ??= dayPeriodOfLetter(character, field.dayPeriodTexts);
+      for (const character of text)
+        dayPeriod ??= dayPeriodOfLetter(character, field.dayPeriodTexts);
       if (dayPeriod !== undefined) accepted = full = field.setDayPeriod(dayPeriod, details);
     }
     if (full && accepted) moveFocus(1);
@@ -135,7 +139,7 @@ export function useDateTimeFieldSegment(
 
   // The text of the segment changes only through its number.
   function showText(input: HTMLInputElement) {
-    nextTick(() => {
+    void nextTick(() => {
       const shown = composing.value ?? view.value.text;
       if (input.value !== shown) input.value = shown;
     });
@@ -190,7 +194,11 @@ export function useDateTimeFieldSegment(
   }
 
   function onBeforeinput(event: InputEvent) {
-    if (composing.value !== null || event.isComposing || COMPOSITION_INPUT_TYPES.has(event.inputType)) {
+    if (
+      composing.value !== null ||
+      event.isComposing ||
+      COMPOSITION_INPUT_TYPES.has(event.inputType)
+    ) {
       return;
     }
     event.preventDefault();
@@ -213,7 +221,7 @@ export function useDateTimeFieldSegment(
       composing.value = input.value;
       return;
     }
-    const { inputType = '' } = event as InputEvent;
+    const inputType = (event as Partial<InputEvent>).inputType ?? '';
     // A composition that ended gave its text at `compositionend`. WebKit sends its last `input`
     // after that event.
     const endOfComposition = COMPOSITION_INPUT_TYPES.has(inputType) && !platform.os.android;

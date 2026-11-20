@@ -23,9 +23,7 @@ export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
 // `none` is the reason of a native reset of the form of the picker.
 export type DatePickerRootChangeEventReason =
-  | CalendarChangeEventReason
-  | DateTimeFieldChangeEventReason
-  | 'none';
+  CalendarChangeEventReason | DateTimeFieldChangeEventReason | 'none';
 export type DatePickerRootChangeEventDetails = ChangeEventDetails<DatePickerRootChangeEventReason>;
 
 export type DatePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;

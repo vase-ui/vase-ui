@@ -1,8 +1,5 @@
 <script lang="ts">
-import type {
-  DateFieldRootProps,
-  DateFieldRootState,
-} from '../../date-field/types';
+import type { DateFieldRootProps, DateFieldRootState } from '../../date-field/types';
 
 export interface DateRangePickerStartFieldState extends DateFieldRootState {}
 

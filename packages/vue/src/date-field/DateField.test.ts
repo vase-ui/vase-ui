@@ -72,7 +72,11 @@ describe('the parts', () => {
     const { segments, group } = await mountFields([{ defaultValue: day('2026-11-14') }]);
     const [month, dayOfMonth, year] = segments;
     expect(month!.type).toBe('text');
-    expect(Object.fromEntries(month!.getAttributeNames().map((name) => [name, month!.getAttribute(name)]))).toEqual({
+    expect(
+      Object.fromEntries(
+        month!.getAttributeNames().map((name) => [name, month!.getAttribute(name)]),
+      ),
+    ).toEqual({
       id: expect.any(String),
       type: 'text',
       role: 'spinbutton',
@@ -187,7 +191,9 @@ describe('the value', () => {
   test('a new value keeps the calendar, the time zone and the units that the field does not show', async () => {
     const log: string[] = [];
     const zoned = Temporal.ZonedDateTime.from('2026-11-14T15:04:30[Asia/Tokyo]');
-    const { segment } = await mountFields([record(log, { defaultValue: zoned, granularity: 'day' })]);
+    const { segment } = await mountFields([
+      record(log, { defaultValue: zoned, granularity: 'day' }),
+    ]);
     segment('day').focus();
     await userEvent.keyboard('{ArrowUp}');
     expect(log[0]).toBe('valueChange 2026-11-15T15:04:30+09:00[Asia/Tokyo] keyboard');
@@ -241,7 +247,9 @@ describe('the value', () => {
 
   test('`clear()` empties each segment and gives only `update:modelValue`', async () => {
     const log: string[] = [];
-    const { exposed, segments } = await mountFields([record(log, { defaultValue: day('2026-11-14') })]);
+    const { exposed, segments } = await mountFields([
+      record(log, { defaultValue: day('2026-11-14') }),
+    ]);
     exposed.roots[0].clear();
     await nextTick();
     expect(values(segments)).toEqual(['', '', '']);
@@ -362,12 +370,13 @@ describe('paste and input methods', () => {
   test('a paste reads a whole value: a text of the kind, or a text in the layout of the locale', async () => {
     const log: string[] = [];
     const { segments } = await mountFields([record(log)]);
+    // Firefox gives a made `ClipboardEvent` no data, so the event carries its own.
     const paste = (text: string) => {
-      const data = new DataTransfer();
-      data.setData('text/plain', text);
-      segments[1]!.dispatchEvent(
-        new ClipboardEvent('paste', { clipboardData: data, cancelable: true, bubbles: true }),
-      );
+      const event = new Event('paste', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'clipboardData', {
+        value: { getData: (type: string) => (type === 'text/plain' ? text : '') },
+      });
+      segments[1]!.dispatchEvent(event);
     };
     paste('2026-11-14');
     paste('12/24/2027');

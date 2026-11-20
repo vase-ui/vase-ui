@@ -49,16 +49,14 @@ function elementProps() {
 
 <!-- A clock with no value has no hand. -->
 <template>
-  <template v-if="!state.empty">
-    <slot
-      v-if="$slots.element"
-      name="element"
-      :props="elementProps()"
-      :elementRef="setElement"
-      :state="state"
-    />
-    <div v-else v-bind="elementProps()" :ref="setElement">
-      <slot :state="state" />
-    </div>
-  </template>
+  <slot
+    v-if="!state.empty && $slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <div v-else-if="!state.empty" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </div>
 </template>

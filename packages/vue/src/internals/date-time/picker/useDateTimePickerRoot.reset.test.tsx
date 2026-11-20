@@ -4,7 +4,11 @@ import type { ShallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { createRenderer, flushMicrotasks, screen, wait } from '#test-utils';
-import type { DateTimeFieldChangeEventDetails } from '../../../common/date-time-field/field';
+import type { ChangeEventDetails } from '../../../common/changeEventDetails';
+import type {
+  DateTimeFieldChangeEventDetails,
+  DateTimeFieldChangeEventReason,
+} from '../../../common/date-time-field/field';
 import { DateField } from '../../../date-field';
 import { createChangeEventDetails } from '../../createVaseUIEventDetails';
 import { NOOP } from '../../noop';
@@ -26,7 +30,10 @@ const EMPTY: Ends = [null, null];
 // timeouts, and the picker takes the reset one time.
 const PickerOfTwoFields = defineComponent({
   setup() {
-    const picker = useDateTimePickerRoot<Ends, DateTimeFieldChangeEventDetails>({
+    const picker = useDateTimePickerRoot<
+      Ends,
+      ChangeEventDetails<DateTimeFieldChangeEventReason | 'none'>
+    >({
       part: 'PickerOfTwoFields',
       disabled: false,
       value: () => undefined,

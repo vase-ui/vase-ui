@@ -16,8 +16,9 @@ export interface TimeClockRootState {
   empty: boolean;
 }
 
-export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime>
-  extends /* @vue-ignore */ HTMLAttributes {
+export interface TimeClockRootProps<
+  Value extends TimeValue = Temporal.PlainTime,
+> extends /* @vue-ignore */ HTMLAttributes {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
    * A new value keeps the date and the time zone of the value.
@@ -118,8 +119,10 @@ export interface TimeClockDayPeriodState extends TimeClockRootState {
   selected: boolean;
 }
 
-export interface TimeClockDayPeriodProps
-  extends /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'disabled' | 'value'> {
+export interface TimeClockDayPeriodProps extends /* @vue-ignore */ Omit<
+  ButtonHTMLAttributes,
+  'disabled' | 'value'
+> {
   /** The day period that the button selects. Its text is that period in the locale. */
   value: TimeClockDayPeriodValue;
 }
@@ -129,8 +132,10 @@ export interface TimeClockViewTriggerState extends TimeClockRootState {
   active: boolean;
 }
 
-export interface TimeClockViewTriggerProps
-  extends /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'disabled'> {
+export interface TimeClockViewTriggerProps extends /* @vue-ignore */ Omit<
+  ButtonHTMLAttributes,
+  'disabled'
+> {
   /** The unit that the face shows after a press. The text is that unit of the time. */
   view: TimeClockView;
 }

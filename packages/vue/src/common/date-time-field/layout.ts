@@ -437,13 +437,15 @@ export function getLimits(numbers: SegmentNumbers, calendar: string): Limits {
   const { era, year, month } = numbers;
   if (year === undefined) {
     const first = getSample(calendar).toPlainDate();
-    const monthsInYear = Math.max(
-      ...[0, 1, 2].map((years) => first.add({ years }).monthsInYear),
-    );
+    const monthsInYear = Math.max(...[0, 1, 2].map((years) => first.add({ years }).monthsInYear));
     return { monthsInYear, daysInMonth: 31 };
   }
   const yearBag = yearProperties(era, year);
-  const monthsInYear = Temporal.PlainYearMonth.from({ calendar, ...yearBag, month: 1 }).monthsInYear;
+  const monthsInYear = Temporal.PlainYearMonth.from({
+    calendar,
+    ...yearBag,
+    month: 1,
+  }).monthsInYear;
   const daysInMonth =
     month === undefined
       ? 31

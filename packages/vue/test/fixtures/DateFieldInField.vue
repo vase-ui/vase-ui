@@ -35,7 +35,9 @@ defineProps({
             <DateField.Clear aria-label="Clear">×</DateField.Clear>
           </DateField.Root>
         </template>
-        <Field.Error v-if="match" :match="match" data-testid="match">Choose another day.</Field.Error>
+        <Field.Error v-if="match" :match="match" data-testid="match"
+          >Choose another day.</Field.Error
+        >
       </TestField>
     </fieldset>
     <button type="submit">Submit</button>

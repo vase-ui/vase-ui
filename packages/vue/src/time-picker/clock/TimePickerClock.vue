@@ -1,10 +1,6 @@
 <script lang="ts">
 import type { VaseUIComponentProps } from '../../internals/types';
-import type {
-  TimeClockRootProps,
-  TimeClockRootState,
-  TimeClockView,
-} from '../../time-clock/types';
+import type { TimeClockRootProps, TimeClockRootState, TimeClockView } from '../../time-clock/types';
 
 export interface TimePickerClockState extends TimeClockRootState {}
 
@@ -17,19 +13,20 @@ export interface TimePickerClockProps
   extends
     VaseUIComponentProps<TimePickerClockState>,
     Omit<
-  TimeClockRootProps,
-  | 'modelValue'
-  | 'defaultValue'
-  | 'defaultView'
-  | 'granularity'
-  | 'hourCycle'
-  | 'min'
-  | 'max'
-  | 'referenceDate'
-  | 'locale'
-  | 'disabled'
-  | 'readonly'
-> {
+      TimeClockRootProps,
+      | 'as'
+      | 'modelValue'
+      | 'defaultValue'
+      | 'defaultView'
+      | 'granularity'
+      | 'hourCycle'
+      | 'min'
+      | 'max'
+      | 'referenceDate'
+      | 'locale'
+      | 'disabled'
+      | 'readonly'
+    > {
   /**
    * The unit that an uncontrolled clock shows each time that the popup opens.
    *
@@ -191,7 +188,7 @@ defineExpose({ element });
 
 <template>
   <TimeClockRoot
-    v-if="$slots.render || as !== 'div'"
+    v-if="$slots.render"
     ref="clock"
     v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
     @value-change="handleValueChange"
@@ -200,8 +197,20 @@ defineExpose({ element });
     @update:view="handleViewUpdate"
   >
     <template #element="{ props: rootProps, elementRef, state }">
-      <slot v-if="$slots.render" name="render" :props="{ ...rootProps, ref: elementRef }" :state="state" />
-      <component :is="as" v-else v-bind="rootProps" :ref="elementRef">
+      <slot name="render" :props="{ ...rootProps, ref: elementRef }" :state="state" />
+    </template>
+  </TimeClockRoot>
+  <TimeClockRoot
+    v-else-if="as !== 'div'"
+    ref="clock"
+    v-bind="{ ...withoutPropsOf($attrs, TimeClockRoot), ...clockProps() }"
+    @value-change="handleValueChange"
+    @value-committed="handleValueCommitted"
+    @view-change="handleViewChange"
+    @update:view="handleViewUpdate"
+  >
+    <template #element="{ props: rootProps, elementRef, state }">
+      <component :is="as" v-bind="rootProps" :ref="elementRef">
         <slot :state="state" />
       </component>
     </template>

@@ -11,12 +11,20 @@ const props = defineProps<{
   name?: string | undefined;
 }>();
 
-function toValue(text: string | undefined) {
-  if (text === undefined) return undefined;
-  if (text.includes('[')) return Temporal.ZonedDateTime.from(text);
-  if (props.family === 'time' && !text.includes('T')) return Temporal.PlainTime.from(text);
-  return text.includes('T') ? Temporal.PlainDateTime.from(text) : Temporal.PlainDate.from(text);
+function dateTime(text: string) {
+  return text.includes('[') ? Temporal.ZonedDateTime.from(text) : Temporal.PlainDateTime.from(text);
 }
+
+const text = props.value;
+function parse(family: 'date' | 'time') {
+  if (text === undefined || props.family !== family) return undefined;
+  if (text.includes('T')) return dateTime(text);
+  return family === 'date' ? Temporal.PlainDate.from(text) : Temporal.PlainTime.from(text);
+}
+const date = parse('date') as
+  Temporal.PlainDate | Temporal.PlainDateTime | Temporal.ZonedDateTime | undefined;
+const time = parse('time') as
+  Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime | undefined;
 </script>
 
 <template>
@@ -25,7 +33,7 @@ function toValue(text: string | undefined) {
     <DateField.Root
       v-if="family === 'date'"
       id="when"
-      :default-value="toValue(value)"
+      :default-value="date"
       :locale="locale"
       :hour-cycle="hourCycle"
       :name="name"
@@ -35,7 +43,7 @@ function toValue(text: string | undefined) {
     <TimeField.Root
       v-else
       id="when"
-      :default-value="toValue(value)"
+      :default-value="time"
       :locale="locale"
       :hour-cycle="hourCycle"
       :name="name"

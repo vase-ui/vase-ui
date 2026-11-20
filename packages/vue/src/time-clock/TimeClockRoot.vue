@@ -1,12 +1,28 @@
 <script setup lang="ts" generic="Value extends TimeValue = Temporal.PlainTime">
-import { computed, mergeProps, provide, shallowReactive, shallowRef, useAttrs, watchEffect } from 'vue';
+import {
+  computed,
+  mergeProps,
+  provide,
+  shallowReactive,
+  shallowRef,
+  useAttrs,
+  watchEffect,
+} from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { useModel } from '../common/model';
 import { warn } from '../common/warn';
 import { hourCycleOf } from '../internals/date-time/format';
-import { PickerClockOwner, usePickerControl } from '../internals/date-time/picker/PickerControlContext';
-import { assertTemporal, toPlainTime, withTime, type TimeValue } from '../internals/date-time/temporal';
+import {
+  PickerClockOwner,
+  usePickerControl,
+} from '../internals/date-time/picker/PickerControlContext';
+import {
+  assertTemporal,
+  toPlainTime,
+  withTime,
+  type TimeValue,
+} from '../internals/date-time/temporal';
 import { useLocale } from '../locale-provider/part';
 import { clockAttributes, clockKey } from './clock';
 import type {
@@ -126,9 +142,7 @@ const state = computed<TimeClockRootState>(() => ({
 function isNumberDisabled(number: TimeClockFaceNumber) {
   const { first, step } = grid.value;
   const candidate = timeOfFaceNumber(view.value, hourCycle.value, time.value, number);
-  return (
-    (number.value - first) % step !== 0 || !isTimeAllowed(candidate, view.value, limits.value)
-  );
+  return (number.value - first) % step !== 0 || !isTimeAllowed(candidate, view.value, limits.value);
 }
 
 // A day period is disabled when none of its hours is allowed.

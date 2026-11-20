@@ -1,6 +1,5 @@
 import { expectType } from '#test-utils';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import { REASONS } from '../../internals/reasons';
 
 declare const time: Temporal.PlainTime;
 declare const dateTime: Temporal.PlainDateTime;
@@ -49,15 +48,9 @@ function assertValueChange(details: TimePicker.Root.ChangeEventDetails) {
     TimePicker.Root.ChangeEventDetails['reason']
   >(details.reason);
 
-  if (details.reason === REASONS.itemPress) {
-    const event: MouseEvent | KeyboardEvent = details.event;
-    void event;
-  }
-
-  if (details.reason === REASONS.inputPaste) {
-    const event: ClipboardEvent = details.event;
-    void event;
-  }
+  // The picker gives the details of a field, a clock or a calendar with no change.
+  const event: Event = details.event;
+  void event;
 }
 
 void assertValueChange;

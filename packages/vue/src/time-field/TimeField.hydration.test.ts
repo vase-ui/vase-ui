@@ -7,7 +7,9 @@ import { takeReportedMessages } from '../../test/reportedMessages';
 // The parts compile as Vapor components in these setups of `vitest.vue-3.6.config.ts`.
 const isVaporParts = ['vapor', 'vdom-interop'].includes(inject('app'));
 
-const segmentsOf = (root: Element) => [...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]')];
+const segmentsOf = (root: Element) => [
+  ...root.querySelectorAll<HTMLInputElement>('[role="spinbutton"]'),
+];
 
 describe('server render and hydration', () => {
   test('the server HTML has the segments of the time and the form input; the hydration keeps each element', async () => {
