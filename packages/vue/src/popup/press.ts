@@ -102,7 +102,7 @@ export function usePopupPress(
         ),
       );
     },
-    { flush: 'sync' },
+    { flush: 'sync', immediate: true },
   );
 
   return {

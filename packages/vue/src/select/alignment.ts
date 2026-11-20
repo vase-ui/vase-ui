@@ -248,11 +248,13 @@ export function useItemAlignment(
     () =>
       root.open && aligned.value && options.popupShown() ? context.positioner.value : null,
     async (positioner) => {
+      const current = run;
+      // The popup shows in the render that this change queues.
+      await nextTick();
       const popup = root.popup;
       const trigger = root.activeTrigger;
       const scroller = context.container();
-      if (!positioner || !popup || !trigger || !scroller || place.value) return;
-      const current = run;
+      if (!positioner || !popup || !trigger || !scroller || place.value || current !== run) return;
       const win = ownerWindow(positioner);
       const view = ownerDocument(positioner).documentElement;
       const styles = win.getComputedStyle(positioner);
@@ -265,6 +267,7 @@ export function useItemAlignment(
         positioner: boxOf(positioner),
         value: context.valueElement.value ? boxOf(context.valueElement.value) : undefined,
         text: text?.isConnected ? boxOf(text) : undefined,
+        scrollHeight: scroller.scrollHeight,
       }));
       const first = alignedPlace({
         ...read,
@@ -292,7 +295,7 @@ export function useItemAlignment(
         trigger: read.trigger,
         positionerHeight: read.positioner.height,
         maxScrollTop: getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight),
-        scrollHeight: scroller.scrollHeight,
+        scrollHeight: read.scrollHeight,
         minHeight: pixels(styles.minHeight, MIN_HEIGHT),
         maxHeight,
       });
@@ -332,6 +335,8 @@ export function useItemAlignment(
   return {
     /** The place for `usePlacement`: none while the popup is anchored. */
     place: computed(() => (aligned.value ? place.value : undefined)),
+    /** The popup that covers the trigger has its height and its scroll. */
+    ready: computed(() => !aligned.value || (!!place.value && place.value.visibility !== 'hidden')),
     /** The list scrolled. */
     onScroll(scroller: HTMLElement) {
       if (aligned.value && pinned && !full && place.value?.visibility !== 'hidden') {

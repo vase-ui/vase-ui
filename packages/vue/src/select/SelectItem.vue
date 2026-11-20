@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, useAttrs, watch } from 'vue';
+import { computed, mergeProps, provide, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement } from '../common/element';
 import { useListItem } from '../list/list';
@@ -52,7 +52,7 @@ const state = computed<SelectItemState>(() => ({
 }));
 
 function elementProps() {
-  return button.mergeAttributes(
+  const merged = button.mergeAttributes(
     {
       role: 'option',
       ...item.attributes.value,
@@ -68,6 +68,13 @@ function elementProps() {
     },
     attrs,
   );
+  // An Enter that selects closes the popup, and the focus goes back to the trigger in the keydown.
+  // The default of the key would then press the trigger.
+  return mergeProps(merged, {
+    onKeydown(event: KeyboardEvent) {
+      if (event.key === 'Enter' && !disabled.value) event.preventDefault();
+    },
+  });
 }
 
 defineExpose({ element });

@@ -52,7 +52,7 @@ const placement = usePlacement(
 );
 const side = computed(() => (aligned.value ? 'none' : placement.side.value));
 watch(
-  [element, placement.placed, side],
+  [element, () => placement.placed.value && alignment.ready.value, side],
   ([positioner, placed, current]) => {
     context.positioner.value = positioner;
     context.placed.value = placed;

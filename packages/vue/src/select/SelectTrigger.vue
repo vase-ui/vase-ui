@@ -52,15 +52,21 @@ const state = computed<SelectTriggerState>(() => ({
   filled: field?.state.filled ?? false,
 }));
 
-// The focus of a mouse press comes after its `pointerdown`, in the same task.
-let pressing = false;
+let toggled = false;
 
 function onPointerdown(event: PointerEvent) {
   const wasOpen = root.open;
   trigger.onPointerdown(event);
-  pressing = event.pointerType === 'mouse';
-  setTimeout(() => (pressing = false));
+  toggled = root.open !== wasOpen;
   if (!wasOpen && root.open && element.value) context.press.start(event, element.value);
+}
+
+// The popup that a press opened takes the focus before the `mousedown` of the press, and the
+// button of WebKit takes no focus at a press (test/measurements/select.test.ts). So no button
+// takes it.
+function onMousedown(event: MouseEvent) {
+  if (toggled) event.preventDefault();
+  toggled = false;
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -85,7 +91,7 @@ function onKeydown(event: KeyboardEvent) {
 function onFocus(event: FocusEvent) {
   context.keep();
   // An aligned popup covers the trigger.
-  if (!pressing && root.open && context.aligned.value) root.request(false, 'none', event);
+  if (root.open && context.aligned.value) root.request(false, 'none', event);
 }
 
 function onBlur(event: FocusEvent) {
@@ -113,6 +119,7 @@ function elementProps() {
       'data-placeholder': state.value.placeholder ? '' : undefined,
       onClick: trigger.onClick,
       onPointerdown,
+      onMousedown,
       onFocus,
       onBlur,
     },

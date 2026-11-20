@@ -244,8 +244,9 @@ export function useSelectRoot(
     skipDisabled: true,
     current: () => (root.open ? list.highlighted : (selectedItem() ?? null)),
     onMatch(item, event) {
+      const itemValue = itemValues.get(item.element);
       if (root.open) list.highlight(item, 'keyboard');
-      else change(itemValues.get(item.element), 'none', event);
+      else if (!equal(itemValue, value.value)) change(itemValue, 'none', event);
     },
     get hidden() {
       return !root.open;
