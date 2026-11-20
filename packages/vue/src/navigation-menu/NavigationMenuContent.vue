@@ -33,6 +33,10 @@ const onKeydown = useKeyGroup({ orientation: () => 'both' });
 // A portal in the content goes where the portal of the root goes.
 providePortalTarget((inherited) => root.portalTarget ?? inherited);
 
+// With no viewport, the `<Teleport>` is disabled, and the content is in its item. The server render
+// of a component with no `ssrRender`, such as one of the package in Nuxt, drops a `<Teleport>` with
+// no target, so `to` holds a selector that selects no element.
+const NO_TARGET = ':not(*)';
 const contentId = computed(() => givenId(props.id) ?? generatedId);
 const shown = computed(
   () => root.shown != null && root.shown === item.value && root.target !== null,
@@ -94,7 +98,7 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Teleport :to="root.target" :disabled="!root.target">
+  <Teleport :to="root.target ?? NO_TARGET" :disabled="!root.target">
     <Transition v-bind="transitionProps">
       <slot
         v-if="rendered && $slots.element"
