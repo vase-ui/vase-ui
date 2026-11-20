@@ -142,7 +142,8 @@ export namespace Trigger {
 }
 
 /**
- * The label of the value. Renders no element.
+ * The label of the value.
+ * Renders no element.
  */
 export const Value: typeof ComboboxValue = ComboboxValue;
 export namespace Value {
@@ -201,7 +202,8 @@ export namespace ChipRemove {
 }
 
 /**
- * Moves its content to another place of the DOM, `<body>` by default. Renders no element.
+ * Moves its content to another place of the DOM, `<body>` by default.
+ * Renders no element.
  */
 export const Portal: typeof ComboboxPortal = ComboboxPortal;
 export namespace Portal {

@@ -85,7 +85,8 @@ export namespace Root {
 }
 
 /**
- * The text of the input. Renders no element.
+ * The text of the input.
+ * Renders no element.
  */
 export const Value: typeof AutocompleteValue = AutocompleteValue;
 export namespace Value {
@@ -144,7 +145,8 @@ export namespace Clear {
 }
 
 /**
- * Moves its content to another place of the DOM, `<body>` by default. Renders no element.
+ * Moves its content to another place of the DOM, `<body>` by default.
+ * Renders no element.
  */
 export const Portal: typeof ComboboxPortal = ComboboxPortal;
 export namespace Portal {
