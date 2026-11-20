@@ -1,13 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import type { LayoutCase, LayoutResult } from '../../../../test/server/printSegmentLayouts';
+import type { LayoutCase, LayoutResult } from '../../../test/server/printSegmentLayouts';
 import { formatter } from '../../internals/date-time/format';
 import type { TemporalValue } from '../../internals/date-time/temporal';
 import type { SegmentLayoutOptions } from './layout';
 
 const PRINT_SEGMENT_LAYOUTS = fileURLToPath(
-  new URL('../../../../test/server/printSegmentLayouts.ts', import.meta.url),
+  new URL('../../../test/server/printSegmentLayouts.ts', import.meta.url),
 );
 
 // `Temporal` has no `islamic` and no `islamic-rgsa`, so no field shows them.
