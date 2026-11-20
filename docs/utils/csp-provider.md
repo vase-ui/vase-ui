@@ -1,6 +1,6 @@
 ---
 order: 1
-description: A CSP provider component that gives a nonce to the inline style and script elements of Vase UI parts, and that can turn off the inline style elements.
+description: A CSP provider component that gives a nonce to the inline style and script elements of Vase UI parts, and that can remove the inline style elements.
 ---
 
 <script setup lang="ts">
@@ -44,7 +44,7 @@ Then give the nonce to the root component as a prop, for example with `createSSR
 These parts render an inline element that gets the nonce:
 
 - `ScrollArea.Root` renders a `<style>` element that hides the native scrollbar of `ScrollArea.Viewport`.
-- `Select.Popup` and `Select.List` use the same `<style>` element while the popup aligns its item with the trigger, or while it has a scroll arrow and the user does not use touch.
+- `Select.Popup` and `Select.List` use the same `<style>` element while the popup aligns its item with the trigger. They also use it while the popup has a scroll arrow and the user does not use touch.
 - `Tabs.Indicator` with `renderBeforeHydration` renders a `<script>` element in the server HTML.
 
 ## Disable inline style elements

@@ -35,7 +35,9 @@ Use `useElement` to build a component in the form of a Vase UI part. The compone
 
 :::
 
-- Bind `setElement` on the element with `:ref`, and give it to the `element` slot as `elementRef`.
+- Bind `setElement` on the element with `:ref`, because Vapor ignores a `ref` in `v-bind`. Give `setElement` to the `element` slot as `elementRef`.
+- `element` is the element that `setElement` gets. For a component in the slot, it is the `element` that the component exposes, else its root element. A Vapor component has no root element to give.
+- `element` is `null` on a server, before the mount and after the unmount.
 - Expose `element`. A template ref of the consumer then reads the native element. The component can also be the element of a Vase UI part, and a part can be the element of the component.
 - With `inheritAttrs: false`, merge the attributes of the consumer with the attributes of the component in `mergeProps` of Vue. The value of the consumer wins. `class` and `style` join, and each listener stays.
 - `ElementSlotProps` of `@vase-ui/vue/types` types the scope of the `element` slot.

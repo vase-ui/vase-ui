@@ -52,7 +52,8 @@ export namespace Panel {
 /**
  * The separator between two panels. The user drags it or presses a key on it to resize the panels.
  * Enter collapses or expands the primary panel, and a double click gives it its first size.
- * The handle ends with a `<span>`, its pointer target, and has `position: relative` to contain it.
+ * Without the `element` slot, the handle ends with a `<span>`, its pointer target. The handle has
+ * `position: relative` to contain it.
  * A press focuses the handle with no focus ring, where the browser has the `focusVisible` option of
  * `focus()`. A handle before the first panel or after the last panel moves nothing, and it has no
  * tab stop and no value.

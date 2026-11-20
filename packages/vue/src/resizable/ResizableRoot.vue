@@ -67,8 +67,8 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
 });
 const emit = defineEmits<{
   /**
-   * The user changes the layout. `details.cancel()` keeps the layout, so a listener can write a
-   * layout of its own to `v-model`, such as a layout that snaps to a rule of the app.
+   * The user changes the layout. `details.cancel()` keeps the layout. A listener can then write its
+   * own layout to `v-model`, such as a layout that snaps to a rule of the app.
    */
   layoutChange: [layout: ResizableLayout, details: ResizableRootChangeEventDetails];
   /**

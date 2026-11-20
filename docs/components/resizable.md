@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue component for panels that a person resizes with a pointer or the keyboard.
+description: An unstyled Vue resizable component that shows panels that a person resizes with a pointer or the keyboard.
 ---
 
 <script setup lang="ts">
@@ -32,7 +32,7 @@ import DemoResizableVerticalTailwind from '../demos/resizable/vertical/tailwind/
 
 # Resizable
 
-Panels that a person resizes with a handle, a pointer or the keyboard.
+Panels that a person resizes with a pointer or the keyboard on the handles between them.
 
 <DemoFrame>
   <DemoResizableHero />
@@ -67,7 +67,7 @@ Panels that a person resizes with a handle, a pointer or the keyboard.
 
 - **Keep the parts flex items of the root.** Each panel and each handle must be a flex item of the root element. A wrapper element between them needs `display: contents`.
 - **Name each handle.** Give each handle a name that says which panel it resizes, such as `aria-label="Resize the navigation"`.
-- **Give the value words.** The value of a handle is the size of its primary panel in percent, and a screen reader reads it as a number. To give it words, bind `aria-valuetext` to a text that you make from `sizes` of the default slot of the root, as in [Control the layout](#control-the-layout).
+- **Give the value words.** The value of a handle is the size of its primary panel in percent, and a screen reader reads it as a number. To give it words, bind `aria-valuetext` to a text from `sizes` of the default slot of the root. [Control the layout](#control-the-layout) shows how.
 - **Give a coarse pointer a larger target.** The pointer target of a handle is at least 10 px on the axis of the move. [WCAG 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum) asks for a target of at least 24 by 24 CSS pixels. Set `--resizable-handle-hit-area-size` to `24px` in `@media (pointer: coarse)`, as each demo does.
 
 ## Anatomy
@@ -104,7 +104,7 @@ The layout is the layout that the app asks for. The panels show it as far as the
 
 A panel with `collapsible` collapses to its `collapsedSize`, which is 0 by default. A drag collapses the panel when it goes below `minSize` by more than `collapseThreshold`. A drag expands a collapsed panel when it goes above `collapsedSize` by more than `collapseThreshold`. Enter on a handle collapses or expands its primary panel at once, as `collapse()` and `expand()` of a template ref do.
 
-The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The panels get their sizes at the mount. Add the class of the transition in the second animation frame after the mount, so that it does not animate them. The root has `data-dragging` during a drag. Turn the transition off then, or each move of the pointer animates.
+The size of a panel is its `flex-grow`, so a CSS transition of `flex-grow` animates a collapse. The panels get their sizes at the mount. Add the class of the transition in the second animation frame after the mount, so that it does not animate them. The root has `data-dragging` during a drag. Remove the transition then, or each move of the pointer animates.
 
 <DemoFrame>
   <DemoResizableCollapsible />
@@ -180,7 +180,7 @@ Three collapsible panels in a vertical root make an accordion. Each header butto
 
 ### Fixed panels
 
-A panel with `rootResizeBehavior="fixed"` keeps its pixels when the root changes size. The other panels share the rest in the ratio that they have. When the other panels cannot take a change of the root, the fixed panels give way in the order of `rootResizePriority`: the greater number first.
+A panel with `rootResizeBehavior="fixed"` keeps its pixels when the root changes size. The other panels share the rest in the ratio that they have. When the other panels cannot take a change of the root, the fixed panels change size in the order of `rootResizePriority`: the greater number first.
 
 A drag, a key, a method and the layout of the app give a fixed panel new pixels. The layout of each event gives a fixed panel in pixels, with three decimals at the most, such as `'240px'`. Give that layout back to `v-model` or to `defaultLayout`, and each fixed panel gets its pixels again at each size of the root.
 
@@ -440,19 +440,19 @@ These can move at the mount:
 - A layout that the page reads after the mount, such as a layout in a storage.
 - A handle that is not disabled, before the first panel or after the last panel. The server HTML gives it a tab stop and a pointer target that takes a press. After the mount, it has neither.
 
-A server reads only the `dir` attribute of `Resizable.Root`. Set `dir="rtl"` on the root of a right-to-left page, so that the server HTML has the correct `data-at-min` and `data-at-max` of each handle.
+A server reads only the `dir` attribute of `Resizable.Root`. In a right-to-left page, set `dir="rtl"` on `Resizable.Root`, so that the server HTML has the correct `data-at-min` and `data-at-max` of each handle.
 
 ## Keyboard
 
-| Key                          | Action                                                                                                                                                                                                                                               |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Arrow keys                   | Move the handle on the axis of the root by `step`, in the direction of the key on the screen.                                                                                                                                                        |
-| Shift and an arrow key       | Move the handle by `largeStep`.                                                                                                                                                                                                                      |
-| Page Up and Page Down        | Grow and shrink the primary panel by `largeStep`.                                                                                                                                                                                                    |
-| Home and End                 | Give the primary panel its least and its greatest size.                                                                                                                                                                                              |
-| Enter                        | Collapse a collapsible primary panel, or give it its size again.                                                                                                                                                                                     |
-| F6 and Shift+F6              | Move the focus to the first control of the next or the previous panel. A panel with a size of 0 or with no control gets no focus. At its end, a root in a panel of another root gives the key to that root. Another root goes on from its other end. |
-| A key with Ctrl, Alt or Meta | Nothing. The browser gets the key.                                                                                                                                                                                                                   |
+| Key                          | Action                                                                                                                                                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Arrow keys                   | Move the handle on the axis of the root by `step`, in the direction of the key on the screen.                                                                                                                                                           |
+| Shift and an arrow key       | Move the handle by `largeStep`.                                                                                                                                                                                                                         |
+| Page Up and Page Down        | Grow and shrink the primary panel by `largeStep`.                                                                                                                                                                                                       |
+| Home and End                 | Give the primary panel its least and its greatest size.                                                                                                                                                                                                 |
+| Enter                        | Collapse a collapsible primary panel, or give it its size again.                                                                                                                                                                                        |
+| F6 and Shift+F6              | Move the focus to the first control of the next or the previous panel. A panel with a size of 0 or with no control gets no focus. At its end, a root in a panel of another root gives the key to that root. Another root starts again at its other end. |
+| A key with Ctrl, Alt or Meta | Nothing. The browser gets the key.                                                                                                                                                                                                                      |
 
 ## API reference
 
@@ -470,7 +470,7 @@ When a drag changes the layout: at each move, or one time at the release.
 
 ### ResizableRootChangeEventReason
 
-The action of the user that changes the layout: a drag of a handle, a key on a handle, or a double click on a handle.
+The action of the user that changes the layout: `'drag'` is a drag of a handle, `'keyboard'` a key on a handle, and `'reset'` a double click on a handle.
 
 <ApiReference name="ResizableRootChangeEventReason" />
 

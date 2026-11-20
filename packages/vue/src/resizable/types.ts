@@ -54,7 +54,7 @@ export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTML
    */
   dragStep?: number | string;
   /**
-   * A move goes on into the panels after the panel beside the handle.
+   * A move continues into the panels after the panel beside the handle.
    * @default true
    */
   pushPanels?: boolean;
@@ -123,7 +123,7 @@ export interface ResizablePanelProps
   rootResizeBehavior?: 'proportional' | 'fixed';
   /**
    * When the other panels cannot take a size change of the root, the fixed panel with the greater
-   * number gives way first.
+   * number changes size first.
    * @default 0
    */
   rootResizePriority?: number;
