@@ -250,6 +250,10 @@ Set `orientation="vertical"` on `Slider.Root` to make a vertical slider.
 
 </DemoSource>
 
+### Render on the server
+
+The slider reads the text direction of its element. On a right-to-left page that renders on a server, give `Slider.Root` the attribute `dir="rtl"`, so that the server HTML has each thumb at its place.
+
 ## API reference
 
 <ApiReference />

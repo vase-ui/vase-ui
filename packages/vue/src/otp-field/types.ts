@@ -65,7 +65,7 @@ export interface OTPFieldRootProps
    */
   disabled?: boolean;
   /**
-   * The user cannot change the code. The slots stay in the tab order.
+   * The user cannot change the code. The field stays in the tab order.
    * @default false
    */
   readonly?: boolean;

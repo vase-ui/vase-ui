@@ -48,8 +48,8 @@ export namespace Root {
 
 /**
  * An accessible label for the inputs of the slider thumbs.
- * Renders a `<label>` element for the input of the first thumb. The root and each input with no
- * `aria-label` or `aria-labelledby` of their own name the label.
+ * Renders a `<label>` element for the input of the first thumb. The label also names the root and
+ * each input that has no `aria-label` or `aria-labelledby` of its own.
  * @selector `[data-orientation]` The orientation of the slider: `horizontal` or `vertical`.
  * @selector `[data-disabled]` The slider is disabled.
  * @selector `[data-dragging]` The user presses the control with a pointer.
