@@ -1028,6 +1028,29 @@ describe('the panels', () => {
       'enter b right panel-enter-from panel-enter-active',
     ]);
   });
+
+  test('in a <Transition>, a return to a tab during the leave of its panel renders one panel at each moment; the new panel enters after the old one goes', async () => {
+    const root = reactive({ modelValue: 'a' });
+    const { root: host } = mount(TabsInTransition, { root });
+    await nextTick();
+    const panels = () => [...host.querySelectorAll('[role=tabpanel][data-key=a]')];
+    const [old] = panels();
+    let most = 0;
+    const observer = new MutationObserver(() => (most = Math.max(most, panels().length)));
+    observer.observe(host, { childList: true, subtree: true });
+    root.modelValue = 'b';
+    await nextTick();
+    root.modelValue = 'a';
+    await nextTick();
+    expect(panels()).toEqual([old]);
+    await waitFor(() => {
+      expect(panels()).toHaveLength(1);
+      expect(panels()[0]).not.toBe(old);
+      expect(panels()[0]!.className).toBe('');
+    });
+    observer.disconnect();
+    expect(most).toBe(1);
+  });
 });
 
 describe('the activation direction', () => {

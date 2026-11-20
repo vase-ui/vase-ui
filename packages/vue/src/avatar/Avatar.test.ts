@@ -13,6 +13,7 @@ import {
 } from '../../test/pictures';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { mount, mountError, settle } from '../../test/render';
+import { waitFor } from '../../test/waitFor';
 
 /**
  * A listener of `loadingStatusChange` that keeps each status in `events`. The server answers a
@@ -580,6 +581,31 @@ test('Transition gives its enter classes to the image and its leave classes to t
   const fallback = avatar.querySelector('span')!;
   expect(fallback).toHaveClass('v-leave-from', 'v-leave-active');
   expect(getComputedStyle(fallback).position).toBe('absolute');
+});
+
+test('in a <Transition>, a fallback that shows during its leave renders one element at each moment; the new element enters after the old one goes', async () => {
+  const { onLoadingStatusChange, next } = recordStatus();
+  const image = reactive({ src: await pictureThatMustLoad(), onLoadingStatusChange });
+  const { root } = mount(AvatarInTransition, { image });
+  await nextTick();
+  const avatar = root.firstElementChild!;
+  const fallbacks = () => [...avatar.querySelectorAll('span')];
+  const [old] = fallbacks();
+  let most = 0;
+  const observer = new MutationObserver(() => (most = Math.max(most, fallbacks().length)));
+  observer.observe(avatar, { childList: true });
+  await next('loaded');
+  expect(old).toHaveClass('v-leave-active');
+  image.src = pictureThatFails();
+  await nextTick();
+  expect(fallbacks()).toEqual([old]);
+  await waitFor(() => {
+    expect(fallbacks()).toHaveLength(1);
+    expect(fallbacks()[0]).not.toBe(old);
+    expect(fallbacks()[0]!.className).toBe('');
+  });
+  observer.disconnect();
+  expect(most).toBe(1);
 });
 
 describe('lifetime', () => {

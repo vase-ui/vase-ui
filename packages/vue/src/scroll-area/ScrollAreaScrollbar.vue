@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, mergeProps, nextTick, onUnmounted, provide, useAttrs } from 'vue';
 import { useElement } from '../common/element';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { trackPressPosition, wheelPosition } from './geometry';
 import { injectScrollArea, readTrack, scrollbarKey, stateAttributes } from './root';
 import type { ScrollAreaScrollbarProps, ScrollAreaScrollbarState } from './types';
@@ -45,9 +46,11 @@ const state = computed<ScrollAreaScrollbarState>(() => ({
   scrolling: vertical.value ? root.scrollingY : root.scrollingX,
   orientation: props.orientation,
 }));
-const rendered = computed(
-  () => props.keepMounted || (vertical.value ? state.value.hasOverflowY : state.value.hasOverflowX),
+const overflows = computed(() =>
+  vertical.value ? state.value.hasOverflowY : state.value.hasOverflowX,
 );
+const { waiting } = useEnterAfterLeave(() => overflows.value, element);
+const rendered = computed(() => (overflows.value && !waiting.value) || props.keepMounted);
 
 /** The range of the scroll position on the axis. In right-to-left it is `-max` to `0`. */
 function range(viewport: HTMLElement) {

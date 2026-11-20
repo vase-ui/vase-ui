@@ -2,6 +2,7 @@
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { fieldStateAttributes } from './control';
 import { injectFieldRoot } from './root';
 import type { FieldErrorProps, FieldErrorState } from './types';
@@ -24,9 +25,11 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
 const elementId = computed(() => givenId(props.id) ?? generatedId);
-const shows = computed(() =>
+const invalid = computed(() =>
   props.match ? field.validity[props.match] : field.state.valid === false,
 );
+const { waiting } = useEnterAfterLeave(() => invalid.value, element);
+const shown = computed(() => invalid.value && !waiting.value);
 const messages = computed(() =>
   !props.match && field.formErrors.length > 0 ? field.formErrors : field.errors,
 );
@@ -39,7 +42,7 @@ const unregister = field.addDescriber({
     return (slots.element && element.value?.id) || elementId.value;
   },
   get shown() {
-    return shows.value;
+    return shown.value;
   },
 });
 onUnmounted(unregister);
@@ -56,14 +59,14 @@ function elementProps() {
 
 <template>
   <slot
-    v-if="shows && $slots.element"
+    v-if="shown && $slots.element"
     name="element"
     :props="elementProps()"
     :elementRef="setElement"
     :state="field.state"
     :messages="messages"
   />
-  <component :is="as" v-else-if="shows && as" v-bind="elementProps()" :ref="setElement">
+  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
     <slot :state="field.state">
       <template v-if="messages.length === 1">{{ messages[0] }}</template>
       <ul v-else-if="messages.length > 1">
@@ -71,7 +74,7 @@ function elementProps() {
       </ul>
     </slot>
   </component>
-  <div v-else-if="shows" v-bind="elementProps()" :ref="setElement">
+  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="field.state">
       <template v-if="messages.length === 1">{{ messages[0] }}</template>
       <ul v-else-if="messages.length > 1">

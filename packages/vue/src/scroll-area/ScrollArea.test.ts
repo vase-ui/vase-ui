@@ -197,6 +197,33 @@ describe('the parts', () => {
     expect(root.querySelector('.vertical')).toHaveClass('v-enter-active');
     expect(root.querySelector('.corner')).toHaveClass('v-enter-active');
   });
+
+  test('in a <Transition>, an overflow that comes back during the leave renders one scrollbar and one corner at each moment; each new element enters after the old one goes', async () => {
+    const scene = reactive({ height: 1000 });
+    const { root } = mount(ScrollAreaInTransition, { scene });
+    const viewport = root.querySelector<HTMLElement>('.viewport')!;
+    const parts = () => [...root.querySelectorAll('.vertical, .corner')];
+    await waitFor(() =>
+      expect(parts().map((part) => part.className)).toEqual(['vertical', 'corner']),
+    );
+    await settle();
+    const old = parts();
+    let most = 0;
+    const observer = new MutationObserver(() => (most = Math.max(most, parts().length)));
+    observer.observe(root, { childList: true, subtree: true });
+    scene.height = 100;
+    await waitFor(() => expect(old[0]).toHaveClass('v-leave-active'));
+    await settle();
+    scene.height = 1000;
+    await waitFor(() => expect(viewport).toHaveAttribute('data-has-overflow-y'));
+    expect(parts()).toEqual(old);
+    await waitFor(() => {
+      expect(parts().map((part) => part.className)).toEqual(['vertical', 'corner']);
+      expect(parts().filter((part) => old.includes(part))).toEqual([]);
+    });
+    observer.disconnect();
+    expect(most).toBe(2);
+  });
 });
 
 describe('overflow', () => {

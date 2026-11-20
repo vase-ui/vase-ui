@@ -2,6 +2,7 @@
 import { computed, mergeProps, onMounted, shallowRef, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { useIsHydrating } from '../common/hydration';
+import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import PrehydrationScript from '../internals/PrehydrationScript.vue';
 import { injectTabsList } from './list';
 import { measureActiveTab, type ActiveTabMeasure } from './measure';
@@ -26,6 +27,8 @@ const list = injectTabsList();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const isHydrating = useIsHydrating();
+const { waiting } = useEnterAfterLeave(() => root.value !== null, element);
+const shown = computed(() => root.value !== null && !waiting.value);
 
 // The server HTML and the first client render have no measure.
 const measure = shallowRef<ActiveTabMeasure | null>(null);
@@ -111,26 +114,21 @@ function elementProps() {
 
 <template>
   <slot
-    v-if="root.value !== null && $slots.element && !renderBeforeHydration"
+    v-if="shown && $slots.element && !renderBeforeHydration"
     name="element"
     :props="elementProps()"
     :elementRef="setElement"
     :state="state"
   />
-  <template v-else-if="root.value !== null && $slots.element">
+  <template v-else-if="shown && $slots.element">
     <slot name="element" :props="elementProps()" :elementRef="setElement" :state="state" />
     <PrehydrationScript :script="prehydrationScript" />
   </template>
-  <component
-    :is="as"
-    v-else-if="root.value !== null && as"
-    v-bind="elementProps()"
-    :ref="setElement"
-  >
+  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />
   </component>
-  <span v-else-if="root.value !== null" v-bind="elementProps()" :ref="setElement">
+  <span v-else-if="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
     <PrehydrationScript v-if="renderBeforeHydration" :script="prehydrationScript" />
   </span>

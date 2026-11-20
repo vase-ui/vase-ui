@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import TabsIndicatorLayouts from '../../test/fixtures/TabsIndicatorLayouts.vue';
+import TabsInTransition from '../../test/fixtures/TabsInTransition.vue';
 import { screen } from '../../test/queries';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
@@ -85,6 +86,29 @@ async function nextFrame() {
 }
 
 describe('<Tabs.Indicator />', () => {
+  test('in a <Transition>, a value during the leave renders one indicator at each moment; the new indicator enters after the old one goes', async () => {
+    const root = reactive<{ modelValue: string | null }>({ modelValue: 'a' });
+    const { root: host } = mount(TabsInTransition, { root });
+    await nextTick();
+    const indicators = () => [...host.querySelectorAll('.Indicator')];
+    const [old] = indicators();
+    let most = 0;
+    const observer = new MutationObserver(() => (most = Math.max(most, indicators().length)));
+    observer.observe(host, { childList: true, subtree: true });
+    root.modelValue = null;
+    await nextTick();
+    root.modelValue = 'b';
+    await nextTick();
+    expect(indicators()).toEqual([old]);
+    await waitFor(() => {
+      expect(indicators()).toHaveLength(1);
+      expect(indicators()[0]).not.toBe(old);
+      expect(indicators()[0]!.className).toBe('Indicator');
+    });
+    observer.disconnect();
+    expect(most).toBe(1);
+  });
+
   test('exposes null active tab state when the selected value has no matching tab', async () => {
     const root = reactive<Record<string, unknown>>({ modelValue: 'missing' });
     const renders: string[] = [];
