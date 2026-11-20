@@ -7,6 +7,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/popover/description/PopoverDescription.tsx#L24",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/store/ReactStore.ts#L72-L74"
   ],
-  "behavior": "When two titles of one dialog or of one popover are mounted, the popup names the title that registered last in `aria-labelledby`. When that title unmounts, the popup names the title that stays. Base UI gives the popup no `aria-labelledby` then, because the title that stays does not write its id again. The descriptions follow the same rule for `aria-describedby`.",
+  "behavior": "With two mounted titles in one dialog or one popover, the popup names the title that mounted last in `aria-labelledby`. When that title unmounts, the popup names the title that stays. Base UI then gives the popup no `aria-labelledby`, because the title that stays does not write its id again. Two descriptions follow the same rule for `aria-describedby`.",
   "dueWith": "packages/react/src/dialog/title/DialogTitle.tsx"
 }

@@ -89,6 +89,7 @@ export interface DrawerRootState {}
 
 export interface DrawerTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
+  /** The root names the active trigger by this id in `triggerId`. */
   id?: string | undefined;
   /**
    * The user cannot press the trigger.
@@ -105,6 +106,7 @@ export interface DrawerTriggerState extends DialogTriggerState {}
 
 export interface DrawerSwipeAreaProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+  /** The root names the area by this id in `triggerId` after a swipe on the area opens the drawer. */
   id?: string | undefined;
   /**
    * A swipe on the area opens nothing.
@@ -138,7 +140,10 @@ export interface DrawerViewportState {
 }
 
 export interface DrawerPopupProps extends Omit<DialogPopupProps, 'initialFocus'> {
-  /** The element that gets the focus at the open. By default the popup. */
+  /**
+   * The element that gets the focus at the open, or `false` to keep the focus where it is. A
+   * function gets the type of the interaction and gives the element. By default the popup.
+   */
   initialFocus?: DialogPopupProps['initialFocus'];
 }
 
