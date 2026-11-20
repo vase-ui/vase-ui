@@ -393,13 +393,23 @@ describe('in the DOM', () => {
     expect(await opened()).not.toHaveAttribute('data-instant');
   });
 
-  test('the popup that leaves has `data-instant="dismiss"` after Escape', async () => {
-    mount(PreviewCardInTransition, { root: { defaultOpen: true } });
+  test('the popup that leaves has `data-instant="dismiss"` after Escape, and keeps `focus` of an open by the focus after a press outside', async () => {
+    const { unmount } = mount(PreviewCardInTransition, { root: { defaultOpen: true } });
     const element = await opened();
     element.focus();
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(element).toHaveAttribute('data-instant', 'dismiss');
+    unmount();
+    mount(PreviewCardInTransition, { trigger: { delay: 0 } });
+    // `focus()` after a key gives `:focus-visible` (test/measurements/preview-card.test.ts).
+    await userEvent.keyboard('{Shift}');
+    byId('a').focus();
+    const second = await opened();
+    expect(second).toHaveAttribute('data-instant', 'focus');
+    await userEvent.click(byId('outside'));
+    await nextTick();
+    expect(second).toHaveAttribute('data-instant', 'focus');
   });
 });
 
@@ -511,7 +521,7 @@ describe('the hover', () => {
     await closed();
   });
 
-  test('a card that a hover opened closes when the pointer leaves it; a card that the default opened does not', async () => {
+  test('a card that a hover opened closes when the pointer leaves it; a card that the default opened does not, also when the pointer comes from its link or leaves the page', async () => {
     const { trigger, unmount } = await mountCard({
       triggers: [{ key: 't', attrs: { delay: 0, closeDelay: 0 } }],
     });
@@ -528,6 +538,13 @@ describe('the hover', () => {
     });
     expect(await opened()).not.toBe(element);
     await placed();
+    await userEvent.hover(byId('outside'));
+    document.documentElement.dispatchEvent(
+      new PointerEvent('pointerleave', { pointerType: 'mouse' }),
+    );
+    await userEvent.hover(byTestId('text'));
+    await userEvent.hover(byId('outside'));
+    await userEvent.hover(document.querySelector<HTMLElement>('[data-key="t"]')!);
     await userEvent.hover(byTestId('text'));
     await userEvent.hover(byId('outside'));
     await wait(100);
@@ -583,12 +600,24 @@ describe('the hover', () => {
     }
   });
 
-  test('the delay of a hover holds when another link of the root unmounts', async () => {
+  test('a hover while the card leaves after Escape waits for the delay', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    mount(PreviewCardInTransition, { trigger: { delay: 150, closeDelay: 0 } });
+    await userEvent.hover(byId('a'));
+    await waitFor(() => expect(byId('a')).toHaveAttribute('data-popup-open'));
+    await userEvent.keyboard('{Escape}');
+    expect(popup()).not.toBe(null);
+    await userEvent.hover(byId('b'));
+    expect(byId('b')).not.toHaveAttribute('data-popup-open');
+    await waitFor(() => expect(byId('b')).toHaveAttribute('data-popup-open'));
+  });
+
+  test('the delay of a hover holds when another link of the root unmounts, also the link of the trigger id of a closed root', async () => {
     const triggers = reactive([
       { key: 't', attrs: { delay: 100 } },
-      { key: 'other', attrs: { delay: 0 } },
+      { key: 'other', attrs: { id: 'other', delay: 0 } },
     ]);
-    const { trigger } = await mountCard({ triggers });
+    const { trigger } = await mountCard({ root: { defaultTriggerId: 'other' }, triggers });
     await userEvent.hover(trigger());
     triggers.splice(1, 1);
     await nextTick();
@@ -694,6 +723,24 @@ describe('the focus', () => {
     expect(document.querySelector('[data-key="a"]')).toHaveAttribute('data-popup-open');
   });
 
+  test('the focus that leaves a link keeps the card that is open for another link', async () => {
+    const { trigger } = await mountCard({
+      triggers: [
+        { key: 'a', attrs: { delay: 0 } },
+        { key: 'b', attrs: { delay: 0 } },
+      ],
+    });
+    // A mouse press before `focus()` gives no `:focus-visible`, so the link gets the focus with no
+    // open (test/measurements/preview-card.test.ts).
+    await userEvent.click(byId('before'));
+    trigger('a').focus();
+    await userEvent.hover(trigger('b'));
+    await opened();
+    byId('before').focus();
+    await wait(50);
+    expect(trigger('b')).toHaveAttribute('data-popup-open');
+  });
+
   test.each([false, true])(
     'a press on text in a card that the focus opened keeps it open (portal in a shadow root: %s)',
     async (shadow) => {
@@ -754,6 +801,27 @@ describe('the active trigger leaves', () => {
     await closed();
     expect(events).toEqual([[false, 'none', undefined]]);
     expect(document.querySelector('[data-key="b"]')).not.toHaveAttribute('data-popup-open');
+  });
+
+  test('a focused link that Vue removes gives one openChange, also when a listener cancels the close', async () => {
+    const log: string[] = [];
+    const triggers = reactive([{ key: 't', attrs: { delay: 0 } }]);
+    await mountCard({
+      root: {
+        onOpenChange: (open: boolean, details: PreviewCardRootChangeEventDetails) => {
+          log.push(`${open} ${details.reason}`);
+          if (details.reason === 'none') details.cancel();
+        },
+      },
+      triggers,
+    });
+    await tabToLink();
+    await opened();
+    triggers.splice(0, 1);
+    await nextTick();
+    await wait(50);
+    expect(log).toEqual(['true trigger-focus', 'false none']);
+    expect(popup()).not.toBe(null);
   });
 
   test('a cancelled close keeps the card open at its place with its payload', async () => {

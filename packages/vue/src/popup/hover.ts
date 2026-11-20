@@ -97,6 +97,8 @@ export function usePopupHover(
   }
 
   // While the popup is open for this trigger, one listener of the document follows the pointer.
+  // Vapor sets the ref of the trigger before it inserts the element, so the watcher reads the
+  // document of the trigger after the render.
   let from: Point | null = null;
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
   let byHover = true;
@@ -120,7 +122,7 @@ export function usePopupHover(
         ),
       );
     },
-    { flush: 'sync' },
+    { flush: 'post' },
   );
 
   function follow(event: PointerEvent) {

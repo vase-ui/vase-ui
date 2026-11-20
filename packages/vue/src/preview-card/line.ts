@@ -40,12 +40,10 @@ export function linesOf(element: Element): Box[] {
 
 const hoveredLines = new WeakMap<Element, number>();
 
-/** Records the line of the link under the pointer. A link of one line records nothing. */
+/** Records the line of the link under the pointer. */
 export function recordHoveredLine(event: PointerEvent) {
-  if (event.pointerType === 'touch') return;
   const link = event.currentTarget as Element;
   const boxes = linesOf(link);
-  if (boxes.length < 2) return;
   // The point of a pointer event is in the box of its line
   // (test/measurements/preview-card.test.ts). A point between two lines takes the nearest one.
   const distances = boxes.map((box) =>
@@ -85,7 +83,7 @@ export function lineMiddleware(line: () => Line | null): Middleware {
         height: box.bottom - box.top,
       });
       const rects = await state.platform.getElementRects({
-        reference: { contextElement: element, getBoundingClientRect: () => rect },
+        reference: { getBoundingClientRect: () => rect },
         floating,
         strategy: state.strategy,
       });

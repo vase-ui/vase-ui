@@ -106,26 +106,42 @@ describe('the line of a wrapped link', () => {
     });
   });
 
-  test('a card that a hover moves to another link has the line of that link; a card that the parent opens or moves has no line', async () => {
-    const root = reactive<Props>({});
-    mountLinks({ root, trigger: { delay: 0, closeDelay: 0 } });
-    await hoverLine('overlap', 0);
+  test('a card that a hover moves to another link has the line of that link; a card that the parent moves or opens has no line', async () => {
+    const root = reactive<Props>({ open: false, triggerId: null });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    root['onUpdate:triggerId'] = (id: string | null) => (root.triggerId = id);
+    mountLinks({ root });
     const overlap = linesOf(link('overlap'));
-    await placedAt((box) => expectNear(box.top, overlap[0]!.bottom));
-    await hoverLine('parts', 0);
     const parts = linesOf(link('parts'));
+    await hoverLine('parts', 0);
     await placedAt((box) => expectNear(center(box), center(parts[0]!)));
-    await userEvent.pointer({ coords: { x: 1, y: 1 } });
-    await waitFor(() => expect(positioner()).toBe(null));
-    Object.assign(root, { open: true, triggerId: 'overlap' });
-    await placedAt((box) => expectNear(box.top, overlap[1]!.bottom));
+    await hoverLine('overlap', 0);
+    await placedAt((box) => expectNear(box.top, overlap[0]!.bottom));
     root.triggerId = 'parts';
-    // The side rectangle of a link of two parts: from the top of the first part to the bottom of
-    // the second, with the left and the right of the second.
+    // The side rectangle of a link of two parts: the bottom, the left and the right of the second.
     await placedAt((box) => {
       expectNear(box.top, parts[1]!.bottom);
       expectNear(center(box), center(parts[1]!));
     });
+    root.open = false;
+    await waitFor(() => expect(positioner()).toBe(null));
+    Object.assign(root, { open: true, triggerId: 'overlap' });
+    await placedAt((box) => expectNear(box.top, overlap[1]!.bottom));
+  });
+
+  test('a close that the parent refuses keeps the line', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => {
+      if (open) root.open = true;
+    };
+    mountLinks({ root, positioner: { side: 'top' } });
+    await hoverLine('overlap', 1);
+    const second = linesOf(link('overlap'))[1]!;
+    await placedAt((box) => expectNear(box.bottom, second.top));
+    await userEvent.keyboard('{Escape}');
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expectNear(positioner()!.getBoundingClientRect().bottom, second.top);
   });
 
   test('the card stays at its line after a scroll of the page', async () => {

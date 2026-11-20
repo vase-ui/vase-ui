@@ -58,25 +58,19 @@ const hover = usePopupHover(root, {
 });
 const focus = useOpenOnFocus(root, { element, delay: () => props.delay });
 
-// An open by hover in the same event reads the line, so this listener comes first.
-function recordLine(event: PointerEvent) {
-  if (!open.value) recordHoveredLine(event);
-}
-
 const state = computed<PreviewCardTriggerState>(() => ({ open: open.value }));
 
 function elementProps() {
   return mergeProps(
-    { onPointerenter: recordLine, onPointermove: recordLine },
+    // An open by hover in the same event reads the line, so this listener comes first.
+    { onPointerenter: recordHoveredLine, onPointermove: recordHoveredLine },
     hover.listeners,
     focus.listeners,
     {
       id: elementId.value,
       'data-popup-open': open.value ? '' : undefined,
       // The link has the focus, so its ancestors get no Escape that closes the card.
-      onKeydown: (event: KeyboardEvent) => {
-        if (open.value) onLayerKeydown(event);
-      },
+      onKeydown: onLayerKeydown,
     },
     attrs,
   );

@@ -5,8 +5,8 @@ import { PreviewCard } from '../../src/preview-card';
 type Props = Record<string, unknown>;
 
 // Two links and a popup in a `<Transition appear>` in a portal. The leave of the popup takes
-// 300 ms. With `keepMounted` on the portal, Vue runs no transition, and the CSS of `[hidden]`
-// animates the kept popup for 300 ms.
+// 300 ms. With `keepMounted` on the portal, Vue runs no transition, and an animation of `[hidden]`
+// that fills forwards hides the kept popup in 300 ms.
 defineProps({
   root: Object as PropType<Props>,
   trigger: Object as PropType<Props>,
@@ -32,13 +32,19 @@ defineProps({
 </template>
 
 <style>
-.card-leave-active,
-.card[hidden] {
+.card-leave-active {
   transition: opacity 300ms;
 }
-.card-leave-to,
+.card-leave-to {
+  opacity: 0;
+}
 .card[hidden] {
   display: block;
-  opacity: 0;
+  animation: card-hide 300ms forwards;
+}
+@keyframes card-hide {
+  to {
+    opacity: 0;
+  }
 }
 </style>

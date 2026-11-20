@@ -92,7 +92,7 @@ export function usePreviewCardRoot<Payload>(
     handle: () => props.handle,
     emitChange(open, details) {
       emit('openChange', open, details as PreviewCardRootChangeEventDetails);
-      if (!open || details.isCanceled) return;
+      if (!open) return;
       line.value =
         details.reason === 'trigger-hover' && details.trigger
           ? hoveredLineOf(details.trigger)
