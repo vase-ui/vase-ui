@@ -1,7 +1,7 @@
 // Measurements with native elements and plain Vue, with no code of the library. Each one states
 // what the browser or Vue does, so that `NumberField` has code only where they do not do it.
 import type { CDPSession } from '@vitest/browser-playwright';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureNumberInputs from '../fixtures/MeasureNumberInputs.vue';
@@ -315,6 +315,12 @@ describe('text input events', () => {
     await userEvent.copy();
     target!.focus();
     await userEvent.paste();
+    // WebKit ends the drag of a draggable element with no `pointerup` and no `pointercancel`. The
+    // page then keeps the button pressed, and its next press gives no `pointerdown`. Vitest runs
+    // later test files in the same page. A release off the page ends the press.
+    if (server.browser === 'webkit') {
+      onTestFinished(() => userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' }));
+    }
     await userEvent.dragAndDrop(drag, target!);
     await timer();
     expect(heard).toEqual([
