@@ -4,7 +4,6 @@ import type { Component, Ref, VNode } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
 import { NumberField } from '@vase-ui/vue/number-field';
-import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -289,28 +288,6 @@ describe('useRegisteredId', () => {
             <NumberField.Input v-slots={slot('input', id)} />
             <NumberField.Increment data-testid="named" />
           </NumberField.Root>
-        ),
-      },
-      {
-        name: 'Resizable.Panel',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Resizable.Root>
-            <Resizable.Panel id="a" v-slots={slot('div', id)} />
-            <Resizable.Handle data-testid="named" />
-            <Resizable.Panel id="b" />
-          </Resizable.Root>
-        ),
-      },
-      {
-        name: 'Resizable.Panel with disabled handle',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <Resizable.Root>
-            <Resizable.Panel id="a" v-slots={slot('div', id)} />
-            <Resizable.Handle disabled data-testid="named" />
-            <Resizable.Panel id="b" />
-          </Resizable.Root>
         ),
       },
     ];

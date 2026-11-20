@@ -2,7 +2,7 @@ import * as DateField from '../src/date-field/index.parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
-import * as Resizable from '../src/resizable/index.parts';
+import { Resizable } from '../src/resizable';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
 import * as TimePicker from '../src/time-picker/index.parts';
@@ -53,7 +53,6 @@ import { Slider } from '@vase-ui/vue/slider';
 <Slider.Thumb aria-valuetext={5} />;
 
 <Resizable.Handle aria-valuetext="x" />;
-<Resizable.Handle ariaValuetext="x" />;
 // @ts-expect-error `aria-valuetext` is a string
 <Resizable.Handle aria-valuetext={5} />;
 

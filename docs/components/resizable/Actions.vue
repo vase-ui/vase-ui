@@ -1,38 +1,29 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
-import { Resizable } from '@vase-ui/vue/resizable';
-import ResetLayoutButton from './ResetLayoutButton.vue';
+import { nextTick, ref, useTemplateRef } from 'vue';
+import { Resizable, type ResizableLayout } from '@vase-ui/vue/resizable';
 
-const root = useTemplateRef('root');
+const layout = ref<ResizableLayout>({});
 const navigation = useTemplateRef('navigation');
 
 function toggleNavigation() {
-  if (navigation.value?.isCollapsed()) {
-    navigation.value.expand();
-  } else {
-    navigation.value?.collapse();
-  }
+  if (navigation.value?.isCollapsed()) navigation.value.expand();
+  else navigation.value?.collapse();
+}
+
+// The root is controlled, so the second method waits for the layout that the first one gave.
+async function narrowThenCollapse() {
+  navigation.value?.resize('10rem');
+  await nextTick();
+  navigation.value?.collapse();
 }
 </script>
 
 <template>
   <button type="button" @click="toggleNavigation">Toggle the navigation</button>
-  <button type="button" @click="root?.setLayout({ navigation: 20, editor: 80 })">
-    Narrow the navigation
-  </button>
-  <Resizable.Root ref="root">
+  <button type="button" @click="narrowThenCollapse">Narrow, then collapse</button>
+  <Resizable.Root v-model="layout">
     <Resizable.Panel id="navigation" ref="navigation" collapsible :min-size="15" />
-    <Resizable.Handle
-      aria-label="Resize the navigation"
-      @dblclick="
-        (event) => {
-          event.preventVaseUIHandler();
-          navigation?.resize('100%');
-        }
-      "
-    />
-    <Resizable.Panel id="editor">
-      <ResetLayoutButton />
-    </Resizable.Panel>
+    <Resizable.Handle aria-label="Resize the navigation" />
+    <Resizable.Panel id="editor" />
   </Resizable.Root>
 </template>

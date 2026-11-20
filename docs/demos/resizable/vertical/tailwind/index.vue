@@ -14,7 +14,7 @@ import { Resizable } from '@vase-ui/vue/resizable';
     <Resizable.Handle
       primary-panel="next"
       aria-label="Resize the terminal"
-      class="h-px flex-none cursor-row-resize bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-at-max:cursor-n-resize data-at-min:cursor-s-resize data-at-min:data-at-max:cursor-default data-disabled:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
+      class="h-px flex-none cursor-row-resize pointer-coarse:[--resizable-handle-hit-area-size:24px] bg-neutral-200 outline-none focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 data-at-max:cursor-n-resize data-at-min:cursor-s-resize data-at-min:data-at-max:cursor-default aria-disabled:cursor-default dark:bg-neutral-800 dark:focus-visible:outline-white"
     />
     <Resizable.Panel
       id="terminal"

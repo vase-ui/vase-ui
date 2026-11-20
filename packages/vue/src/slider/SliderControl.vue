@@ -2,13 +2,13 @@
 import { mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { useElement } from '../common/element';
+import { usePointerPress } from '../common/pointerPress';
 import { injectSlider, stateAttributes } from './root';
 import type { SliderControlState } from './types';
 import { largest, nearestThumb, snap } from './values';
 
 /** A press, from its `pointerdown` to its end. */
 interface Press {
-  pointerId: number;
   /** The thumb that the press moves. */
   index: number;
   /** The distance on the axis from the centre of the pressed thumb to the pointer. */
@@ -41,16 +41,16 @@ defineSlots<{
 const slider = injectSlider('Control');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-let press: Press | undefined;
+const pointer = usePointerPress({ start, move, end: (_, event) => slider.endPress(event) });
 
 watch(
   () => slider.state.disabled,
   (disabled) => {
-    if (disabled) cancel();
+    if (disabled) pointer.cancel();
   },
 );
-watch(element, cancel);
-onBeforeUnmount(cancel);
+watch(element, pointer.cancel);
+onBeforeUnmount(pointer.cancel);
 
 defineExpose({ element });
 
@@ -61,10 +61,7 @@ function elementProps() {
       // The browser does not pan the page at a touch drag, and it ends no press with
       // `pointercancel`.
       style: { touchAction: 'none' },
-      onPointerdown,
-      onPointermove,
-      onPointerup: end,
-      onPointercancel: end,
+      ...pointer.listeners,
     },
     attrs,
   );
@@ -87,14 +84,13 @@ function valueAt(event: PointerEvent, control: Element, current: Press) {
   return snap(min + (fromStart / size) * (max - min), slider.state);
 }
 
-function onPointerdown(event: PointerEvent) {
+function start(event: PointerEvent) {
   const { values, orientation } = slider.state;
-  if (press || event.button !== 0) return;
   const thumbs = slider.thumbs;
   const enabled = values.map((_, index) => !!thumbs[index] && !thumbs[index].disabled);
   const pressed = thumbs.find((thumb) => thumb?.element?.contains(event.target as Node));
   let index = pressed ? thumbs.indexOf(pressed) : -1;
-  if (pressed ? !enabled[index] : !enabled.includes(true)) return;
+  if (pressed ? !enabled[index] : !enabled.includes(true)) return undefined;
   const control = event.currentTarget as HTMLElement;
   const vertical = orientation === 'vertical';
   const style = getComputedStyle(control);
@@ -114,7 +110,6 @@ function onPointerdown(event: PointerEvent) {
   }
   const sized = (pressed ?? thumbs.find((thumb) => thumb?.element))?.element;
   const current: Press = {
-    pointerId: event.pointerId,
     index,
     offset,
     vertical,
@@ -123,12 +118,9 @@ function onPointerdown(event: PointerEvent) {
     end: inset(vertical ? 'top' : 'inline-end'),
     half: slider.edge && sized ? (vertical ? sized.offsetHeight : sized.offsetWidth) / 2 : 0,
   };
-  // The control gets each move and the end of the pointer, anywhere.
-  control.setPointerCapture(event.pointerId);
-  // The browser then gives the focus to no other element and selects no text. A touch gives no
+  // The browser gives the focus to no other element and selects no text. A touch gives no
   // `mousedown` after its end.
   event.preventDefault();
-  press = current;
   slider.startPress();
   const target = index === -1 ? valueAt(event, control, current) : undefined;
   if (target !== undefined) {
@@ -140,16 +132,10 @@ function onPointerdown(event: PointerEvent) {
     );
   }
   focus(current.index);
+  return current;
 }
 
-function onPointermove(event: PointerEvent) {
-  if (!press || event.pointerId !== press.pointerId) return;
-  // Firefox gives the page no `pointerup` for a release outside its view. The next move has no
-  // button down.
-  if (event.buttons === 0) {
-    end(event);
-    return;
-  }
+function move(press: Press, event: PointerEvent) {
   const target = valueAt(event, event.currentTarget as Element, press);
   if (target === undefined) return;
   const index = slider.dragTo(press.index, target, 'drag', event);
@@ -157,19 +143,6 @@ function onPointermove(event: PointerEvent) {
   press.index = index;
   if (!slider.thumbs[index]?.element) press.offset = 0;
   focus(index);
-}
-
-function end(event: PointerEvent) {
-  if (!press || event.pointerId !== press.pointerId) return;
-  press = undefined;
-  slider.endPress(event);
-}
-
-/** Ends the press with no commit. The browser ends the capture at the release. */
-function cancel() {
-  if (!press) return;
-  press = undefined;
-  slider.endPress();
 }
 
 function focus(index: number) {

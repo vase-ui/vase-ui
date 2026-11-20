@@ -1,7 +1,27 @@
 <script setup lang="ts">
-import { Resizable } from '@vase-ui/vue/resizable';
+import { onMounted, ref } from 'vue';
+import { Resizable, type ResizableLayout } from '@vase-ui/vue/resizable';
 
-const { layout, save } = Resizable.useLayoutStorage({ key: 'nuxt-resizable' });
+const key = 'nuxt-resizable';
+const layout = ref<ResizableLayout>({});
+
+// A server has no storage, so the page reads it after the mount.
+onMounted(() => {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(key) ?? '{}');
+    if (stored !== null && typeof stored === 'object') layout.value = stored as ResizableLayout;
+  } catch {
+    layout.value = {};
+  }
+});
+
+function save(committed: ResizableLayout) {
+  try {
+    localStorage.setItem(key, JSON.stringify(committed));
+  } catch {
+    // The layout stays for this visit only.
+  }
+}
 </script>
 
 <template>
@@ -20,7 +40,7 @@ const { layout, save } = Resizable.useLayoutStorage({ key: 'nuxt-resizable' });
     </Resizable.Root>
     <ResizableCookieLayout />
     <Resizable.Root
-      v-model:layout="layout"
+      v-model="layout"
       data-testid="stored"
       style="width: 600px; height: 80px"
       @layout-committed="save"

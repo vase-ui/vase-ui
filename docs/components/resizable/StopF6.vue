@@ -4,11 +4,9 @@ import { Resizable } from '@vase-ui/vue/resizable';
 
 <template>
   <Resizable.Root
-    @keydown="
-      (event) => {
-        if (event.key === 'F6') {
-          event.preventVaseUIHandler();
-        }
+    @keydown.capture="
+      (event: KeyboardEvent) => {
+        if (event.key === 'F6') event.preventDefault();
       }
     "
   >
