@@ -1,5 +1,5 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { digits, formatter, localeCalendar, weekInfo } from './format';
+import { describe, expect, it } from 'vitest';
+import { digits, formatter, localeCalendar } from './format';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
 
@@ -172,71 +172,6 @@ describe('localeCalendar', () => {
 
   it('gives the calendar of the runtime locale for no locale', () => {
     expect(localeCalendar(undefined)).toBe(new Intl.DateTimeFormat().resolvedOptions().calendar);
-  });
-});
-
-describe('weekInfo', () => {
-  it.each([
-    { locale: 'en-US', firstDay: 7, weekend: [6, 7] },
-    { locale: 'en-GB', firstDay: 1, weekend: [6, 7] },
-    { locale: 'ar-EG', firstDay: 6, weekend: [5, 6] },
-    { locale: 'en-US-u-fw-mon', firstDay: 1, weekend: [6, 7] },
-    { locale: 'en-US-u-fw-sun', firstDay: 7, weekend: [6, 7] },
-    { locale: ['xx-YY', 'en-US'], firstDay: 7, weekend: [6, 7] },
-    { locale: ['en-GB', 'en-US'], firstDay: 1, weekend: [6, 7] },
-    { locale: 'tlh-GB', firstDay: 1, weekend: [6, 7] },
-    { locale: 'tlh-US', firstDay: 7, weekend: [6, 7] },
-  ])('gives the week of the locale $locale', ({ locale, firstDay, weekend }) => {
-    expect(weekInfo(locale)).toEqual({ firstDay, weekend });
-  });
-
-  it('gives the week of the runtime locale for no locale', () => {
-    expect(weekInfo(undefined)).toEqual(
-      weekInfo(new Intl.DateTimeFormat().resolvedOptions().locale),
-    );
-  });
-
-  it('gives a locale object the week of its tag', () => {
-    expect(weekInfo(new Intl.Locale('en-GB')).firstDay).toBe(1);
-  });
-
-  function mockLocale(members: object) {
-    const spy = vi.spyOn(Intl, 'Locale').mockImplementation(function MockLocale() {
-      return members as Intl.Locale;
-    });
-    onTestFinished(() => {
-      spy.mockRestore();
-    });
-  }
-
-  it('reads the accessor of an engine that has no method', () => {
-    mockLocale({ weekInfo: { firstDay: 5, weekend: [6, 7], minimalDays: 1 } });
-    expect(weekInfo('en-US')).toEqual({ firstDay: 5, weekend: [6, 7] });
-  });
-
-  it('prefers the method to the accessor', () => {
-    mockLocale({
-      getWeekInfo: () => ({ firstDay: 2, weekend: [6, 7] }),
-      weekInfo: { firstDay: 5, weekend: [6, 7] },
-    });
-    expect(weekInfo('en-US').firstDay).toBe(2);
-  });
-
-  it.each([
-    { name: 'an engine with no week data', members: {} },
-    {
-      name: 'a first day that is no day of the week',
-      members: { weekInfo: { firstDay: 0, weekend: [6, 7] } },
-    },
-    { name: 'a weekend that is not a list', members: { weekInfo: { firstDay: 1, weekend: 6 } } },
-    {
-      name: 'a weekend with a day that does not exist',
-      members: { weekInfo: { firstDay: 1, weekend: [6, 8] } },
-    },
-    { name: 'a week that is no object', members: { weekInfo: 'Monday' } },
-  ])('gives the ISO week for $name', ({ members }) => {
-    mockLocale(members);
-    expect(weekInfo('en-US')).toEqual({ firstDay: 1, weekend: [6, 7] });
   });
 });
 

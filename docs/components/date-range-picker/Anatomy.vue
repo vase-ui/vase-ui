@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DateField } from '@vase-ui/vue/date-field';
 import { DateRangePicker } from '@vase-ui/vue/date-range-picker';
-import { RangeCalendar } from '@vase-ui/vue/range-calendar';
+import { Calendar } from '@vase-ui/vue/calendar';
 </script>
 
 <template>
@@ -17,35 +17,35 @@ import { RangeCalendar } from '@vase-ui/vue/range-calendar';
       <DateRangePicker.Positioner>
         <DateRangePicker.Popup>
           <DateRangePicker.Calendar>
-            <RangeCalendar.PreviousButton />
-            <RangeCalendar.NextButton />
-            <RangeCalendar.Months>
+            <Calendar.PreviousButton />
+            <Calendar.NextButton />
+            <Calendar.Months>
               <template #month="{ month }">
-                <RangeCalendar.Month :month="month">
-                  <RangeCalendar.Caption />
-                  <RangeCalendar.Grid>
-                    <RangeCalendar.GridHeader>
-                      <RangeCalendar.GridHeaderRow>
+                <Calendar.Month :month="month">
+                  <Calendar.Caption />
+                  <Calendar.Grid>
+                    <Calendar.GridHeader>
+                      <Calendar.GridHeaderRow>
                         <template #weekday="{ weekday }">
-                          <RangeCalendar.Weekday :weekday="weekday" />
+                          <Calendar.Weekday :weekday="weekday" />
                         </template>
-                      </RangeCalendar.GridHeaderRow>
-                    </RangeCalendar.GridHeader>
-                    <RangeCalendar.GridBody>
+                      </Calendar.GridHeaderRow>
+                    </Calendar.GridHeader>
+                    <Calendar.GridBody>
                       <template #week="{ week }">
-                        <RangeCalendar.Week :week="week">
+                        <Calendar.Week :week="week">
                           <template #day="{ day }">
-                            <RangeCalendar.Day :day="day">
-                              <RangeCalendar.DayButton />
-                            </RangeCalendar.Day>
+                            <Calendar.Day :day="day">
+                              <Calendar.DayButton />
+                            </Calendar.Day>
                           </template>
-                        </RangeCalendar.Week>
+                        </Calendar.Week>
                       </template>
-                    </RangeCalendar.GridBody>
-                  </RangeCalendar.Grid>
-                </RangeCalendar.Month>
+                    </Calendar.GridBody>
+                  </Calendar.Grid>
+                </Calendar.Month>
               </template>
-            </RangeCalendar.Months>
+            </Calendar.Months>
           </DateRangePicker.Calendar>
           <DateRangePicker.Close />
         </DateRangePicker.Popup>

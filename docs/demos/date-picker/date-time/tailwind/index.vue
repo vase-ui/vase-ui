@@ -17,9 +17,9 @@ const value = computed(() =>
 );
 
 const buttonClassName =
-  'h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-data-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 dark:hover:not-data-disabled:bg-neutral-800 dark:focus-visible:outline-white';
+  'h-8 w-8 cursor-pointer rounded-md outline-0 hover:not-disabled:not-aria-disabled:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:focus-visible:outline-white';
 const dayButtonClassName =
-  'box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white data-today:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950';
+  'box-border size-9 cursor-pointer rounded-md border border-transparent outline-0 hover:enabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950 data-outside-month:not-data-selected:text-neutral-500 data-selected:bg-neutral-950 data-selected:text-white aria-[current=date]:border-neutral-400 disabled:cursor-default disabled:opacity-40 dark:hover:enabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950';
 </script>
 
 <template>
@@ -164,7 +164,7 @@ const dayButtonClassName =
                 <template #item="{ time }">
                   <TimePicker.Item
                     :time="time"
-                    class="box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-data-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 data-disabled:cursor-default data-disabled:opacity-40 data-selected:bg-neutral-950 data-selected:text-white data-selected:focus-visible:outline-white dark:hover:not-data-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950 dark:data-selected:focus-visible:outline-neutral-950"
+                    class="box-border flex h-8 flex-none cursor-pointer items-center justify-center rounded-md px-3 whitespace-nowrap select-none hover:not-disabled:not-aria-disabled:not-data-selected:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-neutral-950 disabled:cursor-default disabled:opacity-40 aria-disabled:cursor-default aria-disabled:opacity-40 data-selected:bg-neutral-950 data-selected:text-white data-selected:focus-visible:outline-white dark:hover:not-disabled:not-aria-disabled:not-data-selected:bg-neutral-800 dark:focus-visible:outline-white dark:data-selected:bg-white dark:data-selected:text-neutral-950 dark:data-selected:focus-visible:outline-neutral-950"
                   />
                 </template>
               </TimePicker.List>

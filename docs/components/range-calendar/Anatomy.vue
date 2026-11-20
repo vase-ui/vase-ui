@@ -1,38 +1,39 @@
 <script setup lang="ts">
+import { Calendar } from '@vase-ui/vue/calendar';
 import { RangeCalendar } from '@vase-ui/vue/range-calendar';
 </script>
 
 <template>
   <RangeCalendar.Root>
-    <RangeCalendar.PreviousButton />
-    <RangeCalendar.NextButton />
-    <RangeCalendar.Months>
+    <Calendar.PreviousButton />
+    <Calendar.NextButton />
+    <Calendar.Months>
       <template #month="{ month }">
-        <RangeCalendar.Month :month="month">
-          <RangeCalendar.Caption />
-          <RangeCalendar.Grid>
-            <RangeCalendar.GridHeader>
-              <RangeCalendar.GridHeaderRow>
+        <Calendar.Month :month="month">
+          <Calendar.Caption />
+          <Calendar.Grid>
+            <Calendar.GridHeader>
+              <Calendar.GridHeaderRow>
                 <template #weekday="{ weekday }">
-                  <RangeCalendar.Weekday :weekday="weekday" />
+                  <Calendar.Weekday :weekday="weekday" />
                 </template>
-              </RangeCalendar.GridHeaderRow>
-            </RangeCalendar.GridHeader>
-            <RangeCalendar.GridBody>
+              </Calendar.GridHeaderRow>
+            </Calendar.GridHeader>
+            <Calendar.GridBody>
               <template #week="{ week }">
-                <RangeCalendar.Week :week="week">
+                <Calendar.Week :week="week">
                   <template #day="{ day }">
-                    <RangeCalendar.Day :day="day">
-                      <RangeCalendar.DayButton />
-                    </RangeCalendar.Day>
+                    <Calendar.Day :day="day">
+                      <Calendar.DayButton />
+                    </Calendar.Day>
                   </template>
-                </RangeCalendar.Week>
+                </Calendar.Week>
               </template>
-            </RangeCalendar.GridBody>
-          </RangeCalendar.Grid>
-        </RangeCalendar.Month>
+            </Calendar.GridBody>
+          </Calendar.Grid>
+        </Calendar.Month>
       </template>
-    </RangeCalendar.Months>
-    <RangeCalendar.Footer />
+    </Calendar.Months>
+    <Calendar.Footer />
   </RangeCalendar.Root>
 </template>

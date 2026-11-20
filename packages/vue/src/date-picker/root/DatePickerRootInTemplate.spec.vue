@@ -54,7 +54,7 @@ function onWrongKind(value: Temporal.PlainTime | null) {
     <DatePicker.Calendar :number-of-months="2" />
     <DatePicker.TimeField :step="60" />
     <!-- @vue-expect-error the root owns the limits -->
-    <DatePicker.Calendar :min-date="Temporal.PlainDate.from('2026-11-14')" />
+    <DatePicker.Calendar :min="Temporal.PlainDate.from('2026-11-14')" />
     <!-- @vue-expect-error the root owns the name of the form entry -->
     <DatePicker.Field name="when" />
     <!-- The calendar gives the events of `Calendar.Root` that are not about the value. -->

@@ -17,6 +17,11 @@
   }
 }
 
+/* The month comes after the mount, so the root keeps the room of a caption and six weeks. */
+.SixWeeks {
+  min-height: 19.75rem;
+}
+
 .WithWeekNumbers {
   width: 20.25rem;
 }
@@ -72,7 +77,7 @@
     color-scheme: dark;
   }
 
-  &[data-disabled] {
+  &:disabled {
     opacity: 0.4;
     cursor: default;
   }
@@ -100,7 +105,7 @@
   cursor: pointer;
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -109,7 +114,7 @@
     }
   }
 
-  &[data-disabled] {
+  &:is(:disabled, [aria-disabled='true']) {
     opacity: 0.4;
     cursor: default;
   }
@@ -189,7 +194,7 @@
   cursor: pointer;
 
   @media (hover: hover) {
-    &:hover:not([data-selected]):not([disabled]):not([data-unavailable]) {
+    &:hover:not([data-selected], [aria-selected='true'], :disabled, [data-unavailable]) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -198,12 +203,11 @@
     }
   }
 
-  &[data-today],
-  &[data-current] {
+  &[aria-current='date'] {
     border-color: oklch(70.8% 0 0deg);
   }
 
-  &[data-selected] {
+  &:is([data-selected], [aria-selected='true']) {
     color: white;
     background-color: oklch(14.5% 0 0deg);
 
@@ -297,6 +301,12 @@
 }
 
 .Page {
+  position: relative;
+}
+
+/* The demo gives `<Transition>` the name `calendar-page`. */
+.PageGrid:global(.calendar-page-enter-active),
+.PageGrid:global(.calendar-page-leave-active) {
   transition:
     opacity 200ms ease-out,
     translate 200ms ease-out;
@@ -304,18 +314,21 @@
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
+}
 
-  &[data-starting-style] {
-    opacity: 0;
-    translate: calc(0.5rem * var(--page-direction)) 0;
-  }
+.PageGrid:global(.calendar-page-enter-from) {
+  opacity: 0;
+  translate: calc(0.5rem * var(--page-direction)) 0;
+}
 
-  &[data-ending-style] {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    opacity: 0;
-    translate: calc(-0.5rem * var(--page-direction)) 0;
-  }
+/* The grid that leaves stays where it is, above the grid that enters. */
+.PageGrid:global(.calendar-page-leave-active) {
+  position: absolute;
+  right: 0;
+  left: 0;
+}
+
+.PageGrid:global(.calendar-page-leave-to) {
+  opacity: 0;
+  translate: calc(-0.5rem * var(--page-direction)) 0;
 }

@@ -60,7 +60,7 @@ Import the component and assemble its parts:
 
 <<< ./range-calendar/Anatomy.vue
 
-`RangeCalendar.Root`, `RangeCalendar.Day` and `RangeCalendar.DayButton` are the parts of this component. Each other part is the part of Calendar with the same name, and it reads the range from the root.
+`RangeCalendar.Root` is the one part of this component. It holds the parts of [Calendar](/components/calendar), and `Calendar.Day` and `Calendar.DayButton` read the range from it. A range root has no views, so `Calendar.ViewTrigger` is disabled in it, and `Calendar.MonthGrid` and `Calendar.YearGrid` render nothing.
 
 ## Value
 
@@ -77,9 +77,9 @@ The root emits `valueChange` with the new value and `eventDetails`, and then `up
 - A press on a day after a complete range starts a new range.
 - A press that would give a range that is not valid starts a new range at the pressed day. A range is not valid when it has fewer days than `minDays` or more days than `maxDays`. It is also not valid when it crosses a day that is disabled or unavailable. Set `allowNonContiguousRanges` to allow that. The crossed day has `data-range-middle` and is not selected.
 - A drag with the mouse, a pen or a finger from one day to another gives the range in one `valueChange`. The range ends at the day under the pointer, or keeps its last day while the pointer is over no day. When that range is not valid, it ends at the last day between the first day and the pointer that gives a valid range, such as the day before a disabled day. A drag that reaches no valid range changes nothing. A press and a release on one day is a press, not a drag. Escape ends a drag, and the release after it changes nothing. The day buttons have `touch-action: none`, so that a finger can drag over the days. To let the page scroll from a day, give the button a `style` with another `touch-action`.
-- `readOnly` and `disabled` stop each press, each drag and the preview.
+- `readonly` and `disabled` stop each press, each drag and the preview.
 
-A day has `data-range-start` when it is the first day of the range, `data-range-end` when it is the last day and `data-range-middle` when it is between them. A range of one day has the first two attributes and no third. A day in the range that the user can select has `data-selected` and `aria-selected="true"`.
+A day has `data-range-start` when it is the first day of the range, `data-range-end` when it is the last day and `data-range-middle` when it is between them. A range of one day has the first two attributes and no third. A day in the range that the user can select has `aria-selected="true"`, and its button has `data-selected`.
 
 While a range is in progress, the three attributes show the range that a press on the day under the pointer, or on the day that has the focus, would give. The day under the pointer is the day of the last `pointerenter` of a mouse or a pen. A pointer of a finger has no hover. A press that would start a new range shows that day alone.
 
@@ -87,7 +87,7 @@ While a range is in progress, the three attributes show the range that a press o
 
 ### Minimum and maximum days
 
-`minDays` and `maxDays` give the least and the greatest number of days of a range. Both ends count, so Monday to Wednesday is 3 days. `RangeCalendar.Footer` is a live region for a message below the calendar.
+`minDays` and `maxDays` give the least and the greatest number of days of a range. Both ends count, so Monday to Wednesday is 3 days. `Calendar.Footer` is a live region for a message below the calendar.
 
 <DemoFrame>
   <DemoRangeCalendarMinMaxDays />
@@ -155,15 +155,13 @@ While a range is in progress, the three attributes show the range that a press o
 
 The calendar renders with `renderToString`. The server HTML has the grid, the range, one tab stop and the touch style of each day. The preview and the drag are for the browser.
 
-A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current` and the tab stop follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
-
-A server and a browser can also have another calendar, first day of the week or weekend for one locale. The range calendar then hydrates with the grid of the server, and it shows the grid of the browser after the mount. Give `calendar` and `firstDayOfWeek`, and the server HTML has the days and the weeks of the final grid. The weekend has no prop, so `data-weekend` follows the browser. A browser whose `Temporal` does not have the calendar of the server cannot show the grid of the server, and Vue then reports a hydration mismatch. The entry `temporal-polyfill/global` has only the ISO and Gregorian calendars, so it is such a `Temporal`.
+No render reads the clock or the locale of the visitor, as in [Calendar](/components/calendar#server-render). With no `today`, the server HTML marks no day as today, and the root reads the clock after the mount. Give `locale`, `calendar`, `firstDayOfWeek` and `today` when the server knows them.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard
 
-The focus is in the grid of days, and one day has the tab stop. Left and Right swap in a right-to-left document. A move skips each day that is disabled or hidden, and stops at `minDate` and `maxDate`. A move out of the page shows the page of the new day. Escape works with the focus on each element of the calendar, such as a button that changes the month.
+The focus is in the grid of days, and one day has the tab stop. Left and Right swap in a right-to-left document. A move skips each day that is disabled or hidden, and stops at `min` and `max`. A move out of the page shows the page of the new day. Escape works with the focus on each element of the calendar, such as a button that changes the month.
 
 | Key                            | Result                                                                                                                                                                           |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -180,7 +178,7 @@ The focus is in the grid of days, and one day has the tab stop. Left and Right s
 ## Accessibility
 
 - `RangeCalendar.Root` has `role="group"`. Its name is the month that it shows, until you give it an `aria-label` or an `aria-labelledby`.
-- `RangeCalendar.Grid` is a `grid` that has `aria-multiselectable="true"`. Its name is the caption of its month, or the name of the month when the month has no caption.
+- `Calendar.Grid` is a `grid` that has `aria-multiselectable="true"`. Its name is the caption of its month, or the name of the month when the month has no caption.
 - Each day button has the full date as its name, and `aria-current="date"` for today. Its cell has `aria-selected`.
 - A day that is disabled has `aria-disabled` and no tab stop. A day that is unavailable has `aria-disabled` and takes the focus.
 

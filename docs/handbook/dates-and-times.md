@@ -94,7 +94,7 @@ For a calendar other than ISO and Gregorian in an engine that needs the polyfill
 
 ## Time zones
 
-A `Temporal.ZonedDateTime` value keeps its time zone. The prop `timeZone` of a component sets the zone in which it reads today. With no prop, the component uses the zone of its value, and then the zone of the runtime.
+A `Temporal.ZonedDateTime` value keeps its time zone. A component reads today in the zone of its value, else in the zone of the runtime. The prop `timeZone` of a picker sets that zone. `Calendar` and `RangeCalendar` take `today` for another zone, such as `Temporal.Now.plainDateISO('Asia/Tokyo')`.
 
 A zone change can skip an hour, and a time in that hour does not exist. When a pick gives a value such a time, the component moves the time forward by the size of the gap, as `Temporal` does.
 
@@ -102,7 +102,7 @@ A zone change can skip an hour, and a time in that hour does not exist. When a p
 
 A server does not know the locale and the time zone of a visitor. With no `locale` prop, `DateField`, `TimeField` and `TimeClock` use the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. Each other component formats with `en-US` until it mounts. The server HTML and the first render of the browser are then equal.
 
-`Calendar` reads today to mark the day and to pick its first month. With no `today` prop, the server HTML and the first render of the browser have the day of the clock of the server. After the mount, the calendar shows the day of the browser. Give it the prop `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML then has the day of the visitor.
+`Calendar` reads today to mark the day and to pick its first month. With no `today` prop, it reads the clock only after the mount, so the server HTML marks no day as today. Give it `today` when the server knows the day of the visitor. The server HTML then has that day. `Calendar` uses `en-US`, or the `locale` prop, on the server and in the browser.
 
 A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
 

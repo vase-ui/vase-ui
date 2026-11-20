@@ -82,6 +82,8 @@ Import the component and assemble its parts:
 
 `Calendar.Months`, `Calendar.MonthGrid` and `Calendar.YearGrid` each show in one view only. The view `day` shows the days, the view `month` the months of a year, and the view `year` a page of years. Each list part has a slot with the name of its item: `#month`, `#weekday`, `#week`, `#day` and `#row`. A part gets its item as a prop.
 
+Each part renders one element. `as` gives another tag or a component. The slot `element` replaces the element: it gets `props`, `elementRef` and `state`, and the slot of a list part also gets its items. A template ref on a part has `element`, and the ref of the root also has `focus()`.
+
 ## Value
 
 The value is a `Temporal` object, and `v-model` gives back the same kind. A new value has the kind, the calendar, the time and the time zone of the value that the calendar has.
@@ -95,17 +97,19 @@ The value is a `Temporal` object, and `v-model` gives back the same kind. A new 
 
 With no value, the calendar makes a `Temporal.PlainDate`. While the value is `null` or an empty list, `defaultValue` gives the kind of a new value. With no `defaultValue`, the last value of the calendar gives it, with its calendar, its time and its time zone. A month picker thus stays a month picker when its value becomes empty. To make a month picker that starts with no month selected, set `modelValue` to `null` and `defaultValue` to a `Temporal.PlainYearMonth`.
 
-The value is `null` when nothing is selected. With `multiple`, the value is a list, and a press on a selected day removes it down to `minDays`. A press past `maxDays` changes nothing. In a single selection, a press on the selected day changes nothing. `readOnly` keeps the days focusable and selects nothing.
+The value is `null` when nothing is selected. With `multiple`, the value is a list, and a press on a selected day removes it down to `minDays`. A press past `maxDays` changes nothing. In a single selection, a press on the selected day changes nothing. `readonly` keeps the days focusable and selects nothing.
 
 ## Days
 
-`disabledDates`, `unavailableDates` and `hiddenDates` take a matcher. A matcher is a date, `{ start, end }`, `{ before }`, `{ after }`, `{ dayOfWeek }`, a function, or a list of these. A disabled day cannot take focus and cannot be selected. An unavailable day takes focus and cannot be selected. A hidden day has no button. `minDate` and `maxDate` disable the days outside them and stop the navigation. `modifiers` gives a name to the days that a matcher matches, and each such day has `data-<name>`.
+`disabledDates`, `unavailableDates` and `hiddenDates` take a matcher. A matcher is a date, `{ start, end }`, `{ before }`, `{ after }`, `{ dayOfWeek }`, a function, or a list of these. A disabled day cannot take focus and cannot be selected. An unavailable day takes focus and cannot be selected. A hidden day has no button. `min` and `max` disable the days outside them and stop the navigation. `modifiers` gives a name to the days that a matcher matches, and each such day has `data-<name>`.
 
 <<< ./calendar/Days.vue
 
 `fixedWeeks` gives each month six weeks. `showOutsideDays` gives a button to a day of the month before or after, and a press on it shows its month.
 
-`today` gives the day that is today. `locale` gives the names, the digits, the first day of the week and the weekend, and `firstDayOfWeek` changes the first day.
+`today` gives the day that is today. `locale` gives the names and the digits, and `LocaleProvider` gives it to each calendar in it. With neither, the text is `en-US`. A weekend is a modifier, such as `:modifiers="{ weekend: { dayOfWeek: [6, 7] } }"`.
+
+The first day of the week is the first day in the region of the locale, as CLDR gives it. The weeks of `en-US` start on Sunday, the weeks of `de-DE` on Monday, and the weeks of `ar-EG` on Saturday. A locale with no region, such as `en`, takes the region that `Intl.Locale#maximize()` gives it. The server and the browser give the same day. `firstDayOfWeek` changes the first day: `1` is Monday and `7` is Sunday.
 
 ## Months and years
 
@@ -144,7 +148,7 @@ Use `view` and `v-model:view`, or `defaultView`, to choose the view. A calendar 
 
 <<< ./calendar/Months.vue
 
-`disabledMonths` and `disabledYears` take a function. The function of a year gets the first month of that year. A month or a year outside `minDate` and `maxDate` is disabled too. `format` of `Calendar.MonthCell` gives the form of the month name: `long` by default, such as `March`. A month cell has `data-selected` when a selected value is in that month, and `data-current` for the month of today. A year cell has the same states.
+`disabledMonths` and `disabledYears` take a function. The function of a year gets the first month of that year. A month or a year outside `min` and `max` is disabled too. `format` of `Calendar.MonthCell` gives the form of the month name: `long` by default, such as `March`. A month cell has `aria-selected="true"` when a selected value is in that month, and `aria-current="date"` for the month of today. A year cell has the same states.
 
 ## Month picker
 
@@ -317,7 +321,7 @@ This calendar marks the public holidays with the modifier `holiday`. The style s
 
 ### More than one month
 
-`numberOfMonths` shows that number of months, one after the other, and the root has `data-multiple-months`. With `pagedNavigation`, the two buttons move by that number of months. Without it, they move by one month.
+`numberOfMonths` shows that number of months, one after the other, and `state.multipleMonths` of the root is `true`. With `pagedNavigation`, the two buttons move by that number of months. Without it, they move by one month.
 
 <DemoFrame>
   <DemoCalendarMultipleMonths />
@@ -350,7 +354,7 @@ This calendar marks the public holidays with the modifier `holiday`. The style s
 
 ### Month and year selects
 
-This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearSelect` choose the month and the year of the page, and each is a native `<select>`. The years go from the year of `minDate` to the year of `maxDate`, and `order="desc"` puts the last year first.
+This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearSelect` choose the month and the year of the page, and each is a native `<select>`. The years go from the year of `min` to the year of `max`, and `order="desc"` puts the last year first.
 
 <DemoFrame>
   <DemoCalendarMonthYearSelect />
@@ -383,7 +387,7 @@ This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearS
 
 ### Week numbers
 
-`Calendar.WeekNumber` shows the number of a week, and `Calendar.WeekNumberHeader` is the header of that column. By default, a week that starts on Monday has its ISO 8601 number. `isoWeek` gives each locale such weeks. Without `isoWeek`, `firstWeekContainsDate` gives the day of January that is always in the first week.
+`Calendar.WeekNumber` shows the number of a week, and `Calendar.WeekNumberHeader` is the header of that column. The numbers follow the first day of the week. `firstWeekContainsDate` gives the day of January that is always in the first week. Its default is `4` for weeks that start on Monday, which gives the ISO 8601 number, and `1` for weeks that start on another day.
 
 <DemoFrame>
   <DemoCalendarWeekNumbers />
@@ -482,7 +486,7 @@ This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearS
 
 ### Time zone
 
-The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. `timeZone` gives the time zone of the clock that says which day is today. With no `timeZone`, the calendar uses the zone of the value, and then the zone of the runtime. This calendar has no `timeZone`, so its today is the day in Tokyo.
+The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTime`. A press moves the call to another day. With no `today`, the calendar reads the clock in the zone of a zoned value after the mount, so the today of this calendar is the day in Tokyo. For another zone, give `today`, such as `Temporal.Now.plainDateISO('Europe/Paris')`.
 
 <DemoFrame>
   <DemoCalendarTimeZone />
@@ -548,7 +552,7 @@ The value of this calendar is a call at 09:00 in Tokyo, a `Temporal.ZonedDateTim
 
 ### Animation
 
-A page that the user leaves stays until its animations end. It has `data-ending-style` and `inert`, and the new page has `data-starting-style`. `data-navigation-direction` of the root and of `Calendar.Months` says the side of the move: `previous`, `next` or `none`. This calendar fades each page and moves it 0.5rem, to the left for `next` and to the right for `previous`. `fixedWeeks` and `showOutsideDays` give each page six rows of buttons, so the grid keeps its height. The style sheet has no transition for a person who prefers reduced motion.
+Animate a page with the `<Transition>` of Vue around `Calendar.Grid`, with the first day of the month as its key. The grid that leaves is `inert`. `data-navigation-direction` of the root and of `Calendar.Months` says the side of the move: `previous`, `next` or `none`. This calendar fades each grid and moves it 0.5rem, to the left for `next` and to the right for `previous`. The caption stays, and its live region reads the new month. `fixedWeeks` and `showOutsideDays` give each page six rows of buttons, so the grid keeps its height. The style sheet has no transition for a person who prefers reduced motion.
 
 <DemoFrame>
   <DemoCalendarAnimation />
@@ -581,33 +585,33 @@ A page that the user leaves stays until its animations end. It has `data-ending-
 
 ## Events
 
-The root emits `valueChange` and `update:modelValue` for a selection, and `monthChange` and `update:month` when the page changes. It emits `viewChange` and `update:view` when the view changes, and `focusedDateChange` and `update:focusedDate` when the focus moves to another day. Each event with a name that ends in `Change` has a `details` object with a `reason`. `details.cancel()` stops the change and its `update` event.
+The root emits `valueChange` and `update:modelValue` for a selection, and `monthChange` and `update:month` when the page changes. It emits `viewChange` and `update:view` when the view changes, and `focusedDateChange` and `update:focusedDate` when the focus moves to another day. Each event with a name that ends in `Change` has a `details` object with a `reason`. `details.cancel()` stops the change and its `update` event. A move that no user makes, such as a new `focusedDate` of the parent or `focus(date)`, emits only the `update` event.
 
-| Reason          | When                                                                                                   |
-| --------------- | ------------------------------------------------------------------------------------------------------ |
-| `day-press`     | A press or Enter or Space on a day.                                                                    |
-| `month-press`   | A press on a month cell.                                                                               |
-| `year-press`    | A press on a year cell.                                                                                |
-| `trigger-press` | A press on `Calendar.ViewTrigger`.                                                                     |
-| `month-change`  | A button or a select changes the page.                                                                 |
-| `keyboard`      | A key moves the focus, or extends the selection.                                                       |
-| `none`          | A focus on a day, a month or a year, or a change that the consumer makes, such as a new `focusedDate`. |
+| Reason          | When                                             |
+| --------------- | ------------------------------------------------ |
+| `day-press`     | A press or Enter or Space on a day.              |
+| `month-press`   | A press on a month cell.                         |
+| `year-press`    | A press on a year cell.                          |
+| `trigger-press` | A press on `Calendar.ViewTrigger`.               |
+| `month-change`  | A button or a select changes the page.           |
+| `keyboard`      | A key moves the focus, or extends the selection. |
+| `none`          | A focus on a day, a month or a year.             |
 
 ## Server render
 
-The calendar renders with `renderToString`. The server HTML has the grid of the view, its labels, and one tab stop. A server does not know the locale of the visitor. With no `locale` prop, the calendar uses `en-US` until it mounts, and then the locale of the browser.
+The calendar renders with `renderToString`, and the server HTML has the grid of the view, its labels, and one tab stop. No render reads the clock or the locale of the visitor, so the server and the browser render the same grid. Give `locale`, or the text is `en-US`.
 
-A server cannot know the day of the visitor. With no `today` prop, the server HTML has the day of the clock of the server. After the mount, the calendar shows the day of the browser: `data-today`, `aria-current`, `data-current`, the tab stop and the years of `Calendar.YearSelect` follow it. When no value, focused day or month gives the page, the calendar shows the page of that day, with no event and no animation. Give `timeZone` when the server knows the time zone of the visitor, or `today` when it knows the day. The server HTML is then correct. Your own code has the same limit. For a value that follows today, such as `minDate`, read the clock in `onMounted`, as the [Disabled days](#disabled-days) demo does. The data of `Intl` in a server and in a browser can also give other names of the months and other digits of the years. While the calendar hydrates, each cell and each trigger allows that text, and it then shows the text of the browser.
+With no `today`, the root reads the clock after the mount. The server HTML then marks no day as today, and with no value, `month`, `defaultMonth` or focused day it has no month: the page of today comes after the mount, with no event. Give `defaultMonth`, or keep the room of the month in CSS. A server that knows the day of the visitor gives `today` with the data of the page. An expression of `Temporal.Now` in a template can give another day in the browser.
 
-A server and a browser can also have another calendar, first day of the week or weekend for one locale. The calendar then hydrates with the grid of the server, and it shows the grid of the browser after the mount. Give `calendar` and `firstDayOfWeek`, and the server HTML has the days and the weeks of the final grid. The weekend has no prop, so `data-weekend` follows the browser. A browser whose `Temporal` does not have the calendar of the server cannot show the grid of the server, and Vue then reports a hydration mismatch. The entry `temporal-polyfill/global` has only the ISO and Gregorian calendars, so it is such a `Temporal`.
+The grid takes no calendar from the locale, because a server and a browser can give a locale another calendar. Give `calendar` for a calendar that is not Gregorian. A server and a browser can also write other names of the days and another form of a full date or a range. `Calendar.Weekday`, `Calendar.Caption` and `Calendar.ViewTrigger` have `data-allow-mismatch="text"`, so the hydration writes the text of the browser with no message. Vue allows another text only in an element whose one child is that text. With `as` or a default slot, put the text in an element of the default slot. For another part, also give that element `data-allow-mismatch="text"`. A name in an `aria-*` attribute keeps the text of the server until the part renders again.
 
 On a Node.js version before 26, load a `Temporal` polyfill before the server starts. See the [guide](/handbook/dates-and-times#servers).
 
 ## Keyboard
 
-Call `focus()` on the root to focus the current tab stop. After `KeepAlive` restores a cached cell, the same call focuses that cell if it has the tab stop.
+Call `focus()` on the root to focus the current tab stop. `focus(date)` shows the page of that day first.
 
-Each grid has one tab stop: the focused day, month or year. Else the tab stop is the first selected one, else today, else the first one that can take focus. Left and Right swap in a right-to-left document. A key skips the cells that cannot take focus, and it stops at `minDate` and `maxDate`. A key that leaves the page shows the page of the cell that it reaches.
+Each grid has one tab stop: the focused day, month or year. Else the tab stop is the first selected one, else today, else the first one that can take focus. Left and Right swap in a right-to-left document. A key skips the cells that cannot take focus, and it stops at `min` and `max`. Call `event.stopPropagation()` in a key listener of a button to keep the key from the calendar. A key that leaves the page shows the page of the cell that it reaches.
 
 | Key                          | Days                                       | Months and years                                                             |
 | ---------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
@@ -627,8 +631,8 @@ With `multiple`, Shift and an arrow key moves one day, or one week for Up and Do
 - `Calendar.Root` has `role="group"`. Its name is the visible page: the month, the year, or the years. Give it an `aria-label` or an `aria-labelledby` to replace the name.
 - Each grid has `role="grid"`. The grid of days is named by its caption. The grid of months and the grid of years have a name from `Intl.DisplayNames`.
 - A day, a month and a year each have a `button`. A month cell has its text and the year as its name, such as `March 2026`. A day button has the full date as its name. A year cell has its year as its name. `aria-current="date"` marks today, and `aria-selected` marks the selection.
-- `Calendar.ViewTrigger` and `Calendar.Caption` are live regions, so a screen reader reads a new page. The name of the trigger starts with its text and then says what a press does, such as `November 2026, choose the year`.
-- The default labels of the buttons are in English. Give a button an `aria-label` to change it.
+- `Calendar.ViewTrigger` and `Calendar.Caption` are live regions, so a screen reader reads a new page. The trigger is named by its text. Give it an `aria-description` that says what a press does.
+- The two navigation buttons are named by `Intl.RelativeTimeFormat` in the locale, such as `next month`, and `Calendar.WeekNumberHeader` and the two selects by `Intl.DisplayNames`. An `aria-label` of the developer replaces such a name.
 
 ## API reference
 

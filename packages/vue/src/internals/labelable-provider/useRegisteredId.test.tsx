@@ -7,8 +7,6 @@ import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
-import * as Calendar from '../../calendar/index.parts';
-import CalendarAncestors from '../../calendar/root/CalendarAncestors.test.vue';
 import { createIdRegistry } from './createIdRegistry';
 import { useRegisteredId } from './useRegisteredId';
 
@@ -239,16 +237,6 @@ describe('useRegisteredId', () => {
               </Toast.Root>
             </Toast.Viewport>
           </Toast.Provider>
-        ),
-      },
-      {
-        name: 'Calendar.Caption',
-        attribute: 'aria-labelledby',
-        render: (id) => (
-          <CalendarAncestors level="month">
-            <Calendar.Caption v-slots={slot('div', id)} />
-            <Calendar.Grid data-testid="named" />
-          </CalendarAncestors>
         ),
       },
       {
