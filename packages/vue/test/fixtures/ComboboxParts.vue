@@ -29,6 +29,8 @@ defineProps({
   button: Boolean,
   /** A separator after the list, with these props. */
   separator: Object as PropType<Props>,
+  /** `scene.popup` set to `false` unmounts the popup. */
+  scene: { type: Object as PropType<{ popup?: boolean }>, default: () => ({}) },
   /** The items render the label of an object, as `{ value, label }`. */
   labels: Boolean,
   /** The items are groups `{ name, items }`. */
@@ -70,7 +72,7 @@ export const FRUITS = [
     </Combobox.InputGroup>
     <Combobox.Portal v-bind="portal">
       <Combobox.Positioner data-testid="positioner" v-bind="positioner">
-        <Combobox.Popup data-testid="popup" v-bind="popup">
+        <Combobox.Popup v-if="scene.popup !== false" data-testid="popup" v-bind="popup">
           <Combobox.InputGroup v-if="inputInPopup" data-testid="popup-group">
             <Combobox.Input data-testid="input" v-bind="input" />
           </Combobox.InputGroup>
