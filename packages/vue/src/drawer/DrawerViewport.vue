@@ -206,7 +206,8 @@ const tracker = useSwipeTracker({
     );
   },
   start(event) {
-    const popup = root.popup!;
+    const popup = root.popup;
+    if (!popup) return;
     if (event.pointerType !== 'touch') {
       const selection = popup.ownerDocument.getSelection();
       if (selection && popup.contains(selection.anchorNode)) selection.removeAllRanges();

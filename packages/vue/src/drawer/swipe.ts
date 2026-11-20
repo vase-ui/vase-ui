@@ -117,7 +117,7 @@ export function pathTo(event: Event, last: Element) {
   const path = event.composedPath();
   const index = path.indexOf(last);
   return (index === -1 ? [] : path.slice(0, index + 1)).filter(
-    (node): node is Element => node instanceof Element,
+    (node): node is Element => (node as Node).nodeType === 1,
   );
 }
 
@@ -342,7 +342,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
 
   function onPointermove(event: PointerEvent) {
     const current = gesture;
-    if (!current || event.pointerId !== current.id) return;
+    if (current?.id !== event.pointerId) return;
     if (current.type !== 'touch') {
       // A press of another button in the drag takes the pointer: the menu of the context.
       if (event.buttons !== 0 && (event.buttons & 1) === 0) {
@@ -375,7 +375,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
 
   function onPointerup(event: PointerEvent) {
     const current = gesture;
-    if (!current || event.pointerId !== current.id) return;
+    if (current?.id !== event.pointerId) return;
     finish(current.started ? releaseOf(current, event) : null);
   }
 
@@ -404,7 +404,7 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
     onTouchmove(event: TouchEvent) {
       const current = gesture;
       const touch = event.touches[0];
-      if (!current || current.type !== 'touch' || !touch) return;
+      if (current?.type !== 'touch' || !touch) return;
       if (current.claimed === undefined) {
         decide(current, touch.clientX, touch.clientY);
       }

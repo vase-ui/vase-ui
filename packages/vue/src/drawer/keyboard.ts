@@ -1,4 +1,5 @@
 import { inject, onScopeDispose, watch, type InjectionKey } from 'vue';
+import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
 
 /** What the keyboard needs of a drawer root. The properties are reactive. */
@@ -47,8 +48,12 @@ const TAP_SLOP = 16;
 const TEXT_INPUTS = new Set(['email', 'number', 'password', 'search', 'tel', 'text', 'url']);
 const INTERACTIVE = 'button,a[href],[role="button"],select,[tabindex]:not([tabindex="-1"])';
 
+function isHTMLElement(node: unknown): node is HTMLElement {
+  return node instanceof ownerWindow(node).HTMLElement;
+}
+
 function isTextControl(element: Element) {
-  if (!(element instanceof HTMLElement)) return false;
+  if (!isHTMLElement(element)) return false;
   if (element.isContentEditable) return true;
   const typeable =
     element.localName === 'textarea' ||
@@ -58,7 +63,7 @@ function isTextControl(element: Element) {
 
 /** The text control of a target: the target, the host of an editable text, or the control of a label. */
 function textControlOf(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof HTMLElement)) return null;
+  if (!isHTMLElement(target)) return null;
   if (isTextControl(target)) {
     let host = target;
     while (host.isContentEditable && host.parentElement?.isContentEditable) {
@@ -102,7 +107,7 @@ function scrollerOf(field: HTMLElement, viewport: HTMLElement) {
   const find = (sized: boolean) => {
     let node: Node | null = field.assignedSlot ?? field.parentNode;
     while (node) {
-      if (node instanceof HTMLElement && scrolls(node, sized)) return node;
+      if (isHTMLElement(node) && scrolls(node, sized)) return node;
       if (node === viewport) return null;
       node = (node as Element).assignedSlot ?? node.parentNode ?? (node as ShadowRoot).host ?? null;
     }
@@ -186,7 +191,7 @@ export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch 
 
   function follow(viewport: HTMLElement) {
     const doc = viewport.ownerDocument;
-    const win = doc.defaultView!;
+    const win = ownerWindow(viewport);
     const visual = win.visualViewport;
     let frame = 0;
     let realign: ReturnType<typeof setTimeout> | undefined;
@@ -202,6 +207,7 @@ export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch 
     let tallest = win.innerHeight;
     let width = win.innerWidth;
     let probe: HTMLElement | null = null;
+    // eslint-disable-next-line no-restricted-syntax -- The next focus event restores the geometry that the previous event changed.
     let restoreFocusGeometry: (() => void) | null = null;
     const baseX = win.scrollX;
     const baseY = win.scrollY;
@@ -215,7 +221,7 @@ export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch 
     // and moves fixed content itself. The keyboard stays known by its height until that height
     // changes by much.
     function keyboard() {
-      if (!visual || visual.scale !== 1) return null;
+      if (visual?.scale !== 1) return null;
       const layoutHeight = win.innerHeight;
       const visualHeight = visual.height;
       // A keyboard that resizes the layout viewport gives no overlap. On Android it shows as a
@@ -550,7 +556,7 @@ export function useVirtualKeyboard(drawer: () => KeyboardDrawer): KeyboardTouch 
       const target =
         atPoint ?? (fromTarget && { focus: fromTarget, click: targetOf(event) as HTMLElement });
       if (!target || !contains(viewport, target.focus) || !contains(viewport, target.click)) return;
-      const win = target.focus.ownerDocument.defaultView!;
+      const win = ownerWindow(target.focus);
       // A page that the person zoomed keeps the native tap.
       if (win.visualViewport && win.visualViewport.scale !== 1) return;
       // A tap on the focused field with the keyboard up moves the caret. Android shows a closed

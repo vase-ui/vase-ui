@@ -408,7 +408,7 @@ describe('snap points', () => {
     const log: string[] = [];
     await mountSheet(log, {
       onSnapPointChange: (point: unknown, details: { cancel(): void }) => {
-        log.push(`snapPointChange ${point}`);
+        log.push(`snapPointChange ${String(point)}`);
         details.cancel();
       },
     });

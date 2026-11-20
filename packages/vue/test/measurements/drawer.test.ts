@@ -165,10 +165,13 @@ describe('a press of the right button in a mouse drag with capture (M2)', () => 
   });
 });
 
+/** The hooks of the `<Transition>` of `Sheet`, in their order. */
+let hooks: string[] = [];
+
 const Sheet = defineComponent({
   props: {
     scene: {
-      type: Object as PropType<{ open: boolean; tick: number; hooks: string[] }>,
+      type: Object as PropType<{ open: boolean; tick: number }>,
       required: true,
     },
     children: { type: Number, default: 0 },
@@ -180,8 +183,8 @@ const Sheet = defineComponent({
         {
           name: 'sheet',
           appear: true,
-          onAfterEnter: () => props.scene.hooks.push('after-enter'),
-          onAfterLeave: () => props.scene.hooks.push('after-leave'),
+          onAfterEnter: () => hooks.push('after-enter'),
+          onAfterLeave: () => hooks.push('after-leave'),
         },
         () =>
           props.scene.open
@@ -204,7 +207,8 @@ const SHEET_STYLE = `<style>
 
 function mountSheet() {
   html(SHEET_STYLE);
-  const scene = reactive({ open: false, tick: 0, hooks: [] as string[] });
+  hooks = [];
+  const scene = reactive({ open: false, tick: 0 });
   mount(Sheet, { scene });
   return { scene, sheet: () => element('sheet') };
 }
@@ -233,7 +237,7 @@ describe('a script that writes a variable, `transition: none` and an attribute t
     await nextFrame();
     expect(getComputedStyle(leaving).transitionDuration).toBe('0.2s');
     await wait(400);
-    expect(scene.hooks).toContain('after-leave');
+    expect(hooks).toContain('after-leave');
   });
 });
 
@@ -260,7 +264,7 @@ describe('an element that mounts in <Transition appear> (M5)', () => {
     await nextFrame();
     await nextFrame();
     await nextFrame();
-    expect([sheet().className, translateY(sheet()), scene.hooks]).toEqual([
+    expect([sheet().className, translateY(sheet()), hooks]).toEqual([
       'sheet',
       150,
       ['after-enter'],

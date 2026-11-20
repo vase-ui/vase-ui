@@ -11,6 +11,7 @@ import {
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useModel } from '../common/model';
+import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
 import { DialogHandle, useDialogRoot, type DialogForParts } from '../dialog/root';
 import {
@@ -164,11 +165,7 @@ export function useDrawerRoot<Payload>(
   const parent = inject(drawerKey, null);
   let lastClose: DrawerRootChangeEventDetails | undefined;
 
-  const {
-    root,
-    context: dialog,
-    close,
-  } = useDialogRoot<Payload>('dialog', props, ((
+  const dialogRoot = useDialogRoot<Payload>('dialog', props, ((
     event: 'openChange' | 'update:open' | 'update:triggerId',
     value: boolean & string,
     details?: DrawerRootChangeEventDetails,
@@ -191,6 +188,7 @@ export function useDrawerRoot<Payload>(
     }
     emit('update:triggerId', value);
   }) as Parameters<typeof useDialogRoot>[2]);
+  const { root, context: dialog } = dialogRoot;
 
   const defaultPoint = () =>
     props.defaultSnapPoint === undefined ? (props.snapPoints?.[0] ?? null) : props.defaultSnapPoint;
@@ -364,7 +362,8 @@ export function useDrawerRoot<Payload>(
     watch(
       () => root.open && dialog.dialogsAbove === 0 && platform.os.android,
       (top, _, onCleanup) => {
-        const Watcher = (window as { CloseWatcher?: new () => CloseWatcherLike }).CloseWatcher;
+        const Watcher = (ownerWindow(root.popup) as { CloseWatcher?: new () => CloseWatcherLike })
+          .CloseWatcher;
         if (!top || !Watcher) return;
         const watcher = new Watcher();
         watcher.addEventListener('cancel', (event) => {
@@ -377,7 +376,7 @@ export function useDrawerRoot<Payload>(
     );
   });
 
-  return { root, drawer, close };
+  return { root, drawer, close: () => dialogRoot.close() };
 }
 
 interface CloseWatcherLike extends EventTarget {
