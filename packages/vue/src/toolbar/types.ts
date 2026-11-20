@@ -48,9 +48,9 @@ export interface ToolbarGroupState {
 export interface ToolbarButtonProps
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {
   /**
-   * The user cannot press the button. The toolbar stops a click, a press and each key on it, except
-   * Tab, Escape, F1 to F12 and the keys with Ctrl, Alt or Meta. Hover and focus events pass, so a
-   * tooltip can say why the button is disabled.
+   * The user cannot press the button. The toolbar stops each click, press and key on it. Tab,
+   * Escape, F1 to F12 and the keys with Ctrl, Alt or Meta pass. Hover and focus events pass too, so
+   * a tooltip can say why the button is disabled.
    * @default false
    */
   disabled?: boolean;

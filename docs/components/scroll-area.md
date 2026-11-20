@@ -94,9 +94,9 @@ Use `<ScrollArea.Corner>` so that the two scrollbars do not cross.
 
 Use the overflow CSS variables of the viewport in a CSS mask. The fade then grows as the user scrolls away from an edge.
 
-The server HTML has no value for the variables. Give the `var()` of the end edge a fallback, as the demo does, so that the fade shows before the hydration.
+The server HTML has no value for the variables. A `var()` with no fallback then makes the mask invalid, and the browser shows no fade. To show the fade before the hydration, give each `var()` a fallback. Use `0px` for the start edge, and the size of the fade for the end edge.
 
-The viewport writes the variables at each scroll, and each element in it inherits them. With thousands of elements in the viewport, the browser can then need some milliseconds in a frame. Register the variables with `inherits: false`, and set each variable that a child uses to `inherit`:
+The viewport writes the variables at each scroll, and each element in it inherits them. With thousands of elements in the viewport, the browser can then need some milliseconds in a frame. Register the variables with `inherits: false`. Then set each variable that a child uses to `inherit`:
 
 ```css
 @property --scroll-area-overflow-y-start {

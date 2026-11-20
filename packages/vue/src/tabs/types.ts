@@ -103,8 +103,8 @@ export interface TabsPanelProps<Value = any>
   value: Value;
   /**
    * A closed panel stays in the DOM, with `hidden` and `inert`, so its content keeps its state, and
-   * find-in-page and the server HTML have it. `<Transition>` does not animate such a panel: animate
-   * it with CSS on `[hidden]`.
+   * the server HTML has it. `<Transition>` does not animate such a panel: animate it with CSS on
+   * `[hidden]`.
    * @default false
    */
   keepMounted?: boolean;

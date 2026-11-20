@@ -75,7 +75,8 @@ export namespace Link {
 
 /**
  * A text input of the toolbar. Its `element` slot makes another control an item of the toolbar.
- * A text input keeps ArrowLeft and ArrowRight while its caret can move.
+ * A text input keeps ArrowLeft and ArrowRight while its caret can move. A textarea in the `element`
+ * slot also keeps ArrowUp and ArrowDown while its caret can move.
  * Renders the `Input` part, an `<input>` element.
  * @selector `[data-orientation]` The orientation of the toolbar: `horizontal` or `vertical`.
  * @selector `[aria-disabled="true"]` The input is disabled and keeps the focus.

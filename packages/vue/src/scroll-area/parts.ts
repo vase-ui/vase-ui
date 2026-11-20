@@ -82,7 +82,8 @@ export namespace Content {
 
 /**
  * A vertical or horizontal scrollbar for the scroll area. It lies over the viewport and takes no
- * space. It renders while its axis has overflow. To show it at a hover, select `:hover` of the root.
+ * space. Assistive technology does not read it. It renders while its axis has overflow. To show it
+ * at a hover, select `:hover` of the root.
  * Renders a `<div>` element.
  * @selector `[data-orientation]` The axis of the scrollbar: `vertical` or `horizontal`.
  * @selector `[data-scrolling]` The user scrolls the axis of the scrollbar.
@@ -117,7 +118,7 @@ export namespace Thumb {
 
 /**
  * A small rectangular area that appears at the intersection of horizontal and vertical scrollbars.
- * It renders while the two axes have overflow.
+ * It renders while the two axes have overflow. Assistive technology does not read it.
  * Renders a `<div>` element.
  */
 export const Corner: typeof ScrollAreaCorner = ScrollAreaCorner;

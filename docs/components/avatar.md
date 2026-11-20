@@ -63,9 +63,9 @@ Add the `keepMounted` prop to render the image element at once and let it load i
 
 With `keepMounted`, the image and the fallback are both present until the image loads. Until then, the image is hidden from assistive technology, so the fallback gives the accessible name.
 
-Put the two in the same box, and put `<Avatar.Image>` after `<Avatar.Fallback>`. Both are positioned, so the later one in the DOM paints on top. The fallback then shows until the image covers it.
+Put the two in the same box. Put `<Avatar.Image>` after `<Avatar.Fallback>`. Both are positioned, so the later one in the DOM paints on top. The fallback then shows until the image covers it.
 
-A loading image paints nothing, so the fallback shows through it. An image that failed to load paints a broken-image icon on top of the fallback. Hide the image in these two states with the `data-loading` and `data-error` attributes:
+While an image loads, it paints nothing, so the fallback shows through it. An image that failed to load paints a broken-image icon on top of the fallback. Hide the image in these two states with the `data-loading` and `data-error` attributes:
 
 ```css
 .Root {
@@ -94,11 +94,11 @@ By default, the server HTML has no image. With `keepMounted`, the image is in th
 
 ### Animate the image
 
-Put `<Avatar.Image>` in a `<Transition>` to animate its enter and its leave. Vue keeps a leaving image in the DOM beside the fallback until its leave ends, so take the leaving image out of the flow with CSS:
+Put `<Avatar.Image>` in a `<Transition>` to animate its enter and its leave. Vue keeps an image that leaves in the DOM beside the fallback until its leave ends. Take that image out of the flow with CSS:
 
 <<< ./avatar/Animated.vue
 
-A `<Transition>` around `<Avatar.Fallback>` needs the same CSS. `<Transition>` does not animate an image of the `element` slot, or an image that `keepMounted` keeps in the DOM. Give such an image `keepMounted`, and animate it with a CSS transition on `[data-loading]`.
+A `<Transition>` around `<Avatar.Fallback>` needs the same CSS. `<Transition>` does not animate an image in the `element` slot, or an image that `keepMounted` keeps in the DOM. For such an image, use `keepMounted` and a CSS transition on `[data-loading]`.
 
 ## API reference
 

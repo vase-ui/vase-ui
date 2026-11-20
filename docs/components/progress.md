@@ -14,7 +14,7 @@ import DemoProgressHeroTailwind from '../demos/progress/hero/tailwind/index.vue'
 
 # Progress
 
-Displays the status of a task that takes a long time.
+A progress bar that displays the status of a task that takes a long time.
 
 <DemoFrame>
   <DemoProgressHero />
