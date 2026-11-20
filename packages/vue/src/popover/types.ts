@@ -21,7 +21,7 @@ interface ElementProps {
    * A tag or a component that the part renders in place of its own element, with the same
    * attributes and content. The `element` slot wins over it.
    */
-  as?: keyof HTMLElementTagNameMap | Component;
+  as?: keyof HTMLElementTagNameMap | Component | undefined;
 }
 
 export type PopoverRootChangeEventReason =
@@ -39,19 +39,19 @@ export type PopoverRootChangeEventDetails = PopupChangeEventDetails<PopoverRootC
 
 export interface PopoverRootProps<Payload = unknown> {
   /** The popover is open. `v-model:open` binds it. */
-  open?: boolean;
+  open?: boolean | undefined;
   /**
    * The popover is open at the mount of an uncontrolled root.
    * @default false
    */
-  defaultOpen?: boolean;
+  defaultOpen?: boolean | undefined;
   /** The `id` of the active trigger. `v-model:trigger-id` binds it. */
-  triggerId?: string | null;
+  triggerId?: string | null | undefined;
   /**
    * The `id` of the active trigger at the mount, with `defaultOpen`.
    * @default null
    */
-  defaultTriggerId?: string | null;
+  defaultTriggerId?: string | null | undefined;
   /**
    * The modal state of the open popover:
    * - `false`: the page stays in use.
@@ -61,42 +61,42 @@ export interface PopoverRootProps<Payload = unknown> {
    *   page stays in use.
    * @default false
    */
-  modal?: boolean | 'trap-focus';
+  modal?: boolean | 'trap-focus' | undefined;
   /** Connects the root to triggers outside it and to code. */
-  handle?: PopoverHandle<Payload>;
+  handle?: PopoverHandle<Payload> | undefined;
 }
 
 export interface PopoverRootState {}
 
 export interface PopoverTriggerProps<Payload = unknown>
   extends ElementProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
-  id?: string;
+  id?: string | undefined;
   /**
    * The user cannot press the trigger.
    * @default false
    */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** The payload that the popover gets when this trigger opens it. */
-  payload?: Payload;
+  payload?: Payload | undefined;
   /** Connects the trigger to a root outside it. */
-  handle?: PopoverHandle<Payload>;
+  handle?: PopoverHandle<Payload> | undefined;
   /**
    * A mouse that rests on the trigger also opens the popover.
    * @default false
    */
-  openOnHover?: boolean;
+  openOnHover?: boolean | undefined;
   /**
    * The time in milliseconds that the mouse rests on the trigger before the open, with
    * `openOnHover`.
    * @default 300
    */
-  delay?: number;
+  delay?: number | undefined;
   /**
    * The time in milliseconds before the close, after the pointer left the trigger and the popup,
    * with `openOnHover`.
    * @default 0
    */
-  closeDelay?: number;
+  closeDelay?: number | undefined;
 }
 
 export interface PopoverTriggerState {
@@ -131,17 +131,17 @@ export interface PopoverPositionerState {
 
 export interface PopoverPopupProps
   extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  id?: string;
+  id?: string | undefined;
   /**
    * The element that gets the focus at the open. By default: the element with `autofocus`, else the
    * first tab stop, else the popup; after a touch, the popup.
    */
-  initialFocus?: FocusTarget;
+  initialFocus?: FocusTarget | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
    * had the focus before the open.
    */
-  finalFocus?: FocusTarget;
+  finalFocus?: FocusTarget | undefined;
 }
 
 export interface PopoverPopupState {
@@ -168,14 +168,14 @@ export interface PopoverArrowState {
 
 export interface PopoverTitleProps
   extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  id?: string;
+  id?: string | undefined;
 }
 
 export interface PopoverTitleState {}
 
 export interface PopoverDescriptionProps
   extends ElementProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  id?: string;
+  id?: string | undefined;
 }
 
 export interface PopoverDescriptionState {}
@@ -186,7 +186,7 @@ export interface PopoverCloseProps
    * The user cannot press the button.
    * @default false
    */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 export interface PopoverCloseState {

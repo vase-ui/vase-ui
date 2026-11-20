@@ -53,17 +53,17 @@ export interface CollisionAvoidance {
    * The side axis: `'flip'` places the popup on the other side when it has no room, `'shift'`
    * keeps the side and moves the popup into the boundary, `'none'` does nothing.
    */
-  side?: 'flip' | 'shift' | 'none';
+  side?: 'flip' | 'shift' | 'none' | undefined;
   /**
    * The align axis: `'flip'` swaps `start` and `end` when the popup has no room, `'shift'` keeps
    * the alignment and moves the popup into the boundary, `'none'` does nothing.
    */
-  align?: 'flip' | 'shift' | 'none';
+  align?: 'flip' | 'shift' | 'none' | undefined;
   /**
    * With no room on both sides of the preferred axis, the popup can go to a side of the other
    * axis: the logical `'start'` or `'end'` first, or `'none'`.
    */
-  fallbackAxisSide?: 'start' | 'end' | 'none';
+  fallbackAxisSide?: 'start' | 'end' | 'none' | undefined;
 }
 
 export interface PlacementProps {
@@ -71,59 +71,59 @@ export interface PlacementProps {
    * The side of the anchor for the popup. It can change to avoid a collision.
    * @default 'bottom'
    */
-  side?: Side;
+  side?: Side | undefined;
   /**
    * The alignment of the popup on the side.
    * @default 'center'
    */
-  align?: Align;
+  align?: Align | undefined;
   /**
    * The distance from the anchor in pixels, or a function that gives it.
    * @default 0
    */
-  sideOffset?: number | OffsetFunction;
+  sideOffset?: number | OffsetFunction | undefined;
   /**
    * The offset on the align axis in pixels, or a function that gives it.
    * @default 0
    */
-  alignOffset?: number | OffsetFunction;
+  alignOffset?: number | OffsetFunction | undefined;
   /**
    * The element to place the popup against: an element, a virtual element, a template ref of a
    * part, or a function that gives one. With no value, the active trigger.
    */
-  anchor?: Anchor | (() => Anchor);
+  anchor?: Anchor | (() => Anchor) | undefined;
   /** How the popup avoids the edge of the boundary. */
-  collisionAvoidance?: CollisionAvoidance;
+  collisionAvoidance?: CollisionAvoidance | undefined;
   /**
    * The area that holds the popup: an element, elements, or a rectangle.
    * @default 'clipping-ancestors'
    */
-  collisionBoundary?: Boundary;
+  collisionBoundary?: Boundary | undefined;
   /**
    * The space between the popup and the edge of the boundary, in pixels.
    * @default 5
    */
-  collisionPadding?: Padding;
+  collisionPadding?: Padding | undefined;
   /**
    * The popup stays in the view after its anchor scrolls out of it.
    * @default false
    */
-  sticky?: boolean;
+  sticky?: boolean | undefined;
   /**
    * The smallest space between the arrow and an edge of the popup, in pixels.
    * @default 5
    */
-  arrowPadding?: number;
+  arrowPadding?: number | undefined;
   /**
    * The CSS `position` of the positioner.
    * @default 'absolute'
    */
-  positionMethod?: 'absolute' | 'fixed';
+  positionMethod?: 'absolute' | 'fixed' | undefined;
   /**
    * The popup does not follow a move of its anchor.
    * @default false
    */
-  disableAnchorTracking?: boolean;
+  disableAnchorTracking?: boolean | undefined;
 }
 
 function isVirtualElement(value: object): value is VirtualElement {

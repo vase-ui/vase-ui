@@ -24,11 +24,11 @@ export interface PopupPortalProps {
    */
   to?: PortalTarget | undefined;
   /** Renders the content in place, also on the server. */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Moves the content after the other content of the same update mounted. */
-  defer?: boolean;
+  defer?: boolean | undefined;
   /** The closed popup stays in the DOM, with `hidden` and `inert`. */
-  keepMounted?: boolean;
+  keepMounted?: boolean | undefined;
 }
 
 // One key for each popup family, so that a popup in a popup has the target of its parent.
