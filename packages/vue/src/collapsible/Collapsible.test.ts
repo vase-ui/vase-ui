@@ -279,6 +279,20 @@ describe('the panel', () => {
     expect(input.value).toBe('kept');
   });
 
+  test('a kept panel that opens again keeps its element when it loses keepMounted', async () => {
+    const panelProps = reactive<Record<string, unknown>>({ keepMounted: true });
+    const { panel, press } = await mountCollapsible({ panel: panelProps, scene: { input: true } });
+    const element = panel()!;
+    await press();
+    await press();
+    await press();
+    element.querySelector('input')!.value = 'kept';
+    panelProps.keepMounted = false;
+    await settle();
+    expect(panel()).toBe(element);
+    expect(element.querySelector('input')!.value).toBe('kept');
+  });
+
   test('with hiddenUntilFound, a closed panel stays with hidden="until-found" and no inert', async () => {
     const { panel, press } = await mountCollapsible({ panel: { hiddenUntilFound: true } });
     expect(panel()).toHaveAttribute('hidden', 'until-found');

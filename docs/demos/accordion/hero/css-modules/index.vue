@@ -21,12 +21,11 @@ const PlusIcon: FunctionalComponent = () =>
   );
 
 // The panel animates its height from 0 to the height of its content, and back.
-const panelTransition = {
-  enterFromClass: styles.PanelClosed,
-  enterToClass: styles.PanelOpen,
-  leaveFromClass: styles.PanelOpen,
-  leaveToClass: styles.PanelClosed,
-};
+const enterFromClass = styles.PanelClosed;
+const enterToClass = styles.PanelOpen;
+const leaveFromClass = styles.PanelOpen;
+const leaveToClass = styles.PanelClosed;
+const panelTransition = { enterFromClass, enterToClass, leaveFromClass, leaveToClass };
 </script>
 
 <template>

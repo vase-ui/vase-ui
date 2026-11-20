@@ -20,12 +20,11 @@ const PlusIcon: FunctionalComponent = () =>
   );
 
 // The panel animates its height from 0 to the height of its content, and back.
-const panelTransition = {
-  enterFromClass: 'h-0',
-  enterToClass: 'h-[var(--accordion-panel-height)]',
-  leaveFromClass: 'h-[var(--accordion-panel-height)]',
-  leaveToClass: 'h-0',
-};
+const enterFromClass = 'h-0';
+const enterToClass = 'h-[var(--accordion-panel-height)]';
+const leaveFromClass = 'h-[var(--accordion-panel-height)]';
+const leaveToClass = 'h-0';
+const panelTransition = { enterFromClass, enterToClass, leaveFromClass, leaveToClass };
 </script>
 
 <template>

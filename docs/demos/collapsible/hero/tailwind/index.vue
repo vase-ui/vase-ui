@@ -15,6 +15,13 @@ const CaretRightIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M6 12V4l4.5 4z' })],
   );
+
+// The panel animates its height from 0 to the height of its content, and back.
+const enterFromClass = 'h-0';
+const enterToClass = 'h-[var(--collapsible-panel-height)]';
+const leaveFromClass = 'h-[var(--collapsible-panel-height)]';
+const leaveToClass = 'h-0';
+const panelTransition = { enterFromClass, enterToClass, leaveFromClass, leaveToClass };
 </script>
 
 <template>
@@ -29,12 +36,7 @@ const CaretRightIcon: FunctionalComponent = () =>
         class="transition-transform duration-100 ease-[ease-out] group-aria-expanded:rotate-90"
       />
     </Collapsible.Trigger>
-    <Transition
-      enter-from-class="h-0"
-      enter-to-class="h-[var(--collapsible-panel-height)]"
-      leave-from-class="h-[var(--collapsible-panel-height)]"
-      leave-to-class="h-0"
-    >
+    <Transition v-bind="panelTransition">
       <Collapsible.Panel
         class="flex flex-col justify-end overflow-hidden text-sm transition-[height] duration-150 ease-[ease-out]"
       >

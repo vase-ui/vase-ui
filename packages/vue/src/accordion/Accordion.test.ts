@@ -271,7 +271,14 @@ describe('disabled', () => {
     await userEvent.click(disabledRoot.trigger('a'), { force: true });
     expect(log).toEqual([]);
 
-    const { trigger, item, header, press, open } = await mountAccordion({
+    const {
+      root: element,
+      trigger,
+      item,
+      header,
+      press,
+      open,
+    } = await mountAccordion({
       root: { keepMounted: true },
       items: [
         { key: 'a', attrs: { disabled: true } },
@@ -282,6 +289,7 @@ describe('disabled', () => {
     for (const element of [item('a'), header('a')]) {
       expect(element).toHaveAttribute('data-disabled');
     }
+    expect(element.querySelector('[role=region][data-key=a]')).toHaveAttribute('data-disabled');
     expect(item('b')).not.toHaveAttribute('data-disabled');
     expect(trigger('b')).toBeDisabled();
     await press('a');
@@ -322,12 +330,13 @@ describe('ids and ARIA', () => {
   });
 
   test('VUE-80: with no trigger, the panel has no aria-labelledby; a role of the developer wins', async () => {
-    const kept = await mountAccordion({
-      root: { defaultValue: ['a'] },
-      items: [{ key: 'a', trigger: false, panel: { role: 'group', class: 'Group' } }],
-    });
-    const element = kept.root.querySelector('.Group')!;
+    const shown = reactive<Item[]>([{ key: 'a', panel: { role: 'group', class: 'Group' } }]);
+    const accordion = await mountAccordion({ root: { defaultValue: ['a'] }, items: shown });
+    const element = accordion.root.querySelector('.Group')!;
     expect(element).toHaveAttribute('role', 'group');
+    expect(element).toHaveAttribute('aria-labelledby', accordion.trigger('a').id);
+    shown[0]!.trigger = false;
+    await nextTick();
     expect(element).not.toHaveAttribute('aria-labelledby');
   });
 });

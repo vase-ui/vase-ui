@@ -39,12 +39,13 @@ export function useCollapsiblePanel(
     (open) => {
       writeSize();
       if (!open) {
-        leaving = options.element.value ?? leaving;
+        leaving = options.element.value;
         return;
       }
       const gone = leaving;
       const parent = gone?.isConnected ? gone.parentNode : null;
-      if (waiting.value || !gone || !parent || gone === options.element.value) return;
+      // A kept element stays in the DOM, so it does not leave.
+      if (!gone || !parent || gone === options.element.value) return;
       waiting.value = true;
       const observer = new MutationObserver(() => {
         if (gone.isConnected) return;
@@ -55,13 +56,7 @@ export function useCollapsiblePanel(
     },
   );
   // A new element, and a kept element that shows, get the size that they have at their closed style.
-  watch(
-    [options.element, () => part.open],
-    ([element, open]) => {
-      if (element && open) writeSize();
-    },
-    { flush: 'post' },
-  );
+  watch([options.element, () => part.open], writeSize, { flush: 'post' });
 
   function writeSize() {
     const element = options.element.value;
