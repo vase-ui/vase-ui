@@ -37,6 +37,7 @@ const INPUT_ATTRIBUTE =
 // `Toolbar.Root` moves the focus at these keys when they bubble from an item in it.
 const TOOLBAR_KEYS = new Set(['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'Home', 'End']);
 const KEYS = new Set([...TOOLBAR_KEYS, 'PageUp', 'PageDown']);
+const FOCUS_EVENTS = ['blur', 'focusout', 'focus', 'focusin'];
 
 const slider = injectSlider('Thumb');
 const field = inject(fieldKey, null);
@@ -46,9 +47,6 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: input, setElement: setInput } = useElement<HTMLInputElement>();
 // A key with Ctrl, Alt or Meta, until the next task.
 let modifiedKey = false;
-// The blur and the focus of `showFocusRing`. Their events stop at the input. Only a capture
-// listener on an element that contains the input gets them.
-let refocusing = false;
 
 const entry: SliderThumbEntry = {
   get index() {
@@ -160,11 +158,8 @@ function inputProps() {
       ...(field && controlAria(field)),
       'aria-labelledby': named ? undefined : slider.labelId,
       style: inputStyle.value,
-      // Capture listeners, so that they come before each listener of the developer on the input.
-      onFocusCapture: onFocus,
-      onBlurCapture: onBlur,
-      onFocusin: stopRefocusEvent,
-      onFocusout: stopRefocusEvent,
+      onFocus,
+      onBlur,
       onKeydown,
       onInput,
       value: value.value,
@@ -180,18 +175,12 @@ function valueText() {
   return slider.hasFormat ? text : undefined;
 }
 
-function onFocus(event: FocusEvent) {
-  if (refocusing) event.stopImmediatePropagation();
-  else slider.onFocus(entry);
+function onFocus() {
+  slider.onFocus(entry);
 }
 
 function onBlur(event: FocusEvent) {
-  if (refocusing) event.stopImmediatePropagation();
-  else slider.onBlur(event);
-}
-
-function stopRefocusEvent(event: FocusEvent) {
-  if (refocusing) event.stopImmediatePropagation();
+  slider.onBlur(event);
 }
 
 function onInput(event: Event) {
@@ -238,14 +227,21 @@ function onKeydown(event: KeyboardEvent) {
 
 /**
  * Chromium and Firefox show no focus ring at a key after a press. A focus after a blur at a key has
- * the ring in each browser (`test/measurements/slider.test.ts`, S2).
+ * the ring in each browser (`test/measurements/slider.test.ts`, S2). The events of that blur and
+ * focus stop in the capture phase of the window, so the listeners of the page do not get them.
  */
 function showFocusRing(target: HTMLInputElement) {
   if (!target.matches(':focus:not(:focus-visible)')) return;
-  refocusing = true;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A focused input has a window.
+  const view = target.ownerDocument.defaultView!;
+  for (const type of FOCUS_EVENTS) view.addEventListener(type, stopEvent, true);
   target.blur();
   target.focus({ preventScroll: true });
-  refocusing = false;
+  for (const type of FOCUS_EVENTS) view.removeEventListener(type, stopEvent, true);
+}
+
+function stopEvent(event: Event) {
+  event.stopImmediatePropagation();
 }
 </script>
 

@@ -558,9 +558,14 @@ describe('a real pointer', () => {
     expect(log.at(-1)).toBe('commit 60 drag pointerup');
   });
 
-  test('a mouse press gives the input no focus ring; a key that changes the value shows it, with no focus event for the field and the listeners of the developer', async () => {
+  test('a mouse press gives the input no focus ring; a key that changes the value shows it, with no focus event for the field and the listeners of the page', async () => {
     const events: string[] = [];
     const record = (part: string) => (event: FocusEvent) => events.push(`${part} ${event.type}`);
+    const onDocument = record('document');
+    for (const type of ['focusin', 'focusout'] as const) {
+      document.addEventListener(type, onDocument, true);
+      onTestFinished(() => document.removeEventListener(type, onDocument, true));
+    }
     const slider = await mountSlider(
       {
         root: { defaultValue: 100, onFocusin: record('root'), onFocusout: record('root') },
@@ -599,7 +604,13 @@ describe('a real pointer', () => {
     expect(document.activeElement).toBe(input);
     expect(input.matches(':focus-visible')).toBe(true);
     expect(slider.group).not.toHaveAttribute('data-touched');
-    expect(events).toEqual(['thumb capture focus', 'thumb focus', 'thumb focusin', 'root focusin']);
+    expect(events).toEqual([
+      'thumb capture focus',
+      'thumb focus',
+      'document focusin',
+      'thumb focusin',
+      'root focusin',
+    ]);
   });
 
   test.runIf(server.browser === 'chromium')(
