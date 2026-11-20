@@ -50,6 +50,14 @@
       "reason": "The table has the one row Drawer. The handle of Drawer is the handle of Dialog, and the case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests `openWithPayload()` with no root."
     },
     {
+      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "describe": ["concrete popup handles"],
+      "title": "$component handle is closed and names itself in warnings while no root is attached",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/Dialog.test.ts",
+      "reason": "Each family of the table has the handle of the popup layer, which gives no warning with no root. The case `with no root, the methods and the triggers do nothing` of `Dialog.test.ts` tests that such a handle is closed and does nothing."
+    },
+    {
       "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/preview-card/line.test.ts",
