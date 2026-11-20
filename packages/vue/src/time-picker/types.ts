@@ -50,7 +50,8 @@ export interface TimePickerRootState {}
 export interface TimePickerRootProps<Value extends TimePickerRootValue = Temporal.PlainTime> {
   /**
    * The value: a `Temporal.PlainTime`, `PlainDateTime` or `ZonedDateTime`, or `null` for no value.
-   * A new value has the kind, the date and the zone of the value, else of the last value.
+   * A new value has the kind, the date and the zone of the value, else of `defaultValue`, else of
+   * the last value.
    */
   modelValue?: Value | null | undefined;
   /** The first value of a picker with no `modelValue`. */

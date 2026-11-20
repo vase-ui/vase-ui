@@ -52,7 +52,7 @@ A field to type a time in, and a list, columns or a clock face in a popup to pic
 ## Usage guidelines
 
 - **The picker needs `Temporal`**: Load a `Temporal` polyfill for an engine that has none, such as Safari and Node.js 24. Use TypeScript 6.0, or set `skipLibCheck`. See [Dates and times](/handbook/dates-and-times).
-- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, give `TimePicker.Field` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of `TimePicker.Field`. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, give `TimePicker.Field` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of `TimePicker.Field`. A `<label for>` names the field only after the mount, so the server HTML has no name for it. See the [forms guide](/handbook/forms).
 - **The trigger must have a name**: Give `TimePicker.Trigger` content or an `aria-label` in the language of the page. See [Show the time in the trigger](#show-the-time-in-the-trigger).
 - **The popup and the list must have a name**: Give `TimePicker.Popup` an `aria-label`, or put a `Popover.Title` in it. Give `TimePicker.List` an `aria-label` or an `aria-labelledby` in the language of the page.
 

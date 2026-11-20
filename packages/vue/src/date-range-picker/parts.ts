@@ -120,9 +120,9 @@ export namespace Popup {
 
 /**
  * The calendar of the picker: `RangeCalendar.Root` with the range of the picker. It takes the other
- * props of `RangeCalendar.Root`, such as `numberOfMonths` and `minDays`, and it has the selectors of
- * that part. The press that gives the second end, or a drag, closes the popup when `closeOnSelect`
- * of the root allows it.
+ * props and events of `RangeCalendar.Root`, such as `minDays` and `monthChange`, and it has the
+ * selectors of that part. The press that gives the second end, or a drag, closes the popup when
+ * `closeOnSelect` of the root allows it.
  * Renders a `<div>` element.
  */
 export const Calendar: typeof DateRangePickerCalendar = DateRangePickerCalendar;

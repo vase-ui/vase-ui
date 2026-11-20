@@ -285,7 +285,7 @@ The units that the `granularity` prop takes.
 
 ### DateField.Root.ChangeEventReason
 
-The reason of `valueChange`: `keyboard` for a key such as Up or Backspace, and `input-clear` for a deletion by an input method.
+The reason of `valueChange`: `input-change` for typed text, `keyboard` for a key such as Up or Backspace, and `input-clear` for deletion by an input method.
 
 <ApiReference name="DateField.Root.ChangeEventReason" />
 

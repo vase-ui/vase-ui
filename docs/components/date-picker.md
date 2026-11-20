@@ -54,7 +54,7 @@ A field to type a date in, and a calendar in a popup to pick one.
 ## Usage guidelines
 
 - **The picker needs `Temporal`**: Load a `Temporal` polyfill for an engine that has none, such as Safari and Node.js 24. Use TypeScript 6.0, or set `skipLibCheck`. See [Dates and times](/handbook/dates-and-times).
-- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, give `DatePicker.Field` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of `DatePicker.Field`. See the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Put the picker in a `Field` with a `Field.Label`, give `DatePicker.Field` an `aria-label` or an `aria-labelledby`, or point a `<label for>` at the `id` of `DatePicker.Field`. A `<label for>` names the field only after the mount, so the server HTML has no name for it. See the [forms guide](/handbook/forms).
 - **The trigger must have a name**: Give `DatePicker.Trigger` content or an `aria-label` in the language of the page. See [Show the value in the trigger](#show-the-value-in-the-trigger).
 - **The popup must have a name**: Give `DatePicker.Popup` an `aria-label`, or put a `Popover.Title` in it.
 - **The time field must have a name**: Give `DatePicker.TimeField` an `aria-label`. A `Field` around the picker does not name it.
@@ -176,13 +176,13 @@ The `text` of the slots of `DatePicker.Trigger` is the value in the locale, or `
 
 ## Keyboard
 
-| Key                                                                                                     | Action                                                                                                         |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Alt+Down in the field                                                                                   | Opens the popup. The focus goes to the day that has the tab stop.                                              |
-| Enter, Space                                                                                            | On the trigger, opens the popup. On a day, selects it and closes the popup, unless `closeOnSelect` is `false`. |
-| Escape                                                                                                  | Closes the popup and gives the focus back to the trigger. The value stays.                                     |
-| Tab                                                                                                     | Moves the focus through the popup in the order of the page, after the trigger.                                 |
-| The keys of [Date Field](/components/date-field#keyboard) and [Calendar](/components/calendar#keyboard) | Do the same actions in the field and in the calendar.                                                          |
+| Key                                                                                                     | Action                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Alt+Down in the field                                                                                   | Opens the popup. The focus goes to the day or the month that has the tab stop.                                            |
+| Enter, Space                                                                                            | On the trigger, opens the popup. On a day or a month, selects it and closes the popup, unless `closeOnSelect` is `false`. |
+| Escape                                                                                                  | Closes the popup and gives the focus back to the trigger. The value stays.                                                |
+| Tab                                                                                                     | Moves the focus through the popup in the order of the page, after the trigger.                                            |
+| The keys of [Date Field](/components/date-field#keyboard) and [Calendar](/components/calendar#keyboard) | Do the same actions in the field and in the calendar.                                                                     |
 
 ## API reference
 

@@ -44,7 +44,8 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> {
   /**
    * The first day and the last day of the range: each a `Temporal.PlainDate`, `PlainDateTime` or
    * `ZonedDateTime`, or `null` while it has no value. `null` is `[null, null]`. A new end has the
-   * kind, the calendar, the time and the zone of an end, else of the last end.
+   * kind, the calendar, the time and the zone of an end, else of `defaultValue`, else of the last
+   * end.
    */
   modelValue?: DateRangePickerRootValue<Value> | null | undefined;
   /** The first range of a picker with no `modelValue`. */

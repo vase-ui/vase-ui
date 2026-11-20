@@ -45,7 +45,7 @@ export interface DatePickerRootProps<Value extends DatePickerRootValue = DatePic
   /**
    * The value: a `Temporal.PlainDate`, `PlainDateTime`, `ZonedDateTime` or `PlainYearMonth`, or
    * `null` for no value. A new value has the kind, the calendar, the time and the zone of the value,
-   * else of the last value.
+   * else of `defaultValue`, else of the last value.
    */
   modelValue?: Value | null | undefined;
   /** The first value of a picker with no `modelValue`. */

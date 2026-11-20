@@ -173,8 +173,9 @@ export namespace ColumnItem {
 
 /**
  * The clock of the picker: `TimeClock.Root` with the value of the picker. It takes the other props
- * of `TimeClock.Root`, such as `minuteStep`, and it has the selectors of that part. The commit of
- * the last view closes the popup.
+ * and events of `TimeClock.Root`, such as `minuteStep` and `valueCommitted`, and it has the
+ * selectors of that part. The commit of the last view closes the popup when `closeOnSelect` of the
+ * root allows it.
  * Renders a `<div>` element.
  */
 export const Clock: typeof TimePickerClock = TimePickerClock;

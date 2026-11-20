@@ -58,8 +58,8 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
   /**
    * The calendar that the field shows, such as `gregory` or `persian`. The default is the calendar
    * of a value that is not ISO, else the calendar of the locale. A value keeps its own calendar. A
-   * year and month field with no value makes its first value in this calendar when the months of
-   * this calendar are not ISO months, such as in `hebrew`.
+   * year and month field with no value, `defaultValue` or `referenceDate` makes its first value in
+   * this calendar when its months are not ISO months, as in `hebrew`.
    */
   calendar?: string;
   /**

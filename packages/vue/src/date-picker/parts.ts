@@ -108,8 +108,8 @@ export namespace Popup {
 
 /**
  * The calendar of the picker: `Calendar.Root` with the value of the picker. It takes the other
- * props of `Calendar.Root`, such as `numberOfMonths`, and it has the selectors of that part. A pick
- * closes the popup when `closeOnSelect` of the root allows it.
+ * props and events of `Calendar.Root`, such as `numberOfMonths` and `monthChange`, and it has the
+ * selectors of that part. A pick closes the popup when `closeOnSelect` of the root allows it.
  * Renders a `<div>` element.
  */
 export const Calendar: typeof DatePickerCalendar = DatePickerCalendar;
