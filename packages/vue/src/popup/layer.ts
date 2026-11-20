@@ -226,8 +226,9 @@ function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
   return !stack.some((each) => ownElements(each, false).some((element) => child.contains(element)));
 }
 
-// A press on a scrollbar sends `pointerdown`, `mousedown` and `pointerup` with an offset outside
-// the client box of the element that scrolls (test/measurements/popup.test.ts).
+// A press on a scrollbar sends `pointerdown` with an offset outside the client box of the element
+// that scrolls, and no `click` (test/measurements/popup.test.ts). Only a layer that closes at
+// `pointerdown` reads it.
 function isScrollbarPress(event: PointerEvent | MouseEvent) {
   const target = event.target;
   if (!(target instanceof ownerWindow(target as Element).HTMLElement)) return false;
@@ -272,7 +273,10 @@ interface TouchGesture {
 
 let touch: TouchGesture | null = null;
 let pressType = '';
-let pressActive = false;
+/** From a `pointerdown` of the main button to its `pointerup`. */
+let pressing = false;
+/** From a `pointerdown` of the main button to the next `click`. */
+let pressed = false;
 
 function onPointerdown(event: PointerEvent) {
   pressType = event.pointerType;
@@ -288,7 +292,8 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
   if (event.button !== 0) return;
-  pressActive = true;
+  pressing = true;
+  pressed = true;
   const outside = isScrollbarPress(event) ? [] : outsideEntries(event);
   for (const entry of stack) {
     entry.pressOutside = outside.includes(entry);
@@ -319,11 +324,13 @@ function onPointerup(event: PointerEvent) {
     if (moved || event.timeStamp - time < 1000) closeOutside(event, entries);
     return;
   }
+  pressing = false;
   if (event.type === 'pointercancel') {
-    pressActive = false;
+    pressed = false;
     return;
   }
-  const outside = isScrollbarPress(event) ? [] : outsideEntries(event);
+  // A press on a scrollbar sends no `click` (test/measurements/popup.test.ts).
+  const outside = outsideEntries(event);
   for (const entry of stack) {
     if (entry.pressOutside !== undefined) entry.releaseOutside = outside.includes(entry);
   }
@@ -333,8 +340,8 @@ function onPointerup(event: PointerEvent) {
 // the edge of the popup (test/measurements/popup.test.ts). The layer reads the press and the
 // release.
 function onClick(event: MouseEvent) {
-  const withPress = pressActive && event.detail !== 0;
-  pressActive = false;
+  const withPress = pressed && event.detail !== 0;
+  pressed = false;
   if (withPress && pressType === 'touch') return;
   const outside = outsideEntries(event);
   const entries = fromTop().filter((entry) => {
@@ -351,7 +358,7 @@ function onClick(event: MouseEvent) {
 
 function onFocusout(event: FocusEvent) {
   // A press moves the focus at `pointerdown`. The rule of the press decides.
-  if (handledFocusouts.has(event) || pressActive) return;
+  if (handledFocusouts.has(event) || pressing) return;
   handledFocusouts.add(event);
   const path = event.composedPath();
   const related = event.relatedTarget as Element | null;

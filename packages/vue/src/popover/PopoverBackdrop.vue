@@ -34,8 +34,14 @@ function elementProps() {
       role: 'presentation',
       hidden: closed ? true : undefined,
       inert: closed ? true : undefined,
-      // The page stays in use under a popover that a hover opened.
-      style: context.hoverOpen ? { pointerEvents: 'none' } : undefined,
+      style: {
+        // The page stays in use under a popover that a hover opened.
+        pointerEvents: context.hoverOpen ? 'none' : undefined,
+        // A double click selects text of the page in Firefox and WebKit
+        // (test/measurements/popup.test.ts).
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+      },
     },
     attrs,
   );

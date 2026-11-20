@@ -80,6 +80,8 @@ export function usePopupPortal(
     return {
       position: 'fixed',
       inset: 0,
+      // A double click selects text of the page in Firefox and WebKit
+      // (test/measurements/popup.test.ts).
       userSelect: 'none',
       WebkitUserSelect: 'none',
       // The active trigger keeps its hover and its press.
