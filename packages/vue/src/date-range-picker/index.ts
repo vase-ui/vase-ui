@@ -53,7 +53,6 @@ export * as DateRangePickerEndFieldDataAttributes from '../date-field/root/DateF
 export * as DateRangePickerTriggerDataAttributes from '../popover/trigger/PopoverTriggerDataAttributes';
 export * as DateRangePickerPositionerCssVariables from '../popover/positioner/PopoverPositionerCssVars';
 export * as DateRangePickerPositionerDataAttributes from '../popover/positioner/PopoverPositionerDataAttributes';
-export * as DateRangePickerCalendarDataAttributes from '../range-calendar/root/RangeCalendarRootDataAttributes';
 export * as DateRangePickerPopupCssVariables from '../popover/popup/PopoverPopupCssVars';
 export * as DateRangePickerPopupDataAttributes from '../popover/popup/PopoverPopupDataAttributes';
 export * as DateRangePickerArrowDataAttributes from '../popover/arrow/PopoverArrowDataAttributes';

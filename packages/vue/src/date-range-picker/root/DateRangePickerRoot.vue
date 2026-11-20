@@ -1,12 +1,12 @@
 <script lang="ts">
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
-import type {
-  RangeChangeEventReason,
-  RangeValue,
-} from '../../internals/date-time/calendar/rangeSelection';
 import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
+import type {
+  RangeCalendarRootChangeEventReason,
+  RangeCalendarRootValue,
+} from '../../range-calendar/types';
 import type {
   PopoverRootActions,
   PopoverRootChangeEventDetails,
@@ -17,12 +17,12 @@ import type {
 export interface DateRangePickerRootState {}
 
 /** The first day and the last day of a range. An end is `null` while it has no value. */
-export type DateRangePickerRootValue<Value extends DateValue = DateValue> = RangeValue<Value>;
+export type DateRangePickerRootValue<Value extends DateValue = DateValue> = RangeCalendarRootValue<Value>;
 
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 
 export type DateRangePickerRootChangeEventReason =
-  RangeChangeEventReason | DateTimeFieldChangeEventReason;
+  RangeCalendarRootChangeEventReason | DateTimeFieldChangeEventReason;
 export type DateRangePickerRootChangeEventDetails =
   VaseUIChangeEventDetails<DateRangePickerRootChangeEventReason>;
 

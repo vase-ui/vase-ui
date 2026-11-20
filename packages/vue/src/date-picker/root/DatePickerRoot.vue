@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CalendarChangeEventReason } from '../../internals/date-time/calendar/calendarProps';
+import type { CalendarRootChangeEventReason } from '../../calendar/types';
 import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/field/DateTimeFieldContext';
 import type { DateTimeFieldGranularity } from '../../internals/date-time/field/useDateTimeFieldRoot';
 import type { DateMatcher } from '../../internals/date-time/matchers';
@@ -20,7 +20,7 @@ export type DatePickerRootValue = DateValue | Temporal.PlainYearMonth;
 export type DatePickerRootGranularity = DateTimeFieldGranularity;
 
 export type DatePickerRootChangeEventReason =
-  CalendarChangeEventReason | DateTimeFieldChangeEventReason;
+  CalendarRootChangeEventReason | DateTimeFieldChangeEventReason;
 export type DatePickerRootChangeEventDetails =
   VaseUIChangeEventDetails<DatePickerRootChangeEventReason>;
 

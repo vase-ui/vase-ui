@@ -24,36 +24,6 @@
     "src/autocomplete/value/AutocompleteValue.test.tsx": {
       "fails": {}
     },
-    "src/calendar/caption/CalendarCaption.test.tsx": {
-      "fails": {
-        "<Calendar.Caption /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Calendar.Caption /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Calendar.Caption /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/calendar/day-button/CalendarDayButton.context.test.tsx": {
-      "fails": {}
-    },
-    "src/calendar/day-button/CalendarDayButton.test.tsx": {
-      "fails": {
-        "<Calendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Calendar.DayButton /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Calendar.DayButton /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Calendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/calendar/grid/CalendarGrid.test.tsx": {
-      "fails": {
-        "<Calendar.Grid /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<Calendar.Grid /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<Calendar.Grid /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/calendar/root/CalendarRoot.focusTargets.test.tsx": {
-      "fails": {}
-    },
     "src/combobox/chip-remove/ComboboxChipRemove.test.tsx": {
       "fails": {
         "<Combobox.ChipRemove /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
@@ -184,16 +154,6 @@
     "src/preview-card/popup/PreviewCardPopup.test.tsx": {
       "fails": {
         "<PreviewCard.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
-    "src/range-calendar/day-button/RangeCalendarDayButton.test.tsx": {
-      "fails": {
-        "<RangeCalendar.DayButton /> > Base UI component API > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<RangeCalendar.DayButton /> > Base UI component API > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<RangeCalendar.DayButton /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301",
-        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards custom props to the customized element defined with a function": "vue-16301",
-        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop forwarding > forwards the custom `style` attribute defined on the render element": "vue-16301",
-        "<RangeCalendar.DayButton /> > Base UI component API > with a non-native button > prop: render > renders a customized root element with a function": "vue-16301"
       }
     },
     "src/resizable/panel/ResizablePanel.test.tsx": {

@@ -1,49 +1,55 @@
 <script lang="ts">
+import type { VaseUIComponentProps } from '../../internals/types';
 import type {
   RangeCalendarRootChangeEventDetails,
   RangeCalendarRootProps,
   RangeCalendarRootState,
-} from '../../range-calendar/root/RangeCalendarRoot.vue';
+} from '../../range-calendar/types';
 
 export interface DateRangePickerCalendarState extends RangeCalendarRootState {}
 
 /**
  * The props of `RangeCalendar.Root` that the picker does not own. The root of the picker owns the
- * range, the limits, the locale, the calendar, the time zone and the states `disabled` and
- * `readOnly`. The calendar takes the focus when the popup opens, so it has no `autoFocus`.
+ * range, the limits, the locale, the calendar and the states `disabled` and `readonly`. The
+ * calendar takes the focus when the popup opens, so it has no `autofocus`.
  */
-export interface DateRangePickerCalendarProps extends Omit<
-  RangeCalendarRootProps,
-  | 'modelValue'
-  | 'defaultValue'
-  | 'minDate'
-  | 'maxDate'
-  | 'unavailableDates'
-  | 'locale'
-  | 'calendar'
-  | 'timeZone'
-  | 'disabled'
-  | 'readOnly'
-  | 'autoFocus'
-> {}
+export interface DateRangePickerCalendarProps
+  extends
+    Omit<
+      RangeCalendarRootProps,
+      | 'as'
+      | 'modelValue'
+      | 'defaultValue'
+      | 'min'
+      | 'max'
+      | 'unavailableDates'
+      | 'locale'
+      | 'calendar'
+      | 'disabled'
+      | 'readonly'
+      | 'autofocus'
+    >,
+    Pick<VaseUIComponentProps<DateRangePickerCalendarState>, 'as'> {}
 </script>
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import { RangeCalendarHostContext } from '../../internals/date-time/calendar/rangeCalendarHost';
+import { isKind } from '../../internals/date-time/temporal';
 import type { DateValue } from '../../internals/date-time/temporal';
 import {
   PickerCalendarOwner,
   providePickerControl,
 } from '../../internals/date-time/picker/PickerControlContext';
 import { usePickerPopup } from '../../internals/date-time/picker/usePickerPopup';
+import { createChangeEventDetails as createPickerEventDetails } from '../../internals/createVaseUIEventDetails';
 import { givenAttributes } from '../../internals/givenAttributes';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
 import { withoutPropsOf } from '../../internals/withoutPropsOf';
 import { mergeProps } from '../../merge-props';
-import RangeCalendarRoot from '../../range-calendar/root/RangeCalendarRoot.vue';
+import { rangeCalendarHostKey } from '../../range-calendar/host';
+import RangeCalendarRoot from '../../range-calendar/RangeCalendarRoot.vue';
 import type { DateRangePickerRange } from '../root/DateRangePickerRootContext';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 import type { DateRangePickerRootChangeEventDetails } from '../root/DateRangePickerRoot.vue';
@@ -90,10 +96,15 @@ defineSlots<{
 const picker = useDateRangePickerRootContext();
 const popup = usePickerPopup();
 
-// This part renders `RangeCalendar.Root` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `RangeCalendar.Root` dynamic. Vue then renders `RangeCalendar.Root` again each time this part
-// renders.
+// The popup is not in the server HTML, so the calendar reads the clock in its setup and has its page
+// and its tab stop in its first render. The bridge goes when the pickers move to the new calendar.
+const template = picker.template.value;
+const clockToday = Temporal.Now.plainDateISO(
+  picker.props.timeZone ?? (isKind(template, 'zonedDateTime') ? template.timeZoneId : undefined),
+);
+
+// This part renders `RangeCalendar.Root`, and the `element` slot of the root renders `as` or
+// `#render`.
 const calendar = useTemplateRef<{
   element: HTMLElement | null;
   focus: (date?: DateValue) => void;
@@ -107,9 +118,15 @@ providePickerControl(PickerCalendarOwner);
 // because the user can extend the range more.
 function handleValueChange(
   range: DateRangePickerRange,
-  details: DateRangePickerRootChangeEventDetails,
+  calendarDetails: RangeCalendarRootChangeEventDetails,
 ) {
+  // The listeners of the picker get the details of its own API.
+  const details = createPickerEventDetails(
+    calendarDetails.reason,
+    calendarDetails.event,
+  ) as DateRangePickerRootChangeEventDetails;
   picker.commit(range, details);
+  if (details.isCanceled) calendarDetails.cancel();
   if (
     !details.isCanceled &&
     picker.closeOnSelect.value &&
@@ -123,7 +140,7 @@ function handleValueChange(
 
 // A drag that makes the range that the picker already has gives no change, so the calendar tells
 // the picker, and the picker closes as it does after a change.
-provide(RangeCalendarHostContext, {
+provide(rangeCalendarHostKey, {
   onSameRange(event) {
     if (picker.closeOnSelect.value) {
       popup.closeAfterSelection(event);
@@ -155,18 +172,19 @@ function calendarProps(attributes: Record<string, unknown>) {
     modelValue: picker.range.value,
     defaultValue: [picker.template.value, picker.template.value],
   };
+  const { as: _as, ...own } = props;
   return {
     ...mergeProps(calendarHandlers, givenAttributes(attributes)),
-    ...props,
+    ...own,
     ...valueProps,
-    minDate: root.minDate,
-    maxDate: root.maxDate,
+    today: props.today ?? clockToday,
+    min: root.minDate,
+    max: root.maxDate,
     unavailableDates: root.unavailableDates,
     locale: root.locale,
     calendar: root.calendar,
-    timeZone: root.timeZone,
     disabled: picker.disabled.value,
-    readOnly: root.readOnly,
+    readonly: root.readOnly,
   };
 }
 
@@ -181,23 +199,20 @@ defineExpose({
 
 <template>
   <RangeCalendarRoot
-    v-if="$slots.render"
     ref="calendar"
     v-bind="calendarProps(withoutPropsOf($attrs, RangeCalendarRoot))"
     @value-change="handleValueChange"
   >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
-    </template>
-  </RangeCalendarRoot>
-  <RangeCalendarRoot
-    v-else
-    ref="calendar"
-    v-bind="calendarProps(withoutPropsOf($attrs, RangeCalendarRoot))"
-    @value-change="handleValueChange"
-  >
-    <template #default="slotProps">
-      <slot v-bind="slotProps" />
+    <template #element="{ props: elementProps, elementRef, state }">
+      <slot
+        v-if="$slots.render"
+        name="render"
+        :props="{ ...elementProps, ref: elementRef }"
+        :state="state"
+      />
+      <component :is="as" v-else v-bind="elementProps" :ref="elementRef">
+        <slot :state="state" />
+      </component>
     </template>
   </RangeCalendarRoot>
 </template>
