@@ -97,9 +97,9 @@ A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs
 
 When a popup closes, `open` becomes `false` at once. The popup stays in the DOM until its exit animation ends. Vase UI finds the animations on the element of the popup. With no popup part, it finds them on the positioner, and with no positioner, on the backdrop. It always finds CSS transitions and CSS animations. It also finds a `motion-v` animation that includes `opacity`.
 
-When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a [Select](#animate-a-select-popup), and in some cases the popup of a [Combobox or Autocomplete](#animate-a-combobox-or-autocomplete-popup). The root emits `openChangeComplete` with `false`.
+When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. It also hides the popup of a Combobox or Autocomplete in some cases, see [Animate a Combobox or Autocomplete popup](#animate-a-combobox-or-autocomplete-popup). The root emits `openChangeComplete` with `false`. A [Select](#animate-a-select-popup) takes the hooks of a `<Transition>` in place of this.
 
-Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The example of a Select popup animates `opacity`, so Vase UI ends the exit on its own.
+Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting).
 
 ### Animate a popup with motion-v
 
@@ -145,7 +145,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. V
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) is not in the DOM until the select is open, gets the focus, or reads a value from its hidden input. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The code of [Animate a popup with motion-v](#animate-a-popup-with-motion-v) animates the popup. The popup can enter the DOM open, so `initial` is the closed style.
+The popup of [Select](/components/select) stays in the DOM from the first focus of the trigger or the first open, and it hides while the select is closed. Put a `<Transition>` around `Select.Popup`, with no `v-show` and no `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. For a JavaScript animation, give the `<Transition>` `:css="false"`, and call `done` in its `@enter` and `@leave` hooks when the animation ends. The popup stays in the DOM until `@leave` calls `done`.
 
 <DemoFrame>
   <MotionSelect />
@@ -153,7 +153,7 @@ The popup of [Select](/components/select) is not in the DOM until the select is 
 
 ::: code-group
 
-<<< ../demos/handbook-animation/animated-select-motion/css-modules/index.vue{46,48-50}
+<<< ../demos/handbook-animation/animated-select-motion/css-modules/index.vue{29-35,53}
 
 <<< ../demos/handbook-animation/animated-select-motion/css-modules/index.module.css
 

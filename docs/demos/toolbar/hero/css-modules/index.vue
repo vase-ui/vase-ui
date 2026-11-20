@@ -63,16 +63,16 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
           :align-item-with-trigger="false"
         >
           <Select.Popup :class="styles.Popup">
-            <Select.Item :class="styles.Item" value="Helvetica">
-              <Select.ItemIndicator :class="styles.ItemIndicator">
+            <Select.Item :class="styles.Item" value="Helvetica" v-slot="{ state }">
+              <span v-if="state.selected" :class="styles.ItemIndicator">
                 <CheckIcon />
-              </Select.ItemIndicator>
+              </span>
               <Select.ItemText :class="styles.ItemText">Helvetica</Select.ItemText>
             </Select.Item>
-            <Select.Item :class="styles.Item" value="Arial">
-              <Select.ItemIndicator :class="styles.ItemIndicator">
+            <Select.Item :class="styles.Item" value="Arial" v-slot="{ state }">
+              <span v-if="state.selected" :class="styles.ItemIndicator">
                 <CheckIcon />
-              </Select.ItemIndicator>
+              </span>
               <Select.ItemText :class="styles.ItemText">Arial</Select.ItemText>
             </Select.Item>
           </Select.Popup>

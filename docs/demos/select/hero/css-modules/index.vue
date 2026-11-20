@@ -60,10 +60,11 @@ const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
                 :key="label"
                 :value="value"
                 :class="styles.Item"
+                v-slot="{ state }"
               >
-                <Select.ItemIndicator :class="styles.ItemIndicator">
+                <span v-if="state.selected" :class="styles.ItemIndicator">
                   <CheckIcon />
-                </Select.ItemIndicator>
+                </span>
                 <Select.ItemText :class="styles.ItemText">{{ label }}</Select.ItemText>
               </Select.Item>
             </Select.List>

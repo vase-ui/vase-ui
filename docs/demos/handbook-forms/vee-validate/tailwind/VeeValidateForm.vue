@@ -56,11 +56,17 @@ function submitForm(data: FormValues) {
 
 const formElement = useTemplateRef('formElement');
 
-// The element with the name of a field can be the hidden input of a part. That input gives the
-// focus to the control of the part.
+// The element with the name of a field can be the hidden input of a part. The input of a number
+// field gives the focus to its control. The inputs of a select are `type="hidden"`, so the trigger
+// in the same root takes the focus.
 const onSubmit = handleSubmit(submitForm, ({ errors }) => {
   const [name] = Object.keys(errors);
-  formElement.value?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+  const named = formElement.value?.querySelector<HTMLInputElement>(`[name="${name}"]`);
+  const target =
+    named?.type === 'hidden'
+      ? named.parentElement?.querySelector<HTMLElement>('[role="combobox"]')
+      : named;
+  target?.focus();
 });
 
 function required(value: unknown) {
@@ -313,10 +319,11 @@ const protocols = ['http', 'https', 'ssh'];
                     v-for="{ label, value: serverType } in SERVER_TYPES"
                     :key="label"
                     :value="serverType"
+                    v-slot="{ state }"
                   >
-                    <Select.ItemIndicator>
+                    <span v-if="state.selected" class="col-start-1">
                       <CheckIcon />
-                    </Select.ItemIndicator>
+                    </span>
                     <Select.ItemText>{{ label }}</Select.ItemText>
                   </Select.Item>
                 </Select.List>

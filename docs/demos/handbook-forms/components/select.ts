@@ -9,7 +9,7 @@ export const Label = withProps(Select.Label, {
 
 export const Trigger = withProps(Select.Trigger, {
   class:
-    'flex h-8 min-w-40 cursor-default items-center justify-between gap-3 border border-neutral-950 bg-white pl-2 pr-1 text-sm font-normal text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 data-disabled:border-neutral-500 data-disabled:text-neutral-500 data-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 dark:data-pressed:bg-neutral-800',
+    'flex h-8 min-w-40 cursor-default items-center justify-between gap-3 border border-neutral-950 bg-white pl-2 pr-1 text-sm font-normal text-neutral-950 select-none hover:enabled:bg-neutral-100 active:enabled:bg-neutral-200 disabled:border-neutral-500 disabled:text-neutral-500 data-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:enabled:bg-neutral-800 dark:active:enabled:bg-neutral-700 dark:disabled:border-neutral-400 dark:disabled:text-neutral-400 dark:data-pressed:bg-neutral-800',
 });
 
 export const Value = withProps(Select.Value, {
@@ -48,7 +48,5 @@ export const Item = withProps(Select.Item, {
   class:
     'grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none group-data-[side=none]:pr-12 data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950',
 });
-
-export const ItemIndicator = withProps(Select.ItemIndicator, { class: 'col-start-1' });
 
 export const ItemText = withProps(Select.ItemText, { class: 'col-start-2' });

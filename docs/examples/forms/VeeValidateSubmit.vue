@@ -18,7 +18,12 @@ const formElement = useTemplateRef('formElement');
 
 const onSubmit = handleSubmit(submitForm, ({ errors }) => {
   const [name] = Object.keys(errors);
-  formElement.value?.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+  const named = formElement.value?.querySelector<HTMLInputElement>(`[name="${name}"]`);
+  const target =
+    named?.type === 'hidden'
+      ? named.parentElement?.querySelector<HTMLElement>('[role="combobox"]')
+      : named;
+  target?.focus();
 });
 </script>
 

@@ -68,10 +68,16 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
           :align-item-with-trigger="false"
         >
           <Select.Popup :class="styles.Popup">
-            <Select.Item v-for="value in values" :key="value" :value="value" :class="styles.Item">
-              <Select.ItemIndicator :class="styles.ItemIndicator">
+            <Select.Item
+              v-for="value in values"
+              :key="value"
+              :value="value"
+              :class="styles.Item"
+              v-slot="{ state }"
+            >
+              <span v-if="state.selected" :class="styles.ItemIndicator">
                 <CheckIcon />
-              </Select.ItemIndicator>
+              </span>
               <Select.ItemText :class="styles.ItemText">{{ languages[value] }}</Select.ItemText>
             </Select.Item>
           </Select.Popup>

@@ -322,10 +322,15 @@ const SERVER_TYPES = [
               <Select.Popup>
                 <Select.ScrollUpArrow />
                 <Select.List>
-                  <Select.Item v-for="{ label, value } in SERVER_TYPES" :key="label" :value="value">
-                    <Select.ItemIndicator>
+                  <Select.Item
+                    v-for="{ label, value } in SERVER_TYPES"
+                    :key="label"
+                    :value="value"
+                    v-slot="{ state }"
+                  >
+                    <span v-if="state.selected" class="col-start-1">
                       <CheckIcon />
-                    </Select.ItemIndicator>
+                    </span>
                     <Select.ItemText>{{ label }}</Select.ItemText>
                   </Select.Item>
                 </Select.List>

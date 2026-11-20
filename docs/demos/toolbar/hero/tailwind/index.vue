@@ -82,19 +82,21 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
             <Select.Item
               class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
               value="Helvetica"
+              v-slot="{ state }"
             >
-              <Select.ItemIndicator class="col-start-1">
+              <span v-if="state.selected" class="col-start-1">
                 <CheckIcon />
-              </Select.ItemIndicator>
+              </span>
               <Select.ItemText class="col-start-2">Helvetica</Select.ItemText>
             </Select.Item>
             <Select.Item
               class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-none select-none data-highlighted:bg-neutral-950 data-highlighted:text-white pointer-coarse:py-2.5 dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
               value="Arial"
+              v-slot="{ state }"
             >
-              <Select.ItemIndicator class="col-start-1">
+              <span v-if="state.selected" class="col-start-1">
                 <CheckIcon />
-              </Select.ItemIndicator>
+              </span>
               <Select.ItemText class="col-start-2">Arial</Select.ItemText>
             </Select.Item>
           </Select.Popup>
