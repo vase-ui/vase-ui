@@ -4456,7 +4456,6 @@ describe('<NavigationMenu.Root />', () => {
       expect(screen.queryByTestId('popup-1')).not.toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
-
   });
 
   describe('tag', () => {
