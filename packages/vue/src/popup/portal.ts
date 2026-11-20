@@ -34,12 +34,7 @@ export interface PopupPortalProps {
 // One key for each popup family, so that a popup in a popup has the target of its parent.
 const targetKey: InjectionKey<() => PortalTarget> = Symbol('portal target');
 
-export function usePopupPortal(
-  root: PopupRoot,
-  layer: Layer,
-  props: PopupPortalProps,
-  options: { takesFocus: () => boolean },
-) {
+export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
   const inherited = inject(targetKey, () => 'body');
   const target = computed(() => (props.to === undefined ? inherited() : props.to));
   provide(targetKey, () => target.value);
@@ -62,9 +57,7 @@ export function usePopupPortal(
   );
   // The server HTML of a disabled portal has no sentinels and no block, because the server has no
   // popup element and no layer.
-  const sentinels = computed(
-    () => mounted.value && root.open && options.takesFocus() && !!root.popup,
-  );
+  const sentinels = computed(() => mounted.value && root.open && !!root.popup);
   const blocks = computed(() => mounted.value && root.open && layer.block);
 
   const blockElement = shallowRef<HTMLElement | null>(null);
@@ -73,7 +66,7 @@ export function usePopupPortal(
     [() => root.activeTrigger, blockElement],
     ([trigger, block], _, onCleanup) => {
       hole.value = undefined;
-      if (!trigger?.isConnected || !block) return;
+      if (!trigger || !block) return;
       onCleanup(autoUpdate(trigger, block, () => (hole.value = trigger.getBoundingClientRect())));
     },
     { flush: 'post' },

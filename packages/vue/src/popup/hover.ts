@@ -62,10 +62,14 @@ export function usePopupHover(
     });
   }
 
+  // A touch ends with `pointerleave`, which stops the delay. A popup that is open for this trigger
+  // keeps the time of its open, for the press after it.
   function onPointerenter(event: PointerEvent) {
-    if (event.pointerType !== 'mouse' || !options.enabled()) return;
-    closeTimer.clear();
-    if (!root()?.open || root()?.activeTrigger !== options.trigger.value) startOpen(event);
+    const current = root();
+    if (!options.enabled() || (current?.open && current.activeTrigger === options.trigger.value)) {
+      return;
+    }
+    startOpen(event);
   }
 
   // The delay starts again while the pointer moves: the pointer rests on the trigger.
@@ -100,7 +104,6 @@ export function usePopupHover(
   );
 
   function follow(event: PointerEvent) {
-    if (event.pointerType !== 'mouse') return;
     const trigger = options.trigger.value;
     const target = event.target as Element;
     const point = { x: event.clientX, y: event.clientY };
@@ -112,7 +115,6 @@ export function usePopupHover(
     }
     if (options.inside(target)) {
       over = 'popup';
-      from = null;
       closeTimer.clear();
       return;
     }
@@ -129,9 +131,10 @@ export function usePopupHover(
 
   function close() {
     if (closeTimer.isStarted()) return;
-    closeTimer.start(options.closeDelay(), () => {
-      if (hoverOpen()) root()?.request(false, 'trigger-hover', new Event('vase-ui'));
-    });
+    // The timer stops when a press keeps the popup open or the popup moves to another trigger.
+    closeTimer.start(options.closeDelay(), () =>
+      root()?.request(false, 'trigger-hover', new Event('vase-ui')),
+    );
   }
 
   onScopeDispose(() => {

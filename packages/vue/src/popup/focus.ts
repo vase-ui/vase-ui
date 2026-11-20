@@ -87,10 +87,6 @@ function focus(element: HTMLElement | null | undefined, focusVisible?: boolean) 
   element?.focus({ preventScroll: true, ...(focusVisible && { focusVisible }) });
 }
 
-function isShown(element: Element | null): element is HTMLElement {
-  return !!element?.isConnected && element.checkVisibility();
-}
-
 /**
  * The focus of a popup: the first focus after an open, the return at the close, and the Tab order
  * with the sentinels of its portal.
@@ -108,7 +104,6 @@ export function usePopupFocus(
   },
 ) {
   let before: Element | null = null;
-  let focusedForOpen = false;
   let took = false;
 
   watch(
@@ -116,7 +111,6 @@ export function usePopupFocus(
     (open) => {
       if (open) {
         before = activeElement(ownerDocument(root.activeTrigger));
-        focusedForOpen = false;
         took = false;
         return;
       }
@@ -128,8 +122,7 @@ export function usePopupFocus(
   watch(
     () => root.open && options.takesFocus() && options.placed() && root.popup,
     (popup) => {
-      if (!popup || focusedForOpen) return;
-      focusedForOpen = true;
+      if (!popup) return;
       took = true;
       const target = resolve(options.initialFocus(), root.interaction);
       if (target === false) return;
@@ -150,15 +143,18 @@ export function usePopupFocus(
     const popup = root.popup;
     if (!took || !popup) return;
     took = false;
+    // The focus stays where it went: after a move out of the popup, and after a press outside.
+    // During `focusout`, the active element is `<body>`.
+    if (root.reason === 'focus-out') return;
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
     if (active && active !== doc.body && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
     const trigger = root.activeTrigger as HTMLElement | null;
-    const element =
-      target !== true ? target : trigger?.isConnected ? trigger : isShown(before) ? before : null;
-    focus(element, root.closeInteraction === 'keyboard');
+    // A focus of an element that left the DOM or is hidden does nothing.
+    const element = target !== true ? target : trigger?.isConnected ? trigger : before;
+    focus(element as HTMLElement | null, root.closeInteraction === 'keyboard');
   }
 
   return {
@@ -198,7 +194,6 @@ function nextTabStop(trigger: Element, popupElements: Element[]) {
   return tabbables(ownerDocument(trigger).body).find(
     (stop) =>
       !popupElements.some((element) => element.contains(stop)) &&
-      !trigger.contains(stop) &&
       trigger.compareDocumentPosition(stop) & trigger.DOCUMENT_POSITION_FOLLOWING,
   );
 }

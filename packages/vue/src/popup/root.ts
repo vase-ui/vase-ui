@@ -65,7 +65,10 @@ export interface PopupRoot<Payload = unknown> {
   readonly titleId: string | undefined;
   /** The `id` of the last mounted description. */
   readonly descriptionId: string | undefined;
-  /** The number of close requests: each accepted close, and each close of a closed root. */
+  /**
+   * The number of close requests that no hover made: each accepted close, and each close of a
+   * closed root. A hover close does not stop the hover open of another trigger.
+   */
   readonly closeRequests: number;
   /**
    * Asks for a change of the state after an action of the user. A request for the state that the
@@ -129,32 +132,19 @@ export function createPopupChangeEventDetails<Reason extends string>(
   };
 }
 
-// A click event of Safari has no `pointerType`. The `pointerdown` before it has one.
-const pointerTypes = new Map<Document, { type: InteractionType; roots: number; stop(): void }>();
+// A click event of Safari has no `pointerType`. The `pointerdown` before it has one. One listener
+// of each document keeps the type of its last `pointerdown`.
+const pointerTypes = new WeakMap<Document, InteractionType>();
 
 function trackPointerType(doc: Document) {
-  let tracker = pointerTypes.get(doc);
-  if (!tracker) {
-    const created = {
-      type: '' as InteractionType,
-      roots: 0,
-      stop: addEventListener(
-        doc,
-        'pointerdown',
-        (event) => (created.type = event.pointerType as InteractionType),
-        true,
-      ),
-    };
-    tracker = created;
-    pointerTypes.set(doc, tracker);
-  }
-  tracker.roots += 1;
-  return () => {
-    tracker.roots -= 1;
-    if (tracker.roots > 0) return;
-    tracker.stop();
-    pointerTypes.delete(doc);
-  };
+  if (pointerTypes.has(doc)) return;
+  pointerTypes.set(doc, '');
+  addEventListener(
+    doc,
+    'pointerdown',
+    (event) => pointerTypes.set(doc, event.pointerType as InteractionType),
+    true,
+  );
 }
 
 /** The input of an event: a pointer type, or `'keyboard'` for a key and a click with no press. */
@@ -165,7 +155,7 @@ export function interactionOf(event: Event): InteractionType {
   const type = (event as Partial<PointerEvent>).pointerType;
   const target = event.target as Node | null;
   return (
-    (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element))?.type ?? '')
+    (type as InteractionType) || (pointerTypes.get(ownerDocument(target as Element)) ?? '')
   );
 }
 
@@ -200,12 +190,7 @@ export class PopupHandle<Payload = unknown> {
         `Vase UI: The handle has no trigger with the id "${triggerId}". Give this id to a trigger of the root, or open the popup with the id of one of its triggers.`,
       );
     }
-    openRequests.set(root, trigger);
-    try {
-      root.request(true, 'imperative-action', new Event('vase-ui'), trigger.element);
-    } finally {
-      openRequests.delete(root);
-    }
+    root.request(true, 'imperative-action', new Event('vase-ui'), trigger.element);
   }
 
   /** Closes the popup. */
@@ -219,9 +204,6 @@ export class PopupHandle<Payload = unknown> {
   }
 }
 
-// The trigger of an open from a handle. Its element can be absent.
-const openRequests = new WeakMap<PopupRoot, PopupTrigger>();
-
 export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
   const openModel = useModel(() => options.open(), options.open() ?? options.defaultOpen);
   const open = openModel.value;
@@ -233,8 +215,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const triggers = shallowReactive<PopupTrigger[]>([]);
   const leavingElements = shallowReactive<(() => Element | null)[]>([]);
   const portalElements = shallowReactive<(() => Element | null)[]>([]);
-  const titles = shallowReactive<{ readonly id: string }[]>([]);
-  const descriptions = shallowReactive<{ readonly id: string }[]>([]);
+  const labels = shallowReactive<Partial<Record<'title' | 'description', { readonly id: string }>>>(
+    {},
+  );
   const popup = shallowRef<HTMLElement | null>(null);
   const keepMounted = shallowRef(false);
   const leaving = shallowRef(false);
@@ -253,10 +236,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // The popup stays at its trigger after the trigger leaves the DOM.
   const lastTrigger = shallowRef<Element | null>(null);
   watch(
-    [activeTriggerId, () => activeEntry.value?.element],
-    ([id, element], [previousId]) => {
+    () => activeEntry.value?.element,
+    (element) => {
       if (element) lastTrigger.value = element;
-      else if (id !== previousId) lastTrigger.value = null;
     },
     { flush: 'sync' },
   );
@@ -264,14 +246,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
 
   function change(next: boolean, why: string, event: Event, entry: PopupTrigger | undefined) {
     const element = entry?.element ?? activeTrigger.value;
-    const details = createPopupChangeEventDetails(
-      why,
-      event,
-      element?.isConnected ? element : undefined,
-    );
+    const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = next && entry ? entry.id : activeTriggerId.value;
     if (next === open.value && nextId === activeTriggerId.value) {
-      if (!next) closeRequests.value += 1;
+      if (!next && why !== 'trigger-hover') closeRequests.value += 1;
       // A press keeps a popup open that a hover opened.
       if (next && why === 'trigger-press') reason.value = why;
       return details;
@@ -290,7 +268,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       openModel.setOwn(next);
       options.emitOpen(next);
     }
-    if (!next) closeRequests.value += 1;
+    if (!next && why !== 'trigger-hover') closeRequests.value += 1;
     return details;
   }
 
@@ -313,7 +291,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       if (isOpen || keepMounted.value) return;
       const elements = leavingElements
         .map((element) => element())
-        .filter((element): element is Element => !!element?.isConnected);
+        .filter((element): element is Element => !!element);
       if (elements.length === 0) return;
       leavingNow.push(...elements);
       leaving.value = true;
@@ -374,21 +352,19 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     get parts() {
       return leavingElements
         .map((element) => element())
-        .filter((element): element is Element => !!element?.isConnected);
+        .filter((element): element is Element => !!element);
     },
     get titleId() {
-      return titles.at(-1)?.id;
+      return labels.title?.id;
     },
     get descriptionId() {
-      return descriptions.at(-1)?.id;
+      return labels.description?.id;
     },
     get closeRequests() {
       return closeRequests.value;
     },
     request(next, why, event, trigger) {
-      const entry =
-        openRequests.get(root) ??
-        (trigger ? triggers.find((each) => each.element === trigger) : undefined);
+      const entry = trigger ? triggers.find((each) => each.element === trigger) : undefined;
       return change(next, why, event, entry);
     },
     addTrigger: (trigger) => add(triggers, trigger),
@@ -403,26 +379,25 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
     addLeaving: (element) => add(leavingElements, element),
     addPortalElement: (element) => add(portalElements, element),
-    addLabel: (kind, label) => add(kind === 'title' ? titles : descriptions, label),
+    addLabel(kind, label) {
+      labels[kind] = label;
+      return () => {
+        if (labels[kind] === label) labels[kind] = undefined;
+      };
+    },
   };
 
   // A handle holds its root only on the client. A handle in a module of a server would otherwise
   // hold the roots of each request.
   onMounted(() => {
-    watch(
-      () => ownerDocument(null),
-      (doc, _, onCleanup) => onCleanup(trackPointerType(doc)),
-      { immediate: true },
-    );
+    trackPointerType(ownerDocument(null));
     watch(
       () => options.handle(),
       (handle, _, onCleanup) => {
         const holder = handle && handleRoots.get(handle);
         if (!holder) return;
         holder.value = root;
-        onCleanup(() => {
-          if (holder.value === root) holder.value = null;
-        });
+        onCleanup(() => (holder.value = null));
       },
       { immediate: true },
     );

@@ -33,7 +33,7 @@ const elementId = computed(() => givenId(props.id) ?? generatedId);
 
 const hover = usePopupHover(root, {
   trigger: element,
-  enabled: () => props.openOnHover && !trigger.button.disabled.value,
+  enabled: () => props.openOnHover,
   delay: () => props.delay,
   closeDelay: () => props.closeDelay,
   inside: (target) => !!context.value?.inside(target),
@@ -59,7 +59,7 @@ function elementProps() {
       id: elementId.value,
       'aria-haspopup': 'dialog',
       'aria-expanded': trigger.open.value ? 'true' : 'false',
-      'aria-controls': trigger.open.value && popup?.isConnected ? popup.id : undefined,
+      'aria-controls': trigger.open.value && popup ? popup.id : undefined,
       'data-pressed': trigger.open.value && current?.reason === 'trigger-press' ? '' : undefined,
       onClick: trigger.onClick,
       onKeydown: (event: KeyboardEvent) => {

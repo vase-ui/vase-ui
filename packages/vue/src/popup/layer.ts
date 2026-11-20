@@ -5,7 +5,6 @@ import {
   onUnmounted,
   shallowReactive,
   watch,
-  type EffectScope,
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
@@ -135,7 +134,7 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
         if (!popup) return;
         onCleanup(followRootNode(popup, (node) => (isShadowRoot(node) ? listen(node) : undefined)));
       },
-      { flush: 'post' },
+      { immediate: true, flush: 'post' },
     );
     // The Escape listener of the popup element runs before the listeners of the ancestors of an
     // in-place popup.
@@ -144,7 +143,7 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
       (element, _, onCleanup) => {
         if (element) onCleanup(addEventListener(element, 'keydown', onKeydown));
       },
-      { flush: 'post' },
+      { immediate: true, flush: 'post' },
     );
   });
   onUnmounted(remove);
@@ -193,15 +192,12 @@ function fromTop() {
   return [...stack].reverse();
 }
 
-/** Each element of the layer: its popup, its backdrop, its sentinels and fixed element, its triggers. */
+/** Each element of the layer: its popup, its backdrop, its sentinels and its fixed element. */
 function layerElements(entry: Entry): Element[] {
   const { root } = entry.layer;
-  return [
-    root.popup,
-    ...root.parts,
-    ...root.portalElements,
-    ...root.triggers.map((trigger) => trigger.element),
-  ].filter((element): element is Element => !!element?.isConnected);
+  return [root.popup, ...root.parts, ...root.portalElements].filter(
+    (element): element is Element => !!element?.isConnected,
+  );
 }
 
 /**
@@ -284,12 +280,10 @@ interface TouchGesture {
 }
 
 let touch: TouchGesture | null = null;
-let pressType = '';
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
 function onPointerdown(event: PointerEvent) {
-  pressType = event.pointerType;
   if (event.pointerType === 'touch') {
     // A touch that rests more than 1 s selects text or opens the menu of the system.
     touch = {
@@ -334,7 +328,6 @@ function onPointerup(event: PointerEvent) {
     return;
   }
   pressing = false;
-  if (event.type === 'pointercancel') return;
   // A press on a scrollbar sends no `click` (test/measurements/popup.test.ts).
   const outside = outsideEntries(event);
   for (const entry of stack) {
@@ -346,16 +339,14 @@ function onPointerup(event: PointerEvent) {
 // the edge of the popup (test/measurements/popup.test.ts). The layer reads the press and the
 // release.
 function onClick(event: MouseEvent) {
-  // A click of a key, of a script or of an assistive tool has no press.
+  // A click of a key, of a script or of an assistive tool has no press. A touch closes at its end.
   const withPress = event.detail !== 0;
-  if (withPress && pressType === 'touch') return;
   const outside = outsideEntries(event);
   const entries = fromTop().filter((entry) => {
     const pressed = entry.pressOutside;
     entry.pressOutside = undefined;
     const released = entry.releaseOutside;
     entry.releaseOutside = undefined;
-    if (entry.layer.pressStart && withPress) return false;
     if (!withPress) return outside.includes(entry);
     return pressed === true && released === true;
   });
@@ -426,13 +417,14 @@ function onKeydown(event: KeyboardEvent) {
 
 // The top layer that asks for it writes `inert` or `aria-hidden` on each sibling of the path from
 // each element inside it to `<body>`.
-let hideScope: EffectScope | undefined;
+// One watcher of the stack writes the attributes. It starts at the first open, and it stays.
+let hiding = false;
 const written = new Map<Element, 'inert' | 'aria-hidden'>();
 
 function startHide() {
-  if (hideScope) return;
-  hideScope = effectScope(true);
-  hideScope.run(() => {
+  if (hiding) return;
+  hiding = true;
+  effectScope(true).run(() => {
     watch(
       () => {
         const top = stack.findLast((entry) => entry.layer.hide);
@@ -490,9 +482,5 @@ function writeHide(next: { hide: 'inert' | 'aria-hidden'; inside: (Element | nul
     if (written.has(element) || element.hasAttribute(attribute)) continue;
     element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
     written.set(element, attribute);
-  }
-  if (stack.length === 0) {
-    hideScope?.stop();
-    hideScope = undefined;
   }
 }

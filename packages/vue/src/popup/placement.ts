@@ -324,22 +324,9 @@ export function usePlacement(
       ),
   });
 
-  // The first placement of each open. An earlier open placed the popup at another anchor.
-  const placed = shallowRef(false);
-  watch(
-    () => root.open,
-    (open) => {
-      if (open) placed.value = false;
-    },
-    { flush: 'sync' },
-  );
-  watch(
-    floating.middlewareData,
-    () => {
-      if (root.open && reference.value) placed.value = true;
-    },
-    { flush: 'sync' },
-  );
+  // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
+  // so only the first placement hides the popup: the server HTML and the first render have no place.
+  const placed = floating.isPositioned;
   watch(arrowElement, () => floating.update());
 
   const placedSide = computed(() => getSide(floating.placement.value));
@@ -362,10 +349,9 @@ export function usePlacement(
       '--available-height': available.value.height,
       '--anchor-width': anchorSize.value?.width,
       '--anchor-height': anchorSize.value?.height,
-      '--transform-origin': placed.value
-        ? (floating.middlewareData.value.transformOrigin?.value as string | undefined)
-        : undefined,
-      // The server HTML of a portal in place and the first render have no place yet.
+      '--transform-origin': floating.middlewareData.value.transformOrigin?.value as
+        | string
+        | undefined,
       visibility: placed.value ? undefined : 'hidden',
     };
   });

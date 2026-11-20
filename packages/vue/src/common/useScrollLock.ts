@@ -52,7 +52,7 @@ function lock(doc: Document) {
   Object.assign(html.style, {
     overflowY: scrolls('Y') ? 'scroll' : 'hidden',
     overflowX: scrolls('X') ? 'scroll' : 'hidden',
-    // A smooth scroll would animate the move back to the offset.
+    // A smooth scroll would animate the move back to the offset at the unlock.
     scrollBehavior: 'auto',
   });
   Object.assign(body.style, {
@@ -66,7 +66,6 @@ function lock(doc: Document) {
   body.scrollLeft = scrollLeft;
   return () => {
     restoreBody();
-    html.style.scrollBehavior = 'auto';
     html.scrollTop = scrollTop;
     html.scrollLeft = scrollLeft;
     restoreHtml();
