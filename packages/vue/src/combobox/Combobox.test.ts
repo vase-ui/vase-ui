@@ -7,6 +7,7 @@ import type {
 } from '@vase-ui/vue/combobox';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
 import ComboboxClearInTransition from '../../test/fixtures/ComboboxClearInTransition.vue';
+import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import ComboboxInline from '../../test/fixtures/ComboboxInline.vue';
 import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
@@ -96,6 +97,7 @@ describe('the parts', () => {
     expect(trigger()).toHaveAttribute('tabindex', '-1');
     expect(trigger()).not.toHaveAttribute('role');
     expect(trigger()).toHaveAttribute('aria-haspopup', 'listbox');
+    expect(trigger()).toHaveAttribute('aria-labelledby', byTestId('label')!.id);
     expect(list()).toHaveAttribute('role', 'listbox');
     expect(list()).toHaveAttribute('aria-label', 'Fruits');
     expect(popup()).toHaveAttribute('role', 'presentation');
@@ -146,6 +148,39 @@ describe('open and close', () => {
       'openChange false escape-key',
       'update:open false',
     ]);
+  });
+
+  test.each(['group', 'chips'])(
+    'a press on the padding of the %s moves the focus to the input and opens the popup',
+    async (part) => {
+      if (part === 'group') await mountCombobox();
+      else mount(ComboboxChips, { root: { modelValue: [] } });
+      await nextTick();
+      byTestId(part)!.style.padding = '12px';
+      await userEvent.click(byTestId(part)!, { position: { x: 4, y: 4 } });
+      await opened();
+      expect(document.activeElement).toBe(input());
+    },
+  );
+
+  test('a press on the padding of the group, of the popup and of the list keeps the focus in the input and the popup open', async () => {
+    const log: string[] = [];
+    await mountCombobox({
+      root: rootEvents(log),
+      popup: { style: 'padding: 12px' },
+      list: { style: 'padding: 12px' },
+    });
+    byTestId('group')!.style.padding = '12px';
+    await userEvent.click(input());
+    await opened();
+    log.length = 0;
+    for (const part of ['group', 'popup', 'list']) {
+      await userEvent.click(byTestId(part)!, { position: { x: 4, y: 4 } });
+      await nextTick();
+      expect(document.activeElement).toBe(input());
+      expect(input()).toHaveAttribute('aria-expanded', 'true');
+    }
+    expect(log).toEqual([]);
   });
 
   test('with `openOnInputClick` false, a press does not open, and typed text does', async () => {
@@ -636,10 +671,26 @@ describe('chips', () => {
     mount(ComboboxChips, { root });
     await nextTick();
     input().focus();
+    const blurs: string[] = [];
+    input().addEventListener('blur', () => blurs.push('blur'));
     await userEvent.click(byTestId('remove-Apple')!);
     expect(root.modelValue).toEqual(['Banana']);
     expect(reasons).toEqual(['chip-remove-press']);
     expect(document.activeElement).toBe(input());
+    expect(blurs).toEqual([]);
+  });
+
+  test('in a right-to-left chips, ArrowRight goes to the chip before, and ArrowLeft to the chip after', async () => {
+    mount(ComboboxChips, { root: { modelValue: ['Apple', 'Banana'] } });
+    await nextTick();
+    byTestId('chips')!.dir = 'rtl';
+    input().focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(byTestId('chip-Banana'));
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(byTestId('chip-Apple'));
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement).toBe(byTestId('chip-Banana'));
   });
 });
 
@@ -726,7 +777,8 @@ describe('the parts of the popup', () => {
     input().focus();
     await userEvent.keyboard('zz');
     const outer: string[] = [];
-    document.addEventListener('keydown', (event) => outer.push(event.key), { once: true });
+    // The listener of the layers is on the document, and a stopped event does not get to the window.
+    window.addEventListener('keydown', (event) => outer.push(event.key), { once: true });
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(outer).toEqual(['Escape']);
@@ -811,14 +863,20 @@ describe('more rules of 3.1', () => {
     expect(input().getAttribute('autocorrect')).toBe('on');
   });
 
-  test('a press on the clear button or in the group keeps the popup open', async () => {
+  test('a press on the clear button keeps the popup open; a press on it and on an item gives the input no blur', async () => {
     await mountCombobox({ clear: {}, root: { defaultValue: 'Apple' } });
     await userEvent.click(input());
     await opened();
+    const blurs: string[] = [];
+    input().addEventListener('blur', () => blurs.push('blur'));
     await userEvent.click(byTestId('clear')!);
     await nextTick();
     expect(popup()).not.toBe(null);
     expect(document.activeElement).toBe(input());
+    await userEvent.click(item('Banana'));
+    await closed();
+    expect(document.activeElement).toBe(input());
+    expect(blurs).toEqual([]);
   });
 
   test('a clear button in a <Transition> that shows again while it leaves enters again', async () => {
@@ -860,18 +918,26 @@ describe('more rules of 3.1', () => {
 
   test('a filter that makes the popup smaller keeps the side of its flip', async () => {
     await mountCombobox({ positioner: { sideOffset: 4 } });
-    byTestId('group')!.style.cssText = 'position: fixed; bottom: 10px; left: 10px; width: 200px';
+    // The room below the group holds one item, and not the full list.
+    byTestId('group')!.style.cssText = 'position: fixed; bottom: 100px; left: 10px; width: 200px';
     await userEvent.click(input());
     await opened();
     await waitFor(() => expect(byTestId('positioner')).toHaveAttribute('data-side', 'top'));
     await userEvent.keyboard('peac');
     await waitFor(() => expect(itemNames()).toEqual(['Peach']));
-    await nextTick();
+    // The popup moves to its new size, and stays above the group.
+    await waitFor(() => {
+      const group = byTestId('group')!.getBoundingClientRect();
+      const positioner = byTestId('positioner')!.getBoundingClientRect();
+      expect(positioner.height).toBeLessThan(60);
+      expect(Math.round(group.top - positioner.bottom)).toBe(4);
+    });
     expect(byTestId('positioner')).toHaveAttribute('data-side', 'top');
   });
 
-  test('a modal popup blocks the page and leaves the group of the input free', async () => {
-    await mountCombobox({ root: { modal: true, defaultOpen: true } });
+  test('a modal popup blocks the page and locks its scroll, and leaves the group of the input free', async () => {
+    await mountCombobox({ root: { modal: true, defaultValue: 'Apple' }, clear: {} });
+    await userEvent.click(input());
     await opened();
     const block = await waitFor(() => {
       const element = document.querySelector<HTMLElement>('body > div[role="presentation"]');
@@ -879,7 +945,31 @@ describe('more rules of 3.1', () => {
       return element!;
     });
     await waitFor(() => expect(block.style.clipPath).toContain('polygon'));
+    await waitFor(() => expect(isScrollLocked()).toBe(true));
+    await userEvent.click(byTestId('clear')!);
+    await waitFor(() => expect(input().value).toBe(''));
   });
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a modal popup that a touch opened locks the scroll only when it is as wide as the view',
+    async () => {
+      const tap = async () => {
+        const rect = input().getBoundingClientRect();
+        const point = { x: rect.left + 5, y: rect.top + rect.height / 2 };
+        await touchDrag(point, point, 0);
+        await opened();
+      };
+      const narrow = await mountCombobox({ root: { modal: true } });
+      await tap();
+      await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(isScrollLocked()).toBe(false);
+      narrow.unmount();
+      await mountCombobox({ root: { modal: true }, positioner: { style: 'width: 100vw' } });
+      await tap();
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
+    },
+  );
 
   test.skipIf(server.browser !== 'chromium')(
     'a touch that drags outside closes nothing, and a tap outside closes',

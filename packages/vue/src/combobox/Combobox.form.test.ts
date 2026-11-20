@@ -82,6 +82,17 @@ describe('the constraint validation', () => {
     await waitFor(() => expect(submitsPrevented).toEqual([false]));
   });
 
+  test('Enter on a highlighted item of a read-only root submits no form', async () => {
+    await mountForm({ root: { readonly: true } });
+    await userEvent.click(byTestId('input'));
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(byTestId('item-Apple')).toHaveAttribute('data-highlighted'));
+    await userEvent.keyboard('{Enter}');
+    await settle();
+    expect(submitsPrevented).toEqual([]);
+  });
+
   test('a multiple root is required only while no value is selected', async () => {
     await mountForm({ root: { required: true, multiple: true, defaultValue: ['Apple'] } });
     expect(textInput()).not.toBeRequired();
@@ -142,6 +153,21 @@ describe('the field', () => {
     document.getElementById('outside')!.focus();
     await waitFor(() => expect(input).toHaveAttribute('aria-invalid', 'true'));
     expect(entries()).toEqual([['fruit', '']]);
+  });
+
+  test('a pick takes back the error of a required field', async () => {
+    await mountForm({
+      inputInPopup: true,
+      root: { required: true },
+      field: { validationMode: 'blur' },
+    });
+    const trigger = byTestId('trigger');
+    trigger.focus();
+    document.getElementById('outside')!.focus();
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-invalid', 'true'));
+    await userEvent.click(trigger);
+    await userEvent.click(byTestId('item-Apple'));
+    await waitFor(() => expect(trigger).not.toHaveAttribute('aria-invalid'));
   });
 
   test('BUG-1425: a required trigger with no value is invalid after the focus leaves it, and not dirty', async () => {

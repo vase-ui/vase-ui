@@ -2,7 +2,7 @@
 import { mergeProps, onUnmounted, provide, shallowReactive, useAttrs } from 'vue';
 import { byDocumentOrder, useElement } from '../common/element';
 import { ownerWindow } from '../common/owner';
-import { chipsKey, injectComboboxRoot, type ChipsContext } from './root';
+import { chipsKey, injectComboboxRoot, pressAroundInput, type ChipsContext } from './root';
 import type { ComboboxChipsProps, ComboboxChipsState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -51,15 +51,7 @@ const chipsContext: ChipsContext = {
 };
 provide(chipsKey, chipsContext);
 
-// A press on the padding of the chips moves the focus to the input and opens the popup.
-function onMousedown(event: MouseEvent) {
-  if (event.target !== event.currentTarget || event.button !== 0) return;
-  const input = context.inputIsControl ? context.control : null;
-  if (!input || context.disabled) return;
-  event.preventDefault();
-  input.focus();
-  if (context.openOnInputClick) context.request(true, 'input-press', event);
-}
+const onMousedown = (event: MouseEvent) => pressAroundInput(context, event);
 
 function elementProps() {
   return mergeProps({ role: context.hasValue ? 'toolbar' : undefined, onMousedown }, attrs);

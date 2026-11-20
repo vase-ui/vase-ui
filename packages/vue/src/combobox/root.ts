@@ -1054,6 +1054,19 @@ export function injectPositioner(context: ComboboxRootContext, part: string) {
   return placement;
 }
 
+/**
+ * A press on the padding around the input moves the focus to the input and opens the popup, as a
+ * press on the input does.
+ */
+export function pressAroundInput(context: ComboboxRootContext, event: MouseEvent) {
+  if (event.target !== event.currentTarget || event.button !== 0) return;
+  const input = context.inputIsControl ? context.control : null;
+  if (!input || context.disabled) return;
+  event.preventDefault();
+  input.focus();
+  if (context.openOnInputClick) context.request(true, 'input-press', event);
+}
+
 /** The part is in a popup: its positioner is around it. */
 export function useInPopup() {
   return !!inject(positionerKey, null);

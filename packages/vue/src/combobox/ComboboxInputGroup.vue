@@ -2,7 +2,7 @@
 import { computed, inject, mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { fieldKey, fieldStateAttributes } from '../field/control';
-import { injectComboboxRoot, useInPopup } from './root';
+import { injectComboboxRoot, pressAroundInput, useInPopup } from './root';
 import type { ComboboxInputGroupProps, ComboboxInputGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -43,15 +43,7 @@ const state = computed<ComboboxInputGroupState>(() => ({
   filled: field?.state.filled ?? false,
 }));
 
-// A press on the padding of the group moves the focus to the input and opens the popup.
-function onMousedown(event: MouseEvent) {
-  if (event.target !== event.currentTarget || event.button !== 0) return;
-  const input = context.inputIsControl ? context.control : null;
-  if (!input || context.disabled) return;
-  event.preventDefault();
-  input.focus();
-  if (context.openOnInputClick) context.request(true, 'input-press', event);
-}
+const onMousedown = (event: MouseEvent) => pressAroundInput(context, event);
 
 function elementProps() {
   return mergeProps(

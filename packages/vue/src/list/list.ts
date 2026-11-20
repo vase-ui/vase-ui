@@ -259,8 +259,6 @@ export function useListItem(
     // A link or a button in the slot of an item is no tab stop of its own.
     tabindex: -1,
     'data-highlighted': highlighted.value ? '' : undefined,
-    // The owner keeps the focus (test/measurements/combobox.test.ts, C1).
-    onMousedown: (event: MouseEvent) => event.preventDefault(),
   }));
   return { highlighted, attributes };
 }

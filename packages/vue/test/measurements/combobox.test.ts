@@ -243,27 +243,38 @@ describe('a text composition (C12, N6)', () => {
     },
   );
 
-  test('the input part writes one text for a composition in the order of WebKit: its last `input` after `compositionend`', async () => {
+  test('the input part writes one text and gives one highlight for a composition in the order of WebKit: its last `input` after `compositionend`', async () => {
     const texts: string[] = [];
-    mount(ComboboxParts, { root: { 'onUpdate:inputValue': (text: string) => texts.push(text) } });
+    const highlights: unknown[] = [];
+    mount(ComboboxParts, {
+      root: {
+        defaultOpen: true,
+        autoHighlight: true,
+        'onUpdate:inputValue': (text: string) => texts.push(text),
+        onItemHighlighted: (value: unknown) => highlights.push(value),
+      },
+    });
     await nextTick();
     const input = document.querySelector<HTMLInputElement>('[data-testid="input"]')!;
     input.focus();
     const send = (event: Event) => input.dispatchEvent(event);
     send(new CompositionEvent('compositionstart', { data: '' }));
-    input.value = 'に';
+    input.value = 'a';
     send(
-      new InputEvent('input', {
-        inputType: 'insertCompositionText',
-        data: 'に',
-        isComposing: true,
-      }),
+      new InputEvent('input', { inputType: 'insertCompositionText', data: 'a', isComposing: true }),
     );
-    input.value = '日本';
-    send(new CompositionEvent('compositionend', { data: '日本' }));
-    send(new InputEvent('input', { inputType: 'insertFromComposition', data: '日本' }));
+    input.value = 'ap';
+    send(new CompositionEvent('compositionend', { data: 'ap' }));
+    // The browser runs the microtasks between two events that it sends in one task. The highlight
+    // and its event come in two renders.
     await nextTick();
-    expect(texts).toEqual(['日本']);
+    await nextTick();
+    expect(highlights).toEqual(['Apple']);
+    send(new InputEvent('input', { inputType: 'insertFromComposition', data: 'ap' }));
+    await nextTick();
+    await nextTick();
+    expect(texts).toEqual(['ap']);
+    expect(highlights).toEqual(['Apple']);
   });
 });
 

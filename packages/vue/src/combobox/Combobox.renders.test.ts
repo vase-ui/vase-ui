@@ -59,11 +59,13 @@ describe.runIf(inject('app') === 'vdom')('the renders', () => {
     }
   });
 
-  test('a key that keeps the same filtered items renders no item', async () => {
+  test('a key that keeps the same filtered items renders no item and no list', async () => {
     const spy = await openList();
-    await userEvent.keyboard(' ');
+    // Each item contains the letter.
+    await userEvent.keyboard('i');
     await nextTick();
     expect(spy.renders.item).toBe(undefined);
+    expect(spy.renders.list).toBe(undefined);
   });
 
   test('a pick renders only the item whose selected state changed', async () => {
