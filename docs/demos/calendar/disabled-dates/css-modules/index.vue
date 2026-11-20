@@ -19,7 +19,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     :max="lastDay"
     :disabled-dates="{ dayOfWeek: [6, 7] }"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Delivery day"
     :class="[styles.Root, styles.SixWeeks]"
   >

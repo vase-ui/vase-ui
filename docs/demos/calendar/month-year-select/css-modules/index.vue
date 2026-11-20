@@ -18,7 +18,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     :min="firstDay"
     :max="today"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Date of birth"
     :class="[styles.Root, styles.SixWeeks]"
   >

@@ -11,7 +11,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     v-model="selected"
     :visible-duration="{ weeks: 1 }"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Day of the agenda"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
   >

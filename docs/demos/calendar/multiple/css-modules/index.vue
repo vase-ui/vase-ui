@@ -18,7 +18,6 @@ const days = shallowRef<Temporal.PlainDate[]>([]);
     :max-days="3"
     :min="today"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Interview days"
     :class="[styles.Root, styles.SixWeeks]"
   >

@@ -11,7 +11,6 @@ const selected = shallowRef<Temporal.PlainYearMonth | null>(
   <Calendar.Root
     v-model="selected"
     locale="en-US"
-    :first-day-of-week="7"
     class="relative box-border w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
   >
     <div class="mb-2 flex items-center justify-between">

@@ -8,7 +8,7 @@ import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
 const month = (value: string) => Temporal.PlainYearMonth.from(value);
-// 2026-11-18 is a Wednesday. The weeks start on Monday.
+// 2026-11-18 is a Wednesday. The weeks of en-US start on Sunday.
 const today = day('2026-11-18');
 
 async function mountCalendar(setup: Record<string, unknown> = {}) {
@@ -105,11 +105,11 @@ describe('the form of a page', () => {
     const { captions, move, days } = await mountCalendar({
       root: { visibleDuration: { weeks: 2 } },
     });
-    expect(days()[0]).toBe('2026-11-16');
+    expect(days()[0]).toBe('2026-11-15');
     expect(days()).toHaveLength(14);
-    expect(captions()).toEqual(['November 16 – 29, 2026']);
+    expect(captions()).toEqual(['November 15 – 28, 2026']);
     await move('next');
-    expect(days()[0]).toBe('2026-11-30');
+    expect(days()[0]).toBe('2026-11-29');
   });
 
   test('a parent that keeps month keeps the page', async () => {

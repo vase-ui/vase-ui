@@ -7,7 +7,7 @@ import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
-// 2026-11-18 is a Wednesday. The weeks start on Monday.
+// 2026-11-18 is a Wednesday. The weeks of en-US start on Sunday.
 const today = day('2026-11-18');
 
 async function mountCalendar(setup: Record<string, unknown> = {}) {
@@ -93,8 +93,8 @@ describe('the keys', () => {
     { keys: '{ArrowLeft}', expected: '2026-11-17' },
     { keys: '{ArrowDown}', expected: '2026-11-25' },
     { keys: '{ArrowUp}', expected: '2026-11-11' },
-    { keys: '{Home}', expected: '2026-11-16' },
-    { keys: '{End}', expected: '2026-11-22' },
+    { keys: '{Home}', expected: '2026-11-15' },
+    { keys: '{End}', expected: '2026-11-21' },
   ])('$keys moves the focus to $expected', async ({ keys, expected }) => {
     const { press, focused } = await mountCalendar();
     await press('2026-11-18', keys);

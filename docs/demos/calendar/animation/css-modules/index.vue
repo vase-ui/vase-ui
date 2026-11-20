@@ -8,7 +8,6 @@ import styles from '../../_index.module.css';
     fixed-weeks
     show-outside-days
     locale="en-US"
-    :first-day-of-week="7"
     :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Nav">

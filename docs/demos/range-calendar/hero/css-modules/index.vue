@@ -14,7 +14,6 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
     :class="styles.Root"
     aria-label="Trip dates"
     locale="en-US"
-    :first-day-of-week="7"
     :default-value="defaultValue"
   >
     <Calendar.PreviousButton :class="[styles.Navigation, styles.Previous]">

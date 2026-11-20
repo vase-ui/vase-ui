@@ -15,7 +15,6 @@ const summary = computed(() => {
   <Calendar.Root
     v-model="call"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Day of the call"
     :class="[styles.Root, styles.SixWeeks]"
   >

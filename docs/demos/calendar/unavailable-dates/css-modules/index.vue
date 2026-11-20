@@ -25,7 +25,6 @@ const selected = shallowRef<Temporal.PlainDate | null>(null);
     :min="today"
     :unavailable-dates="booked"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Appointment day"
     :class="[styles.Root, styles.SixWeeks]"
   >

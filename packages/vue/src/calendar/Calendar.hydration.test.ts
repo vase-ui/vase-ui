@@ -60,6 +60,23 @@ describe('server render and hydration', () => {
     expect(group).toHaveAttribute('data-navigation-direction', 'none');
   });
 
+  // 2026-11-01 is a Sunday.
+  test.each([
+    { locale: 'en-US', first: '2026-11-01' },
+    { locale: 'de-DE', first: '2026-10-26' },
+    { locale: 'ar-EG', first: '2026-10-31' },
+    { locale: 'en', first: '2026-11-01' },
+  ])('the weeks of $locale start on the same day on both sides', async ({ locale, first }) => {
+    const props = { today: '2026-11-18', weekNumbers: true, root: { locale } };
+    const root = await renderOnServer('CalendarOnServer', props);
+    const cell = root.querySelector('tbody td');
+    expect(cell).toHaveAttribute('data-date', first);
+    hydrate(CalendarOnServer, props, root);
+    await nextTick();
+    expect(root.querySelector('tbody td')).toBe(cell);
+    expect(cell).toHaveAttribute('data-date', first);
+  });
+
   test('a Persian calendar renders the same on both sides', async () => {
     const props = { today: '2026-11-18', root: { calendar: 'persian', locale: 'fa-IR' } };
     const root = await renderOnServer('CalendarOnServer', props);
@@ -98,6 +115,6 @@ describe('server render and hydration', () => {
     await nextTick();
     expect(caption).toHaveTextContent('November 2026');
     expect(trigger).toHaveTextContent('November 2026');
-    expect(weekday).toHaveTextContent('Mon');
+    expect(weekday).toHaveTextContent('Sun');
   });
 });

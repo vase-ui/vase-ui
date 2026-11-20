@@ -11,7 +11,7 @@ import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
-// 2026-11-18 is a Wednesday. The weeks start on Monday.
+// 2026-11-18 is a Wednesday. The weeks of en-US start on Sunday.
 const today = day('2026-11-18');
 
 type Setup = Record<string, unknown> & { root?: Record<string, unknown> };
@@ -231,7 +231,7 @@ describe('the days', () => {
 
   test('today has aria-current="date", and an outside day has data-outside-month', async () => {
     const { cell, button } = await mountCalendar({
-      root: { today, locale: 'en-US', showOutsideDays: true },
+      root: { today, locale: 'en-US', firstDayOfWeek: 1, showOutsideDays: true },
     });
     expect(button('2026-11-18')).toHaveAttribute('aria-current', 'date');
     expect(cell('2026-11-18')).toHaveAttribute('data-today');
@@ -425,24 +425,40 @@ describe('the caption and the week numbers', () => {
     expect(grid).not.toHaveAttribute('aria-labelledby');
   });
 
-  test('the weeks start on Monday and have their ISO number; the head is named by Intl', async () => {
+  test('the weeks of en-US start on Sunday and have their US number; the head is named by Intl', async () => {
     const { query } = await mountCalendar({ weekNumbers: true });
     expect(query('thead th[aria-label]')).toHaveAttribute('aria-label', 'week');
+    expect(query('thead th[abbr]')).toHaveAttribute('abbr', 'Sunday');
     const firstRow = query('tbody tr')!;
     const number = firstRow.querySelector('th[scope=row]')!;
-    expect(number).toHaveTextContent('44');
-    expect(number).toHaveAttribute('data-week-number', '44');
-    expect(firstRow.querySelector('td')).toHaveAttribute('data-date', '2026-10-26');
+    expect(number).toHaveTextContent('45');
+    expect(number).toHaveAttribute('data-week-number', '45');
+    expect(firstRow.querySelector('td')).toHaveAttribute('data-date', '2026-11-01');
   });
 
-  test('firstDayOfWeek and firstWeekContainsDate give the US weeks', async () => {
+  // 2026-11-01 is a Sunday. Week 1 holds January 4 for weeks from Monday, and January 1 for others.
+  test.each([
+    { locale: 'de-DE', first: '2026-10-26', number: '44' },
+    { locale: 'ar-EG', first: '2026-10-31', number: '45' },
+    { locale: 'en', first: '2026-11-01', number: '45' },
+  ])(
+    'the weeks of $locale start on the first day of its region, and have its numbers',
+    async ({ locale, first, number }) => {
+      const { query } = await mountCalendar({ weekNumbers: true, root: { today, locale } });
+      const firstRow = query('tbody tr')!;
+      expect(firstRow.querySelector('td')).toHaveAttribute('data-date', first);
+      expect(firstRow.querySelector('th[scope=row]')).toHaveAttribute('data-week-number', number);
+    },
+  );
+
+  test('firstDayOfWeek wins over the locale, and weeks from Monday have their ISO number', async () => {
     const { query } = await mountCalendar({
       weekNumbers: true,
-      root: { today, locale: 'en-US', firstDayOfWeek: 7 },
+      root: { today, locale: 'en-US', firstDayOfWeek: 1 },
     });
     const firstRow = query('tbody tr')!;
-    expect(firstRow.querySelector('td')).toHaveAttribute('data-date', '2026-11-01');
-    expect(firstRow.querySelector('th')).toHaveTextContent('45');
+    expect(firstRow.querySelector('td')).toHaveAttribute('data-date', '2026-10-26');
+    expect(firstRow.querySelector('th')).toHaveTextContent('44');
   });
 });
 

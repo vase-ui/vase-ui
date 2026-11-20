@@ -23,7 +23,6 @@ const message = computed(() => holidayName(selected.value) ?? 'A dot marks a pub
     v-model="selected"
     :modifiers="modifiers"
     locale="en-US"
-    :first-day-of-week="7"
     aria-label="Day off"
     :class="[styles.Root, styles.SixWeeks]"
   >

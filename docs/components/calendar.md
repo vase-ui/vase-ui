@@ -107,9 +107,9 @@ The value is `null` when nothing is selected. With `multiple`, the value is a li
 
 `fixedWeeks` gives each month six weeks. `showOutsideDays` gives a button to a day of the month before or after, and a press on it shows its month.
 
-`today` gives the day that is today. `locale` gives the names and the digits, and `LocaleProvider` gives it to each calendar in it. With neither, the text is `en-US`. The weeks start on Monday, and `firstDayOfWeek` changes the first day: `7` is Sunday. A weekend is a modifier, such as `:modifiers="{ weekend: { dayOfWeek: [6, 7] } }"`.
+`today` gives the day that is today. `locale` gives the names and the digits, and `LocaleProvider` gives it to each calendar in it. With neither, the text is `en-US`. A weekend is a modifier, such as `:modifiers="{ weekend: { dayOfWeek: [6, 7] } }"`.
 
-An app with no server render can take the first day of the week of a locale from the browser: `new Intl.Locale(locale).getWeekInfo?.().firstDay ?? 1`. A browser that lacks the method gives `1`, so give `firstDayOfWeek` from your own data in a server render.
+The first day of the week is the first day in the region of the locale, as CLDR gives it. The weeks of `en-US` start on Sunday, the weeks of `de-DE` on Monday, and the weeks of `ar-EG` on Saturday. A locale with no region, such as `en`, takes the region that `Intl.Locale#maximize()` gives it. The server and the browser give the same day. `firstDayOfWeek` changes the first day: `1` is Monday and `7` is Sunday.
 
 ## Months and years
 
@@ -387,7 +387,7 @@ This calendar is for a date of birth. `Calendar.MonthSelect` and `Calendar.YearS
 
 ### Week numbers
 
-`Calendar.WeekNumber` shows the number of a week, and `Calendar.WeekNumberHeader` is the header of that column. By default, the weeks start on Monday and have their ISO 8601 number. `firstWeekContainsDate` gives the day of January that is always in the first week.
+`Calendar.WeekNumber` shows the number of a week, and `Calendar.WeekNumberHeader` is the header of that column. The numbers follow the first day of the week. `firstWeekContainsDate` gives the day of January that is always in the first week. Its default is `4` for weeks that start on Monday, which gives the ISO 8601 number, and `1` for weeks that start on another day.
 
 <DemoFrame>
   <DemoCalendarWeekNumbers />

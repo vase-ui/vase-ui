@@ -144,14 +144,15 @@ export interface CalendarBaseProps extends AsProps, /* @vue-ignore */ Omit<HTMLA
    */
   showOutsideDays?: boolean | undefined;
   /**
-   * The first day of the week, from `1` for Monday to `7` for Sunday. The broadcast calendar
-   * always starts on Monday.
-   * @default 1
+   * The first day of the week, from `1` for Monday to `7` for Sunday. The default is the first
+   * day in the region of the locale, as CLDR gives it: `7` for `en-US`, `1` for `de-DE`. A locale
+   * with no region takes its likely region. The broadcast calendar always starts on Monday.
    */
   firstDayOfWeek?: DayOfWeek | undefined;
   /**
    * The day of January that is always in week 1, from `1` to `7`. The default is `4` for weeks
-   * that start on Monday, which gives the ISO 8601 week number, and `1` for other weeks.
+   * that start on Monday, which gives the ISO 8601 week number, and `1` for weeks that start on
+   * another day.
    */
   firstWeekContainsDate?: DayOfWeek | undefined;
   /**

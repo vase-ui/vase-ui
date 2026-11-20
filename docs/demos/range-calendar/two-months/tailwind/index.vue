@@ -15,7 +15,6 @@ const defaultValue: [Temporal.PlainDate, Temporal.PlainDate] = [
     :number-of-months="2"
     paged-navigation
     locale="en-US"
-    :first-day-of-week="7"
     :default-value="defaultValue"
   >
     <Calendar.PreviousButton

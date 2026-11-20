@@ -7,7 +7,6 @@ import { Calendar } from '@vase-ui/vue/calendar';
     fixed-weeks
     show-outside-days
     locale="en-US"
-    :first-day-of-week="7"
     class="relative box-border min-h-79 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
   >
     <div class="absolute top-3 right-3 flex gap-1">

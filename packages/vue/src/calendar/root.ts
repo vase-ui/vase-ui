@@ -28,6 +28,7 @@ import type { DateValue, DayOfWeek } from '../internals/date-time/temporal';
 import { useLocale } from '../locale-provider/part';
 import { assertModifierNames, canFocus, canSelect, getDayState, getTabStop } from './days';
 import type { DayRules } from './days';
+import { getFirstDayOfWeek } from './firstDayOfWeek';
 import {
   alignPageStart,
   broadcastMonthOf,
@@ -228,7 +229,7 @@ export function useCalendar(
   }
 
   const firstDay = computed<DayOfWeek>(() =>
-    props.broadcastCalendar ? 1 : (props.firstDayOfWeek ?? 1),
+    props.broadcastCalendar ? 1 : (props.firstDayOfWeek ?? getFirstDayOfWeek(locale.value)),
   );
   const minimalDays = computed(() => props.firstWeekContainsDate ?? (firstDay.value === 1 ? 4 : 1));
   const monthCount = computed(() => Math.max(1, Math.floor(props.numberOfMonths ?? 1)));

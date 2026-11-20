@@ -11,7 +11,6 @@ const selected = shallowRef(Temporal.PlainDate.from('2026-11-14'));
     v-model="selected"
     calendar="persian"
     locale="en-US"
-    :first-day-of-week="7"
     :class="[styles.Root, styles.SixWeeks]"
   >
     <div :class="styles.Nav">

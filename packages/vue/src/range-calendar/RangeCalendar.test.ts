@@ -8,7 +8,7 @@ import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
-// 2026-11-18 is a Wednesday. The weeks start on Monday.
+// 2026-11-18 is a Wednesday. The weeks of en-US start on Sunday.
 const today = day('2026-11-18');
 
 async function mountRange(root: Record<string, unknown> = {}, setup: Record<string, unknown> = {}) {
