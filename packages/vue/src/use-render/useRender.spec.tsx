@@ -1,6 +1,5 @@
 import type { Component, ComponentPublicInstance, ComputedRef, ShallowRef } from 'vue';
 import { expectType } from '#test-utils';
-import { Button } from '@vase-ui/vue/button';
 import { useRender } from '@vase-ui/vue/use-render';
 import type {
   ComponentRenderFn,
@@ -83,8 +82,6 @@ expectType<UseRenderParameters<ActiveState, HTMLButtonElement>, typeof parameter
 expectType<UseRenderReturnValue<HTMLButtonElement>, typeof returnValue>(returnValue);
 expectType<ComponentRenderFn<HTMLProps, UseRenderPartState>, typeof renderProp>(renderProp);
 
-<Button as={UseRenderPart} />;
-
 <UseRenderPart aria-label="x" lang="fr" onClick={(event) => event.preventVaseUIHandler()} />;
 
 const render: useRender.RenderProp<UseRenderPartState> = ({ props, state }) => {
@@ -96,4 +93,3 @@ const render: useRender.RenderProp<UseRenderPartState> = ({ props, state }) => {
 
 type StyleCallbacks = 'stateClass' | 'stateStyle';
 expectType<never, Extract<StyleCallbacks, keyof useRender.ComponentProps>>(null as never);
-expectType<never, Extract<StyleCallbacks, keyof Button.Props>>(null as never);

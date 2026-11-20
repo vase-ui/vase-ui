@@ -26,7 +26,7 @@ function handleCopy() {
 <template>
   <Button
     ref="button"
-    class="flex h-8 w-8 items-center justify-center rounded-none border border-neutral-950 bg-white text-neutral-950 select-none hover:not-data-disabled:bg-neutral-100 active:not-data-disabled:bg-neutral-200 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-data-disabled:bg-neutral-800 dark:active:not-data-disabled:bg-neutral-700 data-disabled:border-neutral-500 data-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:data-disabled:border-neutral-400 dark:data-disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
+    class="flex h-8 w-8 items-center justify-center rounded-none border border-neutral-950 bg-white text-neutral-950 select-none hover:not-disabled:not-aria-disabled:bg-neutral-100 active:not-disabled:not-aria-disabled:bg-neutral-200 dark:border-white dark:bg-neutral-950 dark:text-white dark:hover:not-disabled:not-aria-disabled:bg-neutral-800 dark:active:not-disabled:not-aria-disabled:bg-neutral-700 aria-disabled:border-neutral-500 aria-disabled:text-neutral-500 disabled:border-neutral-500 disabled:text-neutral-500 dark:aria-disabled:border-neutral-400 dark:disabled:border-neutral-400 dark:aria-disabled:text-neutral-400 dark:disabled:text-neutral-400 focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-neutral-950 dark:focus-visible:outline-white"
     aria-label="Copy to clipboard"
     :disabled="copied"
     focusable-when-disabled

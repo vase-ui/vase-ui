@@ -145,7 +145,7 @@ Set a popup root’s `triggerId` to `null` to clear its active trigger. The popu
 - `alignItemWithTrigger` on `Select.Positioner`.
 - `focusableWhenDisabled` on `Toolbar.Button` and `Toolbar.Input`.
 - `pushPanels` on `Resizable.Root`.
-- `nativeButton` on button parts such as `Button`, `Dialog.Trigger` and `Toolbar.Button`.
+- `nativeButton` on button parts such as `Dialog.Trigger` and `Toolbar.Button`.
 - `initialFocus` and `finalFocus` on popup parts such as `Dialog.Popup` and `Popover.Popup`, and `finalFocus` on `Menu.Popup` and `Select.Popup`. These props also take an element or a function.
 - `closeOnSelect` on `DateRangePicker.Root`, also for a range with a time.
 
