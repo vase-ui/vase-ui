@@ -4,7 +4,6 @@ import * as Combobox from '../src/combobox/index.parts';
 import * as DateField from '../src/date-field/index.parts';
 import * as DatePicker from '../src/date-picker/index.parts';
 import * as DateRangePicker from '../src/date-range-picker/index.parts';
-import * as OTPField from '../src/otp-field/index.parts';
 import { Resizable } from '../src/resizable';
 import * as TimeClock from '../src/time-clock/index.parts';
 import * as TimeField from '../src/time-field/index.parts';
@@ -49,13 +48,6 @@ const id = 'id';
   <DateRangePicker.EndField :ariaLabelledby="id" />
   <!-- @vue-expect-error `aria-labelledby` is a string -->
   <DateRangePicker.EndField :aria-labelledby="5" />
-
-  <OTPField.Root :length="6" aria-labelledby="id" />
-  <OTPField.Root :length="6" :aria-labelledby="id" />
-  <OTPField.Root :length="6" ariaLabelledby="id" />
-  <OTPField.Root :length="6" :ariaLabelledby="id" />
-  <!-- @vue-expect-error `aria-labelledby` is a string -->
-  <OTPField.Root :length="6" :aria-labelledby="5" />
 
   <Slider.Root aria-labelledby="id" />
   <Slider.Root :aria-labelledby="id" />

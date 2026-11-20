@@ -53,7 +53,7 @@ A one-time password input with one slot for each character.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the field a `<label>` element, or put it in a `Field`. See [Labeling an OTP field](#labeling-an-otp-field) and the [forms guide](/handbook/forms).
+- **Form controls must have an accessible name**: Give the field a `<label>` element and name the group with it, or put the field in a `Field`. See [Labeling an OTP field](#labeling-an-otp-field) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 
@@ -61,31 +61,29 @@ Import the component and assemble its parts:
 
 <<< ./otp-field/Anatomy.vue
 
-`OTPField.Root` renders its element and a hidden `<input>` after it. The hidden input holds the whole code. It has the `name` of the field and the native validation, so a form submits the code one time. The slots have no `name`.
+`OTPField.Root` renders a `<div>` with the role `group`. Its last child is a hidden `<input>` that holds the whole code. The hidden input has the `name` of the field and the native validation, so a form submits the code one time. An incomplete code fails the validation. The slots have no `name`.
 
-A reset of the form puts an uncontrolled field back to `defaultValue`. A controlled field does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+The `as` prop of the root renders another element or a component in place of the `<div>`, with the hidden input in it. The `element` slot of the root renders your element, and the root then renders the hidden input after your element.
 
-Because of the hidden input, `OTPField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
-
-Characters that a visitor types, or that the browser fills, before the page hydrates stay in the slots when the field accepts them. After the hydration, the root emits `valueChange` and `update:modelValue` with them. A complete code emits `valueComplete`, and with `autoSubmit` the root submits the form. When the visitor left a slot before the page hydrated, the slot then also gets `change`, `blur` and `focusout`. After a move in the history of the browser or a reload of the page, the slots take no characters from before the hydration. The root thus does not complete or submit a code that the browser restored.
-
-The hidden input takes a code that a program or the browser writes into it before the page hydrates, as an autofill. The root then emits `valueChange` and `valueComplete`, and with `autoSubmit` it submits the form. The focus does not move for that code. After a move in the history or a reload, the hidden input takes no code from before the hydration. When the browser restores the form state of the page, the root writes its own value back to the hidden input and the slots.
+A reset of the form puts the field back to its first value: `defaultValue`, or the model of the mount. The root emits `update:modelValue`, so `v-model` follows. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
 ## Examples
 
 ### Labeling an OTP field
 
-Give `OTPField.Root` an `id`, and give a native `<label>` the same value in `for`. The first input takes the label of the field. Give each other input an `aria-label`, so that assistive technology announces the slot that has the focus.
+Give `OTPField.Root` an `id`, and give a native `<label>` the same value in `for`. The label then names the first input. Give the label an `id`, and give the root `aria-labelledby` with it, so the label names the group too. Give each other input an `aria-label`, so that assistive technology announces the slot that has the focus.
 
 To announce a supporting text with the field, give the root `aria-describedby`.
 
-<<< ./otp-field/NativeLabel.vue{7,9}
+<<< ./otp-field/NativeLabel.vue{7,9,11}
 
-A native `<label>` names only the first input, through `for`, and the group has no name from it. In a `Field`, `Field.Label` names the group and each input that has no `aria-label` of its own, also in the server HTML.
+In a `Field`, `Field.Label` names the group and each input that has no `aria-label` of its own, also in the server HTML.
 
 ### Submitting on completion
 
 Set `autoSubmit` to submit the form of the field when each slot has a character. To act on the completion with no submit, listen to `valueComplete`.
+
+Enter in a slot submits the form, as Enter in one text input does. A listener that prevents the `keydown` of Enter stops the submit.
 
 ### Alphanumeric verification codes
 
@@ -157,7 +155,7 @@ Put sets of inputs in your own layout elements. Add `OTPField.Separator` to show
 
 Use `normalizeValue` to change the accepted characters before the state changes, for example to make a code uppercase. It runs after the filter of `validationType`, and that filter then applies to its result again. Set `validationType` to `none` when the normalizer is the full validation rule.
 
-Use `inputMode` to give the keyboard a hint for a custom rule. Listen to `valueInvalid` to know when the field refuses characters.
+Use `inputmode` to give the keyboard a hint for a custom rule. Listen to `valueInvalid` to know when the field refuses characters.
 
 <DemoFrame>
   <DemoOTPFieldCustomNormalize />
@@ -175,7 +173,7 @@ Use `inputMode` to give the keyboard a hint for a custom rule. Listen to `valueI
 
 ### Masked entry
 
-Set `mask` to hide the code while the user types it.
+Give each `OTPField.Input` the attribute `type="password"` to hide the code while the user types it.
 
 <DemoFrame>
   <DemoOTPFieldPassword />
@@ -205,6 +203,24 @@ Set `mask` to hide the code while the user types it.
 :::
 
 </DemoSource>
+
+## Styling
+
+Select the states of the group with `[data-complete]`, `[data-filled]`, `[data-disabled]`, `[data-readonly]`, `[data-required]`, `[data-valid]`, `[data-invalid]`, `[data-touched]` and `[data-dirty]`. Select a field that has the focus with `:focus-within`.
+
+Select the states of an input with these selectors:
+
+| Selector                | State                               |
+| ----------------------- | ----------------------------------- |
+| `:focus`                | The input has the focus.            |
+| `[data-filled]`         | The input has a character.          |
+| `[data-complete]`       | Each input has a character.         |
+| `:disabled`             | The field is disabled.              |
+| `:read-only`            | The field is read-only or disabled. |
+| `:required`             | The field is required.              |
+| `[aria-invalid='true']` | The field is invalid.               |
+
+The hidden input is the last child of the group, and it is an `<input>` too. Give the last slot a class of its own, and do not select it with `:last-child` or `:last-of-type`.
 
 ## API reference
 

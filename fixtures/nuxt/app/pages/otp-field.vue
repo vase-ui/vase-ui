@@ -17,9 +17,20 @@ const code = ref('12');
       </Field.Root>
       <output data-testid="code-value">{{ code }}</output>
     </form>
-    <label for="pin" data-testid="pin-label">PIN</label>
-    <OTPField.Root id="pin" :length="4" mask default-value="56" data-testid="pin">
-      <OTPField.Input v-for="index in 4" :key="index" :data-testid="`pin-${index}`" />
+    <label id="pin-label" for="pin" data-testid="pin-label">PIN</label>
+    <OTPField.Root
+      id="pin"
+      :length="4"
+      default-value="56"
+      aria-labelledby="pin-label"
+      data-testid="pin"
+    >
+      <OTPField.Input
+        v-for="index in 4"
+        :key="index"
+        type="password"
+        :data-testid="`pin-${index}`"
+      />
     </OTPField.Root>
   </main>
 </template>

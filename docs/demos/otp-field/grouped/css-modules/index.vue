@@ -6,12 +6,13 @@ import styles from './index.module.css';
 const OTP_LENGTH = 6;
 
 const id = useId();
+const labelId = `${id}-label`;
 </script>
 
 <template>
   <div :class="styles.Field">
-    <label :for="id" :class="styles.Label">Verification code</label>
-    <OTPField.Root :id="id" :length="OTP_LENGTH" :class="styles.Root">
+    <label :id="labelId" :for="id" :class="styles.Label">Verification code</label>
+    <OTPField.Root :id="id" :aria-labelledby="labelId" :length="OTP_LENGTH" :class="styles.Root">
       <div :class="styles.Group">
         <OTPField.Input
           v-for="index in 3"
