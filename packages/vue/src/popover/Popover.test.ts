@@ -1469,6 +1469,49 @@ describe('the hover (L9)', () => {
     await closed();
   });
 
+  test('a popover with `openOnHover` that a press opened stays open after the pointer leaves its trigger', async () => {
+    const { trigger } = await mountPopover({
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 300, closeDelay: 0 } }],
+    });
+    await userEvent.click(trigger());
+    await opened();
+    await placed();
+    await moveMouse([centerOf(trigger()), centerOf(byId('outside'))]);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(popup()).not.toBe(null);
+  });
+
+  test('a popover with `openOnHover` that `defaultOpen` opened closes after the pointer leaves its trigger', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountPopover({
+      root: rootEvents(log, { defaultOpen: true }),
+      triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0, closeDelay: 0 } }],
+    });
+    await opened();
+    await placed();
+    await userEvent.hover(trigger());
+    await userEvent.hover(byId('outside'));
+    await closed();
+    expect(log).toEqual(['openChange false trigger-hover', 'update false']);
+  });
+
+  test('a hover on the trigger while the popup leaves after a hover close opens it with no delay', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    mount(PopoverInTransition, {
+      root: { defaultOpen: true },
+      trigger: { openOnHover: true, delay: 5000, closeDelay: 0 },
+    });
+    await opened();
+    await placed();
+    const trigger = document.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
+    await userEvent.hover(trigger);
+    await userEvent.pointer({ coords: { x: innerWidth - 2, y: innerHeight - 2 } });
+    await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
+    expect(popup()).not.toBe(null);
+    await userEvent.hover(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
   test('an Escape stops the pending hover open of another trigger', async () => {
     const { trigger } = await mountPopover({
       triggers: [

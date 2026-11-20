@@ -22,7 +22,7 @@ const context = injectPopoverRoot('Viewport');
 const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const sizes = usePopupViewport(root, context.viewport);
+const sizes = usePopupViewport(root, context.viewport, { triggerChange: true });
 
 const state = computed<PopoverViewportState>(() => ({
   activationDirection: sizes.direction,

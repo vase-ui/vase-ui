@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import styles from '../../index.module.css';
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -15,22 +17,24 @@ import styles from '../../index.module.css';
 
     <PreviewCard.Portal>
       <PreviewCard.Positioner :side-offset="8">
-        <PreviewCard.Popup :class="styles.Popup">
-          <PreviewCard.Arrow :class="styles.Arrow" />
-          <div :class="styles.PopupContent">
-            <img
-              width="224"
-              height="150"
-              :class="styles.Image"
-              src="https://images.unsplash.com/photo-1619615391095-dfa29e1672ef?q=80&w=448&h=300"
-              alt="Station Hofplein signage in Rotterdam, Netherlands"
-            />
-            <p :class="styles.Summary">
-              <strong>Typography</strong> is the art and science of arranging type to make written
-              language clear, visually appealing, and effective in communication.
-            </p>
-          </div>
-        </PreviewCard.Popup>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+          <PreviewCard.Popup :class="styles.Popup">
+            <PreviewCard.Arrow :class="styles.Arrow" />
+            <div :class="styles.PopupContent">
+              <img
+                width="224"
+                height="150"
+                :class="styles.Image"
+                src="https://images.unsplash.com/photo-1619615391095-dfa29e1672ef?q=80&w=448&h=300"
+                alt="Station Hofplein signage in Rotterdam, Netherlands"
+              />
+              <p :class="styles.Summary">
+                <strong>Typography</strong> is the art and science of arranging type to make written
+                language clear, visually appealing, and effective in communication.
+              </p>
+            </div>
+          </PreviewCard.Popup>
+        </Transition>
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
   </PreviewCard.Root>

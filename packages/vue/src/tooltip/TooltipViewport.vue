@@ -22,7 +22,7 @@ const context = injectTooltipRoot('Viewport');
 const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const sizes = usePopupViewport(root, context.viewport, { instant: false });
+const sizes = usePopupViewport(root, context.viewport);
 
 const state = computed<TooltipViewportState>(() => ({
   activationDirection: sizes.direction,

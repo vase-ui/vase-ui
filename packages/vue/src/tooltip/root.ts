@@ -9,7 +9,13 @@ import {
 } from 'vue';
 import { useLayer, type Layer } from '../popup/layer';
 import type { usePlacement } from '../popup/placement';
-import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
+import {
+  PopupHandle,
+  rootOfHandle,
+  useCloseWhenTriggerLeaves,
+  usePopupRoot,
+  type PopupRoot,
+} from '../popup/root';
 import type { ViewportSizes } from '../popup/viewport';
 import { useCursorAnchor } from './cursor';
 import { injectGroup, useGroupMember } from './group';
@@ -65,23 +71,6 @@ export function hoverPopupInstant(open: boolean, reason: string, previous: strin
   if (!open && (reason === 'trigger-press' || reason === 'escape-key')) return 'dismiss';
   if (reason === 'trigger-hover') return undefined;
   return previous;
-}
-
-/**
- * Asks for a close with the reason `'none'` when the active trigger of an open popup leaves the
- * DOM, and no trigger with its id is in the DOM after that update.
- */
-export function useCloseWhenTriggerLeaves(root: PopupRoot) {
-  watch(
-    () =>
-      root.open &&
-      root.activeTriggerId !== null &&
-      root.triggers.some((trigger) => trigger.id === root.activeTriggerId),
-    (present, was) => {
-      if (was && !present && root.open) root.request(false, 'none', new Event('vase-ui'));
-    },
-    { flush: 'post' },
-  );
 }
 
 export function useTooltipRoot<Payload>(

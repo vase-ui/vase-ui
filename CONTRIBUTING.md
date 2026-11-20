@@ -581,7 +581,7 @@ The change event carries these details:
   3. `any`, where Base UI gives a type with members: `Form` (`Record<string, any>`) and `ToggleGroup` (`string[]`). With `never`, vue-tsc refuses a call such as `value.includes('a')`.
 - The exported props interface keeps the default of Base UI: `FormProps<Values extends Record<string, any> = Record<string, any>>`.
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
-- A part whose default tag has attributes of its own gives them to the slot type. The `a` of `PreviewCard.Trigger` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>`. `HTMLProps` has no `href`.
+- A part whose default tag has attributes of its own gives them to the slot type. The `a` of `Menu.LinkItem` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, MenuLinkItemState>`. `HTMLProps` has no `href`.
 - Keep the published composable names, such as `useDirection`, `useRender`, `Toast.useToastManager` and `Combobox.useFilter`.
 - A public composable that gives the methods of the nearest part above the caller returns `null` when the caller is not inside that part. It calls `inject(key, null)`, so Vue shows no warning, and it throws no error. A composable that a part needs for its own work throws, as [Context of a root](#context-of-a-root) says.
 - Choose a plain setup function, getter, computed or exposed ref from what its caller needs. Return a ref for live state that a caller can destructure.
@@ -1069,7 +1069,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 
 ### Popup store
 
-`usePopupRoot` owns the shallow reactive state of each popup in `src/utils/popups/usePopupRoot.ts`. `preview-card/root/PreviewCardRoot.vue` and `preview-card/trigger/PreviewCardTrigger.vue` are the models of a popup root and a popup trigger.
+`usePopupRoot` owns the shallow reactive state of each popup in `src/utils/popups/usePopupRoot.ts`. `menu/root/MenuRoot.vue` and `menu/trigger/MenuTrigger.vue` are the models of a popup root and a popup trigger.
 
 - `ReactiveStore` holds `state`, `context` and the selectors. `state` is a `shallowReactive` object. `context` is a plain object for the values that no part renders, such as a callback or a map.
 - A selector is a plain function of the state: `(state, ...args) => value`. `store.select(key, ...args)` calls it with the reactive state.
@@ -1118,7 +1118,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - A public `handle.store` read exposes writable copies of `activeTriggerProps`, `inactiveTriggerProps` and `popupProps`. The root clears these copies on disposal.
 - A family owns its other bindings, such as the item and input props of Menu.
 - A root calls `usePopupRoot(props, createStore, options)`. Its refs supply the open state, active trigger, popup element, mounted state, transition and payload. Call `requestOpen` with the event details. Expose the root actions to the consumer.
-- A popup part gives `popupElementTarget(store)` to `createElementSetter` in `setup`. The target writes `store.context.popupRef` before the store key `popupElement`. `preview-card/popup/PreviewCardPopup.vue` is the model. A list part uses `stateElementTarget(store, 'listElement')` for a store key. A filterable list gives the setter the `listElement` ref of its root context.
+- A popup part gives `popupElementTarget(store)` to `createElementSetter` in `setup`. The target writes `store.context.popupRef` before the store key `popupElement`. `menu/popup/MenuPopup.vue` is the model. A list part uses `stateElementTarget(store, 'listElement')` for a store key. A filterable list gives the setter the `listElement` ref of its root context.
 - `createElementSetter` clears the target only while it holds the element of its own part. By default the setter clears it when `isHeld` becomes `true` and gives the current element when `isHeld` becomes `false`. The default target gets a new element of a held branch at activation, even when the part mounts there. A trigger or input thus omits the id of an element that `KeepAlive` took out of the document (`VUE-73`).
 - Set `keepWhileHeld: true` only when a reader needs the element of a held part. Name the reader in the JSDoc of the target. Supply a second target in `kept` when only that reader needs the held element. For a popup part, `kept` is `store.context.keptPopupRef`.
 - `NavigationMenu.Content` stays in its viewport while `KeepAlive` holds the viewport. The setter keeps `viewportElement` for content in a positioner and `viewportTargetElement` for content in an inline viewport. The setter for `shownViewportElement` takes the default. The owner element after the active trigger then has no `aria-owns` while the viewport is held. The trigger also needs the held `positionerElement`, because `null` selects the behavior of a menu with no positioner.
@@ -1152,7 +1152,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - A part that listens to an event of `tree.events` adds its listener in a `watch` that has the tree as a source and the option `immediate`. The cleanup of the `watch` removes the listener, so the part listens to the new tree after a change. `Menu.Positioner` and `Menu.Popup` do this.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
-- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
+- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `navigation-menu/root/NavigationMenuRoot.vue` is the model.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
 - `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. The `context` is also `undefined` from the mount of a part in a held branch to its activation. `getNodeChildren` then does not count the node as open. `removeNodeContext(node, context)` removes `context` from a node, also while the part of the node is deactivated. It keeps the context of another popup. Do not compare `node.context` for this, because a deactivated part hides it.
 
@@ -1163,7 +1163,7 @@ The placement owner is `src/utils/popups/usePopupPositioner.ts`. Its anchor meas
 - Call `usePopupPositioner(props, store, options)` with the reactive props of the part. It returns the element bindings, placement, open state and mounted state.
 - Supply family placement rules in `options.positioning`. These options can include a tree and a node ID.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node.
-- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
+- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `menu/positioner/MenuPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - A `NavigationMenu.Positioner` that mounts open has `data-instant` until a 0 ms timer ends. When the positioner mounts in a held branch, that timer starts at the activation.
 - Select, Navigation Menu and Toast use `usePopupPlacement` and `usePositioner` directly. Each part supplies its own size or item policy.
@@ -1171,7 +1171,7 @@ The placement owner is `src/utils/popups/usePopupPositioner.ts`. Its anchor meas
 - `Select.Popup` records the pinned edge when it aligns an item. It reads the new scroll range after the positioner applies its height.
 - The Navigation Menu root holds the popup size and the target size of the positioner. Each part binds its own dimensions. When the active item changes, its trigger measures the previous content before Vue patches it.
 - Provide the placement to the popup and arrow. Each arrow calls `createArrowRef()` once. An old arrow releases only its own element (`VUE-160`).
-- Menu, Combobox and Preview Card use `usePopupArrow` for the arrow state and decorative element bindings.
+- Menu and Combobox use `usePopupArrow` for the arrow state and decorative element bindings.
 - The positioning context is `store.context.positioning`. The JSDoc of `PopupPositioningContext` in `utils/popups/types.ts` gives its members, and the comments of `useVaseUIFloating` say when the composable writes it.
 - `useVaseUIFloating` writes the context in `onBeforeMount`, unless `KeepAlive` holds the part. A server render thus writes nothing, and each part below a positioner that is not held finds the context in `setup`.
 - The composable removes its context from the store and from the node when the part unmounts, and while `KeepAlive` holds the part. A part that mounts in a held branch writes its context at the activation (`VUE-43`). The composable never removes the context of another positioner. The tree hides the context of a node while its own part is deactivated, and from a mount of that part in a held branch to its activation.
@@ -1217,7 +1217,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 
 ### Popup portal
 
-All portal parts use `utils/popups/portal/PopupPortal.vue`. Pass the optional `usePortalFocus` function only for a popup that needs tab guards. Preview Card and Toast omit it.
+All portal parts use `utils/popups/portal/PopupPortal.vue`. Pass the optional `usePortalFocus` function only for a popup that needs tab guards. Toast omits it.
 
 - `to` accepts a CSS selector, an element or a shadow root. An absent target uses the nearest portal element or the document body. An explicit null delays the portal. Resolve selectors after the client patch so a later sibling can supply the target.
 - A change between targets moves the same portal element and its children. A held Teleport moves its content out of the visible document.
@@ -1240,7 +1240,7 @@ Trigger press, focus and modality actions live in `src/utils/popups/usePopupTrig
 - Hover triggers, positioners and Navigation Menu scopes bind their pointer styles. A submenu releases its parent menu before the next pointer event in the same input. On the document body or an external scope, the hover session restores the prior inline value and priority.
 - A trigger that blocks pointer events itself, as `NavigationMenuTrigger.vue` does, calls `restoreOutsidePointerEvents()` of the hover session at each change of `open`, when it unmounts and when `KeepAlive` deactivates it.
 - `usePopupHover(store).trigger(policy)` registers the trigger for pointer access while active (`VUE-94`).
-- Of the triggers that open on hover, only `NavigationMenuTrigger.vue` reads `:hover` in `onMounted` (`VUE-7`). The trigger reads `:hover` there because a browser sends no enter event for a pointer that is already over it when the hydration ends. When the trigger matches, hover is enabled and the menu is closed, it calls `onMouseenter` and then `onMousemove` of its hover props, each with a new event. The first call lets a move open the popup. The second call starts the rest timer. Under `KeepAlive`, the trigger reads `:hover` again when `isHeld` becomes `false`, after a deactivation and at the first activation of a trigger that mounted in a held branch. This follows the `KeepAlive` rules of [What differs from the React source](#what-differs-from-the-react-source). `PreviewCard.Trigger` and `Menu.Trigger` keep the behavior of Base UI. They pass `move: false` and read no `:hover`. A pointer that is already over one of them when the hydration ends opens no popup until it enters the trigger again.
+- Of the triggers that open on hover, only `NavigationMenuTrigger.vue` reads `:hover` in `onMounted` (`VUE-7`). The trigger reads `:hover` there because a browser sends no enter event for a pointer that is already over it when the hydration ends. When the trigger matches, hover is enabled and the menu is closed, it calls `onMouseenter` and then `onMousemove` of its hover props, each with a new event. The first call lets a move open the popup. The second call starts the rest timer. Under `KeepAlive`, the trigger reads `:hover` again when `isHeld` becomes `false`, after a deactivation and at the first activation of a trigger that mounted in a held branch. This follows the `KeepAlive` rules of [What differs from the React source](#what-differs-from-the-react-source). `Menu.Trigger` keeps the behavior of Base UI. It passes `move: false` and reads no `:hover`. A pointer that is already over it when the hydration ends opens no popup until it enters the trigger again.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
 - Pass a store getter to `usePopupHover` when ownership can change. `NavigationMenu.List` follows the active trigger this way.
 - Pass the current close delay to `usePopupHover(store).popup(policy)` as a getter.

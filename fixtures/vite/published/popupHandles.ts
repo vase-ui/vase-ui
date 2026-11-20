@@ -32,15 +32,17 @@ function check(handle: PopupHandle) {
 const menu: Menu.Handle<Payload> = Menu.createHandle<Payload>();
 check(menu);
 check(new Menu.Handle<Payload>());
-// A handle of Popover, Dialog, Alert Dialog and Drawer has no store.
-const popovers: Popover.Handle<Payload>[] = [
+// A handle of Popover, Preview Card, Dialog, Alert Dialog, Drawer and Tooltip has no store.
+const handles: (Popover.Handle<Payload> | PreviewCard.Handle<Payload>)[] = [
   Popover.createHandle<Payload>(),
   new Popover.Handle<Payload>(),
+  PreviewCard.createHandle<Payload>(),
+  new PreviewCard.Handle<Payload>(),
 ];
-for (const popover of popovers) {
-  const open: boolean = popover.isOpen;
-  if (open) popover.close();
-  else popover.open('second');
+for (const handle of handles) {
+  const open: boolean = handle.isOpen;
+  if (open) handle.close();
+  else handle.open('second');
 }
 const dialogs: Dialog.Handle<Payload>[] = [
   Dialog.createHandle<Payload>(),
@@ -56,10 +58,6 @@ for (const dialog of dialogs) {
   else if (dialog instanceof AlertDialog.Handle) dialog.open(null);
   else dialog.openWithPayload({ label: 'Second' });
 }
-const previewCard: PreviewCard.Handle<Payload> = PreviewCard.createHandle<Payload>();
-check(previewCard);
-check(new PreviewCard.Handle<Payload>());
-// A Tooltip handle has no store.
 const tooltips: Tooltip.Handle<Payload>[] = [
   Tooltip.createHandle<Payload>(),
   new Tooltip.Handle<Payload>(),
