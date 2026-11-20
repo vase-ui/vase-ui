@@ -6,6 +6,10 @@ import type {
   RadioGroupState,
 } from './types';
 
+/**
+ * Provides a shared state to a series of radio buttons.
+ * Renders a `<div>` element.
+ */
 export const RadioGroup: typeof RadioGroupComponent = RadioGroupComponent;
 export namespace RadioGroup {
   export type Props<Value = any> = RadioGroupProps<Value>;
