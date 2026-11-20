@@ -114,12 +114,12 @@ export function useList(options: ListOptions): List {
     { flush: 'post', immediate: true },
   );
 
-  // An item that leaves the list takes the highlight with it.
+  // An item that leaves the list takes the highlight with it, also when another item takes its
+  // place in the same update.
   watch(
-    () => added.length,
-    () => {
-      const current = highlighted.value;
-      if (current && !added.includes(current)) list.highlight(null, 'none');
+    () => !!highlighted.value && !added.includes(highlighted.value),
+    (gone) => {
+      if (gone) list.highlight(null, 'none');
     },
   );
 

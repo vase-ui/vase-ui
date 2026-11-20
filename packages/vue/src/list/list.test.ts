@@ -61,6 +61,18 @@ describe('the order', () => {
     await waitFor(() => expect(log.at(-1)).toBe('none none'));
     expect(highlighted()).toBe(null);
   });
+
+  test('the highlight goes when its item renders another element', async () => {
+    const log: string[] = [];
+    const items = reactive<Item[]>(keys('a', 'b'));
+    await mountList({ items, onHighlight: (entry: string) => log.push(entry) });
+    container().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(log.at(-1)).toBe('a keyboard'));
+    items[0]!.link = true;
+    await waitFor(() => expect(log.at(-1)).toBe('none none'));
+    expect(highlighted()).toBe(null);
+  });
 });
 
 describe('the keys', () => {

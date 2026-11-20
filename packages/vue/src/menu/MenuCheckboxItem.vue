@@ -42,7 +42,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => props.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as ?? 'div'),
   role: 'menuitemcheckbox',
 });
 const state = computed<MenuCheckboxItemState>(() => ({

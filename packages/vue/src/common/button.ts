@@ -21,6 +21,11 @@ export function useButton(options: {
    * then writes the attributes of that element. With none, the part counts a `<button>`.
    */
   tag?: () => string | undefined;
+  /**
+   * Enter and Space click an element that is no native button. With `false`, the part gives its
+   * keys to another element, such as the owner of a list in virtual mode.
+   */
+  keys?: () => boolean;
 }) {
   const tag = () => options.tag?.() ?? 'button';
   const isNative = computed(() =>
@@ -50,6 +55,9 @@ export function useButton(options: {
       isSpaceDown = true;
     } else if (event.key === 'Enter' && !disabled.value && !isLink(target)) {
       dispatchClickWithModifiers(target, event);
+      // A click that gives the focus to a button would let the key press that button too
+      // (test/measurements/menu.test.ts).
+      event.preventDefault();
     }
   }
 
@@ -95,7 +103,8 @@ export function useButton(options: {
      * `preventDefault()` in a key listener of the developer stops the click of the key.
      */
     mergeAttributes(own: Record<string, unknown>, attrs: Record<string, unknown>) {
-      return mergeProps(rule.value, own, attrs, isNative.value ? {} : { onKeydown, onKeyup });
+      const keys = !isNative.value && (options.keys?.() ?? true);
+      return mergeProps(rule.value, own, attrs, keys ? { onKeydown, onKeyup } : {});
     },
   };
 }

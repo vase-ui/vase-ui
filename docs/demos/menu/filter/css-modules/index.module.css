@@ -184,6 +184,13 @@
   max-height: min(28rem, var(--available-height));
 }
 
+/* A filtered item stays mounted with `hidden`, and the `display` of its class would show it. */
+.Item[hidden],
+.SubmenuTrigger[hidden],
+.ChoiceItem[hidden] {
+  display: none;
+}
+
 .Item,
 .SubmenuTrigger,
 .ChoiceItem {

@@ -154,11 +154,16 @@ watch(
         addEventListener(doc, 'pointerdown', (event) => {
           closedByPress = event.button === 2 && openAtPress && !root.open;
         }),
-        addEventListener(doc, 'contextmenu', (event) => {
-          if (!closedByPress) return;
-          closedByPress = false;
-          event.preventDefault();
-        }),
+        // In the capture phase, because a trigger stops the `contextmenu` that it gets.
+        addEventListener(
+          doc,
+          'contextmenu',
+          (event) => {
+            if (closedByPress) event.preventDefault();
+            closedByPress = false;
+          },
+          true,
+        ),
       ),
     );
   },

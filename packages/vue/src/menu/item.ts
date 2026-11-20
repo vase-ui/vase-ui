@@ -18,7 +18,7 @@ export function useMenuItem(options: {
   label: () => string | undefined;
   /** Disabled by the part. */
   disabled: () => boolean;
-  /** The tag of the element before the mount (a tag in `as`). */
+  /** The tag of the element before the mount: a tag in `as`, else the default tag of the part. */
   tag: () => string | undefined;
   role: 'menuitem' | 'menuitemcheckbox' | 'menuitemradio';
   link?: boolean;
@@ -35,7 +35,10 @@ export function useMenuItem(options: {
         element: options.element,
         disabled: () => disabled.value,
         focusableWhenDisabled: () => true,
+        type: 'button',
         tag: options.tag,
+        // In a filterable menu, a key on an item that has the focus is a key of the input.
+        keys: () => !menu.list.virtual,
       });
   const { highlighted, attributes } = useListItem(menu.list, options.element, {
     label: options.label,
@@ -65,7 +68,7 @@ export function useMenuItem(options: {
       menu.typeahead.onKeydown(event);
       return;
     }
-    if (options.link && event.key === ' ' && !event.defaultPrevented) {
+    if (options.link && event.key === ' ' && !event.defaultPrevented && !menu.list.virtual) {
       event.preventDefault();
       spaceDown = true;
     }
@@ -74,14 +77,6 @@ export function useMenuItem(options: {
     if (!options.link || event.key !== ' ' || !spaceDown) return;
     spaceDown = false;
     if (!event.defaultPrevented) dispatchClickWithModifiers(event.currentTarget as Element, event);
-  }
-
-  // The button rule clicks an element that is no native button at the `keydown` of Enter. The
-  // focus can then go back to the trigger, and the activation of that `keydown` would press it.
-  function endEnter(event: KeyboardEvent) {
-    const element = event.currentTarget as Element;
-    if (event.key !== 'Enter' || event.target !== element) return;
-    if (element.localName !== 'button' && element.localName !== 'input') event.preventDefault();
   }
 
   return {
@@ -107,8 +102,7 @@ export function useMenuItem(options: {
         onKeyup,
       });
       const merged = mergeProps(base, own);
-      if (!button) return mergeProps(merged, attrs);
-      return mergeProps(button.mergeAttributes(merged, attrs), { onKeydown: endEnter });
+      return button ? button.mergeAttributes(merged, attrs) : mergeProps(merged, attrs);
     },
   };
 }

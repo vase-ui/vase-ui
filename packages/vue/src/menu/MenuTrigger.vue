@@ -79,6 +79,8 @@ let focusOpened = false;
 
 let openedAtPress = false;
 function onPointerdown(event: PointerEvent) {
+  // A key that a listener prevented gave no click, and the click of this press is no key click.
+  keyClick = false;
   focusOpened = false;
   const menu = context.value;
   const wasOpen = trigger.open.value;

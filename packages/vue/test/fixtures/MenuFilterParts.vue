@@ -5,8 +5,8 @@ import { Menu } from '../../src/menu';
 type Props = Record<string, unknown>;
 
 // A filterable menu: a group of fruit, a vegetable, a radio group of citrus when `radio` is set, and
-// a submenu when `submenu` is set. With `filterSubmenu`, the submenu has a filter and an input of
-// its own. `texts` replaces the text of an item by its key.
+// a link when `link` is set, and a submenu when `submenu` is set. With `filterSubmenu`, the submenu
+// has a filter and an input of its own. `texts` replaces the text of an item by its key.
 defineProps({
   provider: Object as PropType<Props>,
   root: Object as PropType<Props>,
@@ -15,6 +15,7 @@ defineProps({
   list: Object as PropType<Props>,
   clear: Boolean,
   radio: Boolean,
+  link: Boolean,
   submenu: Boolean,
   filterSubmenu: Boolean,
   submenuPortal: Object as PropType<Props>,
@@ -51,6 +52,7 @@ defineProps({
                 <Menu.RadioItem data-key="lemon" value="lemon">Lemon</Menu.RadioItem>
                 <Menu.RadioItem data-key="lime" value="lime">Lime</Menu.RadioItem>
               </Menu.RadioGroup>
+              <Menu.LinkItem v-if="link" data-key="link" href="#filter-link">Link</Menu.LinkItem>
               <Menu.SubmenuRoot v-if="submenu">
                 <Menu.SubmenuTrigger data-key="more" :delay="0">More</Menu.SubmenuTrigger>
                 <Menu.Portal v-bind="submenuPortal">

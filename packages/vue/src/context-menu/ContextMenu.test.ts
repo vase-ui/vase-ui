@@ -61,6 +61,8 @@ describe('the open', () => {
     expect(trigger).toHaveAttribute('data-popup-open');
     expect(trigger).toHaveAttribute('data-pressed');
     expect(trigger).not.toHaveAttribute('aria-expanded');
+    // `contextmenu` has `detail` 0 in Chromium and WebKit, and it is no key click.
+    expect(popup()).not.toHaveAttribute('data-instant');
     await waitFor(() => expect(active()).toBe(popup()));
     expect(document.getElementById('outside')!.closest('[aria-hidden="true"]')).not.toBe(null);
     expect(isScrollLocked()).toBe(true);
@@ -237,6 +239,12 @@ describe('a second right press', () => {
       'false outside-press pointerdown',
       'true trigger-press contextmenu',
     ]);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    // The menu key of a keyboard sends a `contextmenu` with no press.
+    const next = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    document.body.dispatchEvent(next);
+    expect(next.defaultPrevented).toBe(false);
   });
 
   test('in the leave of a backdrop reaches the trigger', async () => {
@@ -285,6 +293,7 @@ describe('a long press', () => {
       await waitFor(() => expect(popup()).not.toBe(null));
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(popup()).not.toBe(null);
+      expect(popup()).not.toHaveAttribute('data-instant');
       expect(log).toHaveLength(1);
     },
   );

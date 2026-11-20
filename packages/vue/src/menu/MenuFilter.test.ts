@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { MenuFilterProviderChangeEventDetails } from '@vase-ui/vue/menu';
@@ -352,6 +352,39 @@ describe('the focus', () => {
     await userEvent.keyboard('k');
     expect(active()).toBe(input());
     expect(input().value).toBe('k');
+  });
+
+  test('Enter on an item that has the real focus clicks it; Space clicks an item or a link while the input is empty, and types into the input while it has text', async () => {
+    const clicks: string[] = [];
+    const record = (event: Event) => {
+      const key = (event.target as Element).closest('[data-key]')?.getAttribute('data-key');
+      if (key) clicks.push(key);
+      if (key === 'link') event.preventDefault();
+    };
+    document.addEventListener('click', record, true);
+    onTestFinished(() => document.removeEventListener('click', record, true));
+    const { trigger } = await mountFilter({ link: true });
+    await open(trigger);
+    item('apricot').focus();
+    await userEvent.keyboard('{Enter}');
+    expect(clicks).toEqual(['apricot']);
+    await open(trigger);
+    item('banana').focus();
+    await userEvent.keyboard(' ');
+    expect(clicks).toEqual(['apricot', 'banana']);
+    await open(trigger);
+    item('link').focus();
+    await userEvent.keyboard(' ');
+    expect(clicks).toEqual(['apricot', 'banana', 'link']);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    await open(trigger);
+    await userEvent.keyboard('b');
+    item('banana').focus();
+    await userEvent.keyboard(' ');
+    expect(active()).toBe(input());
+    expect(input().value).toBe('b ');
+    expect(clicks).toEqual(['apricot', 'banana', 'link']);
   });
 
   test('a horizontal list: Down gives the first item, and Left and Right move the caret while the input has text', async () => {

@@ -40,7 +40,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => props.disabled || submenu.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as ?? 'div'),
   role: 'menuitem',
   menu: parent,
 });
@@ -105,6 +105,11 @@ function onKeydown(event: KeyboardEvent) {
   keyClick = !event.defaultPrevented && (event.key === 'Enter' || event.key === ' ');
 }
 
+// A key that a listener prevented gave no click, and the click of this press is no key click.
+function onPointerdown() {
+  keyClick = false;
+}
+
 function onClick(event: MouseEvent) {
   const fromKey = keyClick;
   keyClick = false;
@@ -130,6 +135,7 @@ function elementProps() {
       'aria-controls': controlled?.id || undefined,
       'data-popup-open': isOpen ? '' : undefined,
       onKeydown,
+      onPointerdown,
       onClick,
       ...hover.listeners,
     },

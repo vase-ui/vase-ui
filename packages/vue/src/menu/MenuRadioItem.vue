@@ -29,7 +29,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => props.disabled || group.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as ?? 'div'),
   role: 'menuitemradio',
 });
 const checked = computed(() => Object.is(group.value, props.value));

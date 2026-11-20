@@ -196,7 +196,9 @@ export function useMenuRoot<Payload>(
         if (reason === 'sibling-open' || reason === 'list-navigation') return 'group';
         if (open && replacesSibling) return 'group';
       }
-      if (reason === 'trigger-press' && (event as MouseEvent).detail === 0) return 'click';
+      // A `contextmenu` and a `pointerdown` also have `detail` 0 in some browsers.
+      const keyClick = event.type === 'click' && (event as MouseEvent).detail === 0;
+      if (reason === 'trigger-press' && keyClick) return 'click';
       if (!open && (reason === 'escape-key' || reason === 'none')) return 'dismiss';
       return undefined;
     },

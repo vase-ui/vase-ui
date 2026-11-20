@@ -64,13 +64,11 @@ const removeLeaving = root.addLeaving(() => element.value);
 onUnmounted(removeLeaving);
 
 function onKeydown(event: KeyboardEvent) {
-  const filter = menu.filter;
-  if (!filter?.input.value) {
-    menu.onKeydown(event);
-    return;
-  }
+  // A submenu with no portal is in this popup, and it takes its own keys.
   if (menu.openChild?.root.popup?.contains(event.target as Node)) return;
-  filter.takeKey(event);
+  const filter = menu.filter;
+  if (filter?.input.value) filter.takeKey(event);
+  else menu.onKeydown(event);
 }
 
 function elementProps() {

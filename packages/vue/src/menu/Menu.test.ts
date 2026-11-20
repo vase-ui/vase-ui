@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Menu, type MenuRootChangeEventDetails } from '@vase-ui/vue/menu';
+import { platform } from '../common/platform';
 import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
@@ -202,14 +203,24 @@ describe('the parts', () => {
     expect(byTestId('group')).toHaveAttribute('aria-labelledby', 'second');
   });
 
-  test('`as` renders the tag; a trigger in a `<span>` is a button with a tab stop', async () => {
-    const { trigger } = await mountMenu({ trigger: { as: 'span' }, popup: { as: 'section' } });
+  test('`as` renders the tag; a trigger in a `<span>` is a button with a tab stop; its Enter does not press an item in a `<button>`, which submits no form', async () => {
+    const { trigger } = await mountMenu({
+      trigger: { as: 'span' },
+      popup: { as: 'section' },
+      items: [{ key: 'a', attrs: { as: 'button' } }, { key: 'b' }],
+    });
     expect(trigger.localName).toBe('span');
     expect(trigger).toHaveAttribute('role', 'button');
     expect(trigger).toHaveAttribute('tabindex', '0');
     trigger.focus();
     await userEvent.keyboard('{Enter}');
     expect((await opened()).localName).toBe('section');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).not.toBe(null);
+    expect(item('a').localName).toBe('button');
+    expect(item('a')).toHaveAttribute('type', 'button');
+    expect(item('b')).not.toHaveAttribute('type');
   });
 });
 
@@ -387,6 +398,29 @@ describe('the trigger', () => {
       await placed();
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(document.querySelector('[data-highlighted]')).toBe(null);
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'after an Enter that a listener prevented, a tap opens the menu and the submenu with no highlight',
+    async () => {
+      const prevent = { onKeydown: (event: KeyboardEvent) => event.preventDefault() };
+      const { trigger } = await mountMenu({
+        trigger: prevent,
+        submenu: { trigger: { ...prevent, openOnHover: false } },
+      });
+      trigger.focus();
+      await userEvent.keyboard('{Enter}');
+      await touchDrag(centerOf(trigger), centerOf(trigger), 0);
+      await placed();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(document.querySelector('[data-highlighted]')).toBe(null);
+      item('sub').focus();
+      await userEvent.keyboard('{Enter}');
+      await touchDrag(centerOf(item('sub')), centerOf(item('sub')), 0);
+      await opened(subPopup);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect([...document.querySelectorAll('[data-highlighted]')]).toEqual([item('sub')]);
     },
   );
 
@@ -912,6 +946,9 @@ describe('submenus', () => {
     await userEvent.keyboard('{ArrowRight}');
     await opened(subPopup);
     await waitFor(() => expect(active()).toBe(item('s1')));
+    // VoiceOver reads a change of `aria-expanded` in place of the first item of the submenu.
+    if (platform.os.apple) expect(item('sub')).not.toHaveAttribute('aria-expanded');
+    else expect(item('sub')).toHaveAttribute('aria-expanded', 'true');
     await userEvent.keyboard('{ArrowDown}');
     expect(active()).toBe(item('s2'));
     await userEvent.keyboard('{ArrowLeft}');
@@ -1145,6 +1182,20 @@ describe('submenus', () => {
     await userEvent.keyboard('{Tab}');
     await closed();
     expect(active()?.id).toBe('after');
+  });
+
+  test('a submenu with no portal takes its own keys: a key that it does not use moves nothing in the parent', async () => {
+    const { trigger } = await mountMenu(
+      submenu({ root: { orientation: 'horizontal' }, portal: { disabled: true } }),
+    );
+    await openWithKeyboard(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowDown}');
+    expect(active()).toBe(item('s1'));
+    expect(item('sub')).toHaveAttribute('data-highlighted');
+    await userEvent.keyboard('{ArrowRight}');
+    expect(active()).toBe(item('s2'));
   });
 
   test('a submenu in a submenu: the parent closes each submenu above it', async () => {
