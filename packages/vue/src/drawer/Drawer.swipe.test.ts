@@ -1,6 +1,6 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { nextTick, reactive } from 'vue';
+import { defineComponent, h, nextTick, reactive } from 'vue';
 import type { DrawerSnapPoint } from '@vase-ui/vue/drawer';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import { touchDrag } from '../../test/pointer';
@@ -207,6 +207,19 @@ describe('the swipe that closes', () => {
     expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('200px');
     expect(Number(popup.style.getPropertyValue('--drawer-swipe-strength'))).toBeLessThanOrEqual(1);
     expect(popup.style.transition).toBe('');
+    await waitFor(() => expect(popup.isConnected).toBe(false));
+  });
+
+  test('VUE-139: gives the backdrop the strength of the popup at the release', async () => {
+    await mountDrawer({ transition: true, backdrop: {} });
+    const popup = get('popup');
+    const backdrop = get('backdrop');
+    await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+    await drag(textOf(), { x: 0, y: 200 }, 4);
+    await nextTick();
+    const strength = popup.style.getPropertyValue('--drawer-swipe-strength');
+    expect(Number(strength)).toBeLessThan(1);
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-strength')).toBe(strength);
     await waitFor(() => expect(popup.isConnected).toBe(false));
   });
 
@@ -495,6 +508,43 @@ describe('the swipe area', () => {
     await userEvent.keyboard('{Escape}');
     await closed();
     await waitFor(() => expect(document.activeElement).toBe(button));
+  });
+
+  test('VUE-57: ends the swipe when the area unmounts, and the popup goes to its open place', async () => {
+    const shown = reactive({ area: true });
+    const log: string[] = [];
+    const root = reactive({
+      defaultOpen: false,
+      onOpenChange: (open: boolean) => log.push(`${open}`),
+    });
+    mount(
+      defineComponent(
+        () => () =>
+          h(DrawerParts, {
+            swipeArea: shown.area ? {} : undefined,
+            trigger: null,
+            backdrop: {},
+            provider: true,
+            root,
+          }),
+      ),
+    );
+    await nextTick();
+    await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await nextTick();
+    expect(get('popup').hasAttribute('data-swiping')).toBe(true);
+    shown.area = false;
+    await waitFor(() => expect(byTestId('swipe-area')).toBe(null));
+    await nextTick();
+    const popup = get('popup');
+    expect(popup.hasAttribute('data-swiping')).toBe(false);
+    expect(popup.style.transition).toBe('');
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    expect(get('backdrop').style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(get('indent').style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(log).toEqual(['true']);
   });
 
   test('opens nothing while disabled', async () => {
