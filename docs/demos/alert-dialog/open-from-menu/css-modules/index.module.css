@@ -229,8 +229,8 @@
   gap: 0.75rem;
 }
 
-/* The enter-from and leave-to class of the `<Transition>` around the popup. */
-.PopupHidden {
+/* The enter-from and leave-to class of the `<Transition>` around the part. */
+.MenuPopupHidden {
   opacity: 0;
   transform: scale(0.98);
 }

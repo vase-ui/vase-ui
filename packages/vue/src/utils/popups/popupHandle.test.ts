@@ -346,31 +346,3 @@ describe('BasePopupHandle', () => {
     });
   });
 });
-
-describe('concrete popup handles', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it.each<{
-    component: string;
-    warningName: string;
-    createHandle: () => { open(triggerId: string): void; close(): void; readonly isOpen: boolean };
-  }>([
-  ])(
-    '$component handle is closed and names itself in warnings while no root is attached',
-    ({ warningName, createHandle }) => {
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const handle = createHandle();
-
-      handle.open('trigger');
-      handle.close();
-
-      expect(handle.isOpen).toBe(false);
-      expect(consoleWarn.mock.calls).toEqual([
-        [expect.stringContaining(`${warningName}Handle.open() was called while`)],
-        [expect.stringContaining(`${warningName}Handle.close() was called while`)],
-      ]);
-    },
-  );
-});

@@ -7,7 +7,8 @@ import styles from './index.module.css';
 
 const dialogOpen = shallowRef(false);
 const backdropHiddenClass = styles.BackdropHidden;
-const popupHiddenClass = styles.DialogPopupHidden;
+const menuPopupHiddenClass = styles.MenuPopupHidden;
+const dialogPopupHiddenClass = styles.DialogPopupHidden;
 
 const CaretDownIcon: FunctionalComponent = () =>
   h(
@@ -21,8 +22,6 @@ const CaretDownIcon: FunctionalComponent = () =>
     },
     [h('path', { d: 'M12 6H4l4 4.5z' })],
   );
-
-const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -33,7 +32,11 @@ const popupHiddenClass = styles.PopupHidden;
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition
+          :enter-from-class="menuPopupHiddenClass"
+          :leave-to-class="menuPopupHiddenClass"
+          appear
+        >
           <Menu.Popup :class="styles.MenuPopup">
             <Menu.Item :class="styles.MenuItem">Play</Menu.Item>
             <Menu.Item :class="styles.MenuItem">Share</Menu.Item>
@@ -54,7 +57,11 @@ const popupHiddenClass = styles.PopupHidden;
       >
         <AlertDialog.Backdrop :class="styles.Backdrop" />
       </Transition>
-      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+      <Transition
+        :enter-from-class="dialogPopupHiddenClass"
+        :leave-to-class="dialogPopupHiddenClass"
+        appear
+      >
         <AlertDialog.Popup :class="styles.DialogPopup">
           <div :class="styles.Intro">
             <AlertDialog.Title :class="styles.Title">Delete playlist?</AlertDialog.Title>
