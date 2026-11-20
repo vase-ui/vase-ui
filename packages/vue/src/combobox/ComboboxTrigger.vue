@@ -36,11 +36,13 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const { root } = context;
 const isControl = useTriggerIsControl(context);
-const id = computed(() => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId));
+const elementId = computed(
+  () => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId),
+);
 
 const trigger = usePopupTrigger(() => (isControl.value ? root : null), {
   element,
-  id: () => id.value,
+  id: () => elementId.value,
   payload: () => undefined,
   disabled: () => context.disabled || props.disabled,
   tag: useAsTag(() => props.as),
@@ -120,17 +122,19 @@ function typeahead(event: KeyboardEvent) {
   if (context.mode !== 'single' || context.readonly || root.open) return;
   if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey) return;
   if (event.key === ' ' && typed === '') return;
-  const values = context.data
-    ? context.dataValues
-    : context.list.items().map((item) => context.valueOf(item));
+  // The labels come from `items`, else from the mounted items of a kept popup.
+  const mounted = context.mountedItems();
+  const values = context.data ? context.dataValues : mounted.map((item) => item.value);
   const current = values.findIndex((value) => context.isSelected(value));
   if (typed === '') typedFrom = current;
   typed += event.key;
   clearTimeout(typedTimer);
   typedTimer = setTimeout(() => (typed = ''), TYPEAHEAD_RESET_MS);
   if (event.key === ' ') event.preventDefault();
+  // A mounted item that is disabled gives no match.
+  const disabled = new Set(mounted.filter((item) => item.disabled).map((item) => item.value));
   const index = nextTextMatch(
-    values.map((value) => context.labelOf(value)),
+    values.map((value) => (disabled.has(value) ? '' : context.labelOf(value))),
     typed,
     typedFrom,
     current,
@@ -177,7 +181,7 @@ function elementProps() {
         ...(field && fieldStateAttributes(field.state)),
       };
   Object.assign(own, {
-    id: id.value,
+    id: elementId.value,
     'aria-expanded': open ? 'true' : 'false',
     'data-popup-side': context.popupSide ?? undefined,
     'data-list-empty': context.empty ? '' : undefined,

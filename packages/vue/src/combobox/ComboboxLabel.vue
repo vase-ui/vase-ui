@@ -23,11 +23,11 @@ const field = inject(fieldKey, null);
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const id = computed(() => givenId(props.id) ?? generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
 const removeLabel = context.setLabel({
   get id() {
-    return id.value;
+    return elementId.value;
   },
 });
 onUnmounted(removeLabel);
@@ -48,7 +48,7 @@ function onClick() {
 
 function elementProps() {
   return mergeProps(
-    { id: id.value, ...fieldStateAttributes(state.value, context.disabled), onClick },
+    { id: elementId.value, ...fieldStateAttributes(state.value, context.disabled), onClick },
     attrs,
   );
 }

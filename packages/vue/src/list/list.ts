@@ -202,7 +202,7 @@ export function useList(options: ListOptions): List {
     }
     if (key !== 'ArrowDown' && key !== 'ArrowUp') return undefined;
     const step = key === 'ArrowDown' ? 1 : -1;
-    let nextRow = rows[rowIndex + step];
+    let nextRow: ListItem[] | undefined = rows[rowIndex + step];
     if (!nextRow) {
       if (options.canLeave?.()) return null;
       if (!options.loop()) return current;

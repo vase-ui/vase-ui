@@ -36,7 +36,9 @@ const chipsContext: ChipsContext = {
     return !!el && ownerWindow(el).getComputedStyle(el).direction === 'rtl';
   },
   focusChip(index) {
-    ordered().at(index)?.focus();
+    const chip = ordered().at(index);
+    chip?.focus();
+    return !!chip;
   },
   addChip(chip) {
     chips.push(chip);

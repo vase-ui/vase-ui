@@ -102,4 +102,17 @@ describe('createItems', () => {
     expect(getValue).toHaveBeenCalled();
     expect(takeReportedMessages().join('\n')).toContain('derived the value 1');
   });
+  test('VUE-65: the accessors of grouped data get the leaf items', () => {
+    const seen: string[] = [];
+    const items = Combobox.createItems([{ items: COUNTRIES }], {
+      getValue: (country) => {
+        seen.push(country.name);
+        return country.id;
+      },
+      getLabel: (country) => country.name,
+    });
+    mount(ComboboxCollection, { items, root: { defaultValue: 3 } });
+    expect(input().value).toBe('Greece');
+    expect([...new Set(seen)]).toEqual(['France', 'Germany', 'Greece']);
+  });
 });

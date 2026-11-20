@@ -88,7 +88,7 @@ export function useComboboxForm(
     // The labels come from `items`, else from the mounted items of a kept popup.
     const values = context.data
       ? context.dataValues
-      : context.list.items().map((item) => context.valueOf(item));
+      : context.mountedItems().map((item) => item.value);
     const match = values.find(
       (value) =>
         context.formTextOf(value).toLowerCase() === lower ||

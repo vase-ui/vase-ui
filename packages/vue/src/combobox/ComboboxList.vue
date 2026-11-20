@@ -23,14 +23,14 @@ const context = injectComboboxRoot('List');
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const id = computed(() => givenId(props.id) ?? generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
 const removeList = context.setList({
   get element() {
     return element.value;
   },
   get id() {
-    return id.value;
+    return elementId.value;
   },
 });
 onUnmounted(removeList);
@@ -40,7 +40,7 @@ const state = computed<ComboboxListState>(() => ({ empty: context.empty }));
 function elementProps() {
   return mergeProps(
     {
-      id: id.value,
+      id: elementId.value,
       role: context.grid ? 'grid' : 'listbox',
       'aria-multiselectable': context.mode === 'multiple' ? 'true' : undefined,
       // In a grid the attribute says that the cells cannot change.

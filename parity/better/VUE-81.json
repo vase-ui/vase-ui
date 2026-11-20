@@ -9,6 +9,6 @@
     "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#attr-fe-autocomplete-off",
     "https://html.spec.whatwg.org/multipage/input.html#hidden-state-(type=hidden)"
   ],
-  "behavior": "`Select.Root`, `Combobox.Root` and `Autocomplete.Root` take the value of their input when the input changed with no event that the part handled, as for an autofill. This occurs when the browser restores the form state of the page after a history move or a reload. The part then emits its change events one time, and the input, the part and the model agree. When a parent that controls the part keeps its value, the input goes back. A `Select.Root`, a `Combobox.Root` or an `Autocomplete.Root` whose input is `type=\"hidden\"` keeps its value. With React 19.3, Base UI keeps the changed input and its state does not follow, so the part shows one state and the form submits the other.",
+  "behavior": "`Select.Root` takes the value of their input when the input changed with no event that the part handled, as for an autofill. This occurs when the browser restores the form state of the page after a history move or a reload. The part then emits its change events one time, and the input, the part and the model agree. When a parent that controls the part keeps its value, the input goes back. A `Select.Root` whose input is `type=\"hidden\"` keeps its value. With React 19.3, Base UI keeps the changed input and its state does not follow, so the part shows one state and the form submits the other.",
   "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx"
 }

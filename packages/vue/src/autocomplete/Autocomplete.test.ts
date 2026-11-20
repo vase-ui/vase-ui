@@ -85,6 +85,18 @@ describe('the text', () => {
     await nextTick();
     expect(highlighted()).toBe('fix');
   });
+  test('VUE-59: a cancel of the change keeps the text of an uncontrolled root', async () => {
+    await mountAutocomplete({
+      root: {
+        onValueChange: (_: string, details: AutocompleteRootChangeEventDetails) => details.cancel(),
+      },
+    });
+    input().focus();
+    await userEvent.keyboard('f');
+    await nextTick();
+    await nextTick();
+    expect(input().value).toBe('');
+  });
 });
 
 describe('the modes', () => {

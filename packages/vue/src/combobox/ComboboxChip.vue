@@ -42,8 +42,8 @@ provide(chipKey, {
 /** Removes the value of the chip. */
 function remove(event: Event) {
   const el = element.value;
-  const values = context.value as unknown[];
-  if (!el || context.readonly || disabled.value) return;
+  const values = context.value;
+  if (!el || !Array.isArray(values) || context.readonly || disabled.value) return;
   const index = chips.indexOf(el);
   if (index === -1) return;
   context.setValue(
@@ -64,20 +64,16 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key === forward || event.key === back) {
     event.preventDefault();
     const next = index + (event.key === forward ? 1 : -1);
-    const count = (context.value as unknown[]).length;
-    if (next >= count) input?.focus();
-    else if (next >= 0) chips.focusChip(next);
+    if (next >= 0 && !chips.focusChip(next)) input?.focus();
     return;
   }
-  if (event.key === 'Backspace' || event.key === 'Delete') {
+  if ((event.key === 'Backspace' || event.key === 'Delete') && Array.isArray(context.value)) {
     event.preventDefault();
     remove(event);
     // The focus goes to the chip in its place, else the chip before it, else the input, after the
     // chips render the new value.
     void nextTick(() => {
-      const next = Math.min(index, (context.value as unknown[]).length - 1);
-      if (next >= 0) chips.focusChip(next);
-      else input?.focus();
+      if (!chips.focusChip(index) && !(index > 0 && chips.focusChip(index - 1))) input?.focus();
     });
     return;
   }

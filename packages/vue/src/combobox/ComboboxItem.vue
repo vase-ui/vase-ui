@@ -9,6 +9,7 @@ import type { ComboboxItemProps, ComboboxItemState } from './types';
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ComboboxItemProps>(), {
+  value: null,
   index: undefined,
   disabled: false,
 });
@@ -27,15 +28,13 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
-// An item with no value has the value `null`.
-const value = () => (props.value === undefined ? null : props.value);
 // Each value that the item reads is a primitive of its own, so a highlight step renders only the
 // two items whose highlight changes (discussion #665).
-const disabled = computed(() => context.disabled || props.disabled);
-const selected = computed(() => context.isSelected(value()));
+const isDisabled = computed(() => context.disabled || props.disabled);
+const selected = computed(() => context.isSelected(props.value));
 const { highlighted, attributes } = useListItem(context.list, element, {
   label: () => undefined,
-  disabled: () => disabled.value,
+  disabled: () => isDisabled.value,
 });
 watch(
   element,
@@ -43,8 +42,9 @@ watch(
     if (!el) return;
     onCleanup(
       context.addItem(el, {
-        value,
+        value: () => props.value,
         index: () => props.index,
+        disabled: () => isDisabled.value,
       }),
     );
   },
@@ -52,13 +52,13 @@ watch(
 );
 
 const state = computed<ComboboxItemState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   selected: selected.value,
   highlighted: highlighted.value,
 }));
 
 function onClick(event: MouseEvent) {
-  if (!disabled.value) context.select(value(), event);
+  if (!isDisabled.value) context.select(props.value, event);
 }
 
 function elementProps() {
@@ -68,7 +68,7 @@ function elementProps() {
       id: givenId(props.id) ?? generatedId,
       role: inRow ? 'gridcell' : 'option',
       'aria-selected': context.mode === 'none' ? undefined : selected.value ? 'true' : 'false',
-      'aria-disabled': disabled.value ? 'true' : undefined,
+      'aria-disabled': isDisabled.value ? 'true' : undefined,
       onClick,
     },
     attrs,

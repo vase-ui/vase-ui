@@ -6,35 +6,144 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
-      "describe": ["<Autocomplete.Root />", "Form"],
-      "title": "server-renders only the inline input name for native FormData",
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
+      "reason": "`Autocomplete.test.ts` tests the items: a pick makes the text of the item the value, and an item has no `aria-selected`. The native `click` listener of an item replaces `onClick`."
     },
     {
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
-      "describe": ["<Autocomplete.Root />", "Form"],
-      "title": "server-renders only the outside-popup input name for native FormData",
       "kind": "replaced",
-      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
+      "reason": "`Autocomplete.test.ts` tests the root through its parts: the text as the value, `autoHighlight`, `keepHighlight`, the modes and the inline completion, the form and `submitOnItemClick`. `Autocomplete.hydration.test.ts` tests the one name of the server HTML. The parts of Combobox, which Autocomplete exports, have their tests in the folder of Combobox. The parts have no transition status and no unmount action (rule 8.9)."
     },
     {
-      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
-      "describe": ["<Autocomplete.Root />", "Form"],
-      "title": "server-renders the default popup input value without a form name before hydration",
+      "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
-      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+      "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
+      "reason": "`Autocomplete.test.ts` tests that `Value` in the trigger shows the text."
     },
     {
-      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
-      "describe": ["<Autocomplete.Root />", "Field"],
-      "title": "[data-focused]",
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/Combobox.spec.tsx",
+      "reason": "`Combobox.spec.tsx` tests the types of Autocomplete: the text of the change event and the state of an item."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/clear/AutocompleteClearDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The case tests the focused state of the field, which is cut. CSS selects `:focus` and `:focus-within` (rule 8.15)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/input-group/AutocompleteInputGroupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1), so it takes `as`. `readonly` replaces `readOnly` (rule 8.2). The `id` prop is on `Input` and `Trigger`, the part that has the role (rule 8.4). `inputRef` and `actionsRef` are the template ref, with `inputElement`, `close()` and `element`. `form` names the form of the inputs, as the native attribute does. The unmount action and `openChangeComplete` are cut: the `<Transition>` hooks run after the animations (rule 8.9). No part sends `close-press`: only the hidden dismiss buttons sent it, and they are cut. No part of Autocomplete sends `chip-remove-press`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Clear",
+      "kind": "not-applicable",
+      "reason": "The button reads its element, so it has no `nativeButton` (rule 8.3). `<Transition>` animates it, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Portal",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. It takes `defer` and `disabled` of `<Teleport>`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "`<Transition>` animates the backdrop, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "`<Transition>` animates the popup, and a kept popup has `[hidden]`, so its state has no `transitionStatus` (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Item",
+      "kind": "not-applicable",
+      "reason": "The item reads its element, so it has no `nativeButton` (rule 8.3). Autocomplete exports the item of Combobox, and its props are the props of that part."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Group",
+      "kind": "not-applicable",
+      "reason": "`v-for` over the items of the group renders them, so the group takes no `items`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Collection",
+      "kind": "not-applicable",
+      "reason": "The part is cut. `v-for` over the items of a group, and the `item` slot of `List`, render the items."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteClearDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteSeparatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
@@ -75,9 +184,24 @@
   ],
   "surfaceAdditions": [
     {
-      "entry": "Trigger",
+      "entry": "Root",
+      "prop": "as",
+      "reason": "The root renders a `<div>` that holds the inputs of its form (rule 8.1). `as` gives it another tag or a component (rule 6.1)."
+    },
+    {
+      "entry": "Root",
+      "prop": "readonly",
+      "reason": "The native name of the attribute (rule 8.2). A read-only root opens and moves the highlight, and the user cannot change its text."
+    },
+    {
+      "entry": "Root",
+      "exposed": "element",
+      "reason": "A template ref of a part has its element (rule 6.2)."
+    },
+    {
+      "entry": "List",
       "prop": "id",
-      "reason": "The part reads `id` to name its element and, while the input is inside the popup, to register its control, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` for `aria-controls` of the input, or a generated id when `id` is absent, so it is a declared prop."
     },
     {
       "entry": "List",
@@ -85,14 +209,34 @@
       "reason": "The slot renders each filtered item with `{ item, index }`. It replaces the function child of the list in Base UI."
     },
     {
-      "entry": "GroupLabel",
-      "prop": "id",
-      "reason": "The part registers `id` with its group for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the update."
     },
     {
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-controls` of the trigger, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "Item",
+      "prop": "id",
+      "reason": "The part reads `id` for `aria-activedescendant` of the input, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "GroupLabel",
+      "prop": "id",
+      "reason": "The part gives `id` to the group for `aria-labelledby`, or a generated id when `id` is absent, so it is a declared prop."
+    },
+    {
+      "entry": "Empty",
+      "stateField": "empty",
+      "reason": "The state says that the list is empty, for an element of the developer in the `element` slot."
     }
   ],
   "returnTypeDifferences": [
@@ -107,5 +251,56 @@
       "reason": "`setup` runs one time, so a plain array does not follow a change of the filtered items. The composable thus returns a `ComputedRef` of the array."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/autocomplete/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/autocomplete/parts.ts",
+      "behavior": "The parts of the namespace `Autocomplete`.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/input-group/AutocompleteInputGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxInputGroup.vue",
+      "behavior": "Autocomplete exports the group of Combobox.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxItem.vue",
+      "behavior": "Autocomplete exports the item of Combobox, which has no `aria-selected` in a root that selects no value.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/autocomplete/AutocompleteRoot.vue",
+      "behavior": "The root of the autocomplete: the text is the value.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/separator/AutocompleteSeparator.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxSeparator.vue",
+      "behavior": "Autocomplete exports the separator of Combobox.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/combobox/ComboboxTrigger.vue",
+      "behavior": "Autocomplete exports the trigger of Combobox.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/autocomplete/AutocompleteValue.vue",
+      "behavior": "`Value` shows the text of the input.",
+      "witness": "packages/vue/src/autocomplete/Autocomplete.test.ts"
+    }
+  ]
 }

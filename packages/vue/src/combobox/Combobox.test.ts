@@ -8,6 +8,7 @@ import {
 } from '@vase-ui/vue/combobox';
 import ComboboxChips from '../../test/fixtures/ComboboxChips.vue';
 import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
+import TextareaCombobox from '../../test/fixtures/ComboboxTextarea.vue';
 import { mount, mountError } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -649,6 +650,139 @@ describe('clear', () => {
   test('a kept button has `hidden` with no value', async () => {
     await mountCombobox({ clear: { keepMounted: true } });
     expect(byTestId('clear')).toHaveAttribute('hidden');
+  });
+});
+
+describe('the parts of the popup', () => {
+  test('the positioner anchors to the group of the input and tells its side', async () => {
+    await mountCombobox({ root: { defaultOpen: true } });
+    await opened();
+    const positioner = byTestId('positioner')!;
+    await waitFor(() => expect(positioner.style.visibility).toBe(''));
+    const group = byTestId('group')!;
+    group.style.width = '400px';
+    await waitFor(() => {
+      const { left, width } = positioner.getBoundingClientRect();
+      expect(Math.abs(left + width / 2 - 200)).toBeLessThan(2);
+    });
+    expect(positioner).toHaveAttribute('data-side', 'bottom');
+    expect(input()).toHaveAttribute('data-popup-side', 'bottom');
+    expect(byTestId('group')).toHaveAttribute('data-popup-side', 'bottom');
+  });
+
+  test('Icon is a hidden span with an arrow; Value shows the label of the value, else the placeholder', async () => {
+    const root = reactive<Props>({ modelValue: null });
+    await mountCombobox({ inputInPopup: true, root });
+    expect(trigger()).toHaveTextContent('Pick a fruit');
+    expect(trigger()).toHaveAttribute('data-placeholder');
+    root.modelValue = 'Lemon';
+    await nextTick();
+    expect(trigger()).toHaveTextContent('Lemon');
+    expect(trigger()).not.toHaveAttribute('data-placeholder');
+    const icon = mount(Combobox.Icon).root.firstElementChild!;
+    expect(icon.localName).toBe('span');
+    expect(icon).toHaveAttribute('aria-hidden', 'true');
+    expect(icon).toHaveTextContent('▼');
+  });
+
+  test('the slot of an item gets its state; a selected item has `aria-selected`', async () => {
+    await mountCombobox({ root: { defaultValue: 'Banana', defaultOpen: true } });
+    await opened();
+    expect(item('Banana')).toHaveAttribute('aria-selected', 'true');
+    expect(item('Apple')).toHaveAttribute('aria-selected', 'false');
+  });
+
+  test('the text of Status and of Empty comes one task after the mount; Empty shows only for an empty list', async () => {
+    await mountCombobox({ status: true, empty: true, root: { defaultOpen: true } });
+    await opened();
+    expect(byTestId('status')).toHaveAttribute('role', 'status');
+    expect(byTestId('status')).toHaveAttribute('aria-live', 'polite');
+    expect(byTestId('empty')).toHaveAttribute('aria-atomic', 'true');
+    expect(byTestId('status')).toHaveTextContent('');
+    await waitFor(() => expect(byTestId('status')).toHaveTextContent('Ten fruits.'));
+    expect(byTestId('empty')).toHaveTextContent('');
+    input().focus();
+    await userEvent.keyboard('zz');
+    await waitFor(() => expect(byTestId('empty')).toHaveTextContent('No fruit.'));
+    expect(byTestId('positioner')).toHaveAttribute('data-empty');
+    expect(input()).toHaveAttribute('data-list-empty');
+  });
+
+  test('Escape on an empty list with no Empty goes on to a popup around it', async () => {
+    await mountCombobox({ root: { defaultOpen: true } });
+    await opened();
+    input().focus();
+    await userEvent.keyboard('zz');
+    const outer: string[] = [];
+    document.addEventListener('keydown', (event) => outer.push(event.key), { once: true });
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(outer).toEqual(['Escape']);
+  });
+});
+
+describe('fixes of Base UI', () => {
+  test('BUG-5574: a pick with the mouse while a composition runs leaves no composed text in the input', async () => {
+    await mountCombobox();
+    await userEvent.click(input());
+    await opened();
+    input().dispatchEvent(new CompositionEvent('compositionstart', { data: '' }));
+    input().value = 'ba';
+    input().dispatchEvent(
+      new InputEvent('input', { inputType: 'insertCompositionText', data: 'ba' }),
+    );
+    await userEvent.click(item('Cherry'));
+    await closed();
+    expect(input().value).toBe('Cherry');
+  });
+
+  test('BUG-5776: the typeahead of a closed trigger skips a mounted item that is disabled', async () => {
+    const values: unknown[] = [];
+    await mountCombobox({
+      inputInPopup: true,
+      portal: { keepMounted: true },
+      itemProps: { Apple: { disabled: true } },
+      root: { 'onUpdate:modelValue': (value: unknown) => values.push(value) },
+    });
+    trigger().focus();
+    await userEvent.keyboard('a');
+    expect(values).toEqual(['Apricot']);
+  });
+
+  test('VUE-100: Home and End in an input in the popup move the caret, and not the highlight', async () => {
+    await mountCombobox({ inputInPopup: true });
+    await userEvent.click(trigger());
+    await waitFor(() => expect(document.activeElement).toBe(input()));
+    await userEvent.keyboard('ap{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Apple'));
+    await userEvent.keyboard('{Home}');
+    expect(input().selectionStart).toBe(0);
+    expect(highlighted()).toBe('Apple');
+    await userEvent.keyboard('{Shift>}{End}{/Shift}');
+    expect([input().selectionStart, input().selectionEnd]).toEqual([0, 2]);
+  });
+
+  test('VUE-122: the keys of the chips do nothing for a value that is not a list', async () => {
+    mount(ComboboxChips, { root: { multiple: false, modelValue: 'Apple' } });
+    await nextTick();
+    input().focus();
+    await userEvent.keyboard('{ArrowLeft}{Backspace}');
+    expect(document.activeElement).toBe(input());
+  });
+
+  test('VUE-97: a `<textarea>` in the slot of the input keeps its arrow keys and Home and End, and has the role only while the list shows', async () => {
+    mount(TextareaCombobox);
+    await nextTick();
+    const textarea = document.querySelector('textarea')!;
+    expect(textarea).not.toHaveAttribute('role');
+    expect(textarea).not.toHaveAttribute('autocomplete');
+    textarea.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(popup()).toBe(null);
+    await userEvent.keyboard('a');
+    await opened();
+    await waitFor(() => expect(textarea).toHaveAttribute('role', 'combobox'));
+    expect(textarea).toHaveAttribute('aria-expanded', 'true');
   });
 });
 

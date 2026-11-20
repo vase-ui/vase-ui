@@ -6,6 +6,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/AriaCombobox.tsx#L1351",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/trigger/ComboboxTrigger.tsx#L95-L97"
   ],
-  "behavior": "An expanded `Combobox.Input` or `Autocomplete.Input` names in `aria-controls` only the id that the list element has now. It has no `aria-controls` while the list has an empty `id`. The input, and a `Combobox.Trigger` or `Autocomplete.Trigger` beside it, follow each change of the `id` of the list. Base UI renders `aria-controls=\"\"` on the input for a list with an empty `id`. Base UI reads the `id` of the list when the root or the trigger renders, so after a change of the `id` they name the old id until they render again.",
+  "behavior": "An expanded `Combobox.Input` or `Autocomplete.Input` names the list in `aria-controls` only while a list element is in the document. A trigger beside the input does the same. Base UI renders `aria-controls=\"\"` on the input for a list with an empty `id`, and names the default id of the list while no list is mounted.",
   "dueWith": "packages/react/src/combobox/root/AriaCombobox.tsx"
 }

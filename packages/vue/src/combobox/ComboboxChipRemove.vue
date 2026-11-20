@@ -39,12 +39,13 @@ const state = computed<ComboboxChipRemoveState>(() => ({ disabled: button.disabl
 // Removes the value of the chip, and gives the focus to the input.
 function onClick(event: MouseEvent) {
   const el = chip.element;
-  if (!el || context.readonly) return;
+  const values = context.value;
+  if (!el || !Array.isArray(values) || context.readonly) return;
   const index = chips.indexOf(el);
   if (index === -1) return;
   const details = createComboboxDetails('chip-remove-press', event);
   context.setValue(
-    (context.value as unknown[]).filter((_, at) => at !== index),
+    values.filter((_, at) => at !== index),
     details,
   );
   context.input?.focus();

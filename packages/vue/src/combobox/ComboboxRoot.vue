@@ -61,7 +61,11 @@ defineSlots<{ default?(): unknown }>();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
-const { context, close, form } = useComboboxRoot(
+const {
+  context,
+  close,
+  form: formInputs,
+} = useComboboxRoot(
   {
     family: 'Combobox',
     get mode() {
@@ -182,7 +186,7 @@ defineExpose({
   <component :is="as" v-if="as" v-bind="attrs" :ref="setElement">
     <slot />
     <input
-      v-for="(text, index) in form.values.value"
+      v-for="(text, index) in formInputs.values.value"
       :key="index"
       type="hidden"
       :name="context.name"
@@ -190,12 +194,16 @@ defineExpose({
       :disabled="context.disabled"
       :value="text"
     />
-    <input v-if="form.rendersInputs()" v-bind="form.textInputProps()" :ref="setTextInput" />
+    <input
+      v-if="formInputs.rendersInputs()"
+      v-bind="formInputs.textInputProps()"
+      :ref="setTextInput"
+    />
   </component>
   <div v-else v-bind="attrs" :ref="setElement">
     <slot />
     <input
-      v-for="(text, index) in form.values.value"
+      v-for="(text, index) in formInputs.values.value"
       :key="index"
       type="hidden"
       :name="context.name"
@@ -203,6 +211,10 @@ defineExpose({
       :disabled="context.disabled"
       :value="text"
     />
-    <input v-if="form.rendersInputs()" v-bind="form.textInputProps()" :ref="setTextInput" />
+    <input
+      v-if="formInputs.rendersInputs()"
+      v-bind="formInputs.textInputProps()"
+      :ref="setTextInput"
+    />
   </div>
 </template>

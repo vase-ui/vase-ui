@@ -66,7 +66,9 @@ onUnmounted(removeInput);
 
 const isControl = computed(() => !inPopup || context.inline);
 const isDisabled = computed(() => context.disabled || props.disabled);
-const id = computed(() => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId));
+const elementId = computed(
+  () => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId),
+);
 // A `<textarea>` in the slot has the role only while the list shows (VUE-97). The server HTML and
 // the first render have the attributes of an `<input>`.
 const isInput = computed(
@@ -82,7 +84,7 @@ watch(
     onCleanup(
       root.addTrigger({
         get id() {
-          return id.value;
+          return elementId.value;
         },
         element: el,
         payload: undefined,
@@ -285,7 +287,7 @@ function elementProps() {
   const highlighted = list.highlighted;
   const required = context.required && isControl.value;
   const own: Record<string, unknown> = {
-    id: id.value,
+    id: elementId.value,
     value: composed.value ?? shown(),
     disabled: isDisabled.value,
     readonly: context.readonly,

@@ -222,15 +222,11 @@ export interface ComboboxLabelState extends FieldState {
 
 // The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
 // With it, `defineProps` gives the error TS2590.
-interface InputAutocomplete {
+type InputAttributes = Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'> & {
   autocomplete?: string | null | undefined;
-}
+};
 
-export interface ComboboxInputProps
-  /* @vue-ignore */
-  extends
-    Omit<InputHTMLAttributes, 'disabled' | 'id' | 'autocomplete'>,
-    /* @vue-ignore */ InputAutocomplete {
+export interface ComboboxInputProps extends /* @vue-ignore */ InputAttributes {
   id?: string | undefined;
   /**
    * The user cannot use the input.
@@ -391,7 +387,7 @@ export interface ComboboxItemProps
    * The value of a pick.
    * @default null
    */
-  value?: unknown;
+  value?: any;
   /** The place of the item in the filtered items, for a list that renders a window of them. */
   index?: number | undefined;
   /**

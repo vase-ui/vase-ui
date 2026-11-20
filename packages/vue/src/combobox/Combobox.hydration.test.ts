@@ -9,7 +9,7 @@ const byTestId = (root: ParentNode, id: string) =>
   root.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
 describe('server render and hydration', () => {
-  test('the server HTML of an open root has the root, the control and the form inputs, and no popup', async () => {
+  test('VUE-77: the server HTML of an open root has the root, the control and the form inputs, and no popup; the input names the list only after the mount', async () => {
     const props = {
       root: { defaultOpen: true, name: 'fruit', defaultValue: 'Apple' },
       trigger: true,
@@ -19,6 +19,7 @@ describe('server render and hydration', () => {
     expect(input).toHaveAttribute('role', 'combobox');
     expect(input).toHaveAttribute('aria-expanded', 'true');
     expect(input).toHaveValue('Apple');
+    expect(input).not.toHaveAttribute('aria-controls');
     expect(root.querySelector('input[type="hidden"][name="fruit"]')).toHaveValue('Apple');
     expect(byTestId(root, 'popup')).toBe(null);
     hydrate(ComboboxParts, props, root);

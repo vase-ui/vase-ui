@@ -22,18 +22,18 @@ const group = inject(groupKey, null);
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const id = computed(() => givenId(props.id) ?? generatedId);
+const elementId = computed(() => givenId(props.id) ?? generatedId);
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
 const removeLabel = group?.addLabel({
   get id() {
-    return id.value;
+    return elementId.value;
   },
 });
 onUnmounted(() => removeLabel?.());
 const state: ComboboxGroupLabelState = {};
 
 function elementProps() {
-  return mergeProps({ id: id.value, 'aria-hidden': 'true' }, attrs);
+  return mergeProps({ id: elementId.value, 'aria-hidden': 'true' }, attrs);
 }
 
 defineExpose({ element });

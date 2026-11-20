@@ -56,8 +56,3 @@ expectType<Event | undefined, typeof highlight.event>(highlight.event);
 declare const itemState: Autocomplete.Item.State;
 // @ts-expect-error An item of Autocomplete selects no value.
 void itemState.selected;
-
-// A template ref of the root has `close()`, its element and its hidden text input.
-const root = null as unknown as InstanceType<typeof Combobox.Root>;
-expectType<() => void, typeof root.close>(root.close);
-expectType<HTMLInputElement | null, typeof root.inputElement>(root.inputElement);

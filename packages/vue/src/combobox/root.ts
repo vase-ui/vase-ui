@@ -15,6 +15,7 @@ import {
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { EMPTY_ARRAY } from '../common/empty';
+import { byDocumentOrder } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
 import { ownerDocument, ownerWindow } from '../common/owner';
@@ -107,6 +108,7 @@ export interface RootEmit {
 interface ItemEntry {
   value(): unknown;
   index(): number | undefined;
+  disabled(): boolean;
 }
 
 /** What `Combobox.Root` and `Autocomplete.Root` give to their parts. The properties are reactive. */
@@ -178,6 +180,8 @@ export interface ComboboxRootContext {
   formTextOf(value: unknown): string;
   /** The value of a mounted item. */
   valueOf(item: ListItem): unknown;
+  /** The mounted items, also those of a closed popup that stays in the DOM, in the order of the document. */
+  mountedItems(): { value: unknown; disabled: boolean }[];
   /** Asks for a change of the open state. */
   request(open: boolean, reason: ComboboxRootChangeEventReason, event: Event): void;
   /** Changes the text. Gives `false` when a listener cancelled the change. */
@@ -913,6 +917,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
     formTextOf,
     valueOf,
+    mountedItems: () =>
+      [...itemEntries]
+        .filter(([element]) => element.isConnected)
+        .sort(([a], [b]) => byDocumentOrder(a, b))
+        .map(([, entry]) => ({ value: entry.value(), disabled: entry.disabled() })),
     request,
     setText,
     setValue,
@@ -1050,8 +1059,8 @@ export function useInPopup() {
 export interface ChipsContext {
   /** The direction of the chips element is right to left. */
   rtl(): boolean;
-  /** Moves the focus to the chip at the index. -1 is the last chip. */
-  focusChip(index: number): void;
+  /** Moves the focus to the chip at the index, -1 for the last chip. Gives `false` with no chip there. */
+  focusChip(index: number): boolean;
   addChip(element: HTMLElement): () => void;
   /** The place of the chip among the chips, which is the place of its value. */
   indexOf(element: HTMLElement): number;

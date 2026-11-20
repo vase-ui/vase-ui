@@ -43,7 +43,7 @@ describe('useFilter', () => {
     expect(filter.contains('Banana', 'apple')).toBe(false);
   });
 
-  test('the locale is `en-US` with no option, else the nearest LocaleProvider, else the option', () => {
+  test('VUE-44: the locale is the option, else the nearest LocaleProvider, else `en-US`', () => {
     // In Swedish, "ä" is a letter of its own, and in English it is "a" with an accent.
     expect(inSetup(() => Combobox.useFilter()).contains('Ärla', 'arla')).toBe(true);
     expect(inSetup(() => Autocomplete.useFilter(), 'sv-SE').contains('Ärla', 'arla')).toBe(false);
