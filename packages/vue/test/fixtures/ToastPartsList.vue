@@ -7,7 +7,9 @@ type Props = Record<string, unknown>;
 // Each toast has a root with its `id` in `data-id`, a content, a title, a description, an action
 // and a close button, in a `<TransitionGroup>` with the name `toast`. `titleText` and
 // `descriptionText` give the default slots. `secondTitle` adds a second title after the first.
+// `withoutViewport` unmounts the viewport, and the provider stays.
 defineProps({
+  withoutViewport: Boolean,
   viewport: Object as PropType<Props>,
   group: { type: Object as PropType<Props>, default: () => ({}) },
   root: Object as PropType<Props>,
@@ -24,7 +26,12 @@ defineExpose({ manager });
 </script>
 
 <template>
-  <Toast.Viewport data-testid="viewport" aria-label="Notifications" v-bind="viewport">
+  <Toast.Viewport
+    v-if="!withoutViewport"
+    data-testid="viewport"
+    aria-label="Notifications"
+    v-bind="viewport"
+  >
     <TransitionGroup name="toast" v-bind="group">
       <Toast.Root
         v-for="toast in manager.toasts.value"

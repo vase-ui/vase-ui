@@ -545,10 +545,9 @@ describe('hover, focus and the window (B5)', () => {
   });
 
   test.each(['a blur of the window', 'a keyboard focus in a toast'])(
-    'a viewport that unmounts after %s leaves the timers of the next viewport to run',
+    'the timers run in a new viewport after the old one unmounts with %s',
     async (state) => {
-      // A new key mounts a new viewport in the same provider.
-      const list = reactive<Props>({ key: 'first' });
+      const list = reactive<Props>({ withoutViewport: false });
       const { manager } = await mountToasts({ list });
       await added(manager, { id: 'a', title: 'A' });
       if (state === 'a blur of the window') {
@@ -559,12 +558,10 @@ describe('hover, focus and the window (B5)', () => {
         await userEvent.keyboard('{Tab}');
         expect(document.activeElement).toBe(toastRoot('a'));
       }
-      const first = toastRoot('a');
-      list.key = 'second';
-      await waitFor(() => {
-        expect(toastRoot('a')).not.toBe(null);
-        expect(toastRoot('a')).not.toBe(first);
-      });
+      list.withoutViewport = true;
+      await waitFor(() => expect(toastRoot('a')).toBe(null));
+      list.withoutViewport = false;
+      await waitFor(() => expect(toastRoot('a')).not.toBe(null));
       manager.update('a', { timeout: 100 });
       await waitFor(() => expect(toastRoot('a')).toBe(null));
     },
