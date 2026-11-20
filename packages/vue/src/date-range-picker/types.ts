@@ -16,7 +16,6 @@ import type {
 } from '../popover/types';
 import type {
   RangeCalendarRootChangeEventDetails,
-  RangeCalendarRootChangeEventReason,
   RangeCalendarRootProps,
   RangeCalendarRootState,
 } from '../range-calendar/types';
@@ -30,8 +29,7 @@ export type DateRangePickerRootValue<Value extends DateValue = DateValue> = read
 export type DateRangePickerRootGranularity = 'day' | 'hour' | 'minute' | 'second';
 
 export type DateRangePickerRootChangeEventReason =
-  | Exclude<RangeCalendarRootChangeEventReason, 'month-change' | 'none'>
-  | DateTimeFieldChangeEventReason;
+  'day-press' | 'drag' | 'keyboard' | DateTimeFieldChangeEventReason;
 
 export type DateRangePickerRootChangeEventDetails =
   ChangeEventDetails<DateRangePickerRootChangeEventReason>;
