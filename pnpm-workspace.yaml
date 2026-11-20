@@ -3,6 +3,19 @@ allowBuilds:
   esbuild: false
   # The install script selects the build for Vue 2 or for Vue 3. The package ships the build for Vue 3.
   vue-demi: false
+minimumReleaseAgeExclude:
+  - '@vue/compiler-core@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/compiler-dom@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/compiler-sfc@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/compiler-ssr@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/compiler-vapor@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/reactivity@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/runtime-core@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/runtime-dom@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/runtime-vapor@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/server-renderer@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - '@vue/shared@3.6.0-rc.16' # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
+  - vue@3.6.0-rc.16 # The Vue 3.6 tests use 3.6.0-rc.16, which is newer than the minimum release age.
 packages:
   - docs
   - fixtures/*

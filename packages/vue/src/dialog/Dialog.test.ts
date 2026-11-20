@@ -484,7 +484,7 @@ describe('the handle', () => {
     await waitFor(() => expect(byTestId('payload')).toHaveTextContent('second'));
   });
 
-  // Vue 3.6 runs no `<Suspense>` in a Vapor app with Vapor parts.
+  // Vue 3.6.0-rc.16 runs no `<Suspense>` in a Vapor app with Vapor parts.
   test.skipIf(inject('app') === 'vapor')(
     'a <Suspense> that replaces a page by a page with the same handle gives the handle to the new page',
     async () => {
