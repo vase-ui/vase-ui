@@ -168,6 +168,8 @@ export function usePlacement(
     positioner: Readonly<Ref<HTMLElement | null>>;
     /** Places the positioner with insets from the edge that faces the anchor. */
     insets: () => boolean;
+    /** The anchor while the `anchor` prop has no value. With none, the active trigger. */
+    anchor?: () => VirtualElement | undefined;
   },
 ) {
   const rtl = shallowRef(false);
@@ -183,7 +185,7 @@ export function usePlacement(
     [
       () => root.open,
       () => root.activeTrigger,
-      () => resolveAnchor(props.anchor),
+      () => resolveAnchor(props.anchor) ?? options.anchor?.(),
       options.positioner,
     ],
     ([open, trigger, anchor]) => {

@@ -88,6 +88,8 @@ export interface PopupRoot<Payload = unknown> {
   addLeaving(element: () => Element | null): () => void;
   addPortalElement(element: () => Element | null): () => void;
   addLabel(kind: 'title' | 'description', label: { readonly id: string }): () => void;
+  /** Ends `leaving` at once, so that the portal removes the popup that leaves. */
+  endLeaving(): void;
 }
 
 export interface PopupRootOptions {
@@ -104,6 +106,11 @@ export interface PopupRootOptions {
   emitTriggerId: (id: string | null) => void;
   /** The `instant` state of a change. */
   instantOf?: (open: boolean, reason: string, event: Event) => string | undefined;
+  /**
+   * The root is closed for its parts while it is `true`, and the model keeps its value. After the
+   * mount, a disabled root with an open model asks for a close with the reason `'disabled'`.
+   */
+  disabled?: () => boolean;
 }
 
 export function createPopupChangeEventDetails<Reason extends string>(
@@ -220,7 +227,8 @@ export class PopupHandle<Payload = unknown> {
 
 export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payload> {
   const openModel = useModel(() => options.open(), options.open() ?? options.defaultOpen);
-  const open = openModel.value;
+  const modelOpen = openModel.value;
+  const open = computed(() => modelOpen.value && !options.disabled?.());
   const triggerIdModel = useModel(
     () => options.triggerId(),
     options.triggerId() ?? options.defaultTriggerId,
@@ -262,7 +270,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     const element = entry?.element ?? activeTrigger.value;
     const details = createPopupChangeEventDetails(why, event, element ?? undefined);
     const nextId = next && entry ? entry.id : activeTriggerId.value;
-    if (next === open.value && nextId === activeTriggerId.value) {
+    if (next === modelOpen.value && nextId === activeTriggerId.value) {
       if (!next) closeRequests.value += 1;
       // A press keeps a popup open that a hover opened.
       if (next && why === 'trigger-press') reason.value = why;
@@ -278,7 +286,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       triggerIdModel.setOwn(nextId);
       options.emitTriggerId(nextId);
     }
-    if (next !== open.value) {
+    if (next !== modelOpen.value) {
       openModel.setOwn(next);
       options.emitOpen(next);
     }
@@ -297,6 +305,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     observer = undefined;
     leaving.value = false;
     return true;
+  }
+  function endLeaving() {
+    leavingNow = [];
+    settle();
   }
   watch(
     open,
@@ -400,12 +412,20 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
         if (labels[kind] === label) labels[kind] = undefined;
       };
     },
+    endLeaving,
   };
 
   // A handle holds its root only on the client. A handle in a module of a server would otherwise
   // hold the roots of each request.
   onMounted(() => {
     onScopeDispose(trackPointerType(ownerDocument(null)));
+    watch(
+      () => modelOpen.value && !!options.disabled?.(),
+      (closes) => {
+        if (closes) change(false, 'disabled', new Event('vase-ui'), undefined);
+      },
+      { immediate: true },
+    );
     watch(
       () => options.handle(),
       (handle, _, onCleanup) => {

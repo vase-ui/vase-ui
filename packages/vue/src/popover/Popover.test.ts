@@ -1337,11 +1337,11 @@ describe('the hover (L9)', () => {
     expect(byId('before')).not.toHaveAttribute('inert');
   });
 
-  test('a pointer that moves from one hover trigger to another moves the popup to that trigger after its delay', async () => {
+  test('a pointer that moves from one hover trigger to another moves the popup to that trigger at once', async () => {
     const { trigger } = await mountPopover({
       triggers: [
         { key: 'a', attrs: { id: 'a', openOnHover: true, delay: 40 } },
-        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 100 } },
+        { key: 'b', attrs: { id: 'b', openOnHover: true, delay: 10_000 } },
       ],
     });
     await userEvent.hover(trigger('a'));
@@ -1351,6 +1351,42 @@ describe('the hover (L9)', () => {
     await moveMouse([centerOf(trigger('b'))]);
     await new Promise((resolve) => setTimeout(resolve, 30));
     expect(popup()).not.toBe(null);
+  });
+
+  test('a hover on the trigger while the popup leaves after a hover close opens the popover at once; the popup enters after the leave', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const log: string[] = [];
+    const trigger = reactive<Props>({ openOnHover: true, delay: 0 });
+    mount(PopoverInTransition, { root: rootEvents(log), trigger });
+    const element = document.querySelector<HTMLElement>('[data-testid="trigger"]')!;
+    await userEvent.hover(element);
+    const first = await opened();
+    trigger.delay = 10_000;
+    await userEvent.hover(appendOutside('button'));
+    await waitFor(() => expect(first.className).toContain('pop-leave-active'));
+    await userEvent.hover(element);
+    await nextTick();
+    expect(log.at(-2)).toBe('openChange true trigger-hover');
+    await waitFor(() => expect(popup() ?? first).not.toBe(first));
+  });
+
+  test('a hover asks for nothing while the popover is open with no active trigger', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountPopover({
+      root: rootEvents(log, { defaultOpen: true }),
+      triggers: [
+        { key: 'a', attrs: { openOnHover: true, delay: 0 } },
+        { key: 'b', attrs: { openOnHover: true, delay: 0 } },
+      ],
+    });
+    await opened();
+    await userEvent.hover(appendOutside('button'));
+    for (const key of ['a', 'b']) {
+      await userEvent.hover(trigger(key));
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    expect(log).toEqual([]);
+    expect(document.querySelectorAll('[aria-expanded="true"]')).toHaveLength(0);
   });
 
   test('a hover opens after the pointer rests on the trigger for `delay`; a pointer that leaves before that opens nothing', async () => {

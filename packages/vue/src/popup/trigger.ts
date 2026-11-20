@@ -1,6 +1,24 @@
 import { computed, onMounted, watch, type Ref } from 'vue';
 import { useButton } from '../common/button';
-import type { PopupRoot } from './root';
+import type { PopupRoot, PopupTrigger } from './root';
+
+/** Adds the trigger to its root, from its `setup` to its unmount. */
+export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigger) {
+  // The server and the first render know the root of the setup. A server stops an immediate
+  // watcher after its first run, and its cleanup would remove the trigger. From the mount, the
+  // watcher follows the root, which a handle can give after the mount.
+  const removeInitial = root()?.addTrigger(entry);
+  onMounted(() => {
+    removeInitial?.();
+    watch(
+      root,
+      (current, _, onCleanup) => {
+        if (current) onCleanup(current.addTrigger(entry));
+      },
+      { immediate: true },
+    );
+  });
+}
 
 /**
  * A trigger of a popup: a button that registers with its root while it is mounted, and that
@@ -40,20 +58,7 @@ export function usePopupTrigger(
       return button.disabled.value;
     },
   };
-  // The server and the first render know the root of the setup. A server stops an immediate
-  // watcher after its first run, and its cleanup would remove the trigger. From the mount, the
-  // watcher follows the root, which a handle can give after the mount.
-  const removeInitial = root()?.addTrigger(entry);
-  onMounted(() => {
-    removeInitial?.();
-    watch(
-      root,
-      (current, _, onCleanup) => {
-        if (current) onCleanup(current.addTrigger(entry));
-      },
-      { immediate: true },
-    );
-  });
+  useTriggerEntry(root, entry);
 
   const active = computed(() => {
     const current = root();
