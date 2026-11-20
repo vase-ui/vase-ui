@@ -421,7 +421,7 @@ describe('today and the first focus', () => {
       target: () => popup()!.querySelector<HTMLElement>('button'),
       focus: 'previous',
     },
-    { name: 'false', target: false, focus: 'trigger' },
+    { name: 'false', target: false, focus: 'before' },
   ])('an initialFocus of $name replaces the focus of the picker', async ({ target, focus }) => {
     mockToday('2026-11-18');
     const { trigger } = await mountPicker({
@@ -429,10 +429,12 @@ describe('today and the first focus', () => {
       popup: { initialFocus: target },
     });
     await userEvent.click(trigger);
+    // WebKit gives a button no focus at a click.
+    const before = document.activeElement;
     const element = await opened();
     await settle();
     expect(document.activeElement).toBe(
-      focus === 'trigger' ? trigger : element.querySelector('button'),
+      focus === 'before' ? before : element.querySelector('button'),
     );
   });
 
