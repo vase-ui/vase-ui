@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import { Toggle, type ToggleProps } from '@vase-ui/vue/toggle';
+import type { Toggle, ToggleProps } from '@vase-ui/vue/toggle';
 import {
   ToggleGroup,
   type ToggleGroupChangeEventDetails,

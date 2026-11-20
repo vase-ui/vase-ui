@@ -1,7 +1,9 @@
 import type { Component, HTMLAttributes } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 
-export interface ToggleGroupProps<Value extends string = string> extends /* @vue-ignore */ HTMLAttributes {
+export interface ToggleGroupProps<
+  Value extends string = string,
+> extends /* @vue-ignore */ HTMLAttributes {
   /**
    * A tag or a component that the part renders in place of its `<div>`, with the same attributes
    * and content. The `element` slot wins over it.

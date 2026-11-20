@@ -6,7 +6,11 @@ import { ToggleGroup } from '../../src/toggle-group';
 
 defineProps({
   scene: {
-    type: Object as PropType<{ kind: 'fieldset' | 'root'; disabled: boolean; ownDisabled?: boolean }>,
+    type: Object as PropType<{
+      kind: 'fieldset' | 'root';
+      disabled: boolean;
+      ownDisabled?: boolean;
+    }>,
     required: true,
   },
 });

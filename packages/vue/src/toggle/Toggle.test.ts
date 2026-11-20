@@ -172,7 +172,10 @@ describe('the pressed state', () => {
   test('details.cancel() in pressedChange keeps the state and emits no update', async () => {
     const log: string[] = [];
     const attrs = record(log, {
-      onPressedChange: (pressed: boolean, details: { cancel(): void; reason: string; event: Event }) => {
+      onPressedChange: (
+        pressed: boolean,
+        details: { cancel(): void; reason: string; event: Event },
+      ) => {
         log.push(`pressedChange ${pressed} ${details.reason} ${details.event.type}`);
         details.cancel();
       },

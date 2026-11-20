@@ -8,11 +8,7 @@ import { useInDisabledFieldset } from '../fieldset/part';
 import { useToolbarGroupContext } from '../toolbar/group/ToolbarGroupContext';
 import { useToolbarRootContext } from '../toolbar/root/ToolbarRootContext';
 import { toggleGroupKey, type GroupToggle } from './toggle';
-import type {
-  ToggleGroupChangeEventDetails,
-  ToggleGroupProps,
-  ToggleGroupState,
-} from './types';
+import type { ToggleGroupChangeEventDetails, ToggleGroupProps, ToggleGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 

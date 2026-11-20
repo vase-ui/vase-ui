@@ -34,8 +34,9 @@ defineProps({
       :disabled="scene.buttonDisabled"
       :focusable-when-disabled="scene.focusableWhenDisabled ?? true"
     >
+      <!-- The test project has motion-v, which adds an `as` of its own to the attributes type. -->
       <template #render="{ props }">
-        <Toggle id="alone" v-bind="props" :ref="props.ref">Alone</Toggle>
+        <Toggle id="alone" v-bind="{ ...props, as: undefined }" :ref="props.ref">Alone</Toggle>
       </template>
     </Toolbar.Button>
     <Toolbar.Button id="last">Last</Toolbar.Button>

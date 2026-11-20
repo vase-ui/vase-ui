@@ -33,7 +33,11 @@ function onWrongEventDetails(value: Alignment[], eventDetails: string) {
   </ToggleGroup>
 
   <!-- A toggle takes the native attributes of a button, and its slots give the state. -->
-  <Toggle type="submit" aria-label="Bold" @pressed-change="(pressed, details) => details.cancel()" />
+  <Toggle
+    type="submit"
+    aria-label="Bold"
+    @pressed-change="(pressed, details) => details.cancel()"
+  />
   <Toggle as="span" v-slot="{ state }">
     <span @click="expectType<ToggleState, typeof state>(state)">Bold</span>
   </Toggle>

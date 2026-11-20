@@ -277,7 +277,8 @@ describe('the keys', () => {
   test('a handled key prevents its default, so the page does not scroll', async () => {
     const { toggle } = await mountGroup({});
     const prevented: string[] = [];
-    const record = (event: KeyboardEvent) => prevented.push(`${event.key} ${event.defaultPrevented}`);
+    const record = (event: KeyboardEvent) =>
+      prevented.push(`${event.key} ${event.defaultPrevented}`);
     window.addEventListener('keydown', record);
     onTestFinished(() => window.removeEventListener('keydown', record));
     toggle('a').focus();

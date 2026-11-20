@@ -39,7 +39,7 @@ const toolbar = useToolbarRootContext(true);
 const attrs = useAttrs();
 const generatedValue = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const { disabled, mergeAttributes } = useButton({
+const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled || !!group?.disabled,
   // `Toolbar.Button` writes `data-focusable` on the toggle that it renders and that keeps the focus
@@ -54,18 +54,18 @@ const { value: ownPressed, setOwn } = useModel(
   props.modelValue ?? props.defaultPressed,
 );
 // A toggle with no value still takes its own place in the value of its group.
-const value = computed(() => props.value || generatedValue);
-const pressed = computed(() => (group ? group.value.includes(value.value) : ownPressed.value));
-const state = computed<ToggleState>(() => ({ pressed: pressed.value, disabled: disabled.value }));
+const itemValue = computed(() => props.value || generatedValue);
+const pressed = computed(() => (group ? group.value.includes(itemValue.value) : ownPressed.value));
+const state = computed<ToggleState>(() => ({ pressed: pressed.value, disabled: isDisabled.value }));
 
 const compositeItem =
   group && toolbar
     ? useCompositeItem(element, {
         metadata: computed<ToolbarRootItemMetadata>(() => ({
-          disabled: disabled.value,
+          disabled: isDisabled.value,
           focusableWhenDisabled: false,
         })),
-        disabled,
+        disabled: isDisabled,
       })
     : undefined;
 
@@ -77,11 +77,11 @@ if (group) {
       onCleanup(
         group.addToggle({
           get value() {
-            return value.value;
+            return itemValue.value;
           },
           element: el,
           get disabled() {
-            return disabled.value;
+            return isDisabled.value;
           },
         }),
       );
@@ -120,7 +120,7 @@ function onClick(event: MouseEvent) {
   const next = !pressed.value;
   const details = createChangeEventDetails('none', event);
   emit('pressedChange', next, details);
-  if (details.isCanceled || (group && !group.press(value.value, next, details))) return;
+  if (details.isCanceled || (group && !group.press(itemValue.value, next, details))) return;
   setOwn(next);
   emit('update:modelValue', next);
 }
