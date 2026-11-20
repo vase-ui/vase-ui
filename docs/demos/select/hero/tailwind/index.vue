@@ -35,6 +35,8 @@ const CaretUpIcon: FunctionalComponent = (_, { attrs }) =>
 
 const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'currentColor', ...attrs }, [h('path', { d: 'M12 6H4l4 4.5z' })]);
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -56,36 +58,38 @@ const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner class="outline-hidden select-none z-10" :side-offset="4">
-          <Select.Popup
-            class="group min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding border border-neutral-950 bg-white text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:translate-y-px data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-          >
-            <Select.ScrollUpArrow
-              class="top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute data-[side=none]:before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] dark:bg-neutral-950"
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup
+              class="group min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding border border-neutral-950 bg-white text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-[side=none]:translate-y-px data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:scale-100 data-[side=none]:opacity-100 data-[side=none]:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
-              <CaretUpIcon />
-            </Select.ScrollUpArrow>
-            <Select.List
-              class="relative py-1 scroll-py-6 overflow-y-auto max-h-[var(--available-height)]"
-            >
-              <Select.Item
-                v-for="{ label, value } in apples"
-                :key="label"
-                :value="value"
-                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
-                v-slot="{ state }"
+              <Select.ScrollUpArrow
+                class="top-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute data-[side=none]:before:top-[-100%] before:left-0 before:h-full before:w-full before:content-[''] dark:bg-neutral-950"
               >
-                <span v-if="state.selected" class="col-start-1">
-                  <CheckIcon />
-                </span>
-                <Select.ItemText class="col-start-2">{{ label }}</Select.ItemText>
-              </Select.Item>
-            </Select.List>
-            <Select.ScrollDownArrow
-              class="bottom-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute before:left-0 before:h-full before:w-full before:content-[''] data-[side=none]:before:bottom-[-100%] dark:bg-neutral-950"
-            >
-              <CaretDownIcon />
-            </Select.ScrollDownArrow>
-          </Select.Popup>
+                <CaretUpIcon />
+              </Select.ScrollUpArrow>
+              <Select.List
+                class="relative py-1 scroll-py-6 overflow-y-auto max-h-[var(--available-height)]"
+              >
+                <Select.Item
+                  v-for="{ label, value } in apples"
+                  :key="label"
+                  :value="value"
+                  class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-4 pl-2.5 text-sm outline-hidden select-none data-highlighted:bg-neutral-950 data-highlighted:text-white dark:data-highlighted:bg-white dark:data-highlighted:text-neutral-950"
+                  v-slot="{ state }"
+                >
+                  <span v-if="state.selected" class="col-start-1">
+                    <CheckIcon />
+                  </span>
+                  <Select.ItemText class="col-start-2">{{ label }}</Select.ItemText>
+                </Select.Item>
+              </Select.List>
+              <Select.ScrollDownArrow
+                class="bottom-0 z-[1] flex h-4 w-full cursor-default items-center justify-center bg-white text-center text-xs before:absolute before:left-0 before:h-full before:w-full before:content-[''] data-[side=none]:before:bottom-[-100%] dark:bg-neutral-950"
+              >
+                <CaretDownIcon />
+              </Select.ScrollDownArrow>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

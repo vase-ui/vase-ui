@@ -145,7 +145,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. V
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) stays in the DOM from the first focus of the trigger or the first open, and it hides while the select is closed. Put a `<Transition>` around `Select.Popup`, with no `v-show` and no `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. For a JavaScript animation, give the `<Transition>` `:css="false"`, and call `done` in its `@enter` and `@leave` hooks when the animation ends. The popup stays in the DOM until `@leave` calls `done`.
+The popup of [Select](/components/select) stays in the DOM from the first focus of the trigger, the first open or the first fill of the browser, and it hides while the select is closed. Put a `<Transition>` around `Select.Popup`, with no `v-show` and no `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. For a JavaScript animation, give the `<Transition>` `:css="false"`, and call `done` in its `@enter` and `@leave` hooks when the animation ends. The popup shows until `@leave` calls `done`.
 
 <DemoFrame>
   <MotionSelect />

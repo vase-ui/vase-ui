@@ -57,6 +57,8 @@ const CaretUpIcon: FunctionalComponent = (_, { attrs }) =>
 
 const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'currentColor', ...attrs }, [h('path', { d: 'M12 6H4l4 4.5z' })]);
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -71,39 +73,41 @@ const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner :class="styles.Positioner" :side-offset="4">
-          <Select.Popup :class="styles.Popup">
-            <Select.ScrollUpArrow :class="styles.ScrollArrow">
-              <CaretUpIcon />
-            </Select.ScrollUpArrow>
-            <Select.List :class="styles.List">
-              <template v-for="(group, index) in groupedProduce" :key="group.value">
-                <Select.Group :class="styles.Group">
-                  <Select.GroupLabel :class="styles.GroupLabel">{{
-                    group.value
-                  }}</Select.GroupLabel>
-                  <Select.Item
-                    v-for="item in group.items"
-                    :key="item.value"
-                    :value="item.value"
-                    :class="styles.Item"
-                    v-slot="{ state }"
-                  >
-                    <span v-if="state.selected" :class="styles.ItemIndicator">
-                      <CheckIcon />
-                    </span>
-                    <Select.ItemText :class="styles.ItemText">{{ item.label }}</Select.ItemText>
-                  </Select.Item>
-                </Select.Group>
-                <Select.Separator
-                  v-if="index < groupedProduce.length - 1"
-                  :class="styles.Separator"
-                />
-              </template>
-            </Select.List>
-            <Select.ScrollDownArrow :class="styles.ScrollArrow">
-              <CaretDownIcon />
-            </Select.ScrollDownArrow>
-          </Select.Popup>
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup :class="styles.Popup">
+              <Select.ScrollUpArrow :class="styles.ScrollUpArrow">
+                <CaretUpIcon />
+              </Select.ScrollUpArrow>
+              <Select.List :class="styles.List">
+                <template v-for="(group, index) in groupedProduce" :key="group.value">
+                  <Select.Group :class="styles.Group">
+                    <Select.GroupLabel :class="styles.GroupLabel">{{
+                      group.value
+                    }}</Select.GroupLabel>
+                    <Select.Item
+                      v-for="item in group.items"
+                      :key="item.value"
+                      :value="item.value"
+                      :class="styles.Item"
+                      v-slot="{ state }"
+                    >
+                      <span v-if="state.selected" :class="styles.ItemIndicator">
+                        <CheckIcon />
+                      </span>
+                      <Select.ItemText :class="styles.ItemText">{{ item.label }}</Select.ItemText>
+                    </Select.Item>
+                  </Select.Group>
+                  <Select.Separator
+                    v-if="index < groupedProduce.length - 1"
+                    :class="styles.Separator"
+                  />
+                </template>
+              </Select.List>
+              <Select.ScrollDownArrow :class="styles.ScrollDownArrow">
+                <CaretDownIcon />
+              </Select.ScrollDownArrow>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

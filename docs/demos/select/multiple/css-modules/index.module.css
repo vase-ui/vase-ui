@@ -129,12 +129,6 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-
   &[data-side='none'] {
     transition: none;
     transform: none;
@@ -142,6 +136,13 @@
     min-width: calc(var(--anchor-width) + 1.75rem);
   }
 }
+
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
 
 .Item {
   box-sizing: border-box;

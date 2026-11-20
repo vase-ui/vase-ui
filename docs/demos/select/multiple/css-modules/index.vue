@@ -47,6 +47,8 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'none', stroke: 'currentColor', ...attrs }, [
     h('path', { d: 'm2.5 8.5 4 4 7-9' }),
   ]);
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -67,20 +69,22 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
           :side-offset="4"
           :align-item-with-trigger="false"
         >
-          <Select.Popup :class="styles.Popup">
-            <Select.Item
-              v-for="value in values"
-              :key="value"
-              :value="value"
-              :class="styles.Item"
-              v-slot="{ state }"
-            >
-              <span v-if="state.selected" :class="styles.ItemIndicator">
-                <CheckIcon />
-              </span>
-              <Select.ItemText :class="styles.ItemText">{{ languages[value] }}</Select.ItemText>
-            </Select.Item>
-          </Select.Popup>
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup :class="styles.Popup">
+              <Select.Item
+                v-for="value in values"
+                :key="value"
+                :value="value"
+                :class="styles.Item"
+                v-slot="{ state }"
+              >
+                <span v-if="state.selected" :class="styles.ItemIndicator">
+                  <CheckIcon />
+                </span>
+                <Select.ItemText :class="styles.ItemText">{{ languages[value] }}</Select.ItemText>
+              </Select.Item>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

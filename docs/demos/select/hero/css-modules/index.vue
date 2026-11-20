@@ -36,6 +36,8 @@ const CaretUpIcon: FunctionalComponent = (_, { attrs }) =>
 
 const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'currentColor', ...attrs }, [h('path', { d: 'M12 6H4l4 4.5z' })]);
+
+const popupHiddenClass = styles.PopupHidden;
 </script>
 
 <template>
@@ -50,28 +52,30 @@ const CaretDownIcon: FunctionalComponent = (_, { attrs }) =>
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner :class="styles.Positioner" :side-offset="4">
-          <Select.Popup :class="styles.Popup">
-            <Select.ScrollUpArrow :class="styles.ScrollArrow">
-              <CaretUpIcon />
-            </Select.ScrollUpArrow>
-            <Select.List :class="styles.List">
-              <Select.Item
-                v-for="{ label, value } in apples"
-                :key="label"
-                :value="value"
-                :class="styles.Item"
-                v-slot="{ state }"
-              >
-                <span v-if="state.selected" :class="styles.ItemIndicator">
-                  <CheckIcon />
-                </span>
-                <Select.ItemText :class="styles.ItemText">{{ label }}</Select.ItemText>
-              </Select.Item>
-            </Select.List>
-            <Select.ScrollDownArrow :class="styles.ScrollArrow">
-              <CaretDownIcon />
-            </Select.ScrollDownArrow>
-          </Select.Popup>
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup :class="styles.Popup">
+              <Select.ScrollUpArrow :class="styles.ScrollUpArrow">
+                <CaretUpIcon />
+              </Select.ScrollUpArrow>
+              <Select.List :class="styles.List">
+                <Select.Item
+                  v-for="{ label, value } in apples"
+                  :key="label"
+                  :value="value"
+                  :class="styles.Item"
+                  v-slot="{ state }"
+                >
+                  <span v-if="state.selected" :class="styles.ItemIndicator">
+                    <CheckIcon />
+                  </span>
+                  <Select.ItemText :class="styles.ItemText">{{ label }}</Select.ItemText>
+                </Select.Item>
+              </Select.List>
+              <Select.ScrollDownArrow :class="styles.ScrollDownArrow">
+                <CaretDownIcon />
+              </Select.ScrollDownArrow>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

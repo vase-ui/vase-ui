@@ -160,6 +160,8 @@ const protocols = ['http', 'https', 'ssh'];
 
 // The input of a slider thumb has the focus, and `blur` does not bubble. The thumbs thus listen
 // to `focusout`.
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -312,23 +314,25 @@ const protocols = ['http', 'https', 'ssh'];
           </div>
           <Select.Portal>
             <Select.Positioner>
-              <Select.Popup>
-                <Select.ScrollUpArrow />
-                <Select.List>
-                  <Select.Item
-                    v-for="{ label, value: serverType } in SERVER_TYPES"
-                    :key="label"
-                    :value="serverType"
-                    v-slot="{ state }"
-                  >
-                    <span v-if="state.selected" class="col-start-1">
-                      <CheckIcon />
-                    </span>
-                    <Select.ItemText>{{ label }}</Select.ItemText>
-                  </Select.Item>
-                </Select.List>
-                <Select.ScrollDownArrow />
-              </Select.Popup>
+              <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+                <Select.Popup>
+                  <Select.ScrollUpArrow />
+                  <Select.List>
+                    <Select.Item
+                      v-for="{ label, value: serverType } in SERVER_TYPES"
+                      :key="label"
+                      :value="serverType"
+                      v-slot="{ state }"
+                    >
+                      <span v-if="state.selected" class="col-start-1">
+                        <CheckIcon />
+                      </span>
+                      <Select.ItemText>{{ label }}</Select.ItemText>
+                    </Select.Item>
+                  </Select.List>
+                  <Select.ScrollDownArrow />
+                </Select.Popup>
+              </Transition>
             </Select.Positioner>
           </Select.Portal>
         </Select.Root>

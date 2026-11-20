@@ -128,12 +128,6 @@
     box-shadow: none;
   }
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-
   &[data-side='none'] {
     transition: none;
     transform: translateY(1px);
@@ -141,6 +135,13 @@
     min-width: calc(var(--anchor-width) + 1.75rem);
   }
 }
+
+/* The enter-from and leave-to class of the `<Transition>` around the popup. */
+.PopupHidden {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
 
 .List {
   box-sizing: border-box;
@@ -223,7 +224,8 @@
   }
 }
 
-.ScrollArrow {
+.ScrollUpArrow,
+.ScrollDownArrow {
   width: 100%;
   background-color: white;
   z-index: 2;
@@ -246,24 +248,25 @@
     height: 100%;
     left: 0;
   }
+}
 
-  &[data-direction='up'] {
-    top: 0;
+.ScrollUpArrow {
+  top: 0;
 
-    &[data-side='none'] {
-      &::before {
-        top: -100%;
-      }
-    }
-  }
-
-  &[data-direction='down'] {
-    bottom: 0;
-
-    &[data-side='none'] {
-      &::before {
-        bottom: -100%;
-      }
+  &[data-side='none'] {
+    &::before {
+      top: -100%;
     }
   }
 }
+
+.ScrollDownArrow {
+  bottom: 0;
+
+  &[data-side='none'] {
+    &::before {
+      bottom: -100%;
+    }
+  }
+}
+

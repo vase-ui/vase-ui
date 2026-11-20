@@ -46,6 +46,8 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
   h('svg', { ...ICON_PROPS, fill: 'none', stroke: 'currentColor', ...attrs }, [
     h('path', { d: 'm2.5 8.5 4 4 7-9' }),
   ]);
+
+const popupHiddenClass = 'scale-[0.98] opacity-0';
 </script>
 
 <template>
@@ -73,22 +75,24 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
           :side-offset="4"
           :align-item-with-trigger="false"
         >
-          <Select.Popup
-            class="group max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding overflow-y-auto border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-ending-style:scale-[0.98] data-ending-style:opacity-0 data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:data-ending-style:transition-none data-starting-style:scale-[0.98] data-starting-style:opacity-0 data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
-          >
-            <Select.Item
-              v-for="value in values"
-              :key="value"
-              :value="value"
-              class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-2.5 pl-2.5 text-sm outline-hidden select-none scroll-my-1 [@media(hover:hover)]:data-highlighted:bg-neutral-950 [@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:bg-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950"
-              v-slot="{ state }"
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
+            <Select.Popup
+              class="group max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] bg-clip-padding overflow-y-auto border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[scale,opacity] duration-100 ease-out data-[side=none]:min-w-[calc(var(--anchor-width)+1.75rem)] data-[side=none]:scale-100 data-[side=none]:opacity-100 data-[side=none]:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
-              <span v-if="state.selected" class="col-start-1">
-                <CheckIcon />
-              </span>
-              <Select.ItemText class="col-start-2">{{ languages[value] }}</Select.ItemText>
-            </Select.Item>
-          </Select.Popup>
+              <Select.Item
+                v-for="value in values"
+                :key="value"
+                :value="value"
+                class="grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 py-1.5 pr-2.5 pl-2.5 text-sm outline-hidden select-none scroll-my-1 [@media(hover:hover)]:data-highlighted:bg-neutral-950 [@media(hover:hover)]:data-highlighted:text-white dark:[@media(hover:hover)]:data-highlighted:bg-white dark:[@media(hover:hover)]:data-highlighted:text-neutral-950"
+                v-slot="{ state }"
+              >
+                <span v-if="state.selected" class="col-start-1">
+                  <CheckIcon />
+                </span>
+                <Select.ItemText class="col-start-2">{{ languages[value] }}</Select.ItemText>
+              </Select.Item>
+            </Select.Popup>
+          </Transition>
         </Select.Positioner>
       </Select.Portal>
     </Select.Root>

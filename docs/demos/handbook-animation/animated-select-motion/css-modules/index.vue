@@ -52,7 +52,7 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
       <Select.Positioner :class="styles.Positioner" :side-offset="4">
         <Transition :css="false" @enter="enter" @leave="leave">
           <Select.Popup :class="styles.Popup">
-            <Select.ScrollUpArrow :class="styles.ScrollArrow" />
+            <Select.ScrollUpArrow :class="styles.ScrollUpArrow" />
             <Select.List :class="styles.List">
               <Select.Item
                 v-for="{ label, value } in fonts"
@@ -67,7 +67,7 @@ const CheckIcon: FunctionalComponent = (_, { attrs }) =>
                 <Select.ItemText :class="styles.ItemText">{{ label }}</Select.ItemText>
               </Select.Item>
             </Select.List>
-            <Select.ScrollDownArrow :class="styles.ScrollArrow" />
+            <Select.ScrollDownArrow :class="styles.ScrollDownArrow" />
           </Select.Popup>
         </Transition>
       </Select.Positioner>

@@ -67,7 +67,7 @@ Import the component and assemble its parts:
 
 Bind the value with `v-model`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:modelValue`. Without `multiple`, a press of the selected item emits neither event, and the popup closes. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:modelValue` and keeps its value.
 
-The popup and its items stay in the DOM, hidden, from the first focus of the trigger or the first open. So a key on the closed trigger selects the next item whose text starts with it, as on a native select.
+The popup and its items stay in the DOM, hidden, from the first focus of the trigger, the first open or the first fill of the browser. So a key on the closed trigger selects the next item whose text starts with it, as on a native select.
 
 ## Forms
 
@@ -78,6 +78,8 @@ A visually hidden text input has the constraint validation of `required`, and it
 ## Animation
 
 Put a `<Transition>` around `<Select.Popup>`, and around `<Select.Backdrop>`. Do not write `v-show` or `appear`: the part shows and hides its own element, so the `<Transition>` runs the enter and the leave of each open and close. To run code at the end of an animation, use `@after-enter` and `@after-leave`. To animate with JavaScript, give the `<Transition>` `:css="false"` and call `done` in its `@leave` hook.
+
+In the `element` slot, the part writes no `v-show`: `props` has `hidden` and `inert` while the popup is closed. Put a `<Transition appear>` in the slot, and write `v-show="state.open"` on the element. Give the `-leave-active` class a `display` rule, because `hidden` hides the element during the leave.
 
 Do not give a closed popup a size with CSS: a box with a size makes the page scroll further.
 
@@ -97,6 +99,7 @@ For CSS alone, select `[aria-selected="true"]` on the item.
 ## Style hooks
 
 - The trigger has `aria-expanded="true"` while open, `:disabled`, `aria-readonly="true"`, `aria-required="true"` and `aria-invalid="true"`. It has `data-pressed`, `data-popup-side`, `data-placeholder` and the state of its field.
+- No part has `data-focused`. Select `:focus-visible` on the trigger, and `[aria-expanded="true"]` on it while the list has the focus.
 - An item has `aria-selected="true"`, `aria-disabled="true"` and `data-highlighted`.
 - A scroll arrow is in the DOM while the list can scroll in its direction. With `keepMounted`, it stays and has `hidden`, so an arrow with a `display` rule needs `[hidden] { display: none }`.
 
@@ -145,6 +148,8 @@ Use `<Select.Label>` to give the trigger a visible label:
 <<< ./select/Label.vue{7}
 
 `<Select.Label>` renders a `<div>`. A click on it moves the focus to the trigger and does not open the popup.
+
+In a `Field.Root`, `<Field.Label>` is a native `<label>` of the trigger. A click on it opens the popup, as a click on the trigger does.
 
 ### Placeholder values
 
