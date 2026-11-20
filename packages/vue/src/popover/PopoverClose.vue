@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs } from 'vue';
-import { useButton } from '../button/button';
+import { useButton } from '../common/button';
 import { useElement } from '../common/element';
 import { injectPopoverRoot } from './root';
 import type { PopoverCloseProps, PopoverCloseState } from './types';

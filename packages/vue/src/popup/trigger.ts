@@ -1,5 +1,5 @@
 import { computed, onMounted, watch, type Ref } from 'vue';
-import { useButton } from '../button/button';
+import { useButton } from '../common/button';
 import type { PopupRoot } from './root';
 
 /**

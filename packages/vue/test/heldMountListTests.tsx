@@ -11,8 +11,8 @@ import { createHeldBranch } from './heldBranch';
  * The shared case of a part that owns a composite list. The part mounts while `KeepAlive` holds its
  * branch, and its last item mounts in a later flush. Then the branch shows. A sort in a held flush
  * finds no item, so an item that mounts after it can take an index that another item has. That
- * index stays wrong when the show starts no sort. A family that uses the list only for the index,
- * such as Accordion, thus shows the fault only with the late item.
+ * index stays wrong when the show starts no sort. A family that uses the list only for the index
+ * thus shows the fault only with the late item.
  */
 export function heldMountListTests(config: HeldMountListTestsConfig) {
   const { render, renderList, check } = config;

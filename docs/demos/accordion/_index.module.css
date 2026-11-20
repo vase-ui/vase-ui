@@ -53,7 +53,7 @@
   }
 
   @media (hover: hover) {
-    &:hover:not([data-disabled]) {
+    &:hover:not(:disabled) {
       background-color: oklch(97% 0 0deg);
 
       @media (prefers-color-scheme: dark) {
@@ -76,23 +76,32 @@
 .Icon {
   transition: transform 100ms ease-out;
 
-  [data-panel-open] > & {
+  [aria-expanded='true'] > & {
     transform: rotate(45deg);
   }
 }
 
 .Panel {
   box-sizing: border-box;
-  height: var(--accordion-panel-height);
   overflow: hidden;
   font-size: 0.875rem;
   line-height: 1.25rem;
   transition: height 150ms ease-out;
+}
 
-  &[data-starting-style],
-  &[data-ending-style] {
-    height: 0;
-  }
+.PanelOpen {
+  height: var(--accordion-panel-height);
+}
+
+.PanelClosed {
+  height: 0;
+}
+
+/* No size and no transition: at a reveal by find-in-page, the browser then scrolls to the text. */
+.FoundPanel {
+  box-sizing: border-box;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .Content {
