@@ -1,7 +1,7 @@
 import type { CDPSession } from '@vitest/browser-playwright';
 import { createEvent } from '@testing-library/dom';
 import { onTestFinished } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { fireEvent } from './fireEvent';
 
 export async function enterWithMouse(element: HTMLElement, init?: MouseEventInit) {
@@ -94,15 +94,16 @@ export function clientCenter(element: Element) {
 
 /**
  * Presses the main button of the real pointer at the center of `element` and holds it. `release`
- * lets the button go at the same point. A case that does not call it gets the release when it ends.
+ * lets the button go at the same point, or at `to`. A case that does not call it gets the release
+ * at the same point when it ends.
  */
 export async function holdPress(element: Element) {
   const { clientX, clientY } = clientCenter(element);
   const point = { x: clientX, y: clientY };
   let held = true;
-  async function release() {
+  async function release(to: ClientPoint = point) {
     held = false;
-    await userEvent.pointer({ coords: point, keys: '[/MouseLeft]' });
+    await userEvent.pointer({ coords: to, keys: '[/MouseLeft]' });
   }
   onTestFinished(async () => {
     if (held) {
@@ -111,6 +112,20 @@ export async function holdPress(element: Element) {
   });
   await userEvent.pointer({ coords: point, keys: '[MouseLeft>]' });
   return { point, release };
+}
+
+/**
+ * Drags with the real pointer, as `userEvent.dragAndDrop`. WebKit ends the drag of a draggable
+ * element with no `pointerup` and no `pointercancel`. The page then keeps the button pressed, and
+ * its next press gives no `pointerdown`. Vitest runs later test files in the same page. In WebKit,
+ * the helper thus releases the button off the page when the case ends.
+ */
+export async function dragAndDrop(...args: Parameters<typeof userEvent.dragAndDrop>) {
+  if (server.browser === 'webkit') {
+    onTestFinished(() => userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' }));
+  }
+  // eslint-disable-next-line no-restricted-properties -- This helper is the one call of the command.
+  await userEvent.dragAndDrop(...args);
 }
 
 interface ClientPoint {

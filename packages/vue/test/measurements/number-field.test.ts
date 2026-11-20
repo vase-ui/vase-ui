@@ -1,10 +1,11 @@
 // Measurements with native elements and plain Vue, with no code of the library. Each one states
 // what the browser or Vue does, so that `NumberField` has code only where they do not do it.
 import type { CDPSession } from '@vitest/browser-playwright';
-import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureNumberInputs from '../fixtures/MeasureNumberInputs.vue';
+import { dragAndDrop, holdPress } from '../pointer';
 import { mount, settle } from '../render';
 
 let root: HTMLElement | undefined;
@@ -249,9 +250,9 @@ describe('a held button', () => {
     button.addEventListener('pointerdown', () => setTimeout(() => (button.disabled = true)));
     for (const type of ['pointerup', 'click'])
       button.addEventListener(type, () => heard.push(type));
-    await userEvent.pointer([{ target: button, keys: '[MouseLeft>]' }]);
+    const { release } = await holdPress(button);
     await timer(20);
-    await userEvent.pointer([{ keys: '[/MouseLeft]' }]);
+    await release();
     await timer(20);
     expect(heard).toEqual(['pointerup']);
   });
@@ -264,10 +265,10 @@ describe('a held button', () => {
     for (const type of ['pointerdown', 'pointerleave', 'pointerenter', 'pointerup', 'click']) {
       button.addEventListener(type, () => heard.push(type));
     }
-    await userEvent.pointer([{ target: button, keys: '[MouseLeft>]' }]);
+    const { release } = await holdPress(button);
     await userEvent.pointer([{ coords: { x: 500, y: 500 } }]);
     await userEvent.pointer([{ target: button, coords: { x: 10, y: 10 } }]);
-    await userEvent.pointer([{ keys: '[/MouseLeft]' }]);
+    await release();
     // The pointer enters the button before the press, one time or more.
     expect(heard.slice(heard.indexOf('pointerdown'))).toEqual([
       'pointerdown',
@@ -315,13 +316,7 @@ describe('text input events', () => {
     await userEvent.copy();
     target!.focus();
     await userEvent.paste();
-    // WebKit ends the drag of a draggable element with no `pointerup` and no `pointercancel`. The
-    // page then keeps the button pressed, and its next press gives no `pointerdown`. Vitest runs
-    // later test files in the same page. A release off the page ends the press.
-    if (server.browser === 'webkit') {
-      onTestFinished(() => userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' }));
-    }
-    await userEvent.dragAndDrop(drag, target!);
+    await dragAndDrop(drag, target!);
     await timer();
     expect(heard).toEqual([
       ['insertText', 'x', true],

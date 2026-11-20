@@ -11,6 +11,7 @@ import {
   clientCenter,
   createHeldBranch,
   createRenderer,
+  dragAndDrop,
   enterWithMouse,
   fireEvent,
   flushMicrotasks,
@@ -3563,7 +3564,7 @@ describe('<Menu.Root />', () => {
         // The browser locator must resolve after pointer-down.
         const backdrop = page.getByRole('presentation').first();
 
-        await browserUserEvent.dragAndDrop(trigger, backdrop);
+        await dragAndDrop(trigger, backdrop);
 
         expect(screen.queryByTestId('menu')).toBe(null);
 
