@@ -377,8 +377,15 @@ export function usePlacement(
     arrow: {
       style: arrowStyle,
       uncentered: arrowUncentered,
-      setElement(element: HTMLElement | null) {
+      /**
+       * Gives the element of an arrow to the placement. The cleanup takes it back, unless a newer
+       * arrow came: a replacement arrow can mount before the old one leaves.
+       */
+      addElement(element: HTMLElement) {
         arrowElement.value = element;
+        return () => {
+          if (arrowElement.value === element) arrowElement.value = null;
+        };
       },
     },
   };
