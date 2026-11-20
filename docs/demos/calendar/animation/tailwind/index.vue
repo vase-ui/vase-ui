@@ -26,13 +26,11 @@ import { Calendar } from '@vase-ui/vue/calendar';
       <template #month="{ month }">
         <Calendar.Month :month="month" class="relative">
           <Calendar.Caption class="mb-2 flex h-8 items-center font-semibold" />
-          <Transition
-            enter-active-class="transition-[opacity,translate] duration-200 ease-[ease-out] motion-reduce:transition-none"
-            enter-from-class="translate-x-[calc(0.5rem*var(--page-direction))] opacity-0"
-            leave-active-class="absolute inset-x-0 transition-[opacity,translate] duration-200 ease-[ease-out] motion-reduce:transition-none"
-            leave-to-class="translate-x-[calc(-0.5rem*var(--page-direction))] opacity-0"
-          >
-            <Calendar.Grid :key="month.first.toString()" class="w-full table-fixed border-collapse">
+          <Transition name="calendar-page">
+            <Calendar.Grid
+              :key="month.first.toString()"
+              class="w-full table-fixed border-collapse [&.calendar-page-enter-active,&.calendar-page-leave-active]:transition-[opacity,translate] [&.calendar-page-enter-active,&.calendar-page-leave-active]:duration-200 [&.calendar-page-enter-active,&.calendar-page-leave-active]:ease-[ease-out] motion-reduce:[&.calendar-page-enter-active,&.calendar-page-leave-active]:transition-none [&.calendar-page-enter-from]:translate-x-[calc(0.5rem*var(--page-direction))] [&.calendar-page-enter-from]:opacity-0 [&.calendar-page-leave-active]:absolute [&.calendar-page-leave-active]:inset-x-0 [&.calendar-page-leave-to]:translate-x-[calc(-0.5rem*var(--page-direction))] [&.calendar-page-leave-to]:opacity-0"
+            >
               <Calendar.GridHeader>
                 <Calendar.GridHeaderRow>
                   <template #weekday="{ weekday }">

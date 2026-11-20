@@ -7,7 +7,8 @@ import { RangeCalendar } from '../../src/range-calendar';
 // the root, `dayButton` to each day button and `parts` to the other parts by their name, such as
 // `parts.Grid`. Each day cell has `data-date`, and each button of a month cell or a year cell has
 // its month or year. `captionAfter` puts the caption after the grid. `transition` puts the grid
-// in a `<Transition>` of that name, with the first day of the page as its key.
+// in a `<Transition>` of that name and of the mode `transitionMode`, with the first day of the page
+// as its key. `monthTransition` puts each month in such a `<Transition>` in place of the grid.
 const props = defineProps({
   root: Object as PropType<Record<string, unknown>>,
   range: Boolean,
@@ -19,6 +20,8 @@ const props = defineProps({
   views: Boolean,
   footer: Boolean,
   transition: String,
+  transitionMode: String as PropType<'out-in' | 'in-out'>,
+  monthTransition: String,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart });
@@ -63,9 +66,14 @@ const Root = computed(() => (props.range ? RangeCalendar.Root : Calendar.Root));
     </template>
     <Calendar.Months v-bind="parts.Months">
       <template #month="{ month }">
-        <Calendar.Month :month="month" v-bind="parts.Month">
+        <Transition v-if="monthTransition" :name="monthTransition">
+          <Calendar.Month :key="month.first.toString()" :month="month" v-bind="parts.Month">
+            <Calendar.Caption />
+          </Calendar.Month>
+        </Transition>
+        <Calendar.Month v-else :month="month" v-bind="parts.Month">
           <Calendar.Caption v-if="!captionAfter" v-bind="parts.Caption" />
-          <Transition v-if="transition" :name="transition">
+          <Transition v-if="transition" :name="transition" :mode="transitionMode">
             <Calendar.Grid :key="month.first.toString()" v-bind="parts.Grid">
               <Calendar.GridBody>
                 <template #week="{ week }">

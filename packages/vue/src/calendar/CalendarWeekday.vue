@@ -31,7 +31,7 @@ function elementProps() {
       scope: 'col',
       abbr: formatWeekday(props.weekday, 'long', calendar.locale),
       // A server and a browser can have other names of the days (test/measurements/calendar.test.ts).
-      'data-allow-mismatch': 'text,attribute',
+      'data-allow-mismatch': 'text',
       ...stateAttributes(calendar.state),
     },
     attrs,

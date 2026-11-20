@@ -54,6 +54,16 @@ describe('the view trigger', () => {
     expect(grid().tagName).toBe('TABLE');
   });
 
+  test('a new view sets the direction of the navigation to none', async () => {
+    const { trigger, group } = await mountCalendar();
+    group.querySelectorAll<HTMLElement>(':scope > button[aria-label]')[1]!.click();
+    await nextTick();
+    expect(group).toHaveAttribute('data-navigation-direction', 'next');
+    trigger().click();
+    await nextTick();
+    expect(group).toHaveAttribute('data-navigation-direction', 'none');
+  });
+
   test('is disabled with visibleDuration', async () => {
     const { trigger } = await mountCalendar({ visibleDuration: { weeks: 1 } });
     expect(trigger()).toBeDisabled();
@@ -90,15 +100,21 @@ describe('the cells', () => {
     expect(log).toEqual(['valueChange 2026-08 month-press']);
   });
 
-  test('a month out of the limits or of disabledMonths is disabled', async () => {
-    const { monthCell } = await mountCalendar({
+  test('a month or a year out of the limits or of its rule is disabled', async () => {
+    const { monthCell, yearCell, trigger } = await mountCalendar({
       defaultView: 'month',
       max: day('2026-10-15'),
       disabledMonths: (value: Temporal.PlainYearMonth) => value.month === 2,
+      disabledYears: (value: Temporal.PlainYearMonth) => value.year === 2025,
     });
     expect(monthCell('2026-11')).toBeDisabled();
     expect(monthCell('2026-02')).toBeDisabled();
     expect(monthCell('2026-10')).not.toBeDisabled();
+    trigger().click();
+    await nextTick();
+    expect(yearCell(2025)).toBeDisabled();
+    expect(yearCell(2027)).toBeDisabled();
+    expect(yearCell(2024)).not.toBeDisabled();
   });
 
   test('the arrow keys move by a cell and by a row, and the page follows', async () => {

@@ -58,6 +58,19 @@ describe('a drag with the real pointer', () => {
     expect(log).toEqual(['valueChange 2026-11-10 2026-11-12 drag']);
   });
 
+  test('Escape ends the drag, and the click of the release is no press', async () => {
+    const { at, log, shown } = await mountRange();
+    await userEvent.pointer([
+      { coords: at('2026-11-10'), keys: '[MouseLeft>]' },
+      { coords: at('2026-11-12') },
+    ]);
+    await userEvent.keyboard('{Escape}');
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    await nextTick();
+    expect(log).toEqual([]);
+    expect(shown()).toEqual({ start: [], end: [] });
+  });
+
   test('stops at the last day that maxDays allows', async () => {
     const { at, log } = await mountRange({ maxDays: 2 });
     await userEvent.pointer([

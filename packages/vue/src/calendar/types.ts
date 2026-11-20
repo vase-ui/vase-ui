@@ -261,9 +261,17 @@ export interface CalendarRootProps<
 /** The props of a part that renders a `<div>` and has no prop of its own. */
 interface DivProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 
+/** WAI-ARIA 1.3 gives each element `aria-description`, and the types of Vue do not list it. */
+interface AriaDescription {
+  'aria-description'?: string | undefined;
+}
+
 /** The props of a button of the calendar. */
 interface ButtonProps
-  extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'> {}
+  extends
+    AsProps,
+    /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled'>,
+    /* @vue-ignore */ AriaDescription {}
 
 export interface CalendarMonthsProps extends DivProps {}
 export interface CalendarMonthsState extends CalendarState {

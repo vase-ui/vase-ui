@@ -100,6 +100,14 @@ describe('the range', () => {
     });
   });
 
+  test('a day that gets the focus shows the range in progress', async () => {
+    const { button, shown } = await mountRange();
+    button('2026-11-10').click();
+    button('2026-11-12').focus();
+    await nextTick();
+    expect(shown().end).toEqual(['2026-11-12']);
+  });
+
   test('Escape on each element of the root puts back the range from before the first press', async () => {
     const { button, log, group } = await mountRange({
       defaultValue: [day('2026-11-02'), day('2026-11-04')],

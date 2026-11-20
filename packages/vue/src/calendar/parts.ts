@@ -62,6 +62,7 @@ import type {
   CalendarRootProps,
   CalendarRootState,
   CalendarRootView,
+  CalendarValue,
   CalendarViewTriggerProps,
   CalendarViewTriggerState,
   CalendarWeekNumberHeaderProps,
@@ -88,7 +89,10 @@ import type {
  */
 export const Root: typeof CalendarRoot = CalendarRoot;
 export namespace Root {
-  export type Props = CalendarRootProps;
+  export type Props<
+    Value extends CalendarValue = Temporal.PlainDate,
+    Multiple extends boolean | undefined = false,
+  > = CalendarRootProps<Value, Multiple>;
   export type State = CalendarRootState;
   export type ChangeEventReason = CalendarRootChangeEventReason;
   export type ChangeEventDetails = CalendarRootChangeEventDetails;

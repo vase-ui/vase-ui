@@ -4,7 +4,7 @@ import type { CalendarBaseProps, CalendarRootState } from '../calendar/types';
 import type { DateValue } from '../internals/date-time/temporal';
 
 /** The first and the last day of a range. A range in progress has its first day and `null`. */
-export type RangeCalendarRootValue<Value extends DateValue = DateValue> = [
+export type RangeCalendarRootValue<Value extends DateValue = Temporal.PlainDate> = [
   start: Value | null,
   end: Value | null,
 ];

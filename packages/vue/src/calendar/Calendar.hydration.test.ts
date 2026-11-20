@@ -44,12 +44,13 @@ describe('server render and hydration', () => {
   });
 
   test('with nothing that gives a page, the server HTML has no month and the buttons are disabled; the page of today comes after the mount', async () => {
-    const root = await renderOnServer('CalendarOnServer', {});
+    const root = await renderOnServer('CalendarOnServer', { selects: true });
     const group = root.querySelector('[role=group]')!;
     expect(root.querySelector('[role=grid]')).toBeNull();
     expect(group).not.toHaveAttribute('aria-label');
     expect(group.querySelector(':scope > button')).toHaveAttribute('aria-disabled', 'true');
-    hydrate(CalendarOnServer, {}, root);
+    expect(group.querySelector('select')).toBeDisabled();
+    hydrate(CalendarOnServer, { selects: true }, root);
     await waitFor(() => expect(root.querySelector('[role=grid]')).not.toBeNull());
     const now = clockToday();
     expect(root.querySelector('[aria-current=date]')!.closest('[data-date]')).toHaveAttribute(
@@ -82,5 +83,21 @@ describe('server render and hydration', () => {
     expect(root.querySelectorAll('[data-year][tabindex="0"]')).toHaveLength(1);
     hydrate(CalendarOnServer, props, root);
     await nextTick();
+  });
+
+  test('a server with other Intl data than the browser gives other texts, and the hydration writes the texts of the browser with no message', async () => {
+    const props = { today: '2026-11-18', views: true };
+    const root = await renderOnServer('CalendarOnServer', props);
+    const caption = root.querySelector('[role=group] div[aria-live=polite]')!;
+    const trigger = root.querySelector('[role=group] button[aria-live=polite]')!;
+    const weekday = root.querySelector('th[abbr]')!;
+    caption.textContent = 'server month';
+    trigger.textContent = 'server range';
+    weekday.textContent = 'server day';
+    hydrate(CalendarOnServer, props, root);
+    await nextTick();
+    expect(caption).toHaveTextContent('November 2026');
+    expect(trigger).toHaveTextContent('November 2026');
+    expect(weekday).toHaveTextContent('Mon');
   });
 });

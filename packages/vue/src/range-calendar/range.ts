@@ -14,6 +14,8 @@ import type {
   RangeCalendarRootValue,
 } from './types';
 
+type Value = RangeCalendarRootValue<DateValue>;
+
 type Ends = readonly [DateValue | null, DateValue | null];
 
 /** The first and the last day of a range, in the order of the calendar. */
@@ -50,12 +52,8 @@ function isSameEnd(a: DateValue | null, b: DateValue | null) {
 export function useRange(
   props: RangeCalendarRootProps<DateValue>,
   emit: {
-    (
-      event: 'valueChange',
-      value: RangeCalendarRootValue,
-      details: RangeCalendarRootChangeEventDetails,
-    ): void;
-    (event: 'update:modelValue', value: RangeCalendarRootValue): void;
+    (event: 'valueChange', value: Value, details: RangeCalendarRootChangeEventDetails): void;
+    (event: 'update:modelValue', value: Value): void;
   },
   host: RangeCalendarHost | null,
 ) {
@@ -165,10 +163,10 @@ export function useRange(
     return [
       create(first, before1 ?? fallback),
       second && create(second, before2 ?? fallback),
-    ] as RangeCalendarRootValue;
+    ] as Value;
   }
 
-  function commit(next: RangeCalendarRootValue, details: RangeCalendarRootChangeEventDetails) {
+  function commit(next: Value, details: RangeCalendarRootChangeEventDetails) {
     const [now1, now2] = model.value.value;
     if (isSameEnd(now1, next[0]) && isSameEnd(now2, next[1])) return false;
     emit('valueChange', next, details);

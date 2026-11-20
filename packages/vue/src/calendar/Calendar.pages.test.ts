@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import CalendarParts from '../../test/fixtures/CalendarParts.vue';
-import { mount } from '../../test/render';
+import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
@@ -148,5 +150,41 @@ describe('a keyed grid in <Transition>', () => {
     await move('next');
     expect(container.querySelector('[role=group] [aria-live=polite]')).toBe(caption);
     expect(caption).toHaveTextContent('December 2026');
+  });
+
+  test('a keyed month that leaves is inert', async () => {
+    const { container, move } = await mountCalendar({ monthTransition: 'calendar-slide' });
+    const old = container.querySelector('[role=group] [aria-live=polite]')!.parentElement!;
+    await move('next');
+    expect(old).toHaveClass('calendar-slide-leave-active');
+    expect(old).toHaveAttribute('inert');
+  });
+
+  test('with mode out-in, a key gives the focus to its day when the new grid mounts', async () => {
+    const { container } = await mountCalendar({
+      transition: 'calendar-slide',
+      transitionMode: 'out-in',
+    });
+    container.querySelector<HTMLElement>('[data-date="2026-11-18"] button')!.focus();
+    await userEvent.keyboard('{PageDown}');
+    await waitFor(() =>
+      expect(document.activeElement?.closest('[data-date]')).toHaveAttribute(
+        'data-date',
+        '2026-12-18',
+      ),
+    );
+  });
+});
+
+describe('a development build', () => {
+  test('throws for broadcastCalendar with a calendar that is not Gregorian', () => {
+    expect(
+      String(
+        mountError(CalendarParts, {
+          root: { today, broadcastCalendar: true, calendar: 'persian' },
+        }),
+      ),
+    ).toMatch(/has `broadcastCalendar` and shows the calendar `persian`/);
+    takeReportedMessages();
   });
 });

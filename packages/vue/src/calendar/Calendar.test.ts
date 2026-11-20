@@ -1,11 +1,13 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { h, nextTick, reactive } from 'vue';
+import { nextTick, reactive } from 'vue';
 import type { CalendarRootChangeEventDetails } from '@vase-ui/vue/calendar';
-import { Calendar } from '@vase-ui/vue/calendar';
 import { dataAttributes } from '../../test/field';
+import CalendarElement from '../../test/fixtures/CalendarElement.vue';
+import CalendarPartOutside from '../../test/fixtures/CalendarPartOutside.vue';
 import CalendarParts from '../../test/fixtures/CalendarParts.vue';
 import { mount, mountError } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 const day = (value: string) => Temporal.PlainDate.from(value);
@@ -112,25 +114,14 @@ describe('the elements', () => {
   });
 
   test('the element slot replaces the element, and the template ref has element and focus', async () => {
-    const { root, exposed } = mount({
-      setup: () => () =>
-        h(Calendar.Root, { today, locale: 'en-US', ref: 'calendar' } as never, {
-          element: ({ props, elementRef }: { props: object; elementRef: () => void }) =>
-            h('section', { ...props, ref: elementRef, 'data-own': '' }, 'content'),
-        }),
-    });
+    const { root, exposed } = mount(CalendarElement);
     await nextTick();
     const section = root.querySelector('section')!;
     expect(section).toHaveAttribute('role', 'group');
+    expect(section).toHaveAttribute('aria-label', 'November 2026');
     expect(section).toHaveAttribute('data-own');
-    expect(exposed).toBeDefined();
-  });
-
-  test('throw outside their root, their month and their day', () => {
-    expect(String(mountError(Calendar.Caption))).toMatch(/must be inside <Calendar.Root>/);
-    expect(
-      String(mountError({ render: () => h(Calendar.Root, { today }, () => h(Calendar.Grid)) })),
-    ).toMatch(/must be inside <Calendar.Month>/);
+    expect(exposed.root.element).toBe(section);
+    expect(exposed.root.focus).toBeTypeOf('function');
   });
 });
 
@@ -304,6 +295,41 @@ describe('the navigation buttons', () => {
     expect(next()).toBeDisabled();
   });
 
+  test('a click of the mouse moves the page one time', async () => {
+    const log: string[] = [];
+    const { next } = await mountCalendar({ root: logged(log) });
+    await userEvent.click(next());
+    await nextTick();
+    expect(log).toEqual(['monthChange 2026-12 month-change', 'update:month 2026-12']);
+  });
+
+  test('a touch that the browser cancels, such as a scroll, moves nothing', async () => {
+    const log: string[] = [];
+    const { next } = await mountCalendar({ root: logged(log) });
+    const touch = { pointerId: 3, pointerType: 'touch', button: 0, bubbles: true };
+    next().dispatchEvent(new PointerEvent('pointerdown', touch));
+    window.dispatchEvent(new PointerEvent('pointercancel', touch));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(log).toEqual([]);
+  });
+
+  test('a hold pauses while the pointer is out of the button', async () => {
+    const log: string[] = [];
+    const { next } = await mountCalendar({ root: logged(log) });
+    const rect = next().getBoundingClientRect();
+    let movesAtLeave = -1;
+    next().addEventListener('pointerleave', () => (movesAtLeave = log.length));
+    await userEvent.pointer([
+      { coords: { x: rect.left + 4, y: rect.top + 4 }, keys: '[MouseLeft>]' },
+      { coords: { x: rect.left + 4, y: rect.bottom + 40 } },
+    ]);
+    await waitFor(() => expect(movesAtLeave).toBeGreaterThan(0));
+    // Five repeats would come in this time.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(log).toHaveLength(movesAtLeave);
+  });
+
   test('a hold with the mouse repeats the move until the limit, and its click moves no more', async () => {
     const log: string[] = [];
     const { next } = await mountCalendar({ root: logged(log, { max: day('2027-02-10') }) });
@@ -384,8 +410,69 @@ describe('the caption and the week numbers', () => {
   });
 });
 
-describe('a development build', () => {
-  test('throws for a modifier with the name of a day attribute', () => {
+describe('today and the calendar of the grid', () => {
+  test('with no today, the root reads the clock after the mount and at each move of the user', async () => {
+    const clock = vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(day('2026-11-18'));
+    const { root, button, next } = await mountCalendar({
+      root: { locale: 'en-US', defaultMonth: Temporal.PlainYearMonth.from('2026-11') },
+    });
+    expect(root.querySelector('[aria-current=date]')).toBe(button('2026-11-18'));
+    clock.mockReturnValue(day('2026-12-02'));
+    next().click();
+    await nextTick();
+    expect(root.querySelector('[aria-current=date]')).toBe(button('2026-12-02'));
+    clock.mockRestore();
+  });
+
+  test('with no today, the root reads the clock in the zone of a zoned value', async () => {
+    const clock = vi.spyOn(Temporal.Now, 'plainDateISO');
+    await mountCalendar({
+      root: {
+        locale: 'en-US',
+        defaultValue: Temporal.ZonedDateTime.from('2026-11-03T09:30[Asia/Tokyo]'),
+      },
+    });
+    expect(clock).toHaveBeenCalledWith('Asia/Tokyo');
+    clock.mockRestore();
+  });
+
+  test('the grid takes no calendar from the locale', async () => {
+    const { cell } = await mountCalendar({ root: { today, locale: 'fa-IR' } });
+    expect(cell('2026-11-01')).toHaveAttribute('role', 'gridcell');
+    expect(cell('2026-11-01').querySelector('button')).not.toBeNull();
+  });
+
+  test('a value that becomes empty keeps the kind of its last value for the next value', async () => {
+    const log: string[] = [];
+    const tokyo = Temporal.ZonedDateTime.from('2026-11-03T09:30[Asia/Tokyo]');
+    const paris = Temporal.ZonedDateTime.from('2026-11-04T18:00[Europe/Paris]');
+    const props = logged(log, { multiple: true, modelValue: [tokyo] });
+    props['onUpdate:modelValue'] = (next: unknown) => (props.modelValue = next);
+    const { button } = await mountCalendar({ root: props });
+    props.modelValue = [paris];
+    await nextTick();
+    button('2026-11-04')!.click();
+    await nextTick();
+    button('2026-11-05')!.click();
+    expect(log).toEqual([
+      'valueChange  day-press',
+      'valueChange 2026-11-05T18:00:00+01:00[Europe/Paris] day-press',
+    ]);
+  });
+});
+
+describe('errors', () => {
+  test.each([
+    { part: 'caption', message: /must be inside <Calendar.Root> or <RangeCalendar.Root>/ },
+    { part: 'grid', message: /must be inside <Calendar.Month>/ },
+    { part: 'day-button', message: /<Calendar.DayButton> must be inside <Calendar.Day>/ },
+  ] as const)('a $part outside its parent throws', ({ part, message }) => {
+    expect(String(mountError(CalendarPartOutside, { part }))).toMatch(message);
+    // After the error, Vapor renders the part with no setup, and warns about each binding.
+    takeReportedMessages();
+  });
+
+  test('a development build throws for a modifier with the name of a day attribute', () => {
     expect(
       String(
         mountError(CalendarParts, {
@@ -393,5 +480,6 @@ describe('a development build', () => {
         }),
       ),
     ).toMatch(/The `modifiers` prop of <Calendar.Root> has the key `outsideMonth`/);
+    takeReportedMessages();
   });
 });
