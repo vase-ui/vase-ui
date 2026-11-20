@@ -400,7 +400,7 @@ describe('a native label', () => {
     },
   );
 
-  test('a change of `id` names the group with the label of the new id', async () => {
+  test('each change of `id` names the group with the label of the new id', async () => {
     const date = reactive<Record<string, unknown>>({ id: 'day' });
     const { root, group } = await mountInField({ date });
     root.insertAdjacentHTML(
@@ -410,6 +410,9 @@ describe('a native label', () => {
     date.id = 'arrival';
     await settle();
     expect(group).toHaveAttribute('aria-labelledby', 'arrival-name');
+    date.id = 'day';
+    await settle();
+    expect(group).toHaveAttribute('aria-labelledby', 'day-name');
   });
 
   test('`aria-label` of the developer and the label of a Field win', async () => {

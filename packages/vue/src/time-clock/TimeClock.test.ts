@@ -2,9 +2,11 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
+import { reset as resetWarnings } from '../common/warn';
 import { dataAttributes } from '../../test/field';
 import TimeClockParts from '../../test/fixtures/TimeClockParts.vue';
 import { mount, settle } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { pointOnFace } from '../../test/time-clockTestUtils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
@@ -85,6 +87,22 @@ describe('the parts', () => {
     expect(byTestId('hour-trigger')).toHaveAttribute('aria-label', 'hour');
   });
 
+  test('the hand of a minute between two numbers has `data-between-numbers`', async () => {
+    const { hand } = await mountClock({
+      clock: { defaultValue: time('15:07'), defaultView: 'minute' },
+    });
+    expect(hand()).toHaveAttribute('data-between-numbers');
+    expect(hand()!.style.getPropertyValue('--time-clock-hand-angle')).toBe('42deg');
+  });
+
+  test('a step that is not a whole number above 0 gives a warning', async () => {
+    resetWarnings();
+    await mountClock({ clock: { minuteStep: 0 } });
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: TimeClock `minuteStep` must be a whole number above 0. The clock uses a step of 1 instead. Set `minuteStep` to a whole number above 0.',
+    ]);
+  });
+
   test('a 24-hour face has an inner ring and no day period', async () => {
     const { numbers, byTestId } = await mountClock({ clock: { hourCycle: 24 } });
     expect(numbers()).toHaveLength(24);
@@ -156,12 +174,15 @@ describe('press and drag', () => {
     expect(log).toContain('valueChange 03:00:00 drag');
   });
 
-  test('a press of an event that a script made selects, with no pointer capture and no error', async () => {
+  test('a press of an event that a script made selects, with no pointer capture and no error; a second pointer changes nothing', async () => {
     const log: string[] = [];
     const { face } = await mountClock({ clock: record(log) });
     const point = pointOnFace(face(), 180);
     const init = { ...point, button: 0, pointerId: 7, bubbles: true, cancelable: true };
+    const second = { ...pointOnFace(face(), 90), button: 0, pointerId: 8, bubbles: true };
     face().dispatchEvent(new PointerEvent('pointerdown', init));
+    face().dispatchEvent(new PointerEvent('pointerdown', second));
+    face().dispatchEvent(new PointerEvent('pointerup', second));
     face().dispatchEvent(new PointerEvent('pointerup', init));
     expect(log).toEqual([
       'valueChange 06:00:00 drag',
@@ -187,8 +208,10 @@ describe('press and drag', () => {
     const log: string[] = [];
     const scene = reactive({ showFace: true });
     const { face, group } = await mountClock({ clock: record(log), scene });
+    let pointerId = 0;
+    face().addEventListener('pointerdown', (event) => (pointerId = event.pointerId));
     await pressAt(face(), 90);
-    face().dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1, bubbles: true }));
+    face().dispatchEvent(new PointerEvent('pointercancel', { pointerId, bubbles: true }));
     await releaseAt(face(), 90);
     expect(log).toEqual(['valueChange 03:00:00 drag']);
     await pressAt(face(), 120);

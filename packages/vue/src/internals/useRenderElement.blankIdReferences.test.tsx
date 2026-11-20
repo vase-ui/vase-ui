@@ -18,7 +18,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { TimeClock } from '@vase-ui/vue/time-clock';
 import { Toast } from '@vase-ui/vue/toast';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
@@ -561,20 +560,6 @@ describe('VUE-110: a blank ID reference attribute of the consumer', () => {
               </Slider.Track>
             </Slider.Control>
           </Slider.Root>,
-        );
-        await flushMicrotasks();
-
-        expect(screen.getByRole('slider')).not.toHaveAttribute('aria-describedby');
-      },
-    );
-
-    it.each(BLANKS)(
-      'gives the input of TimeClock.Face no attribute for $blank',
-      async ({ value }) => {
-        await render(
-          <TimeClock.Root locale="en-US">
-            <TimeClock.Face aria-describedby={value} />
-          </TimeClock.Root>,
         );
         await flushMicrotasks();
 

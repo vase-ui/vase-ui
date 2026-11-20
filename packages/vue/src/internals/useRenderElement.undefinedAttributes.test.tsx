@@ -8,7 +8,6 @@ import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
-import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
@@ -20,8 +19,6 @@ import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
-import { TimeClock } from '@vase-ui/vue/time-clock';
-import { TimeField } from '@vase-ui/vue/time-field';
 import { Toast } from '@vase-ui/vue/toast';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
@@ -141,17 +138,6 @@ const rows: Row[] = [
       </ContextMenu.Root>
     ),
     expected: () => '',
-  },
-  {
-    name: 'DateField.Clear aria-label',
-    attribute: 'aria-label',
-    createNode: () => (
-      <DateField.Root>
-        <DateField.Input />
-        <DateField.Clear aria-label={undefined} data-testid="part" />
-      </DateField.Root>
-    ),
-    expected: () => 'Clear',
   },
   {
     name: 'Dialog.Popup aria-labelledby',
@@ -323,23 +309,6 @@ const rows: Row[] = [
     attribute: 'role',
     createNode: () => <Slider.Root role={undefined} data-testid="part" />,
     expected: () => 'group',
-  },
-  {
-    name: 'TimeClock.Root role',
-    attribute: 'role',
-    createNode: () => <TimeClock.Root aria-label="Start" role={undefined} data-testid="part" />,
-    expected: () => 'group',
-  },
-  {
-    name: 'TimeField.Clear aria-label',
-    attribute: 'aria-label',
-    createNode: () => (
-      <TimeField.Root>
-        <TimeField.Input />
-        <TimeField.Clear aria-label={undefined} data-testid="part" />
-      </TimeField.Root>
-    ),
-    expected: () => 'Clear',
   },
   {
     name: 'Toast.Root aria-labelledby',

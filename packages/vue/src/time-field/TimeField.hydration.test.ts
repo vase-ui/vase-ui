@@ -24,20 +24,40 @@ describe('server render and hydration', () => {
     expect(takeReportedMessages()).toEqual([]);
   });
 
-  // A server that renders a 24-hour cycle has no day period, and the browser renders a 12-hour one.
-  test('a server with another count of segments: the segments of the browser, with their attributes, and one message of a virtual DOM part', async () => {
+  // The server renders `de-DE` with a 24-hour cycle: hour, minute and zone name. The browser renders
+  // `ja-JP` with a 12-hour cycle: day period, hour, minute, and a literal where the server had the
+  // zone name.
+  test('a server with another count of segments: the segments and literals of the browser, with their attributes, and one message of a virtual DOM part', async () => {
+    const value = '2026-11-14T15:04[America/New_York]';
     const root = await renderOnServer('DateTimeFieldsOnServer', {
       family: 'time',
-      value: '15:04',
+      value,
+      locale: 'de-DE',
       hourCycle: 24,
     });
     expect(segmentsOf(root)).toHaveLength(2);
-    hydrate(DateTimeFieldsOnServer, { family: 'time', value: '15:04', hourCycle: 12 }, root);
+    hydrate(
+      DateTimeFieldsOnServer,
+      { family: 'time', value, locale: 'ja-JP', hourCycle: 12 },
+      root,
+    );
     await nextTick();
-    const [hour, minute, period] = segmentsOf(root);
-    expect([hour!.value, minute!.value, period!.value]).toEqual(['3', '04', 'PM']);
+    const [period, hour, minute] = segmentsOf(root);
+    expect([period!.value, hour!.value, minute!.value]).toEqual(['午後', '3', '04']);
     expect(hour).toHaveAttribute('aria-valuemax', '12');
     expect(hour).toHaveAttribute('aria-valuemin', '1');
+    const spans = [...root.querySelectorAll('[role="group"] span')];
+    expect(
+      spans.map((span) => [
+        span.textContent,
+        span.getAttribute('data-type'),
+        span.getAttribute('aria-hidden'),
+      ]),
+    ).toEqual([
+      [':', 'literal', 'true'],
+      [' ', 'literal', 'true'],
+      ['GMT-5', 'timeZoneName', null],
+    ]);
     expect(takeReportedMessages()).toEqual(
       isVaporParts ? [] : ['console.error: Hydration completed but contains mismatches.'],
     );

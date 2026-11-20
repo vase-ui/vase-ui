@@ -27,13 +27,6 @@ export interface DateTimeFieldSegmentState extends DateTimeFieldState {
   placeholder: boolean;
 }
 
-// The input types of a composition. The end of a composition commits its text.
-const COMPOSITION_INPUT_TYPES = new Set([
-  'insertCompositionText',
-  'deleteCompositionText',
-  'insertFromComposition',
-]);
-
 /**
  * Writes the attributes again after the mount. Vue keeps the attributes of an element that it
  * hydrates, and a server with other `Intl` data puts another segment or literal in its place
@@ -197,7 +190,7 @@ export function useDateTimeFieldSegment(
     if (
       composing.value !== null ||
       event.isComposing ||
-      COMPOSITION_INPUT_TYPES.has(event.inputType)
+      event.inputType === 'insertCompositionText'
     ) {
       return;
     }
@@ -221,11 +214,10 @@ export function useDateTimeFieldSegment(
       composing.value = input.value;
       return;
     }
+    // WebKit sends the last `input` of a composition after `compositionend`. The text of the
+    // segment then starts with the input, so it adds no digit.
     const inputType = (event as Partial<InputEvent>).inputType ?? '';
-    // A composition that ended gave its text at `compositionend`. WebKit sends its last `input`
-    // after that event.
-    const endOfComposition = COMPOSITION_INPUT_TYPES.has(inputType) && !platform.os.android;
-    if (canChange() && !endOfComposition) {
+    if (canChange()) {
       if (inputType.startsWith('deleteContent')) {
         empty(
           createChangeEventDetails('input-clear', event),

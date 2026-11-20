@@ -18,6 +18,14 @@ const layoutOf = (root: Element) =>
   );
 
 describe('server render and hydration', () => {
+  // A server renders a part before the `setup` of the parts after it, so the root defers its render.
+  test('the server HTML of a field names the group with the label and the description of the Field', async () => {
+    const root = await renderOnServer('DateFieldInField', { field: {} });
+    const group = root.querySelector('[role="group"]')!;
+    expect(group).toHaveAttribute('aria-labelledby', root.querySelector('label')!.id);
+    expect(group).toHaveAttribute('aria-describedby', 'description');
+  });
+
   test('the server HTML has each segment with its text and attributes, each literal and the form input; the hydration keeps each element', async () => {
     const props = { family: 'date', value: '2026-11-14', name: 'when' };
     const root = await renderOnServer('DateTimeFieldsOnServer', props);
@@ -56,32 +64,43 @@ describe('server render and hydration', () => {
 
   // A virtual DOM part logs one message for a list with another count, also under
   // `data-allow-mismatch` (test/measurements/date-time-field.test.ts). A Vapor part logs none.
+  // The server renders `de-DE` with a 24-hour cycle, and the browser `ja-JP` with a 12-hour cycle.
+  // The browser has one more segment, and a literal where the server had the zone name.
   test('a server with another count of items: the layout of the browser, and one message of a virtual DOM part', async () => {
+    const value = '2026-11-14T15:04[America/New_York]';
     const root = await renderOnServer('DateTimeFieldsOnServer', {
       family: 'date',
-      value: '2026-11-14T15:04',
-      locale: 'en-GB',
+      value,
+      locale: 'de-DE',
+      hourCycle: 24,
     });
     expect(segmentsOf(root)).toHaveLength(5);
     hydrate(
       DateTimeFieldsOnServer,
-      { family: 'date', value: '2026-11-14T15:04', locale: 'en-US' },
+      { family: 'date', value, locale: 'ja-JP', hourCycle: 12 },
       root,
     );
     await nextTick();
     expect(layoutOf(root)).toEqual([
-      'month month',
+      'year 年',
       '"/"',
-      'day day',
+      'month 月',
       '"/"',
-      'year year',
-      '", "',
-      'hour hour',
-      '":"',
-      'minute minute',
+      'day 日',
       '" "',
-      'dayPeriod AM/PM',
+      'dayPeriod 午前/午後',
+      'hour 時',
+      '":"',
+      'minute 分',
+      '" "',
+      '"GMT-5"',
     ]);
+    const spans = [...root.querySelectorAll('[role="group"] span')];
+    expect(spans.map((span) => span.getAttribute('aria-hidden'))).toEqual([
+      ...Array.from({ length: 5 }, () => 'true'),
+      null,
+    ]);
+    expect(spans.at(-2)).toHaveAttribute('data-type', 'literal');
     expect(takeReportedMessages()).toEqual(
       isVaporParts ? [] : ['console.error: Hydration completed but contains mismatches.'],
     );

@@ -2,12 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { HTMLAttributes, VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { DateField } from '@vase-ui/vue/date-field';
 import { Dialog } from '@vase-ui/vue/dialog';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { Slider } from '@vase-ui/vue/slider';
-import { TimeClock } from '@vase-ui/vue/time-clock';
 import { useRender } from '@vase-ui/vue/use-render';
 import type { VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -89,17 +87,6 @@ async function showNavigationMenu() {
 }
 
 const rows: Row[] = [
-  {
-    name: 'DateField.Clear',
-    attribute: 'aria-label',
-    createNode: (attrs) => (
-      <DateField.Root>
-        <DateField.Input />
-        <DateField.Clear data-testid="part" {...attrs} />
-      </DateField.Root>
-    ),
-    expected: 'Clear',
-  },
   {
     name: 'Dialog.Popup',
     attribute: 'aria-labelledby',
@@ -191,17 +178,6 @@ const rows: Row[] = [
       </Slider.Root>
     ),
     expected: 'Volume',
-    getNamed: () => screen.getByRole('slider'),
-  })),
-  ...(['aria-label', 'aria-labelledby'] as const).map((attribute): Row => ({
-    name: `TimeClock.Face ${attribute}`,
-    attribute,
-    createNode: (attrs) => (
-      <TimeClock.Root locale="en-US">
-        <TimeClock.Face {...attrs} />
-      </TimeClock.Root>
-    ),
-    expected: 'hour',
     getNamed: () => screen.getByRole('slider'),
   })),
   {

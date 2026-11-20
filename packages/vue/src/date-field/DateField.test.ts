@@ -5,6 +5,7 @@ import type { DateFieldRootChangeEventDetails } from '@vase-ui/vue/date-field';
 import { dataAttributes } from '../../test/field';
 import DateFields from '../../test/fixtures/DateFields.vue';
 import DateFieldSlots from '../../test/fixtures/DateFieldSlots.vue';
+import { mockToday } from '../../test/mockBrowserToday';
 import { mount, settle } from '../../test/render';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -258,11 +259,10 @@ describe('the value', () => {
     expect(values(segments)).toEqual(['', '', '']);
   });
 
-  test('a typed year takes the era of `referenceDate`', async () => {
+  test('a typed year takes the era of today', async () => {
+    mockToday('2026-11-14');
     const log: string[] = [];
-    const { segment } = await mountFields([
-      record(log, { calendar: 'japanese', referenceDate: day('2026-01-01') }),
-    ]);
+    const { segment } = await mountFields([record(log, { calendar: 'japanese' })]);
     segment('year').focus();
     await userEvent.keyboard('5');
     segment('month').focus();
@@ -483,6 +483,10 @@ describe('focus and pointer', () => {
     await userEvent.click(segments[0]!);
     expect(document.activeElement).toBe(segments[0]);
     expect([segments[0]!.selectionStart, segments[0]!.selectionEnd]).toEqual([0, 2]);
+    // A digit that does not fill the segment writes its text, and the caret goes to its end.
+    await userEvent.keyboard('1');
+    await userEvent.click(segments[0]!);
+    expect([segments[0]!.selectionStart, segments[0]!.selectionEnd]).toEqual([0, 1]);
   });
 
   test('a press on Input outside a segment gives the focus to the first empty segment, else to the first', async () => {

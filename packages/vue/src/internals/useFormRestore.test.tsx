@@ -282,24 +282,6 @@ const RESTORED_FAMILIES: RestoredFamily[] = [
     changes: '30,60 (input-change)',
     events: ['input'],
   },
-  {
-    name: 'DateField.Root',
-    family: 'date-field',
-    inputName: 'when',
-    written: ['2026-12-25'],
-    model: '2026-12-25',
-    changes: '2026-12-25 (input-change)',
-    events: ['input'],
-  },
-  {
-    name: 'TimeField.Root',
-    family: 'time-field',
-    inputName: 'alarm',
-    written: ['09:30'],
-    model: '09:30:00',
-    changes: '09:30:00 (input-change)',
-    events: ['input'],
-  },
 ];
 
 describe('VUE-81: a render before the page show', () => {

@@ -97,6 +97,7 @@ function inputProps() {
 
 function setInput(target: unknown) {
   inputElement.value = target as HTMLInputElement | null;
+  clock.setRangeInput(inputElement.value);
 }
 
 function onInput(event: Event) {

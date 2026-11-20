@@ -238,12 +238,14 @@ describe('Vue hydrates a list of inputs and spans that differs from the server H
   );
 
   // So a segment writes its attributes again after the mount.
-  test.each(['an attribute', 'another order'])(
-    '%s: a virtual DOM component keeps the attributes of the server; a Vapor component writes those of the browser',
-    async (name) => {
+  test.each([
+    ['an attribute', 'input month 12 mo. 11'],
+    ['another order', 'input day 31 -- 11'],
+  ])(
+    '%s: without a write after the mount, an input keeps the attributes of the server',
+    async (name, first) => {
       const { shown } = await hydrateCase(name, { allow: true, write: false });
-      if (isVaporFixture) expect(shown).toEqual(rightItems(CASES[name]![1]));
-      else expect(shown).not.toEqual(rightItems(CASES[name]![1]));
+      expect(shown[0]).toBe(first);
     },
   );
 

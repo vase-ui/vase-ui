@@ -40,6 +40,8 @@ export interface ClockForPart {
   setView(view: TimeClockView, details: TimeClockRootViewChangeEventDetails): void;
   commit(details: TimeClockRootCommitEventDetails): void;
   setDragging(dragging: boolean): void;
+  /** The range input of the face, which the time picker focuses. */
+  setRangeInput(input: HTMLInputElement | null): void;
   /** Adds the element of a number. Returns the function that removes it. */
   addNumber(element: Element, number: () => TimeClockFaceNumber): () => void;
 }

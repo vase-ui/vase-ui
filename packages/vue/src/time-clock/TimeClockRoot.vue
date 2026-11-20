@@ -114,8 +114,9 @@ const { value: shownView, setOwn: setOwnView } = useModel<TimeClockView>(
 const dragging = shallowRef(false);
 const numberElements = shallowReactive(new Map<Element, () => TimeClockFaceNumber>());
 
-// The time picker gives the focus to the range input through it.
-usePickerControl(PickerClockOwner, () => element.value?.querySelector('input[type="range"]'));
+const rangeInput = shallowRef<HTMLInputElement | null>(null);
+// The time picker gives the focus to the range input of the face through it.
+usePickerControl(PickerClockOwner, () => rangeInput.value);
 
 const shownHourCycle = computed(() => props.hourCycle ?? hourCycleOf(shownLocale.value));
 const grid = computed(() =>
@@ -257,6 +258,7 @@ provide(clockKey, {
   setView,
   commit,
   setDragging: (next) => (dragging.value = next),
+  setRangeInput: (input) => (rangeInput.value = input),
   addNumber(el, number) {
     numberElements.set(el, number);
     return () => numberElements.delete(el);
