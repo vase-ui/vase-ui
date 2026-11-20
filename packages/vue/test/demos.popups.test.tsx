@@ -185,18 +185,14 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
   return [];
 }
 
-// A portal of `utils/popups` has an element of its own. A portal of the popup layer moves each part
-// to `<body>`, so each child of `<body>` outside the demo is a portal there.
+// A portal moves each part to `<body>`, so each child of `<body>` outside the demo is a portal.
 function portals() {
-  const moved = [...document.body.children].filter(
+  return [...document.body.children].filter(
     (child): child is HTMLElement =>
       child instanceof HTMLElement &&
       !child.matches('script, style') &&
       !child.querySelector('.demo-frame'),
   );
-  return [
-    ...new Set([...document.querySelectorAll<HTMLElement>('[data-vase-ui-portal]'), ...moved]),
-  ];
 }
 
 // A closed popup that stays in the DOM is `hidden`, or `inert` as the list of a select. A popup of

@@ -1,7 +1,0 @@
-{
-  "id": "BUG-5410",
-  "evidence": ["https://github.com/mui/base-ui/issues/5410"],
-  "behavior": "A press in a same-origin iframe closes a popup that is not modal. A press in an iframe in a popup that opened later belongs to that popup, so it does not close a popup that opened before it.",
-  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts",
-  "families": []
-}

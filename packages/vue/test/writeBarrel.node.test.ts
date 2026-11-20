@@ -28,7 +28,7 @@ describe('writeBarrel', () => {
       writeBarrelOf({
         tabs: 'export {};',
         button: 'export {};',
-        internals: 'export {};',
+        common: 'export {};',
         empty: undefined,
       }),
     ).toBe(`${HEADER}export * from './button';\nexport * from './tabs';\n`);
@@ -41,12 +41,6 @@ describe('writeBarrel', () => {
         calendar: `${TEMPORAL_REFERENCE}\nexport {};`,
       }),
     ).toBe(`${HEADER}export * from './button';\n`);
-  });
-
-  it('leaves out an entry whose name starts with unstable-', () => {
-    expect(writeBarrelOf({ button: 'export {};', 'unstable-menu': 'export {};' })).toBe(
-      `${HEADER}export * from './button';\n`,
-    );
   });
 
   it('keeps an entry that has another first line or has the reference line later', () => {

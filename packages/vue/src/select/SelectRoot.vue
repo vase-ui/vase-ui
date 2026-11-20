@@ -6,7 +6,7 @@ import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
-import { isSelectedValueDirty } from '../internals/itemEquality';
+import { isSelectedValueDirty } from '../common/itemEquality';
 import { useSelectForm } from './form';
 import { useSelectRoot } from './root';
 import type {

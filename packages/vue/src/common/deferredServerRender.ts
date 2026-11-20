@@ -1,5 +1,5 @@
 import { onServerPrefetch } from 'vue';
-import { NOOP } from '../internals/noop';
+import { NOOP } from './empty';
 
 /**
  * A part calls it in `setup` when it binds the id of a part that can render after it. Examples are

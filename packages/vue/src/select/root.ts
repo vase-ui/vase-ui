@@ -13,8 +13,8 @@ import {
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useModel } from '../common/model';
 import type { FieldForControl } from '../field/control';
-import { compareItemEquality, defaultItemEquality, removeItem } from '../internals/itemEquality';
-import { stringifyAsValue } from '../internals/resolveValueLabel';
+import { compareItemEquality, defaultItemEquality, removeItem } from '../common/itemEquality';
+import { stringifyAsValue } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
 import { useTypeahead } from '../list/typeahead';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';

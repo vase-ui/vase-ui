@@ -14,7 +14,7 @@ assert.equal(vaseUi.MultiPart, MultiPart);
 const html = await renderToString(h(SinglePart, { orientation: 'vertical' }, () => 'text'));
 assert.equal(html, '<div data-single-part data-orientation="vertical"><!--[-->text<!--]--></div>');
 
-await assert.rejects(import('@vase-ui/vue/internals/part-marker'));
+await assert.rejects(import('@vase-ui/vue/common/part-marker'));
 
 const scriptedHtml = await renderToString(h(ScriptedPart));
 assert.ok(scriptedHtml.includes('data-scripted-part-ran'), scriptedHtml);

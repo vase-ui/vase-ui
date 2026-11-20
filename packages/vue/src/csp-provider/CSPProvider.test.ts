@@ -4,7 +4,7 @@ import CSPProviders from '../../test/fixtures/CSPProviders.vue';
 import CSPStyleElements from '../../test/fixtures/CSPStyleElements.vue';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
-import { styleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar } from '../common/styles';
 
 /** The text of each reader of the fixture, by its id. */
 function readers(root: Element) {

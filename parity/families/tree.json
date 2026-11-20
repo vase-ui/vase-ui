@@ -1,7 +1,28 @@
 {
   "upstreamPaths": ["packages/react/src/utils/popups/tree/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/popups/tree/FloatingTree.tsx",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the tree: one stack of open layers gives the parent and the children of a popup. Each nested popup family tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/tree/FloatingTreeStore.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the tree: one stack of open layers gives the parent and the children of a popup. Each nested popup family tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/tree/nodes.test.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the tree: one stack of open layers gives the parent and the children of a popup. Each nested popup family tests it in its own test file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/tree/nodes.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/layer.ts` replaces the tree: one stack of open layers gives the parent and the children of a popup. Each nested popup family tests it in its own test file."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

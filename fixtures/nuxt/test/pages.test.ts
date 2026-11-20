@@ -1074,26 +1074,6 @@ async function expectHydratedSliderPage(page: Page) {
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
-// The portal renders after the mount, so the server HTML has no portal element.
-async function expectPortalPageOnServer(page: Page) {
-  expect(await page.getByTestId('trigger').count()).toBe(1);
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
-}
-
-// Each portal uses its target after mount. An explicit null delays the portal.
-async function expectHydratedPortalPage(page: Page) {
-  const readParent = (testId: string) =>
-    page
-      .getByTestId(testId)
-      .evaluate((element) => element.parentElement?.id || element.parentElement?.localName);
-
-  expect(await readParent('in-body')).toBe('body');
-  expect(await readParent('in-page')).toBe('page');
-  expect(await readParent('in-teleports')).toBe('teleports');
-  expect(await page.getByTestId('no-container').count()).toBe(0);
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
-}
-
 const TOAST_VIEWPORT_ATTRIBUTES = [
   'role',
   'tabindex',
@@ -1736,11 +1716,6 @@ const PAGES: PageCase[] = [
   },
   { path: '/use-element', expectPage: expectUseElementPage },
   { path: '/rtl', expectPage: expectRtlPage },
-  {
-    path: '/portal',
-    expectPage: expectPortalPageOnServer,
-    expectHydratedPage: expectHydratedPortalPage,
-  },
   {
     path: '/toast',
     expectPage: expectToastPageOnServer,

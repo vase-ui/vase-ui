@@ -6,7 +6,7 @@ import type {
 } from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
-import type { Filter, GetFilterParameters } from '../internals/filter';
+import type { Filter, GetFilterParameters } from '../common/filter';
 import type { FocusTarget } from '../popup/focus';
 import type { Align, PlacementProps, Side } from '../popup/placement';
 import type { PopupPortalProps } from '../popup/portal';

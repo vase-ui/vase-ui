@@ -55,7 +55,7 @@ export type {
   Side,
   VirtualElement,
 } from '../combobox/types';
-export type { Filter as AutocompleteFilter } from '../internals/filter';
+export type { Filter as AutocompleteFilter } from '../common/filter';
 export type { AutocompleteFilterOptions } from '../combobox/filter';
 
 export type AutocompleteRootChangeEventReason = Exclude<

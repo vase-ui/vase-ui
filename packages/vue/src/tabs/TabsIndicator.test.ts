@@ -5,7 +5,7 @@ import TabsInTransition from '../../test/fixtures/TabsInTransition.vue';
 import { screen } from '../../test/queries';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
-import { getCssDimensions } from '../utils/getCssDimensions';
+import { getCssDimensions } from './getCssDimensions';
 import { script } from './prehydrationScript.min';
 
 type LayoutTab = { value: unknown; style?: string; anchor?: boolean };

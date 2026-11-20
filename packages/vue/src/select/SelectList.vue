@@ -2,7 +2,7 @@
 import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { styleDisableScrollbar, useStyleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar, useStyleDisableScrollbar } from '../common/styles';
 import { injectSelectPositioner, injectSelectRoot } from './root';
 import type { SelectListProps, SelectListState } from './types';
 

@@ -12,7 +12,7 @@ import {
 } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { styleDisableScrollbar, useStyleDisableScrollbar } from '../utils/styles';
+import { styleDisableScrollbar, useStyleDisableScrollbar } from '../common/styles';
 import { scrollEdges } from './alignment';
 import { injectSelectPositioner, injectSelectRoot } from './root';
 import type { SelectPopupProps, SelectPopupState } from './types';

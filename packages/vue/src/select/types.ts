@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ButtonHTMLAttributes } from 'vue';
 import type { AsProps } from '../common/element';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
-import type { Group, ItemLabel } from '../internals/resolveValueLabel';
+import type { Group, ItemLabel } from '../common/resolveValueLabel';
 import type { FocusTarget } from '../popup/focus';
 import type { Align, PlacementProps, Side } from '../popup/placement';
 import type { PopupPortalProps } from '../popup/portal';

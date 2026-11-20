@@ -299,7 +299,6 @@ describe('the tab stops of a container (N3)', () => {
 
 describe('an open while the popup leaves (N5)', () => {
   test('mounts a second popup element beside the leaving one; the `<Transition>` of Vapor removes the leaving one', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const scene = reactive({ open: true });
     const { root: app } = mount(MeasureTransitionReopen, { scene });
     await nextTick();

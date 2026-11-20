@@ -5,7 +5,7 @@ export interface MultiPartRootProps<Payload = unknown> {
 </script>
 
 <script setup lang="ts" generic="Payload">
-import { markPart } from '../../internals/part-marker';
+import { markPart } from '../../common/part-marker';
 
 const props = defineProps<MultiPartRootProps<Payload>>();
 

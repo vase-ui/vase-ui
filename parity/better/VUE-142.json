@@ -1,9 +1,0 @@
-{
-  "id": "VUE-142",
-  "evidence": [
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/store.ts#L183-L215"
-  ],
-  "behavior": "A popup root with a null triggerId has no active trigger. A refused press or a lone registered trigger cannot claim it. When the parent releases null, the open popup keeps no active trigger until a trigger opens it or the parent selects one.",
-  "dueWith": "packages/react/src/utils/popups/store.ts",
-  "families": []
-}

@@ -1,7 +1,7 @@
 import { nextTick, type Ref } from 'vue';
 import { useValueInputs } from '../common/valueInputs';
-import { isSelectedValueDirty } from '../internals/itemEquality';
-import { stringifyAsLabel, stringifyAsValue } from '../internals/resolveValueLabel';
+import { isSelectedValueDirty } from '../common/itemEquality';
+import { stringifyAsLabel, stringifyAsValue } from '../common/resolveValueLabel';
 import type { SelectContext } from './root';
 
 /** The form inputs of a select (`useValueInputs`): the trigger is the control. */

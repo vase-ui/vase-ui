@@ -15,17 +15,17 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.ts",
       "kind": "not-applicable",
-      "reason": "The methods of the class call React hooks. `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` holds the state, the context and the selectors on Vue reactivity."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/Store.ts",
       "kind": "not-applicable",
-      "reason": "The class keeps a list of subscribers and gives each one the new state object. A write to `shallowReactive` state tells the readers, so `ReactiveStore` of `packages/vue/src/utils/popups/handleStoreAdapter.ts` has no such list."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/index.ts",
       "kind": "not-applicable",
-      "reason": "The file exports the store classes and hooks for React. The store of Vase UI is in `packages/vue/src/utils/popups/handleStoreAdapter.ts`."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/useStore.ts",
@@ -150,7 +150,7 @@
     {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
-      "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/handleStoreAdapter.test.tsx` tests the writes of the Vue store."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/Store.spec.ts",
@@ -165,7 +165,7 @@
     {
       "upstream": "packages/utils/src/store/ReactStore.spec.ts",
       "kind": "not-applicable",
-      "reason": "It tests the types of the React hooks of `ReactStore`. `packages/vue/src/utils/popups/handleStoreAdapter.spec.ts` tests the types of `select`, `set` and `update`."
+      "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
     },
     {
       "upstream": "packages/utils/src/store/createSelector.test.ts",
@@ -255,22 +255,6 @@
       "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
-      "upstream": "packages/utils/src/useControlled.test.tsx",
-      "describe": ["useControlled"],
-      "title": "warns when switching from uncontrolled to controlled",
-      "kind": "replaced",
-      "test": "packages/vue/src/common/useControlled.test.tsx",
-      "reason": "VUE-141 (B3): A parent can take control after mount. The case checks the new value and the absence of a warning."
-    },
-    {
-      "upstream": "packages/utils/src/useControlled.test.tsx",
-      "describe": ["useControlled"],
-      "title": "warns and falls back to the default when switching from controlled to uncontrolled",
-      "kind": "replaced",
-      "test": "packages/vue/src/common/useControlled.test.tsx",
-      "reason": "VUE-141 (B3): When the parent releases the prop, the part keeps the last value and accepts a local write."
-    },
-    {
       "upstream": "packages/utils/src/getDefaultFormSubmitter.ts",
       "kind": "not-applicable",
       "reason": "A checkbox is a native input, so Enter in it submits its form natively, with the default button of the form. No part finds the submitter."
@@ -279,6 +263,69 @@
       "upstream": "packages/utils/src/getDefaultFormSubmitter.test.ts",
       "kind": "not-applicable",
       "reason": "The file tests `getDefaultFormSubmitter`, which no part needs: the browser submits the form at Enter in a native checkbox."
+    },
+    {
+      "upstream": "packages/utils/src/isElementDisabled.ts",
+      "kind": "not-applicable",
+      "reason": "`src/list/` replaces the file: `list.ts` moves the highlight with the keys, and `typeahead.ts` matches the typed text. Each family with a list tests the keys in its own test file."
+    },
+    {
+      "upstream": "packages/utils/src/mergeObjects.ts",
+      "kind": "not-applicable",
+      "reason": "Vue merges the attributes of a part (rule 6.3)."
+    },
+    {
+      "upstream": "packages/utils/src/useAnimationFrame.test.ts",
+      "kind": "not-applicable",
+      "reason": "No part schedules a frame through the file. A part waits for a frame with `requestAnimationFrame` where it needs one."
+    },
+    {
+      "upstream": "packages/utils/src/useAnimationFrame.ts",
+      "kind": "not-applicable",
+      "reason": "No part schedules a frame through the file. A part waits for a frame with `requestAnimationFrame` where it needs one."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.test.tsx",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.ts",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "kind": "not-applicable",
+      "reason": "`src/popup/trigger.ts` and `src/popup/press.ts` replace the file: the open by a press and by the focus, and the type of the interaction. Each popup family tests them in its own test file."
+    },
+    {
+      "upstream": "packages/utils/src/useInterval.ts",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses the file."
+    },
+    {
+      "upstream": "packages/utils/src/useControlled.spec.ts",
+      "kind": "not-applicable",
+      "reason": "`common/model.ts` replaces the file: a part takes `useModel` of Vue (rule 8.5)."
+    },
+    {
+      "upstream": "packages/utils/src/empty.test.ts",
+      "describe": ["empty"],
+      "title": "keeps the shared EMPTY_OBJECT frozen",
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses a shared empty object, so `common/empty.ts` has none."
+    },
+    {
+      "upstream": "packages/utils/src/shadowDom.test.ts",
+      "describe": ["shadow DOM utilities", "getTarget"],
+      "kind": "not-applicable",
+      "reason": "No part of Vase UI uses `getTarget`, so `common/shadowDom.ts` has none. A part reads `event.composedPath()` where it needs the target in a shadow root."
+    },
+    {
+      "upstream": "packages/utils/src/platform/screen-reader.ts",
+      "kind": "not-applicable",
+      "reason": "No part has a workaround for one screen reader, so `common/platform/` has no group for it."
     }
   ],
   "surfaceAdditions": [],
@@ -286,11 +333,11 @@
   "notApplicableCommits": [],
   "relocations": [
     {
-      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "upstream": "packages/utils/src/useScrollLock.ts",
       "relation": "merged-into",
-      "destination": "packages/vue/src/utils/popups/usePopupTrigger.ts",
-      "member": "useEnhancedClickHandler",
-      "witness": "packages/vue/src/common/useEnhancedClickHandler.test.tsx"
+      "destination": "packages/vue/src/popup/useScrollLock.ts",
+      "member": "useScrollLock",
+      "witness": "packages/vue/src/popup/useScrollLock.test.tsx"
     }
   ]
 }

@@ -6,7 +6,7 @@ import type {
   VNodeChild,
 } from 'vue';
 import type { AsProps } from '../common/element';
-import type { SwipeDirection } from '../common/swipe';
+import type { SwipeDirection } from './swipe';
 import type { Align, PlacementProps, Side } from '../popup/placement';
 import type { PopupPortalProps } from '../popup/portal';
 

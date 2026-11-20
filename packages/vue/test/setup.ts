@@ -1,6 +1,5 @@
 import { afterEach, beforeAll, beforeEach, onTestFinished, vi } from 'vitest';
 import { reset } from '../src/common/error';
-import { resetAnimationFrameScheduler } from '../src/common/useAnimationFrame';
 import { failOnReportedMessages } from './reportedMessages';
 
 declare module 'vitest/browser' {
@@ -167,15 +166,8 @@ if (typeof document !== 'undefined') {
   });
 }
 
-// Animations are off in each test. A test that needs a real animation sets this to `false`.
-globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
-
 afterEach(() => {
   vi.resetAllMocks();
-  globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
   // `warn` and `error` share one log-once store, so this also clears the warnings that it holds.
   reset();
-  // Drops animation frame callbacks that were scheduled and never ran, for example when fake timers
-  // end before the frame fires. The scheduler is global to the process.
-  resetAnimationFrameScheduler();
 });

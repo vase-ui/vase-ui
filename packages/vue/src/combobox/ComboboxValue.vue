@@ -5,7 +5,7 @@ import {
   resolveMultipleLabels,
   resolveSelectedLabel,
   type ItemLabel,
-} from '../internals/resolveValueLabel';
+} from '../common/resolveValueLabel';
 import { injectComboboxRoot } from './root';
 import type { ComboboxValueProps } from './types';
 

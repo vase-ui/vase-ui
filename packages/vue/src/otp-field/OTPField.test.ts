@@ -1096,7 +1096,7 @@ describe('the field', () => {
     }
   });
 
-  test('a name of the developer wins: on the root it names the group only, on a slot that slot only; VUE-103: null removes', async () => {
+  test('a name of the developer wins: on the root it names the group only, on a slot that slot only; null removes', async () => {
     const { root, group, slots } = await mountField({
       field: {},
       root: { 'aria-labelledby': 'mine', 'aria-describedby': null },

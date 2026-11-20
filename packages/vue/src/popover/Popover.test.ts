@@ -277,7 +277,6 @@ describe('the handle (L1)', () => {
 
 describe('in the DOM (L2)', () => {
   test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until each leave ends', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const log: string[] = [];
     mount(PopoverInTransition, {
       root: { defaultOpen: true },
@@ -299,7 +298,6 @@ describe('in the DOM (L2)', () => {
   });
 
   test('an open while the popup leaves renders one popup and one backdrop, which enter after the leave', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const root = reactive<Props>({ open: true });
     mount(PopoverInTransition, { root });
     const first = await opened();
@@ -1445,7 +1443,6 @@ describe('the hover (L9)', () => {
   });
 
   test('a hover on the trigger while the popup leaves after a hover close opens the popover at once; the popup enters after the leave', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const log: string[] = [];
     const trigger = reactive<Props>({ openOnHover: true, delay: 0 });
     mount(PopoverInTransition, { root: rootEvents(log), trigger });
@@ -1573,7 +1570,6 @@ describe('the hover (L9)', () => {
   });
 
   test('a hover on the trigger while the popup leaves after a hover close opens it with no delay', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     mount(PopoverInTransition, {
       root: { defaultOpen: true },
       trigger: { openOnHover: true, delay: 5000, closeDelay: 0 },

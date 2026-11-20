@@ -19,7 +19,7 @@ import { useModel } from '../common/model';
 import { ownerWindow } from '../common/owner';
 import { fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
-import { getFilter } from '../internals/filter';
+import { getFilter } from '../common/filter';
 import {
   compareItemEquality,
   defaultItemEquality,
@@ -27,8 +27,8 @@ import {
   isSelectedValueDirty,
   removeItem,
   selectedValueIncludes,
-} from '../internals/itemEquality';
-import { flattenLeafItems, stringifyAsLabel, type Group } from '../internals/resolveValueLabel';
+} from '../common/itemEquality';
+import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
 import { useLocale } from '../locale-provider/part';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
@@ -36,7 +36,7 @@ import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
-import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers';
+import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
 import { filterItems, sameItems, type FilterItemToString, type ItemFilter } from './filter';
 import { useComboboxForm } from './form';
 import { isItemCollection } from './items';

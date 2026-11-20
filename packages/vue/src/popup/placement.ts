@@ -16,7 +16,6 @@ import {
   offset,
   shift,
   size,
-  // eslint-disable-next-line no-restricted-imports -- The popup layer gives `useFloating` the middleware of Base UI, as `useAnchorPositioning` does for the old parts.
   useFloating,
   type Middleware,
   type MiddlewareState,
