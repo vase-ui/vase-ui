@@ -1,334 +1,106 @@
-import { computed, toValue } from 'vue';
-import type { MaybeRefOrGetter } from 'vue';
-import { isOverflowElement } from '@floating-ui/utils/dom';
-import { addEventListener } from './addEventListener';
-import { platform } from './platform';
-import { ownerDocument, ownerWindow } from './owner';
-import { getPortalLocation } from '../utils/popups/portal/portalElements';
-import { AnimationFrame } from './useAnimationFrame';
-import { useDomEffect } from '../utils/popups/useDomEffect';
+import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
+import { ownerDocument } from './owner';
 
-type OwnerWindow = ReturnType<typeof ownerWindow>;
+// One count for each document, so that the last unlock restores the page.
+const locks = new WeakMap<Document, { count: number; restore: () => void }>();
 
-interface ScrollLockRegistry {
-  version: 1;
-  /** The number of calls that hold a lock. */
-  lockCount: number;
-  /** Puts the page back, or stops the wait for the lock of another script. It is `null` when neither exists. */
-  restore: (() => void) | null;
-  /** For each document, whether `scrollbar-gutter: stable` keeps the width of its page when the scrollbar goes. */
-  stableGutter: WeakMap<Document, boolean>;
+// The viewport takes its overflow from `<html>` when `<html>` has one, and from `<body>` else.
+function viewportScroller(html: HTMLElement, body: HTMLElement) {
+  return /auto|scroll|hidden|clip/.test(getStyle(html).overflow) ? html : body;
 }
 
-const SCROLL_LOCK_KEY = Symbol.for('vase-ui.scroll-lock');
+function getStyle(element: HTMLElement) {
+  return element.ownerDocument.defaultView!.getComputedStyle(element);
+}
 
-// A frame locks its own viewport. Copies of the library in that window share the count and cleanup.
-function getRegistry(doc: Document): ScrollLockRegistry {
-  const holder = ownerWindow(doc.documentElement) as { [SCROLL_LOCK_KEY]?: ScrollLockRegistry };
-  holder[SCROLL_LOCK_KEY] ??= {
-    version: 1,
-    lockCount: 0,
-    restore: null,
-    stableGutter: new WeakMap(),
+function saveStyle(element: HTMLElement, names: string[]) {
+  const saved = names.map((name) => [name, element.style.getPropertyValue(name)] as const);
+  return () => {
+    for (const [name, value] of saved) element.style.setProperty(name, value);
   };
-  return holder[SCROLL_LOCK_KEY];
 }
 
-// The viewport's overflow comes from <html> when it establishes its own scroll container, and
-// propagates from <body> otherwise. An `overflow` style on the other element doesn't lock the page.
-function getViewportScroller(html: HTMLElement, body: HTMLElement) {
-  return isOverflowElement(html) ? html : body;
-}
-
-function isPageScrollLocked(win: OwnerWindow, html: HTMLElement, body: HTMLElement) {
-  return /hidden|clip/.test(win.getComputedStyle(getViewportScroller(html, body)).overflowY);
-}
-
-function hasInsetScrollbars(doc: Document) {
-  // A document has no `ownerDocument`, so `ownerWindow` of a document gives the window of the page.
-  // https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useScrollLock.ts#L29
-  const win = ownerWindow(doc.documentElement);
-  return win.innerWidth - doc.documentElement.clientWidth > 0;
-}
-
-function supportsStableScrollbarGutter(doc: Document) {
+function lock(doc: Document) {
   const html = doc.documentElement;
   const body = doc.body;
-  const win = ownerWindow(html);
-
-  const supported = win.CSS.supports('scrollbar-gutter', 'stable');
-
-  if (!supported) {
-    return false;
+  const scrollbar = doc.defaultView!.innerWidth - html.clientWidth;
+  // An overlay scrollbar takes no room, so `overflow: hidden` alone stops the scroll.
+  if (scrollbar <= 0) {
+    const scroller = viewportScroller(html, body);
+    const restore = saveStyle(scroller, ['overflow']);
+    scroller.style.overflow = 'hidden';
+    return restore;
   }
-
-  // The probe writes styles and reads the layout. In WebKit, that can stop a transition that runs on
-  // the page. Thus each document gets one probe, and the result stays for the life of the document.
-  // https://github.com/mui/base-ui/issues/6119
-  const { stableGutter } = getRegistry(doc);
-  const known = stableGutter.get(doc);
-  if (known !== undefined) {
-    return known;
-  }
-
-  const scrollContainer = getViewportScroller(html, body);
-
-  const originalScrollContainerOverflowY = scrollContainer.style.overflowY;
-  const originalHtmlStyleGutter = html.style.scrollbarGutter;
-
-  html.style.scrollbarGutter = 'stable';
-
-  scrollContainer.style.overflowY = 'scroll';
-  const before = scrollContainer.offsetWidth;
-
-  scrollContainer.style.overflowY = 'hidden';
-  const after = scrollContainer.offsetWidth;
-
-  scrollContainer.style.overflowY = originalScrollContainerOverflowY;
-  html.style.scrollbarGutter = originalHtmlStyleGutter;
-
-  const stable = before === after;
-  stableGutter.set(doc, stable);
-  return stable;
-}
-
-function preventScrollOverlayScrollbars(doc: Document) {
-  const html = doc.documentElement;
-  const body = doc.body;
-
-  // If an `overflow` style is present on <html>, we need to lock it, because a lock on <body>
-  // won't have any effect.
-  // But if <body> has an `overflow` style (like `overflow-x: hidden`), we need to lock it
-  // instead, as sticky elements shift otherwise.
-  const elementToLock = getViewportScroller(html, body);
-  const originalElementToLockStyles = {
-    overflowY: elementToLock.style.overflowY,
-    overflowX: elementToLock.style.overflowX,
-  };
-
-  Object.assign(elementToLock.style, {
-    overflowY: 'hidden',
-    overflowX: 'hidden',
+  // `overflow: hidden` on the element that scrolls the view removes a scrollbar that takes room,
+  // and the page gets wider (test/measurements/popup.test.ts). So `<html>` keeps its scrollbar, and
+  // `<body>` shows the page at its scroll offset.
+  const { scrollTop, scrollLeft } = html;
+  const htmlStyle = getStyle(html);
+  const bodyStyle = getStyle(body);
+  const marginY = Number.parseFloat(bodyStyle.marginTop) + Number.parseFloat(bodyStyle.marginBottom);
+  const marginX = Number.parseFloat(bodyStyle.marginLeft) + Number.parseFloat(bodyStyle.marginRight);
+  const scrollbarY = doc.defaultView!.innerHeight - html.clientHeight;
+  const restoreHtml = saveStyle(html, ['overflow-x', 'overflow-y', 'scroll-behavior']);
+  const restoreBody = saveStyle(body, ['position', 'width', 'height', 'box-sizing', 'overflow']);
+  const scrolls = (axis: 'X' | 'Y') =>
+    htmlStyle[`overflow${axis}`] === 'scroll' ||
+    (axis === 'Y' ? html.scrollHeight > html.clientHeight : html.scrollWidth > html.clientWidth);
+  Object.assign(html.style, {
+    overflowY: scrolls('Y') ? 'scroll' : 'hidden',
+    overflowX: scrolls('X') ? 'scroll' : 'hidden',
+    // A smooth scroll would animate the move back to the offset.
+    scrollBehavior: 'auto',
   });
-
+  Object.assign(body.style, {
+    position: 'relative',
+    width: `calc(100vw - ${marginX + scrollbar}px)`,
+    height: `calc(100dvh - ${marginY + Math.max(0, scrollbarY)}px)`,
+    boxSizing: 'border-box',
+    overflow: 'hidden',
+  });
+  body.scrollTop = scrollTop;
+  body.scrollLeft = scrollLeft;
   return () => {
-    Object.assign(elementToLock.style, originalElementToLockStyles);
-  };
-}
-
-function preventScrollInsetScrollbars(doc: Document) {
-  const html = doc.documentElement;
-  const body = doc.body;
-  const win = ownerWindow(html);
-
-  let originalHtmlStyles: Partial<CSSStyleDeclaration> = {};
-  let originalBodyStyles: Partial<CSSStyleDeclaration> = {};
-  let originalHtmlScrollBehavior = '';
-  let scrollTop = 0;
-  let scrollLeft = 0;
-  let updateGutterOnly = false;
-  const resizeFrame = AnimationFrame.create();
-
-  // Pinch-zoom in Safari causes a shift. Just don't lock scroll if there's any pinch-zoom.
-  if (platform.engine.webkit && (win.visualViewport?.scale ?? 1) !== 1) {
-    return () => {};
-  }
-
-  function lockScroll() {
-    /* DOM reads: */
-
-    const htmlStyles = win.getComputedStyle(html);
-    const bodyStyles = win.getComputedStyle(body);
-    const htmlScrollbarGutterValue = htmlStyles.scrollbarGutter || '';
-    const hasBothEdges = htmlScrollbarGutterValue.includes('both-edges');
-    const scrollbarGutterValue = hasBothEdges ? 'stable both-edges' : 'stable';
-
-    scrollTop = html.scrollTop;
-    scrollLeft = html.scrollLeft;
-
-    originalHtmlStyles = {
-      scrollbarGutter: html.style.scrollbarGutter,
-      overflowY: html.style.overflowY,
-      overflowX: html.style.overflowX,
-    };
-    originalHtmlScrollBehavior = html.style.scrollBehavior;
-
-    originalBodyStyles = {
-      position: body.style.position,
-      height: body.style.height,
-      width: body.style.width,
-      boxSizing: body.style.boxSizing,
-      overflowY: body.style.overflowY,
-      overflowX: body.style.overflowX,
-      scrollBehavior: body.style.scrollBehavior,
-    };
-
-    const isScrollableY = html.scrollHeight > html.clientHeight;
-    const isScrollableX = html.scrollWidth > html.clientWidth;
-    const hasConstantOverflowY =
-      htmlStyles.overflowY === 'scroll' || bodyStyles.overflowY === 'scroll';
-    const hasConstantOverflowX =
-      htmlStyles.overflowX === 'scroll' || bodyStyles.overflowX === 'scroll';
-
-    // Values can be negative in Firefox
-    const scrollbarWidth = Math.max(0, win.innerWidth - body.clientWidth);
-    const scrollbarHeight = Math.max(0, win.innerHeight - body.clientHeight);
-
-    // Avoid shift due to the default <body> margin. This does cause elements to be clipped
-    // with whitespace. Warn if <body> has margins?
-    const marginY =
-      Number.parseFloat(bodyStyles.marginTop) + Number.parseFloat(bodyStyles.marginBottom);
-    const marginX =
-      Number.parseFloat(bodyStyles.marginLeft) + Number.parseFloat(bodyStyles.marginRight);
-    const elementToLock = getViewportScroller(html, body);
-
-    updateGutterOnly = supportsStableScrollbarGutter(doc);
-
-    /*
-     * DOM writes:
-     * Do not read the DOM past this point!
-     */
-
-    if (updateGutterOnly) {
-      html.style.scrollbarGutter = scrollbarGutterValue;
-      elementToLock.style.overflowY = 'hidden';
-      elementToLock.style.overflowX = 'hidden';
-      return;
-    }
-
-    Object.assign(html.style, {
-      scrollbarGutter: scrollbarGutterValue,
-      overflowY: 'hidden',
-      overflowX: 'hidden',
-    });
-
-    if (isScrollableY || hasConstantOverflowY) {
-      html.style.overflowY = 'scroll';
-    }
-    if (isScrollableX || hasConstantOverflowX) {
-      html.style.overflowX = 'scroll';
-    }
-
-    Object.assign(body.style, {
-      position: 'relative',
-      height:
-        marginY || scrollbarHeight ? `calc(100dvh - ${marginY + scrollbarHeight}px)` : '100dvh',
-      width: marginX || scrollbarWidth ? `calc(100vw - ${marginX + scrollbarWidth}px)` : '100vw',
-      boxSizing: 'border-box',
-      // Assign the longhands that `cleanup` restores, so nothing is left behind.
-      overflowY: 'hidden',
-      overflowX: 'hidden',
-      scrollBehavior: 'unset',
-    });
-
-    body.scrollTop = scrollTop;
-    body.scrollLeft = scrollLeft;
-    html.setAttribute('data-vase-ui-scroll-locked', '');
-    html.style.scrollBehavior = 'unset';
-  }
-
-  function cleanup() {
-    Object.assign(html.style, originalHtmlStyles);
-    Object.assign(body.style, originalBodyStyles);
-
-    if (!updateGutterOnly) {
-      html.scrollTop = scrollTop;
-      html.scrollLeft = scrollLeft;
-      html.removeAttribute('data-vase-ui-scroll-locked');
-      html.style.scrollBehavior = originalHtmlScrollBehavior;
-    }
-  }
-
-  function handleResize() {
-    cleanup();
-    resizeFrame.request(lockScroll);
-  }
-
-  lockScroll();
-  const unsubscribeResize = addEventListener(win, 'resize', handleResize);
-
-  return () => {
-    resizeFrame.cancel();
-    cleanup();
-    unsubscribeResize();
+    restoreBody();
+    html.style.scrollBehavior = 'auto';
+    html.scrollTop = scrollTop;
+    html.scrollLeft = scrollLeft;
+    restoreHtml();
   };
 }
 
 function acquire(doc: Document) {
-  const registry = getRegistry(doc);
-  registry.lockCount += 1;
-  if (registry.lockCount === 1 && registry.restore === null) {
-    setTimeout(() => lock(doc, registry), 0);
+  let entry = locks.get(doc);
+  if (!entry) {
+    entry = { count: 0, restore: lock(doc) };
+    locks.set(doc, entry);
   }
+  entry.count += 1;
+  const owned = entry;
   return () => {
-    registry.lockCount -= 1;
-    if (registry.lockCount === 0 && registry.restore) {
-      setTimeout(() => {
-        if (registry.lockCount === 0 && registry.restore) {
-          registry.restore();
-          registry.restore = null;
-        }
-      }, 0);
-    }
+    owned.count -= 1;
+    if (owned.count > 0) return;
+    locks.delete(doc);
+    owned.restore();
   };
 }
 
-function lock(doc: Document, registry: ScrollLockRegistry) {
-  if (registry.lockCount === 0 || registry.restore !== null) {
-    return;
-  }
-
-  const html = doc.documentElement;
-  const body = doc.body;
-  const win = ownerWindow(html);
-
-  // Wait for the existing lock to clear so our release restores the page's unlocked styles.
-  if (isPageScrollLocked(win, html, body)) {
-    const observer = new win.MutationObserver(() => {
-      if (isPageScrollLocked(win, html, body)) {
-        return;
-      }
-      observer.disconnect();
-      registry.restore = null;
-      lock(doc, registry);
-    });
-
-    // Watch every attribute: locks are applied through inline styles, classes, or attributes
-    // paired with a stylesheet (`data-scroll-locked` in react-remove-scroll, for example).
-    const options: MutationObserverInit = { attributes: true };
-
-    observer.observe(html, options);
-    observer.observe(body, options);
-
-    registry.restore = () => observer.disconnect();
-    return;
-  }
-
-  const hasOverlayScrollbars = platform.os.ios || !hasInsetScrollbars(doc);
-
-  // On iOS, scroll locking does not work if the navbar is collapsed. Due to numerous
-  // side effects and bugs that arise on iOS, it must be researched extensively before
-  // being enabled to ensure it doesn't cause the following issues:
-  // - Textboxes must scroll into view when focused, nor cause a glitchy scroll animation.
-  // - The navbar must not force itself into view and cause layout shift.
-  // - Scroll containers must not flicker upon closing a popup when it has an exit animation.
-  registry.restore = hasOverlayScrollbars
-    ? preventScrollOverlayScrollbars(doc)
-    : preventScrollInsetScrollbars(doc);
-}
-
 /**
- * Locks the scroll of the document when enabled.
- *
- * @param enabled - Whether to enable the scroll lock.
- * @param referenceElement - Element to use as a reference for lock calculations.
+ * Stops the scroll of the page while `enabled` is true. The document is the one of
+ * `referenceElement`. Each lock of a document adds to one count, and the last unlock restores the
+ * page.
  */
 export function useScrollLock(
   enabled: MaybeRefOrGetter<boolean> = true,
   referenceElement: MaybeRefOrGetter<Element | null> = null,
 ): void {
-  const doc = computed(() => getPortalLocation(toValue(referenceElement)).document);
-  useDomEffect([() => toValue(enabled), doc], () =>
-    toValue(enabled) ? acquire(doc.value ?? ownerDocument(null)) : undefined,
-  );
+  onMounted(() => {
+    watch(
+      [() => toValue(enabled), () => ownerDocument(toValue(referenceElement))],
+      ([locked, doc], _, onCleanup) => {
+        if (locked) onCleanup(acquire(doc));
+      },
+      { immediate: true, flush: 'post' },
+    );
+  });
 }

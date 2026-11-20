@@ -5,7 +5,7 @@ import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
 import * as NavigationMenu from '../../../navigation-menu/index.parts';
-import * as Popover from '../../../popover/index.parts';
+import * as Popover from '../../../popover/parts';
 import * as PreviewCard from '../../../preview-card/index.parts';
 import * as Select from '../../../select/index.parts';
 import * as Toast from '../../../toast/index.parts';

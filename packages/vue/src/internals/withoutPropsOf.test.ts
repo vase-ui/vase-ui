@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import PopoverRoot from '../popover/root/PopoverRoot.vue';
+import DialogRoot from '../dialog/root/DialogRoot.vue';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { withoutPropsOf } from './withoutPropsOf';
 
@@ -14,7 +14,7 @@ describe('withoutPropsOf', () => {
   });
 
   it('drops handle and trigger-id from the attributes of a generic part', () => {
-    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, PopoverRoot)).toEqual(
+    expect(withoutPropsOf({ handle: {}, 'trigger-id': 'open', id: 'picker' }, DialogRoot)).toEqual(
       {
         id: 'picker',
       },

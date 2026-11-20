@@ -2,11 +2,10 @@
 import type { VaseUIChangeEventDetails } from '../../internals/createVaseUIEventDetails';
 import type { TimeValue } from '../../internals/date-time/temporal';
 import type {
-  PopoverRootActions,
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
   PopoverRootProps,
-} from '../../popover/root/PopoverRoot.vue';
+} from '../../popover/types';
 import type { TimeClockRootChangeEventReason } from '../../time-clock/root/TimeClockRoot.vue';
 import type {
   TimeFieldRootChangeEventReason,
@@ -28,7 +27,10 @@ export type TimePickerRootChangeEventDetails =
 export type TimePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type TimePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;
 
-export type TimePickerRootActions = PopoverRootActions;
+export interface TimePickerRootActions {
+  /** Closes the popup. */
+  close(): void;
+}
 
 export interface TimePickerRootProps<
   Value extends TimePickerRootValue = Temporal.PlainTime,
@@ -136,8 +138,7 @@ import { computed, provide, useTemplateRef } from 'vue';
 import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateTimePickerRoot';
 import { assertTemporal, toPlainTime } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverRoot from '../../popover/root/PopoverRoot.vue';
+import PopoverRoot from '../../popover/PopoverRoot.vue';
 import { TimePickerRootContext } from './TimePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -193,10 +194,6 @@ const emit = defineEmits<{
    * change. `v-model:open` uses it.
    */
   'update:open': [open: boolean];
-  /**
-   * Event handler called after any animations complete when the popup is opened or closed.
-   */
-  openChangeComplete: [open: boolean];
 }>();
 
 defineSlots<{
@@ -243,7 +240,6 @@ provide(TimePickerRootContext, {
 const popover = useTemplateRef<TimePickerRootActions>('popover');
 
 defineExpose<TimePickerRootActions>({
-  unmount: () => popover.value?.unmount(),
   close: () => popover.value?.close(),
 });
 </script>
@@ -251,13 +247,12 @@ defineExpose<TimePickerRootActions>({
 <template>
   <PopoverRoot
     ref="popover"
-    v-bind="withoutPropsOf($attrs, PopoverRoot)"
+    v-bind="$attrs"
     :open="props.open"
     :default-open="props.defaultOpen"
     :modal="props.modal"
     @open-change="(open, details) => emit('openChange', open, details)"
     @update:open="(open) => emit('update:open', open)"
-    @open-change-complete="(open) => emit('openChangeComplete', open)"
   >
     <slot />
   </PopoverRoot>

@@ -22,7 +22,7 @@ import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import * as Popover from '../../popover/index.parts';
+import * as Popover from '../../popover/parts';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';

@@ -1,9 +1,9 @@
 <script lang="ts">
-import type { PopoverPopupProps, PopoverPopupState } from '../../popover/popup/PopoverPopup.vue';
+import type { PopoverPopupProps, PopoverPopupState } from '../../popover/types';
 
 export interface DateRangePickerPopupState extends PopoverPopupState {}
 
-export interface DateRangePickerPopupProps extends PopoverPopupProps {
+export interface DateRangePickerPopupProps extends Omit<PopoverPopupProps, 'as'> {
   /**
    * Determines the element to focus when the popup is opened.
    * By default, focus moves to the day of the calendar that has the tab stop: the first day of the
@@ -26,17 +26,14 @@ export interface DateRangePickerPopupProps extends PopoverPopupProps {
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import { usePickerInitialFocus } from '../../internals/date-time/picker/usePickerPopup';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverPopup from '../../popover/popup/PopoverPopup.vue';
+import PopoverPopup from '../../popover/PopoverPopup.vue';
 
 defineOptions({ inheritAttrs: false });
 
 // An absent Boolean prop is `false` in Vue, and `false` of `initialFocus` and `finalFocus` has a
 // meaning. The default `undefined` tells an absent prop from `false`.
 const props = withDefaults(defineProps<DateRangePickerPopupProps>(), {
-  as: 'div',
   initialFocus: undefined,
   finalFocus: undefined,
 });
@@ -46,16 +43,17 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 defineSlots<{
-  default(props: { state: DateRangePickerPopupState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DateRangePickerPopupState>;
+  default?(scope: { state: DateRangePickerPopupState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: DateRangePickerPopupState;
+  }): unknown;
 }>();
 
 const pickerInitialFocus = usePickerInitialFocus(() => props.initialFocus);
 
-// This part renders `Popover.Popup` and makes no element of its own. The template has one form for
-// `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Popup` dynamic. Vue then renders `Popover.Popup` again each time this part renders. It
-// also renders again each part in that slot that has slot content.
+// This part renders `Popover.Popup` and makes no element of its own.
 const popup = useTemplateRef<{ element: HTMLElement | null }>('popup');
 const element = computed(() => popup.value?.element ?? null);
 
@@ -63,20 +61,10 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPopup
-    v-if="$slots.render"
-    ref="popup"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+  <PopoverPopup ref="popup" v-bind="{ ...$attrs, ...props, initialFocus: pickerInitialFocus }">
+    <template v-if="$slots.element" #element="slotProps">
+      <slot name="element" v-bind="slotProps" />
     </template>
-  </PopoverPopup>
-  <PopoverPopup
-    v-else
-    ref="popup"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverPopup), ...props, initialFocus: pickerInitialFocus }"
-  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

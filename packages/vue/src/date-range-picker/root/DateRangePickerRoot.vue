@@ -8,11 +8,10 @@ import type { DateTimeFieldChangeEventReason } from '../../internals/date-time/f
 import type { DateMatcher } from '../../internals/date-time/matchers';
 import type { DateValue } from '../../internals/date-time/temporal';
 import type {
-  PopoverRootActions,
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
   PopoverRootProps,
-} from '../../popover/root/PopoverRoot.vue';
+} from '../../popover/types';
 
 export interface DateRangePickerRootState {}
 
@@ -29,7 +28,10 @@ export type DateRangePickerRootChangeEventDetails =
 export type DateRangePickerRootOpenChangeEventReason = PopoverRootChangeEventReason;
 export type DateRangePickerRootOpenChangeEventDetails = PopoverRootChangeEventDetails;
 
-export type DateRangePickerRootActions = PopoverRootActions;
+export interface DateRangePickerRootActions {
+  /** Closes the popup. */
+  close(): void;
+}
 
 export interface DateRangePickerRootProps<Value extends DateValue = DateValue> extends Omit<
   PopoverRootProps,
@@ -156,8 +158,7 @@ import { useDateTimePickerRoot } from '../../internals/date-time/picker/useDateT
 import { createPickerPartElements } from '../../internals/date-time/picker/usePickerPartElement';
 import { assertTemporal } from '../../internals/date-time/temporal';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverRoot from '../../popover/root/PopoverRoot.vue';
+import PopoverRoot from '../../popover/PopoverRoot.vue';
 import { DateRangePickerRootContext } from './DateRangePickerRootContext';
 import type { DateRangePickerRange } from './DateRangePickerRootContext';
 import { createRangeTemplate, firstEnd } from './rangeTemplate';
@@ -215,10 +216,6 @@ const emit = defineEmits<{
    * change. `v-model:open` uses it.
    */
   'update:open': [open: boolean];
-  /**
-   * Event handler called after any animations complete when the popup is opened or closed.
-   */
-  openChangeComplete: [open: boolean];
 }>();
 
 defineSlots<{
@@ -276,7 +273,6 @@ provide(DateRangePickerRootContext, {
 const popover = useTemplateRef<DateRangePickerRootActions>('popover');
 
 defineExpose<DateRangePickerRootActions>({
-  unmount: () => popover.value?.unmount(),
   close: () => popover.value?.close(),
 });
 </script>
@@ -284,13 +280,12 @@ defineExpose<DateRangePickerRootActions>({
 <template>
   <PopoverRoot
     ref="popover"
-    v-bind="withoutPropsOf($attrs, PopoverRoot)"
+    v-bind="$attrs"
     :open="props.open"
     :default-open="props.defaultOpen"
     :modal="props.modal"
     @open-change="(open, details) => emit('openChange', open, details)"
     @update:open="(open) => emit('update:open', open)"
-    @open-change-complete="(open) => emit('openChangeComplete', open)"
   >
     <slot />
   </PopoverRoot>

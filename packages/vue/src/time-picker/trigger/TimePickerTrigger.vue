@@ -1,8 +1,5 @@
 <script lang="ts">
-import type {
-  PopoverTriggerProps,
-  PopoverTriggerState,
-} from '../../popover/trigger/PopoverTrigger.vue';
+import type { PopoverTriggerProps, PopoverTriggerState } from '../../popover/types';
 
 export interface TimePickerTriggerState extends PopoverTriggerState {}
 
@@ -12,7 +9,7 @@ export interface TimePickerTriggerState extends PopoverTriggerState {}
  */
 export interface TimePickerTriggerProps extends Omit<
   PopoverTriggerProps,
-  'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
+  'as' | 'handle' | 'payload' | 'openOnHover' | 'delay' | 'closeDelay'
 > {}
 </script>
 
@@ -22,10 +19,8 @@ import { given } from '../../internals/givenAttributes';
 import { formatText } from '../../internals/date-time/calendar/formatText';
 import { usePickerPartElement } from '../../internals/date-time/picker/usePickerPartElement';
 import { isKind } from '../../internals/date-time/temporal';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useCastBooleanWarning } from '../../internals/useCastBooleanWarning';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverTrigger from '../../popover/trigger/PopoverTrigger.vue';
+import PopoverTrigger from '../../popover/PopoverTrigger.vue';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimePickerRootContext } from '../root/TimePickerRootContext';
 import type { TimePickerRootValue } from '../root/TimePickerRoot.vue';
@@ -34,8 +29,6 @@ import { hourCycleOption } from '../utils/useTimePickerFormat';
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<TimePickerTriggerProps>(), {
-  as: 'button',
-  nativeButton: true,
   disabled: false,
 });
 
@@ -44,8 +37,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 defineSlots<{
-  default(props: { state: TimePickerTriggerState }): unknown;
-  render: ComponentRenderFn<HTMLProps, TimePickerTriggerState>;
+  default?(scope: { state: TimePickerTriggerState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: TimePickerTriggerState;
+  }): unknown;
 }>();
 
 const attrs = useAttrs();
@@ -87,36 +84,24 @@ const label = computed(() => {
   return value === null ? 'Choose time' : `Change time, ${describe(value)}`;
 });
 
-// This part renders `Popover.Trigger` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Trigger` dynamic. Vue then renders `Popover.Trigger` again each time this part renders.
+// This part renders `Popover.Trigger` and makes no element of its own.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 
 usePickerPartElement(picker.triggers, element);
 
 function triggerProps() {
-  return { ...props, disabled: isDisabled.value, 'aria-label': label.value };
+  return { ...props, disabled: isDisabled.value, 'aria-label': label.value ?? undefined };
 }
 
 defineExpose({ element });
 </script>
 
 <template>
-  <PopoverTrigger
-    v-if="$slots.render"
-    ref="trigger"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+  <PopoverTrigger ref="trigger" v-bind="{ ...$attrs, ...triggerProps() }">
+    <template v-if="$slots.element" #element="slotProps">
+      <slot name="element" v-bind="slotProps" />
     </template>
-  </PopoverTrigger>
-  <PopoverTrigger
-    v-else
-    ref="trigger"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverTrigger), ...triggerProps() }"
-  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

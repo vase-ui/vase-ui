@@ -4,7 +4,7 @@ import { defineComponent, h, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
 import * as Dialog from '../../../dialog/index.parts';
 import * as Menu from '../../../menu/index.parts';
-import * as Popover from '../../../popover/index.parts';
+import * as Popover from '../../../popover/parts';
 import {
   createHeldBranch,
   createRenderer,

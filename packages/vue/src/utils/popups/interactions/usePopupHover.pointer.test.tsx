@@ -4,7 +4,7 @@ import { userEvent } from 'vitest/browser';
 import { clientCenter, createRenderer, screen, waitFor, waitForPositioned } from '#test-utils';
 import { REASONS } from '../../../internals/reasons';
 import * as Menu from '../../../menu/index.parts';
-import * as Popover from '../../../popover/index.parts';
+import * as Popover from '../../../popover/parts';
 
 // The cases move the real pointer. A pointer event of the test is trusted, and its `relatedTarget`
 // is the element that the browser finds under the pointer.

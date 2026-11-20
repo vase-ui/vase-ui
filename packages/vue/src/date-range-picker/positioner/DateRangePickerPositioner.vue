@@ -1,14 +1,11 @@
 <script lang="ts">
-import type {
-  PopoverPositionerProps,
-  PopoverPositionerState,
-} from '../../popover/positioner/PopoverPositioner.vue';
+import type { PopoverPositionerProps, PopoverPositionerState } from '../../popover/types';
 
 export interface DateRangePickerPositionerState extends PopoverPositionerState {}
 
 export interface DateRangePickerPositionerProps extends Omit<
   PopoverPositionerProps,
-  'anchor' | 'align'
+  'as' | 'anchor' | 'align'
 > {
   /**
    * An element to position the popup against.
@@ -28,21 +25,22 @@ export interface DateRangePickerPositionerProps extends Omit<
 
 <script setup lang="ts">
 import { computed, toValue, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import { withoutPropsOf } from '../../internals/withoutPropsOf';
-import PopoverPositioner from '../../popover/positioner/PopoverPositioner.vue';
+import PopoverPositioner from '../../popover/PopoverPositioner.vue';
 import { useDateRangePickerRootContext } from '../root/DateRangePickerRootContext';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<DateRangePickerPositionerProps>(), {
-  as: 'div',
   align: 'start',
 });
 
 defineSlots<{
-  default(props: { state: DateRangePickerPositionerState }): unknown;
-  render: ComponentRenderFn<HTMLProps, DateRangePickerPositionerState>;
+  default?(scope: { state: DateRangePickerPositionerState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (target: unknown) => void;
+    state: DateRangePickerPositionerState;
+  }): unknown;
 }>();
 
 const picker = useDateRangePickerRootContext();
@@ -80,10 +78,7 @@ const fieldsAnchor = computed(() => {
 });
 const anchorOf = () => toValue(props.anchor) ?? fieldsAnchor.value;
 
-// This part renders `Popover.Positioner` and makes no element of its own. The template has one form
-// for `#render` and one for the content. A `v-if` on a slot template makes the slots of
-// `Popover.Positioner` dynamic. Vue then renders `Popover.Positioner` again each time this part
-// renders. It also renders again each part in that slot that has slot content.
+// This part renders `Popover.Positioner` and makes no element of its own.
 const positioner = useTemplateRef<{ element: HTMLElement | null }>('positioner');
 const element = computed(() => positioner.value?.element ?? null);
 
@@ -91,20 +86,10 @@ defineExpose({ element });
 </script>
 
 <template>
-  <PopoverPositioner
-    v-if="$slots.render"
-    ref="positioner"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverPositioner), ...props, anchor: anchorOf }"
-  >
-    <template #render="slotProps">
-      <slot name="render" v-bind="slotProps" />
+  <PopoverPositioner ref="positioner" v-bind="{ ...$attrs, ...props, anchor: anchorOf }">
+    <template v-if="$slots.element" #element="slotProps">
+      <slot name="element" v-bind="slotProps" />
     </template>
-  </PopoverPositioner>
-  <PopoverPositioner
-    v-else
-    ref="positioner"
-    v-bind="{ ...withoutPropsOf($attrs, PopoverPositioner), ...props, anchor: anchorOf }"
-  >
     <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>

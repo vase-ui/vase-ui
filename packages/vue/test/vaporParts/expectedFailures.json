@@ -173,11 +173,6 @@
         "<NumberField.ScrubAreaCursor /> > Base UI component API > prop: render > renders a customized root element with an element": "vue-16308"
       }
     },
-    "src/popover/popup/PopoverPopup.test.tsx": {
-      "fails": {
-        "<Popover.Popup /> > Base UI component API > prop: render > renders a customized root element with a function": "vue-16301"
-      }
-    },
     "src/preview-card/arrow/PreviewCardArrow.replacement.test.tsx": {
       "fails": {}
     },

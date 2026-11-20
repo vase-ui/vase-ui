@@ -51,7 +51,7 @@ import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
 import * as Menu from '../../menu/index.parts';
-import * as Popover from '../../popover/index.parts';
+import * as Popover from '../../popover/parts';
 import * as Select from '../../select/index.parts';
 import { DialogStore } from '../store/DialogStore';
 import DialogRootHydration from './DialogRootHydration.test.vue';

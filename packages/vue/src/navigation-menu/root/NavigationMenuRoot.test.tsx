@@ -22,7 +22,7 @@ import {
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import * as Popover from '../../popover/index.parts';
+import * as Popover from '../../popover/parts';
 import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
