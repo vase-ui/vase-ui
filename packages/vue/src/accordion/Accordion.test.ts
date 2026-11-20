@@ -145,7 +145,6 @@ describe('the elements', () => {
     expect(span).toHaveAttribute('aria-controls', exposed.panel.element.id);
     expect(exposed.panel.element).toHaveAttribute('aria-labelledby', span.id);
   });
-
 });
 
 describe('the value', () => {
@@ -274,7 +273,10 @@ describe('disabled', () => {
 
     const { trigger, item, header, press, open } = await mountAccordion({
       root: { keepMounted: true },
-      items: [{ key: 'a', attrs: { disabled: true } }, { key: 'b', trigger: { disabled: true } }],
+      items: [
+        { key: 'a', attrs: { disabled: true } },
+        { key: 'b', trigger: { disabled: true } },
+      ],
     });
     expect(trigger('a')).toBeDisabled();
     for (const element of [item('a'), header('a')]) {
@@ -358,7 +360,9 @@ describe('animation', () => {
     });
     await press('b');
     expect(log).toEqual(['leave a', 'enter b']);
-    await waitFor(() => expect(log).toEqual(['leave a', 'enter b', 'after-leave a', 'after-enter b']));
+    await waitFor(() =>
+      expect(log).toEqual(['leave a', 'enter b', 'after-leave a', 'after-enter b']),
+    );
   });
 });
 

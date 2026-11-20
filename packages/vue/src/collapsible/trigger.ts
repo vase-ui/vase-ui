@@ -13,7 +13,7 @@ export function useCollapsibleTrigger(
   },
 ) {
   const slots = useSlots();
-  const { disabled, mergeAttributes } = useButton({
+  const button = useButton({
     element: options.element,
     disabled: () => options.disabled() || part.disabled,
     // The element of a component or of the `element` slot is known after the mount.
@@ -30,9 +30,9 @@ export function useCollapsibleTrigger(
 
   return {
     /** By the trigger, by its root or item, or by a disabled fieldset around a native button. */
-    disabled,
+    disabled: button.disabled,
     elementProps(own: Record<string, unknown>, attrs: Record<string, unknown>) {
-      return mergeAttributes(
+      return button.mergeAttributes(
         {
           'aria-expanded': part.open ? 'true' : 'false',
           'aria-controls': part.open ? part.panelId : undefined,

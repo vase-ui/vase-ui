@@ -53,33 +53,27 @@ describe('useCastBooleanWarning', () => {
   });
 
   it('gives no warning when the caller sets false', async () => {
-    await render(() =>
-      (
-        <WrapperCast modal={false} loopFocus={false}>
-          Content
-        </WrapperCast>
-      ),
-    );
+    await render(() => (
+      <WrapperCast modal={false} loopFocus={false}>
+        Content
+      </WrapperCast>
+    ));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for a caller value in kebab case', async () => {
-    await render(() =>
-      h(WrapperCast, { modal: false, 'loop-focus': false }),
-    );
+    await render(() => h(WrapperCast, { modal: false, 'loop-focus': false }));
     expect(takeReportedMessages()).toEqual([]);
   });
 
   it('gives no warning for the default undefined, for the default false, and with useForwardProps', async () => {
-    await render(() =>
-      (
-        <>
-          <WrapperUndefined>Content</WrapperUndefined>
-          <WrapperFalseDefault>Content</WrapperFalseDefault>
-          <WrapperForward>Content</WrapperForward>
-        </>
-      ),
-    );
+    await render(() => (
+      <>
+        <WrapperUndefined>Content</WrapperUndefined>
+        <WrapperFalseDefault>Content</WrapperFalseDefault>
+        <WrapperForward>Content</WrapperForward>
+      </>
+    ));
     expect(takeReportedMessages()).toEqual([]);
   });
 
@@ -108,16 +102,12 @@ describe('useCastBooleanWarning', () => {
         ))}
       </>
     ));
-    expect(takeReportedMessages()).toEqual([
-      message('WrapperCast.test', 'Menubar', 'modal'),
-    ]);
+    expect(takeReportedMessages()).toEqual([message('WrapperCast.test', 'Menubar', 'modal')]);
   });
 
   it('names the outer wrapper of two', async () => {
     await render(() => <WrapperOuter>Content</WrapperOuter>);
-    expect(takeReportedMessages()).toEqual([
-      message('WrapperOuter.test', 'Menubar', 'modal'),
-    ]);
+    expect(takeReportedMessages()).toEqual([message('WrapperOuter.test', 'Menubar', 'modal')]);
   });
 
   it('finds the wrapper when the part is in the slot of another part', async () => {
@@ -129,13 +119,11 @@ describe('useCastBooleanWarning', () => {
 
   it('gives no warning for an explicit false in the slot of a component that declares the same prop', async () => {
     await render(() => <SlotHostUser />);
-    await render(() =>
-      (
-        <SlotHost>
-          <Menubar modal={false}>Content</Menubar>
-        </SlotHost>
-      ),
-    );
+    await render(() => (
+      <SlotHost>
+        <Menubar modal={false}>Content</Menubar>
+      </SlotHost>
+    ));
     await render(() => <SlotHost>{{ default: () => <AlertDialog.Root open={false} /> }}</SlotHost>);
     expect(takeReportedMessages()).toEqual([]);
   });

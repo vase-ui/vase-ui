@@ -77,7 +77,12 @@ function leaveLater(element: Element, done: () => void) {
     <Collapsible.Panel v-else-if="scene.panel === 'swap'" class="Panel" id="swapped">
       Swapped
     </Collapsible.Panel>
-    <Collapsible.Panel v-else-if="scene.panel !== false" ref="panelPart" class="Panel" v-bind="panel">
+    <Collapsible.Panel
+      v-else-if="scene.panel !== false"
+      ref="panelPart"
+      class="Panel"
+      v-bind="panel"
+    >
       <p v-for="line in scene.lines ?? 1" :key="line" class="Line">Line {{ line }}</p>
       <input v-if="scene.input" aria-label="Inside" />
       <p id="collapsible-target">Needle</p>

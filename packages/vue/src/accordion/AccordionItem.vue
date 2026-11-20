@@ -5,7 +5,11 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement } from '../common/element';
 import { injectAccordionRoot } from './item';
 import { accordionItemKey, type AccordionTriggerEntry } from './part';
-import type { AccordionItemChangeEventDetails, AccordionItemProps, AccordionItemState } from './types';
+import type {
+  AccordionItemChangeEventDetails,
+  AccordionItemProps,
+  AccordionItemState,
+} from './types';
 
 defineOptions({ inheritAttrs: false });
 

@@ -23,20 +23,23 @@ describe('server render and hydration', () => {
     { name: 'a closed panel', panel: {}, hidden: undefined },
     { name: 'a kept panel', panel: { keepMounted: true }, hidden: '' },
     { name: 'a hiddenUntilFound panel', panel: { hiddenUntilFound: true }, hidden: 'until-found' },
-  ])('VUE-3: the server HTML of $name, and its hydration with no message', async ({ panel, hidden }) => {
-    const props = { panel };
-    const root = await renderOnServer('CollapsibleParts', props);
-    const element = root.querySelector('.Panel');
-    if (hidden === undefined) expect(element).toBeNull();
-    else {
-      expect(element).toHaveAttribute('hidden', hidden);
-      expect(element?.hasAttribute('inert')).toBe(hidden === '');
-    }
-    hydrate(CollapsibleParts, props, root);
-    await nextTick();
-    expect(root.querySelector('.Panel')).toBe(element);
-    if (element) expect(element).toHaveAttribute('hidden', hidden);
-  });
+  ])(
+    'VUE-3: the server HTML of $name, and its hydration with no message',
+    async ({ panel, hidden }) => {
+      const props = { panel };
+      const root = await renderOnServer('CollapsibleParts', props);
+      const element = root.querySelector('.Panel');
+      if (hidden === undefined) expect(element).toBeNull();
+      else {
+        expect(element).toHaveAttribute('hidden', hidden);
+        expect(element?.hasAttribute('inert')).toBe(hidden === '');
+      }
+      hydrate(CollapsibleParts, props, root);
+      await nextTick();
+      expect(root.querySelector('.Panel')).toBe(element);
+      if (element) expect(element).toHaveAttribute('hidden', hidden);
+    },
+  );
 
   test('a trigger with a tag in `as` has the attributes of that tag in the server HTML', async () => {
     const props = { trigger: { as: 'span' } };

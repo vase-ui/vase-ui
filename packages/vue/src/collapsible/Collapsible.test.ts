@@ -149,7 +149,6 @@ describe('the elements', () => {
     await nextTick();
     expect(panel.style.display).toBe('none');
   });
-
 });
 
 describe('the state', () => {
@@ -335,7 +334,9 @@ describe('animation', () => {
     expect(log).toEqual(['enter Panel collapsible-fade-enter-from collapsible-fade-enter-active']);
     await waitFor(() => expect(log).toContain('after-enter Panel'));
     await press();
-    expect(log.at(-1)).toBe('leave Panel collapsible-fade-leave-from collapsible-fade-leave-active');
+    expect(log.at(-1)).toBe(
+      'leave Panel collapsible-fade-leave-from collapsible-fade-leave-active',
+    );
     expect(panels()).toHaveLength(1);
     await waitFor(() => expect(log).toContain('after-leave Panel'));
     expect(panel()).toBeNull();
@@ -354,7 +355,9 @@ describe('animation', () => {
     const old = panel();
     await press();
     expect(panels()).toEqual([old]);
-    await waitFor(() => expect(log.filter((entry) => entry.startsWith('after-enter'))).toHaveLength(2));
+    await waitFor(() =>
+      expect(log.filter((entry) => entry.startsWith('after-enter'))).toHaveLength(2),
+    );
     observer.disconnect();
     expect(most).toBe(1);
     expect(panel()).not.toBe(old);
@@ -387,7 +390,9 @@ describe('animation', () => {
     const old = panel();
     await press();
     expect(panels()).toEqual([old]);
-    await waitFor(() => expect(log).toEqual(['enter Panel', 'leave Panel', 'done Panel', 'enter Panel']));
+    await waitFor(() =>
+      expect(log).toEqual(['enter Panel', 'leave Panel', 'done Panel', 'enter Panel']),
+    );
     expect(panels()).toHaveLength(1);
     expect(panel()).not.toBe(old);
   });
@@ -438,7 +443,9 @@ describe('size variables', () => {
       }
     });
     observer.observe(root, { attributeFilter: ['class'], subtree: true });
-    await waitFor(() => expect(log.filter((entry) => entry.startsWith('after-enter'))).toHaveLength(2));
+    await waitFor(() =>
+      expect(log.filter((entry) => entry.startsWith('after-enter'))).toHaveLength(2),
+    );
     observer.disconnect();
     expect(heights[0]).toBe('60px');
   });
@@ -512,9 +519,7 @@ describe('find-in-page', () => {
       scene: { nested: true },
     });
     await navigateTo('collapsible-inner-target');
-    await waitFor(() =>
-      expect(root.querySelector('.Nested > div')).not.toHaveAttribute('hidden'),
-    );
+    await waitFor(() => expect(root.querySelector('.Nested > div')).not.toHaveAttribute('hidden'));
     expect(log).toEqual([]);
   });
 
@@ -523,7 +528,11 @@ describe('find-in-page', () => {
     cancelled.onOpenChange = (_: boolean, details: CollapsibleRootChangeEventDetails) =>
       details.cancel();
     for (const root of [cancelled, { open: false }]) {
-      const { panel, trigger, root: element } = await mountCollapsible({
+      const {
+        panel,
+        trigger,
+        root: element,
+      } = await mountCollapsible({
         root,
         panel: { hiddenUntilFound: true },
       });

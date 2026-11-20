@@ -28,7 +28,10 @@ if (props.writes !== 'none') {
 
 <template>
   <div ref="element" :class="kind" :hidden="scene.open ? undefined : hiddenValue">
-    <div><p class="MeasureLine">Line 1</p><p class="MeasureLine">Line 2</p></div>
+    <div>
+      <p class="MeasureLine">Line 1</p>
+      <p class="MeasureLine">Line 2</p>
+    </div>
   </div>
 </template>
 

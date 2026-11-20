@@ -87,7 +87,9 @@ describe('hidden="until-found"', () => {
     const order: string[] = [];
     expect(Math.round(panel.getBoundingClientRect().height)).toBe(24);
     root!.addEventListener('beforematch', (event) => {
-      order.push(`beforematch ${panel.getAttribute('hidden')} ${event.bubbles} ${event.cancelable}`);
+      order.push(
+        `beforematch ${panel.getAttribute('hidden')} ${event.bubbles} ${event.cancelable}`,
+      );
       setTimeout(() => order.push(`task ${panel.getAttribute('hidden')}`));
     });
     new MutationObserver(() => order.push(`removed ${panel.getAttribute('hidden')}`)).observe(
@@ -122,7 +124,9 @@ describe('the scroll size of a box of height 0', () => {
 
   test('is the height of the content with the four alignment properties at normal with the priority important; a flex item of a column shrinks', () => {
     expect(sizes('', true)).toBe(80);
-    expect(sizes('display: flex; align-items: end !important; justify-content: end', true)).toBe(80);
+    expect(sizes('display: flex; align-items: end !important; justify-content: end', true)).toBe(
+      80,
+    );
     expect(sizes('display: grid; align-content: end; justify-items: end', true)).toBe(80);
     expect(sizes('display: flex; flex-direction: column; justify-content: end', true)).toBeLessThan(
       80,
@@ -165,7 +169,11 @@ describe('a kept element whose hidden Vue writes, with the height of a variable'
   test('the grid rows animate an open and a close; with hidden="until-found" a close takes the height to 0 at once', async () => {
     const scene = reactive({ open: false });
     const heights = async (hiddenValue: boolean | string) => {
-      const { root: host, unmount } = mount(MeasureKeptHeight, { scene, kind: 'Grid', hiddenValue });
+      const { root: host, unmount } = mount(MeasureKeptHeight, {
+        scene,
+        kind: 'Grid',
+        hiddenValue,
+      });
       const target = host.firstElementChild!;
       await wait(50);
       const height = async (open: boolean) => {

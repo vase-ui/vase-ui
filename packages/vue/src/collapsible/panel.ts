@@ -43,14 +43,15 @@ export function useCollapsiblePanel(
         return;
       }
       const gone = leaving;
-      if (waiting.value || !gone?.isConnected || gone === options.element.value) return;
+      const parent = gone?.isConnected ? gone.parentNode : null;
+      if (waiting.value || !gone || !parent || gone === options.element.value) return;
       waiting.value = true;
       const observer = new MutationObserver(() => {
         if (gone.isConnected) return;
         observer.disconnect();
         waiting.value = false;
       });
-      observer.observe(gone.parentNode!, { childList: true });
+      observer.observe(parent, { childList: true });
     },
   );
   // A new element, and a kept element that shows, get the size that they have at their closed style.
@@ -72,7 +73,9 @@ export function useCollapsiblePanel(
     for (const name of ALIGNMENT) style.setProperty(name, 'normal', 'important');
     const sizes = [element.scrollHeight, element.scrollWidth];
     for (const [name, value, priority] of saved) style.setProperty(name, value, priority);
-    options.variables.forEach((variable, index) => style.setProperty(variable, `${sizes[index]}px`));
+    options.variables.forEach((variable, index) =>
+      style.setProperty(variable, `${sizes[index]}px`),
+    );
   }
 
   function onBeforematch(event: Event) {
@@ -90,8 +93,7 @@ export function useCollapsiblePanel(
   return {
     /** The element is in the DOM. */
     shown: computed(
-      () =>
-        (part.open && !waiting.value) || options.keepMounted() || options.hiddenUntilFound(),
+      () => (part.open && !waiting.value) || options.keepMounted() || options.hiddenUntilFound(),
     ),
     elementProps(own: Record<string, unknown>, attrs: Record<string, unknown>) {
       const closed = !part.open;

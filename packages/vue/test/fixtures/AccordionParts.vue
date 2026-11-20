@@ -27,7 +27,9 @@ const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart });
 
 function itemProps(item: Item) {
-  return 'value' in item ? { value: item.value, ...item.attrs } : { value: item.key, ...item.attrs };
+  return 'value' in item
+    ? { value: item.value, ...item.attrs }
+    : { value: item.key, ...item.attrs };
 }
 
 function record(phase: string, element: Element) {
