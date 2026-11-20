@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureNumberInputs from '../fixtures/MeasureNumberInputs.vue';
+import { dragAndDrop, holdPress } from '../pointer';
 import { mount, settle } from '../render';
 
 let root: HTMLElement | undefined;
@@ -249,9 +250,9 @@ describe('a held button', () => {
     button.addEventListener('pointerdown', () => setTimeout(() => (button.disabled = true)));
     for (const type of ['pointerup', 'click'])
       button.addEventListener(type, () => heard.push(type));
-    await userEvent.pointer([{ target: button, keys: '[MouseLeft>]' }]);
+    const { release } = await holdPress(button);
     await timer(20);
-    await userEvent.pointer([{ keys: '[/MouseLeft]' }]);
+    await release();
     await timer(20);
     expect(heard).toEqual(['pointerup']);
   });
@@ -264,10 +265,10 @@ describe('a held button', () => {
     for (const type of ['pointerdown', 'pointerleave', 'pointerenter', 'pointerup', 'click']) {
       button.addEventListener(type, () => heard.push(type));
     }
-    await userEvent.pointer([{ target: button, keys: '[MouseLeft>]' }]);
+    const { release } = await holdPress(button);
     await userEvent.pointer([{ coords: { x: 500, y: 500 } }]);
     await userEvent.pointer([{ target: button, coords: { x: 10, y: 10 } }]);
-    await userEvent.pointer([{ keys: '[/MouseLeft]' }]);
+    await release();
     // The pointer enters the button before the press, one time or more.
     expect(heard.slice(heard.indexOf('pointerdown'))).toEqual([
       'pointerdown',
@@ -315,7 +316,7 @@ describe('text input events', () => {
     await userEvent.copy();
     target!.focus();
     await userEvent.paste();
-    await userEvent.dragAndDrop(drag, target!);
+    await dragAndDrop(drag, target!);
     await timer();
     expect(heard).toEqual([
       ['insertText', 'x', true],

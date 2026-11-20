@@ -54,6 +54,8 @@ const MESSAGES = {
     'A dynamic argument can be `innerHTML`, which renders a string as HTML. Write the name of the attribute.',
   waitLimit:
     'This wait has a limit in seconds, and a busy machine can stall the page for longer. Use `waitFor`, `screen` or `within` of `#test-utils`. Their limit is a count of frames.',
+  dragAndDrop:
+    'In WebKit, this drag leaves the mouse button pressed for the later test files of the page. In Firefox, it leaves a second pointer at the drop point. Use `dragAndDrop` of `test/pointer.ts`, which releases the button and moves that pointer to the edge of the page when the case ends.',
   absenceWait:
     'A query for an absence passes before the element appears, so this wait can end before the change. Assert the absence directly, or wait on an element that you got before the action. For a presence, use a `getBy` query.',
   privateKeyword:
@@ -189,6 +191,8 @@ const RESTRICTED_TEST_PROPERTIES = [
   { object: 'vi', property: 'waitUntil', message: MESSAGES.waitLimit },
   { object: 'expect', property: 'poll', message: MESSAGES.waitLimit },
   { object: 'expect', property: 'element', message: MESSAGES.waitLimit },
+  // Also through another name of `userEvent`.
+  { property: 'dragAndDrop', message: MESSAGES.dragAndDrop },
 ];
 
 // The rule uses a fixed list of names. A pattern for a second capital also matches a

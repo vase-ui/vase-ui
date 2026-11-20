@@ -6,6 +6,10 @@ import type {
   SwitchState,
 } from './types';
 
+/**
+ * A control that the user can set to on or off.
+ * Renders an `<input>` element with the type `checkbox` and the role `switch`.
+ */
 export const Switch: typeof SwitchComponent = SwitchComponent;
 export namespace Switch {
   export type Props = SwitchProps;
