@@ -2,6 +2,7 @@ import { addEventListener } from '../common/addEventListener';
 import { clamp } from '../common/clamp';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
+import { platform as floatingPlatform } from '@floating-ui/vue';
 import { computed, nextTick, shallowRef, watch, type CSSProperties } from 'vue';
 import { getMaxScrollOffset, normalizeScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../utils/scrollEdges';
 import type { SelectContext } from './root';
@@ -167,9 +168,17 @@ export function grownPlace(input: {
   };
 }
 
-function boxOf(element: Element): Box {
+/** The rectangle of the element in the pixels of the styles of the positioner. */
+function boxOf(element: Element, scale: { x: number; y: number }): Box {
   const { top, left, right, bottom, width, height } = element.getBoundingClientRect();
-  return { top, left, right, bottom, width, height };
+  return {
+    top: top / scale.y,
+    left: left / scale.x,
+    right: right / scale.x,
+    bottom: bottom / scale.y,
+    width: width / scale.x,
+    height: height / scale.y,
+  };
 }
 
 /** A `px` value of a style, else the default: an unset value and `0` give it. */
@@ -220,7 +229,12 @@ export function scrollEdges(scroller: HTMLElement) {
  */
 export function useItemAlignment(
   context: SelectContext,
-  options: { enabled: () => boolean; popupShown: () => boolean },
+  options: {
+    enabled: () => boolean;
+    popupShown: () => boolean;
+    /** Floating UI gave the variables of this open, such as `--anchor-width`. */
+    anchored: () => boolean;
+  },
 ) {
   const { root, aligned } = context;
   const place = shallowRef<CSSProperties | null>(null);
@@ -246,7 +260,9 @@ export function useItemAlignment(
 
   watch(
     () =>
-      root.open && aligned.value && options.popupShown() ? context.positioner.value : null,
+      root.open && aligned.value && options.popupShown() && options.anchored()
+        ? context.positioner.value
+        : null,
     async (positioner) => {
       const current = run;
       // The popup shows in the render that this change queues.
@@ -262,11 +278,13 @@ export function useItemAlignment(
       const margin = { top: pixels(styles.marginTop, MARGIN), bottom: pixels(styles.marginBottom, MARGIN) };
       const item = context.selectedItem() ?? (context.hasValue ? undefined : context.list.items()[0]);
       const text = item && context.itemTexts.get(item.element);
+      // A `zoom` of the page scales the rectangles and not the styles (test/popupLayout.test.tsx).
+      const scale = floatingPlatform.getScale(positioner) as { x: number; y: number };
       const read = readWithoutTransforms(popup, () => ({
-        trigger: boxOf(trigger),
-        positioner: boxOf(positioner),
-        value: context.valueElement.value ? boxOf(context.valueElement.value) : undefined,
-        text: text?.isConnected ? boxOf(text) : undefined,
+        trigger: boxOf(trigger, scale),
+        positioner: boxOf(positioner, scale),
+        value: context.valueElement.value ? boxOf(context.valueElement.value, scale) : undefined,
+        text: text?.isConnected ? boxOf(text, scale) : undefined,
         scrollHeight: scroller.scrollHeight,
       }));
       const first = alignedPlace({

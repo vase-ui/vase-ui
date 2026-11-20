@@ -37,10 +37,6 @@ injectPortal('Positioner');
 const { root, aligned } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const alignment = useItemAlignment(context, {
-  enabled: () => props.alignItemWithTrigger,
-  popupShown: () => context.popupShown.value,
-});
 const placement = usePlacement(
   root,
   // The popup that covers the trigger stays at its place.
@@ -50,6 +46,11 @@ const placement = usePlacement(
   }),
   { positioner: element, insets: () => false, place: () => alignment.place.value },
 );
+const alignment = useItemAlignment(context, {
+  enabled: () => props.alignItemWithTrigger,
+  popupShown: () => context.popupShown.value,
+  anchored: () => placement.anchored.value,
+});
 const placedSide = computed(() => (aligned.value ? 'none' : placement.side.value));
 watch(
   [element, () => placement.placed.value && alignment.ready.value, placedSide],
@@ -82,7 +83,8 @@ const state = computed<SelectPositionerState>(() => ({
 function elementProps() {
   return mergeProps(
     {
-      style: placement.style.value,
+      // A closed positioner keeps its place for the leave of the popup, and takes no pointer.
+      style: [placement.style.value, root.open ? undefined : { pointerEvents: 'none' }],
       'data-side': state.value.side,
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,

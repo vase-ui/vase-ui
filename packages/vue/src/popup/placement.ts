@@ -383,6 +383,8 @@ export function usePlacement(
     align,
     anchorHidden,
     placed,
+    /** Floating UI has the first place of this open, with its variables. */
+    anchored: floating.isPositioned,
     arrow: {
       style: arrowStyle,
       uncentered: arrowUncentered,
