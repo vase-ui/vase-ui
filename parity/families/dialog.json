@@ -67,6 +67,13 @@
       "describe": ["<Dialog.Root />", "external scroll lock handoff"],
       "kind": "not-applicable",
       "reason": "The scroll lock waits for no lock of another library: it has one count for each document, and the last unlock restores the page. A lock of another library and the lock of Vase UI each restore their own styles."
+    },
+    {
+      "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "describe": ["<Dialog.Root />", "when using $name", "nested popups"],
+      "title": "should not close the parent menu when Escape is pressed in a nested dialog",
+      "kind": "not-applicable",
+      "reason": "The case nests a Dialog of the older popup code in a Menu. Menu moved to the popup layer, and the two do not share a stack until Dialog moves to it. The change that moves Dialog to the popup layer ports the case again."
     }
   ],
   "surfaceAdditions": [

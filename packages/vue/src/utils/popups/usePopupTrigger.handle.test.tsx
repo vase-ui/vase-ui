@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
-import {
-  createRenderer,
-  hydrate,
-  renderOnServer,
-} from '#test-utils';
+import { createRenderer, hydrate, renderOnServer } from '#test-utils';
 import {
   PopupHandleFixtureStore,
   createPopupHandleFixture,

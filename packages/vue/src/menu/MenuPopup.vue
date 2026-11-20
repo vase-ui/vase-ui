@@ -26,9 +26,7 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
 // While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(
-  () => (root.open && !root.leaving) || root.keepMounted || menu.childLeaving,
-);
+const shown = computed(() => (root.open && !root.leaving) || root.keepMounted || menu.childLeaving);
 const state = computed<MenuPopupState>(() => ({
   open: root.open,
   side: placement.side.value,
@@ -81,7 +79,8 @@ function elementProps() {
       tabindex: -1,
       'aria-labelledby':
         role === 'presentation' || named ? undefined : root.activeTrigger?.id || undefined,
-      'aria-orientation': role === 'menu' && menu.orientation === 'horizontal' ? 'horizontal' : undefined,
+      'aria-orientation':
+        role === 'menu' && menu.orientation === 'horizontal' ? 'horizontal' : undefined,
       'data-side': state.value.side,
       'data-align': state.value.align,
       'data-instant': root.instant,

@@ -182,10 +182,14 @@ function elementProps() {
   };
   if (bar && barItem) {
     const { tabindex: _, 'data-highlighted': __, ...listAttributes } = barItem.attributes.value;
-    Object.assign(own, mergeProps(listAttributes, { onPointermove: onBarPointermove, onFocus: onBarFocus }), {
-      role: 'menuitem',
-      tabindex: bar.tabIndex(element.value),
-    });
+    Object.assign(
+      own,
+      mergeProps(listAttributes, { onPointermove: onBarPointermove, onFocus: onBarFocus }),
+      {
+        role: 'menuitem',
+        tabindex: bar.tabIndex(element.value),
+      },
+    );
   }
   return trigger.button.mergeAttributes(
     mergeProps(props.openOnHover ? hover.listeners : {}, own),

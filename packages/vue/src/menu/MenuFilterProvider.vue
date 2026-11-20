@@ -26,8 +26,8 @@ defineSlots<{
 }>();
 
 const query = useModel(() => props.modelValue, props.defaultValue);
-const locale = useLocale(() => props.locale);
-const contains = computed(() => getFilter({ locale: locale.value }).contains);
+const currentLocale = useLocale(() => props.locale);
+const contains = computed(() => getFilter({ locale: currentLocale.value }).contains);
 
 provide(filterProviderKey, {
   get query() {

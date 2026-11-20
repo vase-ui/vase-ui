@@ -71,6 +71,8 @@ import type {
   MenuRootState,
   MenuSeparatorProps,
   MenuSeparatorState,
+  MenuSubmenuRootChangeEventDetails,
+  MenuSubmenuRootChangeEventReason,
   MenuSubmenuRootProps,
   MenuSubmenuRootState,
   MenuSubmenuTriggerProps,
@@ -231,8 +233,8 @@ export const SubmenuRoot: typeof MenuSubmenuRoot = MenuSubmenuRoot;
 export namespace SubmenuRoot {
   export type Props = MenuSubmenuRootProps;
   export type State = MenuSubmenuRootState;
-  export type ChangeEventReason = MenuRootChangeEventReason;
-  export type ChangeEventDetails = MenuRootChangeEventDetails;
+  export type ChangeEventReason = MenuSubmenuRootChangeEventReason;
+  export type ChangeEventDetails = MenuSubmenuRootChangeEventDetails;
 }
 
 /**

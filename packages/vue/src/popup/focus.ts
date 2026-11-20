@@ -218,7 +218,12 @@ export function usePopupFocus(
         const trigger = exit.activeTrigger;
         // With no trigger, such as a context menu, the focus goes back where it was.
         const next = trigger
-          ? nextTabStop(trigger, [exit.popup, ...exit.portalElements, popup, ...root.portalElements])
+          ? nextTabStop(trigger, [
+              exit.popup,
+              ...exit.portalElements,
+              popup,
+              ...root.portalElements,
+            ])
           : (befores.get(exit) as HTMLElement | null | undefined);
         exit.request(false, 'focus-out', event);
         focus(next);

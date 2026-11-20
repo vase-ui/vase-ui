@@ -27,7 +27,7 @@ defineProps({
   /** A link item after the items. */
   link: Object as PropType<Props>,
   /** A group with a label around the items. */
-  group: Boolean,
+  group: Object as PropType<{ label?: Props }>,
   /** The items are in a `Menu.List`, after a text. */
   list: Object as PropType<Props>,
   /** A submenu after the items, with a submenu in it when `nested` is set. */
@@ -71,7 +71,9 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
           <span v-if="list">Text</span>
           <component :is="list ? Menu.List : 'div'" data-testid="list" v-bind="list">
             <component :is="group ? Menu.Group : 'div'" data-testid="group">
-              <Menu.GroupLabel v-if="group" data-testid="group-label">Group</Menu.GroupLabel>
+              <Menu.GroupLabel v-if="group" data-testid="group-label" v-bind="group.label">
+                Group
+              </Menu.GroupLabel>
               <Menu.Item
                 v-for="item in items"
                 :key="item.key"
@@ -99,7 +101,9 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
               Link
             </Menu.LinkItem>
             <Menu.SubmenuRoot v-if="submenu" v-bind="submenu.root">
-              <Menu.SubmenuTrigger data-key="sub" v-bind="submenu.trigger">More</Menu.SubmenuTrigger>
+              <Menu.SubmenuTrigger data-key="sub" v-bind="submenu.trigger"
+                >More</Menu.SubmenuTrigger
+              >
               <Menu.Portal v-bind="submenu.portal">
                 <Menu.Positioner data-testid="sub-positioner" v-bind="submenu.positioner">
                   <Menu.Popup data-testid="sub-popup" v-bind="submenu.popup">

@@ -326,7 +326,7 @@ A part that Base UI writes as another part renders that part and no element of i
 
 A root that Base UI writes as the root of another family renders that root:
 
-- Set `inheritAttrs: false` on the wrapper root. Bind `withoutPropsOf($attrs, OtherRoot)` on `OtherRoot` before its named props. An attribute thus sets no prop that the wrapper root omits (`VUE-136`). The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
+- Set `inheritAttrs: false` on the wrapper root. Bind `withoutPropsOf($attrs, OtherRoot)` on `OtherRoot` before its named props. An attribute thus sets no prop that the wrapper root omits. The other root renders no element, so Vue still warns about another attribute, such as `class`, in a development build. The wrapper root has no `#render` slot.
 - Its props interface extends an `Omit` of the props interface of the other root. The template binds each prop on the other root by name.
 - The rule above for events applies to the events of the other root.
 - It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
@@ -1211,7 +1211,6 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - Vue does not know the nodes of `useElementSiblings`. The comments of that composable say how a `MutationObserver` keeps the nodes beside the element, and when the composable removes them.
 - `createFocusGuardElement` makes the element of `FocusGuard.vue`. Both read the attributes of a guard from `getFocusGuardAttributes` of `focusGuardAttributes.ts`. Do not write these attributes in another place.
 - `KeepAlive` moves only the element out of the document. The observer moves the nodes with it, and the same nodes come back at the activation.
-- A popup trigger that has focus guards calls `useTriggerFocusGuards(store, element, enabled)` of `src/utils/popups/focus/usePopupFocus.ts`. While `enabled` is `true`, the composable keeps a guard before and after the element with `useElementSiblings`. `MenuTrigger.vue` is the model.
 - The comments of `focus/usePopupFocus.ts` say where each guard sends the focus. The rows `VUE-66`, `VUE-69` and `VUE-107` of `parity/better` give the tab order of a popup that stays open, and the Tab key in a menu.
 - While `KeepAlive` holds a popup, the inside guards of the popup are not in the document. This is also true for a popup that mounts in a held branch. A browser does not focus such an element. The guard after the trigger then skips the popup, as the Tab key skips a popup with no tabbable element (`VUE-120`).
 - A focus from the trigger, or from no element, then leaves as from the end of the popup. The guard asks for the close and focuses the next tabbable element. A focus from another element goes to the trigger, and the guard asks for no close.

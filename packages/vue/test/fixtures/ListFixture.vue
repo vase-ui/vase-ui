@@ -4,7 +4,14 @@ import { useList, type HighlightReason } from '../../src/list/list';
 import { useTypeahead } from '../../src/menu/typeahead';
 import ListFixtureItem from './ListFixtureItem.vue';
 
-type Item = { key: string; text?: string; disabled?: boolean; native?: boolean; hidden?: boolean; link?: boolean };
+type Item = {
+  key: string;
+  text?: string;
+  disabled?: boolean;
+  native?: boolean;
+  hidden?: boolean;
+  link?: boolean;
+};
 
 // A list of items in a box that scrolls, with an input that owns the focus in virtual mode.
 const props = defineProps({
@@ -14,8 +21,8 @@ const props = defineProps({
   virtual: Boolean,
   canLeave: Boolean,
   dir: String,
-  log: { type: Array as PropType<string[]>, default: () => [] },
 });
+const emit = defineEmits<{ highlight: [entry: string] }>();
 const container = shallowRef<HTMLElement | null>(null);
 const input = shallowRef<HTMLElement | null>(null);
 const list = useList({
@@ -25,7 +32,7 @@ const list = useList({
   owner: () => (props.virtual ? input.value : null),
   canLeave: () => props.canLeave,
   onHighlight: (item, reason: HighlightReason) =>
-    props.log.push(`${item?.element.dataset.key ?? 'none'} ${reason}`),
+    emit('highlight', `${item?.element.dataset.key ?? 'none'} ${reason}`),
 });
 const typeahead = useTypeahead(list);
 provide('list', list);
@@ -36,7 +43,12 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <input v-if="virtual" :ref="(el) => (input = el as HTMLElement)" aria-label="Owner" @keydown="onKeydown" />
+  <input
+    v-if="virtual"
+    :ref="(el) => (input = el as HTMLElement)"
+    aria-label="Owner"
+    @keydown="onKeydown"
+  />
   <div
     :ref="(el) => (container = el as HTMLElement)"
     data-testid="container"

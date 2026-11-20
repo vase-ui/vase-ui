@@ -25,7 +25,10 @@ function element<T extends HTMLElement = HTMLElement>(id: string) {
 const nameOf = (target: EventTarget | null) =>
   (target as Element | null)?.id || (target as Element | null)?.localName || 'null';
 
-function record(types: string[], format = (event: Event) => `${event.type} ${nameOf(event.target)}`) {
+function record(
+  types: string[],
+  format = (event: Event) => `${event.type} ${nameOf(event.target)}`,
+) {
   const log: string[] = [];
   const listeners = types.map((type) => {
     const listener = (event: Event) => log.push(format(event));
@@ -53,8 +56,10 @@ describe('a press of the right button (MM1, MN3)', () => {
     html('<div id="area" style="width: 300px; height: 200px">Area</div>');
     const prevent = (event: Event) => event.preventDefault();
     document.addEventListener('contextmenu', prevent);
-    const { log, stop } = record(['pointerdown', 'mousedown', 'contextmenu', 'pointerup', 'mouseup'], (event) =>
-      event.type === 'contextmenu' ? `contextmenu ${(event as MouseEvent).buttons}` : event.type,
+    const { log, stop } = record(
+      ['pointerdown', 'mousedown', 'contextmenu', 'pointerup', 'mouseup'],
+      (event) =>
+        event.type === 'contextmenu' ? `contextmenu ${(event as MouseEvent).buttons}` : event.type,
     );
     try {
       await userEvent.pointer([{ coords: centerOf(element('area')) }, '[MouseRight>]']);
@@ -88,11 +93,16 @@ describe('a fixed element that a `pointerdown` listener removes in a microtask (
   });
 });
 
-const ITEMS = Array.from({ length: 30 }, (_, i) => `<div id="i${i}" style="height: 30px">${i}</div>`).join('');
+const ITEMS = Array.from(
+  { length: 30 },
+  (_, i) => `<div id="i${i}" style="height: 30px">${i}</div>`,
+).join('');
 
 describe('the pointer and content that moves (MM3, MM4, MM11)', () => {
   test('a move in one step sends `pointerover` and then `pointermove` at one place', async () => {
-    html(`<div id="list" style="position: absolute; left: 0; top: 100px; width: 200px; height: 150px; overflow: auto">${ITEMS}</div>`);
+    html(
+      `<div id="list" style="position: absolute; left: 0; top: 100px; width: 200px; height: 150px; overflow: auto">${ITEMS}</div>`,
+    );
     await userEvent.pointer({ coords: { x: 300, y: 40 } });
     const { log, stop } = record(['pointerover', 'pointermove'], (event) => {
       const pointer = event as PointerEvent;
@@ -107,7 +117,9 @@ describe('the pointer and content that moves (MM3, MM4, MM11)', () => {
   });
 
   test('a list that scrolls under a pointer that rests gives `pointerover` to the new item; WebKit also gives `pointermove` at the last place', async () => {
-    html(`<div id="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 150px; overflow: auto">${ITEMS}</div>`);
+    html(
+      `<div id="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 150px; overflow: auto">${ITEMS}</div>`,
+    );
     await userEvent.pointer({ coords: { x: 100, y: 75 } });
     const { log, stop } = record(['pointerover', 'pointermove'], (event) => {
       const pointer = event as PointerEvent;
@@ -144,22 +156,28 @@ describe('a press on an item with no tab stop, while an input has the focus (MM5
   test.each([
     { prevent: 'none', focus: 'popup' },
     { prevent: 'mousedown', focus: 'input' },
-  ])('with `preventDefault()` at $prevent gives the focus to the $focus and a click to the item', async ({ prevent, focus }) => {
-    html(`<div id="popup" tabindex="-1"><input id="input" aria-label="Input" />
+  ])(
+    'with `preventDefault()` at $prevent gives the focus to the $focus and a click to the item',
+    async ({ prevent, focus }) => {
+      html(`<div id="popup" tabindex="-1"><input id="input" aria-label="Input" />
       <div id="item" role="menuitem" style="height: 40px">Item</div></div>`);
-    if (prevent !== 'none') element('item').addEventListener(prevent, (event) => event.preventDefault());
-    let clicks = 0;
-    element('item').addEventListener('click', () => (clicks += 1));
-    element('input').focus();
-    await userEvent.click(element('item'));
-    expect(document.activeElement?.id).toBe(focus);
-    expect(clicks).toBe(1);
-  });
+      if (prevent !== 'none')
+        element('item').addEventListener(prevent, (event) => event.preventDefault());
+      let clicks = 0;
+      element('item').addEventListener('click', () => (clicks += 1));
+      element('input').focus();
+      await userEvent.click(element('item'));
+      expect(document.activeElement?.id).toBe(focus);
+      expect(clicks).toBe(1);
+    },
+  );
 });
 
 describe('Enter and Space (MM6)', () => {
   test('give a focused `<div role="menuitem">` no click; Enter gives a link a click with a `detail` that differs; Space gives it none', async () => {
-    html(`<div id="div" role="menuitem" tabindex="0">Div</div><a id="link" href="#measure">Link</a>`);
+    html(
+      `<div id="div" role="menuitem" tabindex="0">Div</div><a id="link" href="#measure">Link</a>`,
+    );
     const clicks: string[] = [];
     for (const id of ['div', 'link']) {
       element(id).addEventListener('click', (event) => {
@@ -208,8 +226,13 @@ describe('a press on a button, a drag, and the release on an item (MM7)', () => 
 
 describe('the scroll of a list (MM8)', () => {
   test('`focus()` puts an item below the fold in the middle; `scrollIntoView` with `nearest` moves it one row', async () => {
-    const items = Array.from({ length: 20 }, (_, i) => `<div id="i${i}" tabindex="-1" style="height: 30px">${i}</div>`).join('');
-    html(`<div id="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 150px; overflow: auto">${items}</div>`);
+    const items = Array.from(
+      { length: 20 },
+      (_, i) => `<div id="i${i}" tabindex="-1" style="height: 30px">${i}</div>`,
+    ).join('');
+    html(
+      `<div id="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 150px; overflow: auto">${items}</div>`,
+    );
     element('i5').focus();
     await nextFrame();
     expect(element('list').scrollTop).toBe(90);
@@ -223,12 +246,17 @@ describe('the scroll of a list (MM8)', () => {
 
 describe('a focused element that leaves (MM9)', () => {
   test('with `hidden` sends `focusout` with no related target, and the focus goes to <body>', async () => {
-    html(`<div id="popup" tabindex="-1"><div id="group"><div id="item" tabindex="0">Item</div></div></div>`);
+    html(
+      `<div id="popup" tabindex="-1"><div id="group"><div id="item" tabindex="0">Item</div></div></div>`,
+    );
     for (const target of ['item', 'group']) {
       element('item').hidden = false;
       element('group').hidden = false;
       element('item').focus();
-      const { log, stop } = record(['focusout'], (event) => `focusout ${nameOf((event as FocusEvent).relatedTarget)}`);
+      const { log, stop } = record(
+        ['focusout'],
+        (event) => `focusout ${nameOf((event as FocusEvent).relatedTarget)}`,
+      );
       element(target).hidden = true;
       await nextFrame();
       await nextFrame();
@@ -253,7 +281,9 @@ describe('a focused element that leaves (MM9)', () => {
 
 describe('the text of hidden content (MM10)', () => {
   test('`textContent` has all the text; `innerText` leaves out a hidden child', () => {
-    html('<div id="a" hidden>Alpha <span>beta</span></div><div id="b">Gamma <span hidden>delta</span></div>');
+    html(
+      '<div id="a" hidden>Alpha <span>beta</span></div><div id="b">Gamma <span hidden>delta</span></div>',
+    );
     expect(element('a').textContent).toBe('Alpha beta');
     expect(element('b').textContent).toBe('Gamma delta');
     expect(element('b').innerText).toBe('Gamma');
@@ -276,7 +306,9 @@ describe('a touch (MN1, MN2, MN5)', () => {
   test.skipIf(server.browser !== 'chromium')(
     'that rests 600 ms sends `pointerdown` and no `pointercancel`; its lift gives a click to the element under it',
     async () => {
-      html(`<div id="area" style="width: 300px; height: 200px; -webkit-touch-callout: none">Area</div>`);
+      html(
+        `<div id="area" style="width: 300px; height: 200px; -webkit-touch-callout: none">Area</div>`,
+      );
       const { log, stop } = record(['pointerdown', 'pointercancel', 'pointerup', 'click']);
       try {
         await touchDrag(centerOf(element('area')), centerOf(element('area')), 0, 600);

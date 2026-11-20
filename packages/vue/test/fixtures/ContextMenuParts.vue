@@ -26,7 +26,10 @@ defineProps({
     >
       Area
       <ContextMenu.Root v-if="inner" v-bind="inner">
-        <ContextMenu.Trigger data-testid="inner-trigger" style="display: block; width: 100px; height: 60px">
+        <ContextMenu.Trigger
+          data-testid="inner-trigger"
+          style="display: block; width: 100px; height: 60px"
+        >
           Inner
         </ContextMenu.Trigger>
         <ContextMenu.Portal>
@@ -42,7 +45,12 @@ defineProps({
       <ContextMenu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <ContextMenu.Positioner data-testid="positioner" v-bind="positioner">
         <ContextMenu.Popup data-testid="popup" v-bind="popup">
-          <ContextMenu.Item v-for="key in ['a', 'b', 'c']" :key="key" :data-key="key" v-bind="items[key]">
+          <ContextMenu.Item
+            v-for="key in ['a', 'b', 'c']"
+            :key="key"
+            :data-key="key"
+            v-bind="items[key]"
+          >
             {{ key }}
           </ContextMenu.Item>
           <ContextMenu.SubmenuRoot>

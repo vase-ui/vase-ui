@@ -161,11 +161,14 @@
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/composite`, and Vase UI has no entry point for an internal module."
     },
     {
-      "upstream": "packages/react/src/internals/useItemRegistry.test.tsx",
-      "describe": ["useItemRegistry"],
-      "title": "publishes every registration under StrictMode double effects",
+      "upstream": "packages/react/src/internals/useItemRegistry.ts",
       "kind": "not-applicable",
-      "reason": "React StrictMode repeats the mount effect and its cleanup. Vue has no such mount replay."
+      "reason": "Vase UI has no such store. A Menu item adds its element to the list in `setup`, and the list reads its items in the order of the document (`packages/vue/src/list/list.ts`)."
+    },
+    {
+      "upstream": "packages/react/src/internals/useItemRegistry.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The cases test the snapshots of `useItemRegistry`, and Vase UI has no such store. `packages/vue/src/list/list.test.ts` covers the order of the items."
     },
     {
       "upstream": "packages/react/src/global.d.ts",
@@ -201,13 +204,13 @@
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. In Vue, `#render` is a slot, so a part reads the `id` of the element only after the render. `MenuPopup.vue` binds its `id` prop or the default id of the popup, and the store follows the `id` of the popup element (`VUE-73`). The filter root reads the `id` of the list element with `useElementId`. A part that another part names reads the `id` of its own element from the mount on, with `useRegisteredId`."
+      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. A Vase UI Menu part writes its `id` prop or its default id on its element, and each part that names it names that id. A part that another part names reads the `id` of its own element from the mount on, with `useRegisteredId`."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/popup/MenuPopup.test.tsx",
-      "reason": "Vase UI has no such function. The block `prop: id` of this test covers the `id` of the popup element that the trigger names, the default id after a removal, an `id` and an empty `id` from the `#render` slot, and the release at unmount. `packages/vue/src/filter-dropdown/list/FilterDropdownList.test.tsx` covers the release for the list and the id that the `#render` slot gives the list (`VUE-117`). `packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx` covers an empty `id` prop, which counts as no id (`VUE-93`), and an empty id from the `#render` slot. The cases that read the props of a `render` element are for React."
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "Vase UI has no such function. The block `the parts` of this test covers the `id` of the popup and of the list that the trigger names. The case \"an `id` of white space counts as no `id`\" covers an `id` of white space (`VUE-93`). `packages/vue/src/menu/MenuFilter.test.ts` covers the `id` of the list that the input names. The cases that read the props of a `render` element are for React."
     },
     {
       "upstream": "packages/react/test/addVitestMatchers.ts",

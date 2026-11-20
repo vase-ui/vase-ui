@@ -1,4 +1,9 @@
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes } from 'vue';
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  HTMLAttributes,
+  InputHTMLAttributes,
+} from 'vue';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import type { AsProps } from '../common/element';
 import type { Filter, GetFilterParameters } from '../internals/filter';
@@ -117,6 +122,10 @@ export interface MenuSubmenuRootProps extends MenuRootCommonProps {
 
 export interface MenuSubmenuRootState {}
 
+export type MenuSubmenuRootChangeEventReason = MenuRootChangeEventReason;
+
+export type MenuSubmenuRootChangeEventDetails = MenuRootChangeEventDetails;
+
 export interface MenuTriggerProps<Payload = unknown>
   extends AsProps, /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'as' | 'disabled' | 'id'> {
   id?: string | undefined;
@@ -179,7 +188,8 @@ export interface MenuPositionerState {
   instant: string | undefined;
 }
 
-export interface MenuPopupProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface MenuPopupProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;
   /**
    * The element that gets the focus at the close. By default: the trigger, else the element that
@@ -382,7 +392,8 @@ export interface MenuSeparatorProps extends SeparatorProps {}
 
 export interface MenuSeparatorState extends SeparatorState {}
 
-export interface MenuListProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
+export interface MenuListProps
+  extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
   id?: string | undefined;
 }
 
@@ -393,10 +404,7 @@ export type MenuFilter = Filter;
 export type MenuFilterOptions = GetFilterParameters;
 
 export type MenuFilterProviderChangeEventReason =
-  | 'input-change'
-  | 'input-clear'
-  | 'clear-press'
-  | 'popup-close';
+  'input-change' | 'input-clear' | 'clear-press' | 'popup-close';
 
 export type MenuFilterProviderChangeEventDetails =
   ChangeEventDetails<MenuFilterProviderChangeEventReason>;

@@ -96,7 +96,7 @@ describe('the bar', () => {
 });
 
 describe('while a menu of the bar is open', () => {
-  test('a pointer move on another trigger opens its menu with one openChange, and closes the first with `sibling-open`', async () => {
+  test('a pointer move on another trigger opens its menu with one openChange, and closes the first with `sibling-open` (VUE-67, VUE-85)', async () => {
     const log: string[] = [];
     await mountBar({ roots: logged(log) });
     await userEvent.click(element('file'));
@@ -104,7 +104,11 @@ describe('while a menu of the bar is open', () => {
     await userEvent.hover(element('edit'));
     await waitFor(() => expect(popupOf('edit')).not.toBe(null));
     await waitFor(() => expect(popupOf('file')).toBe(null));
-    expect(log).toEqual(['file true trigger-press', 'edit true trigger-hover', 'file false sibling-open']);
+    expect(log).toEqual([
+      'file true trigger-press',
+      'edit true trigger-hover',
+      'file false sibling-open',
+    ]);
     expect(popupOf('edit')).toHaveAttribute('data-instant', 'group');
     await waitFor(() => expect(active()).toBe(popupOf('edit')));
     // The new menu stays open after the pointer leaves.
@@ -140,7 +144,7 @@ describe('while a menu of the bar is open', () => {
     expect(element('edit')).toHaveAttribute('tabindex', '0');
   });
 
-  test('a press on the bar beside the triggers closes the menu, and gives the focus to nothing', async () => {
+  test('a press on the bar beside the triggers closes the menu, and gives the focus to nothing (VUE-85)', async () => {
     await mountBar({ bar: { style: 'width: 400px; height: 40px' } });
     await userEvent.click(element('file'));
     await waitFor(() => expect(popupOf('file')).not.toBe(null));

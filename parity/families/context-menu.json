@@ -6,17 +6,234 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/context-menu/ContextMenu.test.ts",
+      "reason": "`ContextMenu.test.ts` tests a `contextmenu` with no button down starts no drag, as on Windows, where the event comes at the release."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/context-menu/ContextMenu.test.ts",
+      "reason": "`ContextMenu.test.ts` tests the root: the open at the pointer, the release of the drag on an item and outside before and after 500 ms, the focus back to the element that had it, Tab and Shift+Tab, a disabled root and a submenu at the inline end of its trigger."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/context-menu/ContextMenu.test.ts",
+      "reason": "`ContextMenu.test.ts` tests the trigger: the open at a right press, its attributes, the native menu that it stops, a second right press in the open menu and in the leave of a backdrop, a long press of a touch and of a pen, and a trigger in a trigger."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Item",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "CheckboxItem",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "RadioItem",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "SubmenuTrigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "SubmenuRoot",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "SubmenuRoot",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates the part (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates the part (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "CheckboxItemIndicator",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "RadioItemIndicator",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "CheckboxItem",
+      "kind": "not-applicable",
+      "reason": "The change event of the part has the one reason that it sends, `item-press`. The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "RadioGroup",
+      "kind": "not-applicable",
+      "reason": "The change event of the part has the one reason that it sends, `item-press`. The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
       "prop": "side",
       "kind": "not-applicable",
-      "reason": "The row gives the default `'bottom'`. The part has no Vue default: a prop that is absent lets `Menu.Positioner` take `'bottom'` for a root context menu and `'inline-end'` for a submenu, as in Base UI. Only an absent `side` gives a root context menu the offsets `-5` and `2`. With a Vue default, a submenu opens below its trigger and a root context menu loses those offsets."
+      "reason": "The prop has no Vue default: a context menu with no `side` and an `align` that is not `center` opens over the pointer with `sideOffset` -5 and `alignOffset` 2, and a submenu takes `'inline-end'`, as in Base UI."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "Positioner",
+      "prop": "align",
+      "kind": "not-applicable",
+      "reason": "The prop has no Vue default, because the positioner of a submenu shares it: `'start'` for a context menu and for a submenu, as in Base UI."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuCheckboxItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuCheckboxItemIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuLinkItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuRadioItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuRadioItemIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuSubmenuTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "entry": "ContextMenuTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
@@ -59,8 +276,50 @@
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the same update."
     }
   ],
   "returnTypeDifferences": [],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/context-menu/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/context-menu/parts.ts",
+      "behavior": "The parts of the namespace `ContextMenu`.",
+      "witness": "packages/vue/src/context-menu/ContextMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/context-menu/ContextMenuPositioner.vue",
+      "behavior": "The positioner places the menu at the pointer.",
+      "witness": "packages/vue/src/context-menu/ContextMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/context-menu/ContextMenuRoot.vue",
+      "behavior": "The root of a menu that opens at the pointer.",
+      "witness": "packages/vue/src/context-menu/ContextMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/context-menu/root/ContextMenuRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "The point of the context menu, which the trigger writes and the positioner reads.",
+      "witness": "packages/vue/src/context-menu/ContextMenu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/context-menu/ContextMenuTrigger.vue",
+      "behavior": "The trigger opens the menu at a right press and at a long press.",
+      "witness": "packages/vue/src/context-menu/ContextMenu.test.ts"
+    }
+  ]
 }

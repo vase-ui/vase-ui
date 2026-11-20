@@ -1,7 +1,6 @@
 import {
   computed,
   inject,
-  onScopeDispose,
   provide,
   shallowRef,
   watch,
@@ -9,6 +8,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
+import { isElement } from '../common/element';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
 import { useList, type List, type ListItem } from '../list/list';
@@ -22,11 +22,7 @@ import { dispatchClickWithModifiers } from '../utils/dispatchClickWithModifiers'
 import { isReleaseAtPressPoint } from '../utils/popups/isReleaseAtPressPoint';
 import { filterProviderKey, useMenuFilter, type MenuFilterRoot } from './filter';
 import { useTypeahead } from './typeahead';
-import type {
-  MenuRootChangeEventDetails,
-  MenuRootChangeEventReason,
-  MenuRootOrientation,
-} from './types';
+import type { MenuRootChangeEventReason, MenuRootOrientation } from './types';
 
 /** Opens and closes a menu from code, and connects triggers outside the root to it. */
 export class MenuHandle<Payload = unknown> extends PopupHandle<Payload> {}
@@ -185,7 +181,7 @@ export function useMenuRoot<Payload>(
       if (!open && details.reason === 'escape-key' && props.closeParentOnEsc && parent) {
         details.allowPropagation();
       }
-      emit('openChange', open, details as MenuRootChangeEventDetails);
+      emit('openChange', open, details);
       if (details.isCanceled) return;
       if (!open) {
         // A menu closes its submenu first, so that the focus goes back from the inside out.
@@ -213,9 +209,17 @@ export function useMenuRoot<Payload>(
     () => injectedBar ?? menubarOfTrigger(root.activeTrigger) ?? null,
   );
   const kind = computed<MenuKind>(() =>
-    place === 'submenu' ? 'submenu' : place === 'context' ? 'context' : menubar.value ? 'menubar' : 'menu',
+    place === 'submenu'
+      ? 'submenu'
+      : place === 'context'
+        ? 'context'
+        : menubar.value
+          ? 'menubar'
+          : 'menu',
   );
-  const disabled = computed(() => props.disabled || !!parent?.disabled || !!menubar.value?.disabled);
+  const disabled = computed(
+    () => props.disabled || !!parent?.disabled || !!menubar.value?.disabled,
+  );
   const openChild = shallowRef<MenuContext | null>(null);
   const lastChild = shallowRef<MenuContext | null>(null);
   const positioner = shallowRef<HTMLElement | null>(null);
@@ -254,7 +258,8 @@ export function useMenuRoot<Payload>(
       hide: current === 'context' ? 'aria-hidden' : false,
       trap: false,
       lockScroll: blocks && (root.interaction !== 'touch' || fullWidth.value),
-      hole: current === 'context' ? null : current === 'menubar' ? menubar.value?.element : undefined,
+      hole:
+        current === 'context' ? null : current === 'menubar' ? menubar.value?.element : undefined,
       inside: current === 'menubar' ? menubar.value?.triggers : undefined,
     };
   });
@@ -338,7 +343,7 @@ export function useMenuRoot<Payload>(
     (open) => {
       if (!open) {
         siblingTimer.clear();
-        stopDrag?.();
+        drag.value = null;
         if (list.highlighted) list.highlight(null, 'none');
         // A parent that closes with no event of the user closes its submenu.
         openChild.value?.root.request(false, 'sibling-open', lastEvent ?? new Event('vase-ui'));
@@ -354,9 +359,12 @@ export function useMenuRoot<Payload>(
 
   const cross = () => {
     const container = listElement.value ?? root.popup;
-    const rtl = !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
+    const rtl =
+      !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
     if (props.orientation === 'horizontal') return { end: 'ArrowDown', start: 'ArrowUp' };
-    return rtl ? { end: 'ArrowLeft', start: 'ArrowRight' } : { end: 'ArrowRight', start: 'ArrowLeft' };
+    return rtl
+      ? { end: 'ArrowLeft', start: 'ArrowRight' }
+      : { end: 'ArrowRight', start: 'ArrowLeft' };
   };
 
   function onKeydown(event: KeyboardEvent): boolean {
@@ -394,32 +402,37 @@ export function useMenuRoot<Payload>(
     return !!menubar.value?.onMenuKey(event, context);
   }
 
-  let stopDrag: (() => void) | undefined;
+  const drag = shallowRef<MenuPress | null>(null);
+  watch(
+    drag,
+    (press, _, onCleanup) => {
+      if (!press) return;
+      onCleanup(
+        addEventListener(
+          ownerDocument(press.trigger),
+          'pointerup',
+          (event) => {
+            if (event.button !== press.button) return;
+            drag.value = null;
+            release(press, event);
+          },
+          true,
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
   function startDrag(press: MenuPress) {
-    stopDrag?.();
-    const doc = ownerDocument(press.trigger);
-    const stop = addEventListener(
-      doc,
-      'pointerup',
-      (event) => {
-        if (event.button !== press.button) return;
-        stop();
-        stopDrag = undefined;
-        release(press, event);
-      },
-      true,
-    );
-    stopDrag = stop;
+    drag.value = press;
   }
-  onScopeDispose(() => stopDrag?.());
 
   function release(press: MenuPress, event: PointerEvent) {
     if (!root.open || isReleaseAtPressPoint({ clientX: press.x, clientY: press.y }, event)) return;
     const elapsed = event.timeStamp - press.time;
-    const path = event.composedPath().filter((node): node is Element => node instanceof Element);
+    const path = event.composedPath().filter(isElement);
     const item = path.find((node) => menuItems.has(node));
     if (item && isInPopup(layer, item)) {
-      if (!submenus.has(item) && !menuItems.get(item)!.disabled() && elapsed >= press.itemDelay) {
+      if (!submenus.has(item) && !menuItems.get(item)?.disabled() && elapsed >= press.itemDelay) {
         (item as HTMLElement).focus({ preventScroll: true });
         dispatchClickWithModifiers(item, event, { detail: 1, pointerType: 'mouse' });
       }
@@ -437,7 +450,7 @@ export function useMenuRoot<Payload>(
     },
     parent,
     get rootMenu() {
-      return parent?.rootMenu ?? (context as MenuContext);
+      return parent?.rootMenu ?? context;
     },
     get menubar() {
       return menubar.value;
@@ -495,9 +508,9 @@ export function useMenuRoot<Payload>(
       if (child) lastChild.value = child;
     },
   };
-  contexts.set(root, context as MenuContext);
+  contexts.set(root, context);
   provide(menuKey, context as MenuContext);
-  filter?.connect(context as MenuContext);
+  filter?.connect(context);
 
   return {
     root,
@@ -563,4 +576,3 @@ export function injectPositioner(part: string) {
   }
   return placement;
 }
-

@@ -40,7 +40,7 @@ To compose more than one part with your own components, nest the slots as deeply
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
-In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`.
+In this sample, `Menu.Trigger` renders `Tooltip.Trigger`, `Tooltip.Trigger` renders `Dialog.Trigger`, and `Dialog.Trigger` renders `MyButton`.
 
 ## How props are merged
 
@@ -177,4 +177,3 @@ A custom component in Vapor mode must expose its element as `element`, with `def
 A component that you build with [useRender](/utils/use-render) exposes the `element` that `useRender` returns. Its template binds `setRef` by name on its element and calls `usesRenderSlot()` in the `v-if` of its `#render` slot, as the samples of that page do. In a Vapor component, a development build shows a warning when a native element has only the spread.
 
 In a Vapor wrapper, give each optional Boolean prop the default `undefined`, as [useForwardProps explains](/utils/use-forward-props#vapor-mode).
-

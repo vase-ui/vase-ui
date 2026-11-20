@@ -11,13 +11,15 @@ const SUBMENU: CollisionAvoidance = { fallbackAxisSide: 'end' };
  * Places a menu. A prop with no value takes the default of the place of the menu: a submenu opens
  * at the inline end of its trigger, and a context menu at the pointer.
  */
-export function useMenuPositioner(props: PlacementProps, element: Readonly<Ref<HTMLElement | null>>) {
+export function useMenuPositioner(
+  props: PlacementProps,
+  element: Readonly<Ref<HTMLElement | null>>,
+) {
   const context = injectMenu('Positioner');
   injectPortal('Positioner');
   const kind = () => context.kind;
   const verticalBar = () => context.menubar?.orientation === 'vertical';
-  const align = () =>
-    props.align ?? (kind() === 'menu' ? 'center' : 'start');
+  const align = () => props.align ?? (kind() === 'menu' ? 'center' : 'start');
   // A context menu with no side opens at the pointer, a little over it.
   const atPointer = () => kind() === 'context' && !props.side && align() !== 'center';
   const placementProps = {
@@ -93,7 +95,10 @@ export function useMenuPositioner(props: PlacementProps, element: Readonly<Ref<H
   return {
     state,
     attributes: () => ({
-      style: [placement.style.value, sizeVariables('positioner', context.viewport.value?.positioner)],
+      style: [
+        placement.style.value,
+        sizeVariables('positioner', context.viewport.value?.positioner),
+      ],
       'data-side': state.value.side,
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,

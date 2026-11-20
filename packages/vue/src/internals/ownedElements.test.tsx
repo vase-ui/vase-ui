@@ -4,14 +4,7 @@ import { Calendar } from '@vase-ui/vue/calendar';
 import { DatePicker } from '@vase-ui/vue/date-picker';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import { TimePicker } from '@vase-ui/vue/time-picker';
-import {
-  createRenderer,
-  fireEvent,
-  flushMicrotasks,
-  screen,
-  waitFor,
-  within,
-} from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor, within } from '#test-utils';
 import { TestElement } from '../../test/testElement';
 import PopupPortal from '../utils/popups/portal/PopupPortal.vue';
 import { getNestedPortals, isPortalOfPart } from '../utils/popups/portal/portalElements';
@@ -290,5 +283,4 @@ describe('owned parts', () => {
       expect(within(screen.getByTestId('face')).getByRole('slider')).toHaveFocus(),
     );
   });
-
 });

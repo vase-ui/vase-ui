@@ -58,6 +58,8 @@ export type {
   MenuRootState,
   MenuSeparatorProps,
   MenuSeparatorState,
+  MenuSubmenuRootChangeEventDetails,
+  MenuSubmenuRootChangeEventReason,
   MenuSubmenuRootProps,
   MenuSubmenuRootState,
   MenuSubmenuTriggerProps,

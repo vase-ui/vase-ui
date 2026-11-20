@@ -289,17 +289,17 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     await checkReturn();
   }
 
-  // A popup of the old layer returns the focus to the trigger of an earlier popup of that layer.
-  // The menu is on the popup layer, so the old layer does not know its trigger. The case runs again
-  // when the Dialog and Drawer units move these families to the popup layer.
+  // A popup of the older popup code returns the focus to the trigger of an earlier popup of that
+  // code. The menu is on the popup layer, so that code does not know its trigger. The case runs
+  // again when Dialog and Drawer move to the popup layer.
   it.skip('BUG-6037: skips the trigger of a select that was open in the popup: the app opens the popup', () =>
     checkSelectSkip(false));
 
   it('BUG-6037: skips the trigger of a select that was open in the popup: a menu item opens the popup', () =>
     checkSelectSkip(true));
 
-  // The old layer does not know the trigger of a menu on the popup layer. The case runs again when
-  // the Dialog and Drawer units move these families to the popup layer.
+  // The older popup code does not know the trigger of a menu on the popup layer. The case runs
+  // again when Dialog and Drawer move to the popup layer.
   it.skip('BUG-6037: returns focus to the earlier menu trigger after a press outside', async () => {
     // The drawer viewport needs space for a press outside its popup.
     const { popup, checkReturn } = await openWithoutTrigger(() => (
@@ -311,8 +311,8 @@ export function nestedPopupCloseTests(config: NestedPopupCloseTestsConfig) {
     await checkReturn(() => userEvent.click(outside, { position: { x: 2, y: 2 } }));
   });
 
-  // The old layer does not know the trigger of a menu on the popup layer. The case runs again when
-  // the Dialog and Drawer units move these families to the popup layer.
+  // The older popup code does not know the trigger of a menu on the popup layer. The case runs
+  // again when Dialog and Drawer move to the popup layer.
   it.skip('BUG-6037: returns focus to the earlier menu trigger after a field takes focus at mount', async () => {
     const { checkReturn } = await openWithoutTrigger(() => <FocusAtMount data-testid="field" />);
     expect(screen.getByTestId('field')).toHaveFocus();

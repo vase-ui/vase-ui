@@ -258,7 +258,6 @@ describe('a press on a part of a child popup that is outside its popup element',
       closesChild: false,
     },
 
-
     {
       name: 'Select.Backdrop / trap-focus',
       parent: 'trapFocusPopover',
@@ -372,7 +371,6 @@ describe('a press on the backdrop of a popup whose positioner has not mounted', 
   const { render } = createRenderer();
 
   it.each<PendingPositionerCase>([
-
     {
       name: 'Select',
       render: (record, onOpenChangeComplete) => (

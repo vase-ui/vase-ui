@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, onScopeDispose, useAttrs, watch } from 'vue';
+import { computed, inject, mergeProps, shallowRef, useAttrs, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { useElement } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
@@ -93,31 +93,36 @@ function onPointerdown(event: PointerEvent) {
     press = null;
     menu.setAnchor(at(started.x, started.y, started.type === 'touch' ? 10 : 0));
     root.request(true, 'trigger-press', started.event);
-    if (root.open) skipLift();
+    if (root.open) skipsLift.value = true;
   });
 }
 
 // The lift of a long press can give a `click` to the item that opened under the finger
 // (test/measurements/menu.test.ts). That click does nothing.
-let stopSkip: (() => void) | undefined;
-function skipLift() {
-  const doc = ownerDocument(element.value);
-  const stop = mergeCleanups(
-    addEventListener(
-      doc,
-      'click',
-      (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        stop();
-      },
-      true,
-    ),
-    addEventListener(doc, 'pointerdown', () => stop(), true),
-  );
-  stopSkip = stop;
-}
-onScopeDispose(() => stopSkip?.());
+const skipsLift = shallowRef(false);
+watch(
+  skipsLift,
+  (skips, _, onCleanup) => {
+    if (!skips) return;
+    const doc = ownerDocument(element.value);
+    onCleanup(
+      mergeCleanups(
+        addEventListener(
+          doc,
+          'click',
+          (event) => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            skipsLift.value = false;
+          },
+          true,
+        ),
+        addEventListener(doc, 'pointerdown', () => (skipsLift.value = false), true),
+      ),
+    );
+  },
+  { flush: 'sync' },
+);
 
 function onPointermove(event: PointerEvent) {
   if (!press || event.pointerId !== press.id) return;

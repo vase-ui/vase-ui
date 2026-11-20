@@ -72,7 +72,12 @@ describe('the open', () => {
     const { trigger } = await mountContextMenu();
     let reached = false;
     trigger.parentElement!.addEventListener('contextmenu', () => (reached = true));
-    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 10, clientY: 10 });
+    const event = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 10,
+      clientY: 10,
+    });
     trigger.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
     expect(reached).toBe(false);
@@ -139,7 +144,13 @@ describe('press, drag, release', () => {
   test('a `contextmenu` with no button down starts no drag', async () => {
     const { trigger } = await mountContextMenu();
     trigger.dispatchEvent(
-      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 100, clientY: 80, buttons: 0 }),
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: 100,
+        clientY: 80,
+        buttons: 0,
+      }),
     );
     await placed();
     await new Promise((resolve) => setTimeout(resolve, 520));
@@ -159,7 +170,10 @@ describe('a second right press', () => {
     await placed();
     await rightRelease();
     let event: Event | undefined;
-    document.addEventListener('contextmenu', (each) => (event = each), { capture: true, once: true });
+    document.addEventListener('contextmenu', (each) => (event = each), {
+      capture: true,
+      once: true,
+    });
     await rightPress(200, 150);
     await rightRelease();
     await placed();
@@ -191,7 +205,10 @@ describe('a second right press', () => {
     await placed();
     await rightRelease();
     let event: Event | undefined;
-    document.addEventListener('contextmenu', (each) => (event = each), { capture: true, once: true });
+    document.addEventListener('contextmenu', (each) => (event = each), {
+      capture: true,
+      once: true,
+    });
     await rightPress(380, 400);
     await rightRelease();
     await waitFor(() => expect(popup()).toBe(null));
@@ -215,12 +232,17 @@ describe('a long press', () => {
     },
   );
 
+  test.skipIf(server.browser !== 'chromium')('of a pen opens the menu (BUG-4854)', async () => {
+    await mountContextMenu();
+    await penDrag({ x: 100, y: 80 }, { x: 100, y: 80 }, 0, LONG_PRESS);
+    await waitFor(() => expect(popup()).not.toBe(null));
+  });
+
   test.skipIf(server.browser !== 'chromium')(
-    'of a pen that leaves the trigger opens nothing',
+    'of a pen that leaves the trigger within 10 px opens nothing',
     async () => {
       await mountContextMenu();
-      await penDrag({ x: 290, y: 100 }, { x: 400, y: 100 }, 2);
-      await new Promise((resolve) => setTimeout(resolve, LONG_PRESS));
+      await penDrag({ x: 295, y: 100 }, { x: 304, y: 100 }, 2, LONG_PRESS);
       expect(popup()).toBe(null);
     },
   );
@@ -233,7 +255,12 @@ describe('the focus', () => {
       const { trigger } = await mountContextMenu();
       document.getElementById('before')!.focus();
       trigger.dispatchEvent(
-        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 100, clientY: 80 }),
+        new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          clientX: 100,
+          clientY: 80,
+        }),
       );
       await placed();
       await waitFor(() => expect(active()).toBe(popup()));
@@ -245,7 +272,7 @@ describe('the focus', () => {
     },
   );
 
-  test('Tab in a submenu closes each menu and returns the focus to the element that had it before the open', async () => {
+  test('Tab in a submenu closes each menu and returns the focus to the element that had it before the open (VUE-107)', async () => {
     const { trigger } = await mountContextMenu();
     document.getElementById('before')!.focus();
     trigger.dispatchEvent(

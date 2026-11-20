@@ -81,7 +81,7 @@ export function useList(options: ListOptions): List {
   let over: Point | null = null;
   const moves = new WeakMap<Event, boolean>();
   watch(
-    options.container,
+    () => options.container(),
     (container, _, onCleanup) => {
       if (!container) return;
       onCleanup(
@@ -163,7 +163,8 @@ export function useList(options: ListOptions): List {
         // `focus()` alone puts the item in the middle of the list
         // (test/measurements/menu.test.ts). A pointer scrolls nothing, so the list does not move
         // under it.
-        if (reason !== 'pointer') item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        if (reason !== 'pointer')
+          item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       } else if (!virtual.value && previous) {
         const active = activeElement(ownerDocument(previous.element));
         if (active && previous.element.contains(active)) {
@@ -243,7 +244,9 @@ export function useListItem(
     },
     { flush: 'post', immediate: true },
   );
-  const highlighted = computed(() => !!element.value && list.highlighted?.element === element.value);
+  const highlighted = computed(
+    () => !!element.value && list.highlighted?.element === element.value,
+  );
   const options: Partial<ListOptions> = optionsOfLists.get(list) ?? {};
   const hovers = () => options.hover?.() ?? true;
 

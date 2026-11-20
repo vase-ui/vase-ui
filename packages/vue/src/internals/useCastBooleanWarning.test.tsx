@@ -101,12 +101,16 @@ describe('useCastBooleanWarning', () => {
         ))}
       </>
     ));
-    expect(takeReportedMessages()).toEqual([message('WrapperCast.test', 'TimePicker.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([
+      message('WrapperCast.test', 'TimePicker.Root', 'open'),
+    ]);
   });
 
   it('names the outer wrapper of two', async () => {
     await render(() => <WrapperOuter>Content</WrapperOuter>);
-    expect(takeReportedMessages()).toEqual([message('WrapperOuter.test', 'TimePicker.Root', 'open')]);
+    expect(takeReportedMessages()).toEqual([
+      message('WrapperOuter.test', 'TimePicker.Root', 'open'),
+    ]);
   });
 
   it('finds the wrapper when the part is in the slot of another part', async () => {

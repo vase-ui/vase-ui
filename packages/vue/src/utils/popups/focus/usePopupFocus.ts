@@ -1830,4 +1830,3 @@ export function markOthers(avoidElements: Element[], options: MarkOthersOptions 
     }
   };
 }
-

@@ -161,11 +161,11 @@ export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, r
 
 /**
  * Drags a real pen from one client point of the test page to another, in `steps` moves, and lifts it
- * at the last point. The pen then moves out of the test page, so it hovers over no element that a
+ * at the last point after `rest` milliseconds. The pen then moves out of the test page, so it hovers over no element that a
  * later test renders. Only Chromium has the protocol that the helper uses: guard a case that calls
  * it with `it.skipIf(!platform.engine.blink)`.
  */
-export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4) {
+export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4, rest = 0) {
   const { cdp } = await import('vitest/browser');
   const session = cdp() as CDPSession;
   const send = (
@@ -187,6 +187,7 @@ export async function penDrag(from: ClientPoint, to: ClientPoint, steps = 4) {
     for (let step = 1; step <= steps; step += 1) {
       await send('mouseMoved', getPointOnLine(from, to, step, steps), 1);
     }
+    if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
   } finally {
     await send('mouseReleased', to, 0);
     await send('mouseMoved', { x: -10, y: -10 }, 0);

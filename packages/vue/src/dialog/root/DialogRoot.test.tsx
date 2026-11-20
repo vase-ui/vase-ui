@@ -1366,58 +1366,6 @@ describe('<Dialog.Root />', () => {
 
         expect(screen.queryByRole('dialog')).toBe(null);
       });
-
-      // The menu is on the popup layer, and Dialog is not, so the Escape of the dialog also
-      // reaches the stack of the menu. The case runs again when the Dialog unit moves Dialog to the
-      // popup layer.
-      it.skip('should not close the parent menu when Escape is pressed in a nested dialog', async () => {
-        const { user } = await render(
-          <Menu.Root>
-            <Menu.Trigger>Open menu</Menu.Trigger>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup>
-                  <TestDialog
-                    triggerProps={{ children: 'Open dialog' }}
-                    triggerWrapper={(renderTrigger) => (
-                      <Menu.Item
-                        closeOnClick={false}
-                        v-slots={{
-                          element: ({ props, elementRef }: ElementSlot) =>
-                            renderTrigger({ ...props, ref: elementRef }),
-                        }}
-                      />
-                    )}
-                  />
-                </Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>,
-        );
-
-        const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
-        await waitForLaterMillisecond(async () => {
-          await user.click(menuTrigger);
-          await waitFor(() => {
-            expect(screen.getByRole('menu')).not.toBe(null);
-          });
-        });
-
-        const dialogTrigger = screen.getByRole('menuitem', { name: 'Open dialog' });
-        await waitForLaterMillisecond(async () => {
-          await user.click(dialogTrigger);
-          await waitFor(() => {
-            expect(screen.getByRole('dialog')).not.toBe(null);
-          });
-        });
-
-        await user.keyboard('[Escape]');
-
-        expect(screen.queryByRole('dialog')).toBe(null);
-        await waitFor(() => {
-          expect(screen.getByRole('menu')).not.toBe(null);
-        });
-      });
     });
 
     describe.skipIf(isJSDOM)('pointerdown removal', () => {

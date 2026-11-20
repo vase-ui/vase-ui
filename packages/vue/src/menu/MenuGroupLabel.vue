@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
+import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { injectGroup } from './group';
@@ -21,13 +21,12 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const group = injectGroup();
-const id = computed(() => givenId(props.id) ?? generatedId);
+const labelId = computed(() => givenId(props.id) ?? generatedId);
 const state = computed<MenuGroupLabelState>(() => ({}));
-const removeLabel = group.setLabel(id.value);
-onUnmounted(removeLabel);
+watch(labelId, (value, _, onCleanup) => onCleanup(group.setLabel(value)), { immediate: true });
 
 function elementProps() {
-  return mergeProps({ id: id.value, 'aria-hidden': 'true' }, attrs);
+  return mergeProps({ id: labelId.value, 'aria-hidden': 'true' }, attrs);
 }
 
 defineExpose({ element });

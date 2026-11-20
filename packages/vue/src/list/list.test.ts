@@ -5,7 +5,14 @@ import ListFixture from '../../test/fixtures/ListFixture.vue';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
-type Item = { key: string; text?: string; disabled?: boolean; native?: boolean; hidden?: boolean; link?: boolean };
+type Item = {
+  key: string;
+  text?: string;
+  disabled?: boolean;
+  native?: boolean;
+  hidden?: boolean;
+  link?: boolean;
+};
 
 const item = (key: string) => document.querySelector<HTMLElement>(`[data-key="${key}"]`)!;
 const container = () => document.querySelector<HTMLElement>('[data-testid="container"]')!;
@@ -46,7 +53,7 @@ describe('the order', () => {
   test('the highlight goes when its item leaves, with the reason `none`', async () => {
     const log: string[] = [];
     const items = reactive<Item[]>(keys('a', 'b'));
-    await mountList({ items, log });
+    await mountList({ items, onHighlight: (entry: string) => log.push(entry) });
     container().focus();
     await userEvent.keyboard('{ArrowDown}');
     items.splice(0, 1);

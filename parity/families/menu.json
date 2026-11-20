@@ -3,148 +3,606 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
+      "upstream": "packages/react/src/menu/arrow/MenuArrowDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdropDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.tsx",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/clear/MenuClearDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/input/MenuInputDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.tsx",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicatorDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItemDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTriggerDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewportCssVars.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewportDataAttributes.ts",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "packages/react/src/menu/arrow/MenuArrow.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the arrow: its element, `aria-hidden` and the attributes of its side."
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the backdrop: its element and its role. The backdrop gets `inert` at the close, so a press in its leave reaches the page."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` shows `state.checked` in the slot of each item. The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the checkbox item: its role and `aria-checked`, a toggle at a click, `checkedChange` before `update:modelValue`, a cancel, `closeOnClick` and `state.checked` in its slot."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests a group of a filterable menu: it has `hidden` while no item of it is shown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterParts.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the parts of the filter: the input, the list, the clear button and the empty message."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterPopup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the popup of a filterable menu: it is a dialog that holds the input and the list."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the first highlight: a key open highlights the first item, and `autoHighlight` highlights the first shown item."
+    },
+    {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.react17.test.tsx",
       "kind": "not-applicable",
-      "reason": "The cases are for React 17, which has no `useId`. `useVaseUiId` gives an id in `setup`."
+      "reason": "The cases are for React 17, which has no `useId`. Each part takes `useId` of Vue."
     },
     {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
-      "title": "uses an explicit label from the popup render element",
-      "kind": "not-applicable",
-      "reason": "The case gives a React element with an `aria-label` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see the `aria-label` of the element of the slot. The `aria-label` attribute of the part gives the same result."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
-      "title": "keeps a list label supplied through a render element",
-      "kind": "not-applicable",
-      "reason": "The case gives a React element with an attribute of the list as `render`. In Vue `#render` is a slot, which is a function, so the part does not see an attribute of the element of the slot. The attribute of the part gives the same result."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
-      "title": "points aria-controls at the id of a server-created render element",
-      "kind": "not-applicable",
-      "reason": "The case gives the lazy wrapper of the React Flight client as `render`."
-    },
-    {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "leaving the menu"],
-      "title": "keeps input focus when a Shift+Tab close is canceled",
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.scoping.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/filter-root/MenuFilterRoot.test.tsx",
-      "reason": "The case asserts that the input keeps the focus for Shift+Tab when the root cancels the close. Vase UI moves the focus to the trigger, and the menu stays open (VUE-69). The case \"VUE-69: moves the focus to the trigger for Shift+Tab from the input when the root cancels the close\" tests it."
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the scope of a provider: the root directly in it filters, and a submenu with no provider of its own stays plain."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the filter: the match with `hidden`, the label, `filter` and `null`, the highlight with `autoHighlight`, the keys of the input, Enter and Space, Home and End, the query and its four reasons, the clear button, the real focus on an item, a horizontal list and a submenu that the query hides."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.webkit.test.tsx",
-      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)"],
-      "title": "keeps selection state for an auto-focused input in Strict Mode",
-      "kind": "not-applicable",
-      "reason": "The case checks the selection state after the double effects of Strict Mode. Vue has no Strict Mode."
-    },
-    {
-      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "describe": ["<Menu.Root />"],
-      "title": "keeps focus in the menu when a Shift+Tab close is canceled",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/root/MenuRoot.test.tsx",
-      "reason": "The case asserts that the focus stays in the menu for Shift+Tab when the root cancels the close. Vase UI moves the focus to the trigger, and the menu stays open (VUE-69). The case \"VUE-69: moves the focus to the trigger for Shift+Tab when the root cancels the close\" tests it."
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the filter in WebKit: the input keeps the focus, and the highlight follows the keys."
     },
     {
-      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "describe": ["<Menu.Root />"],
-      "title": "warns that nested menus ignore the modal prop",
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterItem.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/root/MenuRoot.test.tsx",
-      "reason": "The case gives `modal` to `Menu.SubmenuRoot` through a cast. That part has no such prop in Vase UI, and Vue warns about the attribute. The case 'warns that a menu in a menubar ignores modal={false}' covers the warning of Vase UI."
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests an item of the filter: it stays mounted with `hidden`, so its text and its state stay in the DOM, and a text that changes while it is hidden counts."
     },
     {
-      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "describe": ["<Menu.Root />"],
-      "title": "does not emit the nested modal warning in production",
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterKeyDown.test.ts",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/root/MenuRoot.node.test.tsx",
-      "reason": "The case runs only in jsdom, and it sets `process.env.NODE_ENV` to `production`. Vitest sets that value when it transforms a file for a browser, so only the Node project can change it. The case 'gives no warning for modal in a production build' of the Node file covers it."
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests the keys of the input: the arrow keys, Enter, Space while the input is empty, Home and End while it is empty, and the keys across the list."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterSubmenuTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests a submenu trigger of a filterable menu: the query that hides it closes its submenu."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.pointerFocus.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests a filterable submenu: a pointer move in the popup gives the focus back to the input."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.test.ts",
+      "reason": "`MenuFilter.test.ts` tests a filterable submenu: it opens with the arrow key across the list, and it closes with the other one."
+    },
+    {
+      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the group label: the group has its id in `aria-labelledby`."
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the group: its role and its name."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the item: its role, its `tabindex`, the highlight at a pointer move and at a key, a click that closes the menu with `item-press`, `closeOnClick`, a disabled item that keeps the highlight and gets no click, Enter and Space, and a release of a drag."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the link item: a native link with the role of an item, Enter and a click for Space."
+    },
+    {
+      "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the list: it has the role and the name of the menu, and the popup is presentation."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the popup: its role, its name, the first focus, `finalFocus`, Tab and Shift+Tab, and the focus after the focused item left the DOM."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests a popup in a `<Transition>`: a submenu leaves before its parent popup. The parts render no transition status (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests a popup in a `<Transition>`. The parts render no transition status: `<Transition>` animates the popup, and `data-instant` is the hook that stops an animation (rule 8.9)."
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortal.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the portal: `keepMounted` keeps the closed popup with `hidden` and `inert`, and a disabled portal renders in place."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the positioner: the side and the alignment of a menu and of a submenu, and the state of its place."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the radio group: its role, `valueChange`, and no change for a press of the checked item."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` shows `state.checked` in the slot of each item. The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the radio item: its role, `aria-checked`, a check at a click, and `state.checked` in its slot."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the handle: a trigger outside the root, `open(id)`, `close()` and `isOpen`."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "describe": ["<Menu.Root />", "submenu parent store subscription"],
-      "title": "releases the subscriptions a submenu adds to its parent store when it unmounts",
-      "kind": "not-applicable",
-      "reason": "A submenu of Vase UI adds no subscription to the store of its parent. A selector of its store reads the reactive state of the parent."
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other."
     },
     {
-      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "describe": ["<Menu.Root />", "submenu parent store subscription"],
-      "title": "releases them under StrictMode",
-      "kind": "not-applicable",
-      "reason": "Vue has no Strict Mode. A submenu of Vase UI adds no subscription to the store of its parent."
+      "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests a root with no trigger part: a handle opens the menu of a trigger outside the root."
+    },
+    {
+      "upstream": "packages/react/src/menu/store/MenuStore.test.ts",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the menu through its parts. The family has no store: a menu is a root of the popup layer with a list."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the submenu trigger: a click with no mouse press toggles the submenu, and a mouse press on a trigger that opens on hover does nothing."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
-      "title": "warns without an owner stack when React cannot provide one",
-      "kind": "not-applicable",
-      "reason": "`captureOwnerStack` is a React API. The warning of Vase UI has no owner stack."
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the submenu trigger: its attributes, the open at a hover and at a key, the close with the other key, Escape and `closeParentOnEsc`, a sibling that opens, a move to another item, and Tab and Shift+Tab."
     },
     {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
-      "title": "does not inspect rendered disabled elements in production",
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/submenu-trigger/MenuSubmenuTrigger.node.test.tsx",
-      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it. A server render calls no `onMounted` hook, so the Node case asserts only that a server render in a production build gives no warning."
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the submenu trigger after a key open. On an Apple platform it has no `aria-expanded`, so that VoiceOver reads the first item."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the trigger: its element and its attributes, the open at `pointerdown`, the keys that open the menu, `data-pressed`, the instant of a key click, `openOnHover`, a disabled root and a fieldset."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.test.ts",
+      "reason": "`Menu.test.ts` tests the viewport through the parts of Popover, which share it: the direction of a move and the `triggerId` of its slot."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.spec.ts",
+      "reason": "`Menu.spec.ts` tests the props of a link item."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.spec.ts",
+      "reason": "`Menu.spec.ts` tests the props of the positioner, and the positioner of a context menu with no `positionMethod`."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.spec.tsx",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.spec.ts",
+      "reason": "`Menu.spec.ts` tests the payload of the handle, the root and the trigger, the details types, the value of a radio group and the template refs."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Trigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Clear",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Item",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "CheckboxItem",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioItem",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "SubmenuTrigger",
+      "prop": "nativeButton",
+      "kind": "not-applicable",
+      "reason": "The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Root",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Root",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "SubmenuRoot",
+      "prop": "onOpenChangeComplete",
+      "kind": "not-applicable",
+      "reason": "`@after-enter` and `@after-leave` of a `<Transition>` around the popup run after its animations (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "SubmenuRoot",
+      "prop": "actionsRef",
+      "kind": "not-applicable",
+      "reason": "A template ref of the root has `close()`. The `unmount` action is cut: with `:css=\"false\"`, the `leave` hook of a `<Transition>` keeps the popup until it calls `done`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Portal",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Backdrop",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates the part, and an element is in the DOM only while the menu is open or leaves (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Popup",
+      "kind": "not-applicable",
+      "reason": "The state has no `transitionStatus`, and the part has no `data-starting-style`, `data-ending-style`, `data-open` and `data-closed`: `<Transition>` animates the part, and an element is in the DOM only while the menu is open or leaves (rule 8.9)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "CheckboxItemIndicator",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioItemIndicator",
+      "kind": "not-applicable",
+      "reason": "The part is cut (rule 8.9). The default slot of the item gives `state.checked`, so the developer writes `v-if` or `v-show` on an element of their own, with `<Transition>` for an enter and a leave. CSS alone selects `[aria-checked=\"true\"]`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "CheckboxItem",
+      "kind": "not-applicable",
+      "reason": "The change event of the part has the one reason that it sends, `item-press`, in place of the union of the reasons of the root. No feature goes. The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioGroup",
+      "kind": "not-applicable",
+      "reason": "The change event of the part has the one reason that it sends, `item-press`, in place of the union of the reasons of the root. No feature goes. The part reads the element that it renders, so it has no `nativeButton` (rule 8.3)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Positioner",
       "prop": "side",
       "kind": "not-applicable",
-      "reason": "The row gives the default `'bottom'`. The part has no Vue default: a prop that is absent takes `'inline-end'` for a submenu and for a menubar with a vertical orientation, and `'bottom'` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The prop has no Vue default, because the default follows the place of the menu: `'bottom'` for a menu, `'inline-end'` for a submenu and for a menu of a vertical menubar, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Positioner",
       "prop": "align",
       "kind": "not-applicable",
-      "reason": "The row gives the default `'center'`. The part has no Vue default: a prop that is absent takes `'start'` for a submenu, a menubar and a context menu, and `'center'` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The prop has no Vue default, because the default follows the place of the menu: `'center'` for a menu, `'start'` for a submenu, a menu of a menubar and a context menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Positioner",
       "prop": "sideOffset",
       "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `-5` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The prop has no Vue default, because the default follows the place of the menu: `-5` for a context menu with no `side` and an `align` that is not `center`, else `0`, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Positioner",
       "prop": "alignOffset",
       "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `2` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The prop has no Vue default, because the default follows the place of the menu: `2` for a context menu with no `side` and an `align` that is not `center`, else `0`, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
-      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.test.tsx",
-      "describe": ["<Menu.GroupLabel />", "a11y attributes"],
-      "title": "allows overriding aria-hidden",
-      "kind": "replaced",
-      "test": "packages/vue/src/menu/group-label/MenuGroupLabel.test.tsx",
-      "reason": "The case gives `aria-hidden` the value `undefined` and asserts that the part removes the attribute. Vase UI keeps the value of the part for `undefined` and removes it for `null` (VUE-103). The case \"VUE-103: aria-hidden of the consumer is $name\" tests both values."
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Positioner",
+      "prop": "arrowPadding",
+      "kind": "not-applicable",
+      "reason": "The prop has no Vue default, because the default follows the place of the menu: `0` for a context menu, else `5`, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuArrowDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuBackdropDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuCheckboxItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuCheckboxItemIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuClearDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuInputDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuLinkItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPopupDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPositionerCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPositionerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuRadioItemDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuRadioItemIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "MenuSeparatorDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part is `Separator`. The part writes `aria-orientation`, which the role `separator` takes, so CSS selects `[aria-orientation='vertical']` and the part writes no `data-orientation` (rule 8.15). The family has no namespace of constants (rule 8.10)."
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     },
     {
-      "upstream": "packages/react/src/menu/filter-root/MenuFilterParts.test.tsx",
-      "describe": ["Menu filter parts conformance"],
-      "suite": "describeConformance",
-      "kind": "replaced",
-      "test": "packages/vue/src/separator/Separator.test.ts",
-      "reason": "The call tests `Menu.Separator`, which is `Separator`. `Separator.test.ts` tests that component."
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuSubmenuTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuTriggerDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuViewportCssVariables",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuViewportDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The parts write the attribute and variable names that the docs list, and CSS selects them as text. The family has no namespace of constants (rule 8.10)."
     }
   ],
   "surfaceAdditions": [
@@ -207,6 +665,16 @@
       "entry": "Portal",
       "prop": "disabled",
       "reason": "A disabled portal renders at its source, also on the server (VUE-128)."
+    },
+    {
+      "entry": "Root",
+      "emit": "update:triggerId",
+      "reason": "`v-model:trigger-id` binds the active trigger, as a second state that a developer binds is a named model (rule 8.5)."
+    },
+    {
+      "entry": "Portal",
+      "prop": "defer",
+      "reason": "The portal is a `<Teleport>`, and it takes the props of `<Teleport>`: `defer` waits for the other content of the same update."
     }
   ],
   "returnTypeDifferences": [
@@ -221,5 +689,399 @@
       "reason": "Base UI documents the return type as `MenuFilter`. The function returns `Filter`, and `MenuFilter` is that type under another name."
     }
   ],
-  "notApplicableCommits": []
+  "notApplicableCommits": [],
+  "relocations": [
+    {
+      "upstream": "packages/react/src/menu/arrow/MenuArrow.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuArrow.vue",
+      "behavior": "The arrow points to the anchor.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuBackdrop.vue",
+      "behavior": "The backdrop is an overlay under the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuCheckboxItem.vue",
+      "behavior": "The checkbox item toggles its value at a click.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuCheckboxItem.vue",
+      "behavior": "The checked state of the item, which the slot gives as `state.checked`.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/clear/MenuClear.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuClear.vue",
+      "behavior": "The clear button empties the query.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/empty/MenuEmpty.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuEmpty.vue",
+      "behavior": "The empty message shows while the query shows no item.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuFilterProvider.vue",
+      "behavior": "The provider holds the query and the match of the root in it.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "What the provider gives to the root directly in it.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderOptions.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/types.ts",
+      "behavior": "The props of the provider.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "What a filterable menu gives to its parts.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterDropdown.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The query, the match and the highlight of a filterable menu.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuGroup.vue",
+      "behavior": "A group with no shown item has `hidden`.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterImpl.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a menu.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuList.vue",
+      "behavior": "The list of a filterable menu.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuPopup.vue",
+      "behavior": "The popup of a filterable menu is a dialog.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "The root directly in a provider filters its items.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/moveHighlightFrom.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/list/list.ts",
+      "behavior": "The arrow keys move the highlight from an item.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterKeyDown.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The keys of the input.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "A key on an item or on the list goes to the input.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterRoot.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/filter.ts",
+      "behavior": "The filter of a root.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterSubmenuTrigger.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuSubmenuTrigger.vue",
+      "behavior": "A submenu trigger that the query hides closes its submenu.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useVirtualFocusParentHandoff.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "A submenu of a filterable parent gives the focus back to the input of the parent.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "A submenu directly in a provider filters its items.",
+      "witness": "packages/vue/src/menu/MenuFilter.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuGroupLabel.vue",
+      "behavior": "The label names its group.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuGroup.vue",
+      "behavior": "The group of items has the name of its label.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/group.ts",
+      "behavior": "What a group gives to its label.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/index.parts.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/parts.ts",
+      "behavior": "The parts of the namespace `Menu`.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/input/MenuInput.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuInput.vue",
+      "behavior": "The input of the query names the highlighted item.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuItem.vue",
+      "behavior": "The item closes the menu at a click.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItem.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/item.ts",
+      "behavior": "The behavior of an item: a button with its role, and an item of the list.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItemCommonProps.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/item.ts",
+      "behavior": "The attributes of each item.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuLinkItem.vue",
+      "behavior": "The link item is a native link in the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/list/MenuList.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuList.vue",
+      "behavior": "The list has the role and the name of the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuPopup.vue",
+      "behavior": "The popup has the role `menu` and the keys of the list.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortal.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuPortal.vue",
+      "behavior": "The portal renders its content in a `<Teleport>` after its mount.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortalContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "The portal marks the parts in it.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/positioner.ts",
+      "behavior": "The positioner places the menu with the defaults of its place.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "What the positioner gives to the popup and the arrow.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuRadioGroup.vue",
+      "behavior": "The radio group holds the value of its checked item.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroupContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/radio.ts",
+      "behavior": "What a radio group gives to its items.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuRadioItem.vue",
+      "behavior": "The radio item checks its value at a click.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItemContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuRadioItem.vue",
+      "behavior": "The checked state of the item, which the slot gives as `state.checked`.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuRoot.vue",
+      "behavior": "The root holds the open state, the active trigger and the layer of the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "What a menu gives to its parts and to its submenus.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/store/MenuHandle.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "The handle of the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/store/MenuStore.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "The state of a menu: the open state, the highlight, the open submenu and the press.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuSubmenuRoot.vue",
+      "behavior": "The submenu root holds the open state of a submenu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "A submenu knows its parent menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuSubmenuTrigger.vue",
+      "behavior": "The submenu trigger opens its submenu at a hover, a key and a press.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTrigger.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuTrigger.vue",
+      "behavior": "The trigger opens the menu at a press and at a key.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/popup/trigger.ts",
+      "behavior": "A mouse press acts at `pointerdown`, and its click does nothing.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/findRootOwnerId.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "A menu asks the root menu for the close of an item press.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/isKeyboardOpen.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/root.ts",
+      "behavior": "A key open highlights the first or the last item.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/stateAttributesMapping.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuItem.vue",
+      "behavior": "The attributes of the state of the items.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/types.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/types.ts",
+      "behavior": "The types of the menu.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewport.tsx",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/menu/MenuViewport.vue",
+      "behavior": "The viewport gives the direction of a move and the id of the active trigger.",
+      "witness": "packages/vue/src/menu/Menu.test.ts"
+    }
+  ]
 }

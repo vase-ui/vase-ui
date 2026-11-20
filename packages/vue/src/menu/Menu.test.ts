@@ -67,7 +67,7 @@ describe('the parts', () => {
       checkbox: {},
       radio: {},
       link: {},
-      group: true,
+      group: {},
     });
     expect(trigger.localName).toBe('button');
     expect(trigger).toHaveAttribute('type', 'button');
@@ -127,6 +127,17 @@ describe('the parts', () => {
     expect(item('r1')).toHaveTextContent('r1 false');
     expect(item('r2')).toHaveTextContent('r2 true');
     expect(item('r2')).toHaveAttribute('aria-checked', 'true');
+  });
+
+  test('a group follows a new `id` of its label', async () => {
+    const label = reactive<Props>({ id: 'first' });
+    const { trigger } = await mountMenu({ group: { label } });
+    await userEvent.click(trigger);
+    await opened();
+    expect(byTestId('group')).toHaveAttribute('aria-labelledby', 'first');
+    label.id = 'second';
+    await nextTick();
+    expect(byTestId('group')).toHaveAttribute('aria-labelledby', 'second');
   });
 
   test('`as` renders the tag; a trigger in a `<span>` is a button with a tab stop', async () => {
@@ -382,7 +393,10 @@ describe('the keys of the list', () => {
 
   test('a `keydown` listener on an item that calls `preventDefault()` stops the list', async () => {
     const { trigger } = await mountMenu({
-      items: [{ key: 'a', attrs: { onKeydown: (event: KeyboardEvent) => event.preventDefault() } }, { key: 'b' }],
+      items: [
+        { key: 'a', attrs: { onKeydown: (event: KeyboardEvent) => event.preventDefault() } },
+        { key: 'b' },
+      ],
     });
     await openWithKeyboard(trigger);
     await userEvent.keyboard('{ArrowDown}');
@@ -479,10 +493,15 @@ describe('the focus', () => {
     await userEvent.keyboard('{Tab}');
     await closed();
     expect(active()?.id).toBe('after');
-    expect(log).toEqual(['openChange true trigger-press', 'update true', 'openChange false focus-out', 'update false']);
+    expect(log).toEqual([
+      'openChange true trigger-press',
+      'update true',
+      'openChange false focus-out',
+      'update false',
+    ]);
   });
 
-  test('Shift+Tab closes the menu and moves the focus to the trigger; a listener that cancels the close does not stop the move', async () => {
+  test('Shift+Tab closes the menu and moves the focus to the trigger; a listener that cancels the close does not stop the move (VUE-69)', async () => {
     const log: string[] = [];
     const root = rootEvents(log);
     const { trigger } = await mountMenu({ root });
@@ -572,7 +591,11 @@ describe('the items', () => {
     expect(popup()).not.toBe(null);
     await userEvent.click(item('checkbox'));
     expect(item('checkbox')).toHaveAttribute('aria-checked', 'true');
-    expect(log).toEqual(['checkedChange true item-press', 'update true', 'checkedChange false item-press']);
+    expect(log).toEqual([
+      'checkedChange true item-press',
+      'update true',
+      'checkedChange false item-press',
+    ]);
   });
 
   test('a radio item checks its value; a press of the checked item emits nothing', async () => {

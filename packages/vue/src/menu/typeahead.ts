@@ -41,7 +41,7 @@ export function useTypeahead(list: List, options: { resetMs?: number } = {}) {
       timer.start(options.resetMs ?? 500, () => (typed.value = ''));
       // With no text that starts with a double letter, the same key again goes to the next item
       // with that letter.
-      const repeated = [...next].every((character) => character === next[0]);
+      const repeated = next.replaceAll(event.key, '') === '';
       const match =
         nextMatch(list, next, from) ??
         (repeated ? nextMatch(list, event.key, list.highlighted) : undefined);
