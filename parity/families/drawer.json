@@ -69,7 +69,7 @@
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.keyboard.test.tsx",
-      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider with the new parts. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code."
+      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
