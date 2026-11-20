@@ -5,6 +5,7 @@ import { Drawer, type DrawerSnapPoint } from '@vase-ui/vue/drawer';
 import DialogWithDrawer from '../../test/fixtures/DialogWithDrawer.vue';
 import DrawerPartAlone from '../../test/fixtures/DrawerPartAlone.vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
+import DrawerWithKeyboard from '../../test/fixtures/DrawerWithKeyboard.vue';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -328,6 +329,34 @@ describe('Drawer', () => {
       expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(indent.hasAttribute('data-active')).toBe(false));
+    });
+  });
+
+  describe('virtual keyboard', () => {
+    test('gives the viewport the inset of the keyboard while a field has the focus', async () => {
+      // A software keyboard makes the visual viewport shorter than the layout viewport.
+      const events = new EventTarget();
+      vi.stubGlobal('visualViewport', {
+        height: innerHeight - 300,
+        offsetTop: 0,
+        scale: 1,
+        addEventListener: events.addEventListener.bind(events),
+        removeEventListener: events.removeEventListener.bind(events),
+      });
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
+      mount(DrawerWithKeyboard);
+      await opened();
+      const viewport = get('viewport');
+      get('field').focus();
+      await waitFor(() =>
+        expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('300px'),
+      );
+      get('field').blur();
+      await waitFor(() =>
+        expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe(''),
+      );
     });
   });
 
