@@ -6,7 +6,7 @@ import { renderToString } from 'vue/server-renderer';
 import App from './App.vue';
 
 it('hydrates the built Toggle and forwards its first update, slot state and element', async () => {
-  const expectedVersion = import.meta.env.MODE === 'vapor' ? '3.6.0-rc.15' : '3.5.12';
+  const expectedVersion = import.meta.env.MODE === 'vapor' ? '3.6.0-rc.16' : '3.5.12';
   expect(version).toBe(expectedVersion);
   using warn = vi.spyOn(console, 'warn');
   using error = vi.spyOn(console, 'error');

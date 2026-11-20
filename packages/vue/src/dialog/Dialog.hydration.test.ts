@@ -83,7 +83,7 @@ describe('server render and hydration', () => {
     await waitFor(() => expect(first).toHaveAttribute('aria-expanded', 'true'));
   });
 
-  // In Vue 3.6, the async `setup` of a Vapor component does not make a `<Suspense>` wait.
+  // In Vue 3.6.0-rc.16, the async `setup` of a Vapor component does not make a `<Suspense>` wait.
   test.skipIf(inject('app').startsWith('vapor')).each([true, false])(
     'a trigger with a handle that hydrates after its root, open=%s at that time, hydrates with no message and shows the state of the root',
     async (open) => {

@@ -45,8 +45,8 @@ describe('server render and hydration', () => {
     await waitFor(() => expect(listboxOf(document.body)).not.toBe(null));
   });
 
-  // In a Vapor app with virtual DOM parts, Vue 3.6 hydrates a disabled `<Teleport>` in a slot and
-  // then takes its end comment for the next node, the input of the root.
+  // In a Vapor app with virtual DOM parts, Vue 3.6.0-rc.16 hydrates a disabled `<Teleport>` in a slot
+  // and then takes its end comment for the next node, the input of the root.
   (inject('app') === 'vapor-interop' ? test.fails : test)(
     'a disabled portal of an open root renders the popup in place, hidden until its first place',
     async () => {

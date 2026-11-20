@@ -40,17 +40,19 @@ function countTransitions(target: Element) {
 
 /** The patch of Vue 3.5, or `Infinity` for a later Vue. */
 const patchOf35 = version.startsWith('3.5.') ? Number(version.split('.')[2]) : Infinity;
+/** The release candidate of Vue 3.6.0, or `Infinity` for another Vue. */
+const rcOf36 = version.startsWith('3.6.0-rc.') ? Number(version.split('.').at(-1)) : Infinity;
 
 // The parts that call `useEnterAfterLeave` render their element in this way. `Avatar.Image` removes
 // its element only in an update of its own props, which renders its `<Transition>` again.
 describe('a <Transition> around a component that renders its root element by injected state', () => {
   // In a Vapor component, `<Transition>` takes the old element back. Vue 3.5.28 and earlier give
-  // the second element its enter, and Vue 3.5.29 and later keep its enter classes
-  // (https://github.com/vuejs/core/issues/16359).
+  // the second element its enter. Vue 3.5.29 and later keep its enter classes, until the fix of
+  // https://github.com/vuejs/core/issues/16359 in Vue 3.5.46 and 3.6.0-rc.16.
   const vapor = inject('app').startsWith('vapor');
-  const keepsEnterClasses = !vapor && patchOf35 >= 29;
+  const keepsEnterClasses = !vapor && ((patchOf35 >= 29 && patchOf35 <= 45) || rcOf36 <= 15);
 
-  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends with Vue 3.5.29 or later; Vapor gives one element', async () => {
+  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends from Vue 3.5.29 until Vue 3.5.46 and 3.6.0-rc.16; Vapor gives one element', async () => {
     const scene = reactive({ open: false });
     const { root: host } = mount(MeasureInjectedPanel, { scene });
     const panels = () => [...host.querySelectorAll('.MeasurePanel')];

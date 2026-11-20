@@ -811,8 +811,8 @@ describe('the content', () => {
     expect(content).toHaveAttribute('hidden');
   });
 
-  // A Vapor part has no instance that tells a client-only mount from a hydration, so it mounts a
-  // kept content again after its own mount.
+  // In Vue 3.6.0-rc.16, a Vapor part has no instance that tells a client-only mount from a hydration,
+  // so it mounts a kept content again after its own mount.
   test.skipIf(isVaporParts)('a kept content mounts the components in it one time', async () => {
     let count = 0;
     const mounts = { add: () => (count += 1) };

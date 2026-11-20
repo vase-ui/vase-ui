@@ -209,7 +209,7 @@ describe('the indicator', () => {
     expect(readVariables(indicator)).toEqual(variables);
   });
 
-  // Vue 3.6 runs no `<Suspense>` in a Vapor app with Vapor parts.
+  // Vue 3.6.0-rc.16 runs no `<Suspense>` in a Vapor app with Vapor parts.
   test.skipIf(inject('app') === 'vapor')(
     'hydrates with no message when its list is mounted before it',
     async () => {
