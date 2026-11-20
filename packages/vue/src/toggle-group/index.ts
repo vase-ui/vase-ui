@@ -6,6 +6,10 @@ import type {
   ToggleGroupState,
 } from './types';
 
+/**
+ * Provides a shared state to a series of toggle buttons.
+ * Renders a `<div>` element.
+ */
 export const ToggleGroup: typeof ToggleGroupComponent = ToggleGroupComponent;
 export namespace ToggleGroup {
   export type Props<Value extends string = string> = ToggleGroupProps<Value>;

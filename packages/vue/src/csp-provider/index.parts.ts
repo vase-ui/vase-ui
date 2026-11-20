@@ -4,6 +4,7 @@ import type { CSPProviderProps, CSPProviderState } from './CSPProvider.vue';
 /**
  * Provides a default Content Security Policy (CSP) configuration for Vase UI components that
  * require inline `<style>` or `<script>` tags.
+ * Doesn't render its own HTML element.
  */
 export const CSPProvider: typeof CSPProviderComponent = CSPProviderComponent;
 export namespace CSPProvider {
