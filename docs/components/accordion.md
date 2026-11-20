@@ -101,7 +101,7 @@ The `hiddenUntilFound` prop hides the closed panels with [`hidden="until-found"`
 
 To try it, press <kbd>Ctrl</kbd>+<kbd>F</kbd> (<kbd>Cmd</kbd>+<kbd>F</kbd> on macOS) and search for "restocking". The browser opens the closed panel that has the match. With the prop, a closed panel always stays mounted in the DOM, so search engines can also index its contents.
 
-The panels of this demo have no `<Transition>` and no size transition. The [Collapsible page](/components/collapsible#hidden-until-found) gives the reasons, and what a browser without the feature and an earlier Vue do.
+The panels of this demo have no `<Transition>` and no size transition. The [Collapsible page](/components/collapsible#hidden-until-found) gives the reasons, and what a browser without the feature does.
 
 In a [wrapper of `Accordion.Panel`](/handbook/composition#wrap-a-part), give `keepMounted` and `hiddenUntilFound` the default `undefined` to keep the root values.
 
