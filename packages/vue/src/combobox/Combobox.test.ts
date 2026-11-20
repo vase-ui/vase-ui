@@ -138,6 +138,18 @@ describe('the control', () => {
     expect(input()).toHaveAttribute('aria-expanded', 'true');
   });
 
+  test('VUE-73: a popup that unmounts while the combobox is open leaves no aria-controls on the trigger', async () => {
+    const scene = reactive({ popup: true });
+    await mountCombobox({ inputInPopup: true, root: { defaultOpen: true }, scene });
+    const element = await opened();
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-controls', element.id));
+    scene.popup = false;
+    await waitFor(() => expect(popup()).toBe(null));
+    await nextTick();
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger()).not.toHaveAttribute('aria-controls');
+  });
+
   test('VUE-116: a press on the label moves the focus to the control', async () => {
     await mountCombobox({ label: true });
     await userEvent.click(byTestId('label')!);
