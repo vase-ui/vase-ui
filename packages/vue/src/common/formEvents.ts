@@ -3,9 +3,9 @@ import { watch, type Ref } from 'vue';
 type FormControl = HTMLInputElement | HTMLTextAreaElement;
 
 /**
- * Listens to an event of the form that owns the element, while the element is mounted. The form
- * of an element is a property of the element and gives no event when it changes, so the listener
- * stays on the form of the mount.
+ * Listens to an event of the form that owns the element, while the element is mounted. `reset`
+ * and `formdata` bubble from the form, so the listener is on the root node of the element, and it
+ * follows the form that owns the element at the event, also one that a `form` attribute names.
  */
 export function useFormListener<Type extends keyof HTMLElementEventMap>(
   element: Readonly<Ref<FormControl | null>>,
@@ -15,15 +15,16 @@ export function useFormListener<Type extends keyof HTMLElementEventMap>(
   watch(
     element,
     (el, _, onCleanup) => {
-      const form = el?.form;
-      if (!el || !form) return;
-      const onEvent = (event: HTMLElementEventMap[Type]) => {
+      if (!el) return;
+      const root = el.getRootNode();
+      const onEvent = (event: Event) => {
         // A form acts only on the controls that it owns at that moment: an element that
         // `KeepAlive` holds has no form.
-        if (el.form === form) listener(event, form);
+        const { form } = el;
+        if (form && event.target === form) listener(event as HTMLElementEventMap[Type], form);
       };
-      form.addEventListener(type, onEvent);
-      onCleanup(() => form.removeEventListener(type, onEvent));
+      root.addEventListener(type, onEvent, true);
+      onCleanup(() => root.removeEventListener(type, onEvent, true));
     },
     { flush: 'post' },
   );

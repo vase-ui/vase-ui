@@ -7,7 +7,6 @@ export type FormRestoreFamily =
   | 'toolbar-default'
   | 'select'
   | 'combobox'
-  | 'number-field'
   | 'slider'
   | 'range'
   | 'date-field'
@@ -18,7 +17,6 @@ export type FormRestoreFamily =
 import { computed, shallowRef } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { DateField } from '@vase-ui/vue/date-field';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
 import { TimeField } from '@vase-ui/vue/time-field';
@@ -36,7 +34,6 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
 const text = shallowRef('server');
 const font = shallowRef<string | null>('serif');
 const fruit = shallowRef<string | null>(null);
-const quantity = shallowRef<number | null>(1);
 const volume = shallowRef(50);
 const range = shallowRef([20, 80]);
 const when = shallowRef<Temporal.PlainDate | null>(null);
@@ -47,7 +44,6 @@ const MODELS = {
   'toolbar-default': text,
   select: font,
   combobox: fruit,
-  'number-field': quantity,
   slider: volume,
   range,
   'date-field': when,
@@ -123,16 +119,6 @@ function handleToolbarInput(event: Event) {
         </Combobox.Positioner>
       </Combobox.Portal>
     </Combobox.Root>
-    <NumberField.Root
-      v-else-if="family === 'number-field'"
-      v-model="quantity"
-      name="quantity"
-      locale="en-US"
-      :data-revision="revision"
-      @value-change="record"
-    >
-      <NumberField.Input aria-label="Quantity" />
-    </NumberField.Root>
     <Slider.Root
       v-else-if="family === 'slider'"
       v-model="volume"

@@ -6,7 +6,6 @@ import * as DatePicker from '../date-picker/index.parts';
 import * as DateRangePicker from '../date-range-picker/index.parts';
 import * as Dialog from '../dialog/index.parts';
 import * as Menu from '../menu/index.parts';
-import * as NumberField from '../number-field/index.parts';
 import * as OTPField from '../otp-field/index.parts';
 import * as Slider from '../slider/index.parts';
 import * as TimeClock from '../time-clock/index.parts';
@@ -28,7 +27,6 @@ declare const segment: EditableDateTimeFieldSegment;
   <Combobox.Input :autocomplete="null" />
   <DateField.Segment :segment="segment" :autocomplete="null" />
   <Menu.Input :autocomplete="null" />
-  <NumberField.Input :autocomplete="null" />
   <OTPField.Input :autocomplete="null" />
   <TimeField.Segment :segment="segment" :autocomplete="null" />
   <Toolbar.Input :autocomplete="null" />

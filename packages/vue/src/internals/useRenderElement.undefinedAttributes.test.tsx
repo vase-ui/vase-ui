@@ -14,7 +14,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Menu } from '@vase-ui/vue/menu';
 import { Menubar } from '@vase-ui/vue/menubar';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
@@ -243,16 +242,6 @@ const rows: Row[] = [
       </NavigationMenu.Root>
     ),
     expected: () => 'false',
-  },
-  {
-    name: 'NumberField.Group role',
-    attribute: 'role',
-    createNode: () => (
-      <NumberField.Root>
-        <NumberField.Group role={undefined} data-testid="part" />
-      </NumberField.Root>
-    ),
-    expected: () => 'group',
   },
   {
     name: 'OTPField.Root role',

@@ -23,7 +23,6 @@ import { demoVariant } from '../../../docs/.vitepress/components/demoVariant.ts'
 import { DEMO_VARIANT_STORAGE_KEY } from '../../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import '../../../docs/demos/tailwind.css';
 import VeeValidateRules from '../../../docs/examples/forms/VeeValidateRules.vue';
-import { platform } from '../src/common/platform';
 
 const modules = import.meta.glob<{ default: Component }>(
   [
@@ -124,43 +123,6 @@ describe('the style sheet of the Tailwind demos', () => {
       Object.fromEntries(Object.keys(expected).map((name) => [name, style.getPropertyValue(name)])),
     ).toEqual(expected);
   });
-
-  // The part renders no cursor in WebKit.
-  it.skipIf(platform.engine.webkit)(
-    'the scrub area cursor gets the utilities of its classes',
-    async () => {
-      const pointerLock = vi
-        .spyOn(document.body, 'requestPointerLock')
-        .mockImplementation(() => Promise.resolve());
-      onTestFinished(() => {
-        pointerLock.mockRestore();
-      });
-      const TailwindNumberField =
-        modules['../../../docs/demos/number-field/hero/tailwind/index.vue'].default;
-      const { container } = await render(
-        h('div', { 'data-demo': 'tailwind' }, h(TailwindNumberField)),
-      );
-
-      container
-        .querySelector('[role="presentation"]')!
-        .dispatchEvent(
-          new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 }),
-        );
-      await flushMicrotasks();
-
-      const cursor = [...document.querySelectorAll('[role="presentation"][data-scrubbing]')].find(
-        (element) => !container.contains(element),
-      )!;
-      const frame = container.appendChild(document.createElement('div'));
-      frame.dataset.demo = 'tailwind';
-      const reference = frame.appendChild(document.createElement('span'));
-      reference.className = cursor.className;
-      const { filter } = getComputedStyle(reference);
-
-      expect(filter).not.toBe('none');
-      expect(getComputedStyle(cursor).filter).toBe(filter);
-    },
-  );
 });
 
 describe('the frame of a demo', () => {

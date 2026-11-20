@@ -5,7 +5,6 @@ import { Accordion } from '@vase-ui/vue/accordion';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { Menu } from '@vase-ui/vue/menu';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
 import { Slider } from '@vase-ui/vue/slider';
@@ -331,17 +330,6 @@ describe('useRegisteredId', () => {
               <Slider.Thumb />
             </Slider.Control>
           </Slider.Root>
-        ),
-      },
-      {
-        // `NumberField.Decrement` names the input with the same code.
-        name: 'NumberField.Input',
-        attribute: 'aria-controls',
-        render: (id) => (
-          <NumberField.Root>
-            <NumberField.Input v-slots={slot('input', id)} />
-            <NumberField.Increment data-testid="named" />
-          </NumberField.Root>
         ),
       },
       {

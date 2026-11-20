@@ -15,6 +15,7 @@ export const REFACTORED_FOLDERS = [
   'input',
   'locale-provider',
   'meter',
+  'number-field',
   'progress',
   'radio',
   'radio-group',

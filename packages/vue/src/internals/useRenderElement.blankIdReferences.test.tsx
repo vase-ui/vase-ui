@@ -13,7 +13,6 @@ import { Drawer } from '@vase-ui/vue/drawer';
 import { Field } from '@vase-ui/vue/field';
 import { Menu } from '@vase-ui/vue/menu';
 import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
-import { NumberField } from '@vase-ui/vue/number-field';
 import { Popover } from '@vase-ui/vue/popover';
 import { Resizable } from '@vase-ui/vue/resizable';
 import { Select } from '@vase-ui/vue/select';
@@ -409,26 +408,6 @@ const rows: Row[] = [
     part: 'Menu.Input',
     attribute: 'aria-controls',
     createNode: createMenuWithInput,
-  },
-  {
-    part: 'NumberField.Increment',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <NumberField.Root>
-        <NumberField.Input data-testid="target" />
-        <NumberField.Increment data-testid="part" {...attrs} />
-      </NumberField.Root>
-    ),
-  },
-  {
-    part: 'NumberField.Decrement',
-    attribute: 'aria-controls',
-    createNode: (attrs) => (
-      <NumberField.Root>
-        <NumberField.Input data-testid="target" />
-        <NumberField.Decrement data-testid="part" {...attrs} />
-      </NumberField.Root>
-    ),
   },
   {
     part: 'Resizable.Handle',
