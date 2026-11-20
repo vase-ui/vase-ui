@@ -6,7 +6,10 @@ import type { AsProps } from '../common/element';
 export type FieldValidateResult = string | string[] | null | undefined | void;
 
 export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
-  /** The name of the field in the data and the values of the form. It wins over the `name` of the control. */
+  /**
+   * The name of the field in the data and the values of the form. It wins over the `name` of the
+   * control.
+   */
   name?: string;
   /**
    * Disables the field and its control.
@@ -15,9 +18,9 @@ export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
   disabled?: boolean;
   /**
    * Checks the value after the native check passes. Return the error messages: a string or an array
-   * of strings. Return nothing, `null`, an empty string or an empty array for a valid value. `formValues` holds the
-   * values of the fields of the form, by name, and is empty with no form. The form does not wait
-   * for a promise.
+   * of strings. Return nothing, `null`, an empty string or an empty array for a valid value.
+   * `formValues` holds the values of the fields of the form, by name, and is empty with no form.
+   * The form does not wait for a promise.
    */
   validate?: (
     value: unknown,
@@ -40,8 +43,8 @@ export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
    */
   invalid?: boolean;
   /**
-   * The value differs from the first value. Bind it with `v-model:dirty`. With no `dirty`, the field
-   * finds the state itself.
+   * The value differs from the first value. Bind it with `v-model:dirty`. With no `dirty`, the
+   * field finds the state itself.
    */
   dirty?: boolean;
   /**

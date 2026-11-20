@@ -19,7 +19,8 @@ export interface RadioProps<Value = any> extends /* @vue-ignore */ Omit<
   /** The `id` of the radio. With no `id`, the radio has an id of its own. */
   id?: string;
   /**
-   * Disables the radio. The arrow keys skip it. A disabled group, field or fieldset also disables it.
+   * Disables the radio. The arrow keys skip it. A disabled group, field or fieldset also disables
+   * it.
    * @default false
    */
   disabled?: boolean;

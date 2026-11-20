@@ -17,7 +17,8 @@ import type {
 } from './types';
 
 /**
- * Groups all parts of the field and its control, such as an `Input`, a `Checkbox` or a `RadioGroup`.
+ * Groups all parts of the field and its control, such as an `Input`, a `Checkbox` or a
+ * `RadioGroup`.
  * Renders a `<div>` element.
  * @selector `[data-disabled]` The field is disabled.
  * @selector `[data-valid]` The field is valid.
@@ -85,9 +86,10 @@ export namespace Error {
 
 /**
  * Groups an item of a checkbox group or a radio group with its label and description. A
- * `Field.Label` and a `Field.Description` in the item name the control of the item.
+ * `Field.Label` in the item labels the control of the item, and a `Field.Description` describes
+ * it.
  * Renders a `<div>` element.
- * @selector `[data-disabled]` The item or its field is disabled.
+ * @selector `[data-disabled]` The item is disabled.
  * @selector `[data-valid]` The field is valid.
  * @selector `[data-invalid]` The field is invalid.
  * @selector `[data-touched]` The focus left the control.

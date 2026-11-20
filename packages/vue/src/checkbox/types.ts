@@ -15,7 +15,10 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
   | 'type'
   | 'value'
 > {
-  /** The checked state. Bind it with `v-model`. With no `modelValue`, the checkbox keeps its own state. */
+  /**
+   * The checked state. Bind it with `v-model`. With no `modelValue`, the checkbox keeps its own
+   * state.
+   */
   modelValue?: boolean;
   /**
    * The checked state at the mount of a checkbox that has no `modelValue`.
@@ -29,7 +32,8 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
    */
   indeterminate?: boolean;
   /**
-   * Disables the checkbox. A disabled field, group or fieldset around the checkbox also disables it.
+   * Disables the checkbox. A disabled field, group or fieldset around the checkbox also disables
+   * it.
    * @default false
    */
   disabled?: boolean;
@@ -43,7 +47,9 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
    * @default false
    */
   required?: boolean;
-  /** The name of the checkbox in the data of the form. The `name` of a `Field.Root` around it wins. */
+  /**
+   * The name of the checkbox in the data of the form. The `name` of a `Field.Root` around it wins.
+   */
   name?: string;
   /**
    * The value in the data of a form. In a group, the value that the group lists. A checkbox with no

@@ -16,7 +16,7 @@ export namespace Root {
 
 /**
  * An accessible label for the fieldset. The fieldset names its group with the `id` of its first
- * legend.
+ * legend. A group in the fieldset with no other label, such as a `RadioGroup`, takes the same name.
  * Renders a `<div>` element.
  */
 export const Legend: typeof FieldsetLegend = FieldsetLegend;

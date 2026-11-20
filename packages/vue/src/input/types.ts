@@ -9,11 +9,14 @@ type InputAttributes = Omit<
 > & { autocomplete?: string | null | undefined };
 
 export interface InputProps extends /* @vue-ignore */ InputAttributes {
-  /** The text of the input. Bind it with `v-model`. With no `modelValue`, the input keeps its own text. */
+  /**
+   * The text of the input. Bind it with `v-model`. With no `modelValue`, the input keeps its own
+   * text.
+   */
   modelValue?: string | number | readonly string[];
   /**
-   * The text at the mount of an input that has no `modelValue`. A native reset of the form gives the
-   * input its first text again.
+   * The text at the mount of an input that has no `modelValue`. A native reset of the form gives
+   * the input its first text again.
    */
   defaultValue?: string | number | string[];
   /** The `id` of the input. With no `id`, the input has an id of its own. */

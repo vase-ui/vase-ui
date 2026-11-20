@@ -14,7 +14,9 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
   | 'required'
   | 'type'
 > {
-  /** The switch is on. Bind it with `v-model`. With no `modelValue`, the switch keeps its own state. */
+  /**
+   * The switch is on. Bind it with `v-model`. With no `modelValue`, the switch keeps its own state.
+   */
   modelValue?: boolean;
   /**
    * The switch is on at the mount, when it has no `modelValue`.
@@ -38,7 +40,9 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
   required?: boolean;
   /** The `id` of the switch. With no `id`, the switch has an id of its own. */
   id?: string;
-  /** The name of the switch in the data of the form. The `name` of a `Field.Root` around it wins. */
+  /**
+   * The name of the switch in the data of the form. The `name` of a `Field.Root` around it wins.
+   */
   name?: string;
   /**
    * The value in the data of a form while the switch is off. The form gets it after the mount, from
