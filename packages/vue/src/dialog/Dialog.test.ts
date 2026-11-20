@@ -1267,7 +1267,10 @@ describe('the viewport, the backdrop and the leave', () => {
     const root = reactive<Props>({ open: true });
     await mountDialog({ root, portal: { keepMounted: true }, backdrop: {}, viewport: {} });
     const element = await opened();
-    const parts = [element, byTestId('viewport')!, byTestId('backdrop')!];
+    // In a Vapor app in WebKit, the backdrop of `DialogInTransition` can stay in <body> after its
+    // case, so the case reads the parts of its own popup.
+    const viewport = element.parentElement!;
+    const parts = [element, viewport, viewport.previousElementSibling!];
     root.open = false;
     await waitFor(() => {
       for (const part of parts) {
@@ -1288,11 +1291,14 @@ describe('the viewport, the backdrop and the leave', () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     // The leave lasts 300 ms, so the case reads the state at the start of each leave.
     const log = new Set<string>();
+    const classesAtLeave: Record<string, string[]> = {};
     const inertAtLeave: boolean[] = [];
     const record = {
       add(entry: string) {
         log.add(entry);
-        if (entry.startsWith('popup')) {
+        const [part = '', ...classes] = entry.split(' ');
+        classesAtLeave[part] = classes;
+        if (part === 'popup') {
           inertAtLeave.push(viewport.isConnected, viewport.inert, backdrop.inert);
         }
       },
@@ -1304,8 +1310,8 @@ describe('the viewport, the backdrop and the leave', () => {
     const pressed: string[] = [];
     byId('page').addEventListener('click', () => pressed.push('page'));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(log.has('popup pop-leave-from pop-leave-active')).toBe(true));
-    expect(log.has('backdrop fade-leave-from fade-leave-active')).toBe(true);
+    await waitFor(() => expect(classesAtLeave.popup).toContain('pop-leave-active'));
+    expect(classesAtLeave.backdrop).toContain('fade-leave-active');
     expect(inertAtLeave).toEqual([true, true, true]);
     await press(byId('page'));
     expect(pressed).toEqual(['page']);
