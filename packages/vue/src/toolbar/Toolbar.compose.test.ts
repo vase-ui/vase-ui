@@ -1,6 +1,6 @@
 import { describe, expect, inject, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick, reactive } from 'vue';
+import { reactive } from 'vue';
 import ToolbarCompose from '../../test/fixtures/ToolbarCompose.vue';
 import ToolbarKeptAlive from '../../test/fixtures/ToolbarKeptAlive.vue';
 import { waitForLaterMillisecond } from '../../test/createRenderer';
@@ -240,26 +240,43 @@ describe('a control in Toolbar.Input', () => {
   });
 });
 
-describe('items in a KeepAlive branch', () => {
-  test('Tab reaches the toolbar after two switches, and the keys follow the document', async () => {
+describe('the tab stop in a KeepAlive branch', () => {
+  async function mountBranches() {
     const scene = reactive({ branch: 'a' as 'a' | 'b' });
     mount(ToolbarKeptAlive, { scene });
     await settle();
-    document.querySelector<HTMLElement>('#a1')!.focus();
-    scene.branch = 'b';
-    await settle();
-    scene.branch = 'a';
-    await settle();
-    scene.branch = 'b';
-    await settle();
-    document.querySelector<HTMLElement>('#before')!.focus();
-    expect(await keys('{Tab}')).toEqual(['first']);
-    expect(await keys('{ArrowRight}', '{ArrowRight}', '{ArrowRight}', '{ArrowRight}')).toEqual([
-      'b1',
-      'b2',
-      'last',
-      'first',
-    ]);
-    await nextTick();
+    const show = async (branch: 'a' | 'b') => {
+      scene.branch = branch;
+      await settle();
+    };
+    const focus = async (id: string) => {
+      document.querySelector<HTMLElement>(`#${id}`)!.focus();
+      await settle();
+    };
+    return { show, focus };
+  }
+
+  test('moves to the first item when KeepAlive holds its branch: Tab reaches the toolbar, and the keys follow the document', async () => {
+    const { show, focus } = await mountBranches();
+    // `KeepAlive` holds both branches, so a switch adds no item.
+    await show('b');
+    await show('a');
+    await focus('a1');
+    await show('b');
+    await focus('before');
+    expect(
+      await keys('{Tab}', '{ArrowRight}', '{ArrowRight}', '{ArrowRight}', '{ArrowRight}'),
+    ).toEqual(['first', 'b1', 'b2', 'last', 'first']);
+  });
+
+  test('comes back when its branch shows again, and the keys follow the document', async () => {
+    const { show, focus } = await mountBranches();
+    await focus('a1');
+    await show('b');
+    await show('a');
+    await focus('before');
+    expect(
+      await keys('{Tab}', '{ArrowRight}', '{ArrowRight}', '{ArrowRight}', '{ArrowRight}'),
+    ).toEqual(['a1', 'a2', 'last', 'first', 'a1']);
   });
 });

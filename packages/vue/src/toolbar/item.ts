@@ -1,4 +1,13 @@
-import { computed, inject, watch, type InjectionKey, type Ref } from 'vue';
+import {
+  computed,
+  inject,
+  onActivated,
+  onDeactivated,
+  shallowRef,
+  watch,
+  type InjectionKey,
+  type Ref,
+} from 'vue';
 import type { ToolbarOrientation } from './types';
 
 /** An element that the arrow keys of a toolbar reach, while it is mounted. The properties are reactive. */
@@ -8,6 +17,8 @@ export interface ToolbarItem {
   readonly disabled: boolean;
   /** The item can take the focus now. */
   readonly focusable: boolean;
+  /** `KeepAlive` holds the item out of the document. */
+  readonly held: boolean;
 }
 
 /** What a toolbar gives to the parts in it. The properties are reactive. */
@@ -39,6 +50,10 @@ export function useToolbarItem(
   element: Readonly<Ref<HTMLElement | null>>,
   flags: { disabled(): boolean; focusable(): boolean },
 ) {
+  // Vue keeps the element ref of an item that `KeepAlive` holds, so the item stays in the list.
+  const held = shallowRef(false);
+  onDeactivated(() => (held.value = true));
+  onActivated(() => (held.value = false));
   watch(
     element,
     (el, _, onCleanup) => {
@@ -51,6 +66,9 @@ export function useToolbarItem(
           },
           get focusable() {
             return flags.focusable();
+          },
+          get held() {
+            return held.value;
           },
         }),
       );
@@ -66,10 +84,10 @@ export function useToolbarItem(
 }
 
 // Chromium stops Tab at a radio with `tabindex="0"`, and Firefox and WebKit pass it when another
-// radio of its group is checked (test/measurements/toolbar.test.ts). With `tabindex="0"` on each
-// radio of the group, Tab stops at the checked radio in each browser. With no radio checked,
-// Firefox passes the group when its first radio has -1, and Chromium when the radio that had the
-// focus has -1.
+// radio of its group is checked. With no radio checked, Firefox passes the group when its first
+// radio has -1, and Chromium when the radio that had the focus has -1
+// (test/measurements/toolbar.test.ts). With `tabindex="0"` on each radio of the group, Tab stops in
+// the group in each browser: at the checked radio, or at a radio that the browser picks.
 function isRadioOfGroup(element: HTMLElement, tabStop: HTMLElement) {
   return (
     isNamedRadio(element) &&

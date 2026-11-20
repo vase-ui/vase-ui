@@ -87,14 +87,10 @@ function isDisabled(element: HTMLElement) {
   return items.some((item) => item.element === element && item.disabled);
 }
 
-/**
- * The items that can take the focus, each one time, in the order of the document. `KeepAlive` takes
- * a held item out of the document, where the browser gives no order.
- */
+/** The items in the document that can take the focus, each one time, in the order of the document. */
 function sequence() {
-  const root = element.value;
-  return [...new Set(items.map((item) => item.element))]
-    .filter((item) => !!root?.contains(item) && canTakeFocus(item))
+  return [...new Set(items.filter((item) => !item.held).map((item) => item.element))]
+    .filter(canTakeFocus)
     .sort(byDocumentOrder);
 }
 
