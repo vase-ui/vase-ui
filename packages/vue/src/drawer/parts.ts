@@ -111,7 +111,7 @@ export namespace Portal {
  * @selector `[hidden]` The drawer is closed, and `keepMounted` of the portal keeps the backdrop in the DOM.
  * @selector `[data-swiping]` A swipe moves the popup.
  * @selector `[data-swipe-dismiss]` The backdrop leaves after a swipe on the popup closed the drawer.
- * @cssVariable `--drawer-swipe-progress` The distance of the popup from its open place: 0 at the open place, 1 at the closed place. A swipe or the active snap point sets it.
+ * @cssVariable `--drawer-swipe-progress` The progress of the popup toward its closed place: 0 at the open place, 1 at the closed place. A swipe or the active snap point sets it.
  * @cssVariable `--drawer-swipe-strength` A number from 0.1 to 1 that scales the duration of the leave after a swipe. A faster swipe gives a smaller number. It is 1 at other times.
  * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0.
  */
@@ -122,18 +122,17 @@ export namespace Backdrop {
 }
 
 /**
- * The container of the popup, where a swipe moves it.
- * Renders a `<div>` element.
- *
- * A touch drag goes to the swipe at its first move of 6 px, when the move is more along the axis
- * of the drawer than across it. In a scroller on that axis, the swipe takes the drag only at the
+ * The container of the popup, where a swipe moves it. At its first move of 6 px, a touch drag goes
+ * to the swipe or stays with the browser. A move that is more across the axis of the drawer than
+ * along it stays with the browser. In a scroller on that axis, the swipe takes the drag only at the
  * edge of the scroller, for a move toward the closed place. A touch can start a swipe on a control
- * or in `Drawer.Content`, but not on a range input or while the popup has a text selection. A
- * touch that starts outside the popup moves it from the point where the finger comes into it. A
- * mouse or a pen starts a swipe only in the popup, and not on a control, in `Drawer.Content` or in
- * a scroller on the axis. An element with `data-vase-ui-swipe-ignore` starts no swipe. With the
- * value `x` or `y`, the element takes the touch drags on that axis, and a touch drag on the other
- * axis still swipes the drawer.
+ * or in `Drawer.Content`. It starts none on a range input, or while the popup has a text selection.
+ * A touch that starts outside the popup moves it from the point where the finger comes into it. A
+ * mouse or a pen starts a swipe only in the popup. It starts none on a control, in `Drawer.Content`
+ * or in a scroller on the axis. An element with `data-vase-ui-swipe-ignore` starts no swipe. With
+ * the value `x` or `y`, the element takes the touch drags on that axis, and a touch drag on the
+ * other axis still swipes the drawer.
+ * Renders a `<div>` element.
  * @selector `[hidden]` The drawer is closed, and `keepMounted` of the portal keeps the viewport in the DOM.
  * @selector `[data-nested]` The root of the drawer is inside a `Dialog.Root`, an `AlertDialog.Root` or a `Drawer.Root`.
  * @selector `:has(> .v-leave-active)` The popup leaves. Use the leave class of the `<Transition>` around the popup.
@@ -227,7 +226,7 @@ export namespace Provider {
  * A container of the page that moves back while a drawer is open.
  * Renders a `<div>` element.
  * @selector `[data-active]` A drawer of the provider is open.
- * @cssVariable `--drawer-swipe-progress` The distance of the outer drawer from its open place: 0 at the open place, 1 at the closed place.
+ * @cssVariable `--drawer-swipe-progress` The progress of the outer drawer toward its closed place: 0 at the open place, 1 at the closed place.
  * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0.
  */
 export const Indent: typeof DrawerIndent = DrawerIndent;

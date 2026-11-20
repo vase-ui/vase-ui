@@ -3,6 +3,6 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx#L431-L436"
   ],
-  "behavior": "When `Drawer.SwipeArea` unmounts during a swipe that opens the drawer, the swipe ends. The popup goes to its open place with no `data-swiping` and no `transition: none`, and the backdrop and `Drawer.Indent` lose the progress of the swipe. In Base UI, the popup stays at the place of the gesture and the indent keeps its progress. Only an outside press then closes the drawer.",
+  "behavior": "When `Drawer.SwipeArea` unmounts during a swipe that opens the drawer, the swipe ends. The popup goes to its open place with no `data-swiping` and no `transition: none`, and the backdrop and `Drawer.Indent` lose the progress of the swipe. In Base UI, the unmount of the swipe area only lets an outside press close the drawer again. The popup stays at the place of the gesture, and the indent keeps its progress.",
   "dueWith": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx"
 }

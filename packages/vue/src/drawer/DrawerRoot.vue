@@ -23,9 +23,9 @@ const props = withDefaults(defineProps<DrawerRootProps<Payload>>(), {
 });
 const emit = defineEmits<{
   /**
-   * The drawer opens or closes. `details.cancel()` keeps it as it was. On Android, the back gesture
-   * closes the top open drawer with the reason `'close-watcher'`. Then `cancel()` keeps the drawer
-   * open only when the browser lets the page cancel the gesture.
+   * The drawer opens or closes. `details.cancel()` keeps it as it was. On Android, in a browser with
+   * `CloseWatcher`, the back gesture closes the top open drawer with the reason `'close-watcher'`.
+   * Then `cancel()` keeps the drawer open only when the browser lets the page cancel the gesture.
    */
   openChange: [open: boolean, details: DrawerRootChangeEventDetails];
   /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */

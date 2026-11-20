@@ -91,7 +91,7 @@ To run code when the dialog opens or closes, listen to the `openChange` event of
 
 You can put a dialog in another dialog.
 
-To style the parent dialog, use the `[data-nested-dialog-open]` selector and the `--nested-dialogs` CSS variable. A nested dialog renders no backdrop, so the parent dialog stays clear behind the dialog on top of it.
+To style the parent dialog while a nested dialog is open, use the `[data-nested-dialog-open]` selector and the `--nested-dialogs` CSS variable. A nested dialog renders no backdrop unless its backdrop has `forceRender`, so the parent dialog stays clear behind the dialog on top of it.
 
 <DemoFrame>
   <DemoDialogNested />
