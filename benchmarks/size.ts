@@ -56,6 +56,7 @@ for (const scenario of SCENARIOS) {
 }
 
 const results = {
+  date: new Date().toISOString(),
   commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   libraries: Object.fromEntries(
     LIBRARIES.map((library) => [library.id, installed(library.package)]),
