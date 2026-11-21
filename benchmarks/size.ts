@@ -6,13 +6,16 @@ import { version as viteVersion } from 'vite';
 import { buildApp, emptyApp, libraryApp, librariesOf, type App } from './build.ts';
 import { LIBRARIES, SCENARIOS, SETUPS } from './scenarios.ts';
 
-export interface Size {
+interface Size {
   raw: number;
   gzip: number;
   brotli: number;
 }
 
-/** Builds the app, then sums the bytes of each JavaScript and CSS file. The HTML file does not count. */
+/**
+ * Builds the app, then sums the bytes of each JavaScript and CSS file. The HTML file does not
+ * count.
+ */
 async function sizeOf(app: App | undefined): Promise<Size | null> {
   if (app === undefined) {
     return null;

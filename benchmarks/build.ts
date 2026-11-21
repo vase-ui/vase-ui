@@ -97,7 +97,7 @@ function frameworkPlugins(setup: Setup): Plugin[] {
  * The one Vite config of each app: the defaults of Vite for a production build, with one
  * JavaScript chunk.
  */
-export function appConfig(app: App): InlineConfig {
+function appConfig(app: App): InlineConfig {
   const { setup } = app;
   // The alias gives the app one copy of Vue, the one of the setup, also when a library or the
   // workspace package resolves another version of `vue`.
@@ -129,7 +129,7 @@ export function appConfig(app: App): InlineConfig {
 }
 
 /** Each app: the empty app of each setup, then each scenario of each library in each setup. */
-export function allApps(): App[] {
+function allApps(): App[] {
   return SETUPS.flatMap((setup) => [
     emptyApp(setup),
     ...SCENARIOS.flatMap((scenario) =>
