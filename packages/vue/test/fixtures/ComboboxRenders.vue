@@ -2,8 +2,8 @@
 import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 
-// A combobox of 300 items that counts the renders of each part with a call in its slot. The call
-// reads the scope that the part gives the slot.
+// A combobox of 300 items that counts the renders of each part with a call in its slot. Where the
+// part gives the slot a scope, the call reads it.
 defineProps({
   count: { type: Function as PropType<(part: string, scope?: unknown) => string>, required: true },
   root: Object as PropType<Record<string, unknown>>,

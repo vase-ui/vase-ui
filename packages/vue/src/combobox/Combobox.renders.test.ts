@@ -6,9 +6,10 @@ import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 // A highlight step renders only the items whose highlight changes (discussion #665). Each part
-// renders only for a change of what it shows. Each count reads the scope that its part gives the
-// slot: a virtual DOM part calls its slot again at each render, and Vapor runs the count again for
-// each new scope. So the counts are the same in each mode.
+// renders only for a change of what it shows. A count reads the scope of its slot, where the part
+// gives one. A virtual DOM part calls its slot again at each render. A Vapor part keeps an object
+// of the scope while its values stay the same, and the count runs again for each new object. So
+// the counts are the same in each mode.
 
 function counter() {
   const renders: Record<string, number> = {};
