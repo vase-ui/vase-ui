@@ -1,4 +1,5 @@
 import { inject } from 'vue';
+import { useIsHydrated } from '../common/hydration';
 import { useValueInputs } from '../common/valueInputs';
 import { fieldKey } from '../field/control';
 import { isSelectedValueDirty } from '../common/itemEquality';
@@ -24,6 +25,7 @@ export function useComboboxForm(
   },
 ) {
   const field = inject(fieldKey, null);
+  const mounted = useIsHydrated();
 
   /** The form text of the value, or of each value with `multiple`. */
   function formValue() {
@@ -63,8 +65,9 @@ export function useComboboxForm(
     name: () => (options.rendersInputs() ? context.name : undefined),
     values: () => [formValue()].flat(),
     text: () => (context.mode === 'multiple' || context.value == null ? '' : textOf(context.value)),
-    // The control has its id after its mount, so the server HTML and the first render agree.
-    id: () => `${context.control?.id || context.controlId}-hidden-input`,
+    // The server has no control, so the id of the control applies only after the mount. A control
+    // in Vapor mode sets its ref before the root hydrates this input.
+    id: () => `${(mounted.value && context.control?.id) || context.controlId}-hidden-input`,
     form: () => context.form,
     autocomplete: options.autocomplete,
     required: () => context.required,
