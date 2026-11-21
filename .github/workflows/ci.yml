@@ -193,7 +193,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.12
+      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.46
       - uses: ./.github/actions/vitest
         with:
           command: ${{ needs.select.outputs.vitest-command }}
@@ -227,7 +227,7 @@ jobs:
       - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm --filter @vase-ui/vite-fixture typecheck
       - run: pnpm test:nuxt
-      - run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.5.12
+      - run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.5.46
       - run: pnpm --filter @vase-ui/vite-fixture test:published:floor
 
   # This job builds the package and the site again, beside `check`, so that `check` does not take

@@ -34,7 +34,7 @@ yarn add @vase-ui/vue
 
 The package needs:
 
-- Vue 3.5.12 or later. `vue` is a peer dependency of the package.
+- Vue 3.5.46 or later. `vue` is a peer dependency of the package.
 - A browser that has the web platform features that are [Baseline Widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility).
 - The global `Temporal` for the date and time components. Where the JavaScript engine does not have it, load a [polyfill](/handbook/dates-and-times#polyfill).
 
