@@ -32,8 +32,9 @@ describe('server render and hydration', () => {
     expect(root.contains(popupOf(document.body))).toBe(false);
   });
 
-  // In a Vapor app, Vue 3.6 renders the content of a `<Transition>` in a `<template>` of the server
-  // HTML.
+  // The server render of Vue puts the content of a `<Transition>` with a bound `appear` in a
+  // `<template>`, also when the value is `false`. In a Vapor app, the server HTML of this fixture
+  // then has the popup in a `<template>`.
   test.skipIf(inject('app').startsWith('vapor'))(
     'a disabled portal renders the popup in place, with the variables of a drawer at rest',
     async () => {
