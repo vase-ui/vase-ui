@@ -292,7 +292,7 @@ Write no code that guards, tracks, repairs or copies a behavior on an assumption
 1. Build the smallest case with plain Vue and native elements, and see what Chromium, Firefox and WebKit do. Keep the case as a test, as [Measurements](#measurements) says.
 2. When the browser or Vue does the right thing in the three browsers, write no code.
 3. When the browsers differ and a person notices it, write the least code that makes them agree. The target is the HTML Standard and the WAI-ARIA Authoring Practices. A preference of the user, such as the macOS preference for the Tab key, is not a difference to smooth over.
-4. A comment at such code names its measurement, such as `(test/measurements/dialog.test.ts)`.
+4. A comment at such code names its measurement: the file and the title of the case, such as `(test/measurements/dialog.test.ts, "an inert element that covers the page")`.
 
 A part handles the events that the browser sends. It detects no value that an element got with no event. Examples are text before the hydration, a press on a label before the hydration, and form state that the browser restores.
 
@@ -412,6 +412,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handl
 - The code is the documentation. Correct a name or the structure before you add a comment.
 - A comment stays only where it gives a reason that the code cannot show: a decision, an outside constraint, a measurement or an upstream link.
 - Do not write the history of the code in a comment or in a doc.
+- `scripts/repo/history.test.ts` refuses a word that tells the history of the code, a plan label and a pull request number of this repository in each file. Its allow-list holds only lines that tell no history, such as a Conventional Commit type or the title of a Base UI case.
 - Write the reason for a node of a template as a comment in the script block. A comment in a template becomes a DOM node in a development build.
 
 ## Tests
@@ -450,6 +451,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 ### Test rules
 
 - A test exists for a behavior that a user or a developer meets, a contract or a real fault. Do not test a fact of Vue, of the browser or of a library.
+- A test title names the behavior that it checks. It has no label of a plan or of a list.
 - A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
 - A test belongs in the test file of the family whose prop or behavior it asserts. A file with a scenario of its own is `<Family>.<scenario>.test.ts`.
 - Use only the Vitest APIs and the matchers of `@testing-library/jest-dom`. `toHaveTextContent` passes when the text contains the string: to compare the whole text, use `expect(element.textContent).toBe(text)`.
