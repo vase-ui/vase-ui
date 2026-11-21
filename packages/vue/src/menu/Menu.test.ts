@@ -1293,6 +1293,19 @@ describe('the arrow and the anchor', () => {
     expect(element).not.toHaveAttribute('data-uncentered');
   });
 
+  test('VUE-193: the arrow in a positioned popup with a border points to the center of the trigger', async () => {
+    const { trigger } = await mountMenu({
+      arrow,
+      trigger: { style: 'position: fixed; left: 300px; top: 200px; width: 40px' },
+      popup: { style: 'position: relative; width: 120px; border: 1px solid' },
+    });
+    await userEvent.click(trigger);
+    await placed();
+    const element = byTestId('arrow')!;
+    await waitFor(() => expect(element.style.left).toMatch(/px$/));
+    expect(Math.abs(centerX(element) - centerX(trigger))).toBeLessThanOrEqual(0.5);
+  });
+
   test('an arrow that cannot point to the center of a narrow trigger at the edge has `data-uncentered`', async () => {
     const { trigger } = await mountMenu({
       arrow,

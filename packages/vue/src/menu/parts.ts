@@ -179,8 +179,9 @@ export namespace Popup {
 }
 
 /**
- * An element that points to the anchor.
+ * An element that points to the center of the anchor.
  * Renders a `<div>` element.
+ * Its place is in the padding box of its nearest positioned ancestor: the popup when the popup has a `position`, else the positioner.
  * @selector `[data-side]` The side of the anchor that the popup is on, as on the positioner.
  * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
  * @selector `[data-uncentered]` The arrow cannot point to the center of the anchor.
