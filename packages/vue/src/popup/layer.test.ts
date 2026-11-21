@@ -119,8 +119,9 @@ test.skipIf(server.browser !== 'chromium').each(families)(
 );
 
 const open = { root: { defaultOpen: true } };
+const popover: Family = { name: 'Popover', fixture: PopoverParts, props: open, popup: 'popup' };
 const openFamilies: Family[] = [
-  { name: 'Popover', fixture: PopoverParts, props: open, popup: 'popup' },
+  popover,
   { name: 'Dialog', fixture: DialogParts, props: open, popup: 'popup' },
   { name: 'Menu', fixture: MenuParts, props: open, popup: 'popup' },
   { name: 'Select', fixture: SelectParts, props: open, popup: 'popup' },
@@ -156,7 +157,7 @@ async function mountOpen({ fixture, props, popup }: Family) {
 }
 
 test.each(openFamilies)(
-  'VUE-172: $name: a dispatched touch outside that moves 16 px closes nothing; a tap that moves 15 px closes at its `pointerup`',
+  'VUE-172: $name: a dispatched touch outside that moves 16 px closes nothing; a tap that moves 15 px closes at its `pointerup` and leaves its `touchend` to the page',
   async (family) => {
     const { outside, shown } = await mountOpen(family);
     const { x, y } = centerOf(outside);
@@ -171,9 +172,58 @@ test.each(openFamilies)(
     await firePointer.down(outside, { ...touch, timeStamp: 2000 });
     await firePointer.move(outside, { ...near, timeStamp: 2050 });
     await firePointer.up(outside, { ...near, timeStamp: 2100 });
+    const end = new Event('touchend', { bubbles: true, cancelable: true });
+    outside.dispatchEvent(end);
+    expect(end.defaultPrevented).toBe(false);
     await waitFor(() => expect(shown()).toBe(false));
   },
 );
+
+const uncovered: Family[] = [
+  popover,
+  {
+    name: 'Dialog with modal false',
+    fixture: DialogParts,
+    props: { root: { defaultOpen: true, modal: false } },
+    popup: 'popup',
+  },
+  { name: 'Combobox', fixture: ComboboxParts, props: open, popup: 'popup' },
+  { name: 'Autocomplete', fixture: AutocompleteParts, props: open, popup: 'popup' },
+  { name: 'PreviewCard', fixture: PreviewCardParts, props: open, popup: 'popup' },
+];
+
+test.skipIf(server.browser !== 'chromium').each(uncovered)(
+  '$name: a real tap on an element of the page outside closes the popup, and the element gets the `click` of the tap',
+  async (family) => {
+    const { outside, shown } = await mountOpen(family);
+    const events: string[] = [];
+    outside.addEventListener('mousedown', () => events.push('mousedown'));
+    outside.addEventListener('click', () => events.push('click'));
+    const point = centerOf(outside);
+    expect(document.elementFromPoint(point.x, point.y)).toBe(outside);
+    await touchDrag(point, point, 0);
+    await waitFor(() => expect(events).toEqual(['mousedown', 'click']));
+    await waitFor(() => expect(shown()).toBe(false));
+  },
+);
+
+// A press of a mouse or a pen that the browser takes, such as for a scroll, ends with
+// `pointercancel` and no `click`. A later tap gives its own `click`.
+test('a tap in a popup after a press outside that the browser canceled keeps the popup open', async () => {
+  const { outside, shown } = await mountOpen(popover);
+  const popup = document.querySelector('[data-testid="popup"]')!;
+  const from = centerOf(outside);
+  const pen = { pointerType: 'pen', isPrimary: true, button: 0, clientX: from.x, clientY: from.y };
+  await firePointer.down(outside, { ...pen, timeStamp: 1000 });
+  await firePointer.cancel(outside, { ...pen, timeStamp: 1100 });
+  const to = centerOf(popup);
+  const touch = { pointerType: 'touch', isPrimary: true, clientX: to.x, clientY: to.y };
+  await firePointer.down(popup, { ...touch, timeStamp: 2000 });
+  await firePointer.up(popup, { ...touch, timeStamp: 2100 });
+  popup.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true, detail: 1 }));
+  await nextTick();
+  expect(shown()).toBe(true);
+});
 
 // The fixed element of a modal popup and a backdrop take each pointer from the page.
 const BLOCK = 'body > div[role="presentation"]:not([data-testid])';

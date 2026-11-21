@@ -844,7 +844,7 @@ describe('the dismissal', () => {
     },
   );
 
-  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 15 px, that rests 1 s or that the browser cancels closes nothing', async () => {
+  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 15 px, that rests 1 s, that opens the menu of the system or that the browser cancels closes nothing', async () => {
     const other = appendOutside('div', 'width: 100px; height: 100px');
     const events: string[] = [];
     await mountPopover({
@@ -866,6 +866,9 @@ describe('the dismissal', () => {
     await firePointer.up(other, { ...touch, timeStamp: 3000 });
     await firePointer.down(other, { ...touch, timeStamp: 4000 });
     await firePointer.cancel(other, { ...touch, timeStamp: 4050 });
+    await firePointer.down(other, { ...touch, timeStamp: 4500 });
+    other.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+    await firePointer.up(other, { ...touch, timeStamp: 4600 });
     expect(events).toEqual([]);
     await firePointer.down(other, { ...touch, timeStamp: 5000 });
     await firePointer.up(other, { ...touch, timeStamp: 5999 });
