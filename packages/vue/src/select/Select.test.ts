@@ -9,6 +9,7 @@ import SelectArrowsInTransition from '../../test/fixtures/SelectArrowsInTransiti
 import SelectInPopover from '../../test/fixtures/SelectInPopover.vue';
 import SelectInTransition from '../../test/fixtures/SelectInTransition.vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
+import SelectPopupElement from '../../test/fixtures/SelectPopupElement.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { clientCenter, touchDrag } from '../../test/pointer';
 import { mount, mountError, settle } from '../../test/render';
@@ -1110,6 +1111,42 @@ describe('item alignment', () => {
       ).toBeLessThan(1);
     },
   );
+
+  test.each([
+    { name: 'a heading before the list', heading: { style: 'height: 40px; margin: 0' } },
+    { name: 'a footer after the list', footer: { style: 'height: 30px; margin: 0' } },
+  ])(
+    'VUE-196: with $name, puts the text of the selected item over the text of the value where the list ends in the view',
+    async ({ heading, footer }) => {
+      await mountSelect({
+        ...aligned,
+        items: longList.slice(0, 30),
+        list: {},
+        heading,
+        footer,
+        root: { defaultValue: 'i28' },
+        trigger: { style: 'position: fixed; top: 300px; left: 20px' },
+      });
+      await userEvent.click(trigger());
+      await opened();
+      expect(
+        Math.abs(middleOf(item('i28').firstElementChild!) - middleOf(byTestId('value'))),
+      ).toBeLessThan(1);
+      const end = byTestId(footer ? 'footer' : 'list').getBoundingClientRect().bottom;
+      expect(end).toBeLessThanOrEqual(popup().getBoundingClientRect().bottom + 0.5);
+    },
+  );
+
+  test('a popup over the trigger in the `element` slot, with a `Select.List`, hides when it closes', async () => {
+    mount(SelectPopupElement);
+    await nextTick();
+    await userEvent.click(trigger());
+    await opened();
+    expect(byTestId('positioner')).toHaveAttribute('data-side', 'none');
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(popup()).toHaveAttribute('hidden');
+  });
 
   test('VUE-195: in a popup with a CSS zoom, puts the text of the selected item over the text of the value', async () => {
     await mountSelect({

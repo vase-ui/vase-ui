@@ -76,6 +76,8 @@ To place the popup at a side of the trigger, set `alignItemWithTrigger` to `fals
 - **Viewport space**: The viewport must have enough room to put the selected item over the text of the value with a popup that is not too short. If it does not, the popup uses the default positioning. Set `min-height` on `<Select.Positioner>` to change the limit. A smaller value makes this occur less often. The trigger must also be at least 20px from the top and from the bottom of the viewport. If it is not, the popup uses the default positioning.
 - **Other positioning props**: Props such as `side` and `align` have no effect while the mode is active. They apply when the prop is `false`, and when the popup uses the default positioning.
 
+While the popup covers the trigger and has a `<Select.List>`, `<Select.Popup>` is a flex column. The list takes the height that the other children of the popup leave, so a heading or a footer keeps its room. As in each flex container, the margins of two children next to each other add up, and a child keeps the margins of its own children in its box.
+
 ## Examples
 
 ### Typed component

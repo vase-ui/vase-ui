@@ -91,7 +91,7 @@ function onKeydown(event: KeyboardEvent) {
   if (!list.onKeydown(event)) typeahead.onKeydown(event);
 }
 
-function elementProps() {
+function elementProps(hidden = false) {
   const aligned = context.aligned.value;
   const listProps = ownsList.value
     ? {
@@ -111,17 +111,15 @@ function elementProps() {
       inert: root.open ? undefined : true,
       class: hidesScrollbar.value ? styleDisableScrollbar.className : undefined,
       // The margin box of the popup fills the positioner that covers the trigger, and its list
-      // scrolls.
+      // scrolls. A `Select.List` takes the height that the other children leave. The `hidden`
+      // attribute of the `element` slot hides a closed popup only with no `display`.
       style: aligned
         ? {
             flex: '1',
             minHeight: '0',
-            ...(ownsList.value && {
-              position: 'relative',
-              maxHeight: '100%',
-              overflowX: 'hidden',
-              overflowY: 'auto',
-            }),
+            ...(ownsList.value
+              ? { position: 'relative', maxHeight: '100%', overflowX: 'hidden', overflowY: 'auto' }
+              : !hidden && { display: 'flex', flexDirection: 'column' }),
           }
         : undefined,
     },
@@ -141,7 +139,7 @@ and `inert` while closed. -->
   <slot
     v-if="$slots.element"
     name="element"
-    :props="{ ...elementProps(), hidden: shown ? undefined : true }"
+    :props="{ ...elementProps(!shown), hidden: shown ? undefined : true }"
     :elementRef="setElement"
     :state="state"
   />

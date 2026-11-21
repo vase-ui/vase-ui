@@ -7,7 +7,7 @@ type Item = { value: unknown; text: string; label?: string; disabled?: boolean }
 
 // A select with a label, a trigger with its value and icon, and a popup with one item for each
 // entry of `items`. Text inputs stand before and after the root, and a button at the bottom right
-// of the view is outside. The parts that their props name render too.
+// of the view is outside. The parts and the elements that their props name render too.
 defineProps({
   root: Object as PropType<Props>,
   label: Object as PropType<Props>,
@@ -42,6 +42,9 @@ defineProps({
   arrows: Object as PropType<Props>,
   /** A separator after the items, with these props. */
   separator: Object as PropType<Props>,
+  /** A `<p>` in the popup before the list, and one after it, with these props. */
+  heading: Object as PropType<Props>,
+  footer: Object as PropType<Props>,
   noPortal: Boolean,
 });
 const rootPart = useTemplateRef('rootPart');
@@ -69,6 +72,7 @@ defineExpose({ root: rootPart, popup: popupPart });
         >
           <Select.Arrow v-if="arrow" data-testid="arrow" v-bind="arrow" />
           <Select.ScrollUpArrow v-if="arrows" data-testid="up" v-bind="arrows" />
+          <p v-if="heading" data-testid="heading" v-bind="heading">Fruits</p>
           <component
             :is="list && show.list !== false ? Select.List : 'div'"
             data-testid="list"
@@ -88,6 +92,7 @@ defineExpose({ root: rootPart, popup: popupPart });
             </Select.Item>
           </component>
           <Select.Separator v-if="separator" data-testid="separator" v-bind="separator" />
+          <p v-if="footer" data-testid="footer" v-bind="footer">More soon</p>
           <Select.ScrollDownArrow v-if="arrows" data-testid="down" v-bind="arrows" />
         </Select.Popup>
       </Select.Positioner>
