@@ -17,13 +17,13 @@ import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
+import { submitAtEnter } from '../common/implicitSubmission';
 import { useModel } from '../common/model';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
 import { warn } from '../common/warn';
 import { fieldKey, fieldStateAttributes } from '../field/control';
 import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
 import { inputmodeOf, patternOf, removeAt, toCode, writeAt } from './code';
-import { submitImplicitly } from './implicitSubmission';
 import { otpFieldKey } from './root';
 import type {
   OTPFieldRootChangeEventDetails,
@@ -268,17 +268,7 @@ provide(otpFieldKey, {
     focused.value = slot;
     slot.select();
   },
-  onEnter(slot, event) {
-    const { form } = slot;
-    // A later listener, of the slot or of an ancestor, can prevent the submission, as for one text
-    // input. So the root waits for the end of the event.
-    setTimeout(() => {
-      if (!form || event.defaultPrevented) return;
-      const own: Element[] = [...mountedSlots];
-      if (formInput.value) own.push(formInput.value);
-      submitImplicitly(form, own);
-    });
-  },
+  onEnter: (event) => submitAtEnter(event, [...mountedSlots, formInput.value]),
 });
 
 defineExpose({ element });

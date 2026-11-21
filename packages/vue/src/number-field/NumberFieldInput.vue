@@ -3,26 +3,11 @@ import { computed, mergeProps, onMounted, shallowRef, useAttrs, useId, watch } f
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
+import { submitAtEnter } from '../common/implicitSubmission';
 import { platform } from '../common/platform';
 import { controlAria } from '../field/control';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldInputProps, NumberFieldInputState } from './types';
-
-// The input types of a field that blocks the implicit submission of a form (HTML Standard).
-const blocksImplicitSubmission = new Set([
-  'text',
-  'search',
-  'tel',
-  'url',
-  'email',
-  'password',
-  'date',
-  'month',
-  'week',
-  'time',
-  'datetime-local',
-  'number',
-]);
 
 defineOptions({ inheritAttrs: false });
 
@@ -165,7 +150,8 @@ function onKeydown(event: KeyboardEvent) {
   // WebKit gives `isComposing` as false on a key of a composition (WebKit bug 165004).
   if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
   if (event.key === 'Enter') {
-    submitAtEnter(event);
+    // The hidden input is a second field for the browser (measured).
+    submitAtEnter(event, [event.currentTarget as Element, root.hiddenInput]);
     return;
   }
   const { state, min, max } = root;
@@ -184,36 +170,6 @@ function onKeydown(event: KeyboardEvent) {
   event.preventDefault();
   const next = root.step(direction, event, 'keyboard', event);
   if (next !== undefined) root.commit(next, 'keyboard', event);
-}
-
-/**
- * Enter in one text field submits a form with no submit button (HTML Standard). The hidden input
- * is a second field for the browser (measured), so the part submits.
- */
-function submitAtEnter(event: KeyboardEvent) {
-  const el = event.currentTarget as HTMLInputElement;
-  const { form } = el;
-  // A listener of an ancestor can still prevent the key, so the part waits for the end of the
-  // event.
-  setTimeout(() => {
-    if (!form || event.defaultPrevented) return;
-    // The browser clicks an image button too, which `form.elements` does not list.
-    const images = (form.getRootNode() as ParentNode).querySelectorAll('input[type=image]');
-    if ([...images].some((image) => (image as HTMLInputElement).form === form)) return;
-    for (const other of form.elements) {
-      const { type } = other as HTMLInputElement;
-      if (type === 'submit') return;
-      if (
-        other.localName === 'input' &&
-        blocksImplicitSubmission.has(type) &&
-        other !== el &&
-        other !== root.hiddenInput
-      ) {
-        return;
-      }
-    }
-    form.requestSubmit();
-  });
 }
 
 function onWheel(event: WheelEvent) {
