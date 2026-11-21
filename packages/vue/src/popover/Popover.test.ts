@@ -810,7 +810,7 @@ describe('the dismissal', () => {
   );
 
   test.skipIf(server.browser !== 'chromium')(
-    'a touch outside closes at the `pointerup` of a tap, also of a tap that moves 8 px; a touch that rests more than 1 s or that moves more than 10 px closes nothing',
+    'a touch outside closes at the `pointerup` of a tap, also of a tap that moves 15 px; a touch that rests more than 1 s or that moves more than 15 px closes nothing',
     async () => {
       const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');
       try {
@@ -827,7 +827,7 @@ describe('the dismissal', () => {
         const current = await mountPopover(setup());
         await placed();
         await touchDrag(point, point, 0, 1200);
-        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await touchDrag(point, { x: point.x + 16, y: point.y }, 4);
         await nextTick();
         expect(popup()).not.toBe(null);
         await touchDrag(point, point, 0);
@@ -835,7 +835,7 @@ describe('the dismissal', () => {
         current.unmount();
         await mountPopover(setup());
         await placed();
-        await touchDrag(point, { x: point.x + 8, y: point.y }, 2);
+        await touchDrag(point, { x: point.x + 15, y: point.y }, 3);
         await closed();
         expect(events).toEqual(['outside-press pointerup', 'outside-press pointerup']);
       } finally {
@@ -844,7 +844,7 @@ describe('the dismissal', () => {
     },
   );
 
-  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 10 px, that rests 1 s or that the browser cancels closes nothing', async () => {
+  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 15 px, that rests 1 s or that the browser cancels closes nothing', async () => {
     const other = appendOutside('div', 'width: 100px; height: 100px');
     const events: string[] = [];
     await mountPopover({
@@ -858,7 +858,7 @@ describe('the dismissal', () => {
     await placed();
     const { x, y } = centerOf(other);
     const touch = { pointerType: 'touch', isPrimary: true, clientX: x, clientY: y };
-    const moved = { ...touch, clientX: x + 11 };
+    const moved = { ...touch, clientX: x + 16 };
     await firePointer.down(other, { ...touch, timeStamp: 1000 });
     await firePointer.move(other, { ...moved, timeStamp: 1050 });
     await firePointer.up(other, { ...moved, timeStamp: 1100 });

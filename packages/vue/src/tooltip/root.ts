@@ -111,7 +111,6 @@ export function useTooltipRoot<Payload>(
     trap: false,
     lockScroll: false,
     triggerInUse: true,
-    tapEnd: true,
   }));
   useCloseWhenTriggerLeaves(root);
 

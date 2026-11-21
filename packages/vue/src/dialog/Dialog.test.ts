@@ -685,25 +685,16 @@ describe('modal', () => {
       { modal: true, backdrop: false },
       { modal: 'trap-focus', backdrop: true },
       { modal: false, backdrop: true },
+      { modal: 'trap-focus', backdrop: false },
+      { modal: false, backdrop: false },
     ] as const)(
-      'with modal=$modal and a backdrop=$backdrop closes at the `click` of a tap',
+      'with modal=$modal and a backdrop=$backdrop closes at the `pointerup` of a tap',
       async ({ modal, backdrop }) => {
         append('div', surface);
         const reasons = await touchDialog(
           modal,
           backdrop ? 'position: fixed; inset: 0' : undefined,
         );
-        await touchDrag(point, point, 1);
-        await closed();
-        expect(reasons).toEqual(['outside-press click']);
-      },
-    );
-
-    test.each(['trap-focus', false] as const)(
-      'with modal=%s and no backdrop closes at the `pointerup` of a tap',
-      async (modal) => {
-        append('div', surface);
-        const reasons = await touchDialog(modal);
         await touchDrag(point, point, 1);
         await closed();
         expect(reasons).toEqual(['outside-press pointerup']);
@@ -737,7 +728,7 @@ describe('modal', () => {
       },
     );
 
-    // A touch that moves more than 10 px is no tap by itself, so the two touches stay.
+    // A touch that moves more than 15 px is no tap by itself, so the two touches stay.
     test('a touch of two fingers closes nothing', async () => {
       append('div', surface);
       await touchDialog(false);
