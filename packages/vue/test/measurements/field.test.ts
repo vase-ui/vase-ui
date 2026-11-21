@@ -1,8 +1,9 @@
 // Measurements with native elements and plain Vue, with no code of the library. Each one states
 // what the browser or Vue does, so that a part has code only where they do not do it.
 import { describe, expect, test } from 'vitest';
-import { cdp, server } from 'vitest/browser';
+import { server } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import { byName, chromiumNodes } from '../accessibilityTree';
 import MeasureBlurOrder from '../fixtures/MeasureBlurOrder.vue';
 import MeasureFocusLoss from '../fixtures/MeasureFocusLoss.vue';
 import MeasureRegisterList from '../fixtures/MeasureRegisterList.vue';
@@ -136,34 +137,12 @@ describe('an id that aria-describedby names two times', () => {
       root.innerHTML = `<p id="hint">Hint</p><p id="error">Error</p>
         <input aria-label="Once" aria-describedby="hint error">
         <input aria-label="Twice" aria-describedby="hint error hint">`;
-      expect(await chromiumDescriptions(['Once', 'Twice'])).toEqual({
-        Once: 'Hint Error',
-        Twice: 'Hint Error Hint',
-      });
+      const nodes = await chromiumNodes();
+      expect(['Once', 'Twice'].map((name) => byName(nodes, name)?.description?.value)).toEqual([
+        'Hint Error',
+        'Hint Error Hint',
+      ]);
       root.remove();
     },
   );
 });
-
-type FrameTree = { frame: { id: string }; childFrames?: FrameTree[] };
-type AXNode = { name?: { value: string }; description?: { value: string } };
-
-/** The descriptions of the nodes with these names in the accessibility tree of Chromium. */
-async function chromiumDescriptions(names: string[]) {
-  const session = cdp();
-  await session.send('Accessibility.enable');
-  const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: FrameTree };
-  const found: Record<string, string | undefined> = {};
-  const visit = async (tree: FrameTree) => {
-    const { nodes } = (await session.send('Accessibility.getFullAXTree', {
-      frameId: tree.frame.id,
-    })) as { nodes: AXNode[] };
-    for (const node of nodes) {
-      const name = node.name?.value ?? '';
-      if (names.includes(name)) found[name] = node.description?.value;
-    }
-    for (const child of tree.childFrames ?? []) await visit(child);
-  };
-  await visit(frameTree);
-  return found;
-}

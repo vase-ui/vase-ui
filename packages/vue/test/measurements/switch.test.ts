@@ -3,7 +3,8 @@
 // the browser does not do it. The measurements of a native checkbox in `checkbox.test.ts` hold
 // for the same element: the write-back after a refused change, a reset, and read-only.
 import { afterEach, describe, expect, test } from 'vitest';
-import { cdp, server, userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
+import { byName, chromiumNodes, propertyOf } from '../accessibilityTree';
 
 let root: HTMLElement | undefined;
 
@@ -18,37 +19,6 @@ afterEach(() => {
   root = undefined;
 });
 
-type AXNode = {
-  role?: { value: string };
-  name?: { value: string };
-  properties?: { name: string; value: { value: unknown } }[];
-};
-
-/** The nodes of the accessibility tree of Chromium, in each frame, by their name. */
-async function chromiumNodes(names: string[]) {
-  const session = cdp();
-  await session.send('Accessibility.enable');
-  const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: FrameTree };
-  const found: Record<string, { role?: string; checked?: unknown }> = {};
-  const visit = async (tree: FrameTree) => {
-    const { nodes } = (await session.send('Accessibility.getFullAXTree', {
-      frameId: tree.frame.id,
-    })) as { nodes: AXNode[] };
-    for (const node of nodes) {
-      const name = node.name?.value ?? '';
-      if (names.includes(name)) {
-        const checked = node.properties?.find((property) => property.name === 'checked');
-        found[name] = { role: node.role?.value, checked: checked?.value.value };
-      }
-    }
-    for (const child of tree.childFrames ?? []) await visit(child);
-  };
-  await visit(frameTree);
-  return found;
-}
-
-type FrameTree = { frame: { id: string }; childFrames?: FrameTree[] };
-
 describe('a native checkbox with role="switch"', () => {
   // Playwright reads the accessibility tree of Chromium only. Its role queries compute a role
   // of their own, so they measure no browser.
@@ -57,10 +27,15 @@ describe('a native checkbox with role="switch"', () => {
     async () => {
       html(`<label>Wifi <input type="checkbox" role="switch" checked></label>
         <label>Sound <input type="checkbox" role="switch"></label>`);
-      expect(await chromiumNodes(['Wifi', 'Sound'])).toEqual({
-        Wifi: { role: 'switch', checked: 'true' },
-        Sound: { role: 'switch', checked: 'false' },
+      const nodes = await chromiumNodes();
+      const found = ['Wifi', 'Sound'].map((name) => {
+        const node = byName(nodes, name);
+        return { role: node?.role?.value, checked: propertyOf(node, 'checked') };
       });
+      expect(found).toEqual([
+        { role: 'switch', checked: 'true' },
+        { role: 'switch', checked: 'false' },
+      ]);
     },
   );
 
