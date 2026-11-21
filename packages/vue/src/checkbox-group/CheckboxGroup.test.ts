@@ -388,6 +388,25 @@ describe('in a native form', () => {
     await settle();
     expect(checked()).toEqual(['fuji']);
   });
+
+  test.each([
+    { edit: 'push', change: (value: string[]) => value.push('gala'), shown: ['fuji', 'gala'] },
+    { edit: 'splice', change: (value: string[]) => value.splice(0, 1, 'gala'), shown: ['gala'] },
+  ])(
+    'a reset gives a controlled group the value of its mount, also after a $edit on the array of the model',
+    async ({ change, shown }) => {
+      const log: string[] = [];
+      const group = groupModel(log, ['fuji']);
+      const { root, checked } = await mountGroup({ group, items: apples('fuji', 'gala') });
+      change(group.modelValue as string[]);
+      await nextTick();
+      expect(checked()).toEqual(shown);
+      root.querySelector('form')!.reset();
+      await settle();
+      expect(log).toEqual(['group fuji']);
+      expect(checked()).toEqual(['fuji']);
+    },
+  );
 });
 
 describe('in a field', () => {

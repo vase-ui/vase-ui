@@ -428,6 +428,25 @@ describe('native forms', () => {
     expect(log).toEqual(['update hdd']);
   });
 
+  test('a reset gives a controlled group the array of its mount, which a radio has as its value', async () => {
+    const values = reactive({ small: ['s'], large: ['l'] });
+    const group = groupModel([], values.small);
+    const { root, radio, checked } = await mountGroup({
+      group,
+      items: [
+        { key: 'small', value: values.small },
+        { key: 'large', value: values.large },
+      ],
+    });
+    expect(checked()).toBe('small');
+    radio('large').click();
+    await nextTick();
+    expect(checked()).toBe('large');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toBe('small');
+  });
+
   test('a reset gives the first value with one update:modelValue; nothing for no change, a prevented reset or another form', async () => {
     const log: string[] = [];
     const group = groupModel(log, 'ssd', false);
