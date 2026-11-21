@@ -46,7 +46,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm docs:ios-backdrop` | Opens the first demo of the Dialog, Alert Dialog and Drawer pages on the built site, with the page scrolled. It applies the rules that only Safari on iOS applies, and it fails when the backdrop does not cover the view. It runs in Chromium, Firefox and WebKit. Run `pnpm docs:build` first. |
 | `pnpm test:vapor` | Runs the browser tests in Chromium. `createRenderer` of `#test-utils` then mounts each test in a Vapor app. It needs Vue 3.6. |
 | `pnpm test:vapor-parts` | Compiles the parts as Vapor components and runs the files of `packages/vue/test/vaporParts/expectedFailures.json` in Chromium. It needs Vue 3.6, and it runs alone. |
-| `pnpm --filter @vase-ui/vue test:vue-3.6` | Runs the `.test.ts` files of `src` and of `test/measurements` with Vue 3.6. Each file runs in four setups: a virtual DOM app or a Vapor app, with the parts compiled in either mode. |
+| `pnpm --filter @vase-ui/vue test:vue-3.6` | Runs the browser tests of the `.test.ts` files of `src` and `test/measurements`, and of `test/as.test.ts`, with Vue 3.6. Each file runs in four setups: a virtual DOM app or a Vapor app, with the parts compiled in either mode. |
 | `pnpm test:nuxt` | Tests the Nuxt fixture, `fixtures/nuxt`, in Chromium: a production build, then the development server. Run `pnpm build` first. |
 | `pnpm --filter @vase-ui/nuxt-fixture typecheck` | Runs `nuxt prepare`, then the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first. |
 
@@ -258,6 +258,7 @@ Each part follows the rules of this section.
 - `useElement` of `src/common/element.ts` gives `element` and `setElement`. A component in `as` or in the slot gives its element as an exposed `element`, else as its `$el`. A Vapor component has no `$el`, so it exposes `element`.
 - A template ref on a part has `element`.
 - A part sets `inheritAttrs: false` and binds `mergeProps` of Vue with its own props first and `useAttrs()` last. The value of the developer wins, `undefined` too.
+- The control of a field gives `joinDescribedBy(attrs, field)` of `src/field/control.ts` to `mergeProps` in place of `useAttrs()`. Its `aria-describedby` then has the ids of the developer and the ids of the field, each id one time. `null` of the developer removes the ids of the field.
 - The props type of a part extends `AsProps` and the attributes of its element with `/* @vue-ignore */`, so that a template can give them. It omits from the attributes each attribute that the part declares as a prop, and `as`, because motion-v adds an `as` to `HTMLAttributes`.
 - A part that reads its element in its render reads a tag in `as` before the mount with `useAsTag`. The server HTML then has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`.
 - A part that acts as a button takes `useButton` of `src/common/button.ts`. A `<button>`, an `<input>` of a button type and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.

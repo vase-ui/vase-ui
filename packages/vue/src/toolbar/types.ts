@@ -88,7 +88,7 @@ export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
   focusableWhenDisabled?: boolean;
   /** The text of the input. With no value, the input owns its text. */
   modelValue?: NonNullable<InputProps['modelValue']>;
-  /** The first text of an input that owns its text. */
+  /** The text of an input that owns its text, at the mount and at a native reset of the form. */
   defaultValue?: NonNullable<InputProps['defaultValue']>;
   /** The id of the input, or of the element of the `element` slot. */
   id?: string;

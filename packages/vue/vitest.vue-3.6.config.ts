@@ -1,5 +1,5 @@
-// Runs the browser tests of `src` and of `test/measurements` with Vue 3.6, in the setups of virtual
-// DOM and Vapor:
+// Runs the browser tests of the `.test.ts` files of `src` and `test/measurements`, and of
+// `test/as.test.ts`, with Vue 3.6, in the setups of virtual DOM and Vapor:
 //   pnpm exec vitest run --config vitest.vue-3.6.config.ts
 import { createRequire } from 'node:module';
 import vue from '@vitejs/plugin-vue';
