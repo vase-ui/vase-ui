@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, inject, onTestFinished, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { h, nextTick, reactive, Teleport, watchEffect } from 'vue';
+import { h, nextTick, reactive, watchEffect } from 'vue';
 import type { UseToastManagerReturnValue } from '@vase-ui/vue/toast';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import ToastAnchored from '../../test/fixtures/ToastAnchored.vue';
@@ -20,8 +20,8 @@ const viewport = () => document.querySelector<HTMLElement>('[data-testid="viewpo
 const toastRoot = (id: string) => document.querySelector<HTMLElement>(`[data-id="${id}"]`);
 const byId = (id: string) => document.getElementById(id)!;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-// A label that is a function gives vnodes. A Vapor app without the interop plugin renders no
-// virtual DOM content in a part.
+// A label that is a function gives virtual DOM content. A Vapor app renders it only with the
+// interop plugin.
 const rendersVnodes = inject('app') !== 'vapor';
 
 async function mountToasts(props: Props = {}) {
@@ -719,20 +719,13 @@ describe('the keys', () => {
     expect(manager.toasts.value).toHaveLength(1);
   });
 
-  test.runIf(rendersVnodes)(
-    'an Escape in content that a <Teleport> of the toast moves out of it closes nothing',
-    async () => {
-      const { manager } = await mountToasts();
-      await added(manager, {
-        id: 'a',
-        description: () =>
-          h(Teleport, { to: 'body' }, h('input', { id: 'moved', 'aria-label': 'Moved' })),
-      });
-      byId('moved').focus();
-      await userEvent.keyboard('{Escape}');
-      expect(manager.toasts.value).toHaveLength(1);
-    },
-  );
+  test('an Escape in content that a <Teleport> of the toast moves out of it closes nothing', async () => {
+    const { manager } = await mountToasts({ list: { teleportedInput: true } });
+    await added(manager, { id: 'a' });
+    byId('moved').focus();
+    await userEvent.keyboard('{Escape}');
+    expect(manager.toasts.value).toHaveLength(1);
+  });
 
   test('a close with a keyboard focus in the toast moves it to the next older toast that is not inert, else to the next newer one, else to the origin', async () => {
     const { manager } = await mountToasts();
@@ -850,24 +843,24 @@ describe('the names and the announcements', () => {
     },
   );
 
-  test.runIf(rendersVnodes)(
-    'a label that is a function renders as a component; `actionProps` gives the attributes and the listeners of the action',
-    async () => {
-      const onClick = vi.fn();
-      const { manager } = await mountToasts();
-      await added(manager, {
-        id: 'a',
-        title: () => h('strong', 'Bold'),
-        actionProps: { children: 'Undo', onClick, 'aria-label': 'Undo the change' },
-      });
-      const root = toastRoot('a')!;
-      expect(root.querySelector('h2 > strong')).toHaveTextContent('Bold');
-      const action = root.querySelector('button')!;
-      expect(action).toHaveAttribute('aria-label', 'Undo the change');
-      await userEvent.click(action);
-      expect(onClick).toHaveBeenCalledTimes(1);
-    },
-  );
+  test.runIf(rendersVnodes)('a label that is a function renders as a component', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: () => h('strong', 'Bold') });
+    expect(toastRoot('a')!.querySelector('h2 > strong')).toHaveTextContent('Bold');
+  });
+
+  test('`actionProps` gives the attributes and the listeners of the action', async () => {
+    const onClick = vi.fn();
+    const { manager } = await mountToasts();
+    await added(manager, {
+      id: 'a',
+      actionProps: { children: 'Undo', onClick, 'aria-label': 'Undo the change' },
+    });
+    const action = toastRoot('a')!.querySelector('button')!;
+    expect(action).toHaveAttribute('aria-label', 'Undo the change');
+    await userEvent.click(action);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
 
   test('a slot that comes after the mount is content', async () => {
     const list = reactive<Props>({ titleText: '' });

@@ -1,7 +1,6 @@
-import { beforeEach, expect, onTestFinished } from 'vitest';
+import { beforeEach, onTestFinished } from 'vitest';
 import { version } from 'vue';
 import type { App } from 'vue';
-import { isVaporParts } from './testApp';
 
 const consoleMethods = ['warn', 'error'] as const;
 
@@ -91,24 +90,4 @@ export function recordVueWarnings(app: App): void {
  */
 export function takeReportedMessages(): string[] {
   return messages?.splice(0) ?? [];
-}
-
-/**
- * Expects the warnings of an error that a part throws in `setup`. With virtual DOM parts, Vue gives
- * exactly one setup warning. With parts compiled as Vapor components, each parent part also reports
- * the error in its render, after the setup warning: https://github.com/vuejs/core/issues/16309
- * Each other message fails the assertion.
- */
-export function expectSetupErrorWarnings(messages: string[]): void {
-  const setupWarning = expect.stringContaining(
-    'Unhandled error during execution of setup function',
-  );
-  if (!isVaporParts) {
-    expect(messages).toEqual([setupWarning]);
-    return;
-  }
-  const renderWarning = expect.stringContaining(
-    'Unhandled error during execution of render function',
-  );
-  expect(messages).toEqual([setupWarning, ...messages.slice(1).map(() => renderWarning)]);
 }

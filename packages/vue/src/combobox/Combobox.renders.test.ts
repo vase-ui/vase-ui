@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import ComboboxRenders from '../../test/fixtures/ComboboxRenders.vue';
@@ -6,9 +6,10 @@ import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 // A highlight step renders only the items whose highlight changes (discussion #665). Each part
-// renders only for a change of what it shows. The counts are renders of the virtual DOM: a Vapor
-// component updates each binding alone, and a Vapor app reads a function prop of the root as a
-// getter.
+// renders only for a change of what it shows. A count reads the scope of its slot, where the part
+// gives one. A virtual DOM part calls its slot again at each render. A Vapor part keeps an object
+// of the scope while its values stay the same, and the count runs again for each new object. So
+// the counts are the same in each mode.
 
 function counter() {
   const renders: Record<string, number> = {};
@@ -36,7 +37,7 @@ async function openList(root: Record<string, unknown> = {}) {
   return spy;
 }
 
-describe.runIf(inject('app') === 'vdom')('the renders', () => {
+describe('the renders', () => {
   test('20 steps of the highlight over 300 items render 39 items and 20 inputs, and no other part', async () => {
     const spy = await openList();
     for (let step = 0; step < 20; step += 1) {

@@ -24,5 +24,5 @@ export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
 export { cloneElement } from './cloneElement';
 export { renderOnServer, hydrate, hydrateAfter } from './hydration';
-export { expectSetupErrorWarnings, takeReportedMessages } from './reportedMessages';
+export { takeReportedMessages } from './reportedMessages';
 export { expectNoAxeViolations } from './axe';

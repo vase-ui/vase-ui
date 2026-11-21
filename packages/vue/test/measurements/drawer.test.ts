@@ -1,9 +1,12 @@
 // Measurements for Drawer, with native elements and plain Vue, and no code of the library. Each one
 // states what the browser or Vue does, so that the drawer has code only where they do not do it.
 // Where the browsers differ, the measurement states each one. A real touch runs only in Chromium.
-import { afterEach, describe, expect, inject, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { defineComponent, h, nextTick, reactive, shallowRef, Transition, type PropType } from 'vue';
+import { nextTick, reactive } from 'vue';
+import MeasureScroller from '../fixtures/MeasureScroller.vue';
+import MeasureSheet from '../fixtures/MeasureSheet.vue';
+import MeasureSpansInPopup from '../fixtures/MeasureSpansInPopup.vue';
 import { touchDrag } from '../pointer';
 import { mount } from '../render';
 import { wait } from '../wait';
@@ -165,42 +168,8 @@ describe('a press of the right button in a mouse drag with capture', () => {
   });
 });
 
-/** The hooks of the `<Transition>` of `Sheet`, in their order. */
+/** The hooks of the `<Transition>` of `MeasureSheet`, in their order. */
 let hooks: string[] = [];
-
-// The cases that mount a component write it with render functions, and a Vapor app mounts no such
-// component. The setups of a virtual DOM app run them.
-const vdomApp = !inject('app').startsWith('vapor');
-
-const Sheet = defineComponent({
-  props: {
-    scene: {
-      type: Object as PropType<{ open: boolean; tick: number }>,
-      required: true,
-    },
-    children: { type: Number, default: 0 },
-  },
-  setup(props) {
-    return () =>
-      h(
-        Transition,
-        {
-          name: 'sheet',
-          appear: true,
-          onAfterEnter: () => hooks.push('after-enter'),
-          onAfterLeave: () => hooks.push('after-leave'),
-        },
-        () =>
-          props.scene.open
-            ? h(
-                'div',
-                { id: 'sheet', class: 'sheet', 'data-tick': props.scene.tick },
-                Array.from({ length: props.children }, (_, index) => h('span', index)),
-              )
-            : null,
-      );
-  },
-});
 
 const SHEET_STYLE = `<style>
   .sheet { position: fixed; left: 0; right: 0; bottom: 0; height: 200px;
@@ -213,40 +182,41 @@ function mountSheet() {
   html(SHEET_STYLE);
   hooks = [];
   const scene = reactive({ open: false, tick: 0 });
-  mount(Sheet, { scene });
+  mount(MeasureSheet, {
+    scene,
+    onAfterEnter: () => hooks.push('after-enter'),
+    onAfterLeave: () => hooks.push('after-leave'),
+  });
   return { scene, sheet: () => element('sheet') };
 }
 
-describe.runIf(vdomApp)(
-  'a script that writes a variable, `transition: none` and an attribute to an element in a <Transition>',
-  () => {
-    test('keeps them through a render; the leave starts at the place of the drag and reads the variable written before the close', async () => {
-      const { scene, sheet } = mountSheet();
-      scene.open = true;
-      await nextTick();
-      await wait(450);
-      sheet().style.transition = 'none';
-      sheet().style.setProperty('--y', '80px');
-      sheet().setAttribute('data-swiping', '');
-      scene.tick += 1;
-      await nextTick();
-      expect([translateY(sheet()), sheet().hasAttribute('data-swiping')]).toEqual([80, true]);
+describe('a script that writes a variable, `transition: none` and an attribute to an element in a <Transition>', () => {
+  test('keeps them through a render; the leave starts at the place of the drag and reads the variable written before the close', async () => {
+    const { scene, sheet } = mountSheet();
+    scene.open = true;
+    await nextTick();
+    await wait(450);
+    sheet().style.transition = 'none';
+    sheet().style.setProperty('--y', '80px');
+    sheet().setAttribute('data-swiping', '');
+    scene.tick += 1;
+    await nextTick();
+    expect([translateY(sheet()), sheet().hasAttribute('data-swiping')]).toEqual([80, true]);
 
-      const leaving = sheet();
-      leaving.style.transition = '';
-      leaving.style.setProperty('--strength', '0.5');
-      leaving.setAttribute('data-swipe-dismiss', '');
-      scene.open = false;
-      await nextTick();
-      expect([translateY(leaving), leaving.hasAttribute('data-swipe-dismiss')]).toEqual([80, true]);
-      await nextFrame();
-      await nextFrame();
-      expect(getComputedStyle(leaving).transitionDuration).toBe('0.2s');
-      await wait(400);
-      expect(hooks).toContain('after-leave');
-    });
-  },
-);
+    const leaving = sheet();
+    leaving.style.transition = '';
+    leaving.style.setProperty('--strength', '0.5');
+    leaving.setAttribute('data-swipe-dismiss', '');
+    scene.open = false;
+    await nextTick();
+    expect([translateY(leaving), leaving.hasAttribute('data-swipe-dismiss')]).toEqual([80, true]);
+    await nextFrame();
+    await nextFrame();
+    expect(getComputedStyle(leaving).transitionDuration).toBe('0.2s');
+    await wait(400);
+    expect(hooks).toContain('after-leave');
+  });
+});
 
 describe('a variable that is not set', () => {
   test('gives `transform: none` and an opacity of 1', () => {
@@ -257,7 +227,7 @@ describe('a variable that is not set', () => {
   });
 });
 
-describe.runIf(vdomApp)('an element that mounts in <Transition appear>', () => {
+describe('an element that mounts in <Transition appear>', () => {
   test('has the enter classes and the place of the enter class at its mount; with `transition: none` it goes to the place of its variable, and with its transition again it goes back', async () => {
     const { scene, sheet } = mountSheet();
     scene.open = true;
@@ -433,7 +403,7 @@ describe('an element that gets `inert` in a drag that started on it', () => {
   );
 });
 
-describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs', () => {
+describe('`transition: none` on a sheet while its enter runs', () => {
   test('moves the sheet from its place in the enter to the end of the enter', async () => {
     const { scene, sheet } = mountSheet();
     scene.open = true;
@@ -445,66 +415,31 @@ describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs', ()
   });
 });
 
-describe.runIf(vdomApp)(
-  'an update of a style bound to a ref, on a component with 2,000 components in its slot',
-  () => {
-    // A runner can be slow, and WebKit gives `performance.now()` in steps of 1 ms, so the bound of
-    // the time is half a frame.
-    test('renders no component of the slot again, and takes less than half a frame', async () => {
-      const movement = shallowRef(0);
-      let renders = 0;
-      const Item = defineComponent({
-        props: { index: { type: Number, required: true } },
-        setup(props) {
-          return () => {
-            renders += 1;
-            return h('span', { class: 'item' }, `${props.index}`);
-          };
-        },
-      });
-      const Popup = defineComponent({
-        setup(_, { slots }) {
-          return () => h('div', { style: { '--y': `${movement.value}px` } }, slots.default?.());
-        },
-      });
-      const Content = defineComponent({
-        setup() {
-          return () =>
-            h(Popup, null, {
-              default: () => Array.from({ length: 2000 }, (_, index) => h(Item, { index })),
-            });
-        },
-      });
-      mount(Content);
-      const times: number[] = [];
-      for (let index = 1; index <= 60; index += 1) {
-        const start = performance.now();
-        movement.value = index;
-        await nextTick();
-        times.push(performance.now() - start);
-      }
-      times.sort((a, b) => a - b);
-      expect(renders).toBe(2000);
-      expect(times[30]).toBeLessThan(8);
-    });
-  },
-);
-
-describe.runIf(vdomApp)('a style that a script writes on an element of a component', () => {
-  const Scroller = defineComponent({
-    props: {
-      scene: { type: Object as PropType<{ tick: number; own: boolean }>, required: true },
-    },
-    setup(props) {
-      return () =>
-        h('div', {
-          id: 'scroller',
-          'data-tick': props.scene.tick,
-          style: props.scene.own ? { paddingBottom: '4px', color: 'red' } : { color: 'red' },
-        });
-    },
+describe('an update of a reactive style, on a component with 2,000 components in its slot', () => {
+  // A runner can be slow, and WebKit gives `performance.now()` in steps of 1 ms, so the bound of the
+  // time is half a frame.
+  test('renders no component of the slot again, and takes less than half a frame', async () => {
+    const scene = reactive({ movement: 0 });
+    let renders = 0;
+    const count = () => {
+      renders += 1;
+      return '';
+    };
+    mount(MeasureSpansInPopup, { scene, count });
+    const times: number[] = [];
+    for (let index = 1; index <= 60; index += 1) {
+      const start = performance.now();
+      scene.movement = index;
+      await nextTick();
+      times.push(performance.now() - start);
+    }
+    times.sort((a, b) => a - b);
+    expect(renders).toBe(2000);
+    expect(times[30]).toBeLessThan(8);
   });
+});
 
+describe('a style that a script writes on an element of a component', () => {
   test.each([
     { own: false, after: '120px' },
     { own: true, after: '4px' },
@@ -512,7 +447,7 @@ describe.runIf(vdomApp)('a style that a script writes on an element of a compone
     'stays through a render unless the `:style` of the component has that property: own=$own',
     async ({ own, after }) => {
       const scene = reactive({ tick: 0, own });
-      mount(Scroller, { scene });
+      mount(MeasureScroller, { scene });
       element('scroller').style.paddingBottom = '120px';
       scene.tick += 1;
       await nextTick();
