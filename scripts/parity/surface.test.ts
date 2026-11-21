@@ -801,6 +801,39 @@ test('readEmits reads the arguments as the source writes them and the JSDoc, in 
   );
 });
 
+test('readEmits reads the members of an interface that the setup imports from a module beside the component', () => {
+  const source = [
+    '<script setup lang="ts" generic="Value">',
+    "import type { SampleEmits as Emits } from './types';",
+    'defineEmits<Emits<Value>>();',
+    '</script>',
+  ].join('\n');
+  const types = [
+    'export interface SampleEmits<Value> {',
+    '  /** The value changes. */',
+    '  valueChange: [value: Value | null, details: ChangeDetails];',
+    '}',
+  ].join('\n');
+  const read: string[] = [];
+  const emits = readEmits(source, join('sample', 'Sample.vue'), (path) => {
+    read.push(path);
+    return types;
+  });
+  assert.deepEqual(read, [join('sample', 'types.ts')]);
+  assert.deepEqual(
+    [...emits],
+    [
+      [
+        'valueChange',
+        {
+          type: '[value: Value | null, details: ChangeDetails]',
+          description: 'The value changes.',
+        },
+      ],
+    ],
+  );
+});
+
 const missingKeepMounted: [string, string][] = [
   [
     '  /** Whether to keep the popup in the DOM while the sample is closed. */\n  keepMounted?: boolean | undefined;\n',

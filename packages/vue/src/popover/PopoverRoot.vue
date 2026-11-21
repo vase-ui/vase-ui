@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
 import { usePopoverRoot } from './root';
-import type { PopoverRootChangeEventDetails, PopoverRootProps } from './types';
+import type { PopoverRootEmits, PopoverRootProps } from './types';
 
 const props = withDefaults(defineProps<PopoverRootProps<Payload>>(), {
   open: undefined,
@@ -10,14 +10,7 @@ const props = withDefaults(defineProps<PopoverRootProps<Payload>>(), {
   modal: false,
   handle: undefined,
 });
-const emit = defineEmits<{
-  /** The popover opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: PopoverRootChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-  /** The active trigger changes. `v-model:trigger-id` uses it. */
-  'update:triggerId': [id: string | null];
-}>();
+const emit = defineEmits<PopoverRootEmits>();
 defineSlots<{
   /** The content of the popover. `payload` is the payload of the active trigger. */
   default?(scope: { payload: Payload | undefined }): unknown;

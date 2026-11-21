@@ -34,6 +34,13 @@ export interface ToggleGroupProps<Value extends string = string>
   loopFocus?: boolean;
 }
 
+export interface ToggleGroupEmits<Value extends string = string> {
+  /** The user presses a toggle. `details.cancel()` keeps the value as it was. */
+  valueChange: [value: Value[], details: ToggleGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value[]];
+}
+
 export interface ToggleGroupState {
   /** By the `disabled` prop, a toolbar, a `Toolbar.Group`, or a disabled fieldset. */
   disabled: boolean;

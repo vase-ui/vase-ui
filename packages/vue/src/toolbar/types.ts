@@ -1,6 +1,6 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes } from 'vue';
 import type { AsProps } from '../common/element';
-import type { InputProps } from '../input';
+import type { InputChangeEventDetails, InputProps } from '../input';
 import type { SeparatorProps, SeparatorState } from '../separator';
 
 export type ToolbarOrientation = 'horizontal' | 'vertical';
@@ -96,6 +96,13 @@ export interface ToolbarInputProps extends /* @vue-ignore */ Omit<
   name?: string;
   /** The user cannot edit the text. A disabled input that keeps the focus is read-only too. */
   readonly?: boolean;
+}
+
+export interface ToolbarInputEmits {
+  /** The user changes the text. `details.cancel()` keeps the text as it was. */
+  valueChange: [value: string, details: InputChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string];
 }
 
 export interface ToolbarInputState {

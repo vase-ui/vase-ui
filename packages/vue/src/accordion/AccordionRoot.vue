@@ -4,7 +4,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { accordionRootKey } from './item';
 import type {
-  AccordionRootChangeEventDetails,
+  AccordionRootEmits,
   AccordionRootProps,
   AccordionRootState,
   AccordionValue,
@@ -20,16 +20,7 @@ const props = withDefaults(defineProps<AccordionRootProps<Value>>(), {
   keepMounted: false,
   hiddenUntilFound: false,
 });
-const emit = defineEmits<{
-  /**
-   * The user opens or closes an item: `trigger-press` for a press of a trigger, `none` for a reveal
-   * by find-in-page. The `openChange` of the item comes first. `details.cancel()` keeps the value as
-   * it is.
-   */
-  valueChange: [value: AccordionValue<Value>, details: AccordionRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: AccordionValue<Value>];
-}>();
+const emit = defineEmits<AccordionRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: AccordionRootState<Value> }): unknown;
   element?(scope: ElementSlotProps<AccordionRootState<Value>>): unknown;

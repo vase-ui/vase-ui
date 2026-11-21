@@ -42,6 +42,15 @@ export interface AlertDialogRootProps<Payload = unknown> extends Omit<
   handle?: AlertDialogHandle<Payload> | undefined;
 }
 
+export interface AlertDialogRootEmits {
+  /** The alert dialog opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: AlertDialogRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+}
+
 export interface AlertDialogRootState {}
 
 export interface AlertDialogTriggerProps<Payload = unknown>

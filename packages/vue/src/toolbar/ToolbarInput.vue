@@ -3,7 +3,7 @@ import { computed, mergeProps, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { Input, type InputChangeEventDetails } from '../input';
 import { injectToolbar, useToolbarItem } from './item';
-import type { ToolbarInputProps, ToolbarInputState } from './types';
+import type { ToolbarInputEmits, ToolbarInputProps, ToolbarInputState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -13,12 +13,7 @@ const props = withDefaults(defineProps<ToolbarInputProps>(), {
   focusableWhenDisabled: true,
   readonly: false,
 });
-const emit = defineEmits<{
-  /** The user changes the text. `details.cancel()` keeps the text as it was. */
-  valueChange: [value: string, details: InputChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: string];
-}>();
+const emit = defineEmits<ToolbarInputEmits>();
 defineSlots<{
   element?(scope: ElementSlotProps<ToolbarInputState>): unknown;
 }>();

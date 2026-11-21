@@ -5,11 +5,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAccordionRoot } from './item';
 import { accordionItemKey, type AccordionTriggerEntry } from './part';
-import type {
-  AccordionItemChangeEventDetails,
-  AccordionItemProps,
-  AccordionItemState,
-} from './types';
+import type { AccordionItemEmits, AccordionItemProps, AccordionItemState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -17,13 +13,7 @@ const props = withDefaults(defineProps<AccordionItemProps>(), {
   value: undefined,
   disabled: false,
 });
-const emit = defineEmits<{
-  /**
-   * The user opens or closes the item. It comes before the `valueChange` of the root.
-   * `details.cancel()` keeps the item as it is. An item that another item closes emits nothing.
-   */
-  openChange: [open: boolean, details: AccordionItemChangeEventDetails];
-}>();
+const emit = defineEmits<AccordionItemEmits>();
 defineSlots<{
   default?(scope: { state: AccordionItemState }): unknown;
   element?(scope: ElementSlotProps<AccordionItemState>): unknown;

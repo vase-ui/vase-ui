@@ -16,6 +16,7 @@ import type {
   DatePickerPositionerState,
   DatePickerRootChangeEventDetails,
   DatePickerRootChangeEventReason,
+  DatePickerRootEmits,
   DatePickerRootGranularity,
   DatePickerRootOpenChangeEventDetails,
   DatePickerRootOpenChangeEventReason,
@@ -37,6 +38,8 @@ export const Root: typeof DatePickerRoot = DatePickerRoot;
 export namespace Root {
   export type Props<Value extends DatePickerRootValue = DatePickerRootValue> =
     DatePickerRootProps<Value>;
+  export type Emits<Value extends DatePickerRootValue = DatePickerRootValue> =
+    DatePickerRootEmits<Value>;
   export type State = DatePickerRootState;
   export type Value = DatePickerRootValue;
   export type Granularity = DatePickerRootGranularity;

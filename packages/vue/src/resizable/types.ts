@@ -62,6 +62,24 @@ export interface ResizableRootProps extends AsProps, /* @vue-ignore */ Omit<HTML
   resizeMode?: ResizableRootResizeMode;
 }
 
+export interface ResizableRootEmits {
+  /**
+   * The user changes the layout. `details.cancel()` keeps the layout. A listener can then write its
+   * own layout to `v-model`, such as a layout that snaps to a rule of the app.
+   */
+  layoutChange: [layout: ResizableLayout, details: ResizableRootChangeEventDetails];
+  /**
+   * Comes after `layoutChange`, unless a listener cancelled it. Also comes alone after a method of a
+   * panel, and after a panel that mounts with no entry. A change of the size of the root emits
+   * nothing.
+   */
+  'update:modelValue': [layout: ResizableLayout];
+  /** The user ends a change: the release of a drag, a key, a double click. */
+  layoutCommitted: [layout: ResizableLayout, details: ResizableRootCommitEventDetails];
+  /** A drag starts, and it ends. */
+  draggingChange: [dragging: boolean];
+}
+
 export interface ResizableRootState {
   orientation: 'horizontal' | 'vertical';
   disabled: boolean;
@@ -134,6 +152,11 @@ export interface ResizablePanelProps
    * @default '10px'
    */
   snapTolerance?: number | string;
+}
+
+export interface ResizablePanelEmits {
+  /** The panel collapses or expands, after the DOM update. Not at the mount. */
+  collapsedChange: [collapsed: boolean];
 }
 
 export interface ResizablePanelState {

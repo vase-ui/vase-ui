@@ -2,6 +2,7 @@ import CheckboxGroupComponent from './CheckboxGroup.vue';
 import type {
   CheckboxGroupChangeEventDetails,
   CheckboxGroupChangeEventReason,
+  CheckboxGroupEmits,
   CheckboxGroupProps,
   CheckboxGroupState,
 } from './types';
@@ -19,6 +20,7 @@ import type {
 export const CheckboxGroup: typeof CheckboxGroupComponent = CheckboxGroupComponent;
 export namespace CheckboxGroup {
   export type Props = CheckboxGroupProps;
+  export type Emits = CheckboxGroupEmits;
   export type State = CheckboxGroupState;
   export type ChangeEventReason = CheckboxGroupChangeEventReason;
   export type ChangeEventDetails = CheckboxGroupChangeEventDetails;
@@ -27,6 +29,7 @@ export namespace CheckboxGroup {
 export type {
   CheckboxGroupChangeEventDetails,
   CheckboxGroupChangeEventReason,
+  CheckboxGroupEmits,
   CheckboxGroupProps,
   CheckboxGroupState,
 };

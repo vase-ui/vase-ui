@@ -61,6 +61,7 @@ import type {
   ComboboxPositionerState,
   ComboboxRootChangeEventDetails,
   ComboboxRootChangeEventReason,
+  ComboboxRootEmits,
   ComboboxRootHighlightEventDetails,
   ComboboxRootHighlightEventReason,
   ComboboxRootOpenChangeEventDetails,
@@ -93,6 +94,10 @@ export namespace Root {
     Multiple extends boolean | undefined = false,
     Item = Value,
   > = ComboboxRootProps<Value, Multiple, Item>;
+  export type Emits<
+    Value = unknown,
+    Multiple extends boolean | undefined = false,
+  > = ComboboxRootEmits<Value, Multiple>;
   export type State = ComboboxRootState;
   export type ChangeEventReason = ComboboxRootChangeEventReason;
   export type ChangeEventDetails = ComboboxRootChangeEventDetails;

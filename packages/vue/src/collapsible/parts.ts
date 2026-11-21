@@ -6,6 +6,7 @@ import type {
   CollapsiblePanelState,
   CollapsibleRootChangeEventDetails,
   CollapsibleRootChangeEventReason,
+  CollapsibleRootEmits,
   CollapsibleRootProps,
   CollapsibleRootState,
   CollapsibleTriggerProps,
@@ -21,6 +22,7 @@ import type {
 export const Root: typeof CollapsibleRoot = CollapsibleRoot;
 export namespace Root {
   export type Props = CollapsibleRootProps;
+  export type Emits = CollapsibleRootEmits;
   export type State = CollapsibleRootState;
   export type ChangeEventReason = CollapsibleRootChangeEventReason;
   export type ChangeEventDetails = CollapsibleRootChangeEventDetails;

@@ -6,6 +6,7 @@ import type {
   ContextMenuPositionerState,
   ContextMenuRootChangeEventDetails,
   ContextMenuRootChangeEventReason,
+  ContextMenuRootEmits,
   ContextMenuRootHighlightEventDetails,
   ContextMenuRootHighlightEventReason,
   ContextMenuRootProps,
@@ -38,6 +39,7 @@ export {
 export const Root: typeof ContextMenuRoot = ContextMenuRoot;
 export namespace Root {
   export type Props = ContextMenuRootProps;
+  export type Emits = ContextMenuRootEmits;
   export type State = ContextMenuRootState;
   export type ChangeEventReason = ContextMenuRootChangeEventReason;
   export type ChangeEventDetails = ContextMenuRootChangeEventDetails;

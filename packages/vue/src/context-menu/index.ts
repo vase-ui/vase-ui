@@ -4,6 +4,7 @@ export type {
   ContextMenuPositionerState,
   ContextMenuRootChangeEventDetails,
   ContextMenuRootChangeEventReason,
+  ContextMenuRootEmits,
   ContextMenuRootHighlightEventDetails,
   ContextMenuRootHighlightEventReason,
   ContextMenuRootProps,

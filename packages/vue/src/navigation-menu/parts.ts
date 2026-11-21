@@ -34,6 +34,7 @@ import type {
   NavigationMenuPositionerState,
   NavigationMenuRootChangeEventDetails,
   NavigationMenuRootChangeEventReason,
+  NavigationMenuRootEmits,
   NavigationMenuRootProps,
   NavigationMenuRootState,
   NavigationMenuRootValue,
@@ -50,6 +51,7 @@ import type {
 export const Root: typeof NavigationMenuRoot = NavigationMenuRoot;
 export namespace Root {
   export type Props<Value = NavigationMenuRootValue> = NavigationMenuRootProps<Value>;
+  export type Emits<Value = NavigationMenuRootValue> = NavigationMenuRootEmits<Value>;
   export type State = NavigationMenuRootState;
   export type ChangeEventReason = NavigationMenuRootChangeEventReason;
   export type ChangeEventDetails = NavigationMenuRootChangeEventDetails;

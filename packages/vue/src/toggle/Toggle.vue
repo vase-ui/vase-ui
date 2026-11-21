@@ -7,7 +7,7 @@ import { error } from '../common/error';
 import { useModel } from '../common/model';
 import { toggleGroupKey } from '../toggle-group/toggle';
 import { toolbarKey, useToolbarItem } from '../toolbar/item';
-import type { ToggleChangeEventDetails, ToggleProps, ToggleState } from './types';
+import type { ToggleEmits, ToggleProps, ToggleState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -16,12 +16,7 @@ const props = withDefaults(defineProps<ToggleProps>(), {
   defaultPressed: false,
   disabled: false,
 });
-const emit = defineEmits<{
-  /** The user presses the toggle. `details.cancel()` keeps the state as it was. */
-  pressedChange: [pressed: boolean, details: ToggleChangeEventDetails];
-  /** Comes after the change event with the new state, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [pressed: boolean];
-}>();
+const emit = defineEmits<ToggleEmits>();
 defineSlots<{
   default?(scope: { state: ToggleState }): unknown;
   element?(scope: ElementSlotProps<ToggleState>): unknown;

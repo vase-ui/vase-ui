@@ -3,7 +3,7 @@ import { computed, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useNavigationMenuRoot } from './root';
 import type {
-  NavigationMenuRootChangeEventDetails,
+  NavigationMenuRootEmits,
   NavigationMenuRootProps,
   NavigationMenuRootState,
 } from './types';
@@ -17,12 +17,7 @@ const props = withDefaults(defineProps<NavigationMenuRootProps<Value>>(), {
   closeDelay: 50,
   orientation: 'horizontal',
 });
-const emit = defineEmits<{
-  /** The open item changes. `details.cancel()` keeps the menu as it was. */
-  valueChange: [value: Value | null, details: NavigationMenuRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value | null];
-}>();
+const emit = defineEmits<NavigationMenuRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: NavigationMenuRootState }): unknown;
   element?(scope: ElementSlotProps<NavigationMenuRootState>): unknown;

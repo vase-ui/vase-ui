@@ -21,6 +21,7 @@ export type {
   DrawerProviderState,
   DrawerRootChangeEventDetails,
   DrawerRootChangeEventReason,
+  DrawerRootEmits,
   DrawerRootProps,
   DrawerRootSnapPointChangeEventDetails,
   DrawerRootSnapPointChangeEventReason,

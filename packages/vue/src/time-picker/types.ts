@@ -133,6 +133,23 @@ export interface TimePickerRootProps<Value extends TimePickerRootValue = Tempora
   form?: string | undefined;
 }
 
+export interface TimePickerRootEmits<Value extends TimePickerRootValue = Temporal.PlainTime> {
+  /**
+   * The user changes the value. The value is `null` while a segment is empty.
+   * `details.cancel()` keeps the value as it was.
+   */
+  valueChange: [value: Value | null, details: TimePickerRootChangeEventDetails];
+  /**
+   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
+   * the form and `clear()` of a field emit it with no `valueChange`.
+   */
+  'update:modelValue': [value: Value | null];
+  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: TimePickerRootOpenChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+}
+
 type FieldOwned = OwnedKeys<
   TimeFieldRootProps,
   | 'modelValue'
@@ -309,6 +326,11 @@ export interface TimePickerClockProps extends /* @vue-ignore */ ClockProps {
    * @default 'hour'
    */
   defaultView?: TimeClockView | undefined;
+}
+
+export interface TimePickerClockEmits {
+  /** Comes after `viewChange` of the clock, unless a listener cancels it. `v-model:view` uses it. */
+  'update:view': [view: TimeClockView];
 }
 
 export interface TimePickerClockState extends TimeClockRootState {}

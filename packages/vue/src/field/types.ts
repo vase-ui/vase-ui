@@ -55,6 +55,13 @@ export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
   touched?: boolean;
 }
 
+export interface FieldRootEmits {
+  /** The dirty state changes. `v-model:dirty` uses it. */
+  'update:dirty': [dirty: boolean];
+  /** The touched state changes. `v-model:touched` uses it. */
+  'update:touched': [touched: boolean];
+}
+
 export interface FieldRootState extends FieldState {
   disabled: boolean;
 }

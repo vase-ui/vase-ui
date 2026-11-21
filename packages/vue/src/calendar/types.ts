@@ -261,6 +261,31 @@ export interface CalendarRootProps<
   disabledYears?: ((year: Temporal.PlainYearMonth) => boolean) | undefined;
 }
 
+export interface CalendarRootEmits<
+  Value extends CalendarValue = Temporal.PlainDate,
+  Multiple extends boolean | undefined = false,
+> {
+  /** The user changes the value. `details.cancel()` keeps the value as it is. */
+  valueChange: [
+    value: Multiple extends true ? Value[] : Value,
+    details: CalendarRootChangeEventDetails,
+  ];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Multiple extends true ? Value[] : Value];
+  /** The user moves the page. `details.cancel()` keeps the page. */
+  monthChange: [month: Temporal.PlainYearMonth, details: CalendarRootChangeEventDetails];
+  /** Comes after `monthChange`, and for a move with no user event. `v-model:month` uses it. */
+  'update:month': [month: Temporal.PlainYearMonth];
+  /** A day or a cell gets the focus, or a key moves it. `details.cancel()` keeps the focused day. */
+  focusedDateChange: [date: Temporal.PlainDate, details: CalendarRootChangeEventDetails];
+  /** Comes after `focusedDateChange`, and for a move with no user event. `v-model:focusedDate` uses it. */
+  'update:focusedDate': [date: Temporal.PlainDate];
+  /** The user shows another view. `details.cancel()` keeps the view. */
+  viewChange: [view: CalendarRootView, details: CalendarRootChangeEventDetails];
+  /** Comes after `viewChange`, unless a listener cancels the change. `v-model:view` uses it. */
+  'update:view': [view: CalendarRootView];
+}
+
 /** `as` and the attributes of the element of a part. */
 interface DivProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {}
 

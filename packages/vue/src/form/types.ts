@@ -30,3 +30,15 @@ export interface FormProps<
    */
   onSubmitOnce?: FormSubmitListener<Values> | FormSubmitListener<Values>[];
 }
+
+export interface FormEmits<Values extends Record<string, any> = Record<string, any>> {
+  /**
+   * A submit with each field valid. `values` has the value of each named field of the form that is
+   * not disabled. The form prevents the native submit while it has a `submit` listener. With no
+   * listener, the browser submits the form. Give `@submit` a function, because the form can miss a
+   * listener that you add or remove after the mount.
+   */
+  submit: [event: SubmitEvent, values: Values];
+  /** An edit or a reset removes the errors of a field. `v-model:errors` uses it. */
+  'update:errors': [errors: FormErrors];
+}

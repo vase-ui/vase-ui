@@ -22,6 +22,7 @@ export type {
   PopoverPositionerState,
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
+  PopoverRootEmits,
   PopoverRootProps,
   PopoverRootState,
   PopoverTitleProps,

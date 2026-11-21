@@ -20,6 +20,7 @@ import type {
   DialogPortalState,
   DialogRootChangeEventDetails,
   DialogRootChangeEventReason,
+  DialogRootEmits,
   DialogRootProps,
   DialogRootState,
   DialogTitleProps,
@@ -39,6 +40,7 @@ export { createHandle, DialogHandle as Handle } from './root';
 export const Root: typeof DialogRoot = DialogRoot;
 export namespace Root {
   export type Props<Payload = unknown> = DialogRootProps<Payload>;
+  export type Emits = DialogRootEmits;
   export type State = DialogRootState;
   export type ChangeEventReason = DialogRootChangeEventReason;
   export type ChangeEventDetails = DialogRootChangeEventDetails;

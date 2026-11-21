@@ -59,6 +59,7 @@ import type {
   CalendarPreviousButtonState,
   CalendarRootChangeEventDetails,
   CalendarRootChangeEventReason,
+  CalendarRootEmits,
   CalendarRootProps,
   CalendarRootState,
   CalendarRootView,
@@ -99,6 +100,10 @@ export namespace Root {
     Value extends CalendarValue = Temporal.PlainDate,
     Multiple extends boolean | undefined = false,
   > = CalendarRootProps<Value, Multiple>;
+  export type Emits<
+    Value extends CalendarValue = Temporal.PlainDate,
+    Multiple extends boolean | undefined = false,
+  > = CalendarRootEmits<Value, Multiple>;
   export type State = CalendarRootState;
   export type ChangeEventReason = CalendarRootChangeEventReason;
   export type ChangeEventDetails = CalendarRootChangeEventDetails;

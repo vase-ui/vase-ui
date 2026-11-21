@@ -21,6 +21,7 @@ import type {
   AlertDialogPortalState,
   AlertDialogRootChangeEventDetails,
   AlertDialogRootChangeEventReason,
+  AlertDialogRootEmits,
   AlertDialogRootProps,
   AlertDialogRootState,
   AlertDialogTitleProps,
@@ -46,6 +47,7 @@ export function createHandle<Payload = unknown>() {
 export const Root: typeof AlertDialogRoot = AlertDialogRoot;
 export namespace Root {
   export type Props<Payload = unknown> = AlertDialogRootProps<Payload>;
+  export type Emits = AlertDialogRootEmits;
   export type State = AlertDialogRootState;
   export type ChangeEventReason = AlertDialogRootChangeEventReason;
   export type ChangeEventDetails = AlertDialogRootChangeEventDetails;

@@ -6,11 +6,7 @@ import { useModel } from '../common/model';
 import { useGroupItems } from './filter';
 import { useGroupLabel } from './group';
 import { radioGroupKey } from './radio';
-import type {
-  MenuRadioGroupChangeEventDetails,
-  MenuRadioGroupProps,
-  MenuRadioGroupState,
-} from './types';
+import type { MenuRadioGroupEmits, MenuRadioGroupProps, MenuRadioGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -19,12 +15,7 @@ const props = withDefaults(defineProps<MenuRadioGroupProps<Value>>(), {
   defaultValue: undefined,
   disabled: false,
 });
-const emit = defineEmits<{
-  /** The user checks an item. `details.cancel()` keeps the value as it was. */
-  valueChange: [value: Value, details: MenuRadioGroupChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value];
-}>();
+const emit = defineEmits<MenuRadioGroupEmits<Value>>();
 defineSlots<{
   default?(scope: { state: MenuRadioGroupState }): unknown;
   element?(scope: ElementSlotProps<MenuRadioGroupState>): unknown;

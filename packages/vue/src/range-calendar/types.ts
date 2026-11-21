@@ -52,6 +52,21 @@ export interface RangeCalendarRootProps<
   allowNonContiguousRanges?: boolean | undefined;
 }
 
+export interface RangeCalendarRootEmits<Value extends DateValue = Temporal.PlainDate> {
+  /** The user changes the range. `details.cancel()` keeps the range as it is. */
+  valueChange: [value: RangeCalendarRootValue<Value>, details: RangeCalendarRootChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: RangeCalendarRootValue<Value>];
+  /** The user moves the page. `details.cancel()` keeps the page. */
+  monthChange: [month: Temporal.PlainYearMonth, details: RangeCalendarRootChangeEventDetails];
+  /** Comes after `monthChange`, and for a move with no user event. `v-model:month` uses it. */
+  'update:month': [month: Temporal.PlainYearMonth];
+  /** A day gets the focus, or a key moves it. `details.cancel()` keeps the focused day. */
+  focusedDateChange: [date: Temporal.PlainDate, details: RangeCalendarRootChangeEventDetails];
+  /** Comes after `focusedDateChange`, and for a move with no user event. `v-model:focusedDate` uses it. */
+  'update:focusedDate': [date: Temporal.PlainDate];
+}
+
 export interface RangeCalendarRootState extends CalendarRootState {
   /** The user picked the first day and not yet the last day, or drags a range. */
   selecting: boolean;

@@ -8,12 +8,14 @@ import type {
   AccordionHeaderState,
   AccordionItemChangeEventDetails,
   AccordionItemChangeEventReason,
+  AccordionItemEmits,
   AccordionItemProps,
   AccordionItemState,
   AccordionPanelProps,
   AccordionPanelState,
   AccordionRootChangeEventDetails,
   AccordionRootChangeEventReason,
+  AccordionRootEmits,
   AccordionRootProps,
   AccordionRootState,
   AccordionTriggerProps,
@@ -29,6 +31,7 @@ import type {
 export const Root: typeof AccordionRoot = AccordionRoot;
 export namespace Root {
   export type Props<Value = any> = AccordionRootProps<Value>;
+  export type Emits<Value = any> = AccordionRootEmits<Value>;
   export type State<Value = any> = AccordionRootState<Value>;
   export type Value<TValue = any> = AccordionValue<TValue>;
   export type ChangeEventReason = AccordionRootChangeEventReason;
@@ -44,6 +47,7 @@ export namespace Root {
 export const Item: typeof AccordionItem = AccordionItem;
 export namespace Item {
   export type Props = AccordionItemProps;
+  export type Emits = AccordionItemEmits;
   export type State = AccordionItemState;
   export type ChangeEventReason = AccordionItemChangeEventReason;
   export type ChangeEventDetails = AccordionItemChangeEventDetails;

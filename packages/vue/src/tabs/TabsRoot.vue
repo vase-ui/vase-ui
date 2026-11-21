@@ -15,8 +15,8 @@ import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
 import { rootStateAttributes, tabsRootKey, type RootPanel, type RootTab } from './root';
 import type {
-  TabsRootChangeEventDetails,
   TabsRootChangeEventReason,
+  TabsRootEmits,
   TabsRootProps,
   TabsRootState,
   TabsTabActivationDirection,
@@ -29,18 +29,7 @@ const props = withDefaults(defineProps<TabsRootProps<Value>>(), {
   defaultValue: undefined,
   orientation: 'horizontal',
 });
-const emit = defineEmits<{
-  /**
-   * The value changes. `details.reason` is `none` for a change by the user, and
-   * `details.cancel()` then keeps the value as it was. An uncontrolled root also changes its value
-   * itself: the first tab that is not disabled at the mount (`initial`), and the first tab that is
-   * not disabled, or `null`, when the active tab is disabled (`disabled`) or no tab has the value
-   * (`missing`). Such a change cannot be cancelled.
-   */
-  valueChange: [value: Value | null, details: TabsRootChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value | null];
-}>();
+const emit = defineEmits<TabsRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: TabsRootState }): unknown;
   element?(scope: ElementSlotProps<TabsRootState>): unknown;

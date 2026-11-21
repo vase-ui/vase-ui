@@ -49,6 +49,18 @@ export interface ContextMenuRootProps extends Omit<
   'triggerId' | 'defaultTriggerId' | 'handle' | 'modal' | 'closeParentOnEsc'
 > {}
 
+export interface ContextMenuRootEmits {
+  /** The menu opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: ContextMenuRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The highlighted item changes. It gets the element of the item, or `undefined`. */
+  itemHighlighted: [
+    element: HTMLElement | undefined,
+    details: ContextMenuRootHighlightEventDetails,
+  ];
+}
+
 export interface ContextMenuRootState {}
 
 export type ContextMenuRootChangeEventReason = MenuRootChangeEventReason;

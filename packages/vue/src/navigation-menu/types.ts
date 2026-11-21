@@ -67,6 +67,13 @@ export interface NavigationMenuRootProps<Value = NavigationMenuRootValue>
   orientation?: NavigationMenuOrientation | undefined;
 }
 
+export interface NavigationMenuRootEmits<Value = NavigationMenuRootValue> {
+  /** The open item changes. `details.cancel()` keeps the menu as it was. */
+  valueChange: [value: Value | null, details: NavigationMenuRootChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value | null];
+}
+
 export interface NavigationMenuRootState {
   /** An item is open. */
   open: boolean;

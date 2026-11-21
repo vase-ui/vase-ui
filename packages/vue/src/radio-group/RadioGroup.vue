@@ -8,7 +8,7 @@ import { fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { useFieldGroup } from '../field/group';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey, type GroupRadio } from './radio';
-import type { RadioGroupChangeEventDetails, RadioGroupProps, RadioGroupState } from './types';
+import type { RadioGroupEmits, RadioGroupProps, RadioGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -16,12 +16,7 @@ const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
   modelValue: undefined,
   defaultValue: undefined,
 });
-const emit = defineEmits<{
-  /** The user selects a radio. `details.cancel()` keeps the value as it was. */
-  valueChange: [value: Value, details: RadioGroupChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value | undefined];
-}>();
+const emit = defineEmits<RadioGroupEmits<Value>>();
 defineSlots<{
   default?(scope: { state: RadioGroupState }): unknown;
   element?(scope: ElementSlotProps<RadioGroupState>): unknown;

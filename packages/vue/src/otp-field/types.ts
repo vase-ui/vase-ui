@@ -72,6 +72,28 @@ export interface OTPFieldRootProps
   readonly?: boolean;
 }
 
+export interface OTPFieldRootEmits {
+  /**
+   * The user changes the code. `details.reason` is `'input-change'` for typed text or a fill,
+   * `'input-clear'` for a removed character, `'input-paste'` for a paste, and `'keyboard'` for a
+   * key. `details.cancel()` keeps the code as it was.
+   */
+  valueChange: [value: string, eventDetails: OTPFieldRootChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string];
+  /**
+   * Typed, pasted or filled text has a character that `validationType` or `normalizeValue`
+   * refuses. It comes before the code changes. `value` is the text of the user.
+   */
+  valueInvalid: [value: string, eventDetails: OTPFieldRootInvalidEventDetails];
+  /**
+   * The code becomes complete, or the user pastes a complete code in a complete field. It comes
+   * after `valueChange` and the change of the code. A pasted code that equals the code gives no
+   * `valueChange`. With `autoSubmit`, the form submits just after it.
+   */
+  valueComplete: [value: string, eventDetails: OTPFieldRootCompleteEventDetails];
+}
+
 export interface OTPFieldRootState extends FieldState {
   /** Each slot has a character. */
   complete: boolean;
