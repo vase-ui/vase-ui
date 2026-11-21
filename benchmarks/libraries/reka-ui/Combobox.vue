@@ -15,8 +15,10 @@ import {
 import { useId } from 'vue';
 import { options } from '../../harness/options.ts';
 
+// The template sets `position="popper"` on ComboboxContent. The Reka UI docs say that a
+// ComboboxContent in a ComboboxPortal needs it.
+
 // The props of ComboboxInput omit `id`, so the template gives it in an object of attributes.
-// The Reka UI docs tell you to set `position="popper"` on a ComboboxContent in a ComboboxPortal.
 const id = useId();
 </script>
 
