@@ -8,7 +8,12 @@ import TimeClockRoot from '../time-clock/TimeClockRoot.vue';
 import type { TimeClockRootChangeEventDetails } from '../time-clock/types';
 import { nextView, type TimeClockView } from '../time-clock/views';
 import { injectTimePicker } from './root';
-import type { TimePickerClockProps, TimePickerClockState, TimePickerRootValue } from './types';
+import type {
+  TimePickerClockEmits,
+  TimePickerClockProps,
+  TimePickerClockState,
+  TimePickerRootValue,
+} from './types';
 import type { ElementSlotProps } from '../common/element';
 
 defineOptions({ inheritAttrs: false });
@@ -17,10 +22,7 @@ const props = withDefaults(defineProps<TimePickerClockProps>(), {
   view: undefined,
   defaultView: 'hour',
 });
-const emit = defineEmits<{
-  /** Comes after `viewChange` of the clock, unless a listener cancels it. `v-model:view` uses it. */
-  'update:view': [view: TimeClockView];
-}>();
+const emit = defineEmits<TimePickerClockEmits>();
 defineSlots<{
   default?(scope: { state: TimePickerClockState }): unknown;
   element?(scope: ElementSlotProps<TimePickerClockState>): unknown;

@@ -6,10 +6,9 @@ import { assertTemporal } from '../common/date-time/temporal';
 import type { DateValue } from '../common/date-time/temporal';
 import { useRange } from './range';
 import type {
-  RangeCalendarRootChangeEventDetails,
+  RangeCalendarRootEmits,
   RangeCalendarRootProps,
   RangeCalendarRootState,
-  RangeCalendarRootValue,
 } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -23,20 +22,7 @@ const props = withDefaults(defineProps<RangeCalendarRootProps<Value>>(), {
   focusedDate: undefined,
   showOutsideDays: undefined,
 });
-const emit = defineEmits<{
-  /** The user changes the range. `details.cancel()` keeps the range as it is. */
-  valueChange: [value: RangeCalendarRootValue<Value>, details: RangeCalendarRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: RangeCalendarRootValue<Value>];
-  /** The user moves the page. `details.cancel()` keeps the page. */
-  monthChange: [month: Temporal.PlainYearMonth, details: RangeCalendarRootChangeEventDetails];
-  /** Comes after `monthChange`, and for a move with no user event. `v-model:month` uses it. */
-  'update:month': [month: Temporal.PlainYearMonth];
-  /** A day gets the focus, or a key moves it. `details.cancel()` keeps the focused day. */
-  focusedDateChange: [date: Temporal.PlainDate, details: RangeCalendarRootChangeEventDetails];
-  /** Comes after `focusedDateChange`, and for a move with no user event. `v-model:focusedDate` uses it. */
-  'update:focusedDate': [date: Temporal.PlainDate];
-}>();
+const emit = defineEmits<RangeCalendarRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: RangeCalendarRootState }): unknown;
   element?(scope: ElementSlotProps<RangeCalendarRootState>): unknown;

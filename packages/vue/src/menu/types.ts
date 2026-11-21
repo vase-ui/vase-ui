@@ -110,6 +110,17 @@ export interface MenuRootProps<Payload = unknown> extends MenuRootCommonProps {
   closeParentOnEsc?: boolean | undefined;
 }
 
+export interface MenuRootEmits {
+  /** The menu opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: MenuRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+  /** The highlighted item changes. It gets the element of the item, or `undefined`. */
+  itemHighlighted: [element: HTMLElement | undefined, details: MenuRootHighlightEventDetails];
+}
+
 export interface MenuRootState {}
 
 export interface MenuSubmenuRootProps extends MenuRootCommonProps {
@@ -118,6 +129,15 @@ export interface MenuSubmenuRootProps extends MenuRootCommonProps {
    * @default false
    */
   closeParentOnEsc?: boolean | undefined;
+}
+
+export interface MenuSubmenuRootEmits {
+  /** The submenu opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: MenuRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The highlighted item changes. It gets the element of the item, or `undefined`. */
+  itemHighlighted: [element: HTMLElement | undefined, details: MenuRootHighlightEventDetails];
 }
 
 export interface MenuSubmenuRootState {}
@@ -307,6 +327,13 @@ export interface MenuCheckboxItemProps
   closeOnClick?: boolean | undefined;
 }
 
+export interface MenuCheckboxItemEmits {
+  /** The user checks or unchecks the item. `details.cancel()` keeps it as it was. */
+  checkedChange: [checked: boolean, details: MenuCheckboxItemChangeEventDetails];
+  /** Comes after `checkedChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [checked: boolean];
+}
+
 export interface MenuCheckboxItemState {
   checked: boolean;
   disabled: boolean;
@@ -328,6 +355,13 @@ export interface MenuRadioGroupProps<Value = unknown>
    * @default false
    */
   disabled?: boolean | undefined;
+}
+
+export interface MenuRadioGroupEmits<Value = unknown> {
+  /** The user checks an item. `details.cancel()` keeps the value as it was. */
+  valueChange: [value: Value, details: MenuRadioGroupChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value];
 }
 
 export interface MenuRadioGroupState {
@@ -446,6 +480,13 @@ export interface MenuFilterProviderProps {
   autoHighlight?: boolean | 'always' | undefined;
   /** The locale of the default `filter`. With no value, the nearest `LocaleProvider`, else `en-US`. */
   locale?: Intl.LocalesArgument | undefined;
+}
+
+export interface MenuFilterProviderEmits {
+  /** The user changes the query. `details.cancel()` keeps it as it was. */
+  valueChange: [value: string, details: MenuFilterProviderChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string];
 }
 
 export interface MenuFilterProviderState {}

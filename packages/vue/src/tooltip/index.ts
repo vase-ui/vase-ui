@@ -18,6 +18,7 @@ export type {
   TooltipProviderState,
   TooltipRootChangeEventDetails,
   TooltipRootChangeEventReason,
+  TooltipRootEmits,
   TooltipRootProps,
   TooltipRootState,
   TooltipTriggerProps,

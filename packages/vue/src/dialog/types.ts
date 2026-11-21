@@ -57,6 +57,15 @@ export interface DialogRootProps<Payload = unknown> {
   handle?: DialogHandle<Payload> | undefined;
 }
 
+export interface DialogRootEmits {
+  /** The dialog opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: DialogRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+}
+
 export interface DialogRootState {}
 
 export interface DialogTriggerProps<Payload = unknown>

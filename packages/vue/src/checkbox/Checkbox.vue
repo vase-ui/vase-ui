@@ -7,7 +7,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
-import type { CheckboxChangeEventDetails, CheckboxProps, CheckboxState } from './types';
+import type { CheckboxEmits, CheckboxProps, CheckboxState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -15,14 +15,7 @@ const props = withDefaults(defineProps<CheckboxProps>(), {
   // An absent `modelValue` makes the checkbox uncontrolled.
   modelValue: undefined,
 });
-const emit = defineEmits<{
-  /** The user presses the checkbox. `details.cancel()` keeps the state as it was. */
-  checkedChange: [checked: boolean, details: CheckboxChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [checked: boolean];
-  /** A press asks to clear the indeterminate state. `v-model:indeterminate` uses it. */
-  'update:indeterminate': [indeterminate: false];
-}>();
+const emit = defineEmits<CheckboxEmits>();
 const slots = defineSlots<{
   element?(scope: ElementSlotProps<CheckboxState>): unknown;
 }>();

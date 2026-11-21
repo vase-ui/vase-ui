@@ -43,6 +43,13 @@ export interface AvatarImageProps extends /* @vue-ignore */ Omit<
   keepMounted?: boolean;
 }
 
+export interface AvatarImageEmits {
+  /**
+   * Callback fired when the loading status changes.
+   */
+  loadingStatusChange: [status: ImageLoadingStatus];
+}
+
 export type AvatarImageState = AvatarRootState;
 
 export interface AvatarFallbackProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {

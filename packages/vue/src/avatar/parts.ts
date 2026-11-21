@@ -4,6 +4,7 @@ import AvatarRoot from './AvatarRoot.vue';
 import type {
   AvatarFallbackProps,
   AvatarFallbackState,
+  AvatarImageEmits,
   AvatarImageProps,
   AvatarImageState,
   AvatarRootProps,
@@ -32,6 +33,7 @@ export namespace Root {
 export const Image: typeof AvatarImage = AvatarImage;
 export namespace Image {
   export type Props = AvatarImageProps;
+  export type Emits = AvatarImageEmits;
   export type State = AvatarImageState;
 }
 

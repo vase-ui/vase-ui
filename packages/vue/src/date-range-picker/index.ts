@@ -11,6 +11,7 @@ export type {
   DateRangePickerPositionerState,
   DateRangePickerRootChangeEventDetails,
   DateRangePickerRootChangeEventReason,
+  DateRangePickerRootEmits,
   DateRangePickerRootGranularity,
   DateRangePickerRootOpenChangeEventDetails,
   DateRangePickerRootOpenChangeEventReason,

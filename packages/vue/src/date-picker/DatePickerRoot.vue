@@ -9,6 +9,7 @@ import { datePickerKey } from './root';
 import { hasTime, templateOf } from './template';
 import type {
   DatePickerRootChangeEventDetails,
+  DatePickerRootEmits,
   DatePickerRootOpenChangeEventDetails,
   DatePickerRootProps,
   DatePickerRootValue,
@@ -24,22 +25,7 @@ const props = withDefaults(defineProps<DatePickerRootProps<Value>>(), {
   modal: false,
   closeOnSelect: undefined,
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the value. The value is `null` while a segment is empty.
-   * `details.cancel()` keeps the value as it was.
-   */
-  valueChange: [value: Value | null, details: DatePickerRootChangeEventDetails];
-  /**
-   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
-   * the form and `clear()` of a field emit it with no `valueChange`.
-   */
-  'update:modelValue': [value: Value | null];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: DatePickerRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-}>();
+const emit = defineEmits<DatePickerRootEmits<Value>>();
 defineSlots<{ default?(): unknown }>();
 
 assertTemporal('DatePicker.Root');

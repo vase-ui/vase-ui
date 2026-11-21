@@ -4,11 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { collapsibleKey, type CollapsiblePanelEntry } from './part';
-import type {
-  CollapsibleRootChangeEventDetails,
-  CollapsibleRootProps,
-  CollapsibleRootState,
-} from './types';
+import type { CollapsibleRootEmits, CollapsibleRootProps, CollapsibleRootState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -17,15 +13,7 @@ const props = withDefaults(defineProps<CollapsibleRootProps>(), {
   defaultOpen: false,
   disabled: false,
 });
-const emit = defineEmits<{
-  /**
-   * The user opens or closes the panel: `trigger-press` for a press of the trigger, `none` for a
-   * reveal by find-in-page. `details.cancel()` keeps the panel as it is.
-   */
-  openChange: [open: boolean, details: CollapsibleRootChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-}>();
+const emit = defineEmits<CollapsibleRootEmits>();
 defineSlots<{
   default?(scope: { state: CollapsibleRootState }): unknown;
   element?(scope: ElementSlotProps<CollapsibleRootState>): unknown;

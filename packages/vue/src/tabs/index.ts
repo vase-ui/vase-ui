@@ -8,6 +8,7 @@ export type {
   TabsPanelState,
   TabsRootChangeEventDetails,
   TabsRootChangeEventReason,
+  TabsRootEmits,
   TabsRootOrientation,
   TabsRootProps,
   TabsRootState,

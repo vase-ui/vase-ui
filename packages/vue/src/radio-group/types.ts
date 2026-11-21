@@ -40,6 +40,13 @@ export interface RadioGroupProps<Value = any>
   required?: boolean;
 }
 
+export interface RadioGroupEmits<Value = any> {
+  /** The user selects a radio. `details.cancel()` keeps the value as it was. */
+  valueChange: [value: Value, details: RadioGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value | undefined];
+}
+
 export interface RadioGroupState extends FieldState {
   disabled: boolean;
   readonly: boolean;

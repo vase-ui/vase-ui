@@ -4,11 +4,13 @@ import ResizableRoot from './ResizableRoot.vue';
 import type {
   ResizableHandleProps,
   ResizableHandleState,
+  ResizablePanelEmits,
   ResizablePanelProps,
   ResizablePanelState,
   ResizableRootChangeEventDetails,
   ResizableRootChangeEventReason,
   ResizableRootCommitEventDetails,
+  ResizableRootEmits,
   ResizableRootProps,
   ResizableRootResizeMode,
   ResizableRootState,
@@ -28,6 +30,7 @@ export type { ResizableLayout as Layout } from './types';
 export const Root: typeof ResizableRoot = ResizableRoot;
 export namespace Root {
   export type Props = ResizableRootProps;
+  export type Emits = ResizableRootEmits;
   export type State = ResizableRootState;
   export type ResizeMode = ResizableRootResizeMode;
   export type ChangeEventReason = ResizableRootChangeEventReason;
@@ -46,6 +49,7 @@ export namespace Root {
 export const Panel: typeof ResizablePanel = ResizablePanel;
 export namespace Panel {
   export type Props = ResizablePanelProps;
+  export type Emits = ResizablePanelEmits;
   export type State = ResizablePanelState;
 }
 

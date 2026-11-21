@@ -10,6 +10,7 @@ export type {
   DateFieldLiteralState,
   DateFieldRootChangeEventDetails,
   DateFieldRootChangeEventReason,
+  DateFieldRootEmits,
   DateFieldRootGranularity,
   DateFieldRootProps,
   DateFieldRootState,

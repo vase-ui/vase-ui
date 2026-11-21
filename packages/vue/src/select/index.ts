@@ -33,6 +33,7 @@ export type {
   SelectPositionerState,
   SelectRootChangeEventDetails,
   SelectRootChangeEventReason,
+  SelectRootEmits,
   SelectRootOpenChangeEventDetails,
   SelectRootOpenChangeEventReason,
   SelectRootProps,

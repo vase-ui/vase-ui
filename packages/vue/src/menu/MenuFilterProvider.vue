@@ -5,7 +5,7 @@ import { useModel } from '../common/model';
 import { getFilter } from '../common/filter';
 import { useLocale } from '../locale-provider/part';
 import { filterProviderKey } from './filter';
-import type { MenuFilterProviderChangeEventDetails, MenuFilterProviderProps } from './types';
+import type { MenuFilterProviderEmits, MenuFilterProviderProps } from './types';
 
 const props = withDefaults(defineProps<MenuFilterProviderProps>(), {
   modelValue: undefined,
@@ -14,12 +14,7 @@ const props = withDefaults(defineProps<MenuFilterProviderProps>(), {
   autoHighlight: false,
   locale: undefined,
 });
-const emit = defineEmits<{
-  /** The user changes the query. `details.cancel()` keeps it as it was. */
-  valueChange: [value: string, details: MenuFilterProviderChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: string];
-}>();
+const emit = defineEmits<MenuFilterProviderEmits>();
 defineSlots<{
   /** The `Menu.Root` or `Menu.SubmenuRoot` that filters its items. */
   default?(): unknown;

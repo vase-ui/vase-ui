@@ -19,6 +19,7 @@ import type {
   PreviewCardPositionerState,
   PreviewCardRootChangeEventDetails,
   PreviewCardRootChangeEventReason,
+  PreviewCardRootEmits,
   PreviewCardRootProps,
   PreviewCardRootState,
   PreviewCardTriggerProps,
@@ -36,6 +37,7 @@ export { createHandle, PreviewCardHandle as Handle } from './root';
 export const Root: typeof PreviewCardRoot = PreviewCardRoot;
 export namespace Root {
   export type Props<Payload = unknown> = PreviewCardRootProps<Payload>;
+  export type Emits = PreviewCardRootEmits;
   export type State = PreviewCardRootState;
   export type ChangeEventReason = PreviewCardRootChangeEventReason;
   export type ChangeEventDetails = PreviewCardRootChangeEventDetails;

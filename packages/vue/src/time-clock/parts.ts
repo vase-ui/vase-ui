@@ -18,6 +18,7 @@ import type {
   TimeClockRootChangeEventReason,
   TimeClockRootCommitEventDetails,
   TimeClockRootCommitEventReason,
+  TimeClockRootEmits,
   TimeClockRootProps,
   TimeClockRootState,
   TimeClockRootViewChangeEventDetails,
@@ -38,6 +39,7 @@ import type {
 export const Root: typeof TimeClockRoot = TimeClockRoot;
 export namespace Root {
   export type Props<Value extends TimeValue = Temporal.PlainTime> = TimeClockRootProps<Value>;
+  export type Emits<Value extends TimeValue = Temporal.PlainTime> = TimeClockRootEmits<Value>;
   export type State = TimeClockRootState;
   export type ChangeEventReason = TimeClockRootChangeEventReason;
   export type ChangeEventDetails = TimeClockRootChangeEventDetails;

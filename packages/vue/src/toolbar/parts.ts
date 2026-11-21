@@ -9,6 +9,7 @@ import type {
   ToolbarButtonState,
   ToolbarGroupProps,
   ToolbarGroupState,
+  ToolbarInputEmits,
   ToolbarInputProps,
   ToolbarInputState,
   ToolbarLinkProps,
@@ -85,6 +86,7 @@ export namespace Link {
 export const Input: typeof ToolbarInput = ToolbarInput;
 export namespace Input {
   export type Props = ToolbarInputProps;
+  export type Emits = ToolbarInputEmits;
   export type State = ToolbarInputState;
 }
 

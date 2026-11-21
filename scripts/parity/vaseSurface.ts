@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import ts from 'typescript';
 import { compileScript, parse } from 'vue/compiler-sfc';
 import { createChecker } from 'vue-component-meta';
@@ -145,26 +146,22 @@ function jsDocText(node: ts.Node): string {
 }
 
 /**
- * The events that the type literal of `defineEmits` declares, with the arguments as the source writes
- * them and the JSDoc. vue-component-meta gives an empty description. Its type text can lose the name
- * of an alias, such as `RadioGroupChangeEventDetails`.
+ * The events that `defineEmits` declares, with the arguments as the source writes them and the JSDoc.
+ * The type argument is a type literal, or an interface that the setup imports from a module beside the
+ * component. vue-component-meta gives an empty description. Its type text can lose the name of an
+ * alias, such as `RadioGroupChangeEventDetails`.
  */
-export function readEmits(source: string, file: string): Map<string, MemberSurface> {
+export function readEmits(
+  source: string,
+  file: string,
+  readSource: (path: string) => string = (path) => readFileSync(path, 'utf8'),
+): Map<string, MemberSurface> {
   const setup = parse(source, { filename: file }).descriptor.scriptSetup;
   const emits = new Map<string, MemberSurface>();
   if (!setup) {
     return emits;
   }
-  const sourceFile = ts.createSourceFile(
-    'setup.ts',
-    setup.content,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS,
-  );
-  const printer = ts.createPrinter({ removeComments: true });
-  const print = (node: ts.Node): string =>
-    printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
+  const setupFile = createTsSource(setup.content);
   const visit = (node: ts.Node): void => {
     if (
       ts.isCallExpression(node) &&
@@ -172,35 +169,95 @@ export function readEmits(source: string, file: string): Map<string, MemberSurfa
       node.expression.text === 'defineEmits'
     ) {
       const type = node.typeArguments?.[0];
-      for (const member of type && ts.isTypeLiteralNode(type) ? type.members : []) {
-        if (ts.isPropertySignature(member) && member.type) {
-          // The printer keeps the line breaks of a tuple that the source writes on several lines,
-          // so each element of a tuple prints alone.
-          emits.set(member.name.getText(sourceFile).replace(/^['"]|['"]$/g, ''), {
-            type: ts.isTupleTypeNode(member.type)
-              ? `[${member.type.elements.map(print).join(', ')}]`
-              : print(member.type),
-            description: jsDocText(member),
-          });
-        } else if (ts.isCallSignatureDeclaration(member)) {
-          const [first, ...rest] = member.parameters;
-          if (
-            first?.type &&
-            ts.isLiteralTypeNode(first.type) &&
-            ts.isStringLiteral(first.type.literal)
-          ) {
-            emits.set(first.type.literal.text, {
-              type: `[${rest.map(print).join(', ')}]`,
-              description: jsDocText(member),
-            });
-          }
-        }
+      if (type && ts.isTypeLiteralNode(type)) {
+        readEmitMembers(type.members, setupFile, emits);
+      } else if (type && ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName)) {
+        const declaration = importedInterface(setupFile, type.typeName.text, file, readSource);
+        readEmitMembers(declaration.members, declaration.getSourceFile(), emits);
       }
     }
     ts.forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(setupFile);
   return emits;
+}
+
+function createTsSource(text: string): ts.SourceFile {
+  return ts.createSourceFile('source.ts', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+}
+
+/** The interface `name` that `sourceFile` imports from a relative module of `file`. */
+function importedInterface(
+  sourceFile: ts.SourceFile,
+  name: string,
+  file: string,
+  readSource: (path: string) => string,
+): ts.InterfaceDeclaration {
+  for (const statement of sourceFile.statements) {
+    const bindings = ts.isImportDeclaration(statement)
+      ? statement.importClause?.namedBindings
+      : undefined;
+    const element =
+      bindings && ts.isNamedImports(bindings)
+        ? bindings.elements.find((binding) => binding.name.text === name)
+        : undefined;
+    if (
+      !element ||
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteral(statement.moduleSpecifier) ||
+      !statement.moduleSpecifier.text.startsWith('.')
+    ) {
+      continue;
+    }
+    const exportedName = element.propertyName?.text ?? name;
+    const moduleFile = createTsSource(
+      readSource(`${join(dirname(file), statement.moduleSpecifier.text)}.ts`),
+    );
+    const declaration = moduleFile.statements.find(
+      (candidate): candidate is ts.InterfaceDeclaration =>
+        ts.isInterfaceDeclaration(candidate) && candidate.name.text === exportedName,
+    );
+    if (declaration) {
+      return declaration;
+    }
+  }
+  throw new Error(
+    `${file}: defineEmits names ${name}, but no relative import gives its interface.`,
+  );
+}
+
+function readEmitMembers(
+  members: ts.NodeArray<ts.TypeElement>,
+  sourceFile: ts.SourceFile,
+  emits: Map<string, MemberSurface>,
+): void {
+  const printer = ts.createPrinter({ removeComments: true });
+  const print = (node: ts.Node): string =>
+    printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
+  for (const member of members) {
+    if (ts.isPropertySignature(member) && member.type) {
+      // The printer keeps the line breaks of a tuple that the source writes on several lines,
+      // so each element of a tuple prints alone.
+      emits.set(member.name.getText(sourceFile).replace(/^['"]|['"]$/g, ''), {
+        type: ts.isTupleTypeNode(member.type)
+          ? `[${member.type.elements.map(print).join(', ')}]`
+          : print(member.type),
+        description: jsDocText(member),
+      });
+    } else if (ts.isCallSignatureDeclaration(member)) {
+      const [first, ...rest] = member.parameters;
+      if (
+        first?.type &&
+        ts.isLiteralTypeNode(first.type) &&
+        ts.isStringLiteral(first.type.literal)
+      ) {
+        emits.set(first.type.literal.text, {
+          type: `[${rest.map(print).join(', ')}]`,
+          description: jsDocText(member),
+        });
+      }
+    }
+  }
 }
 
 function compileSetup(source: string, file: string): ReturnType<typeof compileScript> {
@@ -783,7 +840,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
           ignored: prop.tags.some((tag) => tag.name === 'ignore'),
         });
       }
-      const declaredEmits = readEmits(source, file);
+      const declaredEmits = readEmits(source, file, readSource);
       const listed = new Set(meta.events.map(({ name }) => name));
       return {
         description: documentationOf(resolve(symbol)),

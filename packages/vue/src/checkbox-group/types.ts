@@ -24,6 +24,16 @@ export interface CheckboxGroupProps extends AsProps, /* @vue-ignore */ Omit<HTML
   disabled?: boolean;
 }
 
+export interface CheckboxGroupEmits {
+  /**
+   * The user checks or clears a checkbox of the group. The `checkedChange` of the checkbox comes
+   * first, with the same `details`. `details.cancel()` keeps the value as it was.
+   */
+  valueChange: [value: string[], details: CheckboxGroupChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string[]];
+}
+
 export interface CheckboxGroupState extends FieldState {
   disabled: boolean;
 }

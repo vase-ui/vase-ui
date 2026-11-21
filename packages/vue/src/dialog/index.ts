@@ -13,6 +13,7 @@ export type {
   DialogPortalState,
   DialogRootChangeEventDetails,
   DialogRootChangeEventReason,
+  DialogRootEmits,
   DialogRootProps,
   DialogRootState,
   DialogTitleProps,

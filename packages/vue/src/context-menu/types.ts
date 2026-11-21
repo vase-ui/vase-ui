@@ -7,6 +7,7 @@ import type {
   MenuBackdropState,
   MenuCheckboxItemChangeEventDetails,
   MenuCheckboxItemChangeEventReason,
+  MenuCheckboxItemEmits,
   MenuCheckboxItemProps,
   MenuCheckboxItemState,
   MenuGroupLabelProps,
@@ -25,6 +26,7 @@ import type {
   MenuPositionerState,
   MenuRadioGroupChangeEventDetails,
   MenuRadioGroupChangeEventReason,
+  MenuRadioGroupEmits,
   MenuRadioGroupProps,
   MenuRadioGroupState,
   MenuRadioItemProps,
@@ -38,6 +40,7 @@ import type {
   MenuSeparatorState,
   MenuSubmenuRootChangeEventDetails,
   MenuSubmenuRootChangeEventReason,
+  MenuSubmenuRootEmits,
   MenuSubmenuRootProps,
   MenuSubmenuRootState,
   MenuSubmenuTriggerProps,
@@ -48,6 +51,18 @@ export interface ContextMenuRootProps extends Omit<
   MenuRootProps,
   'triggerId' | 'defaultTriggerId' | 'handle' | 'modal' | 'closeParentOnEsc'
 > {}
+
+export interface ContextMenuRootEmits {
+  /** The menu opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: ContextMenuRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The highlighted item changes. It gets the element of the item, or `undefined`. */
+  itemHighlighted: [
+    element: HTMLElement | undefined,
+    details: ContextMenuRootHighlightEventDetails,
+  ];
+}
 
 export interface ContextMenuRootState {}
 
@@ -82,8 +97,10 @@ export type ContextMenuItemState = MenuItemState;
 export type ContextMenuLinkItemProps = MenuLinkItemProps;
 export type ContextMenuLinkItemState = MenuLinkItemState;
 export type ContextMenuCheckboxItemProps = MenuCheckboxItemProps;
+export type ContextMenuCheckboxItemEmits = MenuCheckboxItemEmits;
 export type ContextMenuCheckboxItemState = MenuCheckboxItemState;
 export type ContextMenuRadioGroupProps<Value = unknown> = MenuRadioGroupProps<Value>;
+export type ContextMenuRadioGroupEmits<Value = unknown> = MenuRadioGroupEmits<Value>;
 export type ContextMenuRadioGroupState = MenuRadioGroupState;
 export type ContextMenuRadioItemProps<Value = unknown> = MenuRadioItemProps<Value>;
 export type ContextMenuRadioItemState = MenuRadioItemState;
@@ -94,6 +111,7 @@ export type ContextMenuGroupLabelState = MenuGroupLabelState;
 export type ContextMenuSeparatorProps = MenuSeparatorProps;
 export type ContextMenuSeparatorState = MenuSeparatorState;
 export type ContextMenuSubmenuRootProps = MenuSubmenuRootProps;
+export type ContextMenuSubmenuRootEmits = MenuSubmenuRootEmits;
 export type ContextMenuSubmenuRootState = MenuSubmenuRootState;
 export type ContextMenuSubmenuTriggerProps = MenuSubmenuTriggerProps;
 export type ContextMenuSubmenuTriggerState = MenuSubmenuTriggerState;

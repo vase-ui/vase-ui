@@ -8,6 +8,7 @@ import PopoverRoot from '../popover/PopoverRoot.vue';
 import { dateRangePickerKey, sameRange, useRangeControl } from './root';
 import type {
   DateRangePickerRootChangeEventDetails,
+  DateRangePickerRootEmits,
   DateRangePickerRootOpenChangeEventDetails,
   DateRangePickerRootProps,
   DateRangePickerRootValue,
@@ -23,25 +24,7 @@ const props = withDefaults(defineProps<DateRangePickerRootProps<Value>>(), {
   modal: false,
   closeOnSelect: undefined,
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the range. An end is `null` while a segment of its field is empty.
-   * `details.cancel()` keeps the range as it was.
-   */
-  valueChange: [
-    value: DateRangePickerRootValue<Value>,
-    details: DateRangePickerRootChangeEventDetails,
-  ];
-  /**
-   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
-   * the form and `clear()` of a field emit it with no `valueChange`.
-   */
-  'update:modelValue': [value: DateRangePickerRootValue<Value>];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: DateRangePickerRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-}>();
+const emit = defineEmits<DateRangePickerRootEmits<Value>>();
 defineSlots<{ default?(): unknown }>();
 
 assertTemporal('DateRangePicker.Root');

@@ -5,6 +5,7 @@ export type {
   OTPFieldRootChangeEventReason,
   OTPFieldRootCompleteEventDetails,
   OTPFieldRootCompleteEventReason,
+  OTPFieldRootEmits,
   OTPFieldRootInvalidEventDetails,
   OTPFieldRootInvalidEventReason,
   OTPFieldRootProps,

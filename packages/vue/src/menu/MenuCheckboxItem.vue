@@ -4,11 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { useMenuItem } from './item';
-import type {
-  MenuCheckboxItemChangeEventDetails,
-  MenuCheckboxItemProps,
-  MenuCheckboxItemState,
-} from './types';
+import type { MenuCheckboxItemEmits, MenuCheckboxItemProps, MenuCheckboxItemState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -18,12 +14,7 @@ const props = withDefaults(defineProps<MenuCheckboxItemProps>(), {
   disabled: false,
   closeOnClick: false,
 });
-const emit = defineEmits<{
-  /** The user checks or unchecks the item. `details.cancel()` keeps it as it was. */
-  checkedChange: [checked: boolean, details: MenuCheckboxItemChangeEventDetails];
-  /** Comes after `checkedChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [checked: boolean];
-}>();
+const emit = defineEmits<MenuCheckboxItemEmits>();
 defineSlots<{
   default?(scope: { state: MenuCheckboxItemState }): unknown;
   element?(scope: ElementSlotProps<MenuCheckboxItemState>): unknown;

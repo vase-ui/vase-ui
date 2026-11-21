@@ -17,6 +17,7 @@ export type {
   PreviewCardPositionerState,
   PreviewCardRootChangeEventDetails,
   PreviewCardRootChangeEventReason,
+  PreviewCardRootEmits,
   PreviewCardRootProps,
   PreviewCardRootState,
   PreviewCardTriggerProps,

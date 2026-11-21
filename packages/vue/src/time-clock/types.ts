@@ -79,6 +79,22 @@ export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime
   readonly?: boolean;
 }
 
+export interface TimeClockRootEmits<Value extends TimeValue = Temporal.PlainTime> {
+  /**
+   * The user selects a time. The value has the date and the time zone of the value.
+   * `details.cancel()` keeps the time as it was.
+   */
+  valueChange: [value: Value, details: TimeClockRootChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value];
+  /** The user commits the time: a press that selects a number ends, or Enter or Space on the face. */
+  valueCommitted: [value: Value, details: TimeClockRootCommitEventDetails];
+  /** The view changes: a trigger, or a commit that shows the next view. `details.cancel()` keeps the view. */
+  viewChange: [view: TimeClockView, details: TimeClockRootViewChangeEventDetails];
+  /** Comes after the change event of the view, unless a listener cancels it. `v-model:view` uses it. */
+  'update:view': [view: TimeClockView];
+}
+
 export type TimeClockRootChangeEventReason = 'drag' | 'keyboard' | 'input-change' | 'item-press';
 export type TimeClockRootChangeEventDetails = ChangeEventDetails<TimeClockRootChangeEventReason>;
 

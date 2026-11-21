@@ -13,7 +13,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { isCollapsed, isLength, isSize, parseSize } from './layout';
 import { injectRoot, type Size } from './root';
-import type { ResizablePanelProps, ResizablePanelState } from './types';
+import type { ResizablePanelEmits, ResizablePanelProps, ResizablePanelState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -29,10 +29,7 @@ const props = withDefaults(defineProps<ResizablePanelProps>(), {
   snapPoints: undefined,
   snapTolerance: '10px',
 });
-const emit = defineEmits<{
-  /** The panel collapses or expands, after the DOM update. Not at the mount. */
-  collapsedChange: [collapsed: boolean];
-}>();
+const emit = defineEmits<ResizablePanelEmits>();
 defineSlots<{
   default?(scope: { state: ResizablePanelState }): unknown;
   element?(scope: ElementSlotProps<ResizablePanelState>): unknown;

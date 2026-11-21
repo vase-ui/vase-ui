@@ -12,6 +12,7 @@ export type {
   NumberFieldRootChangeEventReason,
   NumberFieldRootCommitEventDetails,
   NumberFieldRootCommitEventReason,
+  NumberFieldRootEmits,
   NumberFieldRootProps,
   NumberFieldRootState,
   NumberFieldScrubAreaProps,

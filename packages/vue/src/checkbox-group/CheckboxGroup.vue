@@ -9,11 +9,7 @@ import { fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { useFieldGroup } from '../field/group';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { checkboxGroupKey, type GroupCheckbox } from './checkbox';
-import type {
-  CheckboxGroupChangeEventDetails,
-  CheckboxGroupProps,
-  CheckboxGroupState,
-} from './types';
+import type { CheckboxGroupEmits, CheckboxGroupProps, CheckboxGroupState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -22,15 +18,7 @@ const props = withDefaults(defineProps<CheckboxGroupProps>(), {
   defaultValue: undefined,
   allValues: undefined,
 });
-const emit = defineEmits<{
-  /**
-   * The user checks or clears a checkbox of the group. The `checkedChange` of the checkbox comes
-   * first, with the same `details`. `details.cancel()` keeps the value as it was.
-   */
-  valueChange: [value: string[], details: CheckboxGroupChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: string[]];
-}>();
+const emit = defineEmits<CheckboxGroupEmits>();
 defineSlots<{
   default?(scope: { state: CheckboxGroupState }): unknown;
   element?(scope: ElementSlotProps<CheckboxGroupState>): unknown;

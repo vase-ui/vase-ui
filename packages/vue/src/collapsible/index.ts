@@ -4,6 +4,7 @@ export type {
   CollapsiblePanelState,
   CollapsibleRootChangeEventDetails,
   CollapsibleRootChangeEventReason,
+  CollapsibleRootEmits,
   CollapsibleRootProps,
   CollapsibleRootState,
   CollapsibleTriggerProps,
