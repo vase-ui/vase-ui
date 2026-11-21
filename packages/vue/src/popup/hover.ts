@@ -1,5 +1,6 @@
 import { onScopeDispose, shallowRef, watch, type Ref, type ShallowRef } from 'vue';
 import { addEventListener } from '../common/addEventListener';
+import { isElement } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
@@ -283,17 +284,20 @@ export function usePopupHover(
 
   function follow(event: PointerEvent, byHover: boolean) {
     const trigger = options.trigger.value;
-    const target = event.target as Element;
+    // At the document, a move in a shadow tree has the host of the tree as its target. The path
+    // has the element under the pointer and each of its ancestors.
+    const path = event.composedPath().filter(isElement);
+    const passesOn = () => path.some((element) => !!options.passOn?.(element));
     const point = { x: event.clientX, y: event.clientY };
     restTimer.clear();
     inTriangle.value = false;
-    if (trigger?.contains(target)) {
+    if (trigger && path.includes(trigger)) {
       over = 'trigger';
       setCrossing(false);
       closeTimer.clear();
       return;
     }
-    if (options.inside(target)) {
+    if (path.some((element) => options.inside(element))) {
       over = 'popup';
       enteredPopup = true;
       setCrossing(false);
@@ -312,14 +316,14 @@ export function usePopupHover(
       inTriangle.value = true;
       restTimer.start(REST_IN_TRIANGLE, () => {
         setCrossing(false);
-        if (!options.passOn?.(target)) close();
+        if (!passesOn()) close();
       });
       return;
     }
     from = null;
     // Another trigger under the pointer starts its open before this close.
     setCrossing(false);
-    if (!options.passOn?.(target)) close();
+    if (!passesOn()) close();
   }
 
   function close() {
