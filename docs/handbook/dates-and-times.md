@@ -51,7 +51,7 @@ createApp(App).mount('#app');
 
 The entry `temporal-polyfill/global` has the ISO and Gregorian calendars only. For each other calendar, import `temporal-polyfill/full/global`.
 
-In a Nuxt app, import the polyfill in a plugin. A plugin runs on the server and in the browser before the app mounts. In Nuxt 3, the folder is `plugins` and not `app/plugins`:
+In a Nuxt app, the [Nuxt module](/handbook/nuxt#temporal-polyfill) loads the polyfill. Without the module, import the polyfill in a plugin. A plugin runs on the server and in the browser before the app mounts. In Nuxt 3, the folder is `plugins` and not `app/plugins`:
 
 ```ts
 // app/plugins/temporal.ts
@@ -106,7 +106,7 @@ A server does not know the locale and the time zone of a visitor. With no `local
 
 A date field reads today only at an arrow key in an empty segment, so the server HTML and the first render of the browser agree with no `referenceDate`. `DatePicker` and `DateRangePicker` read today after the mount and at each open of the popup. No render reads the clock. While the year is empty, the month segment allows the most months of its calendar, such as 13 in `hebrew`. A time field does not read the day.
 
-On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
+On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the module or the plugin above covers the server.
 
 Node.js 22, 24 and 26 end the process for some date formats of `Intl`, with no error that code can catch ([nodejs/node#67076](https://github.com/nodejs/node/issues/67076)). A date field takes its layout from another format in these fields:
 

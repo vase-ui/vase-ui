@@ -40,6 +40,8 @@ The package needs:
 
 Each component has its own entry point, such as `@vase-ui/vue/popover`. The entry point `@vase-ui/vue` exports each component, except the date and time components. The package has no side effects, so a bundle holds only the components that your app imports.
 
+In a Nuxt app, add the [Nuxt module](/handbook/nuxt) of the package. Your components then use each component with no import.
+
 ## Set up
 
 ### Portals

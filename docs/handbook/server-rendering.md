@@ -36,9 +36,11 @@ A part handles the events of the browser after the hydration. Before it, a part 
 
 ## Nuxt
 
-Vase UI needs no Nuxt module and no configuration. Import each component from its entry point, such as `@vase-ui/vue/dialog`, in your components.
+Add the [Nuxt module](/handbook/nuxt) of the package. Your components then use each component of Vase UI with no import. When your app has `temporal-polyfill`, the module also loads it where the engine has no `Temporal`.
 
-- For the date and time components, load the `Temporal` polyfill in a plugin. See [Dates and times](/handbook/dates-and-times).
+Without the module, import each component from its entry point, such as `@vase-ui/vue/dialog`. Vase UI needs no other configuration.
+
+- Without the module, load the `Temporal` polyfill in a plugin for the date and time components. See [Dates and times](/handbook/dates-and-times).
 - For a link of the router in a part, see [The element slot](/handbook/composition#the-element-slot).
 
 ## Content Security Policy

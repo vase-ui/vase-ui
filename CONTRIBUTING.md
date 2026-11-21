@@ -37,7 +37,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm parity:track <sha> --upstream <path>` | Writes `parity/upstream.json` for a Base UI commit. The commit is the tracked commit or a descendant of it. |
 | `pnpm docs:demos --upstream <path> [family]` | Writes the demo style sheets and the record `docs/demos/<family>/upstream.json` of a family from a local clone of Base UI. With no family, it does this for each family with a page or a demo folder. With `--check`, it writes nothing and fails when a file is absent or differs. |
 | `pnpm thanks:render` | Writes `THANKS.md` from the contributor lists of Base UI, Floating UI and aria-hidden on GitHub. It uses your `gh` login. |
-| `pnpm check:package` | Builds the package with the fixture families and packs it through `prepack`. It runs publint, Are the Types Wrong and a consumer project. It fails when the pack lacks the license, the notices or the readme. |
+| `pnpm check:package` | Builds the package with the fixture families and packs it through `prepack`. It runs publint, Are the Types Wrong and a consumer project. It fails when the pack lacks the license, the notices, the readme or `dist/module.json`. |
 | `pnpm release:check-tag <tag>` | Fails when the tag is not `v` and the version in `packages/vue/package.json`, or when that version does not have the form `YYYY.M.MICRO`. |
 | `pnpm docs:typecheck` | Runs vue-tsc on the site, its data loaders, the samples and the demos. Then it compiles with the SFC compiler each Vue file of `docs` outside `.vitepress`, and each Vue file that a page shows from another folder. |
 | `pnpm docs:build` | Builds the site into `docs/.vitepress/dist`. It fails when `pnpm parity:check` fails. `pnpm docs:preview` serves the built site. |
@@ -47,7 +47,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm test:vapor` | Runs the browser tests in Chromium. `createRenderer` of `#test-utils` then mounts each test in a Vapor app. It needs Vue 3.6. |
 | `pnpm test:vapor-parts` | Compiles the parts as Vapor components and runs the files of `packages/vue/test/vaporParts/expectedFailures.json` in Chromium. It needs Vue 3.6, and it runs alone. |
 | `pnpm --filter @vase-ui/vue test:vue-3.6` | Runs the `.test.ts` files of the families and of `test/measurements` with Vue 3.6. Each file runs in four setups: a virtual DOM app or a Vapor app, with the parts compiled in either mode. |
-| `pnpm test:nuxt` | Tests the Nuxt fixture, `fixtures/nuxt`, in Chromium: a production build, then the development server. Run `pnpm build` first. |
+| `pnpm test:nuxt` | Tests the Nuxt fixture, `fixtures/nuxt`, which uses the Nuxt module of the package. It runs a production build, then the development server, in Chromium. Then it runs a production build with no `Temporal` in Chromium, Firefox and WebKit. Run `pnpm build` first. |
 | `pnpm --filter @vase-ui/nuxt-fixture typecheck` | Runs `nuxt prepare`, then the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first. |
 
 To run one test file, add a part of its name: `pnpm test:chromium Collapsible`.
@@ -198,7 +198,8 @@ The package is `@vase-ui/vue`, in `packages/vue`. It is ESM only.
 The entry points:
 
 - Each folder of `src` with an `index.ts` is an entry point of the same name: `@vase-ui/vue/dialog`.
-- `package.json` has the one export pattern `./*`. The build and `pnpm typecheck` write the barrel `src/index.ts`, which is `@vase-ui/vue`.
+- `package.json` has the export pattern `./*` and the export `./nuxt`. The build and `pnpm typecheck` write the barrel `src/index.ts`, which is `@vase-ui/vue`.
+- `src/nuxt.ts` is the Nuxt module, `@vase-ui/vue/nuxt`. It runs in Node.js when Nuxt starts, and it reads the entry points from `dist`. The build writes its `meta` to `dist/module.json`, which the module list of nuxt.com reads.
 - The barrel leaves out an entry whose `index.ts` starts with `/// <reference lib="esnext.temporal" preserve="true" />`. That line gives a consumer the `Temporal` types, and the consumer needs TypeScript 6.0 or `skipLibCheck`.
 - `index.ts` exports the namespace of the parts and the flat types: `export * as Field from './parts'`, then `export type { FieldRootProps, … } from './types'`.
 - `parts.ts` declares the constant of each part with the type `typeof` its SFC, and a type-only namespace beside it. A family with one part declares them in `index.ts`:
@@ -429,7 +430,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handl
 - Set the `timeout-minutes` of a job to 1.5 times the 95th percentile of its passed runs in the merge queue. Round it up to a multiple of 5 minutes. For a job with a matrix, use the slowest entry. When a passed run takes more than two thirds of the limit, measure the job again.
 - On macOS, `test/server/engineInstances.ts` starts WebKit with full keyboard access through `test/webkitFullKeyboardAccess.sh`. Full keyboard access does not put a link in the order of the Tab key. So a case that tabs to a link fails in WebKit on macOS.
 - On Linux, Chromium keeps a block of shared memory for each module that a new test frame loads, until a garbage collection. CI sets `VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB`, so Vitest collects the garbage after each test file. Without it, a long run loses its connection with `Browser connection was closed`.
-- The tests of `fixtures/nuxt` run in Node and read the pages of the Nuxt app in Chromium. The job `test-nuxt` runs them, and `required` needs that job.
+- The tests of `fixtures/nuxt` run in Node and read the pages of the Nuxt app in Chromium. The cases of an engine with no `Temporal` also run in Firefox and WebKit. The job `test-nuxt` runs them, and `required` needs that job.
 
 ### Test helpers
 
