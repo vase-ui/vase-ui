@@ -150,7 +150,7 @@ function onKeydown(event: KeyboardEvent) {
   // WebKit gives `isComposing` as false on a key of a composition (WebKit bug 165004).
   if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
   if (event.key === 'Enter') {
-    // The hidden input is a second field for the browser (measured).
+    // The hidden input is a second field for the browser (test/measurements/number-field.test.ts).
     submitAtEnter(event, [event.currentTarget as Element, root.hiddenInput]);
     return;
   }
