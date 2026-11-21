@@ -3,7 +3,7 @@ order: 2
 description: The principles behind Vase UI.
 ---
 
-# Methodology
+# Philosophy
 
 We build Vase UI around six principles:
 
