@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-11-12',
   devtools: { enabled: false },
   telemetry: false,
+  modules: ['@vase-ui/vue/nuxt'],
   // With this key, Vue reports a class, style or attribute mismatch of a hydration in a production
   // build also.
   debug: { hydration: true },

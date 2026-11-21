@@ -8,6 +8,7 @@ interface Manifest {
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
 }
 
 const manifest: Manifest = JSON.parse(
@@ -16,12 +17,13 @@ const manifest: Manifest = JSON.parse(
 const vueRange = manifest.peerDependencies?.vue ?? '';
 const floor = /^\^(\d+\.\d+\.\d+)(?= |$)/.exec(vueRange)?.[1];
 
-test('the package has two run-time dependencies, and `vue` is its one peer', () => {
+test('the package has two run-time dependencies, the peer `vue`, and the optional peer `nuxt` of its Nuxt module', () => {
   assert.deepEqual(
     Object.keys({ ...manifest.dependencies, ...manifest.optionalDependencies }).sort(),
     ['@floating-ui/utils', '@floating-ui/vue'],
   );
-  assert.deepEqual(Object.keys(manifest.peerDependencies ?? {}), ['vue']);
+  assert.deepEqual(Object.keys(manifest.peerDependencies ?? {}).sort(), ['nuxt', 'vue']);
+  assert.deepEqual(manifest.peerDependenciesMeta, { nuxt: { optional: true } });
 });
 
 test('the peer range of `vue` starts with the lowest version', () => {

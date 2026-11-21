@@ -35,6 +35,7 @@ test('measures the packed release and each public browser import', async (t) => 
           browser: './dist/client.js',
           default: './dist/index.js',
         },
+        './nuxt': './dist/nuxt.js',
         './*': {
           types: './dist/*/index.d.ts',
           browser: { production: './dist/*/index.js', default: './dist/*/dev.js' },
@@ -58,6 +59,7 @@ test('measures the packed release and each public browser import', async (t) => 
     "import 'vue'; import '@fixture/peer/client'; export const dialog = 1;",
   );
   write('dist/chunks/internal.js', 'export const privateValue = 0;');
+  write('dist/nuxt.js', "import { existsSync } from 'node:fs'; export const exists = existsSync;");
   write('dist/server-only/server.js', 'export const server = true;');
   write(
     'dist/unstable-button/index.js',
@@ -86,6 +88,7 @@ test('measures the packed release and each public browser import', async (t) => 
   assert.deepEqual(Object.keys(base.entries).sort(), [
     '@fixture/ui',
     '@fixture/ui/dialog',
+    '@fixture/ui/nuxt',
     '@fixture/ui/unstable-button',
   ]);
   assert.deepEqual(base.entries['@fixture/ui'], base.entries['@fixture/ui/dialog']);
