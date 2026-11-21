@@ -305,6 +305,19 @@ describe('native forms', () => {
     expect(log).toEqual(['update true']);
   });
 
+  test('a reset gives the defaultChecked of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const box = record(log, { defaultChecked: false });
+    const { form, boxes } = await mountBoxes([box]);
+    box.defaultChecked = true;
+    await nextTick();
+    expect(boxes[0]!.checked).toBe(false);
+    form.reset();
+    await settle();
+    expect(boxes[0]!.checked).toBe(true);
+    expect(log).toEqual(['update true']);
+  });
+
   test('a prevented reset and a reset of another form change nothing', async () => {
     const { root, form, boxes } = await mountBoxes([{ defaultChecked: true }]);
     boxes[0]!.click();

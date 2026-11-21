@@ -126,12 +126,10 @@ export function useSelectRoot(
   const { field } = options;
   const multiple = computed(() => !!props.multiple);
   const model = () => (props.modelValue === null && multiple.value ? NO_VALUES : props.modelValue);
+  const noValue = () => (multiple.value ? NO_VALUES : null);
   const firstModel = model();
-  /** The value of the mount, which a native reset and an item that leaves give back. */
-  const firstValue =
-    firstModel === undefined
-      ? (props.defaultValue ?? (multiple.value ? NO_VALUES : null))
-      : firstModel;
+  /** The value of the mount, which an item that leaves gives back. */
+  const firstValue = firstModel === undefined ? (props.defaultValue ?? noValue()) : firstModel;
   const valueModel = useModel<unknown>(model, firstValue);
   const { value } = valueModel;
   const comparer = (itemValue: unknown, current: unknown) =>
@@ -414,9 +412,10 @@ export function useSelectRoot(
   return {
     context,
     value,
-    firstValue,
     hasValue,
     setOwn: (next: unknown) => valueModel.setOwn(next),
+    /** The value that a native reset gives. */
+    resetValue: () => valueModel.resetValue(props.defaultValue ?? noValue()),
     /** Asks for a close with the reason `'imperative-action'`. */
     close() {
       root.request(false, 'imperative-action', new Event('vase-ui'));

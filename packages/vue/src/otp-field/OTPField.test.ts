@@ -1247,6 +1247,19 @@ describe('a native reset', () => {
     expect(log).toEqual(['update 12']);
   });
 
+  test('puts an uncontrolled field to the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = recorded(log, { defaultValue: '12' });
+    const { form, values } = await mountField({ root });
+    root.defaultValue = '34';
+    await nextTick();
+    expect(values()).toEqual(['1', '2', '', '', '', '']);
+    form.reset();
+    await settle();
+    expect(values()).toEqual(['3', '4', '', '', '', '']);
+    expect(log).toEqual(['update 34']);
+  });
+
   test('puts a controlled field back to its first model, and v-model follows', async () => {
     const log: string[] = [];
     const root = model('12', log);

@@ -87,6 +87,22 @@ describe('a native reset', () => {
     expect(log).toEqual(['update 20,60']);
   });
 
+  test('gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = reactive<Attrs>({
+      defaultValue: 30,
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { form, values } = await mountSlider({ root });
+    root.defaultValue = 70;
+    await nextTick();
+    expect(values()).toEqual([30]);
+    form.reset();
+    await settle();
+    expect(values()).toEqual([70]);
+    expect(log).toEqual(['update 70']);
+  });
+
   test('of a controlled slider emits its first model; a reset that a listener prevents does nothing', async () => {
     const log: string[] = [];
     const root = reactive<Attrs>({ modelValue: 30 });

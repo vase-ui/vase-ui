@@ -16,7 +16,7 @@ export interface InputProps extends /* @vue-ignore */ InputAttributes {
   modelValue?: string | number | readonly string[];
   /**
    * The text at the mount of an input that has no `modelValue`. A native reset of the form gives
-   * the input its first text again.
+   * the input the `defaultValue` that it has at the reset.
    */
   defaultValue?: string | number | string[];
   /** The `id` of the input. With no `id`, the input has an id of its own. */

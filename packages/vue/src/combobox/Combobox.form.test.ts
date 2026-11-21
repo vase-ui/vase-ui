@@ -123,6 +123,56 @@ describe('the reset', () => {
   });
 });
 
+describe('the reset of a controlled root or of a changed default', () => {
+  test('BUG-6206: a controlled root gets the value and the text of its mount, with the update events only', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'a',
+      modelValue: 'Apple',
+      inputValue: 'Apple',
+      onValueChange: () => log.push('valueChange'),
+      onInputValueChange: () => log.push('inputValueChange'),
+    });
+    root['onUpdate:modelValue'] = (value: string) => {
+      log.push(`update:modelValue ${value}`);
+      root.modelValue = value;
+    };
+    root['onUpdate:inputValue'] = (text: string) => {
+      log.push(`update:inputValue ${text}`);
+      root.inputValue = text;
+    };
+    await mountForm({ root });
+    await userEvent.click(byTestId('input'));
+    await userEvent.click(byTestId('item-Cherry'));
+    await waitFor(() => expect(entries()).toEqual([['a', 'Cherry']]));
+    log.length = 0;
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update:modelValue Apple', 'update:inputValue Apple']);
+    expect(entries()).toEqual([['a', 'Apple']]);
+    expect((byTestId('input') as HTMLInputElement).value).toBe('Apple');
+  });
+
+  test('an uncontrolled root gets the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'a',
+      defaultValue: 'Apple',
+      'onUpdate:modelValue': (value: string) => log.push(`update:modelValue ${value}`),
+      'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+    });
+    await mountForm({ root });
+    root.defaultValue = 'Cherry';
+    await nextTick();
+    expect(entries()).toEqual([['a', 'Apple']]);
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update:modelValue Cherry', 'update:inputValue Cherry']);
+    expect(entries()).toEqual([['a', 'Cherry']]);
+    expect((byTestId('input') as HTMLInputElement).value).toBe('Cherry');
+  });
+});
+
 describe('the autofill', () => {
   test('an `input` event on the text input selects the item with that text, with no regard to case', async () => {
     const values: unknown[] = [];

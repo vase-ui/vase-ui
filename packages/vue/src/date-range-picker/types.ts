@@ -48,7 +48,7 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> {
    * end.
    */
   modelValue?: DateRangePickerRootValue<Value> | null | undefined;
-  /** The first range of a picker with no `modelValue`. */
+  /** The range of a picker with no `modelValue`, at the mount and at a native reset of the form. */
   defaultValue?: DateRangePickerRootValue<Value> | null | undefined;
   /** The popup is open. `v-model:open` binds it. */
   open?: boolean | undefined;

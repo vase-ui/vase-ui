@@ -6,6 +6,7 @@ import { computed, shallowRef, watch } from 'vue';
  * and the part keeps the value that it has.
  */
 export function useModel<T>(model: () => T | undefined, first: T) {
+  const firstModel = model();
   const own = shallowRef(first);
   const value = computed(() => {
     const given = model();
@@ -20,6 +21,13 @@ export function useModel<T>(model: () => T | undefined, first: T) {
      */
     setOwn(next: T) {
       if (model() === undefined) own.value = next;
+    },
+    /**
+     * The value that a native reset of the form gives: the model of the mount, else the default
+     * value that the part has now, as a native control resets to its current default.
+     */
+    resetValue(defaultValue: T): T {
+      return firstModel === undefined ? defaultValue : firstModel;
     },
   };
 }

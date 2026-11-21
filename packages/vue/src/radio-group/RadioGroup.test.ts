@@ -412,6 +412,22 @@ describe('native forms', () => {
     expect(focused()).toBe('hdd');
   });
 
+  test('a reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const group = reactive<Record<string, unknown>>({
+      defaultValue: 'ssd',
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { root, checked } = await mountGroup({ group, items: choices('ssd', 'hdd') });
+    group.defaultValue = 'hdd';
+    await nextTick();
+    expect(checked()).toBe('ssd');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toBe('hdd');
+    expect(log).toEqual(['update hdd']);
+  });
+
   test('a reset gives the first value with one update:modelValue; nothing for no change, a prevented reset or another form', async () => {
     const log: string[] = [];
     const group = groupModel(log, 'ssd', false);

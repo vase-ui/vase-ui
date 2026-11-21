@@ -342,6 +342,22 @@ describe('in a native form', () => {
     ]);
   });
 
+  test('a reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const group = reactive<Record<string, unknown>>({
+      defaultValue: ['fuji'],
+      'onUpdate:modelValue': (value: string[]) => log.push(`group ${value.join(',')}`),
+    });
+    const { root, checked } = await mountGroup({ group, items: apples('fuji', 'gala') });
+    group.defaultValue = ['gala'];
+    await nextTick();
+    expect(checked()).toEqual(['fuji']);
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toEqual(['gala']);
+    expect(log).toEqual(['group gala']);
+  });
+
   test('a reset gives the first value with one update:modelValue, and starts the cycle of the parent again', async () => {
     const log: string[] = [];
     const group = groupModel(log, ['fuji'], false);

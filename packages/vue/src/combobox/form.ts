@@ -16,8 +16,11 @@ export function useComboboxForm(
     /** The element whose form owns the root: the text input, else the input of Autocomplete. */
     formElement: () => HTMLInputElement | null;
     isEqual: () => (itemValue: any, value: any) => boolean;
-    /** Puts back the first value and the first text, and emits only the `update:*` events. */
-    reset: () => void;
+    /**
+     * Puts back the value and the text of a native reset, and emits only the `update:*` events.
+     * Returns the value of the field.
+     */
+    reset: () => unknown;
   },
 ) {
   const field = inject(fieldKey, null);
@@ -73,8 +76,8 @@ export function useComboboxForm(
     input: options.formElement,
     fill,
     reset() {
-      options.reset();
-      field?.onReset(context.value);
+      const value = options.reset();
+      field?.onReset(value);
     },
     fieldControl: {
       get name() {

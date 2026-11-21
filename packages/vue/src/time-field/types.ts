@@ -27,7 +27,7 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
    * The field gives a value of the same kind, with the date and the time zone of the value.
    */
   modelValue?: Value | null;
-  /** The first value of a field with no `modelValue`. */
+  /** The value of a field with no `modelValue`, at the mount and at a native reset of the form. */
   defaultValue?: Value | null;
   /**
    * Gives the kind, the date and the time zone of a first value. With no `referenceDate` and no

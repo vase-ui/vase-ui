@@ -42,15 +42,14 @@ useDeferredServerRender();
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue: readonly string[] = [...(props.modelValue ?? props.defaultValue ?? [])];
-const { value, setOwn } = useModel<readonly string[]>(
+const { value, setOwn, resetValue } = useModel<readonly string[]>(
   () => (props.modelValue === undefined ? undefined : (props.modelValue ?? [])),
-  firstValue,
+  [...(props.modelValue ?? props.defaultValue ?? [])],
 );
 const checkboxes = shallowReactive<GroupCheckbox[]>([]);
 // The selection that a press on the parent gives back: the value after the last press on a
 // child, or the first value.
-let selection = firstValue;
+let selection = value.value;
 // The last reset that the group followed. Each checkbox of the group tells the group a reset.
 let lastReset: Event | undefined;
 
@@ -171,11 +170,12 @@ function change(next: string[], details: ChangeEventDetails<'none'>, byChild: bo
 function onReset(event: Event) {
   if (event === lastReset) return;
   lastReset = event;
-  selection = firstValue;
-  field?.onReset([...firstValue]);
-  if (sameValue(value.value, firstValue)) return;
-  setOwn(firstValue);
-  emit('update:modelValue', [...firstValue]);
+  const reset = [...resetValue(props.defaultValue ?? [])];
+  selection = reset;
+  field?.onReset([...reset]);
+  if (sameValue(value.value, reset)) return;
+  setOwn(reset);
+  emit('update:modelValue', [...reset]);
 }
 </script>
 

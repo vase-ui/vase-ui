@@ -3,7 +3,7 @@ import { watch, type InjectionKey, type Ref } from 'vue';
 export interface FieldState {
   /** The focus left the control one time or more. */
   touched: boolean;
-  /** The value differs from the first value of the field. */
+  /** The value differs from the value at the mount or at the last native reset of the form. */
   dirty: boolean;
   /** `null` while the field has no validity. */
   valid: boolean | null;
@@ -78,7 +78,10 @@ export interface FieldForControl {
   onEdit(): void;
   /** The focus left `element`, the element of the control or of an item of a group. */
   onLeave(element: Element): void;
-  /** A native reset of the form of the control, which gave the control `value`. */
+  /**
+   * A native reset of the form of the control, which gave the control `value`. The value is then
+   * the first value of the field.
+   */
   onReset(value: unknown): void;
 }
 

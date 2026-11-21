@@ -8,7 +8,10 @@ export interface SliderRootProps<Value extends number | readonly number[] = numb
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value. An array makes a range, with one value for each thumb. */
   modelValue?: Value;
-  /** The first value of an uncontrolled slider. The default is `min`. */
+  /**
+   * The value of an uncontrolled slider, at the mount and at a native reset of the form. The
+   * default is `min`.
+   */
   defaultValue?: Value;
   /**
    * The least value. The Home key sets it.

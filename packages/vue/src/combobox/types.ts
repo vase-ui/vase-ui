@@ -169,13 +169,13 @@ export interface ComboboxRootProps<
   extends ComboboxSharedRootProps<Item>, AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The selected value. `v-model` binds it. With `multiple`, `null` is no value. */
   modelValue?: ComboboxValue<Value, Multiple> | null | undefined;
-  /** The value at the mount of an uncontrolled root. A native reset of the form gives it back. */
+  /** The value of an uncontrolled root, at the mount and at a native reset of the form. */
   defaultValue?: ComboboxValue<Value, Multiple> | null | undefined;
   /** The text of the input. `v-model:input-value` binds it. */
   inputValue?: string | undefined;
   /**
-   * The text at the mount, when the text is uncontrolled. With neither, the text of a single
-   * combobox starts as the label of its value. A native reset of the form gives it back.
+   * The text at the mount and at a native reset of the form, when the text is uncontrolled. With
+   * neither, the text of a single combobox is the label of its value.
    */
   defaultInputValue?: string | undefined;
   /**

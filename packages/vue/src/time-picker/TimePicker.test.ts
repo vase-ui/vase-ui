@@ -526,6 +526,28 @@ describe('the form', () => {
     expect(log).toEqual(['update null']);
   });
 
+  test.each([
+    { order: 'the field root first', reversed: false },
+    { order: 'the field part first', reversed: true },
+  ])(
+    'a reset gives the defaultValue of the reset, and the field is not dirty, with $order',
+    async ({ reversed }) => {
+      const log: string[] = [];
+      const root = logged(log, { defaultValue: time('09:30') });
+      const { form, formInput } = await mountPicker({
+        root,
+        fieldRoot: { name: 'when', 'data-testid': 'field' },
+      });
+      root.defaultValue = time('17:45');
+      await nextTick();
+      expect(formInput.value).toBe('09:30');
+      await resetForm(form, reversed);
+      expect(log).toEqual(['update 17:45:00']);
+      expect(formInput.value).toBe('17:45');
+      expect(document.querySelector('[data-testid="field"]')).not.toHaveAttribute('data-dirty');
+    },
+  );
+
   describe.each([
     { order: 'the field root first', reversed: false },
     { order: 'the field part first', reversed: true },

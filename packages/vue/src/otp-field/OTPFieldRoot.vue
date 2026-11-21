@@ -88,8 +88,10 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: formInput, setElement: setFormInput } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue = props.modelValue ?? props.defaultValue;
-const { value, setOwn } = useModel(() => props.modelValue, firstValue);
+const { value, setOwn, resetValue } = useModel(
+  () => props.modelValue,
+  props.modelValue ?? props.defaultValue,
+);
 const code = computed(() => toCode(value.value, props).code);
 const characters = computed(() => Array.from(code.value));
 const validLength = computed(() => Number.isInteger(props.length) && props.length > 0);
@@ -188,11 +190,11 @@ watch(
 );
 
 useFormReset(formInput, () => {
-  const first = toCode(firstValue, props).code;
-  field?.onReset(first);
-  if (code.value === first) return;
-  setOwn(first);
-  emit('update:modelValue', first);
+  const reset = toCode(resetValue(props.defaultValue), props).code;
+  field?.onReset(reset);
+  if (code.value === reset) return;
+  setOwn(reset);
+  emit('update:modelValue', reset);
 });
 
 if (process.env.NODE_ENV !== 'production') {

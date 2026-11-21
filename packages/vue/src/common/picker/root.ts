@@ -27,7 +27,10 @@ export interface PickerForPart<Value, Template = Value> {
   commit(value: Value | null, details: ChangeEventDetails): boolean;
   /** Takes the value with `update:modelValue` only, as `clear()` of a field part. */
   set(value: Value | null): void;
-  /** A native reset of a form: the root takes its first value, one time for each event. */
+  /**
+   * A native reset of a form: the root takes the model of its mount, else its `defaultValue`, one
+   * time for each event.
+   */
   reset(event: Event): void;
   addField(element: HTMLElement): () => void;
   addTrigger(element: HTMLElement): () => void;
@@ -165,9 +168,9 @@ export function usePicker<Value, Template = Value>(
       // next render, so a second call would emit again.
       if (event === lastReset) return;
       lastReset = event;
-      // The field roots give the `Field` the same first value, so the `Field` sees no change.
-      field?.onReset(first);
-      set(first);
+      const reset = model.resetValue(props.defaultValue ?? null);
+      field?.onReset(reset);
+      set(reset);
     },
     addField: (element: HTMLElement) => add(fields, element),
     addTrigger: (element: HTMLElement) => add(triggers, element),

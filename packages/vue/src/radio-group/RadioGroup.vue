@@ -33,8 +33,10 @@ useDeferredServerRender();
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue = props.modelValue !== undefined ? props.modelValue : props.defaultValue;
-const { value, setOwn } = useModel<Value | undefined>(() => props.modelValue, firstValue);
+const { value, setOwn, resetValue } = useModel<Value | undefined>(
+  () => props.modelValue,
+  props.modelValue !== undefined ? props.modelValue : props.defaultValue,
+);
 const radios = shallowReactive<GroupRadio[]>([]);
 // The last reset that the group followed. Each radio of the group tells the group a reset.
 let lastReset: Event | undefined;
@@ -172,10 +174,11 @@ function showValue() {
 function onReset(event: Event) {
   if (event === lastReset) return;
   lastReset = event;
-  field?.onReset(firstValue);
-  if (value.value === firstValue) return;
-  setOwn(firstValue);
-  emit('update:modelValue', firstValue);
+  const reset = resetValue(props.defaultValue);
+  field?.onReset(reset);
+  if (value.value === reset) return;
+  setOwn(reset);
+  emit('update:modelValue', reset);
 }
 
 const steps: Record<string, 'next' | 'previous' | 'right' | 'left'> = {
