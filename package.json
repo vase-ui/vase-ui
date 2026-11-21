@@ -31,6 +31,7 @@
     "docs:typecheck": "pnpm --filter @vase-ui/docs typecheck && node scripts/docs/sampleCompile.ts",
     "docs:axe": "node scripts/docs/axeSite.ts",
     "docs:search-focus": "node scripts/docs/searchBoxFocus.ts",
+    "docs:ios-backdrop": "node scripts/docs/iosBackdrop.ts",
     "docs:demos": "node scripts/docs/upstreamDemos.ts",
     "parity:extract": "node scripts/parity/extract.ts",
     "parity:check": "node scripts/parity/check.ts",
@@ -54,7 +55,7 @@
     "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.2",
-    "vue": "3.5.45",
+    "vue": "3.5.46",
     "vue-component-meta": "3.3.14",
     "vue-eslint-parser": "10.4.2"
   }

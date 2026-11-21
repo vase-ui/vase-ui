@@ -302,6 +302,40 @@ describe('the swipe that closes', () => {
     },
   );
 
+  test.each([
+    { drawer: 'a drawer', prefix: '', when: 'after' },
+    { drawer: 'a drawer', prefix: '', when: 'during' },
+    { drawer: 'a nested drawer', prefix: 'nested-', when: 'after' },
+  ])(
+    'opens $drawer at its open place again after a swipe close, with the open $when the leave',
+    async ({ prefix, when }) => {
+      // A leave of 1 s keeps the old popup in the DOM while the trigger opens the drawer again.
+      const slowLeave = document.createElement('style');
+      slowLeave.textContent = '.drawer-test-leave-active { transition-duration: 1s; }';
+      document.head.append(slowLeave);
+      onTestFinished(() => slowLeave.remove());
+      await mountDrawer(
+        prefix
+          ? { nested: { root: { defaultOpen: true }, transition: true } }
+          : { transition: true },
+      );
+      await waitFor(() => expect(byTestId(`${prefix}popup`)).not.toBe(null));
+      const popup = get(`${prefix}popup`);
+      await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+      await drag(textOf(`${prefix}popup`), { x: 0, y: 200 });
+      await waitFor(() => expect(popup.classList.contains('drawer-test-leave-active')).toBe(true));
+      if (when === 'after') await waitFor(() => expect(popup.isConnected).toBe(false));
+      else expect(popup.isConnected).toBe(true);
+      await userEvent.click(get(`${prefix}trigger`));
+      await waitFor(() => expect([null, popup]).not.toContain(byTestId(`${prefix}popup`)));
+      const next = get(`${prefix}popup`);
+      await waitFor(() => expect(next.className).toBe('drawer-test-popup'));
+      expect(next.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+      // The popup of the fixture is 300 px high at the bottom of the view.
+      await waitFor(() => expect(next.getBoundingClientRect().top).toBe(window.innerHeight - 300));
+    },
+  );
+
   test('goes back after a cancelled close, and after a close that the parent refused', async () => {
     const root = reactive<Props>({
       defaultOpen: true,

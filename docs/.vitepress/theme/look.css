@@ -10,6 +10,13 @@
   isolation: isolate;
 }
 
+/* On iOS, the backdrop of a Dialog, Alert Dialog or Drawer demo is `position: absolute` with
+   `min-height: 100dvh`, in `<body>`. The Base UI docs give `<body>` this style, so the backdrop
+   covers the whole page and not only its top. */
+body {
+  position: relative;
+}
+
 .Layout ::selection {
   background-color: var(--vase-color-selection);
 }
