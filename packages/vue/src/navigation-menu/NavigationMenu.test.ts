@@ -926,10 +926,17 @@ describe('the content', () => {
       popupTransition: { name: 'fade' },
     });
     const content = await shows('one');
+    const popup = get('popup');
+    // The checks come in the task where the leave starts: the leave of 80 ms can end before the
+    // command ends.
+    const atLeave = readWhen(
+      () => popup.classList.contains('fade-leave-active'),
+      () => ({ className: content.className, inPopup: popup.contains(content) }),
+    );
     await userEvent.click(byId('outside'));
-    await nextTick();
-    expect(content.className).not.toContain('slide-leave');
-    expect(get('popup').contains(content)).toBe(true);
+    const { className, inPopup } = await atLeave;
+    expect(className).not.toContain('slide-leave');
+    expect(inPopup).toBe(true);
     await waitFor(() => expect(content.isConnected).toBe(false));
     expect(byTestId('content-one')).toBe(null);
   });
@@ -938,11 +945,17 @@ describe('the content', () => {
     await mountMenu({ root: { defaultValue: 'one' }, popupTransition: { name: 'fade' } });
     await shows('one');
     const popup = await opened();
+    // The reopen and the check come in the task where the leave of 80 ms starts.
+    const atReopen = readWhen(
+      () => popup.classList.contains('fade-leave-active'),
+      async () => {
+        get('trigger-two').click();
+        await nextTick();
+        return popup.contains(byTestId('content-one'));
+      },
+    );
     await userEvent.click(byId('outside'));
-    await nextTick();
-    get('trigger-two').click();
-    await nextTick();
-    expect(popup.contains(get('content-one'))).toBe(true);
+    expect(await atReopen).toBe(true);
     await waitFor(() => expect(popup.isConnected).toBe(false));
     const next = await shows('two');
     expect(get('popup')).not.toBe(popup);
