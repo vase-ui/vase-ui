@@ -55,6 +55,8 @@ function addParts(
     .map(([name]) => name);
   const { dst } = addTemplate({
     filename: `vase-ui/${entry}.ts`,
+    // The types of a part in a template, such as `<DialogRoot>`, import this file from the disk.
+    write: true,
     getContents: () =>
       [
         `import { ${namespace} } from '${PACKAGE_NAME}/${entry}';`,
@@ -91,15 +93,19 @@ function addTemporalPlugin(temporal: string, nuxt: Nuxt): void {
  * Adds the components and the composables of Vase UI to a Nuxt app with no import, and loads the
  * `Temporal` polyfill where the engine has no `Temporal`.
  */
-const nuxtModule: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
+const nuxtModule: NuxtModule<
+  ModuleOptions,
+  Required<ModuleOptions>,
+  true
+> = defineNuxtModule<ModuleOptions>().with({
   meta: {
     name: PACKAGE_NAME,
     configKey: 'vaseUi',
     compatibility: { nuxt: '>=4.0.0' },
     docs: 'https://vase-ui.com/handbook/nuxt',
   },
-  defaults: { temporal: 'temporal-polyfill/global' },
-  async setup({ prefix = '', temporal }, nuxt) {
+  defaults: { prefix: '', temporal: 'temporal-polyfill/global' },
+  async setup({ prefix, temporal }, nuxt) {
     for (const entry of entryNames()) {
       const from = `${PACKAGE_NAME}/${entry}`;
       const exports: Record<string, object> = await import(
