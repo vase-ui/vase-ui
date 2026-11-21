@@ -1,0 +1,70 @@
+<script setup lang="ts">
+import { data } from '../../benchmarks.data.ts';
+import { vaseUiCommitUrl } from './links.ts';
+import ScrollBox from './ScrollBox.vue';
+
+const TOOL_NAMES: Record<string, string> = {
+  node: 'Node.js',
+  zlib: 'zlib of Node.js',
+  brotli: 'Brotli of Node.js',
+  vite: 'Vite',
+};
+</script>
+
+<template>
+  <ScrollBox label="Run">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Run</th>
+          <th scope="col">Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Date (UTC)</th>
+          <td>{{ data.date?.slice(0, 10) ?? 'Not recorded' }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Vase UI commit</th>
+          <td>
+            <a :href="vaseUiCommitUrl(data.commit)">
+              <code>{{ data.commit.slice(0, 7) }}</code>
+            </a>
+          </td>
+        </tr>
+        <tr v-for="(version, tool) in data.tools" :key="tool">
+          <th scope="row">{{ TOOL_NAMES[tool] ?? tool }}</th>
+          <td>{{ version }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollBox>
+  <ScrollBox label="Versions">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Library or framework</th>
+          <th scope="col">Package</th>
+          <th scope="col">Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="library in data.libraries" :key="library.id">
+          <th scope="row">{{ library.name }}</th>
+          <td>
+            <code>{{ library.package }}</code>
+          </td>
+          <td>{{ library.id === 'vase-ui' ? 'The commit of the run' : library.version }}</td>
+        </tr>
+        <tr v-for="setup in data.setups" :key="setup.id">
+          <th scope="row">{{ setup.name }}</th>
+          <td>
+            <code>{{ setup.package }}</code>
+          </td>
+          <td>{{ setup.version }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollBox>
+</template>

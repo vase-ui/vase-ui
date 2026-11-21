@@ -595,7 +595,7 @@ The workspace project `benchmarks` measures the size of Vase UI and of other com
 | Command | Function |
 | --- | --- |
 | `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. Run `pnpm build` first. |
-| `pnpm benchmarks:size` | Builds each app. Then it writes `benchmarks/results.json`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
+| `pnpm benchmarks:size` | Builds each app. Then it writes `benchmarks/results.json`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the date, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
 | `pnpm benchmarks:typecheck` | Runs vue-tsc on the Vue files and tsc on the React files. The job `check` of CI runs it, so a pull request that changes the API of Vase UI also corrects the fixtures. Run `pnpm build` first. |
 
 A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base UI. Each fixture follows these rules, so that each library gets the same conditions:
@@ -606,6 +606,14 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 4. Do not add CSS, icons, animations or virtualization.
 5. Put `data-bench="trigger"` on the trigger button and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
 6. Read the documentation of a library and install its npm package. Do not copy its source.
+
+The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json` and `benchmarks/features.json`. Its list of the rows where Vase UI is larger comes from the results, so do not write that list by hand.
+
+- `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
+- The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
+- In a row of the kind `support`, the value is `yes`, `no` or `partial`. In a row of the kind `fact`, the value is a text, such as a count or a date.
+- A note that starts with "Our check" gives the result of a check in Chromium of the example in the docs. Use it only where the docs do not give the fact.
+- `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Run `pnpm benchmarks:size` in the pull request that moves a pin.
 
 ## Releases
 

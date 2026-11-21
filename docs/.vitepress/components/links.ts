@@ -5,3 +5,7 @@ export function baseUiCommitUrl(sha: string): string {
 export function vaseUiFileUrl(path: string): string {
   return `https://github.com/vase-ui/vase-ui/blob/main/${path}`;
 }
+
+export function vaseUiCommitUrl(sha: string): string {
+  return `https://github.com/vase-ui/vase-ui/commit/${sha}`;
+}
