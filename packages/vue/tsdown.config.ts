@@ -1,8 +1,15 @@
 import { defineConfig } from 'tsdown';
-import { buildOptions, familyEntries, writeBarrel } from './scripts/build.ts';
+import {
+  NUXT_MODULE_ENTRY,
+  buildOptions,
+  familyEntries,
+  writeBarrel,
+  writeModuleManifest,
+} from './scripts/build.ts';
 
 writeBarrel('src/index.ts', ['src']);
 
-export default defineConfig(
-  buildOptions({ index: 'src/index.ts', ...familyEntries('src') }, 'dist'),
-);
+export default defineConfig({
+  ...buildOptions({ index: 'src/index.ts', ...NUXT_MODULE_ENTRY, ...familyEntries('src') }, 'dist'),
+  onSuccess: () => writeModuleManifest('dist'),
+});

@@ -5,7 +5,14 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build as buildPackage } from 'tsdown';
 import { build as bundle } from 'vite';
-import { TEMPORAL_REFERENCE, buildOptions, familyEntries, writeBarrel } from './build.ts';
+import {
+  NUXT_MODULE_ENTRY,
+  TEMPORAL_REFERENCE,
+  buildOptions,
+  familyEntries,
+  writeBarrel,
+  writeModuleManifest,
+} from './build.ts';
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -92,7 +99,11 @@ async function main(): Promise<void> {
     ...familyEntries('src'),
     ...familyEntries('test/package-check/src'),
   };
-  await buildPackage({ ...buildOptions(entry, DIST_DIRECTORY, SOURCE_ROOTS), config: false });
+  await buildPackage({
+    ...buildOptions({ ...entry, ...NUXT_MODULE_ENTRY }, DIST_DIRECTORY, SOURCE_ROOTS),
+    config: false,
+  });
+  await writeModuleManifest(DIST_DIRECTORY);
   const builtFiles = readdirSync(DIST_DIRECTORY, { encoding: 'utf8', recursive: true }).filter(
     (file) => file.endsWith('.js'),
   );
@@ -155,6 +166,14 @@ async function main(): Promise<void> {
     );
     console.log(`  ${file}: packed`);
   }
+  const moduleManifest = JSON.parse(readFileSync(`${DIST_DIRECTORY}/module.json`, 'utf8'));
+  assert.ok(
+    packedPaths.includes('dist/module.json') &&
+      moduleManifest.compatibility?.nuxt &&
+      moduleManifest.docs,
+    'dist/module.json must be packed, with the Nuxt versions and the address of the documentation. The module list of nuxt.com reads them.',
+  );
+  console.log('  dist/module.json: packed, with the Nuxt versions and the documentation');
 
   console.log('[6/10] Run publint');
   runBin('publint', ['run', '--strict', '--pack', 'npm', PACKAGE_DIRECTORY]);
@@ -168,6 +187,7 @@ async function main(): Promise<void> {
     '--exclude-entrypoints',
     'package.json',
     '--include-entrypoints',
+    'nuxt',
     ...entryFiles.filter((file) => file !== 'index.js').map((file) => dirname(file)),
   ]);
 
