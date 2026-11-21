@@ -13,7 +13,7 @@ The rules below hold for each family. The family list after them gives only what
 - Vue: the peer range of `vue` is `^3.5.46 || ^3.6.0-0`. On Vue 3.5, use 3.5.46 or later. ([#762](https://github.com/vase-ui/vase-ui/pull/762))
 - Components: import each part from its namespace, such as `Dialog.Root`, or as the component of a family with one part, such as `Checkbox`. The flat components, such as `DialogRoot`, are removed. The types have two names: `Dialog.Root.Props` and `DialogRootProps`. ([#704](https://github.com/vase-ui/vase-ui/pull/704))
 - Element: the `#render` slot is the `element` slot. Its scope is `{ props, elementRef, state }`. Bind `v-bind="props"` and `:ref="elementRef"` on your element. ([#714](https://github.com/vase-ui/vase-ui/pull/714))
-- `as` takes a tag or a component on each part that renders an element, and the `element` slot wins over it. A part that is a native form element, or that renders another part or no element, has no `as`. ([#714](https://github.com/vase-ui/vase-ui/pull/714))
+- `as` takes a tag or a component on each part that renders an element, and the `element` slot wins over it. A native form control, a form element, a native label and an image have no `as`, such as `Input`, `Checkbox`, `Fieldset.Root`, `Field.Label` and `Avatar.Image`. A part that renders another part or no element also has no `as`. ([#714](https://github.com/vase-ui/vase-ui/pull/714))
 - A template ref of a part has `element`, the native element of the part. ([#714](https://github.com/vase-ui/vase-ui/pull/714))
 - `nativeButton` and `nativeLabel` are removed. A part reads its element. An element that is not a native button gets `role="button"`, a tab stop, and a click from Enter and Space. ([#699](https://github.com/vase-ui/vase-ui/pull/699))
 - `stateClass` and `stateStyle` are removed. Bind `class` and `style`, or select the state in CSS. ([#662](https://github.com/vase-ui/vase-ui/pull/662))
@@ -31,7 +31,7 @@ The rules below hold for each family. The family list after them gives only what
 
 - The `focused` state is removed. Use `:focus-visible` and `:focus-within`. ([#694](https://github.com/vase-ui/vase-ui/pull/694))
 - Animation: `data-starting-style`, `data-ending-style`, the `transitionStatus` state, `openChangeComplete`, the `unmount` action and `preventUnmountOnClose()` are removed. Put the part in a `<Transition>`, and use its classes and hooks. ([#733](https://github.com/vase-ui/vase-ui/pull/733))
-- A popup and a backdrop are in the DOM only while they are open or in their leave. `data-open` and `data-closed` of these parts are removed. A closed part with `keepMounted` has `hidden`. ([#720](https://github.com/vase-ui/vase-ui/pull/720))
+- A popup and a backdrop are in the DOM only while they are open or in their leave. `data-open` and `data-closed` of these parts are removed. A closed part with `keepMounted` has `hidden` and `inert`. ([#720](https://github.com/vase-ui/vase-ui/pull/720))
 - `actionsRef` and each `Actions` type are removed. The template ref of a root has the methods, such as `close()` of a popup root and `validate()` of `Form` and `Field.Root`. ([#733](https://github.com/vase-ui/vase-ui/pull/733))
 - `v-model` binds the value of each part. Replace `v-model:value`, `v-model:checked`, `v-model:pressed` and `v-model:layout` with `v-model`. In a render function, use `modelValue` and `update:modelValue`. The other models keep their names, such as `v-model:open`. ([#666](https://github.com/vase-ui/vase-ui/pull/666))
 - A model that is not `undefined` is the value at each moment. While the model is `undefined`, the part owns the value, and it keeps its last value. A change between the two gives no warning. ([#664](https://github.com/vase-ui/vase-ui/pull/664))
@@ -42,15 +42,15 @@ The rules below hold for each family. The family list after them gives only what
 - The props `minDate`, `maxDate`, `minTime` and `maxTime` are `min` and `max`. ([#719](https://github.com/vase-ui/vase-ui/pull/719))
 - Locale: a part with no `locale` uses the locale of the nearest `LocaleProvider`, else `en-US`, on the server and in the browser. No part uses the locale of the browser. ([#707](https://github.com/vase-ui/vase-ui/pull/707))
 - Text direction: a part reads the direction of its own element (`dir` or CSS `direction`). ([#738](https://github.com/vase-ui/vase-ui/pull/738))
-- Native form reset: an uncontrolled control gets the `default*` value that it has at the reset. A controlled control gets its `v-model` value of the mount. ([#763](https://github.com/vase-ui/vase-ui/pull/763))
-- In Number Field, OTP Field, Slider, the date and time fields and the pickers, a native reset emits only `update:modelValue`. These families have no change reason `none`. ([#719](https://github.com/vase-ui/vase-ui/pull/719))
+- Native form reset: an uncontrolled control gets the `default*` value that it has at the reset. A controlled control gets its `v-model` value of the mount. The reset emits only the `update:*` events of the models, and no change event. ([#763](https://github.com/vase-ui/vase-ui/pull/763))
+- OTP Field, Slider, Resizable, the date and time fields and the pickers have no change reason `none`. ([#701](https://github.com/vase-ui/vase-ui/pull/701), [#703](https://github.com/vase-ui/vase-ui/pull/703), [#712](https://github.com/vase-ui/vase-ui/pull/712), [#719](https://github.com/vase-ui/vase-ui/pull/719))
 - In a `Field`, a control writes your `aria-describedby` ids first, then the ids of the field, each id one time. Give `null` to write no `aria-describedby`. ([#763](https://github.com/vase-ui/vase-ui/pull/763))
 - Number Field, OTP Field, Combobox, Autocomplete, the date and time fields and `Toolbar.Input` take no text that the user typed before the hydration. They take no form state that the browser restores. ([#718](https://github.com/vase-ui/vase-ui/pull/718))
 - A portal part renders no element, so it has no `as`. `container` is `to`: a CSS selector, an element or a shadow root. A `to` of `null` renders nothing. ([#687](https://github.com/vase-ui/vase-ui/pull/687))
 - The handle of a popup has no `store`. ([#720](https://github.com/vase-ui/vase-ui/pull/720))
 - In a `Viewport` of Popover, Preview Card and Tooltip, key the content by the `triggerId` of the slot in a `<Transition>`. `data-current` and `data-previous` are removed. ([#720](https://github.com/vase-ui/vase-ui/pull/720))
 
-#### Removed entry points
+#### Entry points and types
 
 - `@vase-ui/vue/direction-provider`: set `dir` on `<html>` or on an element around the parts. For a server render, give `Slider.Root` its own `dir`. In place of `useDirection()`, use `:dir(rtl)` in CSS or `getComputedStyle(element).direction` in a listener. ([#738](https://github.com/vase-ui/vase-ui/pull/738))
 - `@vase-ui/vue/merge-props`: import `mergeProps` from `vue`. It joins `class`, merges `style` and calls each listener of the same name, in the order of the arguments. For `mergePropsN(sets)`, call `mergeProps(...sets)`. For `mergeClassNames(a, b)`, use `normalizeClass([a, b])` or `:class="[a, b]"`. `makeEventPreventable` has no other form: call `details.cancel()`. ([#745](https://github.com/vase-ui/vase-ui/pull/745))
@@ -111,7 +111,7 @@ The rules below hold for each family. The family list after them gives only what
 - Field: `validate(value, formValues)` of `Field.Root` gets the values of the form. `match` of `Field.Error` takes a key of `ValidityState` only. `invalid` on `Field.Root` shows an error with no `match`. ([#694](https://github.com/vase-ui/vase-ui/pull/694))
 - Field: a label that is not a `<label>` names the control with `aria-labelledby`, and a click on it moves the focus to the control. A field shows no error while its control is disabled or read-only. ([#694](https://github.com/vase-ui/vase-ui/pull/694))
 - Field: after a native reset, `initialValue` of the `Field.Root` slot is the value of the reset, and the field is not dirty. ([#763](https://github.com/vase-ui/vase-ui/pull/763))
-- Fieldset: `Fieldset.Legend` renders a `<div>`. To keep a native `<legend>`, render it in the `element` slot. A disabled fieldset disables a part in the `<div>` legend. Select the legend of a disabled root with `.Fieldset:disabled .Legend`. ([#706](https://github.com/vase-ui/vase-ui/pull/706))
+- Fieldset: `Fieldset.Legend` renders a `<div>`. For a native `<legend>`, give it `as="legend"`. A disabled fieldset disables a part in the `<div>` legend. Select the legend of a disabled root with `.Fieldset:disabled .Legend`. ([#706](https://github.com/vase-ui/vase-ui/pull/706))
 - Fieldset: a disabled `Fieldset.Root` whose element is not a `<fieldset>` also disables its parts. When the `element` slot of the root renders a `<div>`, give the `<div>` `role="group"`. ([#706](https://github.com/vase-ui/vase-ui/pull/706))
 - Form: `validationMode` takes `'submit'`, `'blur'` and `'change'` in place of `'onSubmit'`, `'onBlur'` and `'onChange'`. Bind the `errors` of `Form` with `v-model:errors`. ([#694](https://github.com/vase-ui/vase-ui/pull/694))
 - Form: `onFormSubmit` is removed. `submit(event, values)` gives the native `SubmitEvent` and the values of the form. While `Form` has a `submit` listener, it prevents the native submit: remove each `.prevent` and `event.preventDefault()` that only stops the submit. ([#705](https://github.com/vase-ui/vase-ui/pull/705))
@@ -125,7 +125,7 @@ The rules below hold for each family. The family list after them gives only what
 - Number Field: PageUp and PageDown keep their native action. A step from an empty field gives 0 in the range. A `keydown` listener that calls `preventDefault()` stops the step of the key. ([#718](https://github.com/vase-ui/vase-ui/pull/718))
 - OTP Field: replace `mask` with `type="password"` on each `OTPField.Input`. `OTPFieldInputProps` and `OTPField.Input.Props` are removed. The form input is the last child of the group, so give the last slot a class of its own. ([#712](https://github.com/vase-ui/vase-ui/pull/712))
 - OTP Field: a native `<label for>` names the first slot only. Give the label an `id`, and give the root `aria-labelledby`, to name the group. ([#712](https://github.com/vase-ui/vase-ui/pull/712))
-- Preview Card: a root keeps the payload of its trigger after the trigger leaves the DOM, while a parent keeps the root open or a listener cancels its close. The reason `trigger-press` is removed. ([#730](https://github.com/vase-ui/vase-ui/pull/730))
+- Preview Card: a root keeps the payload of its trigger after the trigger leaves the DOM. It keeps it while a parent keeps the root open or a listener cancels its close. The reason `trigger-press` is removed. ([#730](https://github.com/vase-ui/vase-ui/pull/730))
 - Resizable: `getLayout()`, `setLayout()` and `reset()` of the root are removed: write `v-model`. `getSize()` and the `resize` event of a panel are removed: read `state.size`, or `sizes` of the root slot. ([#703](https://github.com/vase-ui/vase-ui/pull/703))
 - Resizable: an event gives the size of a fixed panel in pixels, such as `'240px'`, and each other size in percent. `ResizableRootLayout` and `ResizableRootLayoutSnapshot` are `ResizableLayout`, and `details.snapshot` of `layoutCommitted` is removed. `ResizableRootCommitEventReason` is `ResizableRootChangeEventReason`. ([#703](https://github.com/vase-ui/vase-ui/pull/703))
 - Resizable: `dragEdges` is removed: put a `Resizable.Handle` with no size at the boundary. `hitAreaSize` is removed: set `--resizable-handle-hit-area-size`. With the `element` slot of a handle, end your element with `<span v-bind="targetProps" />`. ([#703](https://github.com/vase-ui/vase-ui/pull/703))
@@ -143,7 +143,7 @@ The rules below hold for each family. The family list after them gives only what
 - Slider: `getAriaLabel` of `Slider.Thumb` is removed: give each thumb an `aria-label`. `id` and `ariaLabelledby` of the root, and the `aria*` props and `tabindex` of a thumb, are attributes. ([#701](https://github.com/vase-ui/vase-ui/pull/701))
 - Slider: `Slider.Label` renders a `<label>` for the input of the first thumb. No part has `data-index`. A key with Ctrl, Alt or Meta changes no value. ([#701](https://github.com/vase-ui/vase-ui/pull/701))
 - Slider: `details.event` of `valueChange` is the browser event. Read the value from the first argument, and the name from the thumb input. ([#681](https://github.com/vase-ui/vase-ui/pull/681))
-- Tabs: with no `defaultValue`, the first tab that is not disabled is active. Give `:default-value="0"` to a list whose first enabled tab does not have the value `0`. ([#700](https://github.com/vase-ui/vase-ui/pull/700))
+- Tabs: with no `defaultValue`, the first tab that is not disabled is active. To keep the tab with the value `0` active, give `Tabs.Root` `:default-value="0"`. ([#700](https://github.com/vase-ui/vase-ui/pull/700))
 - Tabs: a tab activates at `click`, and with `activateOnFocus` at a key of the list. A focus from a script or from the Tab key activates nothing. `details.event` of a key is its `keydown`. ([#700](https://github.com/vase-ui/vase-ui/pull/700))
 - Tabs: a disabled tab runs no `click` listener, and a disabled link tab does not navigate. The list stops each arrow key, Home and End that it handles. ([#700](https://github.com/vase-ui/vase-ui/pull/700))
 - Tabs: a panel has no `data-hidden`: use `[hidden]`. A closed panel with `keepMounted` has `hidden` and `inert`. The panel that leaves has the direction of the new tab in `data-activation-direction`. `Tabs.Tab.Metadata` and `Tabs.Panel.Metadata` are removed. ([#700](https://github.com/vase-ui/vase-ui/pull/700))
@@ -161,7 +161,7 @@ The rules below hold for each family. The family list after them gives only what
 
 ### Added
 
-- Add the Nuxt module `@vase-ui/vue/nuxt`. It imports each namespace and composable, and it registers each part as a component, such as `<Dialog.Root>`. The option `prefix` puts a text before each name. The option `temporal` loads a `Temporal` polyfill where the engine has none. ([#766](https://github.com/vase-ui/vase-ui/pull/766))
+- Add the Nuxt module `@vase-ui/vue/nuxt`, for Nuxt 4. It imports each namespace and composable, and it registers each part as a component, such as `<Dialog.Root>`. The option `prefix` puts a text before each name. The option `temporal` loads a `Temporal` polyfill where the engine has none. ([#766](https://github.com/vase-ui/vase-ui/pull/766))
 - Add `LocaleProvider` (`@vase-ui/vue/locale-provider`). It gives its `locale` to each part below it, and the nearest provider wins. ([#707](https://github.com/vase-ui/vase-ui/pull/707))
 - Add `useElement` (`@vase-ui/vue/use-element`). It gives the native element of a function ref, also of a component that exposes `element`. ([#738](https://github.com/vase-ui/vase-ui/pull/738))
 - Add `disabled` to each portal part: it renders the content in place, also on the server. ([#687](https://github.com/vase-ui/vase-ui/pull/687))
@@ -173,7 +173,6 @@ The rules below hold for each family. The family list after them gives only what
 
 ### Fixed
 
-- Drawer: a drawer opens at its open place again after a swipe close. ([#759](https://github.com/vase-ui/vase-ui/pull/759))
 - Toast: after F6, an Escape in `Toast.Viewport` returns the focus to where it was. A popup under the toasts stays open. ([#625](https://github.com/vase-ui/vase-ui/pull/625))
 - An element that a native `<slot>` projects into a popup counts as inside the popup for a dismiss, the focus and the hover. ([#655](https://github.com/vase-ui/vase-ui/pull/655))
 - The style elements of Scroll Area and Select follow their part into another document or shadow root, so the native scrollbar stays hidden there. ([#639](https://github.com/vase-ui/vase-ui/pull/639))
