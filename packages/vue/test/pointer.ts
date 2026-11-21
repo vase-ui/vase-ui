@@ -30,8 +30,7 @@ function firePointerEvent(
   const { timeStamp, ...eventInit } = init;
 
   if (!(timeStamp > 0)) {
-    // Code that reads the gesture speed rejects a stamp of 0 or less, such as `getValidTimeStamp`
-    // in `useSwipeDismiss`. It reads the real clock in its place.
+    // An event of the browser has a stamp greater than 0.
     throw new Error(`firePointer: timeStamp must be greater than 0, received ${timeStamp}.`);
   }
 
