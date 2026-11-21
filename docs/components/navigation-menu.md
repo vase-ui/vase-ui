@@ -171,7 +171,7 @@ A native scrollbar is visible while the content changes. Use [Scroll Area](/comp
 
 ### Animate the content
 
-The root of `NavigationMenu.Content` is a `<Teleport>` to the viewport, and Vue animates a `<Transition>` around such a part only from Vue 3.5.41. Use the `transition` prop of the content in place of a `<Transition>` around it. Its value is the props of a `<Transition>`, such as `:transition="{ name: 'slide' }"`. At a change of the item, the old content leaves while the new one enters. Both have `data-activation-direction`, so the classes of the transition can move them to the side of the new trigger. At a close, the content stays in the popup and leaves with it.
+`NavigationMenu.Content` renders its element in a `<Transition>` of its own, in a `<Teleport>` to the viewport. Use the `transition` prop of the content in place of a `<Transition>` around it. Its value is the props of that `<Transition>`, such as `:transition="{ name: 'slide' }"`. At a change of the item, the old content leaves while the new one enters. Both have `data-activation-direction`, so the classes of the transition can move them to the side of the new trigger. At a close, the content stays in the popup and leaves with it.
 
 While the popup changes its item, `--popup-width` and `--popup-height` give it its old size and then its new size. Give the popup a CSS transition of `width` and `height` to animate the change. Give the positioner `width: var(--positioner-width)` and `height: var(--positioner-height)`. At the side `top` or `left`, the popup is then at the edge of the positioner that faces the trigger, so it grows away from the trigger.
 

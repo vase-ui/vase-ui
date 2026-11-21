@@ -315,7 +315,7 @@
     {
       "entry": "Content",
       "prop": "transition",
-      "reason": "The root of the part is a `<Teleport>`, and Vue animates a `<Transition>` around such a part only from Vue 3.5.41. The part renders the `<Transition>` with these props, so a content animates with each Vue that the package supports."
+      "reason": "The part renders its element in a `<Transition>` of its own, with these props and its own hooks: at a change of the item, the old content leaves out of the flow with `data-activation-direction`, and at a close the content stays in the popup and leaves with it."
     }
   ],
   "returnTypeDifferences": [],

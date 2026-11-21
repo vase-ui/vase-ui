@@ -132,7 +132,7 @@ describe('reported messages', () => {
     expect(takeReportedMessages()).toEqual(['console.warn: text']);
   });
 
-  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, so this case is last.
+  // A `setup` that throws leaves the current instance of Vue set, so this case is last.
   it('gives one warning when a part throws in setup', async () => {
     await expect(render(<ThrowingPart />)).rejects.toThrow('error raised in the setup');
 

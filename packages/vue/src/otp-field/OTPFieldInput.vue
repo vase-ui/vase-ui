@@ -49,10 +49,6 @@ defineExpose({ element });
 function elementProps() {
   const at = index.value;
   const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;
-  // Vue before 3.5.14 sets the key `autocorrect` as a Boolean DOM property, and `off` then turns
-  // autocorrect on. Vue sets the key `autoCorrect` as an attribute. Two keys would give a server
-  // two attributes.
-  const { autocorrect, ...given } = attrs;
   return mergeProps(
     {
       type: 'text',
@@ -62,7 +58,7 @@ function elementProps() {
       // A password manager shows its list at each input with `autocomplete` or `maxlength`.
       autocomplete: at === 0 ? root.autocomplete : 'off',
       maxlength: at === 0 ? root.maxlength : undefined,
-      autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
+      autocorrect: 'off',
       spellcheck: 'false',
       tabindex: root.tabStop === at ? 0 : -1,
       form: root.form,
@@ -82,7 +78,7 @@ function elementProps() {
       onCompositionstart,
       onCompositionend,
     },
-    given,
+    attrs,
   );
 }
 

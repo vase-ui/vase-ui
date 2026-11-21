@@ -27,7 +27,7 @@ test('the package has two run-time dependencies, and `vue` is its one peer', () 
 test('the peer range of `vue` starts with the lowest version', () => {
   assert.ok(
     floor !== undefined,
-    `The range "${vueRange}" must start with "^" and the lowest version, such as "^3.5.12 || ^3.6.0-0".`,
+    `The range "${vueRange}" must start with "^" and the lowest version, such as "^3.5.46 || ^3.6.0-0".`,
   );
 });
 

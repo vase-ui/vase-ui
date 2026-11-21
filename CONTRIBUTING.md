@@ -58,7 +58,7 @@ To run `pnpm test:vapor` or `pnpm test:vapor-parts` on your machine, install the
 
 ### Tool versions
 
-- The lowest version of Vue that the package supports is 3.5.12. Before that version, `useId` can give different ids on the server and in the browser below a component that has `onServerPrefetch` ([vuejs/core#12128](https://github.com/vuejs/core/pull/12128)).
+- The lowest version of Vue that the package supports is 3.5.46.
 - `typescript` stays at version 6. The parity scripts and the API reference use its compiler API, and the main export of `typescript` 7 gives only its version.
 - `vue-component-meta` and `vue-tsc` have the same version, so that both read an SFC with the same `@vue/language-core`.
 - `vitepress` stays at exactly `2.0.0-alpha.21`. The stable release, 1.6.4, installs a second Vite from the 5.x line, which has advisories that no 5.x release corrects. Install the stable 2.0 release when VitePress publishes it.
@@ -455,7 +455,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - Put one assertion in each `waitFor`. Assert the start state before the action when the end state can be true already.
 - A case passes each time that Vitest runs it again in one page: `pnpm test:chromium Collapsible --repeats 1`. A case that replaces a method of a prototype or of a global object restores the method when the case ends.
 - When a test expects a Vue warning or a `Vase UI:` message, assert the whole list of `takeReportedMessages()`. A case with a console spy asserts each call of the spy.
-- Put a case that throws in `setup` last in its file. In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case can get a warning about a slot.
+- Put a case that throws in `setup` last in its file. A `setup` that throws leaves the current instance of Vue set, and a later case can get a warning about a slot.
 - For a mouse, the browser sends `pointerdown` and `mousedown` in one task, and `pointerup`, `mouseup` and `click` in a later task. A case that depends on a 0 ms timer of a part dispatches the events of one task in one `Promise.all`.
 - A case that asserts what a part does when an element loses the focus moves the real focus, with `blur()` or `focus()` on another element. A dispatched `focusout` does not move the focus.
 - To assert that a timer did no work, call `await wait(0)` after the action. One frame is not a wait for a 0 ms timer.

@@ -38,21 +38,17 @@ function countTransitions(target: Element) {
   return runs;
 }
 
-/** The patch of Vue 3.5, or `Infinity` for a later Vue. */
-const patchOf35 = version.startsWith('3.5.') ? Number(version.split('.')[2]) : Infinity;
-
 // The parts that call `useEnterAfterLeave` render their element in this way. `Avatar.Image` removes
 // its element only in an update of its own props, which renders its `<Transition>` again.
 describe('a <Transition> around a component that renders its root element by injected state', () => {
-  // In a Vapor component, `<Transition>` takes the old element back. Vue 3.5.29 to 3.5.45 and Vue
-  // 3.6.0-rc.15 and earlier keep the enter classes of the second element
-  // (https://github.com/vuejs/core/issues/16359). The other releases give it its enter.
+  // In a Vapor component, `<Transition>` takes the old element back. Vue 3.6.0-rc.15 and earlier
+  // keep the enter classes of the second element (https://github.com/vuejs/core/issues/16359).
+  // Vue 3.5.46 gives it its enter.
   const vapor = inject('app').startsWith('vapor');
   const rcOf36 = /^3\.6\.0-rc\.(\d+)$/.exec(version);
-  const keepsEnterClasses =
-    !vapor && (rcOf36 ? Number(rcOf36[1]) <= 15 : patchOf35 >= 29 && patchOf35 <= 45);
+  const keepsEnterClasses = !vapor && rcOf36 !== null && Number(rcOf36[1]) <= 15;
 
-  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends with Vue 3.5.29 to 3.5.45 and 3.6.0-rc.15 or earlier; Vapor gives one element', async () => {
+  test('an open during a leave gives a second element, which keeps the enter classes after the leave ends with Vue 3.6.0-rc.15 or earlier; Vapor gives one element', async () => {
     const scene = reactive({ open: false });
     const { root: host } = mount(MeasureInjectedPanel, { scene });
     const panels = () => [...host.querySelectorAll('.MeasurePanel')];
@@ -92,10 +88,7 @@ describe('a <Transition> around a component that renders its root element by inj
 });
 
 describe('hidden="until-found"', () => {
-  // Vue writes the value on a server from 3.5.41, and from 3.6.0-rc.3 in Vue 3.6.
-  const writesOnServer = patchOf35 >= 41;
-
-  test('Vue writes the value in a client render, and on a server from Vue 3.5.41; the hydration keeps the server value with no message', async () => {
+  test('Vue writes the value in a client render and on a server; the hydration keeps the server value with no message', async () => {
     const scene = reactive({ closed: true });
     const { root: client } = mount(MeasureUntilFound, { scene });
     const measured = client.querySelector('.Measured')!;
@@ -107,11 +100,10 @@ describe('hidden="until-found"', () => {
     await nextTick();
     expect(measured).toHaveAttribute('hidden', 'until-found');
     const server = await renderOnServer('MeasureUntilFound');
-    const serverValue = writesOnServer ? 'until-found' : '';
-    expect(server.querySelector('.Measured')).toHaveAttribute('hidden', serverValue);
+    expect(server.querySelector('.Measured')).toHaveAttribute('hidden', 'until-found');
     hydrate(MeasureUntilFound, {}, server);
     await nextTick();
-    expect(server.querySelector('.Measured')).toHaveAttribute('hidden', serverValue);
+    expect(server.querySelector('.Measured')).toHaveAttribute('hidden', 'until-found');
   });
 
   test('at a fragment navigation, beforematch comes first and bubbles, the browser then removes hidden, and a task of the listener comes after; the closed box keeps its padding and border', async () => {
