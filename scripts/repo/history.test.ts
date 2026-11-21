@@ -93,6 +93,11 @@ const rows: { name: string; text: string; traces: string[] }[] = [
   },
   { name: 'a purpose', text: '// The id is used to name the popup.', traces: [] },
   {
+    name: 'an earlier form',
+    text: '// A part of the old form keeps its slot.',
+    traces: ['a name of a form'],
+  },
+  {
     name: 'two forms of a part',
     text: '// The check accepts both forms until each family has the new one.',
     traces: ['a name of a form'],
@@ -114,6 +119,26 @@ const rows: { name: string; text: string; traces: string[] }[] = [
     traces: ['a plan label'],
   },
   { name: 'a range of labels', text: '// M1 to M6 use native elements.', traces: ['a plan label'] },
+  {
+    name: 'a label after the word measurement',
+    text: '// Firefox completes no lazy image (measurement M7).',
+    traces: ['a plan label'],
+  },
+  {
+    name: 'a label of a case in another file',
+    text: '// A double click selects text (N9 of popup.test.ts).',
+    traces: ['a plan label'],
+  },
+  {
+    name: 'a label at the start of a comment',
+    text: '// P3. The window loses the focus.',
+    traces: ['a plan label'],
+  },
+  {
+    name: 'a label after a section number',
+    text: "describe('modal (3.2, L4)', () => {",
+    traces: ['a plan label'],
+  },
   {
     name: 'a pull request of this repository',
     text: '// The order came with PR #745.',
