@@ -787,8 +787,9 @@ describe('the focus', () => {
     byId('before').focus();
     await userEvent.keyboard('{Tab}');
     await opened();
-    // A browser that loses the focus of its window sends `focusout` with no related target, and
-    // the trigger stays the active element.
+    // When its window loses the focus, Chromium and Firefox send `focusout` with no related target,
+    // and the trigger stays the active element. At the return, they send `focusin`. WebKit sends
+    // neither (test/measurements/tooltip.test.ts).
     trigger().dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     await sleep(20);
     expect(popup()).not.toBe(null);

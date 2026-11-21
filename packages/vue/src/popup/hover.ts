@@ -428,10 +428,10 @@ export function useOpenOnFocus(
       }
       return;
     }
-    // A focus that moves into a shadow tree has the host as its related target, and a window that
-    // loses the focus gives none and keeps the trigger as its active element. A press on an element
-    // with no tab stop moves the focus to `<body>` (test/measurements/tooltip.test.ts). So the
-    // trigger reads the focused element one task later.
+    // A focus that moves into a shadow tree has the host as its related target. A window that loses
+    // the focus gives none in Chromium and Firefox, and keeps the trigger as its active element. A
+    // press on an element with no tab stop moves the focus to `<body>`
+    // (test/measurements/tooltip.test.ts). So the trigger reads the focused element one task later.
     const doc = ownerDocument(element);
     later.start(0, () => {
       // Chromium sends `focusout` to a focused link that Vue removes
