@@ -292,7 +292,7 @@ Write no code that guards, tracks, repairs or copies a behavior on an assumption
 1. Build the smallest case with plain Vue and native elements, and see what Chromium, Firefox and WebKit do. Keep the case as a test, as [Measurements](#measurements) says.
 2. When the browser or Vue does the right thing in the three browsers, write no code.
 3. When the browsers differ and a person notices it, write the least code that makes them agree. The target is the HTML Standard and the WAI-ARIA Authoring Practices. A preference of the user, such as the macOS preference for the Tab key, is not a difference to smooth over.
-4. A comment at such code names its measurement: the file and the title of the case, such as `(test/measurements/dialog.test.ts, "an inert element that covers the page")`.
+4. A comment at such code names its measurement file, such as `(test/measurements/dialog.test.ts)`. To name one case of the file, add the title of the case: `(test/measurements/dialog.test.ts, "an inert element that covers the page")`.
 
 A part handles the events that the browser sends. It detects no value that an element got with no event. Examples are text before the hydration, a press on a label before the hydration, and form state that the browser restores.
 
