@@ -1699,6 +1699,26 @@ describe('the portal, the positioner and the popup', () => {
     await sleep(50);
     expect(byTestId('viewport-t')).not.toHaveAttribute('data-instant');
   });
+
+  test('the arrow in a positioned popup with a border points at the center of the trigger', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: { defaultOpen: true },
+          triggers: [
+            { key: 't', attrs: { style: 'position: fixed; left: 300px; top: 200px; width: 40px' } },
+          ],
+          popup: { style: 'position: relative; width: 80px; border: 1px solid' },
+          arrow: { style: 'width: 10px; height: 10px' },
+        },
+      ],
+    });
+    await opened();
+    const arrow = byTestId('arrow-t')!;
+    await waitFor(() => expect(arrow.style.left).toMatch(/px$/));
+    expect(Math.abs(centerOf(arrow).x - centerOf(trigger()).x)).toBeLessThanOrEqual(0.5);
+  });
 });
 
 describe('with other parts', () => {

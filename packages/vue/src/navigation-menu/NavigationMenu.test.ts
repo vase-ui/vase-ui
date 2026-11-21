@@ -1066,6 +1066,20 @@ describe('the size', () => {
 });
 
 describe('the placement', () => {
+  test('the arrow in a positioned popup with a border points at the center of the trigger', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      triggers: { one: { style: 'position: fixed; left: 300px; top: 200px; width: 40px' } },
+      popup: { style: 'position: relative; border: 1px solid' },
+      arrow: { style: 'width: 10px; height: 10px' },
+    });
+    await shows('one');
+    await placed();
+    const arrow = get('arrow');
+    await waitFor(() => expect(arrow.style.left).toMatch(/px$/));
+    expect(Math.abs(centerOf(arrow).x - centerOf(get('trigger-one')).x)).toBeLessThanOrEqual(0.5);
+  });
+
   test('the positioner is below the active trigger, placed with insets', async () => {
     await mountMenu({ root: { defaultValue: 'one' }, positioner: { sideOffset: 4 } });
     await shows('one');

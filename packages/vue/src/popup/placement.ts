@@ -449,8 +449,28 @@ interface ArrowOptions {
 }
 
 /**
- * The `arrow()` of Floating UI with the floating element as the offset parent of the arrow. With no
- * arrow, it gives the center of the anchor to the transform origin.
+ * The padding box of the offset parent of the arrow on an axis: the distance of its start from the
+ * border edge of the floating element, and its length. The offset parent is the nearest positioned
+ * ancestor of the arrow: the popup when it is positioned, else the floating element. The offsets
+ * ignore transforms, so a popup that scales while it enters has the same box.
+ */
+function arrowOffsetParentBox(arrow: HTMLElement | null, floating: HTMLElement, axis: 'x' | 'y') {
+  const x = axis === 'x';
+  const parent = arrow?.offsetParent;
+  const block = parent && floating.contains(parent) ? (parent as HTMLElement) : floating;
+  let start = x ? floating.clientLeft : floating.clientTop;
+  let element: HTMLElement | null = block;
+  while (element && element !== floating) {
+    start += x ? element.offsetLeft + element.clientLeft : element.offsetTop + element.clientTop;
+    element = element.offsetParent as HTMLElement | null;
+  }
+  return { start, length: x ? block.clientWidth : block.clientHeight };
+}
+
+/**
+ * The `arrow()` of Floating UI. The place of the arrow is in the padding box of its offset parent,
+ * so the borders and the place of that box in the floating element do not move the arrow off the
+ * center. With no arrow, it gives the center of the anchor to the transform origin.
  * @see https://floating-ui.com/docs/arrow
  */
 function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
@@ -466,18 +486,16 @@ function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
       const arrowSize = element ? await platform.getDimensions(element) : { width: 0, height: 0 };
       const minProp = axis === 'y' ? 'top' : 'left';
       const maxProp = axis === 'y' ? 'bottom' : 'right';
-      const clientSize =
-        elements.floating[axis === 'y' ? 'clientHeight' : 'clientWidth'] || rects.floating[length];
-      const endDiff =
-        rects.reference[length] + rects.reference[axis] - coords[axis] - rects.floating[length];
-      const startDiff = coords[axis] - rects.reference[axis];
-      const centerToReference = endDiff / 2 - startDiff / 2;
+      const box = arrowOffsetParentBox(element, elements.floating, axis);
+      const clientSize = box.length || rects.floating[length];
       // A large padding would move the arrow off the center.
       const largest = clientSize / 2 - arrowSize[length] / 2 - 1;
       const min = Math.min(paddingObject[minProp], largest);
       const maxPadding = Math.min(paddingObject[maxProp], largest);
       const max = clientSize - arrowSize[length] - maxPadding;
-      const center = clientSize / 2 - arrowSize[length] / 2 + centerToReference;
+      const referenceCenter =
+        rects.reference[axis] + rects.reference[length] / 2 - coords[axis] - box.start;
+      const center = referenceCenter - arrowSize[length] / 2;
       const place = clamp(min, center, max);
       // On a small anchor, the arrow of an aligned popup can point at nothing. The popup then moves
       // one time, and `shift()` still acts.
@@ -534,9 +552,14 @@ function transformOrigin(
             ? '100%'
             : '0%';
       } else {
+        // The center of the arrow from the padding edge of the floating element, where the popup
+        // starts.
+        const axis = vertical ? 'x' : 'y';
+        const { start } = arrowOffsetParentBox(arrowElement, elements.floating, axis);
+        const border = vertical ? elements.floating.clientLeft : elements.floating.clientTop;
         const at = vertical ? data.arrow?.x || 0 : data.arrow?.y || 0;
         const length = vertical ? arrowElement?.clientWidth || 0 : arrowElement?.clientHeight || 0;
-        cross = `${at + length / 2}px`;
+        cross = `${start - border + at + length / 2}px`;
       }
       let along = side === 'top' || side === 'left' ? `calc(100% + ${gap}px)` : `${-gap}px`;
       // A popup that a shift moved over its anchor grows from the center of the anchor.

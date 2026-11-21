@@ -1811,6 +1811,48 @@ describe('the placement', () => {
       });
     });
 
+    test.each([
+      {
+        name: 'a popup with a border',
+        side: 'bottom',
+        popup: 'position: relative; border: 1px solid',
+      },
+      {
+        name: 'a popup with borders of other widths',
+        side: 'right',
+        popup: 'position: relative; border: solid; border-width: 4px 1px 2px 3px',
+      },
+      {
+        name: 'a positioner with a border',
+        side: 'bottom',
+        popup: 'border: 1px solid',
+        positioner: 'border: 3px solid',
+      },
+    ])(
+      'with the offset parent $name, the arrow and the transform origin point at the center of the anchor',
+      async ({ side, popup: popupStyle, positioner: positionerStyle }) => {
+        placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, side, style: positionerStyle },
+          popup: { style: `width: 120px; height: 80px; ${popupStyle}` },
+          arrow: { style: 'width: 10px; height: 10px' },
+        });
+        await opened();
+        await placed();
+        const arrow = byTestId('arrow');
+        await waitFor(() => expect(arrow.style.left || arrow.style.top).toMatch(/px$/));
+        const axis = side === 'bottom' ? 'x' : 'y';
+        const center = centerOf(anchor)[axis];
+        expect(Math.abs(centerOf(arrow)[axis] - center)).toBeLessThanOrEqual(0.5);
+        const origin = positioner()!.style.getPropertyValue('--transform-origin').split(' ');
+        const cross = parseFloat((axis === 'x' ? origin[0] : origin.at(-1))!);
+        expect(
+          Math.abs(popup()!.getBoundingClientRect()[axis] + cross - center),
+        ).toBeLessThanOrEqual(0.5);
+      },
+    );
+
     test('the alignment flips at the edge of the view; with `side: shift`, the popup shifts and keeps its alignment, and grows from the anchor', async () => {
       placeAnchor(`left: ${innerWidth - 40}px; top: 200px; width: 20px; height: 20px`);
       const wide = { style: 'width: 200px' };
