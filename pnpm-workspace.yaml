@@ -3,6 +3,19 @@ allowBuilds:
   esbuild: false
   # The install script selects the build for Vue 2 or for Vue 3. The package ships the build for Vue 3.
   vue-demi: false
+# pnpm installs a release only when it is one day old. Vue 3.5.46 came out on 2026-11-20 at 08:21
+# UTC. Remove these entries after 2026-11-21 at 08:21 UTC.
+minimumReleaseAgeExclude:
+  - '@vue/compiler-core@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/compiler-dom@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/compiler-sfc@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/compiler-ssr@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/reactivity@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/runtime-core@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/runtime-dom@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/server-renderer@3.5.46' # A package of Vue 3.5.46.
+  - '@vue/shared@3.5.46' # A package of Vue 3.5.46.
+  - vue@3.5.46 # A package of Vue 3.5.46.
 packages:
   - docs
   - fixtures/*

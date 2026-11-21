@@ -231,8 +231,8 @@ jobs:
       - run: pnpm --filter @vase-ui/vite-fixture test:published:floor
 
   # This job builds the package and the site again, beside `check`, so that `check` does not take
-  # longer. Then it runs axe-core on each page of the built site, and it checks the focus of the
-  # search box.
+  # longer. Then it runs axe-core on each page of the built site, it checks the focus of the search
+  # box, and it checks the backdrops of the demos with the style sheets of iOS.
   docs-axe:
     runs-on: ubuntu-latest
     container:
@@ -255,6 +255,7 @@ jobs:
       - run: pnpm docs:build
       - run: pnpm docs:axe
       - run: pnpm docs:search-focus
+      - run: pnpm docs:ios-backdrop
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
   # The version is the dist-tag `rc` of `vue` on npm.
