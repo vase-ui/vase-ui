@@ -59,17 +59,19 @@ describe('what a field gives to its control', () => {
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
-  test('aria-describedby has the ids of the developer and then the ids of the field; null of the developer removes them', async () => {
-    const [fromField, joined, removed] = (
+  test('aria-describedby has the ids of the developer and then the ids of the field, each one time; null of the developer removes them', async () => {
+    const [fromField, joined, shared, removed] = (
       await mountInField(
         { invalid: true },
         {},
         { 'aria-describedby': 'hint' },
+        { 'aria-describedby': 'error  hint' },
         { 'aria-describedby': null },
       )
     ).inputs;
     expect(fromField).toHaveAttribute('aria-describedby', 'description error');
     expect(joined).toHaveAttribute('aria-describedby', 'hint description error');
+    expect(shared).toHaveAttribute('aria-describedby', 'error hint description');
     expect(removed).not.toHaveAttribute('aria-describedby');
   });
 

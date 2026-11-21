@@ -136,8 +136,13 @@ export function joinDescribedBy(attrs: Record<string, unknown>, field: FieldForC
   if (!field) return attrs;
   const given = attrs['aria-describedby'];
   if (given === null) return attrs;
-  const ids = [typeof given === 'string' ? given : undefined, field.describedBy];
-  return { ...attrs, 'aria-describedby': ids.filter(Boolean).join(' ') || undefined };
+  // Each id one time. Chromium reads the text of an id again for each time that the list names it
+  // (test/measurements/field.test.ts).
+  const ids = new Set(
+    `${typeof given === 'string' ? given : ''} ${field.describedBy ?? ''}`.split(/\s+/),
+  );
+  ids.delete('');
+  return { ...attrs, 'aria-describedby': [...ids].join(' ') || undefined };
 }
 
 /** Makes the element the control of its field while the element is mounted. */
