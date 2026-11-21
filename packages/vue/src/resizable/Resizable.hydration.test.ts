@@ -258,8 +258,8 @@ describe('the hydration', () => {
     expect(server.at('h1')).toHaveAttribute('aria-valuenow', '60');
   });
 
-  // A Vapor component of Vue 3.6 has no async `setup`, so a Vapor app with Vapor parts cannot render
-  // the fixture.
+  // Vue 3.6 runs no `<Suspense>` in a Vapor app with Vapor parts, and the fixture has an async
+  // `setup` in a `<Suspense>`.
   test.skipIf(inject('app') === 'vapor')(
     'a panel below an async setup: the server HTML of the panels beside it lacks it, and after the hydration each panel has the layout of all',
     async () => {

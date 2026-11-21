@@ -1,9 +1,10 @@
-import { describe, expect, inject, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { defineComponent, h, nextTick, reactive } from 'vue';
+import { nextTick, reactive } from 'vue';
 import type { TimeClockRootChangeEventDetails } from '@vase-ui/vue/time-clock';
 import { reset as resetWarnings } from '../common/warn';
 import { dataAttributes } from '../../test/field';
+import ClassedSpan from '../../test/fixtures/ClassedSpan.vue';
 import DateTimePartsInLocaleProvider from '../../test/fixtures/DateTimePartsInLocaleProvider.vue';
 import TimeClockAs from '../../test/fixtures/TimeClockAs.vue';
 import TimeClockParts from '../../test/fixtures/TimeClockParts.vue';
@@ -13,13 +14,6 @@ import { takeReportedMessages } from '../../test/reportedMessages';
 import { pointOnFace } from '../../test/time-clockTestUtils';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
-
-/** A component with a class of its own on its element. */
-const ClassedSpan = defineComponent({
-  setup(_, { slots }) {
-    return () => h('span', { class: 'Own' }, slots.default?.());
-  },
-});
 
 /** Props of a clock that write each event in `log`. */
 function record(log: string[], attrs: Record<string, unknown> = {}) {
@@ -190,17 +184,13 @@ describe('the parts', () => {
     expect(numbers[3]).toHaveAttribute('data-selected');
   });
 
-  // A Vapor app without the interop plugin renders no virtual DOM component in a part.
-  test.skipIf(inject('app') === 'vapor')(
-    'the element of a component in `as` keeps the attributes of the component',
-    async () => {
-      const { root } = mount(TimeClockAs, { numberAs: ClassedSpan });
-      await nextTick();
-      const numbers = [...root.querySelectorAll('article span.Number')];
-      expect(numbers).toHaveLength(12);
-      expect(numbers.every((number) => number.className === 'Own Number')).toBe(true);
-    },
-  );
+  test('the element of a component in `as` keeps the attributes of the component', async () => {
+    const { root } = mount(TimeClockAs, { numberAs: ClassedSpan });
+    await nextTick();
+    const numbers = [...root.querySelectorAll('article span.Number')];
+    expect(numbers).toHaveLength(12);
+    expect(numbers.every((number) => number.className === 'Own Number')).toBe(true);
+  });
 
   test('the element slots render the elements of the developer, with the state; the attributes of the developer win; each part exposes its element', async () => {
     const { root, exposed } = mount(TimeClockSlots);

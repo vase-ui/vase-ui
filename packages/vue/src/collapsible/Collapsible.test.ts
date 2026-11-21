@@ -4,6 +4,7 @@ import { defineComponent, h, nextTick, reactive } from 'vue';
 import type { CollapsibleRootChangeEventDetails } from '@vase-ui/vue/collapsible';
 import { expectNoAxeViolations } from '../../test/axe';
 import { dataAttributes } from '../../test/field';
+import ClassedSpan from '../../test/fixtures/ClassedSpan.vue';
 import CollapsibleElements from '../../test/fixtures/CollapsibleElements.vue';
 import CollapsibleFound from '../../test/fixtures/CollapsibleFound.vue';
 import CollapsibleParts from '../../test/fixtures/CollapsibleParts.vue';
@@ -63,6 +64,10 @@ const PlainSpan = defineComponent({
     return () => h('span', slots.default?.());
   },
 });
+
+// A component of the mode of the app. A Vapor component has no root element for the part, so it
+// exposes its element.
+const SpanOfApp = inject('app').startsWith('vapor') ? ClassedSpan : PlainSpan;
 
 /** Navigates to the fragment `id`, as a link to it does. */
 async function navigateTo(id: string) {
@@ -146,22 +151,18 @@ describe('the elements', () => {
     expect(root.querySelector('[role=button]')!.tagName).toBe('SPAN');
   });
 
-  // A Vapor app without the interop plugin renders no virtual DOM component in a part.
-  test.skipIf(inject('app') === 'vapor')(
-    'read the root element of a component in `as` that exposes no element',
-    async () => {
-      const { exposed, trigger, panel, press } = await mountCollapsible({
-        trigger: { as: PlainSpan },
-        panel: { as: PlainSpan },
-      });
-      expect(exposed.trigger.element).toBe(trigger);
-      expect(trigger).toHaveAttribute('role', 'button');
-      expect(trigger).not.toHaveAttribute('type');
-      await press();
-      expect(exposed.panel.element).toBe(panel());
-      expect(panel()!.style.getPropertyValue('--collapsible-panel-height')).toMatch(/^\d+px$/);
-    },
-  );
+  test('read the element of a component in `as`: the root element of a virtual DOM component, the exposed element of a Vapor component', async () => {
+    const { exposed, trigger, panel, press } = await mountCollapsible({
+      trigger: { as: SpanOfApp },
+      panel: { as: SpanOfApp },
+    });
+    expect(exposed.trigger.element).toBe(trigger);
+    expect(trigger).toHaveAttribute('role', 'button');
+    expect(trigger).not.toHaveAttribute('type');
+    await press();
+    expect(exposed.panel.element).toBe(panel());
+    expect(panel()!.style.getPropertyValue('--collapsible-panel-height')).toMatch(/^\d+px$/);
+  });
 
   test('VUE-60: the panel has one root node; a scoped style and v-show reach its element', async () => {
     const scene = reactive({ shown: true });
