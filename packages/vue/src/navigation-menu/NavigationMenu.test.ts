@@ -11,6 +11,7 @@ import TabsInNavigationMenu from '../../test/fixtures/TabsInNavigationMenu.vue';
 import { movePointerThrough } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readAfter, readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -409,14 +410,22 @@ describe('the hover', () => {
   test('a mouse that rests on a trigger for `delay` opens its item and moves no focus; the menu closes `closeDelay` after the pointer left', async () => {
     const log: string[] = [];
     await mountMenu({ root: rootEvents(log, { delay: 60, closeDelay: 60 }) });
+    const popup = () => byTestId('popup');
+    const beforeOpen = readAfter(get('trigger-one'), 'pointerenter', 20, popup);
     await userEvent.hover(get('trigger-one'));
-    await wait(20);
-    expect(byTestId('popup')).toBe(null);
+    expect(await beforeOpen).toBe(null);
     await shows('one');
     expect(document.activeElement).toBe(document.body);
+    let leftAt = 0;
+    get('trigger-one').addEventListener('pointerleave', () => (leftAt = performance.now()));
+    const closedAt = readWhen(
+      () => get('trigger-one').getAttribute('aria-expanded') === 'false',
+      () => performance.now(),
+    );
     await userEvent.hover(byId('outside'));
-    await wait(20);
-    expect(byTestId('popup')).not.toBe(null);
+    // The browser rounds the times of its clock, so a measured time can be up to 2 ms below the
+    // delay.
+    expect((await closedAt) - leftAt).toBeGreaterThanOrEqual(58);
     await closed();
     expect(document.activeElement).toBe(document.body);
     expect(log).toEqual([
@@ -473,11 +482,19 @@ describe('the hover', () => {
 
   test('a press in the first 500 ms after a hover open keeps the menu open; the backdrop lets the pointer through until the press', async () => {
     await mountMenu({ root: { delay: 0 }, backdrop: {} });
+    // A press command can come more than 500 ms after the open on a busy machine. The click of the
+    // DOM comes in the task of the open.
+    const backdropAtPress = readWhen(
+      () => byTestId('backdrop') !== null,
+      () => {
+        const pointerEvents = get('backdrop').style.pointerEvents;
+        get('trigger-one').click();
+        return pointerEvents;
+      },
+    );
     await userEvent.hover(get('trigger-one'));
-    await shows('one');
-    expect(get('backdrop').style.pointerEvents).toBe('none');
-    await userEvent.click(get('trigger-one'));
-    await wait(20);
+    expect(await backdropAtPress).toBe('none');
+    await nextTick();
     expect(byTestId('content-one')).not.toBe(null);
     expect(get('backdrop').style.pointerEvents).toBe('');
     await userEvent.hover(byId('outside'));
@@ -838,7 +855,6 @@ describe('the content', () => {
   });
 
   test('with `transition`, the new content enters and the old one leaves out of the flow with the new direction; the popup takes the size of the new content', async () => {
-    const classes: string[] = [];
     await mountMenu({
       root: { defaultValue: 'one' },
       contents: {
@@ -849,15 +865,29 @@ describe('the content', () => {
     });
     const old = await shows('one');
     await placed();
+    // The checks come in the task of the change: the transitions of 80 ms can end before the
+    // command ends.
+    const atChange = readWhen(
+      () => byTestId('content-two') !== null,
+      () => {
+        const next = get('content-two');
+        return {
+          next,
+          classes: [next.className, old.className],
+          directions: [next, old].map((element) => element.dataset.activationDirection),
+          position: old.style.position,
+          inert: old.hasAttribute('inert'),
+        };
+      },
+    );
     await userEvent.click(get('trigger-two'));
-    const next = await shows('two');
-    classes.push(next.className, old.className);
-    expect(next.className).toContain('slide-enter-active');
-    expect(old.className).toContain('slide-leave-active');
-    expect(old).toHaveAttribute('data-activation-direction', 'right');
-    expect(next).toHaveAttribute('data-activation-direction', 'right');
-    expect(old.style.position).toBe('absolute');
-    expect(old).toHaveAttribute('inert');
+    const { next, classes, directions, position, inert } = await atChange;
+    expect(classes[0]).toContain('slide-enter-active');
+    expect(classes[1]).toContain('slide-leave-active');
+    expect(directions).toEqual(['right', 'right']);
+    expect(position).toBe('absolute');
+    expect(inert).toBe(true);
+    await shows('two');
     await waitFor(() => expect(old.isConnected).toBe(false));
     await waitFor(() => expect(get('popup').style.getPropertyValue('--popup-width')).toBe(''));
     expect(get('popup').offsetWidth).toBe(next.offsetWidth);

@@ -8,6 +8,7 @@ import TooltipParts from '../../test/fixtures/TooltipParts.vue';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readAfter, readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -542,21 +543,30 @@ describe('the hover', () => {
     await userEvent.hover(trigger());
     const first = await opened();
     attrs.delay = 10_000;
-    await hoverAway();
-    await waitFor(() => expect(first.className).toContain('fade-leave-active'));
     let most = 0;
     const observer = new MutationObserver(() => {
       most = Math.max(most, document.querySelectorAll('[data-testid="popup-t"]').length);
     });
     observer.observe(document.body, { childList: true, subtree: true });
     onTestFinished(() => observer.disconnect());
-    await userEvent.hover(trigger());
-    await nextTick();
-    expect(log.at(-2)).toBe('openChange true trigger-hover');
+    // The hover and the checks come in the task where the leave starts. A close in the enter
+    // reverses its transition, so the leave can end in some milliseconds, before a command ends.
+    const atReopen = readWhen(
+      () => first.classList.contains('fade-leave-active'),
+      async () => {
+        movePointer(trigger(), centerOf(trigger()));
+        await nextTick();
+        const reason = log.at(-2);
+        await nextTick();
+        return { reason, isConnected: first.isConnected, className: first.className };
+      },
+    );
+    await hoverAway();
+    const { reason, isConnected, className } = await atReopen;
+    expect(reason).toBe('openChange true trigger-hover');
     // The old popup ends its leave before the new one enters.
-    await nextTick();
-    expect(first.isConnected).toBe(true);
-    expect(first.className).toContain('fade-leave-active');
+    expect(isConnected).toBe(true);
+    expect(className).toContain('fade-leave-active');
     await waitFor(() => expect(popup() ?? first).not.toBe(first));
     await sleep(20);
     expect(most).toBe(1);
@@ -880,7 +890,14 @@ describe('the press', () => {
         },
       ],
     });
-    await userEvent.click(trigger('a'));
+    // The press comes in the task of the `pointerenter`, after the listener of the trigger: the open
+    // waits 300 ms, and a command can take more time.
+    trigger('a').addEventListener(
+      'pointerenter',
+      () => trigger('a').dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'mouse' })),
+      { once: true },
+    );
+    await userEvent.hover(trigger('a'));
     await sleep(500);
     expect(popup()).toBe(null);
     await userEvent.hover(trigger('b'));
@@ -1464,10 +1481,15 @@ describe('`disabled`', () => {
       },
     ]);
     await mountTooltips({ tooltips });
+    // The trigger becomes disabled in its delay, and the check comes after the delay. Both start at
+    // the `pointerenter` of the hover, because the command can end after the delay.
+    const disabled = readAfter(trigger('b'), 'pointerenter', 0, () => {
+      tooltips[0]!.triggers[1]!.attrs.disabled = true;
+    });
+    const afterDelay = readAfter(trigger('b'), 'pointerenter', 150, popup);
     await userEvent.hover(trigger('b'));
-    tooltips[0]!.triggers[1]!.attrs.disabled = true;
-    await sleep(150);
-    expect(popup()).toBe(null);
+    await disabled;
+    expect(await afterDelay).toBe(null);
     await userEvent.hover(trigger('a'));
     await opened();
     expect(trigger('b')).toHaveAttribute('data-trigger-disabled');

@@ -439,9 +439,10 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - `renderOnServer(fixture, props)` of `test/render.ts` renders a fixture of `test/fixtures` in Node, and `hydrate` hydrates that HTML in the app of the project. The props go to Node as JSON, so a prop cannot be a function.
 - `test/render.ts` prevents each submit of a form, so that Firefox does not load the test page again. `submitsPrevented` records whether a listener of the form prevented the submit first.
 - `waitFor` of `test/waitFor.ts` gives up after 180 frames, not after a time. A busy machine can stall the page for some seconds, and a stall uses no frame.
-- `test/setup.ts` fails a test when Vue warns, or when a call to `console.warn` or `console.error` reaches the console. It moves the real pointer off the page after a test that put it there. It refuses a pointer lock, so a test that needs one mocks `requestPointerLock`.
+- `test/setup.ts` fails a test when Vue warns, or when a call to `console.warn` or `console.error` reaches the console. It moves the real pointer off the page after a test that put it there. It refuses a pointer lock, so a test that needs one mocks `requestPointerLock`. A test ends when `<body>` is empty: in a Vapor app, an element that leaves in a `<Transition>` stays after the unmount until its leave ends.
 - `takeReportedMessages()` of `test/reportedMessages.ts` takes the messages that a test expects. Assert the whole list that it returns.
 - `nextEvent` of `test/animation.ts` waits for an event of a transition or an animation. It gives up after 180 frames.
+- `readAfter` of `test/wait.ts` reads a value some milliseconds after an event of an element. `readWhen` reads a value in the task of a change of the DOM, such as the start of a leave.
 - `expectNoAxeViolations` of `test/axe.ts` runs axe-core on an element.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. It imports `renderToString` from `vue/server-renderer`.
 
@@ -458,6 +459,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - For a mouse, the browser sends `pointerdown` and `mousedown` in one task, and `pointerup`, `mouseup` and `click` in a later task. A case that depends on a 0 ms timer of a part dispatches the events of one task in one `Promise.all`.
 - A case that asserts what a part does when an element loses the focus moves the real focus, with `blur()` or `focus()` on another element. A dispatched `focusout` does not move the focus.
 - To assert that a timer did no work, call `await wait(0)` after the action. One frame is not a wait for a 0 ms timer.
+- A command of `userEvent` can take some seconds on a busy machine. A check before the end of a delay starts at the event that starts the delay, with `readAfter`. An action that must come in a delay, a press window or a leave comes in the task where it starts, with `readWhen` or a listener of the event.
 - Do not poll a state that exists only while an animation runs. Record it in a `MutationObserver`. Then wait for a state that stays, such as `hidden` or the removal of the element.
 - Give a duration of 100 s to each animation that a case ends with its own call, such as `finish()`. A late frame can end a short animation before the part reads it.
 - A case of a date part gives the part `today`, or a value and a time zone, so that it does not depend on the clock. Compute an expected text in a locale with the same locale and options as the part.
