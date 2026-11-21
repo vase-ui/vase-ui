@@ -1881,8 +1881,13 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await page.getByTestId('title').getAttribute('id'),
     );
     const code = (await Promise.all(scripts)).join('\n');
-    expect(code).toMatch(/\bDialogPopup\b/);
-    expect(code).not.toMatch(/\bSelectRoot\b/);
+    // Vue gives each component of a `<script setup>` its `__name`. The name of a part starts with
+    // the name of its family. The production build writes the name in backticks.
+    const components = new Set(
+      Array.from(code.matchAll(/__name:\s*["`]([A-Z]\w*)["`]/g), ([, name]) => name),
+    );
+    expect(components).toContain('DialogPopup');
+    expect([...components].filter((name) => !/^(Dialog|Button$)/.test(name))).toEqual([]);
     expect(messages).toEqual([]);
   });
 
