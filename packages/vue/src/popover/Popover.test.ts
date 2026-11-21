@@ -2041,6 +2041,35 @@ describe('the placement', () => {
       expect(Math.abs(overlap - 1.5 * (10 / 2 + (5 + 5) / 2))).toBeLessThanOrEqual(0.5);
     });
 
+    // Floating UI reads the zoom of the floating element from `Element.currentCSSZoom`, which the
+    // WebKit of Playwright on Linux does not have (floating-ui/floating-ui#3492).
+    test.skipIf(!('currentCSSZoom' in Element.prototype)).each([
+      { zoomed: 'html', positionMethod: 'absolute' },
+      { zoomed: 'body', positionMethod: 'absolute' },
+      { zoomed: 'html', positionMethod: 'fixed' },
+    ] as const)(
+      'under `zoom: 1.5` on <$zoomed>, with the position method $positionMethod, the popup is at its side offset under the center of the anchor',
+      async ({ zoomed, positionMethod }) => {
+        const { style } = zoomed === 'html' ? document.documentElement : document.body;
+        style.zoom = '1.5';
+        onTestFinished(() => {
+          style.zoom = '';
+        });
+        placeAnchor('left: 100px; top: 100px; width: 40px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, sideOffset: 8, positionMethod },
+          popup: { style: 'width: 120px' },
+        });
+        await opened();
+        await placed();
+        const box = anchor.getBoundingClientRect();
+        const place = popup()!.getBoundingClientRect();
+        expect(Math.abs(place.top - (box.bottom + 1.5 * 8))).toBeLessThanOrEqual(1);
+        expect(Math.abs(centerOf(popup()!).x - centerOf(anchor).x)).toBeLessThanOrEqual(1);
+      },
+    );
+
     test('the alignment flips at the edge of the view; with `side: shift`, the popup shifts and keeps its alignment, and grows from the anchor', async () => {
       placeAnchor(`left: ${innerWidth - 40}px; top: 200px; width: 20px; height: 20px`);
       const wide = { style: 'width: 200px' };

@@ -1,0 +1,390 @@
+diff --git a/dist/floating-ui.dom.esm.js b/dist/floating-ui.dom.esm.js
+index 078fcb5ee68ae38884a0bf4961506f89af8e5649..07e3dcb0925adc95211d4a28c9f37ed3727aa6d4 100644
+--- a/dist/floating-ui.dom.esm.js
++++ b/dist/floating-ui.dom.esm.js
+@@ -156,8 +156,7 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+   } = _ref;
+   const isFixed = strategy === 'fixed';
+   const documentElement = getDocumentElement(offsetParent);
+-  const topLayer = elements ? isTopLayer(elements.floating) : false;
+-  if (offsetParent === documentElement || topLayer && isFixed) {
++  if (offsetParent === documentElement) {
+     return rect;
+   }
+   let scroll = {
+@@ -165,28 +164,36 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+     scrollTop: 0
+   };
+   let scale = createCoords(1);
+-  const offsets = createCoords(0);
+-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
+-  if (isOffsetParentAnElement || !isFixed) {
++  let offsetX = 0;
++  let offsetY = 0;
++  const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
++  if (isOffsetParentAnHTMLElement || !isFixed) {
+     if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+       scroll = getNodeScroll(offsetParent);
+     }
+-    if (isOffsetParentAnElement) {
++    if (isOffsetParentAnHTMLElement) {
+       const offsetRect = getBoundingClientRect(offsetParent);
+       scale = getScale(offsetParent);
+-      offsets.x = offsetRect.x + offsetParent.clientLeft;
+-      offsets.y = offsetRect.y + offsetParent.clientTop;
++      offsetX = offsetRect.x + offsetParent.clientLeft;
++      offsetY = offsetRect.y + offsetParent.clientTop;
+     }
+   }
+-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++  const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++  if (!isElement(offsetParent) && elements) {
++    scale = createCoords(getCurrentCSSZoom(elements.floating));
++  }
+   return {
+     width: rect.width * scale.x,
+     height: rect.height * scale.y,
+-    x: rect.x * scale.x - scroll.scrollLeft * scale.x + offsets.x + htmlOffset.x,
+-    y: rect.y * scale.y - scroll.scrollTop * scale.y + offsets.y + htmlOffset.y
++    x: rect.x * scale.x - scroll.scrollLeft * (isOffsetParentAnHTMLElement ? scale.x : 1) + offsetX + htmlOffset.x,
++    y: rect.y * scale.y - scroll.scrollTop * (isOffsetParentAnHTMLElement ? scale.y : 1) + offsetY + htmlOffset.y
+   };
+ }
+ 
++function getCurrentCSSZoom(element) {
++  return element.currentCSSZoom || 1;
++}
++
+ function getClientRects(element) {
+   return element.getClientRects ? Array.from(element.getClientRects()) : [];
+ }
+@@ -390,8 +397,8 @@ function getDimensions(element) {
+   };
+ }
+ 
+-function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
++function getRectRelativeToOffsetParent(element, offsetParent, strategy, floating) {
++  const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
+   const documentElement = getDocumentElement(offsetParent);
+   const isFixed = strategy === 'fixed';
+   const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
+@@ -399,31 +406,35 @@ function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+     scrollLeft: 0,
+     scrollTop: 0
+   };
+-  const offsets = createCoords(0);
+-  if (isOffsetParentAnElement || !isFixed) {
++  let offsetX = 0;
++  let offsetY = 0;
++  if (isOffsetParentAnHTMLElement || !isFixed) {
+     if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+       scroll = getNodeScroll(offsetParent);
+     }
+-    if (isOffsetParentAnElement) {
++    if (isOffsetParentAnHTMLElement) {
+       const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
+-      offsets.x = offsetRect.x + offsetParent.clientLeft;
+-      offsets.y = offsetRect.y + offsetParent.clientTop;
++      offsetX = offsetRect.x + offsetParent.clientLeft;
++      offsetY = offsetRect.y + offsetParent.clientTop;
+     }
+   }
+ 
+   // If the <body> scrollbar appears on the left (e.g. RTL systems). Use
+   // Firefox with layout.scrollbar.side = 3 in about:config to test this.
+-  if (!isOffsetParentAnElement && documentElement) {
+-    offsets.x = getWindowScrollBarX(documentElement);
++  if (!isOffsetParentAnHTMLElement) {
++    offsetX = getWindowScrollBarX(documentElement);
+   }
+-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+-  const x = rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x;
+-  const y = rect.top + scroll.scrollTop - offsets.y - htmlOffset.y;
++  const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++
++  // When the offsetParent is the Window, every term above is in viewport
++  // pixels, but the coords are written as `left`/`top` on the floating element,
++  // which resolves them in its own CSS-zoom space.
++  const zoom = isElement(offsetParent) ? 1 : getCurrentCSSZoom(floating);
+   return {
+-    x,
+-    y,
+-    width: rect.width,
+-    height: rect.height
++    x: (rect.left + scroll.scrollLeft - offsetX - htmlOffset.x) / zoom,
++    y: (rect.top + scroll.scrollTop - offsetY - htmlOffset.y) / zoom,
++    width: rect.width / zoom,
++    height: rect.height / zoom
+   };
+ }
+ 
+@@ -482,7 +493,7 @@ const getElementRects = async function (data) {
+   const getDimensionsFn = this.getDimensions;
+   const floatingDimensions = await getDimensionsFn(data.floating);
+   return {
+-    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
++    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy, data.floating),
+     floating: {
+       x: 0,
+       y: 0,
+diff --git a/dist/floating-ui.dom.mjs b/dist/floating-ui.dom.mjs
+index 078fcb5ee68ae38884a0bf4961506f89af8e5649..07e3dcb0925adc95211d4a28c9f37ed3727aa6d4 100644
+--- a/dist/floating-ui.dom.mjs
++++ b/dist/floating-ui.dom.mjs
+@@ -156,8 +156,7 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+   } = _ref;
+   const isFixed = strategy === 'fixed';
+   const documentElement = getDocumentElement(offsetParent);
+-  const topLayer = elements ? isTopLayer(elements.floating) : false;
+-  if (offsetParent === documentElement || topLayer && isFixed) {
++  if (offsetParent === documentElement) {
+     return rect;
+   }
+   let scroll = {
+@@ -165,28 +164,36 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+     scrollTop: 0
+   };
+   let scale = createCoords(1);
+-  const offsets = createCoords(0);
+-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
+-  if (isOffsetParentAnElement || !isFixed) {
++  let offsetX = 0;
++  let offsetY = 0;
++  const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
++  if (isOffsetParentAnHTMLElement || !isFixed) {
+     if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+       scroll = getNodeScroll(offsetParent);
+     }
+-    if (isOffsetParentAnElement) {
++    if (isOffsetParentAnHTMLElement) {
+       const offsetRect = getBoundingClientRect(offsetParent);
+       scale = getScale(offsetParent);
+-      offsets.x = offsetRect.x + offsetParent.clientLeft;
+-      offsets.y = offsetRect.y + offsetParent.clientTop;
++      offsetX = offsetRect.x + offsetParent.clientLeft;
++      offsetY = offsetRect.y + offsetParent.clientTop;
+     }
+   }
+-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++  const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++  if (!isElement(offsetParent) && elements) {
++    scale = createCoords(getCurrentCSSZoom(elements.floating));
++  }
+   return {
+     width: rect.width * scale.x,
+     height: rect.height * scale.y,
+-    x: rect.x * scale.x - scroll.scrollLeft * scale.x + offsets.x + htmlOffset.x,
+-    y: rect.y * scale.y - scroll.scrollTop * scale.y + offsets.y + htmlOffset.y
++    x: rect.x * scale.x - scroll.scrollLeft * (isOffsetParentAnHTMLElement ? scale.x : 1) + offsetX + htmlOffset.x,
++    y: rect.y * scale.y - scroll.scrollTop * (isOffsetParentAnHTMLElement ? scale.y : 1) + offsetY + htmlOffset.y
+   };
+ }
+ 
++function getCurrentCSSZoom(element) {
++  return element.currentCSSZoom || 1;
++}
++
+ function getClientRects(element) {
+   return element.getClientRects ? Array.from(element.getClientRects()) : [];
+ }
+@@ -390,8 +397,8 @@ function getDimensions(element) {
+   };
+ }
+ 
+-function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
++function getRectRelativeToOffsetParent(element, offsetParent, strategy, floating) {
++  const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
+   const documentElement = getDocumentElement(offsetParent);
+   const isFixed = strategy === 'fixed';
+   const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
+@@ -399,31 +406,35 @@ function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+     scrollLeft: 0,
+     scrollTop: 0
+   };
+-  const offsets = createCoords(0);
+-  if (isOffsetParentAnElement || !isFixed) {
++  let offsetX = 0;
++  let offsetY = 0;
++  if (isOffsetParentAnHTMLElement || !isFixed) {
+     if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+       scroll = getNodeScroll(offsetParent);
+     }
+-    if (isOffsetParentAnElement) {
++    if (isOffsetParentAnHTMLElement) {
+       const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
+-      offsets.x = offsetRect.x + offsetParent.clientLeft;
+-      offsets.y = offsetRect.y + offsetParent.clientTop;
++      offsetX = offsetRect.x + offsetParent.clientLeft;
++      offsetY = offsetRect.y + offsetParent.clientTop;
+     }
+   }
+ 
+   // If the <body> scrollbar appears on the left (e.g. RTL systems). Use
+   // Firefox with layout.scrollbar.side = 3 in about:config to test this.
+-  if (!isOffsetParentAnElement && documentElement) {
+-    offsets.x = getWindowScrollBarX(documentElement);
++  if (!isOffsetParentAnHTMLElement) {
++    offsetX = getWindowScrollBarX(documentElement);
+   }
+-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+-  const x = rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x;
+-  const y = rect.top + scroll.scrollTop - offsets.y - htmlOffset.y;
++  const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++
++  // When the offsetParent is the Window, every term above is in viewport
++  // pixels, but the coords are written as `left`/`top` on the floating element,
++  // which resolves them in its own CSS-zoom space.
++  const zoom = isElement(offsetParent) ? 1 : getCurrentCSSZoom(floating);
+   return {
+-    x,
+-    y,
+-    width: rect.width,
+-    height: rect.height
++    x: (rect.left + scroll.scrollLeft - offsetX - htmlOffset.x) / zoom,
++    y: (rect.top + scroll.scrollTop - offsetY - htmlOffset.y) / zoom,
++    width: rect.width / zoom,
++    height: rect.height / zoom
+   };
+ }
+ 
+@@ -482,7 +493,7 @@ const getElementRects = async function (data) {
+   const getDimensionsFn = this.getDimensions;
+   const floatingDimensions = await getDimensionsFn(data.floating);
+   return {
+-    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
++    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy, data.floating),
+     floating: {
+       x: 0,
+       y: 0,
+diff --git a/dist/floating-ui.dom.umd.js b/dist/floating-ui.dom.umd.js
+index d3df8b7e4e60afbd21bae9b4bc282f8d62fb0fa4..c64afd8ee198670c7aa99a1639a181341e34f943 100644
+--- a/dist/floating-ui.dom.umd.js
++++ b/dist/floating-ui.dom.umd.js
+@@ -335,8 +335,7 @@
+     } = _ref;
+     const isFixed = strategy === 'fixed';
+     const documentElement = getDocumentElement(offsetParent);
+-    const topLayer = elements ? isTopLayer(elements.floating) : false;
+-    if (offsetParent === documentElement || topLayer && isFixed) {
++    if (offsetParent === documentElement) {
+       return rect;
+     }
+     let scroll = {
+@@ -344,28 +343,36 @@
+       scrollTop: 0
+     };
+     let scale = createCoords(1);
+-    const offsets = createCoords(0);
+-    const isOffsetParentAnElement = isHTMLElement(offsetParent);
+-    if (isOffsetParentAnElement || !isFixed) {
++    let offsetX = 0;
++    let offsetY = 0;
++    const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
++    if (isOffsetParentAnHTMLElement || !isFixed) {
+       if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+         scroll = getNodeScroll(offsetParent);
+       }
+-      if (isOffsetParentAnElement) {
++      if (isOffsetParentAnHTMLElement) {
+         const offsetRect = getBoundingClientRect(offsetParent);
+         scale = getScale(offsetParent);
+-        offsets.x = offsetRect.x + offsetParent.clientLeft;
+-        offsets.y = offsetRect.y + offsetParent.clientTop;
++        offsetX = offsetRect.x + offsetParent.clientLeft;
++        offsetY = offsetRect.y + offsetParent.clientTop;
+       }
+     }
+-    const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++    const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++    if (!isElement(offsetParent) && elements) {
++      scale = createCoords(getCurrentCSSZoom(elements.floating));
++    }
+     return {
+       width: rect.width * scale.x,
+       height: rect.height * scale.y,
+-      x: rect.x * scale.x - scroll.scrollLeft * scale.x + offsets.x + htmlOffset.x,
+-      y: rect.y * scale.y - scroll.scrollTop * scale.y + offsets.y + htmlOffset.y
++      x: rect.x * scale.x - scroll.scrollLeft * (isOffsetParentAnHTMLElement ? scale.x : 1) + offsetX + htmlOffset.x,
++      y: rect.y * scale.y - scroll.scrollTop * (isOffsetParentAnHTMLElement ? scale.y : 1) + offsetY + htmlOffset.y
+     };
+   }
+ 
++  function getCurrentCSSZoom(element) {
++    return element.currentCSSZoom || 1;
++  }
++
+   function getClientRects(element) {
+     return element.getClientRects ? Array.from(element.getClientRects()) : [];
+   }
+@@ -569,8 +576,8 @@
+     };
+   }
+ 
+-  function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+-    const isOffsetParentAnElement = isHTMLElement(offsetParent);
++  function getRectRelativeToOffsetParent(element, offsetParent, strategy, floating) {
++    const isOffsetParentAnHTMLElement = isHTMLElement(offsetParent);
+     const documentElement = getDocumentElement(offsetParent);
+     const isFixed = strategy === 'fixed';
+     const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
+@@ -578,31 +585,35 @@
+       scrollLeft: 0,
+       scrollTop: 0
+     };
+-    const offsets = createCoords(0);
+-    if (isOffsetParentAnElement || !isFixed) {
++    let offsetX = 0;
++    let offsetY = 0;
++    if (isOffsetParentAnHTMLElement || !isFixed) {
+       if (getNodeName(offsetParent) !== 'body' || isOverflowElement(documentElement)) {
+         scroll = getNodeScroll(offsetParent);
+       }
+-      if (isOffsetParentAnElement) {
++      if (isOffsetParentAnHTMLElement) {
+         const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
+-        offsets.x = offsetRect.x + offsetParent.clientLeft;
+-        offsets.y = offsetRect.y + offsetParent.clientTop;
++        offsetX = offsetRect.x + offsetParent.clientLeft;
++        offsetY = offsetRect.y + offsetParent.clientTop;
+       }
+     }
+ 
+     // If the <body> scrollbar appears on the left (e.g. RTL systems). Use
+     // Firefox with layout.scrollbar.side = 3 in about:config to test this.
+-    if (!isOffsetParentAnElement && documentElement) {
+-      offsets.x = getWindowScrollBarX(documentElement);
++    if (!isOffsetParentAnHTMLElement) {
++      offsetX = getWindowScrollBarX(documentElement);
+     }
+-    const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+-    const x = rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x;
+-    const y = rect.top + scroll.scrollTop - offsets.y - htmlOffset.y;
++    const htmlOffset = !isOffsetParentAnHTMLElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
++
++    // When the offsetParent is the Window, every term above is in viewport
++    // pixels, but the coords are written as `left`/`top` on the floating element,
++    // which resolves them in its own CSS-zoom space.
++    const zoom = isElement(offsetParent) ? 1 : getCurrentCSSZoom(floating);
+     return {
+-      x,
+-      y,
+-      width: rect.width,
+-      height: rect.height
++      x: (rect.left + scroll.scrollLeft - offsetX - htmlOffset.x) / zoom,
++      y: (rect.top + scroll.scrollTop - offsetY - htmlOffset.y) / zoom,
++      width: rect.width / zoom,
++      height: rect.height / zoom
+     };
+   }
+ 
+@@ -661,7 +672,7 @@
+     const getDimensionsFn = this.getDimensions;
+     const floatingDimensions = await getDimensionsFn(data.floating);
+     return {
+-      reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
++      reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy, data.floating),
+       floating: {
+         x: 0,
+         y: 0,

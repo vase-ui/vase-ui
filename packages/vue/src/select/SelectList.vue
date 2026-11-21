@@ -51,9 +51,17 @@ function elementProps() {
       'aria-multiselectable': context.multiple ? 'true' : undefined,
       'aria-readonly': context.readonly ? 'true' : undefined,
       class: hidesScrollbar.value ? styleDisableScrollbar.className : undefined,
-      // The list scrolls in a popup that covers the trigger.
+      // The list scrolls in a popup that covers the trigger, in the height that the other children
+      // of the popup leave.
       style: context.aligned.value
-        ? { position: 'relative', maxHeight: '100%', overflowX: 'hidden', overflowY: 'auto' }
+        ? {
+            position: 'relative',
+            flex: '1',
+            minHeight: '0',
+            maxHeight: '100%',
+            overflowX: 'hidden',
+            overflowY: 'auto',
+          }
         : undefined,
       onScroll: (event: Event) => positioner.onScroll(event.currentTarget as HTMLElement),
     },

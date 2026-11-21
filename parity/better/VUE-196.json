@@ -1,0 +1,10 @@
+{
+  "id": "VUE-196",
+  "evidence": [
+    "https://drafts.csswg.org/css-flexbox-1/#flex-common",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/popup/utils.ts#L7-L12",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/list/SelectList.tsx#L39-L41"
+  ],
+  "behavior": "In a Select popup over the trigger, `Select.List` takes the height that the other children of `Select.Popup` leave. A heading before the list or a footer after it keeps its room, and the text of the selected item covers the text of the value also where the list ends in the view. Base UI gives the list `max-height: 100%` of the popup, so the list and an element before it are taller than the popup.",
+  "dueWith": "packages/react/src/select/list/SelectList.tsx"
+}
