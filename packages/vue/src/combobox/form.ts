@@ -65,8 +65,8 @@ export function useComboboxForm(
     name: () => (options.rendersInputs() ? context.name : undefined),
     values: () => [formValue()].flat(),
     text: () => (context.mode === 'multiple' || context.value == null ? '' : textOf(context.value)),
-    // The server has no control, so the id of the control applies only after the mount. A Vapor
-    // root sets the ref of the control before it hydrates this input.
+    // The server has no control, so the id of the control applies only after the mount. A control
+    // in Vapor mode sets its ref before the root hydrates this input.
     id: () => `${(mounted.value && context.control?.id) || context.controlId}-hidden-input`,
     form: () => context.form,
     autocomplete: options.autocomplete,
