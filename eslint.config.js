@@ -861,8 +861,6 @@ export default defineConfig([
       '@typescript-eslint/no-dynamic-delete': 'off',
       // The rule reports the helper that compares two types, and public signatures of Base UI.
       '@typescript-eslint/no-unnecessary-type-parameters': 'off',
-      // The fix changes the text of two types in the declarations of `mergeProps`.
-      '@typescript-eslint/consistent-indexed-object-style': 'off',
       // A callback of the consumer can return nothing, so Base UI has `void` in a union.
       '@typescript-eslint/no-invalid-void-type': 'off',
       // A number in a template is correct, such as `${height}px` for a CSS length.
