@@ -64,7 +64,6 @@ const MESSAGES = {
   useFloating:
     '`usePlacement` of `src/popup/placement.ts` gives `useFloating` the middleware of Base UI. Call `usePlacement` in a positioner part.',
   inputValueWrite: 'Restore the input through its Vue value binding.',
-  handledInput: 'Handle the input event without a second copy of the value.',
   defineModel:
     'A defined model prop controls the part. An undefined prop lets the part own the value. Vue permits a local write through `useModel` with only the prop.',
   groupBy:
@@ -257,7 +256,7 @@ const CONSTANT = 'VariableDeclaration > VariableDeclarator';
 const DESCRIBE =
   ":matches(CallExpression[callee.name='describe'], CallExpression[callee.callee.object.name='describe'])";
 
-// A call that acts on an element. `select` of a store has an argument, and `select()` of an input has none.
+// A call that acts on an element. `select()` of an input has no argument, and `select` of the root of a Select has arguments.
 const ACT_ON_ELEMENT =
   ":function :matches(CallExpression[callee.property.name=/^(?:click|select|blur)$/][arguments.length=0], CallExpression[callee.property.name='focus'])";
 
@@ -338,10 +337,6 @@ const RESTRICTED_SYNTAX = [
     selector:
       'AssignmentExpression > MemberExpression.left[computed=false][property.name="value"] > TSAsExpression.object:has(TSTypeReference[typeName.name=/^HTML(Input|TextArea)Element$/])',
     message: MESSAGES.inputValueWrite,
-  },
-  {
-    selector: 'VariableDeclarator[id.name=/^handled\\w*(Value|Text)$/]',
-    message: MESSAGES.handledInput,
   },
   { selector: "CallExpression[callee.name='defineModel']", message: MESSAGES.defineModel },
   { selector: 'VariableDeclaration[kind=/using$/]', message: MESSAGES.resourceManagement },
