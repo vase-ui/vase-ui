@@ -63,7 +63,7 @@ const BOX = `<p id="outside">Text outside the box that a drag can select too.</p
     <input id="field" aria-label="Field" value="value">
   </div>`;
 
-describe('a mouse drag on text in a box with pointer capture (M1)', () => {
+describe('a mouse drag on text in a box with pointer capture', () => {
   function captureAtPress(onPress: (event: PointerEvent) => void = () => {}) {
     html(BOX);
     const box = element('box');
@@ -128,7 +128,7 @@ describe('a mouse drag on text in a box with pointer capture (M1)', () => {
   });
 });
 
-describe('a press of the right button in a mouse drag with capture (M2)', () => {
+describe('a press of the right button in a mouse drag with capture', () => {
   test('sends `contextmenu` in the three browsers; then Chromium sends no `pointerup`, and Firefox and WebKit send it at the release of the left button', async () => {
     html(
       `<div id="box" style="position: fixed; left: 100px; top: 100px; width: 100px; height: 100px"></div>`,
@@ -218,7 +218,7 @@ function mountSheet() {
 }
 
 describe.runIf(vdomApp)(
-  'a script that writes a variable, `transition: none` and an attribute to an element in a <Transition> (M3)',
+  'a script that writes a variable, `transition: none` and an attribute to an element in a <Transition>',
   () => {
     test('keeps them through a render; the leave starts at the place of the drag and reads the variable written before the close', async () => {
       const { scene, sheet } = mountSheet();
@@ -248,7 +248,7 @@ describe.runIf(vdomApp)(
   },
 );
 
-describe('a variable that is not set (M4)', () => {
+describe('a variable that is not set', () => {
   test('gives `transform: none` and an opacity of 1', () => {
     html(`<div id="target" style="transform: translateY(var(--drawer-swipe-movement-y));
       opacity: calc(0.2 * (1 - var(--drawer-swipe-progress)))">Target</div>`);
@@ -257,7 +257,7 @@ describe('a variable that is not set (M4)', () => {
   });
 });
 
-describe.runIf(vdomApp)('an element that mounts in <Transition appear> (M5)', () => {
+describe.runIf(vdomApp)('an element that mounts in <Transition appear>', () => {
   test('has the enter classes and the place of the enter class at its mount; with `transition: none` it goes to the place of its variable, and with its transition again it goes back', async () => {
     const { scene, sheet } = mountSheet();
     scene.open = true;
@@ -303,7 +303,7 @@ function centerOf(target: Element) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-describe('a real touch on a sheet (M6, M7)', () => {
+describe('a real touch on a sheet', () => {
   test.skipIf(server.browser !== 'chromium')(
     'gives the drag to the browser after a `touchmove` that no listener prevents, also when nothing scrolls',
     async () => {
@@ -361,7 +361,7 @@ describe('a real touch on a sheet (M6, M7)', () => {
   );
 });
 
-describe('a real touch on an element with `touch-action: pan-y` (M8)', () => {
+describe('a real touch on an element with `touch-action: pan-y`', () => {
   function area() {
     html(`<div style="height: 3000px"></div><div id="area" style="position: fixed; left: 0;
       top: 100px; width: 40px; height: 300px; touch-action: pan-y"></div>`);
@@ -397,7 +397,7 @@ describe('a real touch on an element with `touch-action: pan-y` (M8)', () => {
   );
 });
 
-describe('an element that gets `inert` in a drag that started on it (M9)', () => {
+describe('an element that gets `inert` in a drag that started on it', () => {
   function area() {
     html(`<div id="wrap"><div id="area" style="position: fixed; left: 0; top: 100px; width: 100px;
       height: 100px; touch-action: none"></div></div>`);
@@ -433,7 +433,7 @@ describe('an element that gets `inert` in a drag that started on it (M9)', () =>
   );
 });
 
-describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs (N2)', () => {
+describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs', () => {
   test('moves the sheet from its place in the enter to the end of the enter', async () => {
     const { scene, sheet } = mountSheet();
     scene.open = true;
@@ -446,7 +446,7 @@ describe.runIf(vdomApp)('`transition: none` on a sheet while its enter runs (N2)
 });
 
 describe.runIf(vdomApp)(
-  'an update of a style bound to a ref, on a component with 2,000 components in its slot (N4)',
+  'an update of a style bound to a ref, on a component with 2,000 components in its slot',
   () => {
     // A runner can be slow, and WebKit gives `performance.now()` in steps of 1 ms, so the bound of
     // the time is half a frame.
@@ -490,7 +490,7 @@ describe.runIf(vdomApp)(
   },
 );
 
-describe.runIf(vdomApp)('a style that a script writes on an element of a component (N6)', () => {
+describe.runIf(vdomApp)('a style that a script writes on an element of a component', () => {
   const Scroller = defineComponent({
     props: {
       scene: { type: Object as PropType<{ tick: number; own: boolean }>, required: true },

@@ -101,8 +101,9 @@ function pressBesideInput(event: MouseEvent) {
 }
 
 function onMousedown(event: MouseEvent) {
-  // The input keeps the focus (test/measurements/combobox.test.ts, C1). The popup that this press
-  // opened has the focus, which the button would take at `mousedown`.
+  // The input keeps the focus (test/measurements/combobox.test.ts, "a press in a popup while a
+  // text input has the focus"). The popup that this press opened has the focus, which the button
+  // would take at `mousedown`.
   if (!isControl.value || openedByPress) event.preventDefault();
   openedByPress = false;
 }

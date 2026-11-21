@@ -51,7 +51,7 @@ function centerOf(target: Element) {
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('a press of the right button (MM1, MN3)', () => {
+describe('a press of the right button', () => {
   test('sends `contextmenu` at the press, with `buttons` 2, on macOS and Linux', async () => {
     html('<div id="area" style="width: 300px; height: 200px">Area</div>');
     const prevent = (event: Event) => event.preventDefault();
@@ -73,7 +73,7 @@ describe('a press of the right button (MM1, MN3)', () => {
   });
 });
 
-describe('a fixed element that a `pointerdown` listener removes in a microtask (MM2)', () => {
+describe('a fixed element that a `pointerdown` listener removes in a microtask', () => {
   test('gives the `contextmenu` of that right press to the element below it', async () => {
     html(`<div id="trigger" style="position: absolute; left: 0; top: 0; width: 300px; height: 200px"></div>
       <div id="block" style="position: fixed; inset: 0"></div>`);
@@ -98,7 +98,7 @@ const ITEMS = Array.from(
   (_, i) => `<div id="i${i}" style="height: 30px">${i}</div>`,
 ).join('');
 
-describe('the pointer and content that moves (MM3, MM4, MM11)', () => {
+describe('the pointer and content that moves', () => {
   test('a move in one step sends `pointerover` and then `pointermove` at one place', async () => {
     html(
       `<div id="list" style="position: absolute; left: 0; top: 100px; width: 200px; height: 150px; overflow: auto">${ITEMS}</div>`,
@@ -152,7 +152,7 @@ describe('the pointer and content that moves (MM3, MM4, MM11)', () => {
   });
 });
 
-describe('a press on an item with no tab stop, while an input has the focus (MM5)', () => {
+describe('a press on an item with no tab stop, while an input has the focus', () => {
   test.each([
     { prevent: 'none', focus: 'popup' },
     { prevent: 'mousedown', focus: 'input' },
@@ -173,7 +173,7 @@ describe('a press on an item with no tab stop, while an input has the focus (MM5
   );
 });
 
-describe('Enter and Space (MM6)', () => {
+describe('Enter and Space', () => {
   test('give a focused `<div role="menuitem">` no click; Enter gives a link a click with a `detail` that differs; Space gives it none', async () => {
     html(
       `<div id="div" role="menuitem" tabindex="0">Div</div><a id="link" href="#measure">Link</a>`,
@@ -205,7 +205,7 @@ describe('Enter and Space (MM6)', () => {
   });
 });
 
-describe('a press on a button, a drag, and the release on an item (MM7)', () => {
+describe('a press on a button, a drag, and the release on an item', () => {
   test('gives the item `pointerup` and the common ancestor `click`; the button has the focus after the press but in WebKit on macOS', async () => {
     html(`<button id="trigger" style="position: absolute; left: 0; top: 0; width: 100px; height: 30px">Trigger</button>
       <div id="popup" hidden style="position: absolute; left: 0; top: 40px; width: 200px">
@@ -225,7 +225,7 @@ describe('a press on a button, a drag, and the release on an item (MM7)', () => 
   });
 });
 
-describe('the scroll of a list (MM8)', () => {
+describe('the scroll of a list', () => {
   test('`focus()` puts an item below the fold in the middle; `scrollIntoView` with `nearest` moves it one row', async () => {
     const items = Array.from(
       { length: 20 },
@@ -245,7 +245,7 @@ describe('the scroll of a list (MM8)', () => {
   });
 });
 
-describe('a focused element that leaves (MM9)', () => {
+describe('a focused element that leaves', () => {
   test('with `hidden` sends `focusout` with no related target, and the focus goes to <body>', async () => {
     html(
       `<div id="popup" tabindex="-1"><div id="group"><div id="item" tabindex="0">Item</div></div></div>`,
@@ -280,7 +280,7 @@ describe('a focused element that leaves (MM9)', () => {
   });
 });
 
-describe('the text of hidden content (MM10)', () => {
+describe('the text of hidden content', () => {
   test('`textContent` has all the text; `innerText` leaves out a hidden child', () => {
     html(
       '<div id="a" hidden>Alpha <span>beta</span></div><div id="b">Gamma <span hidden>delta</span></div>',
@@ -291,7 +291,7 @@ describe('the text of hidden content (MM10)', () => {
   });
 });
 
-describe('a fast sweep from a trigger across its siblings to outside (MN4)', () => {
+describe('a fast sweep from a trigger across its siblings to outside', () => {
   test('sends `pointerleave` to the trigger', async () => {
     html(`<div style="position: absolute; left: 0; top: 0; width: 200px">
       <div id="trigger" style="height: 30px">Trigger</div><div id="sibling" style="height: 30px">Sibling</div></div>`);
@@ -303,7 +303,7 @@ describe('a fast sweep from a trigger across its siblings to outside (MN4)', () 
   });
 });
 
-describe('a touch (MN1, MN2, MN5)', () => {
+describe('a touch', () => {
   test.skipIf(server.browser !== 'chromium')(
     'that rests 600 ms sends `pointerdown` and no `pointercancel`; its lift gives a click to the element under it',
     async () => {
@@ -337,7 +337,7 @@ describe('a touch (MN1, MN2, MN5)', () => {
   );
 });
 
-describe('a pointer over an item of a parent menu under a submenu triangle (MN6)', () => {
+describe('a pointer over an item of a parent menu under a submenu triangle', () => {
   test('sends `pointermove` to the item at each move', async () => {
     html('<div id="item" style="width: 200px; height: 30px">Item</div>');
     let moves = 0;

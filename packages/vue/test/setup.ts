@@ -49,9 +49,9 @@ if (typeof document !== 'undefined') {
 
   // In Chromium on Linux, a real touch drag can end with a fling that continues after the test. The
   // first touch of a later test then stops the fling, and it gets no compatibility mouse events and
-  // no `click` (N11 of `test/measurements/popup.test.ts`). A touch that moves sends a `pointermove`,
-  // also before the `pointercancel` of a drag that the browser takes. After a test with a touch
-  // `pointermove`, the setup stops a fling.
+  // no `click` (`test/measurements/popup.test.ts`, "a real touch outside"). A touch that moves
+  // sends a `pointermove`, also before the `pointercancel` of a drag that the browser takes. After a
+  // test with a touch `pointermove`, the setup stops a fling.
   let hasTouchMoved = false;
   window.addEventListener(
     'pointermove',

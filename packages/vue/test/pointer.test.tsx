@@ -37,9 +37,9 @@ describe('firePointer', () => {
   });
 
   // The rest of the init reaches the event through the constructor of `createEvent`. It is only as
-  // good as the `PointerEvent` of the browser. A stale `window.PointerEvent = window.MouseEvent`
-  // shim once dropped `pointerId` and `pointerType` with no failure: each consumer keys on
-  // `'touch'` and `'pen'`, so `undefined` falls the same way as `'mouse'`.
+  // good as the `PointerEvent` of the browser. A `window.PointerEvent = window.MouseEvent` shim
+  // drops `pointerId` and `pointerType` with no failure: each consumer keys on `'touch'` and
+  // `'pen'`, so `undefined` falls the same way as `'mouse'`.
   it('delivers the rest of the init alongside the timeStamp', async () => {
     const seen: Record<string, unknown>[] = [];
     await render(

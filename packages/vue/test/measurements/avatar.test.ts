@@ -41,7 +41,7 @@ function requested(...urls: string[]) {
     .filter((name) => urls.includes(name));
 }
 
-describe('M1: a picture that the document has', () => {
+describe('a picture that the document has', () => {
   test.each(['an image object', 'an img of Vue'])(
     'from src, %s is complete in the same task',
     async (kind) => {
@@ -71,7 +71,7 @@ describe('M1: a picture that the document has', () => {
   );
 });
 
-test('M2: a loaded img that gets a src which the document does not have is not complete, also in a mutation observer', async () => {
+test('a loaded img that gets a src which the document does not have is not complete, also in a mutation observer', async () => {
   const image = html(`<img alt="" src="${await pictureThatBrowserHas()}">`).querySelector('img')!;
   await event(image, 'load');
   const next = await pictureThatMustLoad();
@@ -83,7 +83,7 @@ test('M2: a loaded img that gets a src which the document does not have is not c
   expect(await inObserver).toBe(false);
 });
 
-test('M3: WebKit requests src at once in an img that gets src first and lazy, srcset and the request options later, before it is in the document', async () => {
+test('WebKit requests src at once in an img that gets src first and lazy, srcset and the request options later, before it is in the document', async () => {
   const [src, candidate, farSrc, farCandidate] = [
     'src',
     'candidate',
@@ -119,7 +119,7 @@ test('M3: WebKit requests src at once in an img that gets src first and lazy, sr
   );
 });
 
-test('M4: Firefox sends the load event of a source that a new source replaced in the same task', async () => {
+test('Firefox sends the load event of a source that a new source replaced in the same task', async () => {
   const next = await pictureThatMustLoad();
   const attrs = reactive<Record<string, unknown>>({ alt: '', src: await pictureThatBrowserHas() });
   const loads: boolean[] = [];
@@ -134,7 +134,7 @@ test('M4: Firefox sends the load event of a source that a new source replaced in
   expect(loads).toEqual(server.browser === 'firefox' ? [false, true] : [true]);
 });
 
-test('M5: an SVG picture with a viewBox and no width has a natural width, after its load and from the document', async () => {
+test('an SVG picture with a viewBox and no width has a natural width, after its load and from the document', async () => {
   const svg =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 2"><rect width="4" height="2"/></svg>';
   const url = `data:image/svg+xml,${encodeURIComponent(svg)}#${Math.random()}`;
@@ -144,7 +144,7 @@ test('M5: an SVG picture with a viewBox and no width has a natural width, after 
   expect(read(Object.assign(new Image(), { src: url }))).toEqual({ complete: true, loaded: true });
 });
 
-test('M6: a lazy img with the hidden attribute requests no picture, and one with visibility: hidden does', async () => {
+test('a lazy img with the hidden attribute requests no picture, and one with visibility: hidden does', async () => {
   const [hidden, invisible] = ['hidden', 'invisible'].map(newServerUrl) as [string, string];
   performance.clearResourceTimings();
   const [, shown] = html(
@@ -155,7 +155,7 @@ test('M6: a lazy img with the hidden attribute requests no picture, and one with
   expect(requested(hidden, invisible)).toEqual([invisible]);
 });
 
-test('M7: in Firefox, a lazy img with a srcset that the document has is not complete below the view', async () => {
+test('in Firefox, a lazy img with a srcset that the document has is not complete below the view', async () => {
   const url = await pictureThatBrowserHas();
   const image = html(
     `<img alt="" loading="lazy" style="position: absolute; top: 100000px" sizes="2px" srcset="${url} 2w">`,

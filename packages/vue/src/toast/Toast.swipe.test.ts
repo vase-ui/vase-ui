@@ -66,7 +66,7 @@ function drag(root: HTMLElement, moves: Point[], release = true) {
 
 const down = (...ys: number[]): Point[] => ys.map((y) => ({ x: 0, y }));
 
-describe('the swipe (B8)', () => {
+describe('the swipe', () => {
   test('a mouse drag of more than 40 px down closes the toast; it leaves with `data-swipe-direction` and the variables, and with no inline transform', async () => {
     style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
     const { manager, root } = await mountToast();
@@ -170,7 +170,7 @@ describe('the swipe (B8)', () => {
     expect(manager.toasts.value).toHaveLength(1);
   });
 
-  test('a drag selects no text (T19)', async () => {
+  test('a drag selects no text', async () => {
     const { root } = await mountToast({ swipeDirection: 'down' });
     getSelection()?.removeAllRanges();
     await drag(root, [
@@ -193,7 +193,7 @@ describe('the swipe (B8)', () => {
   });
 
   test.skipIf(server.browser !== 'chromium')(
-    'N1: a touch drag of more than 40 px down closes the toast with no `pointercancel`',
+    'a touch drag of more than 40 px down closes the toast with no `pointercancel`',
     async () => {
       const { manager, root } = await mountToast();
       const cancels: string[] = [];

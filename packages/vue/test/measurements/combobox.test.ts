@@ -1,7 +1,7 @@
 // Measurements for Combobox and Autocomplete, with native elements and plain Vue, and no code of the
 // library, but where a case names a part. Each one states what the browser or Vue does, so that
 // the parts have code only where they do not do it. Vue does not patch an element that leaves in a
-// `<Transition>` (C5): see `tabs.test.ts`.
+// `<Transition>`: see `tabs.test.ts`.
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import {
@@ -43,7 +43,7 @@ function centerOf(target: Element) {
 
 const activeId = () => document.activeElement?.id || document.activeElement?.localName;
 
-describe('a press in a popup while a text input has the focus (C1)', () => {
+describe('a press in a popup while a text input has the focus', () => {
   test.each(['none', 'mousedown'])(
     'with preventDefault() at %s: the input keeps the focus only when `mousedown` is prevented',
     async (prevented) => {
@@ -70,7 +70,7 @@ describe('a press in a popup while a text input has the focus (C1)', () => {
   );
 });
 
-describe('a list that scrolls under a pointer at rest (C2, C7)', () => {
+describe('a list that scrolls under a pointer at rest', () => {
   test('the item under the pointer gets `pointerover` at the point of the rest; WebKit also sends `pointermove` there', async () => {
     html(
       `<div id="box" style="position: fixed; left: 0; top: 0; width: 200px; height: 100px; overflow: auto">${Array.from(
@@ -93,7 +93,7 @@ describe('a list that scrolls under a pointer at rest (C2, C7)', () => {
   });
 });
 
-describe('Home and End in a text input (C3, N7)', () => {
+describe('Home and End in a text input', () => {
   test('Chromium moves the caret; Firefox and WebKit move it only off macOS', async () => {
     html(`<input id="input" aria-label="Input" value="hello world">`);
     const input = element<HTMLInputElement>('input');
@@ -105,7 +105,7 @@ describe('Home and End in a text input (C3, N7)', () => {
   });
 });
 
-describe('the `inputType` of an `input` event (C4)', () => {
+describe('the `inputType` of an `input` event', () => {
   test('a key gives `insertText`; an event of a script has none', async () => {
     html(`<input id="input" aria-label="Input">`);
     const types: unknown[] = [];
@@ -119,7 +119,7 @@ describe('the `inputType` of an `input` event (C4)', () => {
   });
 });
 
-describe('the renders of 300 items for 20 steps of a highlight (C6)', () => {
+describe('the renders of 300 items for 20 steps of a highlight', () => {
   test.each([
     { form: 'a computed Boolean in each item', renders: 39 },
     { form: 'each item reads an object that each step makes again', renders: 6000 },
@@ -159,7 +159,7 @@ describe('the renders of 300 items for 20 steps of a highlight (C6)', () => {
   });
 });
 
-describe('scrollIntoView of an item (C8)', () => {
+describe('scrollIntoView of an item', () => {
   test('scrolls the box and the page', () => {
     html(
       `<div style="height: 200vh"><div id="box" style="position: absolute; top: calc(100vh - 50px); height: 100px; overflow: auto">${Array.from(
@@ -174,7 +174,7 @@ describe('scrollIntoView of an item (C8)', () => {
   });
 });
 
-describe('a press on a `<label for>` of a button (C9, N8)', () => {
+describe('a press on a `<label for>` of a button', () => {
   test('clicks the button, and gives it the focus but in WebKit on macOS', async () => {
     html(`<label id="label" for="button">Label</label><button id="button">Button</button>`);
     const log: string[] = [];
@@ -186,7 +186,7 @@ describe('a press on a `<label for>` of a button (C9, N8)', () => {
   });
 });
 
-describe('Enter after a microtask of `keydown` changed the values of a form (C10)', () => {
+describe('Enter after a microtask of `keydown` changed the values of a form', () => {
   test('Firefox submits the old values; Chromium and WebKit the new ones', async () => {
     html(
       `<form id="form"><input id="input" name="q" aria-label="Q" value="typed"><input id="hidden" type="hidden" name="h" value="old"></form>`,
@@ -208,7 +208,7 @@ describe('Enter after a microtask of `keydown` changed the values of a form (C10
   });
 });
 
-describe('a submit that a required, hidden input blocks (C11)', () => {
+describe('a submit that a required, hidden input blocks', () => {
   test('the input gets `invalid` and then the focus', async () => {
     html(
       `<form id="form"><input id="hidden" required tabindex="-1" aria-label="Hidden" style="position: absolute; width: 1px; height: 1px; clip-path: inset(50%)"><button id="submit">Submit</button></form>`,
@@ -221,7 +221,7 @@ describe('a submit that a required, hidden input blocks (C11)', () => {
   });
 });
 
-describe('a text composition (C12, N6)', () => {
+describe('a text composition', () => {
   test.skipIf(server.browser !== 'chromium')(
     'Chromium sends no `input` after `compositionend`',
     async () => {
@@ -278,7 +278,7 @@ describe('a text composition (C12, N6)', () => {
   });
 });
 
-describe('the caret after setSelectionRange in each direction (C13)', () => {
+describe('the caret after setSelectionRange in each direction', () => {
   test.each(['ltr', 'rtl'])('%s: a character goes at the index of the caret', async (dir) => {
     html(`<input id="input" dir="${dir}" aria-label="Input" value="abc">`);
     const input = element<HTMLInputElement>('input');
@@ -292,7 +292,7 @@ describe('the caret after setSelectionRange in each direction (C13)', () => {
   });
 });
 
-describe('the scroll of a text input after a script moved the caret (C14)', () => {
+describe('the scroll of a text input after a script moved the caret', () => {
   test('Firefox scrolls to the caret; Chromium and WebKit do not', async () => {
     html(
       `<input id="input" aria-label="Input" style="width: 60px" value="${'a long text '.repeat(8)}">`,
@@ -307,7 +307,7 @@ describe('the scroll of a text input after a script moved the caret (C14)', () =
   });
 });
 
-describe('a kept popup that closes (N1)', () => {
+describe('a kept popup that closes', () => {
   test('an element with `hidden` and an exit of `display` stays shown while the exit runs, but in Firefox', async () => {
     html(
       `<style>#kept { transition: opacity 300ms, display 300ms allow-discrete } #kept[hidden] { opacity: 0 }</style><div id="kept">Content</div>`,
@@ -319,7 +319,7 @@ describe('a kept popup that closes (N1)', () => {
   });
 });
 
-describe('a press on the scrollbar of a list whose `mousedown` is prevented (N3)', () => {
+describe('a press on the scrollbar of a list whose `mousedown` is prevented', () => {
   test('scrolls the list, on a system whose scrollbar has a width', async ({ skip }) => {
     html(
       `<input id="input" aria-label="Input"><div id="box" style="width: 200px; height: 100px; overflow-y: scroll">${Array.from(
@@ -342,7 +342,7 @@ describe('a press on the scrollbar of a list whose `mousedown` is prevented (N3)
   });
 });
 
-describe('a mouse press on a trigger whose popup opens under the pointer (N4)', () => {
+describe('a mouse press on a trigger whose popup opens under the pointer', () => {
   test('the release at the point of the press selects nothing', async () => {
     const values: unknown[] = [];
     mount(ComboboxParts, {

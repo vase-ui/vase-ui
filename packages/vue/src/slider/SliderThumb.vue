@@ -241,8 +241,9 @@ function onKeydown(event: KeyboardEvent) {
 
 /**
  * Chromium and Firefox show no focus ring at a key after a press. A focus after a blur at a key has
- * the ring in each browser (`test/measurements/slider.test.ts`, S2). The events of that blur and
- * focus stop in the capture phase of the window, so the listeners of the page do not get them.
+ * the ring in each browser (`test/measurements/slider.test.ts`, ":focus-visible of the input after
+ * a press"). The events of that blur and focus stop in the capture phase of the window, so the
+ * listeners of the page do not get them.
  */
 function showFocusRing(target: HTMLInputElement) {
   if (!target.matches(':focus:not(:focus-visible)')) return;

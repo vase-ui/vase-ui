@@ -18,7 +18,9 @@ defineSlots<{
 }>();
 
 // WebKit starts the request when `src` is set, before a later `loading`, `srcset` or request option
-// has an effect (measurement M3). So the sources come last.
+// has an effect (test/measurements/avatar.test.ts, "WebKit requests src at once in an img that gets
+// src first and lazy, srcset and the request options later, before it is in the document"). So the
+// sources come last.
 const REQUEST_OPTIONS = ['crossorigin', 'referrerpolicy'] as const;
 const SOURCES = ['sizes', 'srcset', 'src'] as const;
 
@@ -44,7 +46,8 @@ function readStatus(image: HTMLImageElement): ImageLoadingStatus {
 
 function readWhenSelected(image: HTMLImageElement) {
   const read = () => setStatus(readStatus(image));
-  // Firefox selects the source of `srcset` one microtask after the change (measurement M1).
+  // Firefox selects the source of `srcset` one microtask after the change
+  // (test/measurements/avatar.test.ts, "a picture that the document has").
   if (image.hasAttribute('srcset')) queueMicrotask(read);
   else read();
 }
@@ -82,7 +85,8 @@ onMounted(() => {
 // With `keepMounted`, the element loads the picture. The browser sends no event when a source
 // changes, and the picture can load before the hydration, so the part reads each new element and
 // each change of its request attributes. Without `keepMounted`, the part reads no element: Firefox
-// does not complete a lazy `<img>` with `srcset` below the view (measurement M7).
+// does not complete a lazy `<img>` with `srcset` below the view (test/measurements/avatar.test.ts,
+// "in Firefox, a lazy img with a srcset that the document has is not complete below the view").
 watch(
   () => (props.keepMounted ? element.value : null),
   (image, _, onCleanup) => {
@@ -101,8 +105,10 @@ onUnmounted(() => {
 });
 
 // The listener reads the element of the part: Firefox sends the `load` event of a source after a
-// new source replaced it (measurement M4), and an element that the slot replaced can load after
-// the new one. A component that gives the part no element gives the target of the event.
+// new source replaced it (test/measurements/avatar.test.ts, "Firefox sends the load event of a
+// source that a new source replaced in the same task"), and an element that the slot replaced can
+// load after the new one. A component that gives the part no element gives the target of the
+// event.
 function onLoadOrError(event: Event) {
   setStatus(readStatus(element.value ?? (event.currentTarget as HTMLImageElement)));
 }

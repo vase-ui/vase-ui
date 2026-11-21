@@ -62,7 +62,7 @@
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the popup: its element and attributes, the first focus, `initialFocus` and `finalFocus`, the return of the focus (BUG-5519, BUG-6037), the Tab order, the nested state and the error with no root. The arrow keys need no code (test/measurements/dialog.test.ts, D10)."
+      "reason": "`Dialog.test.ts` tests the popup: its element and attributes, the first focus, `initialFocus` and `finalFocus`, the return of the focus (BUG-5519, BUG-6037), the Tab order, the nested state and the error with no root. The arrow keys need no code (test/measurements/dialog.test.ts, \"a dialog in place in a composite\")."
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",

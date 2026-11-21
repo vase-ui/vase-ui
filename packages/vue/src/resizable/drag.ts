@@ -151,7 +151,9 @@ export function useDrag(options: {
       startY = event.clientY;
       moved = false;
       // The `mousedown` of the press does not focus the handle. A focus of a script shows a ring
-      // unless a mouse gave the last focus, and `focusVisible: false` stops it (M5).
+      // unless a mouse gave the last focus, and `focusVisible: false` stops it
+      // (test/measurements/resizable.test.ts, "focus() in a press matches :focus-visible unless a
+      // mouse gave the last focus or the call has focusVisible: false").
       element.focus({ preventScroll: true, focusVisible: false });
       return started;
     },

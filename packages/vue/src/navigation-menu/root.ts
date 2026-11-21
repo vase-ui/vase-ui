@@ -209,7 +209,8 @@ export function useNavigationMenuRoot(
 
   // The content of the open item follows its trigger in the Tab order. Each key rule moves the
   // focus to a sentinel at `keydown`, and the browser does the Tab from there, with the setting of
-  // the system for the elements that Tab reaches (test/measurements/navigation-menu.test.ts, N3).
+  // the system for the elements that Tab reaches (test/measurements/navigation-menu.test.ts, "Tab
+  // after a key listener moved the focus to a sentinel").
   function onTabKey(event: KeyboardEvent) {
     const trigger = popup.activeTrigger;
     const box = popup.popup;

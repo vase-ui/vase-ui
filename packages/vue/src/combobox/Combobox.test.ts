@@ -417,7 +417,7 @@ describe('text', () => {
 });
 
 describe('a kept popup', () => {
-  test('keeps the filter and the text of its input from the close until the next open (N1)', async () => {
+  test('keeps the filter and the text of its input from the close until the next open', async () => {
     await mountCombobox({ inputInPopup: true, portal: { keepMounted: true } });
     await userEvent.click(trigger());
     await waitFor(() => expect(popup()).not.toHaveAttribute('hidden'));
