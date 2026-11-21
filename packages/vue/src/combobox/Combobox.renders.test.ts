@@ -6,8 +6,9 @@ import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 // A highlight step renders only the items whose highlight changes (discussion #665). Each part
-// renders only for a change of what it shows. The counts are renders of the virtual DOM: a Vapor component updates
-// each binding alone, and a Vapor app reads a function prop of the root as a getter.
+// renders only for a change of what it shows. The counts are renders of the virtual DOM: a Vapor
+// component updates each binding alone, and a Vapor app reads a function prop of the root as a
+// getter.
 
 function counter() {
   const renders: Record<string, number> = {};

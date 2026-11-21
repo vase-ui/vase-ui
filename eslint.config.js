@@ -256,7 +256,8 @@ const CONSTANT = 'VariableDeclaration > VariableDeclarator';
 const DESCRIBE =
   ":matches(CallExpression[callee.name='describe'], CallExpression[callee.callee.object.name='describe'])";
 
-// A call that acts on an element. `select()` of an input has no argument, and `select` of the root of a Select has arguments.
+// A call that acts on an element. `select()` of an input has no argument, and `select` of the root
+// of a Select has arguments.
 const ACT_ON_ELEMENT =
   ":function :matches(CallExpression[callee.property.name=/^(?:click|select|blur)$/][arguments.length=0], CallExpression[callee.property.name='focus'])";
 

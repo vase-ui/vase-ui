@@ -151,9 +151,9 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
       continue;
     }
     if (row.name === 'render') {
-      // Base UI's `render` is the slot `element` and the prop `as`. With no `as`, a part renders its
-      // own element, so `as` has no default. A native form control, a form element, an image and a
-      // hidden input take no `as`.
+      // Base UI's `render` is the slot `element` and the prop `as`. With no `as`, a part renders
+      // its own element, so `as` has no default. A native form control, a form element, an image
+      // and a hidden input take no `as`.
       expected.props.set('as', {
         required: false,
         default: null,
