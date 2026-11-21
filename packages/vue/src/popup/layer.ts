@@ -344,8 +344,8 @@ let tap: Tap | null = null;
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
-// The largest move of a tap in each engine. Chromium sends `click` for a touch that moves 15 px, and
-// Safari on iOS for one that moves 44 px (test/measurements/popup.test.ts).
+// The largest move of a tap. Chromium sends `click` for a touch that moves 15 px and not for one that
+// moves 16 px. Safari on iOS sends it for a move of 44 px (test/measurements/popup.test.ts).
 const TAP_SLOP = 15;
 
 // The layer decides at `pointerdown` which layers the press can close.
@@ -416,7 +416,8 @@ function onPointerup(event: PointerEvent) {
     closeOutside(event, entries);
     // The close takes the backdrop or the fixed element away from under the tap. The browser then
     // gives the `click` of the tap to the element of the page under it, unless the `touchend` of
-    // the tap is canceled (test/measurements/popup.test.ts).
+    // the tap is canceled (test/measurements/popup.test.ts). Pointer Events give no way to stop
+    // that `click`.
     if (onLayer) {
       addEventListener(target, 'touchend', (end) => end.preventDefault(), { once: true });
     }
