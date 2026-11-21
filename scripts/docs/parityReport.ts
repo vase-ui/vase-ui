@@ -11,12 +11,13 @@ import type {
   Engine,
   ExceptionKind,
   ExceptionRow,
+  FamilyExtract,
   FamilyFile,
   MemberKind,
   ReturnTypeDifference,
   UpstreamFile,
 } from '../parity/parityFiles.ts';
-import { isTestFile, isUnderMappedRoot, matchesAny } from '../parity/paths.ts';
+import { counterparts, isTestFile, isUnderMappedRoot, matchesAny } from '../parity/paths.ts';
 import type { VaseFiles } from '../parity/paths.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles, OwnComponentFile } from '../parity/repository.ts';
@@ -43,6 +44,9 @@ export interface FamilyEntry {
   sources: FileTally;
   typeTests: FileTally;
   cases: RowTally;
+  coveredCases: number;
+  /** The cases of the Vase UI test files that hold the ported cases or that a `replaced` row of a case names. */
+  vaseTests: number;
   suiteCalls: RowTally;
   rowsWithoutUpstream: number;
   surface?: SurfaceSummary;
@@ -162,6 +166,7 @@ function otherOf(paths: string[], scope: ScopeFile): NonNullable<Change['other']
 interface FamilyInput {
   name: string;
   family: FamilyFile;
+  extract?: FamilyExtract;
   report: FamilyReport;
   /** The position of `matchedCommit` in the commits of the upstream file. */
   matchedIndex: number;
@@ -210,11 +215,31 @@ function exceptionsOf(rows: ExceptionRow[]): FamilyEntry['exceptions'] {
   });
 }
 
+/** A test file that covers the cases of more than one family counts in each family. */
+function vaseTestsOf(
+  { family, extract }: FamilyInput,
+  files: VaseFiles,
+  rowsOf: (path: string) => TestRow[],
+): number {
+  const caseFiles = new Set(extract?.cases.map(({ file }) => file));
+  const testFiles = new Set([
+    ...[...caseFiles].flatMap((file) => counterparts(file, files)),
+    ...family.exceptions.flatMap(({ kind, upstream, test }) =>
+      kind === 'replaced' && test !== undefined && caseFiles.has(upstream) ? [test] : [],
+    ),
+  ]);
+  return [...testFiles].reduce(
+    (count, path) => count + rowsOf(path).filter((row) => !isSuiteRow(row)).length,
+    0,
+  );
+}
+
 function familyEntryOf(
-  { name, family, report, matchedIndex }: FamilyInput,
-  upstream: UpstreamFile,
+  input: FamilyInput,
+  { upstream, files, rowsOf }: ReportInput,
   changes: Change[],
 ): FamilyEntry {
+  const { name, family, report, matchedIndex } = input;
   const { summary, surface } = report;
   // `changes` is newest first, so the last queued change is the oldest.
   const queued = changes.filter((change) =>
@@ -228,6 +253,8 @@ function familyEntryOf(
     sources: summary.sources,
     typeTests: summary.typeTests,
     cases: summary.cases,
+    coveredCases: summary.cases.matched + summary.cases.replaced,
+    vaseTests: vaseTestsOf(input, files, rowsOf),
     suiteCalls: summary.suiteCalls,
     rowsWithoutUpstream: summary.rowsWithoutUpstream,
     surface,
@@ -277,11 +304,21 @@ function edgeCasesOf(
 export function buildParityReport(input: ReportInput): ParityReport {
   const { upstream, check, scope } = input;
   const shas = upstream.commits.map(({ sha }) => sha);
-  const familyFiles = new Map(input.families.map(({ name, family }) => [name, family]));
+  const familyFiles = new Map(
+    input.families.map(({ name, family, extract }) => [name, { family, extract }]),
+  );
   const families = check.families.flatMap((report): FamilyInput[] => {
-    const family = familyFiles.get(report.name);
+    const { family, extract } = familyFiles.get(report.name) ?? {};
     return family
-      ? [{ name: report.name, family, report, matchedIndex: shas.indexOf(family.matchedCommit) }]
+      ? [
+          {
+            name: report.name,
+            family,
+            extract,
+            report,
+            matchedIndex: shas.indexOf(family.matchedCommit),
+          },
+        ]
       : [];
   });
   const changes = changesOf(upstream, families, scope);
@@ -293,7 +330,7 @@ export function buildParityReport(input: ReportInput): ParityReport {
       date: utcDay(upstream.commits[upstream.commits.length - 1].date),
     },
     status: countComponents(input.families, upstream.components),
-    families: families.map((family) => familyEntryOf(family, upstream, changes)),
+    families: families.map((family) => familyEntryOf(family, input, changes)),
     ownComponents: input.ownComponents.map(({ name, record }) => ({
       name,
       reason: record.reason,
