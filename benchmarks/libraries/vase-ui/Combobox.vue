@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { useId } from 'vue';
 import { Combobox } from '@vase-ui/vue/combobox';
 import { options } from '../../harness/options.ts';
+
+const id = useId();
 </script>
 
 <template>
   <Combobox.Root :items="options">
-    <Combobox.Label>Label</Combobox.Label>
+    <label :for="id">Label</label>
     <Combobox.InputGroup>
-      <Combobox.Input data-bench="input" />
+      <Combobox.Input :id="id" data-bench="input" />
       <Combobox.Clear>Clear</Combobox.Clear>
       <Combobox.Trigger data-bench="trigger">Open</Combobox.Trigger>
     </Combobox.InputGroup>
