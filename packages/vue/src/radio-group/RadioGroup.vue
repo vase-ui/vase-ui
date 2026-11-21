@@ -4,7 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
-import { fieldStateAttributes } from '../field/control';
+import { fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { useFieldGroup } from '../field/group';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey, type GroupRadio } from './radio';
@@ -33,8 +33,10 @@ useDeferredServerRender();
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue = props.modelValue !== undefined ? props.modelValue : props.defaultValue;
-const { value, setOwn } = useModel<Value | undefined>(() => props.modelValue, firstValue);
+const { value, setOwn, resetValue } = useModel<Value | undefined>(
+  () => props.modelValue,
+  props.modelValue !== undefined ? props.modelValue : props.defaultValue,
+);
 const radios = shallowReactive<GroupRadio[]>([]);
 // The last reset that the group followed. Each radio of the group tells the group a reset.
 let lastReset: Event | undefined;
@@ -119,7 +121,6 @@ function elementProps() {
     {
       role: 'radiogroup',
       'aria-labelledby': labelledBy(attrs),
-      'aria-describedby': field?.describedBy,
       // WAI-ARIA gives these states to a radio group, and CSS matches them.
       'aria-disabled': on(isDisabled.value),
       'aria-readonly': on(props.readonly),
@@ -131,7 +132,7 @@ function elementProps() {
       onKeydown,
       onFocusout,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 
@@ -172,10 +173,11 @@ function showValue() {
 function onReset(event: Event) {
   if (event === lastReset) return;
   lastReset = event;
-  field?.onReset(firstValue);
-  if (value.value === firstValue) return;
-  setOwn(firstValue);
-  emit('update:modelValue', firstValue);
+  const reset = resetValue(props.defaultValue);
+  field?.onReset(reset);
+  if (value.value === reset) return;
+  setOwn(reset);
+  emit('update:modelValue', reset);
 }
 
 const steps: Record<string, 'next' | 'previous' | 'right' | 'left'> = {

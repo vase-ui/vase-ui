@@ -87,6 +87,22 @@ describe('a native reset', () => {
     expect(log).toEqual(['update 20,60']);
   });
 
+  test('gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = reactive<Attrs>({
+      defaultValue: 30,
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { form, values } = await mountSlider({ root });
+    root.defaultValue = 70;
+    await nextTick();
+    expect(values()).toEqual([30]);
+    form.reset();
+    await settle();
+    expect(values()).toEqual([70]);
+    expect(log).toEqual(['update 70']);
+  });
+
   test('of a controlled slider emits its first model; a reset that a listener prevents does nothing', async () => {
     const log: string[] = [];
     const root = reactive<Attrs>({ modelValue: 30 });
@@ -179,7 +195,7 @@ describe('a field', () => {
     expect(label.htmlFor).toBe('start');
   });
 
-  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid; an aria-describedby of the developer wins', async () => {
+  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid; an aria-describedby of the developer comes first', async () => {
     const field = reactive<Attrs>({ invalid: false });
     const { input } = await mountSlider({
       root: { defaultValue: [20, 40, 60] },
@@ -194,7 +210,7 @@ describe('a field', () => {
       expect(input(index)).toHaveAttribute('aria-describedby', 'description error');
       expect(input(index)).toHaveAttribute('aria-invalid', 'true');
     }
-    expect(input(2)).toHaveAttribute('aria-describedby', 'mine');
+    expect(input(2)).toHaveAttribute('aria-describedby', 'mine description error');
   });
 
   test('disabled and name of the field win over the props', async () => {

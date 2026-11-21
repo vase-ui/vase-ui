@@ -363,6 +363,28 @@ describe('the fields', () => {
     expect(log).toEqual(['update 2026-11-18 2026-11-20']);
   });
 
+  test.each([
+    { order: 'the field root first', reversed: false },
+    { order: 'the field part first', reversed: true },
+  ])(
+    'a reset gives the defaultValue of the reset, and the field is not dirty, with $order',
+    async ({ reversed }) => {
+      const log: string[] = [];
+      const root = logged(log, { defaultValue: range('2026-11-18', '2026-11-20') });
+      const { form, inputs, fieldRoot } = await mountPicker({
+        root,
+        fieldRoot: { name: 'when', 'data-testid': 'field' },
+      });
+      root.defaultValue = range('2026-12-24', '2026-12-26');
+      await nextTick();
+      expect(inputs().map((input) => input.value)).toEqual(['2026-11-18', '2026-11-20']);
+      await resetForm(form, reversed);
+      expect(log).toEqual(['update 2026-12-24 2026-12-26']);
+      expect(inputs().map((input) => input.value)).toEqual(['2026-12-24', '2026-12-26']);
+      expect(fieldRoot()).not.toHaveAttribute('data-dirty');
+    },
+  );
+
   test('the positioner holds the box around the two fields, also when the trigger opens the popup', async () => {
     const { start, end, trigger } = await mountPicker({ root: { locale: 'en-US' } });
     await userEvent.click(trigger);

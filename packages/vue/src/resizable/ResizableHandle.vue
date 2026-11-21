@@ -20,7 +20,14 @@ const props = withDefaults(defineProps<ResizableHandleProps>(), {
 });
 defineSlots<{
   default?(scope: { state: ResizableHandleState }): unknown;
-  element?(scope: ElementSlotProps<ResizableHandleState>): unknown;
+  /**
+   * Renders your element in place of the element of the handle. Bind `props` with `v-bind` and
+   * `elementRef` with `:ref`. End your element with `<span v-bind="targetProps" />`, the pointer
+   * target of the handle.
+   */
+  element?(
+    scope: ElementSlotProps<ResizableHandleState> & { targetProps: Record<string, unknown> },
+  ): unknown;
 }>();
 
 const root = injectRoot('Handle');
@@ -234,6 +241,7 @@ defineExpose({ element });
     :props="elementProps()"
     :element-ref="setElement"
     :state="state"
+    :target-props="{ style: targetStyle }"
   />
   <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" /><span :style="targetStyle" />

@@ -1,8 +1,9 @@
 // Measurements with native elements and plain Vue, with no code of the library. Each one states
 // what the browser or Vue does, so that a part has code only where they do not do it.
 import { afterEach, describe, expect, test } from 'vitest';
-import { cdp, server } from 'vitest/browser';
+import { server } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import { chromiumNodes } from '../accessibilityTree';
 import MeasureFieldsetToggle from '../fixtures/MeasureFieldsetToggle.vue';
 import { mount, settle } from '../render';
 
@@ -98,23 +99,8 @@ describe('a legend', () => {
   );
 });
 
-type FrameTree = { frame: { id: string }; childFrames?: FrameTree[] };
-
-/** The names of the groups in the accessibility tree of Chromium, in each frame. */
+/** The names of the groups in the accessibility tree of Chromium. */
 async function chromiumGroupNames() {
-  const session = cdp();
-  await session.send('Accessibility.enable');
-  const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: FrameTree };
-  const names: string[] = [];
-  const visit = async (tree: FrameTree) => {
-    const { nodes } = (await session.send('Accessibility.getFullAXTree', {
-      frameId: tree.frame.id,
-    })) as { nodes: { role?: { value: string }; name?: { value: string } }[] };
-    for (const node of nodes) {
-      if (node.role?.value === 'group') names.push(node.name?.value ?? '');
-    }
-    for (const child of tree.childFrames ?? []) await visit(child);
-  };
-  await visit(frameTree);
-  return names;
+  const nodes = await chromiumNodes();
+  return nodes.filter((node) => node.role?.value === 'group').map((node) => node.name?.value ?? '');
 }

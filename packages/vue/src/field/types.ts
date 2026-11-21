@@ -44,8 +44,8 @@ export interface FieldRootProps extends AsProps, /* @vue-ignore */ Omit<HTMLAttr
    */
   invalid?: boolean;
   /**
-   * The value differs from the first value. Bind it with `v-model:dirty`. With no `dirty`, the
-   * field finds the state itself.
+   * The value differs from its value at the mount or at the last native reset of the form. Bind
+   * it with `v-model:dirty`. With no `dirty`, the field finds the state itself.
    */
   dirty?: boolean;
   /**

@@ -10,7 +10,7 @@ import {
   watch,
   type Ref,
 } from 'vue';
-import { describedByWith, fieldKey } from '../../field/control';
+import { fieldKey, joinDescribedBy } from '../../field/control';
 import { useInDisabledFieldset } from '../../fieldset/part';
 import { displayCalendar } from '../date-time/displayCalendar';
 import { digits as localeDigits, formatter } from '../date-time/format';
@@ -167,13 +167,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   );
   const id = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 
-  // A native reset gives the first value: the model of the mount, else `defaultValue`.
-  const firstValue = (
-    props.modelValue === undefined ? (props.defaultValue ?? null) : props.modelValue
-  ) as Value | null;
   const model = useModel<Value | null>(
     () => props.modelValue as Value | null | undefined,
-    firstValue,
+    (props.modelValue === undefined
+      ? (props.defaultValue ?? null)
+      : props.modelValue) as Value | null,
   );
   const value = model.value;
   // The numbers of a partial entry. The field has no value until each segment has a number.
@@ -619,11 +617,12 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   );
 
   useFormReset(inputElement, () => {
+    const reset = model.resetValue((props.defaultValue ?? null) as Value | null);
     draft.value = null;
-    field?.onReset(firstValue);
-    if (sameTemporal(value.value, firstValue)) return;
-    model.setOwn(firstValue);
-    options.emitModel(firstValue);
+    field?.onReset(reset);
+    if (sameTemporal(value.value, reset)) return;
+    model.setOwn(reset);
+    options.emitModel(reset);
   });
 
   const state = computed<DateTimeFieldState>(() => ({
@@ -705,18 +704,16 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     state,
     /** The attributes of the group element, with the attributes of the developer. */
     groupProps(attrs: Record<string, unknown>) {
-      const { 'aria-describedby': describedBy, ...rest } = attrs;
       const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;
       return mergeProps(
         {
           role: 'group',
           id: host?.groupId,
           'aria-labelledby': named ? undefined : (field?.labelId ?? nativeLabelIds.value),
-          'aria-describedby': field ? describedByWith(field, describedBy) : describedBy,
           ...stateAttributes(state.value),
           onFocusout,
         },
-        rest,
+        joinDescribedBy(attrs, field),
       );
     },
     /** The attributes of the form input. */

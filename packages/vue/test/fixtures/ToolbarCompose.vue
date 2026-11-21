@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
 import { AlertDialog } from '../../src/alert-dialog';
+import { Checkbox } from '../../src/checkbox';
 import { Dialog } from '../../src/dialog';
 import { Menu } from '../../src/menu';
 import { NumberField } from '../../src/number-field';
@@ -29,6 +30,7 @@ defineProps({
         | 'toggle'
         | 'toggle-group'
         | 'switch'
+        | 'checkbox'
         | 'radio'
         | 'number-field';
       disabled?: boolean;
@@ -166,6 +168,17 @@ defineProps({
         <Switch
           id="trigger"
           aria-label="Wrap"
+          v-bind="props"
+          :ref="elementRef"
+          @checked-change="(checked) => log.add(`checked ${checked}`)"
+        />
+      </template>
+    </Toolbar.Input>
+    <Toolbar.Input v-else-if="scene.kind === 'checkbox'" :disabled="scene.disabled">
+      <template #element="{ props, elementRef }">
+        <Checkbox
+          id="trigger"
+          aria-label="Bold"
           v-bind="props"
           :ref="elementRef"
           @checked-change="(checked) => log.add(`checked ${checked}`)"

@@ -54,7 +54,7 @@ const ownDisabled = computed(() => props.disabled || inDisabledFieldset.value);
 const isDisabled = computed(() => ownDisabled.value || !!field?.disabled);
 const triggerId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
 
-const { context, value, firstValue, setOwn, close } = useSelectRoot(
+const { context, value, setOwn, resetValue, close } = useSelectRoot(
   props,
   { field, triggerId: () => triggerId.value, disabled: () => isDisabled.value },
   emit,
@@ -88,12 +88,11 @@ const inputs = useSelectForm(
   input,
   // A native reset is no change of the user: the value goes back, with `update:modelValue` only.
   () => {
-    field?.onReset(firstValue);
-    if (!isSelectedValueDirty(value.value, firstValue, props.isItemEqualToValue ?? Object.is)) {
-      return;
-    }
-    setOwn(firstValue);
-    emit('update:modelValue', firstValue as SelectOutputValue<Value, Multiple>);
+    const reset = resetValue();
+    field?.onReset(reset);
+    if (!isSelectedValueDirty(value.value, reset, props.isItemEqualToValue ?? Object.is)) return;
+    setOwn(reset);
+    emit('update:modelValue', reset as SelectOutputValue<Value, Multiple>);
   },
 );
 

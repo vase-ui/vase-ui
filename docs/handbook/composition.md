@@ -42,7 +42,7 @@ A part takes the props that it declares. It gives each other attribute and liste
 
 A part that writes its own id takes `id` as a prop. An `id` that is empty or holds only white space counts as no `id`, and the part keeps its own id.
 
-In a `Field`, the controls of Select, Combobox, Autocomplete and the date and time fields add the ids of the field to your `aria-describedby`.
+In a `Field`, each control adds the ids of the descriptions and the errors of the field after the ids of your `aria-describedby`. With `null`, the control writes no `aria-describedby`.
 
 Set a prop on the part, and not on the component in `as` or in the slot. For example, set `disabled` on `Toolbar.Button`: the toolbar then keeps the button in its keyboard navigation.
 

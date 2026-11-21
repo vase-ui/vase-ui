@@ -48,7 +48,7 @@ export interface DatePickerRootProps<Value extends DatePickerRootValue = DatePic
    * else of `defaultValue`, else of the last value.
    */
   modelValue?: Value | null | undefined;
-  /** The first value of a picker with no `modelValue`. */
+  /** The value of a picker with no `modelValue`, at the mount and at a native reset of the form. */
   defaultValue?: Value | null | undefined;
   /** The popup is open. `v-model:open` binds it. */
   open?: boolean | undefined;

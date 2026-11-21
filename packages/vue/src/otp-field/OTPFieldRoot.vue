@@ -17,13 +17,13 @@ import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
+import { submitAtEnter } from '../common/implicitSubmission';
 import { useModel } from '../common/model';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
 import { warn } from '../common/warn';
-import { fieldKey, fieldStateAttributes } from '../field/control';
+import { fieldKey, fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
 import { inputmodeOf, patternOf, removeAt, toCode, writeAt } from './code';
-import { submitImplicitly } from './implicitSubmission';
 import { otpFieldKey } from './root';
 import type {
   OTPFieldRootChangeEventDetails,
@@ -88,8 +88,10 @@ const { element, setElement } = useElement<HTMLElement>();
 const { element: formInput, setElement: setFormInput } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue = props.modelValue ?? props.defaultValue;
-const { value, setOwn } = useModel(() => props.modelValue, firstValue);
+const { value, setOwn, resetValue } = useModel(
+  () => props.modelValue,
+  props.modelValue ?? props.defaultValue,
+);
 const code = computed(() => toCode(value.value, props).code);
 const characters = computed(() => Array.from(code.value));
 const validLength = computed(() => Number.isInteger(props.length) && props.length > 0);
@@ -188,11 +190,11 @@ watch(
 );
 
 useFormReset(formInput, () => {
-  const first = toCode(firstValue, props).code;
-  field?.onReset(first);
-  if (code.value === first) return;
-  setOwn(first);
-  emit('update:modelValue', first);
+  const reset = toCode(resetValue(props.defaultValue), props).code;
+  field?.onReset(reset);
+  if (code.value === reset) return;
+  setOwn(reset);
+  emit('update:modelValue', reset);
 });
 
 if (process.env.NODE_ENV !== 'production') {
@@ -268,17 +270,7 @@ provide(otpFieldKey, {
     focused.value = slot;
     slot.select();
   },
-  onEnter(slot, event) {
-    const { form } = slot;
-    // A later listener, of the slot or of an ancestor, can prevent the submission, as for one text
-    // input. So the root waits for the end of the event.
-    setTimeout(() => {
-      if (!form || event.defaultPrevented) return;
-      const own: Element[] = [...mountedSlots];
-      if (formInput.value) own.push(formInput.value);
-      submitImplicitly(form, own);
-    });
-  },
+  onEnter: (event) => submitAtEnter(event, [...mountedSlots, formInput.value]),
 });
 
 defineExpose({ element });
@@ -290,14 +282,13 @@ function elementProps() {
     {
       role: 'group',
       'aria-labelledby': named ? undefined : (field?.labelId ?? fieldset?.legendId),
-      'aria-describedby': field?.describedBy,
       ...fieldStateAttributes(state.value, isDisabled.value),
       'data-readonly': on(props.readonly),
       'data-required': on(props.required),
       'data-complete': on(state.value.complete),
       onFocusout,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 

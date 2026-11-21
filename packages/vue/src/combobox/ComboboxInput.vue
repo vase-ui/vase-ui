@@ -17,7 +17,7 @@ import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
-import { controlAttributes, describedByWith, fieldKey } from '../field/control';
+import { controlAttributes, fieldKey, joinDescribedBy } from '../field/control';
 import { isComposing, isInPopup } from '../popup/layer';
 import {
   createComboboxDetails,
@@ -328,11 +328,7 @@ function elementProps() {
     });
   }
   const fieldOwn = isControl.value && field ? controlAttributes(field) : {};
-  const merged = mergeProps(fieldOwn, own, attrs);
-  if (isControl.value && field) {
-    merged['aria-describedby'] = describedByWith(field, attrs['aria-describedby']);
-  }
-  return merged;
+  return mergeProps(fieldOwn, own, joinDescribedBy(attrs, isControl.value ? field : null));
 }
 
 defineExpose({ element });

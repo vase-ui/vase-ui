@@ -5,7 +5,7 @@ import { useChecked, type CheckedOwner } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { fieldKey, useFieldControl } from '../field/control';
+import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { CheckboxChangeEventDetails, CheckboxProps, CheckboxState } from './types';
 
@@ -157,7 +157,7 @@ watch(
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(ownProps.value, attrs);
+  return mergeProps(ownProps.value, joinDescribedBy(attrs, field));
 }
 </script>
 

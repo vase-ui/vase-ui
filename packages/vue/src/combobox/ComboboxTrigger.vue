@@ -5,9 +5,9 @@ import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import {
   controlAttributes,
-  describedByWith,
   fieldKey,
   fieldStateAttributes,
+  joinDescribedBy,
 } from '../field/control';
 import { nextTextMatch, TYPEAHEAD_RESET_MS } from '../list/typeahead';
 import { interactionOf } from '../popup/root';
@@ -195,11 +195,9 @@ function elementProps() {
       }
     },
   });
-  const merged = trigger.button.mergeAttributes(own, attrs);
-  if (isControl.value && field) {
-    merged['aria-describedby'] = describedByWith(field, attrs['aria-describedby']);
-  }
-  return mergeProps(merged);
+  return mergeProps(
+    trigger.button.mergeAttributes(own, joinDescribedBy(attrs, isControl.value ? field : null)),
+  );
 }
 
 defineExpose({ element });

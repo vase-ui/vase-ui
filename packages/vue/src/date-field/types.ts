@@ -29,7 +29,7 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
    * `null` for no value. The field gives a value of the same kind, calendar, time and time zone.
    */
   modelValue?: Value | null;
-  /** The first value of a field with no `modelValue`. */
+  /** The value of a field with no `modelValue`, at the mount and at a native reset of the form. */
   defaultValue?: Value | null;
   /**
    * Gives the kind, the time zone, the calendar and the hidden units of a first value. An arrow key

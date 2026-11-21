@@ -67,9 +67,10 @@ const rootId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const firstValue: number | readonly number[] =
-  props.modelValue !== undefined ? props.modelValue : (props.defaultValue ?? props.min);
-const { value, setOwn } = useModel<number | readonly number[]>(() => props.modelValue, firstValue);
+const { value, setOwn, resetValue } = useModel<number | readonly number[]>(
+  () => props.modelValue,
+  props.modelValue !== undefined ? props.modelValue : (props.defaultValue ?? props.min),
+);
 const grid = computed(() => ({ min: props.min, max: props.max, step: props.step }));
 const values = computed(() => shownValues(value.value, grid.value));
 // Two values of the grid differ by a whole number of steps.
@@ -270,10 +271,11 @@ provide(sliderKey, {
   onReset(event) {
     if (event === lastReset) return;
     lastReset = event;
-    field?.onReset(asValue(shownValues(firstValue, grid.value), typeof firstValue === 'number'));
-    if (sameValues(value.value, firstValue)) return;
-    setOwn(firstValue);
-    emit('update:modelValue', firstValue as Emitted);
+    const reset = resetValue(props.defaultValue ?? props.min);
+    field?.onReset(asValue(shownValues(reset, grid.value), typeof reset === 'number'));
+    if (sameValues(value.value, reset)) return;
+    setOwn(reset);
+    emit('update:modelValue', reset as Emitted);
   },
 });
 

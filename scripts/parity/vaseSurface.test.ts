@@ -599,6 +599,23 @@ ${declaration}`,
   }
 }
 
+test('an exposed member with the name of a prop keeps its place, its type and its text', () => {
+  const members = withText(
+    POPUP,
+    [
+      [
+        'defineExpose({ element });',
+        'function disable() {}\ndefineExpose({\n  /** Disables the popup. */\n  disabled: disable,\n  element,\n});',
+      ],
+    ],
+    () => project.readComponent(exportOf('Popup'))?.exposed,
+  );
+  assert.deepEqual(members && [...members], [
+    ['disabled', { type: '() => void', description: 'Disables the popup.' }],
+    ['element', { type: 'Element | null', description: '' }],
+  ]);
+});
+
 test('the exposed members of a spread keep the sequence of their declaration, also the properties that an Omit copies', () => {
   const members = withText(
     POPUP,

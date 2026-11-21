@@ -1096,6 +1096,11 @@ describe('the field', () => {
     }
   });
 
+  test('aria-describedby of the developer on the root comes before the ids of the field', async () => {
+    const { group } = await mountField({ field: {}, root: { 'aria-describedby': 'hint' } });
+    expect(group).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('a name of the developer wins: on the root it names the group only, on a slot that slot only; null removes', async () => {
     const { root, group, slots } = await mountField({
       field: {},
@@ -1245,6 +1250,19 @@ describe('a native reset', () => {
     await settle();
     expect(values()).toEqual(['1', '2', '', '', '', '']);
     expect(log).toEqual(['update 12']);
+  });
+
+  test('puts an uncontrolled field to the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = recorded(log, { defaultValue: '12' });
+    const { form, values } = await mountField({ root });
+    root.defaultValue = '34';
+    await nextTick();
+    expect(values()).toEqual(['1', '2', '', '', '', '']);
+    form.reset();
+    await settle();
+    expect(values()).toEqual(['3', '4', '', '', '', '']);
+    expect(log).toEqual(['update 34']);
   });
 
   test('puts a controlled field back to its first model, and v-model follows', async () => {

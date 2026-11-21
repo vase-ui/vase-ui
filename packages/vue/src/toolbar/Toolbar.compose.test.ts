@@ -200,6 +200,23 @@ describe('a control in Toolbar.Input', () => {
     expect(disabled.entries).toEqual([]);
   });
 
+  test('a checkbox: a click and Space change it, and Enter does not; the arrow keys move the focus; disabled, nothing changes it', async () => {
+    const { entries, trigger } = await mountCompose({ kind: 'checkbox' });
+    await userEvent.click(trigger);
+    await focusTrigger(trigger);
+    await userEvent.keyboard(' {Enter}');
+    expect(entries).toEqual(['checked true', 'checked false']);
+    expect(await keys('{ArrowRight}')).toEqual(['last']);
+
+    const disabled = await mountCompose({ kind: 'checkbox', disabled: true });
+    expect(disabled.trigger).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.click(disabled.trigger, { force: true });
+    await focusTrigger(disabled.trigger);
+    await userEvent.keyboard(' ');
+    expect(disabled.entries).toEqual([]);
+    expect(focused()).toBe('trigger');
+  });
+
   test('radios of a named group: the keys of the toolbar check nothing; Tab and Shift+Tab reach the toolbar at the checked radio', async () => {
     const { find } = await mountCompose({ kind: 'radio' });
     find('left').focus();

@@ -71,7 +71,7 @@ A part owns its state, unless you bind it. This dialog owns its open state:
 <<< ../examples/customization/Uncontrolled.vue
 
 - `v-model` binds the main value of a part. A second state has a named model, such as `v-model:open`.
-- A `default*` prop, such as `defaultValue` or `defaultOpen`, gives the first value of a part that you do not bind. The part reads it at its mount only.
+- A `default*` prop, such as `defaultValue` or `defaultOpen`, gives the first value of a part that you do not bind. The part reads it at its mount. A form control also reads it at a native reset of its form.
 - A model that is not `undefined` controls the part, also with no update listener. After a change of the user, the part shows the new value only when you write it to the model.
 - A model of `undefined` makes the part own its state again. The part keeps the value that it has.
 
@@ -79,7 +79,7 @@ For example, this dialog opens after a timeout, with no trigger:
 
 <<< ../examples/customization/Controlled.vue{20}
 
-A native reset of the form puts a form control back to its value at the mount. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset.
+A native reset of the form gives a form control the model of its mount. With no model at the mount, the control takes the `default*` prop that it has at the reset, as a native control does. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset. The field of the control is then not dirty.
 
 ## Differences from Base UI
 
@@ -90,4 +90,4 @@ A native reset of the form puts a form control back to its value at the mount. T
 | `allowPropagation()` and `isPropagationAllowed` in the details of each change | Only in the details of a popup part, which stops the propagation of an event.                                                           |
 | `event.preventBaseUIHandler()`                                                | `cancel()` for a change. For a native event that causes no change, a capture listener on the part that calls `event.stopPropagation()`. |
 | The part keeps its control mode from its mount, and warns at a change of it   | A model can start and stop the control at each moment, with no warning. With `undefined`, the part keeps the value that it has.         |
-| A warning at a change of a `default*` prop after the mount                    | No warning. The part reads the prop at its mount only.                                                                                  |
+| A warning at a change of a `default*` prop after the mount                    | No warning. The part reads the prop at its mount, and a form control also at a native reset of its form.                                |

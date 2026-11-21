@@ -46,7 +46,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm docs:ios-backdrop` | Opens the first demo of the Dialog, Alert Dialog and Drawer pages on the built site, with the page scrolled. It applies the rules that only Safari on iOS applies, and it fails when the backdrop does not cover the view. It runs in Chromium, Firefox and WebKit. Run `pnpm docs:build` first. |
 | `pnpm test:vapor` | Runs the browser tests in Chromium. `createRenderer` of `#test-utils` then mounts each test in a Vapor app. It needs Vue 3.6. |
 | `pnpm test:vapor-parts` | Compiles the parts as Vapor components and runs the files of `packages/vue/test/vaporParts/expectedFailures.json` in Chromium. It needs Vue 3.6, and it runs alone. |
-| `pnpm --filter @vase-ui/vue test:vue-3.6` | Runs the `.test.ts` files of the families and of `test/measurements` with Vue 3.6. Each file runs in four setups: a virtual DOM app or a Vapor app, with the parts compiled in either mode. |
+| `pnpm --filter @vase-ui/vue test:vue-3.6` | Runs the browser tests of the `.test.ts` files of `src` and `test/measurements`, and of `test/as.test.ts`, with Vue 3.6. Each file runs in four setups: a virtual DOM app or a Vapor app, with the parts compiled in either mode. |
 | `pnpm test:nuxt` | Tests the Nuxt fixture, `fixtures/nuxt`, in Chromium: a production build, then the development server. Run `pnpm build` first. |
 | `pnpm --filter @vase-ui/nuxt-fixture typecheck` | Runs `nuxt prepare`, then the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first. |
 
@@ -234,7 +234,7 @@ Each part follows the rules of this section.
 ### The element of a part
 
 - A part renders one root element. Scoped styles, `v-show`, directives, `<Transition>` and the attributes of the developer reach it.
-- A part with a form value is the native input itself, or holds its form inputs in its element. With the `element` slot, the part renders its form input after the element of the slot, or gives the input to the slot.
+- A part with a form value is the native input itself, or holds its form inputs in its element. With the `element` slot, the part renders its form input after the element of the slot, or gives the input to the slot. A part that renders a node of its own in its element, such as the pointer target of `Resizable.Handle`, gives the props of the node to the slot.
 - Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element, an image and a hidden input take no `as`, such as `Input`, `Checkbox` and `Avatar.Image`. The part keeps its content, its own nodes and its attributes on the element of `as`.
 - The named slot `element` gets `{ props, elementRef, state }` of the type `ElementSlotProps<State>` of `src/common/element.ts`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The slot wins over `as`. The default slot is the content of the part.
 - The template has the slot, then `as`, then the default element in a branch of its own. A tag in `<component :is>` can render a component of the same name that the app registers:
@@ -258,6 +258,7 @@ Each part follows the rules of this section.
 - `useElement` of `src/common/element.ts` gives `element` and `setElement`. A component in `as` or in the slot gives its element as an exposed `element`, else as its `$el`. A Vapor component has no `$el`, so it exposes `element`.
 - A template ref on a part has `element`.
 - A part sets `inheritAttrs: false` and binds `mergeProps` of Vue with its own props first and `useAttrs()` last. The value of the developer wins, `undefined` too.
+- The control of a field gives `joinDescribedBy(attrs, field)` of `src/field/control.ts` to `mergeProps` in place of `useAttrs()`. Its `aria-describedby` then has the ids of the developer and the ids of the field, each id one time. `null` of the developer removes the ids of the field.
 - The props type of a part extends `AsProps` and the attributes of its element with `/* @vue-ignore */`, so that a template can give them. It omits from the attributes each attribute that the part declares as a prop, and `as`, because motion-v adds an `as` to `HTMLAttributes`.
 - A part that reads its element in its render reads a tag in `as` before the mount with `useAsTag`. The server HTML then has the attributes of the client. `Tabs.Tab` writes `type="button"` only on a `<button>`.
 - A part that acts as a button takes `useButton` of `src/common/button.ts`. A `<button>`, an `<input>` of a button type and an element that the part does not know yet are native buttons. Each other element gets `role="button"`, a tab stop, and a click from Enter and Space.
@@ -273,7 +274,7 @@ Each part follows the rules of this section.
 3. The `id` prop names the element that has the role and takes the focus. A native `<label for>` names that element. A blank `id` counts as absent: read it with `givenId` of `src/common/id.ts`.
 4. The main state of a part is `v-model`. A second state is a named model, such as `v-model:open`. An uncontrolled state starts from a `default*` prop with the name of the DOM property, such as `defaultChecked`. Give a Boolean model prop the default `undefined` in `withDefaults`. Vue otherwise gives an absent Boolean prop the value `false`, and the part is controlled.
 5. A change event comes before the update of its model, in the same task. Its last argument is the details object, `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, with `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`.
-6. A native reset is not a change of the user. The part goes back to its default and emits only its `update:*` event.
+6. A native reset is not a change of the user. The part takes `resetValue` of `useModel` in `src/common/model.ts`: the model of the mount, else the `default*` prop at the reset. It emits only its `update:*` event, and its field is not dirty after it.
 7. `<Transition>` animates a part that appears and goes. Content that a user or a developer would lose, such as a closed panel, stays in the DOM with `hidden` when the part has `keepMounted`.
 8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat: `Field.Root.Props` and `FieldRootProps`. No constants hold the names of data attributes.
 9. A part gives a form what the native control of the same kind gives. It has the same name and value rules, constraint validation, implicit submit and reset.

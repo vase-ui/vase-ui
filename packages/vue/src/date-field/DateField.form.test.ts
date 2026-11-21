@@ -160,6 +160,25 @@ describe('the form input', () => {
   });
 });
 
+describe('a native reset after a change of defaultValue', () => {
+  test('gives the defaultValue of the reset, with only `update:modelValue`', async () => {
+    const log: string[] = [];
+    const field = reactive<Record<string, unknown>>({
+      defaultValue: day('2026-11-14'),
+      onValueChange: (value: unknown) => log.push(`valueChange ${String(value)}`),
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { segments, form } = await mountFields([field]);
+    field.defaultValue = day('2026-12-24');
+    await nextTick();
+    expect(segments.map((s) => s.value)).toEqual(['11', '14', '2026']);
+    form.reset();
+    await settle();
+    expect(log).toEqual(['update 2026-12-24']);
+    expect(segments.map((s) => s.value)).toEqual(['12', '24', '2026']);
+  });
+});
+
 describe('validity', () => {
   test('the form input checks `required`, `min` and `max` of a date natively', async () => {
     const field = reactive<Record<string, unknown>>({
@@ -239,6 +258,11 @@ describe('validity', () => {
 });
 
 describe('in a Field', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    const { group } = await mountInField({ field: {}, date: { 'aria-describedby': 'hint' } });
+    expect(group).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group and gives the focus to the first segment; the description describes the group', async () => {
     const { root, group, segments } = await mountInField({ field: { name: 'when' } });
     const label = root.querySelector('label')!;

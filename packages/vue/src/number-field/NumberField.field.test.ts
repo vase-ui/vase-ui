@@ -154,6 +154,19 @@ describe('the native form', () => {
     expect(log).toEqual(['update 3']);
   });
 
+  test('a native reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = record(log, { defaultValue: 5 });
+    const { form, input } = await mountField({ root });
+    root.defaultValue = 7;
+    await nextTick();
+    expect(input.value).toBe('5');
+    form.reset();
+    await settle();
+    expect(input.value).toBe('7');
+    expect(log).toEqual(['update 7']);
+  });
+
   test('a reset with no change of the value emits nothing, and the text shows the format', async () => {
     const log: string[] = [];
     const { form, input } = await mountField({ root: record(log, { defaultValue: 5 }) });
@@ -263,6 +276,11 @@ describe('Enter', () => {
 });
 
 describe('Field and Form', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    const { input } = await mountInField({ input: { 'aria-describedby': 'hint' } });
+    expect(input).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the text input; the description describes it; the field name wins over the prop', async () => {
     const { input, hidden, label } = await mountInField({
       field: { name: 'price' },

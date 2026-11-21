@@ -3,6 +3,7 @@
 import { describe, expect, test } from 'vitest';
 import { server } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import { byName, chromiumNodes } from '../accessibilityTree';
 import MeasureBlurOrder from '../fixtures/MeasureBlurOrder.vue';
 import MeasureFocusLoss from '../fixtures/MeasureFocusLoss.vue';
 import MeasureRegisterList from '../fixtures/MeasureRegisterList.vue';
@@ -123,6 +124,25 @@ describe('a focused input that stays in the document', () => {
       await settle();
       expect(log).toEqual(['blur true true', 'focusout true true']);
       expect(left(root.querySelector('input')!)).toBe(true);
+    },
+  );
+});
+
+describe('an id that aria-describedby names two times', () => {
+  // Playwright reads the accessibility tree of Chromium only.
+  test.runIf(server.browser === 'chromium')(
+    'gives its text two times in the description, in the accessibility tree of Chromium',
+    async () => {
+      const root = document.body.appendChild(document.createElement('div'));
+      root.innerHTML = `<p id="hint">Hint</p><p id="error">Error</p>
+        <input aria-label="Once" aria-describedby="hint error">
+        <input aria-label="Twice" aria-describedby="hint error hint">`;
+      const nodes = await chromiumNodes();
+      expect(['Once', 'Twice'].map((name) => byName(nodes, name)?.description?.value)).toEqual([
+        'Hint Error',
+        'Hint Error Hint',
+      ]);
+      root.remove();
     },
   );
 });

@@ -155,6 +155,11 @@ describe('the field', () => {
     await waitFor(() => expect(field).toHaveAttribute('data-touched'));
   });
 
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    await mountField({ trigger: { 'aria-describedby': 'hint' } });
+    expect(trigger()).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('Field.Label names the trigger, and a click on it opens the select', async () => {
     const { label } = await mountField();
     expect(label.htmlFor).toBe(trigger().id);
@@ -287,6 +292,22 @@ describe('the reset', () => {
       expect(trigger()).toHaveTextContent('a');
     },
   );
+
+  test('a reset gives the defaultValue of the reset, after a change of it, and the field is not dirty', async () => {
+    const log: string[] = [];
+    const root: Attrs = reactive({
+      defaultValue: 'a',
+      'onUpdate:modelValue': (next: string) => log.push(`update ${next}`),
+    });
+    const { form, field } = await mountField({ root });
+    root.defaultValue = 'b';
+    await nextTick();
+    expect(trigger()).toHaveTextContent('a');
+    form.reset();
+    await waitFor(() => expect(log).toEqual(['update b']));
+    expect(trigger()).toHaveTextContent('b');
+    expect(field).not.toHaveAttribute('data-dirty');
+  });
 
   test('VUE-21: a reset clears the error of the field', async () => {
     const { form, field } = await mountField({

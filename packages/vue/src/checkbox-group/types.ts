@@ -10,7 +10,10 @@ export interface CheckboxGroupProps extends AsProps, /* @vue-ignore */ Omit<HTML
    * keeps its own value.
    */
   modelValue?: string[] | null;
-  /** The value at the mount of a group that has no `modelValue`. */
+  /**
+   * The value of a group that has no `modelValue`, at the mount and at a native reset of the
+   * form.
+   */
   defaultValue?: string[] | null;
   /** The values of all the checkboxes that the parent checkbox controls. */
   allValues?: string[];

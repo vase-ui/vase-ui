@@ -101,7 +101,7 @@
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Root",
       "kind": "not-applicable",
-      "reason": "`v-model:dirty` and `v-model:touched` bind the dirty and touched states. The template ref has `validate()`, in place of `actionsRef`. CSS selects `:focus-within`, so the state has no `focused`. Vue gives an absent Boolean prop the value `false`, so `disabled` needs no default."
+      "reason": "`v-model:dirty` and `v-model:touched` bind the dirty and touched states. CSS selects `:focus-within`, so the state has no `focused`. Vue gives an absent Boolean prop the value `false`, so `disabled` needs no default."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",

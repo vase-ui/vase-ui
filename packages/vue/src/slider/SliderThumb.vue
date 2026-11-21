@@ -12,7 +12,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
-import { controlAria, fieldKey } from '../field/control';
+import { controlAria, fieldKey, joinDescribedBy } from '../field/control';
 import { injectSlider, stateAttributes, type SliderThumbEntry } from './root';
 import type { SliderThumbProps, SliderThumbState } from './types';
 import { percent, snap } from './values';
@@ -179,7 +179,7 @@ function inputProps() {
       onInput,
       value: value.value,
     },
-    ofInput,
+    joinDescribedBy(ofInput, field),
   );
 }
 

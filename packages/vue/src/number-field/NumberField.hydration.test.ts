@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import NumberFieldInField from '../../test/fixtures/NumberFieldInField.vue';
+import NumberFieldInLocaleProvider from '../../test/fixtures/NumberFieldInLocaleProvider.vue';
 import NumberFields from '../../test/fixtures/NumberFields.vue';
 import { mockRuntimeLocale } from '../../test/mockRuntimeLocale';
 import { hydrate, renderOnServer, settle } from '../../test/render';
@@ -101,6 +102,17 @@ describe('server render and hydration', () => {
     expect(input).toHaveAttribute('value', '1.234,5');
     hydrate(NumberFields, props, root);
     await nextTick();
+    expect(input.value).toBe('1.234,5');
+  });
+
+  test('VUE-170: the server HTML has the locale of the nearest LocaleProvider, and the text stays after the hydration in a browser with another locale', async () => {
+    const props = { provider: { locale: 'de-DE' } };
+    const root = await renderOnServer('NumberFieldInLocaleProvider', props);
+    const input = root.querySelector<HTMLInputElement>('[aria-label=Provider]')!;
+    expect(input).toHaveAttribute('value', '1.234,5');
+    mockRuntimeLocale('de-CH');
+    hydrate(NumberFieldInLocaleProvider, props, root);
+    await settle();
     expect(input.value).toBe('1.234,5');
   });
 

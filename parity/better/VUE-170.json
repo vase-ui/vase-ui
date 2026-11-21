@@ -5,6 +5,7 @@
     "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch",
     "https://vuejs.org/guide/components/provide-inject.html"
   ],
-  "behavior": "With no `locale` prop, `Meter.Root`, `Progress.Root` and `Slider.Root` format their text in the locale of the nearest `LocaleProvider`, else in `en-US`. The server and the browser use the same locale, so the text does not change after the hydration. Base UI formats in `en-US` until the hydration, and then in the locale of the browser.",
-  "dueWith": "packages/react/src/meter/root/MeterRoot.tsx"
+  "behavior": "With no `locale` prop, `Meter.Root`, `Progress.Root`, `Slider.Root` and `NumberField.Root` format their text in the locale of the nearest `LocaleProvider`, else in `en-US`. The server and the browser use the same locale, so the text does not change after the hydration. Base UI formats the text of Meter, Progress and Slider in `en-US` until the hydration, and then in the locale of the browser. It formats the text of Number Field in the default locale of each runtime, so the server and the browser can differ.",
+  "dueWith": "packages/react/src/meter/root/MeterRoot.tsx",
+  "families": ["progress", "slider", "number-field"]
 }
