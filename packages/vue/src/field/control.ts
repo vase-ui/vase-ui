@@ -135,9 +135,9 @@ export function controlAria(field: FieldForControl) {
 export function joinDescribedBy(attrs: Record<string, unknown>, field: FieldForControl | null) {
   if (!field) return attrs;
   const given = attrs['aria-describedby'];
-  const joined =
-    given === null ? null : [given, field.describedBy].filter(Boolean).join(' ') || undefined;
-  return { ...attrs, 'aria-describedby': joined };
+  if (given === null) return attrs;
+  const ids = [typeof given === 'string' ? given : undefined, field.describedBy];
+  return { ...attrs, 'aria-describedby': ids.filter(Boolean).join(' ') || undefined };
 }
 
 /** Makes the element the control of its field while the element is mounted. */

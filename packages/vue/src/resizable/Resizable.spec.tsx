@@ -9,6 +9,7 @@ import {
   type ResizableRootProps,
   type ResizableRootState,
 } from '@vase-ui/vue/resizable';
+import type { ElementSlotProps } from '@vase-ui/vue/types';
 
 const onClick = (event: MouseEvent) => event.preventDefault();
 
@@ -61,11 +62,7 @@ expectType<{ state: ResizablePanelState }, typeof panelSlotProps>(panelSlotProps
 type HandleSlots = InstanceType<typeof Resizable.Handle>['$slots'];
 const handleElementProps = null as unknown as Parameters<NonNullable<HandleSlots['element']>>[0];
 expectType<
-  {
-    props: Record<string, unknown>;
-    elementRef: (target: unknown) => void;
-    state: ResizableHandleState;
-  },
+  ElementSlotProps<ResizableHandleState> & { targetProps: Record<string, unknown> },
   typeof handleElementProps
 >(handleElementProps);
 

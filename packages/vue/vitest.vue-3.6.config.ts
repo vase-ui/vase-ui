@@ -80,11 +80,7 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
     optimizeDeps: { include: ['axe-core'] },
     test: {
       name,
-      include: [
-        'src/**/*.test.ts',
-        'test/measurements/*.test.ts',
-        'test/as.test.ts',
-      ],
+      include: ['src/**/*.test.ts', 'test/measurements/*.test.ts', 'test/as.test.ts'],
       exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
       retry: 0,
       setupFiles: ['./test/setup.ts'],
