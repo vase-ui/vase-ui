@@ -40,6 +40,19 @@ export interface TabsRootProps<Value = any>
   orientation?: TabsRootOrientation;
 }
 
+export interface TabsRootEmits<Value = any> {
+  /**
+   * The value changes. `details.reason` is `none` for a change by the user, and
+   * `details.cancel()` then keeps the value as it was. An uncontrolled root also changes its value
+   * itself: the first tab that is not disabled at the mount (`initial`), and the first tab that is
+   * not disabled, or `null`, when the active tab is disabled (`disabled`) or no tab has the value
+   * (`missing`). Such a change cannot be cancelled.
+   */
+  valueChange: [value: Value | null, details: TabsRootChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value | null];
+}
+
 export interface TabsRootState {
   /** The direction in which the tabs follow each other. */
   orientation: TabsRootOrientation;

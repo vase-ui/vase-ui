@@ -27,6 +27,7 @@ export type {
   NavigationMenuPositionerState,
   NavigationMenuRootChangeEventDetails,
   NavigationMenuRootChangeEventReason,
+  NavigationMenuRootEmits,
   NavigationMenuRootProps,
   NavigationMenuRootState,
   NavigationMenuRootValue,

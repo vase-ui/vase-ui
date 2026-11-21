@@ -36,6 +36,13 @@ export interface InputProps extends /* @vue-ignore */ InputAttributes {
   readonly?: boolean;
 }
 
+export interface InputEmits {
+  /** The user changes the text. `details.cancel()` keeps the text as it was. */
+  valueChange: [value: string, details: InputChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string];
+}
+
 export interface InputState extends FieldState {
   disabled: boolean;
 }

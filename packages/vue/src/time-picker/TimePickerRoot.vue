@@ -8,6 +8,7 @@ import PopoverRoot from '../popover/PopoverRoot.vue';
 import { timePickerKey } from './root';
 import type {
   TimePickerRootChangeEventDetails,
+  TimePickerRootEmits,
   TimePickerRootOpenChangeEventDetails,
   TimePickerRootProps,
   TimePickerRootValue,
@@ -24,22 +25,7 @@ const props = withDefaults(defineProps<TimePickerRootProps<Value>>(), {
   closeOnSelect: undefined,
   granularity: 'minute',
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the value. The value is `null` while a segment is empty.
-   * `details.cancel()` keeps the value as it was.
-   */
-  valueChange: [value: Value | null, details: TimePickerRootChangeEventDetails];
-  /**
-   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
-   * the form and `clear()` of a field emit it with no `valueChange`.
-   */
-  'update:modelValue': [value: Value | null];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: TimePickerRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-}>();
+const emit = defineEmits<TimePickerRootEmits<Value>>();
 defineSlots<{ default?(): unknown }>();
 
 assertTemporal('TimePicker.Root');

@@ -12,6 +12,7 @@ import type {
   FieldItemState,
   FieldLabelProps,
   FieldLabelState,
+  FieldRootEmits,
   FieldRootProps,
   FieldRootState,
 } from './types';
@@ -30,6 +31,7 @@ import type {
 export const Root: typeof FieldRoot = FieldRoot;
 export namespace Root {
   export type Props = FieldRootProps;
+  export type Emits = FieldRootEmits;
   export type State = FieldRootState;
 }
 

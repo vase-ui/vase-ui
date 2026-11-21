@@ -67,6 +67,21 @@ export interface SliderRootProps<Value extends number | readonly number[] = numb
   locale?: Intl.LocalesArgument;
 }
 
+export interface SliderRootEmits<Value extends number | readonly number[] = number> {
+  /** The user changes the value, also at each move of a drag. `details.cancel()` keeps the value. */
+  valueChange: [
+    value: Value extends number ? number : Value,
+    details: SliderRootChangeEventDetails,
+  ];
+  /** Comes after the change event, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: Value extends number ? number : Value];
+  /** The user ends an action that changed the value: a key, an `input` event, or a press. */
+  valueCommitted: [
+    value: Value extends number ? number : Value,
+    details: SliderRootCommitEventDetails,
+  ];
+}
+
 export interface SliderRootState extends FieldState {
   disabled: boolean;
   dragging: boolean;

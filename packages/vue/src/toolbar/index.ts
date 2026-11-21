@@ -4,6 +4,7 @@ export type {
   ToolbarButtonState,
   ToolbarGroupProps,
   ToolbarGroupState,
+  ToolbarInputEmits,
   ToolbarInputProps,
   ToolbarInputState,
   ToolbarLinkProps,

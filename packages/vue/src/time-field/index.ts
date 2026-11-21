@@ -10,6 +10,7 @@ export type {
   TimeFieldLiteralState,
   TimeFieldRootChangeEventDetails,
   TimeFieldRootChangeEventReason,
+  TimeFieldRootEmits,
   TimeFieldRootGranularity,
   TimeFieldRootProps,
   TimeFieldRootState,

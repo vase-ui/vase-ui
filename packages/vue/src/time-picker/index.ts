@@ -1,6 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 export * as TimePicker from './parts';
 export type {
+  TimePickerClockEmits,
   TimePickerClockProps,
   TimePickerClockState,
   TimePickerColumnItemProps,
@@ -21,6 +22,7 @@ export type {
   TimePickerPositionerState,
   TimePickerRootChangeEventDetails,
   TimePickerRootChangeEventReason,
+  TimePickerRootEmits,
   TimePickerRootGranularity,
   TimePickerRootOpenChangeEventDetails,
   TimePickerRootOpenChangeEventReason,

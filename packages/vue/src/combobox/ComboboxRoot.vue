@@ -2,12 +2,7 @@
 import { useAttrs } from 'vue';
 import { useElement } from '../common/element';
 import { useComboboxRoot } from './root';
-import type {
-  ComboboxRootChangeEventDetails,
-  ComboboxRootHighlightEventDetails,
-  ComboboxRootOpenChangeEventDetails,
-  ComboboxRootProps,
-} from './types';
+import type { ComboboxRootEmits, ComboboxRootProps } from './types';
 
 type ValueChange = Multiple extends true ? Value[] : Value | null;
 
@@ -36,29 +31,7 @@ const props = withDefaults(defineProps<ComboboxRootProps<Value, Multiple, Item>>
   disabled: false,
   readonly: false,
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the value. `details.cancel()` keeps the value as it was. An action that gives
-   * the value that the root has sends no event, such as a pick of the selected item without
-   * `multiple`.
-   */
-  valueChange: [value: ValueChange, details: ComboboxRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: ValueChange];
-  /**
-   * The text of the input changes. `details.cancel()` keeps the text as it was. An action that gives
-   * the text that the input has sends no event.
-   */
-  inputValueChange: [text: string, details: ComboboxRootChangeEventDetails];
-  /** Comes after `inputValueChange`, unless a listener cancels it. `v-model:input-value` uses it. */
-  'update:inputValue': [text: string];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: ComboboxRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-  /** An item gets the highlight, or no item has it (`undefined`, with the index -1). */
-  itemHighlighted: [value: Value | undefined, details: ComboboxRootHighlightEventDetails];
-}>();
+const emit = defineEmits<ComboboxRootEmits<Value, Multiple>>();
 defineSlots<{ default?(): unknown }>();
 
 const attrs = useAttrs();

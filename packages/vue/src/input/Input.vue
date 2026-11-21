@@ -8,19 +8,14 @@ import { givenId } from '../common/id';
 import { useModel } from '../common/model';
 import { controlAttributes, fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
-import type { InputChangeEventDetails, InputProps, InputState } from './types';
+import type { InputEmits, InputProps, InputState } from './types';
 
 type TextElement = HTMLInputElement | HTMLTextAreaElement;
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<InputProps>();
-const emit = defineEmits<{
-  /** The user changes the text. `details.cancel()` keeps the text as it was. */
-  valueChange: [value: string, details: InputChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: string];
-}>();
+const emit = defineEmits<InputEmits>();
 const slots = defineSlots<{
   element?(scope: ElementSlotProps<InputState>): unknown;
 }>();

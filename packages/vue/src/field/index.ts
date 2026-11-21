@@ -8,6 +8,7 @@ export type {
   FieldItemState,
   FieldLabelProps,
   FieldLabelState,
+  FieldRootEmits,
   FieldRootProps,
   FieldRootState,
   FieldValidity,

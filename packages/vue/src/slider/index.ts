@@ -10,6 +10,7 @@ export type {
   SliderRootChangeEventReason,
   SliderRootCommitEventDetails,
   SliderRootCommitEventReason,
+  SliderRootEmits,
   SliderRootProps,
   SliderRootState,
   SliderThumbProps,

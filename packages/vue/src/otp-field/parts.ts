@@ -6,6 +6,7 @@ import type {
   OTPFieldRootChangeEventReason,
   OTPFieldRootCompleteEventDetails,
   OTPFieldRootCompleteEventReason,
+  OTPFieldRootEmits,
   OTPFieldRootInvalidEventDetails,
   OTPFieldRootInvalidEventReason,
   OTPFieldRootProps,
@@ -32,6 +33,7 @@ import type {
 export const Root: typeof OTPFieldRoot = OTPFieldRoot;
 export namespace Root {
   export type Props = OTPFieldRootProps;
+  export type Emits = OTPFieldRootEmits;
   export type State = OTPFieldRootState;
   export type ValidationType = OTPFieldRootValidationType;
   export type ChangeEventReason = OTPFieldRootChangeEventReason;

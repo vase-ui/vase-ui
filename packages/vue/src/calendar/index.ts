@@ -38,6 +38,7 @@ export type {
   CalendarPreviousButtonState,
   CalendarRootChangeEventDetails,
   CalendarRootChangeEventReason,
+  CalendarRootEmits,
   CalendarRootProps,
   CalendarRootState,
   CalendarRootView,

@@ -140,6 +140,20 @@ export interface SelectRootProps<Value = any, Multiple extends boolean | undefin
   disabled?: boolean | undefined;
 }
 
+export interface SelectRootEmits<Value = any, Multiple extends boolean | undefined = false> {
+  /**
+   * The user changes the value. `details.cancel()` keeps the value as it was. Without `multiple`, a
+   * press of the selected item sends no event.
+   */
+  valueChange: [value: SelectOutputValue<Value, Multiple>, details: SelectRootChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: SelectOutputValue<Value, Multiple>];
+  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: SelectRootOpenChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+}
+
 export interface SelectRootState {}
 
 export interface SelectFieldState {

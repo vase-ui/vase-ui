@@ -85,6 +85,23 @@ export interface DrawerRootProps<Payload = unknown> extends Omit<
   snapToSequentialPoints?: boolean | undefined;
 }
 
+export interface DrawerRootEmits {
+  /**
+   * The drawer opens or closes. `details.cancel()` keeps it as it was. On Android, in a browser with
+   * `CloseWatcher`, the back gesture closes the top open drawer with the reason `'close-watcher'`.
+   * Then `cancel()` keeps the drawer open only when the browser lets the page cancel the gesture.
+   */
+  openChange: [open: boolean, details: DrawerRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+  /** The snap point changes. `details.cancel()` keeps it as it was. */
+  snapPointChange: [point: DrawerSnapPoint | null, details: DrawerRootSnapPointChangeEventDetails];
+  /** Comes after `snapPointChange`, unless a listener cancels the change. `v-model:snap-point` uses it. */
+  'update:snapPoint': [point: DrawerSnapPoint | null];
+}
+
 export interface DrawerRootState {}
 
 export interface DrawerTriggerProps<Payload = unknown>

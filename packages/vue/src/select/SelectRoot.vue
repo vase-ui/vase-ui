@@ -9,12 +9,7 @@ import { useInDisabledFieldset } from '../fieldset/part';
 import { isSelectedValueDirty } from '../common/itemEquality';
 import { useSelectForm } from './form';
 import { useSelectRoot } from './root';
-import type {
-  SelectOutputValue,
-  SelectRootChangeEventDetails,
-  SelectRootOpenChangeEventDetails,
-  SelectRootProps,
-} from './types';
+import type { SelectOutputValue, SelectRootEmits, SelectRootProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -29,19 +24,7 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   readonly: false,
   disabled: false,
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the value. `details.cancel()` keeps the value as it was. Without `multiple`, a
-   * press of the selected item sends no event.
-   */
-  valueChange: [value: SelectOutputValue<Value, Multiple>, details: SelectRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: SelectOutputValue<Value, Multiple>];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: SelectRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-}>();
+const emit = defineEmits<SelectRootEmits<Value, Multiple>>();
 defineSlots<{ default?(): unknown }>();
 
 const attrs = useAttrs();

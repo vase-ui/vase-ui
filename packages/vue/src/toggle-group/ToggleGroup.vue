@@ -9,7 +9,12 @@ import { ownerWindow } from '../common/owner';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { toolbarKey } from '../toolbar/item';
 import { toggleGroupKey, type GroupToggle } from './toggle';
-import type { ToggleGroupChangeEventDetails, ToggleGroupProps, ToggleGroupState } from './types';
+import type {
+  ToggleGroupChangeEventDetails,
+  ToggleGroupEmits,
+  ToggleGroupProps,
+  ToggleGroupState,
+} from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -21,12 +26,7 @@ const props = withDefaults(defineProps<ToggleGroupProps<Value>>(), {
   orientation: 'horizontal',
   loopFocus: true,
 });
-const emit = defineEmits<{
-  /** The user presses a toggle. `details.cancel()` keeps the value as it was. */
-  valueChange: [value: Value[], details: ToggleGroupChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value[]];
-}>();
+const emit = defineEmits<ToggleGroupEmits<Value>>();
 defineSlots<{
   default?(scope: { state: ToggleGroupState }): unknown;
   element?(scope: ElementSlotProps<ToggleGroupState>): unknown;

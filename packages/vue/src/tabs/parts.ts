@@ -12,6 +12,7 @@ import type {
   TabsPanelState,
   TabsRootChangeEventDetails,
   TabsRootChangeEventReason,
+  TabsRootEmits,
   TabsRootOrientation,
   TabsRootProps,
   TabsRootState,
@@ -32,6 +33,7 @@ import type {
 export const Root: typeof TabsRoot = TabsRoot;
 export namespace Root {
   export type Props<Value = any> = TabsRootProps<Value>;
+  export type Emits<Value = any> = TabsRootEmits<Value>;
   export type State = TabsRootState;
   export type Orientation = TabsRootOrientation;
   export type ChangeEventReason = TabsRootChangeEventReason;

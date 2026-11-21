@@ -25,6 +25,7 @@ import { clockAttributes, clockKey } from './clock';
 import type {
   TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
+  TimeClockRootEmits,
   TimeClockRootProps,
   TimeClockRootState,
   TimeClockRootViewChangeEventDetails,
@@ -57,21 +58,7 @@ const props = withDefaults(defineProps<TimeClockRootProps<Value>>(), {
   minuteStep: 1,
   secondStep: 1,
 });
-const emit = defineEmits<{
-  /**
-   * The user selects a time. The value has the date and the time zone of the value.
-   * `details.cancel()` keeps the time as it was.
-   */
-  valueChange: [value: Value, details: TimeClockRootChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value];
-  /** The user commits the time: a press that selects a number ends, or Enter or Space on the face. */
-  valueCommitted: [value: Value, details: TimeClockRootCommitEventDetails];
-  /** The view changes: a trigger, or a commit that shows the next view. `details.cancel()` keeps the view. */
-  viewChange: [view: TimeClockView, details: TimeClockRootViewChangeEventDetails];
-  /** Comes after the change event of the view, unless a listener cancels it. `v-model:view` uses it. */
-  'update:view': [view: TimeClockView];
-}>();
+const emit = defineEmits<TimeClockRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: TimeClockRootState }): unknown;
   element?(scope: ElementSlotProps<TimeClockRootState>): unknown;

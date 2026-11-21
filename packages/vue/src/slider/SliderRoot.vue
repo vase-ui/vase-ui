@@ -26,6 +26,7 @@ import type {
   SliderRootChangeEventDetails,
   SliderRootChangeEventReason,
   SliderRootCommitEventDetails,
+  SliderRootEmits,
   SliderRootProps,
   SliderRootState,
 } from './types';
@@ -47,14 +48,7 @@ const props = withDefaults(defineProps<SliderRootProps<Value>>(), {
   thumbAlignment: 'center',
   orientation: 'horizontal',
 });
-const emit = defineEmits<{
-  /** The user changes the value, also at each move of a drag. `details.cancel()` keeps the value. */
-  valueChange: [value: Emitted, details: SliderRootChangeEventDetails];
-  /** Comes after the change event, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Emitted];
-  /** The user ends an action that changed the value: a key, an `input` event, or a press. */
-  valueCommitted: [value: Emitted, details: SliderRootCommitEventDetails];
-}>();
+const emit = defineEmits<SliderRootEmits<Value>>();
 defineSlots<{
   default?(scope: { state: SliderRootState }): unknown;
   element?(scope: ElementSlotProps<SliderRootState>): unknown;

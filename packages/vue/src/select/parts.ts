@@ -43,6 +43,7 @@ import type {
   SelectPositionerState,
   SelectRootChangeEventDetails,
   SelectRootChangeEventReason,
+  SelectRootEmits,
   SelectRootOpenChangeEventDetails,
   SelectRootOpenChangeEventReason,
   SelectRootProps,
@@ -68,6 +69,10 @@ import type {
 export const Root: typeof SelectRoot = SelectRoot;
 export namespace Root {
   export type Props<Value = any, Multiple extends boolean | undefined = false> = SelectRootProps<
+    Value,
+    Multiple
+  >;
+  export type Emits<Value = any, Multiple extends boolean | undefined = false> = SelectRootEmits<
     Value,
     Multiple
   >;

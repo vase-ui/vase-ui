@@ -2,6 +2,7 @@ import CheckboxComponent from './Checkbox.vue';
 import type {
   CheckboxChangeEventDetails,
   CheckboxChangeEventReason,
+  CheckboxEmits,
   CheckboxProps,
   CheckboxState,
 } from './types';
@@ -22,9 +23,16 @@ import type {
 export const Checkbox: typeof CheckboxComponent = CheckboxComponent;
 export namespace Checkbox {
   export type Props = CheckboxProps;
+  export type Emits = CheckboxEmits;
   export type State = CheckboxState;
   export type ChangeEventReason = CheckboxChangeEventReason;
   export type ChangeEventDetails = CheckboxChangeEventDetails;
 }
 
-export type { CheckboxChangeEventDetails, CheckboxChangeEventReason, CheckboxProps, CheckboxState };
+export type {
+  CheckboxChangeEventDetails,
+  CheckboxChangeEventReason,
+  CheckboxEmits,
+  CheckboxProps,
+  CheckboxState,
+};

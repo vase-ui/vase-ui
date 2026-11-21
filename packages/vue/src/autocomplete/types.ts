@@ -4,6 +4,8 @@ import type {
   ComboboxInputGroupState,
   ComboboxItemState,
   ComboboxRootChangeEventDetails,
+  ComboboxRootHighlightEventDetails as AutocompleteRootHighlightEventDetails,
+  ComboboxRootOpenChangeEventDetails as AutocompleteRootOpenChangeEventDetails,
   ComboboxSharedRootProps,
   ComboboxTriggerState,
 } from '../combobox/types';
@@ -105,6 +107,22 @@ export interface AutocompleteRootProps<Item = unknown>
   openOnInputClick?: boolean | undefined;
   /** The text of an item in the input. An object with `value` and `label` gives its `value`. */
   itemToStringValue?: ((item: Item) => string) | undefined;
+}
+
+export interface AutocompleteRootEmits<Item = unknown> {
+  /**
+   * The text changes. `details.cancel()` keeps the text as it was. An action that gives the text
+   * that the root has, such as a press of the item with that text, sends no event.
+   */
+  valueChange: [value: string, details: AutocompleteRootChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: string];
+  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: AutocompleteRootOpenChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** An item gets the highlight, or no item has it (`undefined`, with the index -1). */
+  itemHighlighted: [value: Item | undefined, details: AutocompleteRootHighlightEventDetails];
 }
 
 export interface AutocompleteRootState {}

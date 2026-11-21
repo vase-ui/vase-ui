@@ -80,6 +80,15 @@ export interface NumberFieldRootProps
   readonly?: boolean;
 }
 
+export interface NumberFieldRootEmits {
+  /** The user changes the value. `details.cancel()` keeps the value as it was. */
+  valueChange: [value: number | null, details: NumberFieldRootChangeEventDetails];
+  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: number | null];
+  /** The user ends a change: at the blur after typed edits, a key, a wheel step, a release or a fill. */
+  valueCommitted: [value: number | null, details: NumberFieldRootCommitEventDetails];
+}
+
 export interface NumberFieldRootState extends FieldState {
   value: number | null;
   /** The text of the input. */

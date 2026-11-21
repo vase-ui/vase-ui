@@ -15,6 +15,7 @@ export type {
   TimeClockRootChangeEventReason,
   TimeClockRootCommitEventDetails,
   TimeClockRootCommitEventReason,
+  TimeClockRootEmits,
   TimeClockRootProps,
   TimeClockRootState,
   TimeClockRootViewChangeEventDetails,

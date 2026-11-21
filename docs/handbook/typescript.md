@@ -9,20 +9,19 @@ A guide to using TypeScript with Vase UI.
 
 ## Namespaces
 
-The namespace of a part holds its types. The two main types are:
+The namespace of a part holds its types. The main types are:
 
 - `Props`, such as `Tooltip.Root.Props`
+- `Emits`, such as `Tooltip.Root.Emits`: the events of the part, in the form of `defineEmits`
 - `State`, such as `Tooltip.Root.State`
 
 Each type also has a flat name, such as `TooltipRootProps`. The entry point of the component exports both names. A component with one part has its types on the component, such as `Checkbox.Props` and `CheckboxProps`.
 
-### Props
+### Props and Emits
 
-A component that wraps a part takes the props of the part with its `Props` type. Give the flat name to `defineProps`:
+A component that wraps a part takes the types of the props and the events of the part from its `Props` and `Emits` types. Extend the flat names with `/* @vue-ignore */`, so that Vue gives the props and the listeners to the part. See [Wrap a part](/handbook/composition#wrap-a-part).
 
-<<< ../examples/typescript/MyTooltip.vue{5-10}
-
-The wrapper gives each Boolean prop the default `undefined`, so that the tooltip stays uncontrolled. See [Wrap a part](/handbook/composition#wrap-a-part).
+<<< ../examples/typescript/MyTooltip.vue{5-9}
 
 ### State
 
@@ -64,9 +63,9 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 ## Differences from Base UI
 
-| Base UI                                                         | Vase UI                                                                                                                   |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| A wrapper spreads the props of the part on it                   | A wrapper declares the props with `defineProps<TooltipRootProps>()`, and gives each Boolean prop the default `undefined`. |
-| `OpenChangeEventDetails` with `preventUnmountOnClose()`         | `OpenChangeEventDetails` with `trigger`. A `<Transition>` keeps a closing popup in the DOM.                               |
-| The types of `actionsRef`, such as `Menu.Root.Actions`          | The types of the exposed members of the part, which a template ref gets.                                                  |
-| `useRender.ComponentProps` for a component with a `render` prop | `ElementSlotProps<State>` of `@vase-ui/vue/types`, for a component with an `element` slot.                                |
+| Base UI                                                         | Vase UI                                                                                                                                                    |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A wrapper spreads the props of the part on it                   | A wrapper types its props and events with `Props` and `Emits` of the part and `/* @vue-ignore */`. Vue gives the attributes and the listeners to the part. |
+| `OpenChangeEventDetails` with `preventUnmountOnClose()`         | `OpenChangeEventDetails` with `trigger`. A `<Transition>` keeps a closing popup in the DOM.                                                                |
+| The types of `actionsRef`, such as `Menu.Root.Actions`          | The types of the exposed members of the part, which a template ref gets.                                                                                   |
+| `useRender.ComponentProps` for a component with a `render` prop | `ElementSlotProps<State>` of `@vase-ui/vue/types`, for a component with an `element` slot.                                                                 |

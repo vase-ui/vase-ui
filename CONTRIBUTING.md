@@ -278,7 +278,7 @@ Each part follows the rules of this section.
 5. A change event comes before the update of its model, in the same task. Its last argument is the details object, `ChangeEventDetails<Reason, E>` of `src/common/changeEventDetails.ts`, with `reason`, `event`, `cancel()` and `isCanceled`. `details.cancel()` is the one way to cancel a change. The details of an event that a listener cannot cancel are `GenericEventDetails<Reason, E>`.
 6. A native reset is not a change of the user. The part takes `resetValue` of `useModel` in `src/common/model.ts`: the model of the mount, else the `default*` prop at the reset. It emits only its `update:*` event, and its field is not dirty after it.
 7. `<Transition>` animates a part that appears and goes. Content that a user or a developer would lose, such as a closed panel, stays in the DOM with `hidden` when the part has `keepMounted`.
-8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat: `Field.Root.Props` and `FieldRootProps`. No constants hold the names of data attributes.
+8. A component is `Family.Part`, or the family name when the family has one part. Its types are on the part and also flat: `Field.Root.Props` and `FieldRootProps`. A part with events declares them in its `Emits` interface, such as `FieldRootEmits`, and gives it to `defineEmits`. No constants hold the names of data attributes.
 9. A part gives a form what the native control of the same kind gives. It has the same name and value rules, constraint validation, implicit submit and reset.
 10. A disabled part is out of the tab order and out of the form data. A read-only part stays in both, and the user cannot change it.
 11. A part writes a `data-*` attribute only when no CSS selector on the same element gives the same answer. No part has a `focused` state: use `:focus`, `:focus-visible` and `:focus-within`. A native form element has no `data-disabled`, `data-checked`, `data-required` or `data-readonly`. An ARIA attribute that the part writes for accessibility is the hook for its state, such as `[aria-invalid="true"]`.
@@ -544,7 +544,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - The reference lists the parts in the sequence of the Base UI page.
 - The Default column shows the `@default` tag of a prop in the exported props interface of the part. A property that an interface declares again does not get the tag of the base interface.
 - `@ignore` keeps a prop out of the reference.
-- The description of an event is its JSDoc in `defineEmits`. Write a JSDoc for each event, `update:*` too.
+- The description of an event is its JSDoc in the `Emits` interface of the part. Write a JSDoc for each event, `update:*` too.
 - Write each selector and each CSS variable of a part as a tag in the JSDoc of its constant. Put the tags after the line that names the element: ``@selector `[hidden]` The panel is closed.`` or ``@cssVariable `--collapsible-panel-height` The height of the content of the panel, in pixels.`` The reference shows them in the tables Selectors and CSS variables.
 - Write one selector for each state that a developer styles, as CSS writes it for the element of the part. Write no selector for `:hover`, `:focus`, `:focus-visible` or `:active`.
 - The slots `default` and `element` and the exposed `element` share one description when their JSDoc is empty. Each other prop, slot and exposed member needs a JSDoc.

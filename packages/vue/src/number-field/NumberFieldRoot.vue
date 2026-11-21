@@ -16,6 +16,7 @@ import type {
   NumberFieldRootChangeEventReason,
   NumberFieldRootCommitEventDetails,
   NumberFieldRootCommitEventReason,
+  NumberFieldRootEmits,
   NumberFieldRootProps,
   NumberFieldRootState,
 } from './types';
@@ -34,14 +35,7 @@ const props = withDefaults(defineProps<NumberFieldRootProps>(), {
   disabled: false,
   readonly: false,
 });
-const emit = defineEmits<{
-  /** The user changes the value. `details.cancel()` keeps the value as it was. */
-  valueChange: [value: Value, details: NumberFieldRootChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: Value];
-  /** The user ends a change: at the blur after typed edits, a key, a wheel step, a release or a fill. */
-  valueCommitted: [value: Value, details: NumberFieldRootCommitEventDetails];
-}>();
+const emit = defineEmits<NumberFieldRootEmits>();
 defineSlots<{ default?(scope: { state: NumberFieldRootState }): unknown }>();
 
 const attrs = useAttrs();

@@ -9,6 +9,7 @@ import TimePickerPositioner from './TimePickerPositioner.vue';
 import TimePickerRoot from './TimePickerRoot.vue';
 import TimePickerTrigger from './TimePickerTrigger.vue';
 import type {
+  TimePickerClockEmits,
   TimePickerClockProps,
   TimePickerClockState,
   TimePickerColumnItemProps,
@@ -29,6 +30,7 @@ import type {
   TimePickerPositionerState,
   TimePickerRootChangeEventDetails,
   TimePickerRootChangeEventReason,
+  TimePickerRootEmits,
   TimePickerRootGranularity,
   TimePickerRootOpenChangeEventDetails,
   TimePickerRootOpenChangeEventReason,
@@ -48,6 +50,8 @@ export const Root: typeof TimePickerRoot = TimePickerRoot;
 export namespace Root {
   export type Props<Value extends TimePickerRootValue = Temporal.PlainTime> =
     TimePickerRootProps<Value>;
+  export type Emits<Value extends TimePickerRootValue = Temporal.PlainTime> =
+    TimePickerRootEmits<Value>;
   export type State = TimePickerRootState;
   export type Value = TimePickerRootValue;
   export type Granularity = TimePickerRootGranularity;
@@ -181,5 +185,6 @@ export namespace ColumnItem {
 export const Clock: typeof TimePickerClock = TimePickerClock;
 export namespace Clock {
   export type Props = TimePickerClockProps;
+  export type Emits = TimePickerClockEmits;
   export type State = TimePickerClockState;
 }

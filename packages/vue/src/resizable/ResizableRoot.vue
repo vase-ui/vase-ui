@@ -48,7 +48,7 @@ import type {
   ResizableLayout,
   ResizableRootChangeEventDetails,
   ResizableRootChangeEventReason,
-  ResizableRootCommitEventDetails,
+  ResizableRootEmits,
   ResizableRootProps,
   ResizableRootState,
 } from './types';
@@ -65,23 +65,7 @@ const props = withDefaults(defineProps<ResizableRootProps>(), {
   pushPanels: true,
   resizeMode: 'live',
 });
-const emit = defineEmits<{
-  /**
-   * The user changes the layout. `details.cancel()` keeps the layout. A listener can then write its
-   * own layout to `v-model`, such as a layout that snaps to a rule of the app.
-   */
-  layoutChange: [layout: ResizableLayout, details: ResizableRootChangeEventDetails];
-  /**
-   * Comes after `layoutChange`, unless a listener cancelled it. Also comes alone after a method of a
-   * panel, and after a panel that mounts with no entry. A change of the size of the root emits
-   * nothing.
-   */
-  'update:modelValue': [layout: ResizableLayout];
-  /** The user ends a change: the release of a drag, a key, a double click. */
-  layoutCommitted: [layout: ResizableLayout, details: ResizableRootCommitEventDetails];
-  /** A drag starts, and it ends. */
-  draggingChange: [dragging: boolean];
-}>();
+const emit = defineEmits<ResizableRootEmits>();
 defineSlots<{
   default?(scope: {
     state: ResizableRootState;

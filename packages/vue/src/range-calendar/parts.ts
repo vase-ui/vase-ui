@@ -3,6 +3,7 @@ import RangeCalendarRoot from './RangeCalendarRoot.vue';
 import type {
   RangeCalendarRootChangeEventDetails,
   RangeCalendarRootChangeEventReason,
+  RangeCalendarRootEmits,
   RangeCalendarRootProps,
   RangeCalendarRootState,
   RangeCalendarRootValue,
@@ -21,6 +22,7 @@ import type {
 export const Root: typeof RangeCalendarRoot = RangeCalendarRoot;
 export namespace Root {
   export type Props<Value extends DateValue = Temporal.PlainDate> = RangeCalendarRootProps<Value>;
+  export type Emits<Value extends DateValue = Temporal.PlainDate> = RangeCalendarRootEmits<Value>;
   export type State = RangeCalendarRootState;
   export type Value<Value extends DateValue = Temporal.PlainDate> = RangeCalendarRootValue<Value>;
   export type ChangeEventReason = RangeCalendarRootChangeEventReason;

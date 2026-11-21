@@ -86,7 +86,7 @@ To fix both types, give the part its type arguments in an instantiation expressi
 
 <<< ./select/TypedComponent.vue{7,15}
 
-A wrapper that declares `defineProps<SelectRootProps<Value, Multiple>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the select cannot open.
+A wrapper that declares `defineProps<SelectRootProps<Value, Multiple>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the select cannot open. [Wrap a part](/handbook/composition#wrap-a-part) shows a generic wrapper that keeps the types.
 
 ### Formatting the value
 

@@ -34,6 +34,7 @@ export type {
   AutocompletePositionerState,
   AutocompleteRootChangeEventDetails,
   AutocompleteRootChangeEventReason,
+  AutocompleteRootEmits,
   AutocompleteRootHighlightEventDetails,
   AutocompleteRootHighlightEventReason,
   AutocompleteRootOpenChangeEventDetails,

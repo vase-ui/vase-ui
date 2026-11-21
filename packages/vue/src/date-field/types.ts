@@ -95,6 +95,19 @@ export interface DateFieldRootProps<Value extends DateFieldRootValue = DateField
   readonly?: boolean;
 }
 
+export interface DateFieldRootEmits<Value extends DateFieldRootValue = DateFieldRootValue> {
+  /**
+   * The user changes the value. The value is `null` while a segment is empty.
+   * `details.cancel()` keeps each segment as it was.
+   */
+  valueChange: [value: Value | null, details: DateFieldRootChangeEventDetails];
+  /**
+   * Comes after the change event with the new value, unless a listener cancels the change.
+   * `v-model` uses it. A reset of the form and `clear()` emit it with no change event.
+   */
+  'update:modelValue': [value: Value | null];
+}
+
 /**
  * An item of the layout. The user edits an item with `editable: true`. Each other item has a
  * `text`: a separator, an era or the name of a time zone.
