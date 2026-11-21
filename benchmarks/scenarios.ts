@@ -58,4 +58,16 @@ export const LIBRARIES: readonly Library[] = [
 ];
 
 /** Each scenario is a fixture file `libraries/<library>/<scenario>.vue`, or `.tsx` for React. */
-export const SCENARIOS: readonly string[] = ['Dialog'];
+export const SCENARIOS: readonly string[] = [
+  'Accordion',
+  'Checkbox',
+  'Combobox',
+  'Dialog',
+  'Menu',
+  'Popover',
+  'Select',
+  'Slider',
+  'Tabs',
+  'Tooltip',
+  'AllComponents',
+];
