@@ -169,8 +169,9 @@ export namespace Positioner {
 }
 
 /**
- * An element that points to the anchor of the toast.
+ * An element that points to the center of the anchor of the toast.
  * Renders a `<div>` element.
+ * Its place is in the padding box of its nearest positioned ancestor: the toast when the toast has a `position`, else the positioner.
  * @selector `[data-side]` The side of the anchor that the toast is on, as on the positioner.
  * @selector `[data-align]` The alignment of the toast on its side: `start`, `center` or `end`.
  * @selector `[data-uncentered]` The arrow cannot point to the center of the anchor.

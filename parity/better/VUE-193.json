@@ -1,0 +1,21 @@
+{
+  "id": "VUE-193",
+  "evidence": [
+    "https://www.w3.org/TR/CSS2/visudet.html#containing-block-details",
+    "https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetparent",
+    "https://base-ui.com/react/components/popover"
+  ],
+  "behavior": "An arrow points at the center of its anchor. Its place is in the padding box of its nearest positioned ancestor, so the borders of a popup with a `position` do not move it. `arrowPadding` keeps the same space from each inner edge of that box. In the Popover demo of Base UI, the popup has `position: relative` and a 1 px border, and the arrow is 1.5 px off the center of its trigger.",
+  "dueWith": "packages/react/src/popover/arrow/PopoverArrow.tsx",
+  "families": [
+    "tooltip",
+    "preview-card",
+    "menu",
+    "context-menu",
+    "navigation-menu",
+    "select",
+    "combobox",
+    "autocomplete",
+    "toast"
+  ]
+}
