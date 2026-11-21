@@ -10,6 +10,7 @@ type Props = Record<string, unknown>;
 // disabled `Fieldset.Root` with `disabledFieldset`. With `inputInPopup`, the trigger is the control.
 defineProps({
   root: Object as PropType<Props>,
+  input: Object as PropType<Props>,
   field: Object as PropType<Props>,
   disabledFieldset: Boolean,
   inputInPopup: Boolean,
@@ -27,7 +28,7 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
           <Combobox.Trigger v-if="inputInPopup" data-testid="trigger">
             <Combobox.Value />
           </Combobox.Trigger>
-          <Combobox.Input v-else data-testid="input" />
+          <Combobox.Input v-else data-testid="input" v-bind="input" />
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup data-testid="popup">

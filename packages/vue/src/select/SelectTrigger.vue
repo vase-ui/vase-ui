@@ -3,7 +3,7 @@ import { computed, mergeProps, useAttrs } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { controlAttributes, describedByWith } from '../field/control';
+import { controlAttributes, joinDescribedBy } from '../field/control';
 import { isInPopup } from '../popup/layer';
 import { usePopupTrigger } from '../popup/trigger';
 import { injectSelectRoot } from './root';
@@ -123,9 +123,7 @@ function elementProps() {
       onFocus,
       onBlur,
     },
-    field
-      ? { ...attrs, 'aria-describedby': describedByWith(field, attrs['aria-describedby']) }
-      : attrs,
+    joinDescribedBy(attrs, field),
   );
   // A key listener of the developer that prevents the default stops the keys of the select.
   return mergeProps(merged, { onKeydown });

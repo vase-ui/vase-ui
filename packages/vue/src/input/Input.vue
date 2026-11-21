@@ -6,7 +6,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { useModel } from '../common/model';
-import { controlAttributes, fieldKey, useFieldControl } from '../field/control';
+import { controlAttributes, fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
 
@@ -78,7 +78,7 @@ useFieldControl(field, element, {
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(ownProps.value, attrs);
+  return mergeProps(ownProps.value, joinDescribedBy(attrs, field));
 }
 
 // The binding of `value` writes only a value that changed. When the parent refuses a value, or a

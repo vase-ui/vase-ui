@@ -155,6 +155,11 @@ describe('the field', () => {
     await waitFor(() => expect(field).toHaveAttribute('data-touched'));
   });
 
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    await mountField({ trigger: { 'aria-describedby': 'hint' } });
+    expect(trigger()).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('Field.Label names the trigger, and a click on it opens the select', async () => {
     const { label } = await mountField();
     expect(label.htmlFor).toBe(trigger().id);

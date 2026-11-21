@@ -1096,6 +1096,11 @@ describe('the field', () => {
     }
   });
 
+  test('aria-describedby of the developer on the root comes before the ids of the field', async () => {
+    const { group } = await mountField({ field: {}, root: { 'aria-describedby': 'hint' } });
+    expect(group).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('a name of the developer wins: on the root it names the group only, on a slot that slot only; null removes', async () => {
     const { root, group, slots } = await mountField({
       field: {},

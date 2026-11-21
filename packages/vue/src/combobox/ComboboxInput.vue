@@ -17,7 +17,7 @@ import { useIsHydrated } from '../common/hydration';
 import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
-import { controlAttributes, describedByWith, fieldKey } from '../field/control';
+import { controlAttributes, fieldKey, joinDescribedBy } from '../field/control';
 import { isComposing, isInPopup } from '../popup/layer';
 import {
   createComboboxDetails,
@@ -332,13 +332,9 @@ function elementProps() {
   const fieldOwn = isControl.value && field ? controlAttributes(field) : {};
   // A value of the developer for `autocorrect` takes the key of the part, so the element has one
   // attribute.
-  const { autocorrect, ...given } = attrs;
+  const { autocorrect, ...given } = joinDescribedBy(attrs, isControl.value ? field : null);
   if (autocorrect !== undefined) given.autoCorrect = autocorrect;
-  const merged = mergeProps(fieldOwn, own, given);
-  if (isControl.value && field) {
-    merged['aria-describedby'] = describedByWith(field, attrs['aria-describedby']);
-  }
-  return merged;
+  return mergeProps(fieldOwn, own, given);
 }
 
 defineExpose({ element });

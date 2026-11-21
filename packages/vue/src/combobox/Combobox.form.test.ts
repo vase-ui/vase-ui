@@ -99,6 +99,14 @@ describe('the constraint validation', () => {
   });
 });
 
+describe('the field', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    await mountForm({ field: { invalid: true }, input: { 'aria-describedby': 'hint' } });
+    await waitFor(() => expect(byTestId('error')).not.toBe(null));
+    expect(byTestId('input')).toHaveAttribute('aria-describedby', `hint ${byTestId('error').id}`);
+  });
+});
+
 describe('the reset', () => {
   test('puts back the default value and text, and emits only the update events', async () => {
     const log: string[] = [];

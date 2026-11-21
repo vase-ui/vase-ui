@@ -4,7 +4,7 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
-import { fieldStateAttributes } from '../field/control';
+import { fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { useFieldGroup } from '../field/group';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey, type GroupRadio } from './radio';
@@ -121,7 +121,6 @@ function elementProps() {
     {
       role: 'radiogroup',
       'aria-labelledby': labelledBy(attrs),
-      'aria-describedby': field?.describedBy,
       // WAI-ARIA gives these states to a radio group, and CSS matches them.
       'aria-disabled': on(isDisabled.value),
       'aria-readonly': on(props.readonly),
@@ -133,7 +132,7 @@ function elementProps() {
       onKeydown,
       onFocusout,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 

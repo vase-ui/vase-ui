@@ -5,7 +5,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { submitAtEnter } from '../common/implicitSubmission';
 import { platform } from '../common/platform';
-import { controlAria } from '../field/control';
+import { controlAria, joinDescribedBy } from '../field/control';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldInputProps, NumberFieldInputState } from './types';
 
@@ -86,7 +86,7 @@ const ownProps = computed(() => {
 function elementProps() {
   // A step and the submit at Enter are default actions of a key, so they come after the listeners
   // of the developer, which can prevent them.
-  return mergeProps(ownProps.value, attrs, { onKeydown });
+  return mergeProps(ownProps.value, joinDescribedBy(attrs, root.field), { onKeydown });
 }
 
 /** Shows the text of the field again, after an edit that the field refused. */

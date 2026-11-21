@@ -21,7 +21,7 @@ import { submitAtEnter } from '../common/implicitSubmission';
 import { useModel } from '../common/model';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
 import { warn } from '../common/warn';
-import { fieldKey, fieldStateAttributes } from '../field/control';
+import { fieldKey, fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
 import { inputmodeOf, patternOf, removeAt, toCode, writeAt } from './code';
 import { otpFieldKey } from './root';
@@ -282,14 +282,13 @@ function elementProps() {
     {
       role: 'group',
       'aria-labelledby': named ? undefined : (field?.labelId ?? fieldset?.legendId),
-      'aria-describedby': field?.describedBy,
       ...fieldStateAttributes(state.value, isDisabled.value),
       'data-readonly': on(props.readonly),
       'data-required': on(props.required),
       'data-complete': on(state.value.complete),
       onFocusout,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 

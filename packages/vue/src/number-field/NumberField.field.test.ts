@@ -276,6 +276,11 @@ describe('Enter', () => {
 });
 
 describe('Field and Form', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    const { input } = await mountInField({ input: { 'aria-describedby': 'hint' } });
+    expect(input).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the text input; the description describes it; the field name wins over the prop', async () => {
     const { input, hidden, label } = await mountInField({
       field: { name: 'price' },

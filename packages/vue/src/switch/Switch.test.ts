@@ -214,6 +214,12 @@ describe('native forms', () => {
 });
 
 describe('in a field', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    const { root } = mount(SwitchInField, { field: {}, attrs: { 'aria-describedby': 'hint' } });
+    await nextTick();
+    expect(root.querySelector('input')).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names it and changes it; the field shows its state with aria-invalid and data attributes', async () => {
     const validated: unknown[] = [];
     const { root } = mount(SwitchInField, {

@@ -5,7 +5,7 @@ import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
 import { sameValue } from '../common/values';
-import { fieldStateAttributes } from '../field/control';
+import { fieldStateAttributes, joinDescribedBy } from '../field/control';
 import { useFieldGroup } from '../field/group';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { checkboxGroupKey, type GroupCheckbox } from './checkbox';
@@ -127,11 +127,10 @@ function elementProps() {
     {
       role: 'group',
       'aria-labelledby': labelledBy(attrs),
-      'aria-describedby': field?.describedBy,
       ...fieldStateAttributes(state.value, isDisabled.value),
       onFocusout,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 

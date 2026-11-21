@@ -391,6 +391,16 @@ describe('in a native form', () => {
 });
 
 describe('in a field', () => {
+  test('aria-describedby of the developer comes before the ids of the field, on the group and on a checkbox', async () => {
+    const { group, box } = await mountGroup({
+      group: { 'aria-describedby': 'group-hint' },
+      items: [{ key: 'fuji', value: 'fuji', attrs: { 'aria-describedby': 'hint' } }],
+      field: {},
+    });
+    expect(group).toHaveAttribute('aria-describedby', 'group-hint description');
+    expect(box('fuji')).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group with aria-labelledby and has no for; the descriptions describe the group and each checkbox', async () => {
     const { root, group, box } = await mountGroup({ items: apples('fuji'), field: {} });
     const label = root.querySelector('label')!;

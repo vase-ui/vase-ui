@@ -4,7 +4,7 @@ import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
-import { fieldKey, fieldStateAttributes, useFieldControl } from '../field/control';
+import { fieldKey, fieldStateAttributes, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey } from '../radio-group/radio';
 import type { RadioProps, RadioState } from './types';
@@ -67,7 +67,6 @@ const ownProps = computed(() => {
       ...fieldStateAttributes(field.state),
       // `:checked` matches a filled radio.
       'data-filled': undefined,
-      'aria-describedby': field.describedBy,
     }),
     onClick,
     onChange,
@@ -110,7 +109,7 @@ useFormReset(element, (event) => group.onReset(event));
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(ownProps.value, attrs);
+  return mergeProps(ownProps.value, joinDescribedBy(attrs, field));
 }
 
 function injectGroup() {

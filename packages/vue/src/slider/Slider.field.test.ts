@@ -195,7 +195,7 @@ describe('a field', () => {
     expect(label.htmlFor).toBe('start');
   });
 
-  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid; an aria-describedby of the developer wins', async () => {
+  test('each input has the ids of the description and the error, and aria-invalid while the field is invalid; an aria-describedby of the developer comes first', async () => {
     const field = reactive<Attrs>({ invalid: false });
     const { input } = await mountSlider({
       root: { defaultValue: [20, 40, 60] },
@@ -210,7 +210,7 @@ describe('a field', () => {
       expect(input(index)).toHaveAttribute('aria-describedby', 'description error');
       expect(input(index)).toHaveAttribute('aria-invalid', 'true');
     }
-    expect(input(2)).toHaveAttribute('aria-describedby', 'mine');
+    expect(input(2)).toHaveAttribute('aria-describedby', 'mine description error');
   });
 
   test('disabled and name of the field win over the props', async () => {

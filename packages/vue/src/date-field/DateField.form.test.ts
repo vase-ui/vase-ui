@@ -258,6 +258,11 @@ describe('validity', () => {
 });
 
 describe('in a Field', () => {
+  test('aria-describedby of the developer comes before the ids of the field', async () => {
+    const { group } = await mountInField({ field: {}, date: { 'aria-describedby': 'hint' } });
+    expect(group).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group and gives the focus to the first segment; the description describes the group', async () => {
     const { root, group, segments } = await mountInField({ field: { name: 'when' } });
     const label = root.querySelector('label')!;

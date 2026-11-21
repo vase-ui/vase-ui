@@ -10,7 +10,7 @@ import {
   watch,
   type Ref,
 } from 'vue';
-import { describedByWith, fieldKey } from '../../field/control';
+import { fieldKey, joinDescribedBy } from '../../field/control';
 import { useInDisabledFieldset } from '../../fieldset/part';
 import { displayCalendar } from '../date-time/displayCalendar';
 import { digits as localeDigits, formatter } from '../date-time/format';
@@ -169,7 +169,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
 
   const model = useModel<Value | null>(
     () => props.modelValue as Value | null | undefined,
-    (props.modelValue === undefined ? (props.defaultValue ?? null) : props.modelValue) as Value | null,
+    (props.modelValue === undefined
+      ? (props.defaultValue ?? null)
+      : props.modelValue) as Value | null,
   );
   const value = model.value;
   // The numbers of a partial entry. The field has no value until each segment has a number.
@@ -702,18 +704,16 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
     state,
     /** The attributes of the group element, with the attributes of the developer. */
     groupProps(attrs: Record<string, unknown>) {
-      const { 'aria-describedby': describedBy, ...rest } = attrs;
       const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;
       return mergeProps(
         {
           role: 'group',
           id: host?.groupId,
           'aria-labelledby': named ? undefined : (field?.labelId ?? nativeLabelIds.value),
-          'aria-describedby': field ? describedByWith(field, describedBy) : describedBy,
           ...stateAttributes(state.value),
           onFocusout,
         },
-        rest,
+        joinDescribedBy(attrs, field),
       );
     },
     /** The attributes of the form input. */

@@ -4,7 +4,7 @@ import { useChecked } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { fieldKey, useFieldControl } from '../field/control';
+import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { SwitchChangeEventDetails, SwitchProps, SwitchState } from './types';
 
@@ -76,7 +76,7 @@ function elementProps() {
       disabled: isDisabled.value,
       ...attributes.value,
     },
-    attrs,
+    joinDescribedBy(attrs, field),
   );
 }
 </script>

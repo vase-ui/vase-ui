@@ -116,25 +116,28 @@ export function controlAttributes(field: FieldForControl) {
   };
 }
 
-/** The ARIA attributes that a field gives to the element of its control. */
+/**
+ * The ARIA attributes that a field gives to the element of its control, but for
+ * `aria-describedby`, which `joinDescribedBy` gives.
+ */
 export function controlAria(field: FieldForControl) {
   return {
     'aria-invalid': field.state.valid === false ? 'true' : undefined,
     'aria-labelledby': field.labelledBy,
-    'aria-describedby': field.describedBy,
   };
 }
 
 /**
- * The `aria-describedby` of a control whose developer gives ids too: the ids of the developer, then
- * the ids of the field. `null` of the developer removes the ids of the field.
+ * The attributes of the developer for the element of a control, with the ids of the developer and
+ * then the ids of the field in `aria-describedby`, so that the user gets both descriptions. `null`
+ * of the developer removes the ids of the field.
  */
-export function describedByWith(field: FieldForControl, given: unknown) {
-  if (given === null) return null;
-  return (
-    [typeof given === 'string' ? given : undefined, field.describedBy].filter(Boolean).join(' ') ||
-    undefined
-  );
+export function joinDescribedBy(attrs: Record<string, unknown>, field: FieldForControl | null) {
+  if (!field) return attrs;
+  const given = attrs['aria-describedby'];
+  const joined =
+    given === null ? null : [given, field.describedBy].filter(Boolean).join(' ') || undefined;
+  return { ...attrs, 'aria-describedby': joined };
 }
 
 /** Makes the element the control of its field while the element is mounted. */

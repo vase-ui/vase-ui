@@ -38,7 +38,8 @@ export function usePickerField(picker: PickerForPart<unknown>, part: string) {
   // The root gives a native reset to the `Field`. The field root has the value of the picker as its
   // model, so its reset would give the model of its mount, also after a change of `defaultValue`.
   const outer = inject(fieldKey, null);
-  if (outer) provide(fieldKey, Object.create(outer, { onReset: { value() {} } }) as FieldForControl);
+  if (outer)
+    provide(fieldKey, Object.create(outer, { onReset: { value() {} } }) as FieldForControl);
 
   function onKeydown(event: KeyboardEvent) {
     if (

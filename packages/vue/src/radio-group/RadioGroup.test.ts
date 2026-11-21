@@ -456,6 +456,16 @@ describe('native forms', () => {
 });
 
 describe('in a field', () => {
+  test('aria-describedby of the developer comes before the ids of the field, on the group and on a radio', async () => {
+    const { group, radio } = await mountGroup({
+      group: { 'aria-describedby': 'group-hint' },
+      items: [{ key: 'ssd', attrs: { 'aria-describedby': 'hint' } }],
+      field: {},
+    });
+    expect(group).toHaveAttribute('aria-describedby', 'group-hint description');
+    expect(radio('ssd')).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group; the group has aria-invalid, and each radio data-invalid', async () => {
     const field = reactive<Record<string, unknown>>({ invalid: true });
     const { root, group, radio } = await mountGroup({ items: choices('ssd'), field });
