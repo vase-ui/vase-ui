@@ -1,10 +1,15 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { Rolldown, UserConfig } from 'tsdown';
 import Vue from 'unplugin-vue/rolldown';
 
 const NOT_ENTRY_FOLDERS = new Set(['common', 'list', 'popup']);
 const PREHYDRATION_SCRIPT = 'prehydrationScript.min';
+
+// The Nuxt module is the entry point `@vase-ui/vue/nuxt`. It is a file, so the barrel and the
+// family entries leave it out.
+export const NUXT_MODULE_ENTRY = { nuxt: 'src/nuxt.ts' };
 
 // The first line of the `index.ts` of an entry whose declarations name a `Temporal` type. The
 // barrel leaves out such an entry, so a consumer that imports only the barrel needs no `Temporal`
@@ -105,6 +110,15 @@ export function buildOptions(
     plugins: [prehydrationScripts(sourceRoots), Vue({ isProduction: true })],
     tsconfig: 'tsconfig.build.json',
     dts: { generator: 'tsc', tsc: { vue: true } },
-    deps: { onlyBundle: [] },
+    // The Nuxt module imports the built-in modules of Node.js.
+    deps: { onlyBundle: [], neverBundle: [/^node:/] },
   };
+}
+
+// The module list of nuxt.com reads the Nuxt versions and the address of the documentation from
+// `dist/module.json` of each release.
+export async function writeModuleManifest(outDir: string): Promise<void> {
+  const { default: nuxtModule } = await import(pathToFileURL(resolve(outDir, 'nuxt.js')).href);
+  const meta: unknown = await nuxtModule.getMeta();
+  writeFileSync(join(outDir, 'module.json'), `${JSON.stringify(meta, null, 2)}\n`);
 }

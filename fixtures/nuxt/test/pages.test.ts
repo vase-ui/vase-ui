@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { clearServerLogs, createPage, getServerLogs, setup, url } from '@nuxt/test-utils/e2e';
-import type { Locator, Page } from 'playwright-core';
+import { chromium, firefox, webkit } from 'playwright-core';
+import type { Browser, Locator, Page } from 'playwright-core';
 import { describe, expect, it } from 'vitest';
 import nuxtConfig from '../nuxt.config';
 
@@ -1606,6 +1607,19 @@ async function readResizableWidths(page: Page) {
   );
 }
 
+// The module of the package adds the namespace `Dialog` and the component `Button`, so the page
+// imports nothing.
+async function expectAutoImportPage(page: Page) {
+  const trigger = page.getByTestId('trigger');
+  expect(await readAttributes(trigger, ['type', 'aria-haspopup', 'aria-expanded'])).toEqual({
+    type: 'button',
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+  });
+  expect(await page.getByTestId('button').getAttribute('type')).toBe('button');
+  expect(await page.getByTestId('popup').count()).toBe(0);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1784,6 +1798,7 @@ const PAGES: PageCase[] = [
     expectPage: expectResizablePageOnServer,
     expectHydratedPage: expectHydratedResizablePage,
   },
+  { path: '/auto-import', expectPage: expectAutoImportPage },
 ];
 
 const MODES = [
@@ -1846,6 +1861,30 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expectHydratedPage(page);
     },
   );
+
+  it('opens the dialog of /auto-import after hydration, and loads the code of no other family', async () => {
+    const page = await createPage();
+    const messages = collectMessages(page);
+    const scripts: Promise<string>[] = [];
+    page.on('response', (response) => {
+      if (response.request().resourceType() === 'script') {
+        scripts.push(response.text());
+      }
+    });
+    await page.goto(url('/auto-import'), { waitUntil: 'hydration' });
+
+    await page.getByTestId('trigger').click();
+    const popup = page.getByTestId('popup');
+    await popup.waitFor();
+
+    expect(await popup.getAttribute('aria-labelledby')).toBe(
+      await page.getByTestId('title').getAttribute('id'),
+    );
+    const code = (await Promise.all(scripts)).join('\n');
+    expect(code).toMatch(/\bDialogPopup\b/);
+    expect(code).not.toMatch(/\bSelectRoot\b/);
+    expect(messages).toEqual([]);
+  });
 
   it('keeps the tab order of /dialog-in-place after hydration and closes on Escape', async () => {
     const page = await createPage('/dialog-in-place');
@@ -2719,4 +2758,68 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await detachedPopup.waitFor({ state: 'detached' });
     expect(messages).toEqual([]);
   });
+});
+
+const BROWSERS = { chromium, firefox, webkit };
+
+// The page of a browser with its own `Temporal`, or with none, after the hydration of
+// `/date-picker`, and the scripts that the page ran.
+async function openDatePicker(browser: Browser, { withTemporal }: { withTemporal: boolean }) {
+  const page = await browser.newPage();
+  if (!withTemporal) {
+    await page.addInitScript(() => {
+      delete (globalThis as { Temporal?: unknown }).Temporal;
+    });
+  }
+  const messages = collectMessages(page);
+  // A prefetch of a chunk is a request of the type `other`. The page runs only a `script`.
+  const scripts: string[] = [];
+  page.on('request', (request) => {
+    if (request.resourceType() === 'script') {
+      scripts.push(request.url());
+    }
+  });
+  const response = await page.goto(url('/date-picker'));
+  await page.waitForFunction(
+    () =>
+      (window as { useNuxtApp?: () => { isHydrating: boolean } }).useNuxtApp?.().isHydrating ===
+      false,
+  );
+  return { page, status: response?.status(), scripts, messages };
+}
+
+// The server and the browser have no `Temporal`, as in Node.js 24 and Safari. The module loads the
+// polyfill, and the date parts render with it.
+describe('in an engine with no Temporal', async () => {
+  await setup({
+    rootDir,
+    dev: false,
+    nuxtConfig: { compatibilityDate: nuxtConfig.compatibilityDate },
+    env: { NODE_OPTIONS: '--import=data:text/javascript,delete%20globalThis.Temporal' },
+  });
+
+  it.each(Object.keys(BROWSERS) as (keyof typeof BROWSERS)[])(
+    'renders /date-picker and picks a day with the polyfill in %s, and runs the polyfill only with no Temporal',
+    async (name) => {
+      const browser = await BROWSERS[name].launch();
+      try {
+        const native = await openDatePicker(browser, { withTemporal: true });
+        const { page, status, scripts, messages } = await openDatePicker(browser, {
+          withTemporal: false,
+        });
+
+        expect(status).toBe(200);
+        expect(scripts.filter((script) => !native.scripts.includes(script))).not.toEqual([]);
+        await expectDatePickerPage(page);
+        await page.getByTestId('when-trigger').click();
+        await page.getByRole('button', { name: /November 12, 2026/ }).click();
+        await page.getByTestId('when-popup').waitFor({ state: 'detached' });
+        expect(await page.getByTestId('when-value').textContent()).toBe('2026-11-12');
+        expect(messages).toEqual([]);
+        expect(native.messages).toEqual([]);
+      } finally {
+        await browser.close();
+      }
+    },
+  );
 });

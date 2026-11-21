@@ -99,7 +99,9 @@ export async function measurePackage(directory: string): Promise<PackageSize> {
       cwd: packedDirectory,
       platform: 'browser',
       resolve: { conditionNames: ['production'] },
-      external: (id) => peers.some((peer) => id === peer || id.startsWith(`${peer}/`)),
+      // The Nuxt module imports the built-in modules of Node.js.
+      external: (id) =>
+        id.startsWith('node:') || peers.some((peer) => id === peer || id.startsWith(`${peer}/`)),
       transform: { define: { 'process.env.NODE_ENV': '"production"' } },
       onLog(level, log, handle) {
         handle(log.code === 'UNRESOLVED_IMPORT' ? 'error' : level, log);
