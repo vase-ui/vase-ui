@@ -9,6 +9,7 @@ import type { FamilyReport } from '../parity/checkRepository.ts';
 import type {
   BetterRow,
   ExceptionRow,
+  FamilyExtract,
   FamilyFile,
   UpstreamCommit,
   UpstreamFile,
@@ -363,6 +364,75 @@ test('an exception row keeps its kind, its reason and the label of the thing', (
       waitsOn: undefined,
     },
   ]);
+});
+
+test('a case that a Vase UI test replaces is covered, as a matched case is, and a not-applicable case is not', () => {
+  const alphaReport = makeFamilyReport('alpha');
+  const cases = { ...rowTally(9), matched: 0, replaced: 7, 'not-applicable': 2 };
+  const onlyReplaced = { ...alphaReport, summary: { ...alphaReport.summary, cases } };
+  const report = buildParityReport(
+    makeInput({
+      check: { ...makeInput().check, families: [onlyReplaced, makeFamilyReport('beta')] },
+    }),
+  );
+  const [alphaEntry, betaEntry] = report.families;
+  assert.equal(alphaEntry.coveredCases, 7);
+  assert.equal(betaEntry.coveredCases, 9);
+});
+
+test('the Vase UI tests of a family are the cases of each file that holds or replaces its cases, once', () => {
+  const testFile = 'packages/react/src/alpha/Alpha.test.tsx';
+  const replacedFile = 'packages/react/src/alpha/useAlpha.test.tsx';
+  const typeTest = 'packages/react/src/alpha/Alpha.spec.tsx';
+  const counterpart = 'packages/vue/src/alpha/Alpha.test.ts';
+  const replacement = 'packages/vue/src/alpha/state.test.ts';
+  const typeReplacement = 'packages/vue/src/alpha/Alpha.spec.ts';
+  const replaced = (upstream: string, test: string): ExceptionRow => ({
+    upstream,
+    kind: 'replaced',
+    test,
+    reason: 'A Vase UI test covers it.',
+  });
+  const extract: FamilyExtract = {
+    commit: SECOND,
+    upstreamPaths: alpha.upstreamPaths,
+    sources: [],
+    typeTests: [typeTest],
+    cases: [
+      { file: testFile, rows: [{ describe: [], title: 'renders' }] },
+      {
+        file: replacedFile,
+        rows: [
+          { describe: [], title: 'changes' },
+          { describe: [], title: 'resets' },
+        ],
+      },
+    ],
+    surface: [],
+    pages: [],
+  };
+  const exceptions = [
+    { ...replaced(replacedFile, replacement), describe: [], title: 'changes' },
+    { ...replaced(replacedFile, counterpart), describe: [], title: 'resets' },
+    replaced(typeTest, typeReplacement),
+  ];
+  const rows: Record<string, TestRow[]> = {
+    [counterpart]: [
+      { describe: ['<Alpha />'], title: 'renders' },
+      { describe: ['<Alpha />'], title: 'opens' },
+      { describe: ['<Alpha />'], suite: 'describeConformance' },
+    ],
+    [replacement]: [{ describe: [], title: 'changes' }],
+    [typeReplacement]: [{ describe: [], title: 'types' }],
+  };
+  const report = buildParityReport(
+    makeInput({
+      families: [{ ...familyFiles('alpha', { ...alpha, exceptions }), extract }],
+      files: vaseFiles([counterpart, replacement, typeReplacement]),
+      rowsOf: (path) => rows[path] ?? [],
+    }),
+  );
+  assert.equal(report.families[0].vaseTests, 3);
 });
 
 test('a return type difference keeps its entry, its type and its reason', () => {
