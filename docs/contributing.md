@@ -1,5 +1,5 @@
 ---
-order: 6
+order: 7
 description: Report bugs, request features and ask questions about Vase UI.
 ---
 

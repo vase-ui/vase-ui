@@ -1,0 +1,1266 @@
+{
+  "groups": [
+    {
+      "name": "Dialog",
+      "rows": [
+        {
+          "feature": "Focus trap in a modal dialog",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/dialog"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `trapFocus` prop.",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "The native `showModal()` of the browser.",
+              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
+          }
+        },
+        {
+          "feature": "Focus goes back to the trigger when the dialog closes",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "The `finalFocus` prop changes the element.",
+              "source": "https://vase-ui.com/components/dialog#custom-focus-management"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `finalFocusEl` prop changes the element.",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "Our check. The docs do not give it.",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Our check. The docs do not give it.",
+              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "The `finalFocus` prop changes the element.",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
+          }
+        },
+        {
+          "feature": "The title names the dialog and the description describes it",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/dialog"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
+          }
+        },
+        {
+          "feature": "A dialog that opens from a dialog",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/dialog#nested-dialogs"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog#nested-dialog"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/dialog#nested"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "Our check. The docs do not give it.",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Our check. The docs do not give it.",
+              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/dialog#nested-dialogs"
+            }
+          }
+        },
+        {
+          "feature": "A style hook on a dialog while a dialog on top of it is open",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`[data-nested-dialog-open]` and `--nested-dialogs`.",
+              "source": "https://vase-ui.com/components/dialog#nested-dialogs"
+            },
+            "reka-ui": {
+              "value": "no",
+              "note": "The content has only `data-state`.",
+              "source": "https://reka-ui.com/docs/components/dialog#content"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`[data-has-nested]` and `--nested-layer-count`.",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`[data-nested-dialog-open]` and `--nested-dialogs`.",
+              "source": "https://base-ui.com/react/components/dialog#nested-dialogs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drawer",
+      "rows": [
+        {
+          "feature": "A swipe closes the drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#features"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Preview in the docs.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#swipe-direction"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#anatomy"
+            }
+          }
+        },
+        {
+          "feature": "Snap points",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer#snap-points"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#snap-points"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#snap-points"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#snap-points"
+            }
+          }
+        },
+        {
+          "feature": "A drawer that opens from a drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://vase-ui.com/components/drawer#nested-drawers"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` styles the drawer below. Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#content"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#props"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://base-ui.com/react/components/drawer#nested-drawers"
+            }
+          }
+        },
+        {
+          "feature": "A swipe from the edge of the screen opens the drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer#swipe-to-open"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `SwipeArea` part. Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#swipearea"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `SwipeArea` part. The docs do not describe it.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#props"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#swipe-to-open"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Toast",
+      "rows": [
+        {
+          "feature": "A toast manager that a script calls",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://vase-ui.com/components/toast#global-manager"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://reka-ui.com/docs/components/toast#global-manager"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`createToaster`.",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "`send()` of `useNotifications` queues a toast.",
+              "source": "https://0.vuetifyjs.com/composables/plugins/use-notifications"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://base-ui.com/react/components/toast#global-manager"
+            }
+          }
+        },
+        {
+          "feature": "Toasts in a stack",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`--toast-index`, and `[data-expanded]` while the pointer or the focus is on the viewport.",
+              "source": "https://vase-ui.com/components/toast#stacking-and-animations"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`--reka-toast-index`, and `[data-expanded]` on the viewport.",
+              "source": "https://reka-ui.com/docs/components/toast#stacking-toasts"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `overlap` prop.",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "An example of the docs stacks the toasts with its own CSS.",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`--toast-index`, and `[data-expanded]` on the viewport.",
+              "source": "https://base-ui.com/react/components/toast#stacking-and-animations"
+            }
+          }
+        },
+        {
+          "feature": "A limit on the toasts on the screen",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "The `limit` prop of the provider. A toast over the limit gets `inert`.",
+              "source": "https://vase-ui.com/components/toast#stacking-and-animations"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `limit` prop of `ToastProvider`.",
+              "source": "https://reka-ui.com/docs/components/toast#stacking-toasts"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `max` option of `createToaster`. A toast over it waits in a queue.",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "The `limit` prop of `Toast.Provider`.",
+              "source": "https://base-ui.com/react/components/toast#provider"
+            }
+          }
+        },
+        {
+          "feature": "A swipe closes a toast",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/toast#general-usage"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `swipe-direction` prop.",
+              "source": "https://reka-ui.com/docs/components/toast#animating-swipe-gesture"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "The `swipeDirection` prop.",
+              "source": "https://base-ui.com/react/components/toast#root"
+            }
+          }
+        },
+        {
+          "feature": "A screen reader announces an important toast at once",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`priority: 'high'`.",
+              "source": "https://vase-ui.com/components/toast#add-method"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "No `priority` option. A toast of the `type` `foreground` is announced at once.",
+              "source": "https://reka-ui.com/docs/components/toast#sensitivity"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "The `urgent` prop.",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`priority: 'high'`.",
+              "source": "https://base-ui.com/react/components/toast#add-method"
+            }
+          }
+        },
+        {
+          "feature": "A toast next to the element that it is about",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/toast#anchored-toasts"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `ToastPositioner` part.",
+              "source": "https://reka-ui.com/docs/components/toast#anchored-toasts"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/toast#anchored-toasts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Server render and Vapor mode",
+      "rows": [
+        {
+          "feature": "Hydration of the server HTML of each app, in a virtual DOM app",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://vase-ui.com/handbook/server-rendering"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://reka-ui.com/docs/guides/server-side-rendering"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "Our check: the server render of Combobox, Menu and the app of all ten fails with `ReferenceError: HTMLElement is not defined`. The other apps hydrate with no message.",
+              "source": "https://0.vuetifyjs.com/guide/integration/nuxt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "Our check, in a React app: each app hydrates with no message.",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
+          }
+        },
+        {
+          "feature": "Vapor mode in the docs",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Through `vaporInteropPlugin`.",
+              "source": "https://vase-ui.com/handbook/composition#vapor-mode"
+            },
+            "reka-ui": {
+              "value": "no",
+              "source": "https://reka-ui.com/docs/overview/installation"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/overview/getting-started"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Through `vaporInteropPlugin`. The guide calls it pre-release until Vue 3.6 is stable.",
+              "source": "https://0.vuetifyjs.com/guide/integration/vapor"
+            },
+            "base-ui": {
+              "value": "not-applicable",
+              "note": "A React library.",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "Hydration of the server HTML of each app, in a Vapor app",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "partial",
+              "note": "Our check: Checkbox hydrates with no message. Dialog, Menu, Popover and Select show a hydration mismatch, and then work. Accordion, Combobox, Slider, Tabs, Tooltip and the app of all ten show a mismatch and stop with an error. With the fix of vuejs/core#16376 in the server render of Vue, each app hydrates with no message.",
+              "source": "https://vase-ui.com/handbook/composition#vapor-mode"
+            },
+            "reka-ui": {
+              "value": "partial",
+              "note": "Our check: Select, Tooltip and the app of all ten show a hydration mismatch and stop with an error. The other apps hydrate with no message. With the fix of vuejs/core#16376 in the server render of Vue, each app hydrates with no message.",
+              "source": "https://reka-ui.com/docs/guides/server-side-rendering"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "Our check: the server render of Combobox, Menu and the app of all ten fails with `ReferenceError: HTMLElement is not defined`. Accordion, Dialog, Slider and Tabs show a hydration mismatch and stop with an error. Popover, Select and Tooltip show a mismatch, and then work. Checkbox hydrates with no message. With the fix of vuejs/core#16376 in the server render of Vue, only the errors of the server render stay.",
+              "source": "https://0.vuetifyjs.com/guide/integration/vapor"
+            },
+            "base-ui": {
+              "value": "not-applicable",
+              "note": "A React library.",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "Each app works in a Vapor app",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://vase-ui.com/handbook/composition#vapor-mode"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://reka-ui.com/docs/overview/installation"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://ark-ui.com/vue/docs/overview/getting-started"
+            },
+            "headless-ui": {
+              "value": "partial",
+              "note": "Our check: the items of Menu get no `menuitem` role and no `id`, and Headless UI reports `Passing props on \"template\"!`. `MenuItem` gives its props to the element of its slot, and the slot of a Vapor component gives it no element. The other apps work.",
+              "source": "https://headlessui.com/v1/vue/menu"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://0.vuetifyjs.com/guide/integration/vapor"
+            },
+            "base-ui": {
+              "value": "not-applicable",
+              "note": "A React library.",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "Nuxt module",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`@vase-ui/vue/nuxt`.",
+              "source": "https://vase-ui.com/handbook/nuxt"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`reka-ui/nuxt`.",
+              "source": "https://reka-ui.com/docs/overview/installation#nuxt-modules"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/overview/getting-started"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "The Nuxt guide installs it with a Nuxt plugin.",
+              "source": "https://0.vuetifyjs.com/guide/integration/nuxt"
+            },
+            "base-ui": {
+              "value": "not-applicable",
+              "note": "A React library.",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Popups and lists",
+      "rows": [
+        {
+          "feature": "Popup placement with collision handling",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "With Floating UI.",
+              "source": "https://vase-ui.com/components/popover"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "With Floating UI.",
+              "source": "https://reka-ui.com/docs/components/popover"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `positioning` prop.",
+              "source": "https://ark-ui.com/vue/docs/components/popover"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "Your CSS places the panel.",
+              "source": "https://headlessui.com/v1/vue/popover"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "CSS anchor positioning with `position-try`. Older browsers need its Floating UI adapter.",
+              "source": "https://0.vuetifyjs.com/components/disclosure/popover"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "With Floating UI.",
+              "source": "https://base-ui.com/react/components/popover"
+            }
+          }
+        },
+        {
+          "feature": "Typeahead in Menu and Select",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/select"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/select"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `typeahead` prop.",
+              "source": "https://ark-ui.com/vue/docs/components/menu"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "Menu and Listbox.",
+              "source": "https://headlessui.com/v1/vue/menu"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "source": "https://0.vuetifyjs.com/components/forms/select"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/select"
+            }
+          }
+        },
+        {
+          "feature": "A filter in Combobox",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/combobox"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/combobox#custom-filtering"
+            },
+            "ark-ui": {
+              "value": "partial",
+              "note": "The app calls the `filter` function of `useListCollection` on each input change.",
+              "source": "https://ark-ui.com/vue/docs/components/combobox"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "The app filters the options.",
+              "source": "https://headlessui.com/v1/vue/combobox"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "source": "https://0.vuetifyjs.com/components/forms/combobox"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/combobox"
+            }
+          }
+        },
+        {
+          "feature": "List virtualization",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "partial",
+              "note": "An example with `@tanstack/vue-virtual`.",
+              "source": "https://vase-ui.com/components/autocomplete#virtualized"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Virtualizer parts in Combobox, Listbox and Tree.",
+              "source": "https://reka-ui.com/docs/guides/virtualization"
+            },
+            "ark-ui": {
+              "value": "partial",
+              "note": "An example with `@tanstack/vue-virtual`.",
+              "source": "https://ark-ui.com/vue/docs/components/combobox"
+            },
+            "headless-ui": {
+              "value": "partial",
+              "note": "Combobox has a `virtual` prop. The docs of version 1 do not describe it.",
+              "source": "https://github.com/tailwindlabs/headlessui/blob/%40headlessui/vue%40v1.7.23/packages/%40headlessui-vue/src/components/combobox/combobox.ts"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "A `Virtualizer` component.",
+              "source": "https://0.vuetifyjs.com/components/data/virtualizer"
+            },
+            "base-ui": {
+              "value": "partial",
+              "note": "An example with `@tanstack/react-virtual`.",
+              "source": "https://base-ui.com/react/components/autocomplete"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Layout",
+      "rows": [
+        {
+          "feature": "Resizable panels",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Resizable.",
+              "source": "https://vase-ui.com/components/resizable"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Splitter.",
+              "source": "https://reka-ui.com/docs/components/splitter"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Splitter. Preview in the docs.",
+              "source": "https://ark-ui.com/vue/docs/components/splitter"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Splitter.",
+              "source": "https://0.vuetifyjs.com/components/semantic/splitter"
+            },
+            "base-ui": {
+              "value": "no",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forms",
+      "rows": [
+        {
+          "feature": "Values in a native form submission",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/handbook/forms"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `name` prop.",
+              "source": "https://reka-ui.com/docs/components/select"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "With a `HiddenInput` part.",
+              "source": "https://ark-ui.com/vue/docs/guides/forms"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "note": "The `name` prop.",
+              "source": "https://headlessui.com/v1/vue/listbox"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "The `name` prop.",
+              "source": "https://0.vuetifyjs.com/components/forms/select"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/handbook/forms"
+            }
+          }
+        },
+        {
+          "feature": "A Field part for the label, the description and the error",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/field"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/field"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/field"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "Input has Description and Error parts. The docs list no Field component.",
+              "source": "https://0.vuetifyjs.com/components/forms/input"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/field"
+            }
+          }
+        },
+        {
+          "feature": "Right-to-left text",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Each part reads the text direction of its element.",
+              "source": "https://vase-ui.com/handbook/styling#text-direction"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `dir` prop of `ConfigProvider`.",
+              "source": "https://reka-ui.com/docs/utilities/config-provider"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `dir` prop.",
+              "source": "https://ark-ui.com/vue/docs/utilities/locale"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue/tabs"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "The `useRtl` composable.",
+              "source": "https://0.vuetifyjs.com/composables/plugins/use-rtl"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`DirectionProvider`.",
+              "source": "https://base-ui.com/react/utils/direction-provider"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dates and times",
+      "rows": [
+        {
+          "feature": "Date and time components",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Calendar, Range Calendar, Date Field, Date Picker, Date Range Picker, Time Clock, Time Field and Time Picker.",
+              "source": "https://vase-ui.com/handbook/dates-and-times"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Calendar, Range Calendar, Date Field, Date Range Field, Date Picker, Date Range Picker, Time Field, Time Range Field, and month and year pickers.",
+              "source": "https://reka-ui.com/docs/guides/dates"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Date Picker and Date Input.",
+              "source": "https://ark-ui.com/vue/docs/components/date-picker"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "Time Picker. The `createCalendar` composable gives a month grid.",
+              "source": "https://0.vuetifyjs.com/components/forms/time-picker"
+            },
+            "base-ui": {
+              "value": "no",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "The type of a date or time value",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "Temporal",
+              "note": "A browser with no `Temporal` needs a polyfill.",
+              "source": "https://vase-ui.com/handbook/dates-and-times#why-temporal"
+            },
+            "reka-ui": {
+              "value": "@internationalized/date",
+              "source": "https://reka-ui.com/docs/guides/dates"
+            },
+            "ark-ui": {
+              "value": "@internationalized/date",
+              "source": "https://ark-ui.com/vue/docs/components/date-picker"
+            },
+            "headless-ui": {
+              "value": "No date components",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "A text, such as 09:30",
+              "note": "The value of Time Picker.",
+              "source": "https://0.vuetifyjs.com/components/forms/time-picker"
+            },
+            "base-ui": {
+              "value": "No date components",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Package",
+      "rows": [
+        {
+          "feature": "Components of the ten in this comparison",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "10",
+              "source": "https://vase-ui.com/quick-start"
+            },
+            "reka-ui": {
+              "value": "10",
+              "note": "Menu is DropdownMenu.",
+              "source": "https://reka-ui.com/docs/overview/introduction"
+            },
+            "ark-ui": {
+              "value": "10",
+              "source": "https://ark-ui.com/vue/docs/overview/getting-started"
+            },
+            "headless-ui": {
+              "value": "6",
+              "note": "No Accordion, Checkbox, Slider or Tooltip. Select is Listbox, and Tabs is TabGroup.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "10",
+              "note": "Accordion is ExpansionPanel.",
+              "source": "https://0.vuetifyjs.com/introduction/getting-started"
+            },
+            "base-ui": {
+              "value": "10",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "Components in all",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "46",
+              "note": "The component pages of the docs.",
+              "source": "https://vase-ui.com/quick-start"
+            },
+            "reka-ui": {
+              "value": "60",
+              "note": "The component pages of the docs.",
+              "source": "https://reka-ui.com/docs/overview/introduction"
+            },
+            "ark-ui": {
+              "value": "52",
+              "note": "The component pages of the docs.",
+              "source": "https://ark-ui.com/llms.txt"
+            },
+            "headless-ui": {
+              "value": "10",
+              "note": "The component pages of the docs.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "49",
+              "note": "The component pages of the docs.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "37",
+              "note": "The component pages of the docs.",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        },
+        {
+          "feature": "Components of Base UI",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "37 of 37",
+              "source": "https://vase-ui.com/parity"
+            },
+            "reka-ui": {
+              "value": "33 of 37",
+              "note": "No Button, Fieldset, Input or Meter. Dropdown Menu is Menu, Hover Card is Preview Card and Pin Input is OTP Field.",
+              "source": "https://reka-ui.com/llms.txt"
+            },
+            "ark-ui": {
+              "value": "30 of 37",
+              "note": "No Autocomplete, Button, Form, Menubar, Meter, Separator or Toolbar. Alert Dialog is a `role` of Dialog, Context Menu is a trigger of Menu, Input is a part of Field, Hover Card is Preview Card, Number Input is Number Field and Pin Input is OTP Field.",
+              "source": "https://ark-ui.com/llms.txt"
+            },
+            "headless-ui": {
+              "value": "9 of 37",
+              "note": "Combobox, Dialog, Menu, Popover, Radio Group, Switch and Tabs. Disclosure is Collapsible and Listbox is Select.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "25 of 37",
+              "note": "No Autocomplete, Context Menu, Drawer, Field, Fieldset, Menubar, Meter, Navigation Menu, Preview Card, Scroll Area, Separator or Toolbar. ExpansionPanel is Accordion, Otp is OTP Field and Snackbar is Toast.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "37 of 37",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        },
+        {
+          "feature": "Run-time dependencies",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "2",
+              "note": "`@floating-ui/vue` and `@floating-ui/utils`.",
+              "source": "https://www.npmjs.com/package/@vase-ui/vue?activeTab=dependencies"
+            },
+            "reka-ui": {
+              "value": "9",
+              "note": "Floating UI, `@internationalized/date`, `@internationalized/number`, `@tanstack/vue-virtual`, VueUse and others.",
+              "source": "https://www.npmjs.com/package/reka-ui/v/2.11.0?activeTab=dependencies"
+            },
+            "ark-ui": {
+              "value": "69",
+              "note": "`@internationalized/date` and the Zag.js packages.",
+              "source": "https://www.npmjs.com/package/@ark-ui/vue/v/5.40.0?activeTab=dependencies"
+            },
+            "headless-ui": {
+              "value": "1",
+              "note": "`@tanstack/vue-virtual`.",
+              "source": "https://www.npmjs.com/package/@headlessui/vue/v/1.7.23?activeTab=dependencies"
+            },
+            "vuetify0": {
+              "value": "0",
+              "note": "Optional peer dependencies for its adapters.",
+              "source": "https://www.npmjs.com/package/@vuetify/v0/v/1.4.0?activeTab=dependencies"
+            },
+            "base-ui": {
+              "value": "5",
+              "note": "Floating UI, `@base-ui/utils`, `@babel/runtime` and `use-sync-external-store`.",
+              "source": "https://www.npmjs.com/package/@base-ui/react/v/1.9.0?activeTab=dependencies"
+            }
+          }
+        },
+        {
+          "feature": "License",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "MIT",
+              "source": "https://github.com/vase-ui/vase-ui/blob/main/LICENSE"
+            },
+            "reka-ui": {
+              "value": "MIT",
+              "source": "https://www.npmjs.com/package/reka-ui/v/2.11.0"
+            },
+            "ark-ui": {
+              "value": "MIT",
+              "source": "https://www.npmjs.com/package/@ark-ui/vue/v/5.40.0"
+            },
+            "headless-ui": {
+              "value": "MIT",
+              "source": "https://www.npmjs.com/package/@headlessui/vue/v/1.7.23"
+            },
+            "vuetify0": {
+              "value": "MIT",
+              "source": "https://0.vuetifyjs.com/introduction/license"
+            },
+            "base-ui": {
+              "value": "MIT",
+              "source": "https://www.npmjs.com/package/@base-ui/react/v/1.9.0"
+            }
+          }
+        },
+        {
+          "feature": "Release date of the measured version",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "The commit of the run",
+              "source": "https://github.com/vase-ui/vase-ui"
+            },
+            "reka-ui": {
+              "value": "2026-10-05",
+              "source": "https://www.npmjs.com/package/reka-ui/v/2.11.0"
+            },
+            "ark-ui": {
+              "value": "2026-10-29",
+              "source": "https://www.npmjs.com/package/@ark-ui/vue/v/5.40.0"
+            },
+            "headless-ui": {
+              "value": "2024-09-09",
+              "source": "https://www.npmjs.com/package/@headlessui/vue/v/1.7.23"
+            },
+            "vuetify0": {
+              "value": "2026-11-19",
+              "source": "https://www.npmjs.com/package/@vuetify/v0/v/1.4.0"
+            },
+            "base-ui": {
+              "value": "2026-10-09",
+              "source": "https://www.npmjs.com/package/@base-ui/react/v/1.9.0"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
