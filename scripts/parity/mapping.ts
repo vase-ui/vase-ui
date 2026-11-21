@@ -17,6 +17,10 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ]);
 
+// A native form control, a form element, a native label and an image take no `as` (CONTRIBUTING.md,
+// "The element of a part"). Only the `element` slot replaces their element.
+const ELEMENTS_WITH_NO_AS = new Set(['fieldset', 'form', 'img', 'input', 'label', 'output']);
+
 const REACT_EVENT_HANDLER = /\bReact\.\w*Event|BaseUIEvent|EventHandler</;
 
 export interface ExpectedProp {
@@ -152,14 +156,13 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
     }
     if (row.name === 'render') {
       // Base UI's `render` is the slot `element` and the prop `as`. With no `as`, a part renders
-      // its own element, so `as` has no default. A native form control, a form element, an image
-      // and a hidden input take no `as`.
+      // its own element, so `as` has no default.
       expected.props.set('as', {
         required: false,
         default: null,
         compareDefault: false,
         controlled: false,
-        optional: true,
+        optional: part.tag !== null && ELEMENTS_WITH_NO_AS.has(part.tag),
         row: row.name,
       });
       expected.slots.set('element', row.name);

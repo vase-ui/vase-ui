@@ -330,19 +330,28 @@ for (const { name, file, edits, message } of seeds) {
   });
 }
 
-// A native form control, a form element, an image and a hidden input take no `as`.
-test('a part with the element slot and no prop as matches the render row', () => {
-  const problems = withEdits(
-    POPUP,
-    [
-      ['  /** The tag or component to render. */\n  as?: string | Component | undefined;\n', ''],
-      ['  as: undefined,\n', ''],
-      [
-        '  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">\n    <slot :state="state" />\n  </component>\n',
-        '',
-      ],
-    ],
-    () => check().problems,
+const POPUP_WITH_NO_AS: [string, string][] = [
+  ['  /** The tag or component to render. */\n  as?: string | Component | undefined;\n', ''],
+  ['  as: undefined,\n', ''],
+  [
+    '  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">\n    <slot :state="state" />\n  </component>\n',
+    '',
+  ],
+];
+
+test('the check reports a missing prop as of a part that Base UI renders as a <div>', () => {
+  const problems = withEdits(POPUP, POPUP_WITH_NO_AS, () => check().problems);
+  assert.equal(problems.length, 1, problems.join('\n'));
+  assert.equal(problems[0].includes('missing prop `as` (Base UI row `render`)'), true, problems[0]);
+});
+
+test('a part that Base UI renders as a native form element needs no prop as', () => {
+  const types = readFileSync(join(FIXTURES, 'sample.types.md'), 'utf8');
+  const fieldset = types.replace('Renders a `<div>` element.', 'Renders a `<fieldset>` element.');
+  assert.notEqual(fieldset, types);
+  const fieldsetExtract = { ...extract, surface: [readTypesMd(TYPES_MD, fieldset)] };
+  const { problems } = withEdits(POPUP, POPUP_WITH_NO_AS, () =>
+    check(makeFamily(), fieldsetExtract),
   );
   assert.deepEqual(problems, []);
 });

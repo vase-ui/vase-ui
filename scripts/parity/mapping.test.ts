@@ -63,27 +63,36 @@ const rules: {
   expected: Partial<ReturnType<typeof summarize>>;
 }[] = [
   {
-    name: 'render needs the element slot, the default slot, the exposed element, and an optional as with no default',
+    name: 'render needs as with no default, the element slot, the default slot and the exposed element',
     part: makePart([row('render')], { tag: 'button' }),
     expected: {
-      props: ['as<-render optional'],
+      props: ['as<-render'],
       slots: ['element', 'default'],
       exposed: ['element'],
     },
   },
   {
-    name: 'render with no stated tag needs the default slot',
+    name: 'render with no stated tag needs as and the default slot',
     part: makePart([row('render')]),
+    expected: {
+      props: ['as<-render'],
+      slots: ['element', 'default'],
+      exposed: ['element'],
+    },
+  },
+  {
+    name: 'render with a void tag needs no default slot, and as is optional for an input',
+    part: makePart([row('render')], { tag: 'input' }),
+    expected: { props: ['as<-render optional'], slots: ['element'], exposed: ['element'] },
+  },
+  {
+    name: 'as is optional for a native label',
+    part: makePart([row('render')], { tag: 'label' }),
     expected: {
       props: ['as<-render optional'],
       slots: ['element', 'default'],
       exposed: ['element'],
     },
-  },
-  {
-    name: 'render with a void tag needs no default slot',
-    part: makePart([row('render')], { tag: 'input' }),
-    expected: { props: ['as<-render optional'], slots: ['element'], exposed: ['element'] },
   },
   {
     name: 'children needs the default slot also for a void tag',

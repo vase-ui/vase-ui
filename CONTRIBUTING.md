@@ -235,7 +235,7 @@ Each part follows the rules of this section.
 
 - A part renders one root element. Scoped styles, `v-show`, directives, `<Transition>` and the attributes of the developer reach it.
 - A part with a form value is the native input itself, or holds its form inputs in its element. With the `element` slot, the part renders its form input after the element of the slot, or gives the input to the slot. A part that renders a node of its own in its element, such as the pointer target of `Resizable.Handle`, gives the props of the node to the slot.
-- Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element, an image and a hidden input take no `as`, such as `Input`, `Checkbox` and `Avatar.Image`. The part keeps its content, its own nodes and its attributes on the element of `as`.
+- Each part that renders an element takes `as`: a tag or a component, as `<component :is>` takes. A native form control, a form element, a native label, an image and a hidden input take no `as`, such as `Input`, `Checkbox`, `Field.Label` and `Avatar.Image`. The part keeps its content, its own nodes and its attributes on the element of `as`.
 - The named slot `element` gets `{ props, elementRef, state }` of the type `ElementSlotProps<State>` of `src/common/element.ts`. The developer renders an element with `v-bind="props"` and `:ref="elementRef"`. The slot wins over `as`. The default slot is the content of the part.
 - The template has the slot, then `as`, then the default element in a branch of its own. A tag in `<component :is>` can render a component of the same name that the app registers:
 
