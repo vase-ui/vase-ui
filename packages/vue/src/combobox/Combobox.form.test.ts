@@ -100,11 +100,21 @@ describe('the constraint validation', () => {
 });
 
 describe('the field', () => {
-  test('aria-describedby of the developer comes before the ids of the field', async () => {
-    await mountForm({ field: { invalid: true }, input: { 'aria-describedby': 'hint' } });
-    await waitFor(() => expect(byTestId('error')).not.toBe(null));
-    expect(byTestId('input')).toHaveAttribute('aria-describedby', `hint ${byTestId('error').id}`);
-  });
+  test.each([
+    { control: 'input', inputInPopup: false },
+    { control: 'trigger', inputInPopup: true },
+  ])(
+    'aria-describedby of the developer comes before the ids of the field, on the $control',
+    async ({ control, inputInPopup }) => {
+      await mountForm({
+        field: { invalid: true },
+        inputInPopup,
+        [control]: { 'aria-describedby': 'hint' },
+      });
+      await waitFor(() => expect(byTestId('error')).not.toBe(null));
+      expect(byTestId(control)).toHaveAttribute('aria-describedby', `hint ${byTestId('error').id}`);
+    },
+  );
 });
 
 describe('the reset', () => {
