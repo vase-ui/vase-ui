@@ -23,7 +23,7 @@ export async function moveMouse(from: HTMLElement, to: HTMLElement) {
 type PointerInit = PointerEventInit & { timeStamp: number };
 
 function firePointerEvent(
-  type: 'pointerDown' | 'pointerMove' | 'pointerUp',
+  type: 'pointerDown' | 'pointerMove' | 'pointerUp' | 'pointerCancel',
   element: Element,
   init: PointerInit,
 ) {
@@ -52,6 +52,7 @@ export const firePointer = {
   down: (element: Element, init: PointerInit) => firePointerEvent('pointerDown', element, init),
   move: (element: Element, init: PointerInit) => firePointerEvent('pointerMove', element, init),
   up: (element: Element, init: PointerInit) => firePointerEvent('pointerUp', element, init),
+  cancel: (element: Element, init: PointerInit) => firePointerEvent('pointerCancel', element, init),
 };
 
 /**

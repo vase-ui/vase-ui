@@ -2,7 +2,7 @@
 // the library. Each one states what the browser or Vue does, so that the layer has code only where
 // they do not do it. Where the browsers differ, the measurement states each one. Vue does not patch
 // an element that leaves in a `<Transition>`: see `tabs.test.ts`.
-import { afterEach, describe, expect, inject, test } from 'vitest';
+import { afterEach, describe, expect, inject, onTestFinished, test } from 'vitest';
 import { page, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
@@ -10,7 +10,7 @@ import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
 import MeasureTransitionReopen from '../fixtures/MeasureTransitionReopen.vue';
 import { createScrollDocument } from '../fixtures/scrollDocument';
-import { holdPress, touchDrag } from '../pointer';
+import { holdPress, stopFling, touchDrag } from '../pointer';
 import { mount } from '../render';
 import { tabbables } from '../../src/popup/focus';
 
@@ -388,6 +388,101 @@ describe('a real touch outside', () => {
         rest: ['pointerdown', 'pointerup', 'click'],
         drag: ['pointerdown', 'pointercancel'],
       });
+    },
+  );
+});
+
+describe('a real touch that starts outside a native popover', () => {
+  /** The pointer events with `click`, and the touch events, each with no repeat. */
+  function recordTouch() {
+    const log = { pointer: [] as string[], touch: [] as string[] };
+    let start = { x: 0, y: 0 };
+    const controller = new AbortController();
+    onTestFinished(() => controller.abort());
+    const add = (list: string[], entry: string) => list.at(-1) !== entry && list.push(entry);
+    for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'click']) {
+      document.addEventListener(
+        type,
+        (event) => {
+          const { clientX, clientY } = event as PointerEvent;
+          if (type === 'pointerdown') start = { x: clientX, y: clientY };
+          const far = Math.hypot(clientX - start.x, clientY - start.y) > 10;
+          add(log.pointer, type === 'pointermove' && far ? 'pointermove past 10 px' : type);
+        },
+        { capture: true, signal: controller.signal },
+      );
+    }
+    for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+      document.addEventListener(type, () => add(log.touch, type), {
+        capture: true,
+        passive: true,
+        signal: controller.signal,
+      });
+    }
+    return log;
+  }
+
+  // Playwright can only tap in WebKit, so the case runs in Chromium. A measurement by hand in Safari
+  // on iOS 26.5, in the iPhone 17 Simulator, gives these results:
+  // - A swipe of 150 px that scrolls the page sends `pointermove` past 10 px, then `pointercancel`,
+  //   and no `click`. The popover stays open.
+  // - A move of 20 px on `touch-action: none` sends `pointerup` and `click`.
+  // - A drag of 60 px on `touch-action: none` sends `pointerup` and no `click`. The popover closes
+  //   at that `pointerup`.
+  test.skipIf(server.browser !== 'chromium')(
+    'closes at a tap and at a move of 8 px, which send `click`; a drag of 40 px on `touch-action: none` sends `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 10 px; neither closes it',
+    async () => {
+      html(`<div style="height: 3000px"></div>
+        <div id="surface" style="position: fixed; left: 0; bottom: 0; width: 200px; height: 100px; touch-action: none"></div>
+        <div id="popup" popover style="inset: 0 auto auto 0; margin: 0">Popup</div>`);
+      onTestFinished(() => scrollTo(0, 0));
+      const popover = element('popup');
+      const log = recordTouch();
+      const surface = centerOf(element('surface'));
+      const results: unknown[] = [];
+      for (const [from, to, steps] of [
+        [surface, surface, 0],
+        [surface, { x: surface.x + 8, y: surface.y }, 2],
+        [surface, { x: surface.x + 40, y: surface.y }, 4],
+        [{ x: 100, y: 300 }, { x: 100, y: 150 }, 25],
+      ] as const) {
+        popover.showPopover();
+        await touchDrag(from, to, steps);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        const open = popover.matches(':popover-open');
+        results.push({ ...log, open, scrolled: scrollY > 0 });
+        log.pointer = [];
+        log.touch = [];
+        if (open) popover.hidePopover();
+      }
+      await stopFling();
+      const touch = ['touchstart', 'touchmove', 'touchend'];
+      expect(results).toEqual([
+        {
+          pointer: ['pointerdown', 'pointerup', 'click'],
+          touch: ['touchstart', 'touchend'],
+          open: false,
+          scrolled: false,
+        },
+        {
+          pointer: ['pointerdown', 'pointermove', 'pointerup', 'click'],
+          touch: ['touchstart', 'touchend'],
+          open: false,
+          scrolled: false,
+        },
+        {
+          pointer: ['pointerdown', 'pointermove', 'pointermove past 10 px', 'pointerup'],
+          touch,
+          open: true,
+          scrolled: false,
+        },
+        {
+          pointer: ['pointerdown', 'pointermove', 'pointermove past 10 px', 'pointercancel'],
+          touch,
+          open: true,
+          scrolled: true,
+        },
+      ]);
     },
   );
 });
