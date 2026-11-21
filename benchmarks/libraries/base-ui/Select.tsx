@@ -7,17 +7,21 @@ export default function SelectScenario() {
       <Select.Label>Label</Select.Label>
       <Select.Trigger data-bench="trigger">
         <Select.Value />
+        <Select.Icon />
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner>
           <Select.Popup data-bench="popup">
+            <Select.ScrollUpArrow />
             <Select.List>
               {options.map((option) => (
                 <Select.Item key={option} value={option}>
+                  <Select.ItemIndicator />
                   <Select.ItemText>{option}</Select.ItemText>
                 </Select.Item>
               ))}
             </Select.List>
+            <Select.ScrollDownArrow />
           </Select.Popup>
         </Select.Positioner>
       </Select.Portal>

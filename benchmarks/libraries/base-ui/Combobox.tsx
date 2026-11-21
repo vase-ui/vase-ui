@@ -19,6 +19,7 @@ export default function ComboboxScenario() {
             <Combobox.List>
               {(item: string) => (
                 <Combobox.Item key={item} value={item}>
+                  <Combobox.ItemIndicator />
                   {item}
                 </Combobox.Item>
               )}

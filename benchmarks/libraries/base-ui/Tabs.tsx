@@ -2,7 +2,7 @@ import { Tabs } from '@base-ui/react/tabs';
 
 export default function TabsScenario() {
   return (
-    <Tabs.Root>
+    <Tabs.Root defaultValue="1">
       <Tabs.List>
         <Tabs.Tab value="1">Tab 1</Tabs.Tab>
         <Tabs.Tab value="2">Tab 2</Tabs.Tab>
