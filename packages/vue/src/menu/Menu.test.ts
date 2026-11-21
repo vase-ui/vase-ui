@@ -1294,7 +1294,7 @@ describe('the arrow and the anchor', () => {
     expect(element).not.toHaveAttribute('data-uncentered');
   });
 
-  test('the arrow in a positioned popup with a border points to the center of the trigger', async () => {
+  test('VUE-193: the arrow in a positioned popup with a border points to the center of the trigger', async () => {
     const { trigger } = await mountMenu({
       arrow,
       trigger: { style: 'position: fixed; left: 300px; top: 200px; width: 40px' },

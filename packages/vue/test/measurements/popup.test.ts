@@ -467,3 +467,24 @@ describe('the variables of a positioner', () => {
     expect(getComputedStyle(element('popup')).maxHeight).toBe('none');
   });
 });
+
+describe('the containing block of an arrow', () => {
+  test('is a static popup while the popup has a transform, which is then also the offset parent; without the transform, the positioned ancestor', () => {
+    html(`<div id="positioner" style="position: absolute; left: 100px; top: 100px">
+      <div id="popup" style="border: 4px solid; width: 100px; height: 50px; transform: scale(0.5)">
+        <div id="arrow" style="position: absolute; left: 10px; top: 0; width: 10px; height: 10px"></div>
+      </div></div>`);
+    const place = () => ({
+      parent: (element('arrow').offsetParent as HTMLElement).id,
+      left:
+        element('arrow').getBoundingClientRect().left -
+        element('popup').getBoundingClientRect().left,
+    });
+    const scaled = place();
+    element('popup').style.transform = 'none';
+    expect([scaled, place()]).toEqual([
+      { parent: 'popup', left: 7 },
+      { parent: 'positioner', left: 10 },
+    ]);
+  });
+});

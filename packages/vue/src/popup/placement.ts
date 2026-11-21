@@ -111,7 +111,8 @@ export interface PlacementProps {
    */
   sticky?: boolean | undefined;
   /**
-   * The smallest space between the arrow and an edge of the popup, in pixels.
+   * The smallest space between the arrow and an inner edge of its nearest positioned ancestor, in
+   * pixels.
    * @default 5
    */
   arrowPadding?: number | undefined;
@@ -449,15 +450,21 @@ interface ArrowOptions {
 }
 
 /**
- * The padding box of the offset parent of the arrow on an axis: the distance of its start from the
- * border edge of the floating element, and its length. The offset parent is the nearest positioned
- * ancestor of the arrow: the popup when it is positioned, else the floating element. The offsets
- * ignore transforms, so a popup that scales while it enters has the same box.
+ * The padding box of the nearest positioned ancestor of the arrow on an axis: the distance of its
+ * start from the border edge of the floating element, and its length. That ancestor is the popup
+ * when it has a `position`, else the floating element. A transform also makes a static popup the
+ * containing block of the arrow, but the transform of an enter animation ends
+ * (test/measurements/popup.test.ts), so the place skips a static popup. The offsets ignore
+ * transforms.
  */
-function arrowOffsetParentBox(arrow: HTMLElement | null, floating: HTMLElement, axis: 'x' | 'y') {
+function arrowContainingBlock(arrow: HTMLElement | null, floating: HTMLElement, axis: 'x' | 'y') {
   const x = axis === 'x';
-  const parent = arrow?.offsetParent;
-  const block = parent && floating.contains(parent) ? (parent as HTMLElement) : floating;
+  const win = ownerWindow(floating);
+  let block = (arrow?.offsetParent ?? floating) as HTMLElement | null;
+  while (block && block !== floating && win.getComputedStyle(block).position === 'static') {
+    block = block.offsetParent as HTMLElement | null;
+  }
+  block ??= floating;
   let start = x ? floating.clientLeft : floating.clientTop;
   let element: HTMLElement | null = block;
   while (element && element !== floating) {
@@ -468,9 +475,10 @@ function arrowOffsetParentBox(arrow: HTMLElement | null, floating: HTMLElement, 
 }
 
 /**
- * The `arrow()` of Floating UI. The place of the arrow is in the padding box of its offset parent,
- * so the borders and the place of that box in the floating element do not move the arrow off the
- * center. With no arrow, it gives the center of the anchor to the transform origin.
+ * The `arrow()` of Floating UI. The place of the arrow is in the padding box of its nearest
+ * positioned ancestor, so the borders and the place of that box in the floating element do not
+ * move the arrow off the center. With no arrow, it gives the center of the anchor to the transform
+ * origin.
  * @see https://floating-ui.com/docs/arrow
  */
 function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
@@ -486,7 +494,7 @@ function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
       const arrowSize = element ? await platform.getDimensions(element) : { width: 0, height: 0 };
       const minProp = axis === 'y' ? 'top' : 'left';
       const maxProp = axis === 'y' ? 'bottom' : 'right';
-      const box = arrowOffsetParentBox(element, elements.floating, axis);
+      const box = arrowContainingBlock(element, elements.floating, axis);
       const clientSize = box.length || rects.floating[length];
       // A large padding would move the arrow off the center.
       const largest = clientSize / 2 - arrowSize[length] / 2 - 1;
@@ -555,7 +563,7 @@ function transformOrigin(
         // The center of the arrow from the padding edge of the floating element, where the popup
         // starts.
         const axis = vertical ? 'x' : 'y';
-        const { start } = arrowOffsetParentBox(arrowElement, elements.floating, axis);
+        const { start } = arrowContainingBlock(arrowElement, elements.floating, axis);
         const border = vertical ? elements.floating.clientLeft : elements.floating.clientTop;
         const at = vertical ? data.arrow?.x || 0 : data.arrow?.y || 0;
         const length = vertical ? arrowElement?.clientWidth || 0 : arrowElement?.clientHeight || 0;

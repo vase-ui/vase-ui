@@ -1066,7 +1066,7 @@ describe('the size', () => {
 });
 
 describe('the placement', () => {
-  test('the arrow in a positioned popup with a border points at the center of the trigger', async () => {
+  test('VUE-193: the arrow in a positioned popup with a border points at the center of the trigger', async () => {
     await mountMenu({
       root: { defaultValue: 'one' },
       triggers: { one: { style: 'position: fixed; left: 300px; top: 200px; width: 40px' } },

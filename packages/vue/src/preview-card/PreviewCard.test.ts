@@ -923,7 +923,7 @@ describe('the active trigger leaves', () => {
 });
 
 describe('the arrow', () => {
-  test('the arrow in a positioned popup with a border points at the center of the link', async () => {
+  test('VUE-193: the arrow in a positioned popup with a border points at the center of the link', async () => {
     const { trigger } = await mountCard({
       root: { defaultOpen: true },
       triggers: [

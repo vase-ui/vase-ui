@@ -1700,7 +1700,7 @@ describe('the portal, the positioner and the popup', () => {
     expect(byTestId('viewport-t')).not.toHaveAttribute('data-instant');
   });
 
-  test('the arrow in a positioned popup with a border points at the center of the trigger', async () => {
+  test('VUE-193: the arrow in a positioned popup with a border points at the center of the trigger', async () => {
     await mountTooltips({
       tooltips: [
         {

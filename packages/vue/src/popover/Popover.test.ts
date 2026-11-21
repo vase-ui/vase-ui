@@ -1813,12 +1813,12 @@ describe('the placement', () => {
 
     test.each([
       {
-        name: 'a popup with a border',
+        name: 'a positioned popup with a border',
         side: 'bottom',
         popup: 'position: relative; border: 1px solid',
       },
       {
-        name: 'a popup with borders of other widths',
+        name: 'a positioned popup with borders of other widths',
         side: 'right',
         popup: 'position: relative; border: solid; border-width: 4px 1px 2px 3px',
       },
@@ -1829,7 +1829,7 @@ describe('the placement', () => {
         positioner: 'border: 3px solid',
       },
     ])(
-      'with the offset parent $name, the arrow and the transform origin point at the center of the anchor',
+      'VUE-193: in $name, the arrow and the transform origin point at the center of the anchor',
       async ({ side, popup: popupStyle, positioner: positionerStyle }) => {
         placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
         await mountPopover({
@@ -1850,6 +1850,57 @@ describe('the placement', () => {
         expect(
           Math.abs(popup()!.getBoundingClientRect()[axis] + cross - center),
         ).toBeLessThanOrEqual(0.5);
+      },
+    );
+
+    test('VUE-193: the arrow in a positioned popup with a margin points at the center of the anchor', async () => {
+      placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: { anchor },
+        popup: { style: 'width: 120px; position: relative; margin: 6px' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      await placed();
+      const arrow = byTestId('arrow');
+      await waitFor(() => expect(arrow.style.left).toMatch(/px$/));
+      expect(Math.abs(centerOf(arrow).x - centerOf(anchor).x)).toBeLessThanOrEqual(0.5);
+    });
+
+    test('VUE-193: the arrow in a static popup with a border that scales while it enters points at the center of the anchor after the enter', async () => {
+      placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
+      mount(PopoverInTransition, {
+        root: { defaultOpen: true },
+        positioner: { anchor },
+        popup: { class: 'scales', style: 'width: 120px; border: 4px solid' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      // While the popup has a transform, the popup is the containing block of the arrow.
+      await waitFor(() => expect(getComputedStyle(popup()!).transform).toBe('none'));
+      const arrow = byTestId('arrow');
+      expect(Math.abs(centerOf(arrow).x - centerOf(anchor).x)).toBeLessThanOrEqual(0.5);
+    });
+
+    test.each(['start', 'end'])(
+      'VUE-193: at the %s edge of a positioned popup with a border, `arrowPadding` keeps the arrow from the inner edge, and the arrow is `data-uncentered`',
+      async (align) => {
+        placeAnchor('left: 150px; top: 200px; width: 20px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, align },
+          popup: { style: 'width: 120px; position: relative; border: 4px solid' },
+          arrow: { style: 'width: 10px; height: 10px' },
+        });
+        await opened();
+        await placed();
+        const arrow = byTestId('arrow');
+        await waitFor(() => expect(arrow).toHaveAttribute('data-uncentered'));
+        const box = popup()!.getBoundingClientRect();
+        const place = arrow.getBoundingClientRect();
+        const space = align === 'start' ? place.left - box.left - 4 : box.right - 4 - place.right;
+        expect(Math.abs(space - 5)).toBeLessThanOrEqual(0.5);
       },
     );
 
