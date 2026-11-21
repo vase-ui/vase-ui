@@ -18,6 +18,16 @@ export interface CollapsibleRootProps
   disabled?: boolean;
 }
 
+export interface CollapsibleRootEmits {
+  /**
+   * The user opens or closes the panel: `trigger-press` for a press of the trigger, `none` for a
+   * reveal by find-in-page. `details.cancel()` keeps the panel as it is.
+   */
+  openChange: [open: boolean, details: CollapsibleRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+}
+
 export interface CollapsibleRootState {
   open: boolean;
   disabled: boolean;

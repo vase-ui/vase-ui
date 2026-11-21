@@ -10,6 +10,7 @@ import MeasureDialogInComposite from '../fixtures/MeasureDialogInComposite.vue';
 import MeasureLeaveInElement from '../fixtures/MeasureLeaveInElement.vue';
 import MeasureMountOrder from '../fixtures/MeasureMountOrder.vue';
 import MeasurePageSwap from '../fixtures/MeasurePageSwap.vue';
+import MeasureWrappedDialog from '../fixtures/MeasureWrappedDialog.vue';
 import { hydrate, mount, renderOnServer } from '../render';
 import { takeReportedMessages } from '../reportedMessages';
 
@@ -400,5 +401,21 @@ describe('an attribute that the first client render changes', () => {
       vaporFixtures() ? 'true' : 'false',
     );
     expect(takeReportedMessages()).toEqual([]);
+  });
+});
+
+// `docs/handbook/composition.md`, "Wrap a part": the SFC compiler skips a type after
+// `/* @vue-ignore */`, so the wrapper has no `emits` option, and Vue gives each listener to the part.
+describe('a wrapper that extends `DialogRootProps` and `DialogRootEmits` after `/* @vue-ignore */`', () => {
+  test('gives the listeners and `v-model:open` of its caller to `Dialog.Root`, in each app setup', async () => {
+    const log: string[] = [];
+    const { root } = mount(MeasureWrappedDialog, {
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    await nextTick();
+    await userEvent.click(root.querySelector('button')!);
+    await nextTick();
+    expect(log).toEqual(['openChange true trigger-press', 'update:open true']);
+    expect(root.querySelector('output')).toHaveTextContent('true');
   });
 });

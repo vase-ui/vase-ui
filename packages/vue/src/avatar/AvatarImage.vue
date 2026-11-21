@@ -2,17 +2,17 @@
 import { computed, mergeProps, onMounted, onUnmounted, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { injectAvatarRoot } from './root';
-import type { AvatarImageProps, AvatarImageState, ImageLoadingStatus } from './types';
+import type {
+  AvatarImageEmits,
+  AvatarImageProps,
+  AvatarImageState,
+  ImageLoadingStatus,
+} from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<AvatarImageProps>();
-const emit = defineEmits<{
-  /**
-   * Callback fired when the loading status changes.
-   */
-  loadingStatusChange: [status: ImageLoadingStatus];
-}>();
+const emit = defineEmits<AvatarImageEmits>();
 defineSlots<{
   element?(scope: ElementSlotProps<AvatarImageState>): unknown;
 }>();

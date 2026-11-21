@@ -49,6 +49,7 @@ import type {
   AutocompletePositionerState,
   AutocompleteRootChangeEventDetails,
   AutocompleteRootChangeEventReason,
+  AutocompleteRootEmits,
   AutocompleteRootHighlightEventDetails,
   AutocompleteRootHighlightEventReason,
   AutocompleteRootOpenChangeEventDetails,
@@ -76,6 +77,7 @@ export { useFilteredItems } from '../combobox/root';
 export const Root: typeof AutocompleteRoot = AutocompleteRoot;
 export namespace Root {
   export type Props<Item = unknown> = AutocompleteRootProps<Item>;
+  export type Emits<Item = unknown> = AutocompleteRootEmits<Item>;
   export type State = AutocompleteRootState;
   export type ChangeEventReason = AutocompleteRootChangeEventReason;
   export type ChangeEventDetails = AutocompleteRootChangeEventDetails;

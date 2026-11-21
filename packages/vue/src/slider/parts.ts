@@ -16,6 +16,7 @@ import type {
   SliderRootChangeEventReason,
   SliderRootCommitEventDetails,
   SliderRootCommitEventReason,
+  SliderRootEmits,
   SliderRootProps,
   SliderRootState,
   SliderThumbProps,
@@ -41,6 +42,7 @@ import type {
 export const Root: typeof SliderRoot = SliderRoot;
 export namespace Root {
   export type Props<Value extends number | readonly number[] = number> = SliderRootProps<Value>;
+  export type Emits<Value extends number | readonly number[] = number> = SliderRootEmits<Value>;
   export type State = SliderRootState;
   export type ChangeEventReason = SliderRootChangeEventReason;
   export type ChangeEventDetails = SliderRootChangeEventDetails;

@@ -23,6 +23,13 @@ export interface ToggleProps<Value extends string = string>
   value?: Value;
 }
 
+export interface ToggleEmits {
+  /** The user presses the toggle. `details.cancel()` keeps the state as it was. */
+  pressedChange: [pressed: boolean, details: ToggleChangeEventDetails];
+  /** Comes after the change event with the new state, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [pressed: boolean];
+}
+
 export interface ToggleState {
   /** The toggle is pressed. */
   pressed: boolean;

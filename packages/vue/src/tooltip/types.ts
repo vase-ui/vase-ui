@@ -84,6 +84,15 @@ export interface TooltipRootProps<Payload = unknown> {
   trackCursorAxis?: 'none' | 'x' | 'y' | 'both' | undefined;
 }
 
+export interface TooltipRootEmits {
+  /** The tooltip opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: TooltipRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+}
+
 export interface TooltipRootState {}
 
 export interface TooltipTriggerProps<Payload = unknown>

@@ -63,6 +63,15 @@ export interface PopoverRootProps<Payload = unknown> {
   handle?: PopoverHandle<Payload> | undefined;
 }
 
+export interface PopoverRootEmits {
+  /** The popover opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: PopoverRootChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+  /** The active trigger changes. `v-model:trigger-id` uses it. */
+  'update:triggerId': [id: string | null];
+}
+
 export interface PopoverRootState {}
 
 export interface PopoverTriggerProps<Payload = unknown>

@@ -4,8 +4,7 @@ import { useElement } from '../common/element';
 import { useComboboxRoot } from '../combobox/root';
 import type {
   AutocompleteRootChangeEventDetails,
-  AutocompleteRootHighlightEventDetails,
-  AutocompleteRootOpenChangeEventDetails,
+  AutocompleteRootEmits,
   AutocompleteRootProps,
 } from './types';
 
@@ -35,21 +34,7 @@ const props = withDefaults(defineProps<AutocompleteRootProps<Item>>(), {
   disabled: false,
   readonly: false,
 });
-const emit = defineEmits<{
-  /**
-   * The text changes. `details.cancel()` keeps the text as it was. An action that gives the text
-   * that the root has, such as a press of the item with that text, sends no event.
-   */
-  valueChange: [value: string, details: AutocompleteRootChangeEventDetails];
-  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [value: string];
-  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
-  openChange: [open: boolean, details: AutocompleteRootOpenChangeEventDetails];
-  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
-  'update:open': [open: boolean];
-  /** An item gets the highlight, or no item has it (`undefined`, with the index -1). */
-  itemHighlighted: [value: Item | undefined, details: AutocompleteRootHighlightEventDetails];
-}>();
+const emit = defineEmits<AutocompleteRootEmits<Item>>();
 defineSlots<{ default?(): unknown }>();
 
 const attrs = useAttrs();

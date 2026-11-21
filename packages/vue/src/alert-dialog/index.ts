@@ -13,6 +13,7 @@ export type {
   AlertDialogPortalState,
   AlertDialogRootChangeEventDetails,
   AlertDialogRootChangeEventReason,
+  AlertDialogRootEmits,
   AlertDialogRootProps,
   AlertDialogRootState,
   AlertDialogTitleProps,

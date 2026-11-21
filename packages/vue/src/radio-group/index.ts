@@ -2,6 +2,7 @@ import RadioGroupComponent from './RadioGroup.vue';
 import type {
   RadioGroupChangeEventDetails,
   RadioGroupChangeEventReason,
+  RadioGroupEmits,
   RadioGroupProps,
   RadioGroupState,
 } from './types';
@@ -21,6 +22,7 @@ import type {
 export const RadioGroup: typeof RadioGroupComponent = RadioGroupComponent;
 export namespace RadioGroup {
   export type Props<Value = any> = RadioGroupProps<Value>;
+  export type Emits<Value = any> = RadioGroupEmits<Value>;
   export type State = RadioGroupState;
   export type ChangeEventReason = RadioGroupChangeEventReason;
   export type ChangeEventDetails = RadioGroupChangeEventDetails;
@@ -29,6 +31,7 @@ export namespace RadioGroup {
 export type {
   RadioGroupChangeEventDetails,
   RadioGroupChangeEventReason,
+  RadioGroupEmits,
   RadioGroupProps,
   RadioGroupState,
 };

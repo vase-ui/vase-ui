@@ -2,24 +2,14 @@
 import { mergeProps, provide, ref, useAttrs, watch } from 'vue';
 import { useElement } from '../common/element';
 import { formKey, type FormErrors, type FormField, type FormValues } from './field';
-import type { FormProps } from './types';
+import type { FormEmits, FormProps } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<FormProps<Values>>(), { validationMode: 'submit' });
 // A declared `submit` takes the native listener of the developer off the element, so the
 // listener gets only the submits that pass.
-const emit = defineEmits<{
-  /**
-   * A submit with each field valid. `values` has the value of each named field of the form that is
-   * not disabled. The form prevents the native submit while it has a `submit` listener. With no
-   * listener, the browser submits the form. Give `@submit` a function, because the form can miss a
-   * listener that you add or remove after the mount.
-   */
-  submit: [event: SubmitEvent, values: Values];
-  /** An edit or a reset removes the errors of a field. `v-model:errors` uses it. */
-  'update:errors': [errors: FormErrors];
-}>();
+const emit = defineEmits<FormEmits<Values>>();
 defineSlots<{
   default?(): unknown;
   element?(scope: {

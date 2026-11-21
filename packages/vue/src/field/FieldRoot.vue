@@ -18,7 +18,13 @@ import { useInDisabledFieldset } from '../fieldset/part';
 import { formKey, type FormField } from '../form/field';
 import { fieldKey, fieldStateAttributes, type FieldControl, type NativeControl } from './control';
 import { fieldPartsKey, joinIds, type FieldLabel } from './root';
-import type { FieldRootProps, FieldRootState, FieldValidateResult, FieldValidity } from './types';
+import type {
+  FieldRootEmits,
+  FieldRootProps,
+  FieldRootState,
+  FieldValidateResult,
+  FieldValidity,
+} from './types';
 
 type Failures = Omit<FieldValidity, 'valid'>;
 interface Result {
@@ -36,12 +42,7 @@ const props = withDefaults(defineProps<FieldRootProps>(), {
   dirty: undefined,
   touched: undefined,
 });
-const emit = defineEmits<{
-  /** The dirty state changes. `v-model:dirty` uses it. */
-  'update:dirty': [dirty: boolean];
-  /** The touched state changes. `v-model:touched` uses it. */
-  'update:touched': [touched: boolean];
-}>();
+const emit = defineEmits<FieldRootEmits>();
 defineSlots<{
   /**
    * The content of the field. `validity` has a flag for each failure and `valid`, and `errors` has

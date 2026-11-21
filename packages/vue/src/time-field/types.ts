@@ -73,6 +73,19 @@ export interface TimeFieldRootProps<Value extends TimeFieldRootValue = Temporal.
   readonly?: boolean;
 }
 
+export interface TimeFieldRootEmits<Value extends TimeFieldRootValue = Temporal.PlainTime> {
+  /**
+   * The user changes the value. The value is `null` while a segment is empty.
+   * `details.cancel()` keeps each segment as it was.
+   */
+  valueChange: [value: Value | null, details: TimeFieldRootChangeEventDetails];
+  /**
+   * Comes after the change event with the new value, unless a listener cancels the change.
+   * `v-model` uses it. A reset of the form and `clear()` emit it with no change event.
+   */
+  'update:modelValue': [value: Value | null];
+}
+
 /**
  * An item of the layout. The user edits an item with `editable: true`. Each other item has a
  * `text`: a separator or the name of a time zone.

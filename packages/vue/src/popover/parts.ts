@@ -26,6 +26,7 @@ import type {
   PopoverPositionerState,
   PopoverRootChangeEventDetails,
   PopoverRootChangeEventReason,
+  PopoverRootEmits,
   PopoverRootProps,
   PopoverRootState,
   PopoverTitleProps,
@@ -45,6 +46,7 @@ export { createHandle, PopoverHandle as Handle } from './root';
 export const Root: typeof PopoverRoot = PopoverRoot;
 export namespace Root {
   export type Props<Payload = unknown> = PopoverRootProps<Payload>;
+  export type Emits = PopoverRootEmits;
   export type State = PopoverRootState;
   export type ChangeEventReason = PopoverRootChangeEventReason;
   export type ChangeEventDetails = PopoverRootChangeEventDetails;

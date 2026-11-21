@@ -47,6 +47,7 @@ export type {
   ComboboxPrimitiveValue,
   ComboboxRootChangeEventDetails,
   ComboboxRootChangeEventReason,
+  ComboboxRootEmits,
   ComboboxRootHighlightEventDetails,
   ComboboxRootHighlightEventReason,
   ComboboxRootOpenChangeEventDetails,

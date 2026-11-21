@@ -4,7 +4,7 @@ import { useDateTimeFieldRoot } from '../common/date-time-field/root';
 import { useElement } from '../common/element';
 import { assertTemporal } from '../common/date-time/temporal';
 import type {
-  TimeFieldRootChangeEventDetails,
+  TimeFieldRootEmits,
   TimeFieldRootProps,
   TimeFieldRootState,
   TimeFieldRootValue,
@@ -13,18 +13,7 @@ import type {
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<TimeFieldRootProps<Value>>();
-const emit = defineEmits<{
-  /**
-   * The user changes the value. The value is `null` while a segment is empty.
-   * `details.cancel()` keeps each segment as it was.
-   */
-  valueChange: [value: Value | null, details: TimeFieldRootChangeEventDetails];
-  /**
-   * Comes after the change event with the new value, unless a listener cancels the change.
-   * `v-model` uses it. A reset of the form and `clear()` emit it with no change event.
-   */
-  'update:modelValue': [value: Value | null];
-}>();
+const emit = defineEmits<TimeFieldRootEmits<Value>>();
 defineSlots<{ default?(scope: { state: TimeFieldRootState }): unknown }>();
 
 assertTemporal('TimeField.Root');

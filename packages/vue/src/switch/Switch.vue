@@ -6,7 +6,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
-import type { SwitchChangeEventDetails, SwitchProps, SwitchState } from './types';
+import type { SwitchEmits, SwitchProps, SwitchState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -14,12 +14,7 @@ const props = withDefaults(defineProps<SwitchProps>(), {
   // An absent `modelValue` makes the switch uncontrolled.
   modelValue: undefined,
 });
-const emit = defineEmits<{
-  /** The user presses the switch. `details.cancel()` keeps the state as it was. */
-  checkedChange: [checked: boolean, details: SwitchChangeEventDetails];
-  /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
-  'update:modelValue': [checked: boolean];
-}>();
+const emit = defineEmits<SwitchEmits>();
 const slots = defineSlots<{
   element?(scope: ElementSlotProps<SwitchState>): unknown;
 }>();

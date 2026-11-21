@@ -2,6 +2,7 @@ import InputComponent from './Input.vue';
 import type {
   InputChangeEventDetails,
   InputChangeEventReason,
+  InputEmits,
   InputProps,
   InputState,
 } from './types';
@@ -20,9 +21,10 @@ import type {
 export const Input: typeof InputComponent = InputComponent;
 export namespace Input {
   export type Props = InputProps;
+  export type Emits = InputEmits;
   export type State = InputState;
   export type ChangeEventReason = InputChangeEventReason;
   export type ChangeEventDetails = InputChangeEventDetails;
 }
 
-export type { InputChangeEventDetails, InputChangeEventReason, InputProps, InputState };
+export type { InputChangeEventDetails, InputChangeEventReason, InputEmits, InputProps, InputState };

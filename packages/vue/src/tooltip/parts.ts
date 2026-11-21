@@ -19,6 +19,7 @@ import type {
   TooltipProviderState,
   TooltipRootChangeEventDetails,
   TooltipRootChangeEventReason,
+  TooltipRootEmits,
   TooltipRootProps,
   TooltipRootState,
   TooltipTriggerProps,
@@ -48,6 +49,7 @@ export namespace Provider {
 export const Root: typeof TooltipRoot = TooltipRoot;
 export namespace Root {
   export type Props<Payload = unknown> = TooltipRootProps<Payload>;
+  export type Emits = TooltipRootEmits;
   export type State = TooltipRootState;
   export type ChangeEventReason = TooltipRootChangeEventReason;
   export type ChangeEventDetails = TooltipRootChangeEventDetails;

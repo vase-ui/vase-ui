@@ -139,6 +139,26 @@ export interface DateRangePickerRootProps<Value extends DateValue = DateValue> {
   form?: string | undefined;
 }
 
+export interface DateRangePickerRootEmits<Value extends DateValue = DateValue> {
+  /**
+   * The user changes the range. An end is `null` while a segment of its field is empty.
+   * `details.cancel()` keeps the range as it was.
+   */
+  valueChange: [
+    value: DateRangePickerRootValue<Value>,
+    details: DateRangePickerRootChangeEventDetails,
+  ];
+  /**
+   * Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. A reset of
+   * the form and `clear()` of a field emit it with no `valueChange`.
+   */
+  'update:modelValue': [value: DateRangePickerRootValue<Value>];
+  /** The popup opens or closes. `details.cancel()` keeps it as it was. */
+  openChange: [open: boolean, details: DateRangePickerRootOpenChangeEventDetails];
+  /** Comes after `openChange`, unless a listener cancels the change. `v-model:open` uses it. */
+  'update:open': [open: boolean];
+}
+
 type FieldOwned = OwnedKeys<
   DateFieldRootProps,
   | 'modelValue'

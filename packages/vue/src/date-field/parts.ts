@@ -13,6 +13,7 @@ import type {
   DateFieldLiteralState,
   DateFieldRootChangeEventDetails,
   DateFieldRootChangeEventReason,
+  DateFieldRootEmits,
   DateFieldRootGranularity,
   DateFieldRootProps,
   DateFieldRootState,
@@ -39,6 +40,8 @@ export const Root: typeof DateFieldRoot = DateFieldRoot;
 export namespace Root {
   export type Props<Value extends DateFieldRootValue = DateFieldRootValue> =
     DateFieldRootProps<Value>;
+  export type Emits<Value extends DateFieldRootValue = DateFieldRootValue> =
+    DateFieldRootEmits<Value>;
   export type State = DateFieldRootState;
   export type Value = DateFieldRootValue;
   export type Granularity = DateFieldRootGranularity;

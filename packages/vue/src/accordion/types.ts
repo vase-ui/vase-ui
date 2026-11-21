@@ -39,6 +39,17 @@ export interface AccordionRootProps<Value = any>
   hiddenUntilFound?: boolean;
 }
 
+export interface AccordionRootEmits<Value = any> {
+  /**
+   * The user opens or closes an item: `trigger-press` for a press of a trigger, `none` for a reveal
+   * by find-in-page. The `openChange` of the item comes first. `details.cancel()` keeps the value as
+   * it is.
+   */
+  valueChange: [value: AccordionValue<Value>, details: AccordionRootChangeEventDetails];
+  /** Comes after `valueChange`, unless a listener cancels the change. `v-model` uses it. */
+  'update:modelValue': [value: AccordionValue<Value>];
+}
+
 export interface AccordionRootState<Value = any> {
   /** The values of the open items. */
   value: AccordionValue<Value>;
@@ -58,6 +69,14 @@ export interface AccordionItemProps extends AsProps, /* @vue-ignore */ Omit<HTML
    * @default false
    */
   disabled?: boolean;
+}
+
+export interface AccordionItemEmits {
+  /**
+   * The user opens or closes the item. It comes before the `valueChange` of the root.
+   * `details.cancel()` keeps the item as it is. An item that another item closes emits nothing.
+   */
+  openChange: [open: boolean, details: AccordionItemChangeEventDetails];
 }
 
 export interface AccordionItemState extends AccordionRootState {

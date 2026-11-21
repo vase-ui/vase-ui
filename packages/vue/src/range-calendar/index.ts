@@ -3,6 +3,7 @@ export * as RangeCalendar from './parts';
 export type {
   RangeCalendarRootChangeEventDetails,
   RangeCalendarRootChangeEventReason,
+  RangeCalendarRootEmits,
   RangeCalendarRootProps,
   RangeCalendarRootState,
   RangeCalendarRootValue,

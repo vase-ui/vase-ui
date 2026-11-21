@@ -17,6 +17,7 @@ import type {
   NumberFieldRootChangeEventReason,
   NumberFieldRootCommitEventDetails,
   NumberFieldRootCommitEventReason,
+  NumberFieldRootEmits,
   NumberFieldRootProps,
   NumberFieldRootState,
   NumberFieldScrubAreaProps,
@@ -39,6 +40,7 @@ import type {
 export const Root: typeof NumberFieldRoot = NumberFieldRoot;
 export namespace Root {
   export type Props = NumberFieldRootProps;
+  export type Emits = NumberFieldRootEmits;
   export type State = NumberFieldRootState;
   export type ChangeEventReason = NumberFieldRootChangeEventReason;
   export type ChangeEventDetails = NumberFieldRootChangeEventDetails;

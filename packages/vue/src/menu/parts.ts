@@ -28,6 +28,7 @@ import type {
   MenuBackdropState,
   MenuCheckboxItemChangeEventDetails,
   MenuCheckboxItemChangeEventReason,
+  MenuCheckboxItemEmits,
   MenuCheckboxItemProps,
   MenuCheckboxItemState,
   MenuClearProps,
@@ -36,6 +37,7 @@ import type {
   MenuEmptyState,
   MenuFilterProviderChangeEventDetails,
   MenuFilterProviderChangeEventReason,
+  MenuFilterProviderEmits,
   MenuFilterProviderProps,
   MenuFilterProviderState,
   MenuGroupLabelProps,
@@ -58,12 +60,14 @@ import type {
   MenuPositionerState,
   MenuRadioGroupChangeEventDetails,
   MenuRadioGroupChangeEventReason,
+  MenuRadioGroupEmits,
   MenuRadioGroupProps,
   MenuRadioGroupState,
   MenuRadioItemProps,
   MenuRadioItemState,
   MenuRootChangeEventDetails,
   MenuRootChangeEventReason,
+  MenuRootEmits,
   MenuRootHighlightEventDetails,
   MenuRootHighlightEventReason,
   MenuRootOrientation,
@@ -73,6 +77,7 @@ import type {
   MenuSeparatorState,
   MenuSubmenuRootChangeEventDetails,
   MenuSubmenuRootChangeEventReason,
+  MenuSubmenuRootEmits,
   MenuSubmenuRootProps,
   MenuSubmenuRootState,
   MenuSubmenuTriggerProps,
@@ -93,6 +98,7 @@ export { getFilter as useFilter } from '../common/filter';
 export const Root: typeof MenuRoot = MenuRoot;
 export namespace Root {
   export type Props<Payload = unknown> = MenuRootProps<Payload>;
+  export type Emits = MenuRootEmits;
   export type State = MenuRootState;
   export type ChangeEventReason = MenuRootChangeEventReason;
   export type ChangeEventDetails = MenuRootChangeEventDetails;
@@ -233,6 +239,7 @@ export namespace LinkItem {
 export const CheckboxItem: typeof MenuCheckboxItem = MenuCheckboxItem;
 export namespace CheckboxItem {
   export type Props = MenuCheckboxItemProps;
+  export type Emits = MenuCheckboxItemEmits;
   export type State = MenuCheckboxItemState;
   export type ChangeEventReason = MenuCheckboxItemChangeEventReason;
   export type ChangeEventDetails = MenuCheckboxItemChangeEventDetails;
@@ -247,6 +254,7 @@ export namespace CheckboxItem {
 export const RadioGroup: typeof MenuRadioGroup = MenuRadioGroup;
 export namespace RadioGroup {
   export type Props<Value = unknown> = MenuRadioGroupProps<Value>;
+  export type Emits<Value = unknown> = MenuRadioGroupEmits<Value>;
   export type State = MenuRadioGroupState;
   export type ChangeEventReason = MenuRadioGroupChangeEventReason;
   export type ChangeEventDetails = MenuRadioGroupChangeEventDetails;
@@ -273,6 +281,7 @@ export namespace RadioItem {
 export const SubmenuRoot: typeof MenuSubmenuRoot = MenuSubmenuRoot;
 export namespace SubmenuRoot {
   export type Props = MenuSubmenuRootProps;
+  export type Emits = MenuSubmenuRootEmits;
   export type State = MenuSubmenuRootState;
   export type ChangeEventReason = MenuSubmenuRootChangeEventReason;
   export type ChangeEventDetails = MenuSubmenuRootChangeEventDetails;
@@ -341,6 +350,7 @@ export namespace List {
 export const FilterProvider: typeof MenuFilterProvider = MenuFilterProvider;
 export namespace FilterProvider {
   export type Props = MenuFilterProviderProps;
+  export type Emits = MenuFilterProviderEmits;
   export type State = MenuFilterProviderState;
   export type ChangeEventReason = MenuFilterProviderChangeEventReason;
   export type ChangeEventDetails = MenuFilterProviderChangeEventDetails;

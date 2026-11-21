@@ -13,6 +13,7 @@ import type {
   TimeFieldLiteralState,
   TimeFieldRootChangeEventDetails,
   TimeFieldRootChangeEventReason,
+  TimeFieldRootEmits,
   TimeFieldRootGranularity,
   TimeFieldRootProps,
   TimeFieldRootState,
@@ -39,6 +40,8 @@ export const Root: typeof TimeFieldRoot = TimeFieldRoot;
 export namespace Root {
   export type Props<Value extends TimeFieldRootValue = Temporal.PlainTime> =
     TimeFieldRootProps<Value>;
+  export type Emits<Value extends TimeFieldRootValue = Temporal.PlainTime> =
+    TimeFieldRootEmits<Value>;
   export type State = TimeFieldRootState;
   export type Value = TimeFieldRootValue;
   export type Granularity = TimeFieldRootGranularity;

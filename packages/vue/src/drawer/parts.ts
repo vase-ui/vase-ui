@@ -34,6 +34,7 @@ import type {
   DrawerProviderState,
   DrawerRootChangeEventDetails,
   DrawerRootChangeEventReason,
+  DrawerRootEmits,
   DrawerRootProps,
   DrawerRootSnapPointChangeEventDetails,
   DrawerRootSnapPointChangeEventReason,
@@ -60,6 +61,7 @@ export { createHandle, DrawerHandle as Handle } from './root';
 export const Root: typeof DrawerRoot = DrawerRoot;
 export namespace Root {
   export type Props<Payload = unknown> = DrawerRootProps<Payload>;
+  export type Emits = DrawerRootEmits;
   export type State = DrawerRootState;
   export type ChangeEventReason = DrawerRootChangeEventReason;
   export type ChangeEventDetails = DrawerRootChangeEventDetails;

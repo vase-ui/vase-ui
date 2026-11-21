@@ -2,6 +2,7 @@ import ToggleGroupComponent from './ToggleGroup.vue';
 import type {
   ToggleGroupChangeEventDetails,
   ToggleGroupChangeEventReason,
+  ToggleGroupEmits,
   ToggleGroupProps,
   ToggleGroupState,
 } from './types';
@@ -15,6 +16,7 @@ import type {
 export const ToggleGroup: typeof ToggleGroupComponent = ToggleGroupComponent;
 export namespace ToggleGroup {
   export type Props<Value extends string = string> = ToggleGroupProps<Value>;
+  export type Emits<Value extends string = string> = ToggleGroupEmits<Value>;
   export type State = ToggleGroupState;
   export type ChangeEventReason = ToggleGroupChangeEventReason;
   export type ChangeEventDetails = ToggleGroupChangeEventDetails;
@@ -23,6 +25,7 @@ export namespace ToggleGroup {
 export type {
   ToggleGroupChangeEventDetails,
   ToggleGroupChangeEventReason,
+  ToggleGroupEmits,
   ToggleGroupProps,
   ToggleGroupState,
 };
