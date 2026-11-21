@@ -124,7 +124,7 @@ describe('the reset', () => {
 });
 
 describe('the reset of a controlled root or of a changed default', () => {
-  test('BUG-6206: a controlled root gets the value and the text of its mount, with the update events only', async () => {
+  test('BUG-6206: a controlled root gets the value and the text of its mount, with the update events only, and its field is not dirty', async () => {
     const log: string[] = [];
     const root = reactive<Props>({
       name: 'a',
@@ -141,16 +141,18 @@ describe('the reset of a controlled root or of a changed default', () => {
       log.push(`update:inputValue ${text}`);
       root.inputValue = text;
     };
-    await mountForm({ root });
+    await mountForm({ root, field: { 'data-testid': 'field' } });
     await userEvent.click(byTestId('input'));
     await userEvent.click(byTestId('item-Cherry'));
     await waitFor(() => expect(entries()).toEqual([['a', 'Cherry']]));
+    expect(byTestId('field')).toHaveAttribute('data-dirty');
     log.length = 0;
     form().reset();
     await settle();
     expect(log).toEqual(['update:modelValue Apple', 'update:inputValue Apple']);
     expect(entries()).toEqual([['a', 'Apple']]);
     expect((byTestId('input') as HTMLInputElement).value).toBe('Apple');
+    expect(byTestId('field')).not.toHaveAttribute('data-dirty');
   });
 
   test('an uncontrolled root gets the defaultValue of the reset, after a change of it', async () => {
