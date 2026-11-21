@@ -8,7 +8,13 @@ import type { Checkbox, CheckboxEmits } from '@vase-ui/vue/checkbox';
 import type { CheckboxGroup, CheckboxGroupEmits } from '@vase-ui/vue/checkbox-group';
 import type { Collapsible, CollapsibleRootEmits } from '@vase-ui/vue/collapsible';
 import type { Combobox, ComboboxRootEmits } from '@vase-ui/vue/combobox';
-import type { ContextMenu, ContextMenuRootEmits } from '@vase-ui/vue/context-menu';
+import type {
+  ContextMenu,
+  ContextMenuCheckboxItemEmits,
+  ContextMenuRadioGroupEmits,
+  ContextMenuRootEmits,
+  ContextMenuSubmenuRootEmits,
+} from '@vase-ui/vue/context-menu';
 import type { DateField, DateFieldRootEmits } from '@vase-ui/vue/date-field';
 import type { DatePicker, DatePickerRootEmits } from '@vase-ui/vue/date-picker';
 import type { DateRangePicker, DateRangePickerRootEmits } from '@vase-ui/vue/date-range-picker';
@@ -106,6 +112,21 @@ emitsOf<
   ComboboxRootEmits<string, true>
 >();
 emitsOf<typeof ContextMenu.Root, ContextMenu.Root.Emits, ContextMenuRootEmits>();
+emitsOf<
+  typeof ContextMenu.CheckboxItem,
+  ContextMenu.CheckboxItem.Emits,
+  ContextMenuCheckboxItemEmits
+>();
+emitsOf<
+  typeof ContextMenu.RadioGroup<string>,
+  ContextMenu.RadioGroup.Emits<string>,
+  ContextMenuRadioGroupEmits<string>
+>();
+emitsOf<
+  typeof ContextMenu.SubmenuRoot,
+  ContextMenu.SubmenuRoot.Emits,
+  ContextMenuSubmenuRootEmits
+>();
 emitsOf<
   typeof DateField.Root<Temporal.PlainDate>,
   DateField.Root.Emits<Temporal.PlainDate>,
