@@ -1988,6 +1988,22 @@ describe('the placement', () => {
       },
     );
 
+    test('VUE-195: in a popup with `zoom: 2`, `arrowPadding` is in the pixels of the popup', async () => {
+      placeAnchor('left: 150px; top: 200px; width: 40px; height: 20px');
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: { anchor, align: 'start' },
+        popup: { style: 'width: 120px; position: relative; border: 4px solid; zoom: 2' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      await placed();
+      const arrow = byTestId('arrow');
+      await waitFor(() => expect(arrow).toHaveAttribute('data-uncentered'));
+      const space = arrow.getBoundingClientRect().left - popup()!.getBoundingClientRect().left - 8;
+      expect(Math.abs(space - 2 * 5)).toBeLessThanOrEqual(0.5);
+    });
+
     test('the alignment flips at the edge of the view; with `side: shift`, the popup shifts and keeps its alignment, and grows from the anchor', async () => {
       placeAnchor(`left: ${innerWidth - 40}px; top: 200px; width: 20px; height: 20px`);
       const wide = { style: 'width: 200px' };
