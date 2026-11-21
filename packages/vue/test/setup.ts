@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, beforeEach, expect, onTestFinished, vi } from 'vitest';
 import { reset } from '../src/common/error';
+import { countEndedTest, endedTests } from './endedTests';
 import { failOnReportedMessages } from './reportedMessages';
 
 declare module 'vitest/browser' {
@@ -110,12 +111,11 @@ if (typeof document !== 'undefined') {
   //
   // After a time-out, the function of the test continues when its command ends. When the command
   // ends after the hook below starts, the wrapper rejects, so the next steps of the function do not
-  // run in the next test. Only the `catch` and `finally` blocks of the function run. A command that
-  // the function starts after a wait of another kind, such as a frame, can still run in the next
-  // test. The `onTestFinished` hooks of the test run before that hook, so a release in such a hook
-  // does not reject.
+  // run in the next test. Only the `catch` and `finally` blocks of the function run. `waitFor` of
+  // `test/waitFor.ts` rejects in the same way. A command that the function starts after a wait of
+  // another kind, such as a frame, can still run in the next test. The `onTestFinished` hooks of the
+  // test run before that hook, so a release in such a hook does not reject.
   const runningCommands = new Set<Promise<void>>();
-  let endedTestCount = 0;
   for (const name of [
     'click',
     'dblClick',
@@ -139,7 +139,7 @@ if (typeof document !== 'undefined') {
     const command: (...args: never[]) => Promise<void> = userEvent[name].bind(userEvent);
     Object.defineProperty(userEvent, name, {
       async value(...args: never[]) {
-        const endedTestCountAtCall = endedTestCount;
+        const endedAtCall = endedTests();
         const running = command(...args);
         runningCommands.add(running);
         try {
@@ -147,7 +147,7 @@ if (typeof document !== 'undefined') {
         } finally {
           runningCommands.delete(running);
         }
-        if (endedTestCount !== endedTestCountAtCall) {
+        if (endedTests() !== endedAtCall) {
           throw new Error(`The test ended before the command userEvent.${name} ended.`);
         }
       },
@@ -169,10 +169,10 @@ if (typeof document !== 'undefined') {
   // until its leave ends. Vitest gives Playwright the place of an element among its siblings
   // (`:nth-child`). When an earlier element of `<body>` goes after a command of a later test
   // starts, the selector finds no element, and the command waits until its time-out. So a test
-  // ends when `<body>` is empty.
+  // ends when `<body>` is empty. A test that fails the wait leaves no element to the next test.
   beforeEach(() => {
     onTestFinished(async () => {
-      endedTestCount += 1;
+      countEndedTest();
       await Promise.allSettled(runningCommands);
       if (hadInvalidEvent) {
         closeValidationPopup();
@@ -188,10 +188,14 @@ if (typeof document !== 'undefined') {
         // A point outside the page.
         await userEvent.pointer({ coords: { x: -1, y: -1 } });
       }
-      await waitFor(() => expect(document.body.children).toHaveLength(0));
-      await new Promise<void>((resolve) => {
-        browserSetTimeout(resolve, 0);
-      });
+      try {
+        await waitFor(() => expect(document.body.children).toHaveLength(0));
+      } finally {
+        document.body.replaceChildren();
+        await new Promise<void>((resolve) => {
+          browserSetTimeout(resolve, 0);
+        });
+      }
     });
   });
 }

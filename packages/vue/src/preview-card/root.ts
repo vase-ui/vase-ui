@@ -108,7 +108,6 @@ export function usePreviewCardRoot<Payload>(
     trap: false,
     lockScroll: false,
     triggerInUse: true,
-    tapEnd: true,
   }));
   useCloseWhenTriggerLeaves(root);
 

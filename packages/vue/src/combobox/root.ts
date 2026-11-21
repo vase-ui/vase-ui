@@ -442,7 +442,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       hole: anchor.value,
       inside: insideGetters.map((get) => get()),
       triggerInUse: true,
-      tapEnd: false,
     };
   });
   const popupFocus = shallowRef<{ initialFocus?: FocusTarget; finalFocus?: FocusTarget }>({});
