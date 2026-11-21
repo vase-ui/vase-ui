@@ -71,7 +71,7 @@ A part owns its state, unless you bind it. This dialog owns its open state:
 <<< ../examples/customization/Uncontrolled.vue
 
 - `v-model` binds the main value of a part. A second state has a named model, such as `v-model:open`.
-- A `default*` prop, such as `defaultValue` or `defaultOpen`, gives the first value of a part that you do not bind. The part reads it at its mount only.
+- A `default*` prop, such as `defaultValue` or `defaultOpen`, gives the first value of a part that you do not bind. The part reads it at its mount. A form control also reads it at a native reset of its form.
 - A model that is not `undefined` controls the part, also with no update listener. After a change of the user, the part shows the new value only when you write it to the model.
 - A model of `undefined` makes the part own its state again. The part keeps the value that it has.
 
@@ -79,7 +79,7 @@ For example, this dialog opens after a timeout, with no trigger:
 
 <<< ../examples/customization/Controlled.vue{20}
 
-A native reset of the form puts a form control back to its value at the mount. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset.
+A native reset of the form gives a form control the model of its mount. With no model at the mount, the control takes the `default*` prop that it has at the reset, as a native control does. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset. The field of the control is then not dirty.
 
 ## Differences from Base UI
 
