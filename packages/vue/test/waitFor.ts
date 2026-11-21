@@ -1,4 +1,5 @@
 import { getConfig } from '@testing-library/dom';
+import { endedTests } from './endedTests';
 
 const WAIT_FRAMES = 180;
 
@@ -44,8 +45,11 @@ function isPromiseLike(value: unknown): boolean {
  * last call gives the full error, which reports the roles of the container.
  * It rejects with a `TypeError` when `callback` returns a promise, and it does not call `callback`
  * again. Testing Library waits for such a promise, and it calls `callback` again after a rejection.
+ * It rejects when its test ends first. After a time-out, the function of the test goes on when its
+ * wait ends, and the rejection stops it there, so its next steps do not run in the next test.
  */
 export function waitFor<T>(callback: () => T): Promise<T> {
+  const endedAtCall = endedTests();
   return new Promise<T>((resolve, reject) => {
     let remainingFrames = WAIT_FRAMES;
     let lastError: unknown;
@@ -62,6 +66,11 @@ export function waitFor<T>(callback: () => T): Promise<T> {
     }
     function check(isLastCall: boolean) {
       if (isSettled) {
+        return;
+      }
+      if (endedTests() !== endedAtCall) {
+        settle();
+        reject(new Error('The test ended before `waitFor` ended.'));
         return;
       }
       try {
