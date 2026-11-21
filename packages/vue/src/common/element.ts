@@ -14,8 +14,14 @@ export interface AsProps {
    * A tag or a component that the part renders in place of its own element, with the same
    * attributes and content. The `element` slot wins over it.
    */
-  as?: Extract<keyof HTMLElementTagNameMap, string> | Component;
+  as?: Extract<keyof HTMLElementTagNameMap, string> | Component | GenericComponent;
 }
+
+/**
+ * vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that
+ * function when the SFC has a required slot. At run time the SFC is a component object.
+ */
+type GenericComponent = (props: any, ...args: any[]) => unknown;
 
 /**
  * The scope of the `element` slot of a part. Bind `props` on the element with `v-bind`, and give
