@@ -279,13 +279,16 @@ export function usePlacement(
               props.sticky || options.shiftAcross?.()
                 ? undefined
                 : limitShift((state) => {
-                    const arrow = arrowElement.value?.getBoundingClientRect();
+                    const arrow = arrowElement.value;
                     if (!arrow) return {};
                     const vertical = getSideAxis(getSide(state.placement)) === 'y';
                     const room = vertical
                       ? padding.value.left + padding.value.right
                       : padding.value.top + padding.value.bottom;
-                    return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
+                    const size =
+                      (vertical ? arrow.offsetWidth : arrow.offsetHeight) *
+                      relativeZoom(arrow, state.elements.floating);
+                    return { offset: size / 2 + room / 2 };
                   }),
           });
     // https://floating-ui.com/docs/flip#combining-with-shift

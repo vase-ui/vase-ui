@@ -20,6 +20,7 @@ import { Select } from '@vase-ui/vue/select';
 import { Toast } from '@vase-ui/vue/toast';
 import { Tooltip } from '@vase-ui/vue/tooltip';
 import { recordStyleProperty } from './recordStyleProperty';
+import { scaleOrigin } from './scaleOrigin';
 import SelectLayout from './fixtures/SelectLayout.vue';
 import VaporPopupLayout from './fixtures/VaporPopupLayout.vue';
 
@@ -143,16 +144,6 @@ it.runIf(isVaporApp)(
     expect(popup.style.getPropertyValue('--popup-width')).toBe('');
   },
 );
-
-/** The point that a scale of `element` about `var(--transform-origin)` keeps in its place. */
-function scaleOrigin(element: HTMLElement) {
-  element.style.transformOrigin = 'var(--transform-origin)';
-  const before = element.getBoundingClientRect();
-  element.style.scale = '0.5';
-  const after = element.getBoundingClientRect();
-  element.style.scale = '';
-  return { x: 2 * after.left - before.left, y: 2 * after.top - before.top };
-}
 
 describe('VUE-194: the transform origin of a popup with a margin', () => {
   const popup = { 'data-testid': 'popup', style: 'width: 120px; margin: 16px' };
@@ -375,7 +366,7 @@ describe('VUE-194: the transform origin of a popup with a margin', () => {
       const positioner = () => screen.getByTestId('positioner');
       await waitFor(() => expect(positioner().style.visibility).toBe(''));
       await waitFor(() =>
-        expect(positioner().style.getPropertyValue('--transform-origin')).not.toBe(''),
+        expect(positioner().style.getPropertyValue('--transform-origin')).toMatch(/px/),
       );
       const box = anchor.getBoundingClientRect();
       const origin = scaleOrigin(screen.getByTestId('popup'));
