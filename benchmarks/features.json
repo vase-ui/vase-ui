@@ -114,7 +114,7 @@
             },
             "ark-ui": {
               "value": "yes",
-              "source": "https://ark-ui.com/vue/docs/components/dialog"
+              "source": "https://ark-ui.com/vue/docs/components/dialog#nested"
             },
             "headless-ui": {
               "value": "yes",
@@ -163,6 +163,324 @@
               "value": "yes",
               "note": "`[data-nested-dialog-open]` and `--nested-dialogs`.",
               "source": "https://base-ui.com/react/components/dialog#nested-dialogs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drawer",
+      "rows": [
+        {
+          "feature": "A swipe closes the drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#features"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Preview in the docs.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#swipe-direction"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#anatomy"
+            }
+          }
+        },
+        {
+          "feature": "Snap points",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer#snap-points"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/drawer#snap-points"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#snap-points"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#snap-points"
+            }
+          }
+        },
+        {
+          "feature": "A drawer that opens from a drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://vase-ui.com/components/drawer#nested-drawers"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` styles the drawer below.",
+              "source": "https://reka-ui.com/docs/components/drawer#content"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#props"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "source": "https://base-ui.com/react/components/drawer#nested-drawers"
+            }
+          }
+        },
+        {
+          "feature": "A swipe from the edge of the screen opens the drawer",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/drawer#swipe-to-open"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `SwipeArea` part.",
+              "source": "https://reka-ui.com/docs/components/drawer#swipearea"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `SwipeArea` part. The docs do not describe it.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#props"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/drawer#swipe-to-open"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Toast",
+      "rows": [
+        {
+          "feature": "A toast manager that a script calls",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://vase-ui.com/components/toast#global-manager"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://reka-ui.com/docs/components/toast#global-manager"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`createToaster`.",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "`useNotifications`, with Snackbar.",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`createToastManager` and `useToastManager`.",
+              "source": "https://base-ui.com/react/components/toast#global-manager"
+            }
+          }
+        },
+        {
+          "feature": "Toasts in a stack",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`--toast-index`, and `[data-expanded]` while the pointer or the focus is on the viewport.",
+              "source": "https://vase-ui.com/components/toast#stacking-and-animations"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`--reka-toast-index`, and `[data-expanded]` on the viewport.",
+              "source": "https://reka-ui.com/docs/components/toast#stacking-toasts"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "The `overlap` prop.",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "partial",
+              "note": "An example of the docs stacks the toasts with its own CSS.",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`--toast-index`, and `[data-expanded]` on the viewport.",
+              "source": "https://base-ui.com/react/components/toast#stacking-and-animations"
+            }
+          }
+        },
+        {
+          "feature": "A swipe closes a toast",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/toast#general-usage"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `swipe-direction` prop.",
+              "source": "https://reka-ui.com/docs/components/toast#animating-swipe-gesture"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "The `swipeDirection` prop.",
+              "source": "https://base-ui.com/react/components/toast#root"
+            }
+          }
+        },
+        {
+          "feature": "A screen reader announces an important toast at once",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`priority: 'high'`.",
+              "source": "https://vase-ui.com/components/toast#add-method"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `type` prop: `foreground` or `background`.",
+              "source": "https://reka-ui.com/docs/components/toast#sensitivity"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "The `urgent` prop.",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`priority: 'high'`.",
+              "source": "https://base-ui.com/react/components/toast#add-method"
+            }
+          }
+        },
+        {
+          "feature": "A toast next to the element that it is about",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/toast#anchored-toasts"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "The `ToastPositioner` part.",
+              "source": "https://reka-ui.com/docs/components/toast#anchored-toasts"
+            },
+            "ark-ui": {
+              "value": "no",
+              "source": "https://ark-ui.com/vue/docs/components/toast"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No toast component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
+            },
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/toast#anchored-toasts"
             }
           }
         }
@@ -454,6 +772,45 @@
       ]
     },
     {
+      "name": "Layout",
+      "rows": [
+        {
+          "feature": "Resizable panels",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Resizable.",
+              "source": "https://vase-ui.com/components/resizable"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Splitter.",
+              "source": "https://reka-ui.com/docs/components/splitter"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Splitter. Preview in the docs.",
+              "source": "https://ark-ui.com/vue/docs/components/splitter"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Splitter.",
+              "source": "https://0.vuetifyjs.com/components/semantic/splitter"
+            },
+            "base-ui": {
+              "value": "no",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Forms",
       "rows": [
         {
@@ -594,6 +951,38 @@
               "source": "https://base-ui.com/react/overview/quick-start"
             }
           }
+        },
+        {
+          "feature": "The type of a date or time value",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "Temporal",
+              "note": "A browser with no `Temporal` needs a polyfill.",
+              "source": "https://vase-ui.com/handbook/dates-and-times#why-temporal"
+            },
+            "reka-ui": {
+              "value": "@internationalized/date",
+              "source": "https://reka-ui.com/docs/guides/dates"
+            },
+            "ark-ui": {
+              "value": "@internationalized/date",
+              "source": "https://ark-ui.com/vue/docs/components/date-picker"
+            },
+            "headless-ui": {
+              "value": "No date components",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "A text, such as 09:30",
+              "note": "The value of Time Picker.",
+              "source": "https://0.vuetifyjs.com/components/forms/time-picker"
+            },
+            "base-ui": {
+              "value": "No date components",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
         }
       ]
     },
@@ -665,6 +1054,40 @@
             "base-ui": {
               "value": "37",
               "note": "The component pages of the docs.",
+              "source": "https://base-ui.com/llms.txt"
+            }
+          }
+        },
+        {
+          "feature": "Components of Base UI",
+          "kind": "fact",
+          "cells": {
+            "vase-ui": {
+              "value": "37 of 37",
+              "source": "https://vase-ui.com/parity"
+            },
+            "reka-ui": {
+              "value": "33 of 37",
+              "note": "No Button, Fieldset, Input or Meter. Dropdown Menu is Menu, Hover Card is Preview Card and Pin Input is OTP Field.",
+              "source": "https://reka-ui.com/llms.txt"
+            },
+            "ark-ui": {
+              "value": "30 of 37",
+              "note": "No Autocomplete, Button, Form, Menubar, Meter, Separator or Toolbar. Alert Dialog is a `role` of Dialog, Context Menu is a trigger of Menu, Input is a part of Field, Hover Card is Preview Card, Number Input is Number Field and Pin Input is OTP Field.",
+              "source": "https://ark-ui.com/llms.txt"
+            },
+            "headless-ui": {
+              "value": "9 of 37",
+              "note": "Combobox, Dialog, Menu, Popover, Radio Group, Switch and Tabs. Disclosure is Collapsible and Listbox is Select.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "25 of 37",
+              "note": "No Autocomplete, Context Menu, Drawer, Field, Fieldset, Menubar, Meter, Navigation Menu, Preview Card, Scroll Area, Separator or Toolbar. ExpansionPanel is Accordion, Otp is OTP Field and Snackbar is Toast.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "37 of 37",
               "source": "https://base-ui.com/llms.txt"
             }
           }
