@@ -2017,7 +2017,9 @@ describe('the placement', () => {
       expect(Math.abs(overlap - 1.5 * (10 / 2 + (5 + 5) / 2))).toBeLessThanOrEqual(0.5);
     });
 
-    test.each([
+    // Floating UI reads the zoom of the floating element from `Element.currentCSSZoom`, which the
+    // WebKit of Playwright on Linux does not have (floating-ui/floating-ui#3492).
+    test.skipIf(!('currentCSSZoom' in Element.prototype)).each([
       { zoomed: 'html', positionMethod: 'absolute' },
       { zoomed: 'body', positionMethod: 'absolute' },
       { zoomed: 'html', positionMethod: 'fixed' },
