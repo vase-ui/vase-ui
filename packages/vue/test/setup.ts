@@ -46,6 +46,22 @@ if (typeof document !== 'undefined') {
     { capture: true },
   );
 
+  // In Chromium on Linux, a real touch drag can end with a fling that continues after the test. The
+  // first touch of a later test then stops the fling, and it gets no compatibility mouse events and
+  // no `click` (N11 of `test/measurements/popup.test.ts`). A touch that moves sends a `pointermove`,
+  // also before the `pointercancel` of a drag that the browser takes. After a test with a touch
+  // `pointermove`, the setup stops a fling.
+  let hasTouchMoved = false;
+  window.addEventListener(
+    'pointermove',
+    (event) => {
+      if (event.isTrusted && event.pointerType === 'touch') {
+        hasTouchMoved = true;
+      }
+    },
+    { capture: true },
+  );
+
   // A Firefox validation popup can take real presses in the next test. Firefox listens for blur
   // after it focuses the invalid control. It misses the blur if the control redirects focus, as a
   // radio's hidden input does. Removing a focused control can also leave the popup open.
@@ -144,15 +160,21 @@ if (typeof document !== 'undefined') {
   // the test set in an earlier task can run in the next test. Vitest runs the `onTestFinished`
   // hooks after the `afterEach` hooks and in reverse order. This hook is the second that a test
   // registers, after the hook of `failOnReportedMessages`. The wait for the commands, the close of
-  // the validation popup, the pointer move and the wait for a timer then run after each unmount
-  // and before the check of the messages. A command can put the pointer in the page, so the move
-  // comes after the wait for the commands.
+  // the validation popup, the stop of a fling, the pointer move and the wait for a timer then run
+  // after each unmount and before the check of the messages. A command can put the pointer in the
+  // page, so the move comes after the wait for the commands.
   beforeEach(() => {
     onTestFinished(async () => {
       endedTestCount += 1;
       await Promise.allSettled(runningCommands);
       if (hadInvalidEvent) {
         closeValidationPopup();
+      }
+      // The touch that stops a fling puts a pointer in the page, so it comes before the move.
+      if (hasTouchMoved) {
+        hasTouchMoved = false;
+        const { stopFling } = await import('./pointer');
+        await stopFling();
       }
       if (isPointerInPage) {
         isPointerInPage = false;

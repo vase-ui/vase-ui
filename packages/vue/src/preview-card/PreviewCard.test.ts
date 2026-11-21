@@ -39,6 +39,26 @@ function rootEvents(log: string[], props: Props = {}) {
   });
 }
 
+/**
+ * Resolves with the value of `read` `ms` milliseconds after the next `type` event of `target`. A
+ * command of `userEvent` can take more time than a delay, so a wait that starts after the command
+ * can end after the delay. The window gets the event in the capture phase, before the listeners of
+ * the parts. A timer of `ms` or more that a part starts in that event or later runs after this one
+ * (https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#run-steps-after-a-timeout).
+ */
+function readAfter<T>(target: Element, type: string, ms: number, read: () => T) {
+  return new Promise<T>((resolve) => {
+    const remove = () => window.removeEventListener(type, listener, true);
+    function listener(event: Event) {
+      if (event.target !== target) return;
+      remove();
+      setTimeout(() => resolve(read()), ms);
+    }
+    window.addEventListener(type, listener, true);
+    onTestFinished(remove);
+  });
+}
+
 async function opened() {
   await waitFor(() => expect(popup()).not.toBe(null));
   return popup()!;
@@ -158,15 +178,15 @@ describe('the root', () => {
       root: rootEvents(log),
       triggers: [{ key: 't', attrs: { delay: 100, closeDelay: 100 } }],
     });
+    const beforeOpen = readAfter(trigger(), 'pointerenter', 50, popup);
     await userEvent.hover(trigger());
-    await wait(50);
-    expect(popup()).toBe(null);
+    expect(await beforeOpen).toBe(null);
     await opened();
     expect(trigger()).toHaveAttribute('data-popup-open');
     expect(document.activeElement).not.toBe(trigger());
+    const beforeClose = readAfter(trigger(), 'pointerleave', 50, popup);
     await userEvent.hover(byId('outside'));
-    await wait(50);
-    expect(popup()).not.toBe(null);
+    expect(await beforeClose).not.toBe(null);
     await closed();
     expect(log).toEqual([
       'openChange true trigger-hover',
@@ -600,9 +620,9 @@ describe('the hover', () => {
       await opened();
       await placed();
       await userEvent.hover(trigger());
+      const beforeClose = readAfter(trigger(), 'pointerleave', 20, popup);
       await userEvent.hover(byId('outside'));
-      await wait(20);
-      expect(popup()).not.toBe(null);
+      expect(await beforeClose).not.toBe(null);
       await closed();
       expect(log.at(-2)).toBe('openChange false trigger-hover');
     },
@@ -650,11 +670,12 @@ describe('the hover', () => {
       { key: 'other', attrs: { id: 'other', delay: 0 } },
     ]);
     const { trigger } = await mountCard({ root: { defaultTriggerId: 'other' }, triggers });
+    // The link starts its delay in its own listener of the same event, before this one.
+    trigger().addEventListener('pointerenter', () => triggers.splice(1, 1), { once: true });
+    const beforeOpen = readAfter(trigger(), 'pointerenter', 50, popup);
     await userEvent.hover(trigger());
-    triggers.splice(1, 1);
-    await nextTick();
-    await wait(50);
-    expect(popup()).toBe(null);
+    expect(await beforeOpen).toBe(null);
+    expect(byId('other')).toBe(null);
     await opened();
     expect(trigger()).toHaveAttribute('data-popup-open');
   });
@@ -705,13 +726,13 @@ describe('the hover', () => {
 describe('the focus', () => {
   test('Tab to the link opens the card after `delay` with `trigger-focus`; Tab away closes it', async () => {
     const log: string[] = [];
-    await mountCard({
+    const { trigger } = await mountCard({
       root: rootEvents(log),
       triggers: [{ key: 't', attrs: { delay: 100 } }],
     });
+    const beforeOpen = readAfter(trigger(), 'focusin', 50, popup);
     await tabToLink();
-    await wait(50);
-    expect(popup()).toBe(null);
+    expect(await beforeOpen).toBe(null);
     await opened();
     await userEvent.keyboard(TAB);
     expect(document.activeElement).toBe(byId('outside'));
