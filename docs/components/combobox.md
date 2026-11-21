@@ -93,7 +93,7 @@ To fix the types, give the part its type arguments in an instantiation expressio
 
 A `createItems()` collection has items that differ from its selection values. The root needs the third type argument, `Item`, to accept such a collection. Without it, the type check refuses the collection.
 
-A wrapper that declares `defineProps<ComboboxRootProps<Value, Multiple, Item>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `false` for each Boolean prop that its consumer omits, such as `open`, and the combobox stays closed.
+A wrapper that declares `defineProps<ComboboxRootProps<Value, Multiple, Item>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `false` for each Boolean prop that its consumer omits, such as `open`, and the combobox stays closed. [Wrap a part](/handbook/composition#wrap-a-part) shows a generic wrapper that keeps the types.
 
 ### Value selection with IDs
 

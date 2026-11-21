@@ -98,7 +98,9 @@ A template ref on a part gives the members that the part exposes. `element` is i
 
 Declare only your own props and events in a wrapper. Vue gives each attribute and listener that the wrapper does not declare to its root, the part. The part then keeps its default, or the value of its parent.
 
-To type the props and the events of the part, extend its `Props` and `Emits` types with `/* @vue-ignore */`. Vue ignores these types at run time, so the wrapper declares no prop and no event. The type check of the caller knows each prop, each `v-model` and each event of the part.
+To type the props and the events of the part, extend its `Props` and `Emits` types with `/* @vue-ignore */`. The SFC compiler skips these types, so the wrapper declares no prop and no event at run time. The type check of the caller knows each prop, each `v-model` and each event of the part:
+
+<<< ../examples/composition/MyDialog.vue{5-9}
 
 A wrapper of a generic part, such as `Select.Root`, has the type parameters of the part. The value then keeps the type of the `v-model` of the caller:
 
@@ -112,14 +114,12 @@ Do not bind an attribute that you declared and that can be `undefined`, such as 
 
 ### Reka UI and shadcn-vue
 
-A wrapper in Reka UI or shadcn-vue declares the props and the emits of the part. It gives them to the part with `useForwardPropsEmits(props, emits)`. In Vase UI, Vue gives the part what the wrapper does not declare:
+A wrapper of a Reka UI part, such as a shadcn-vue component, declares the props and the emits of the part. It gives them to the part with `useForwardPropsEmits(props, emits)`. In Vase UI, Vue gives the part what the wrapper does not declare:
 
 - `defineProps<DialogRootProps>()` becomes `defineProps<Props>()`, with `interface Props extends /* @vue-ignore */ DialogRootProps {}`.
 - Vue does the Boolean casting only for a declared prop, so the undeclared props need no `useForwardProps`. Give a declared Boolean prop the default `undefined`.
 - `defineEmits<DialogRootEmits>()` becomes `defineEmits<Emits>()`, with `interface Emits extends /* @vue-ignore */ DialogRootEmits {}`. Vue gives each listener to the part, so the wrapper needs no `useEmitAsProps`.
 - `v-bind="forwarded"` is not necessary when the part is the root of the wrapper. Else, set `defineOptions({ inheritAttrs: false })` and write `v-bind="$attrs"` on the part.
-
-<<< ../examples/composition/MyDialog.vue{5-9,13}
 
 ## Portals, Transition and KeepAlive
 
