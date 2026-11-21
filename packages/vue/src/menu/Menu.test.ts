@@ -62,11 +62,11 @@ function centerOf(element: Element) {
 }
 
 /** Opens the menu with Enter on the trigger: the first item has the focus. */
-async function openWithKeyboard(trigger: HTMLElement) {
+async function openWithKeyboard(trigger: HTMLElement, first = 'a') {
   trigger.focus();
   await userEvent.keyboard('{Enter}');
   await opened();
-  await waitFor(() => expect(active()?.getAttribute('data-key')).toBe('a'));
+  await waitFor(() => expect(active()?.getAttribute('data-key')).toBe(first));
 }
 
 describe('the parts', () => {
@@ -900,8 +900,7 @@ describe('the items', () => {
         },
       },
     });
-    await openWithKeyboard(trigger).catch(() => undefined);
-    item('link').focus();
+    await openWithKeyboard(trigger, 'link');
     let space: KeyboardEvent | undefined;
     item('link').addEventListener('keydown', (event) => (space ??= event));
     await userEvent.keyboard(' ');
