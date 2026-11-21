@@ -320,21 +320,15 @@ function elementProps() {
     });
   }
   if (isInput.value) {
-    // Vue before 3.5.14 sets the key `autocorrect` as a Boolean property, and `off` then turns the
-    // correction on in WebKit. The key `autoCorrect` is an attribute.
     Object.assign(own, {
       autocomplete: 'off',
-      autoCorrect: 'off',
+      autocorrect: 'off',
       autocapitalize: 'none',
       spellcheck: 'false',
     });
   }
   const fieldOwn = isControl.value && field ? controlAttributes(field) : {};
-  // A value of the developer for `autocorrect` takes the key of the part, so the element has one
-  // attribute.
-  const { autocorrect, ...given } = attrs;
-  if (autocorrect !== undefined) given.autoCorrect = autocorrect;
-  const merged = mergeProps(fieldOwn, own, given);
+  const merged = mergeProps(fieldOwn, own, attrs);
   if (isControl.value && field) {
     merged['aria-describedby'] = describedByWith(field, attrs['aria-describedby']);
   }

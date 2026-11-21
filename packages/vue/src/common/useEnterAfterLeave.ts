@@ -1,9 +1,10 @@
 import { shallowRef, watch, type Ref } from 'vue';
 
-// Remove this file when the lowest Vue that Vase UI supports has the fix of https://github.com/vuejs/core/issues/16359.
+// Remove this file when the Vue 3.6 of the tests has the fix of
+// https://github.com/vuejs/core/issues/16359 (3.6.0-rc.16). Vue 3.5.46 has it.
 /**
  * Holds back the new element of a part while its old element leaves in a `<Transition>`. Vue
- * gives a new element that enters during that leave no enter
+ * 3.6.0-rc.15 gives a new element that enters during that leave no enter
  * (test/measurements/collapsible.test.ts), so the part renders its element only while `waiting` is
  * `false`.
  */

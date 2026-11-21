@@ -119,20 +119,12 @@ const ownProps = computed(() => ({
   value: props.value,
   disabled: isDisabled.value,
   'aria-controls': isParent.value ? group?.parent.controls : undefined,
-  // The server HTML has no `:indeterminate`.
+  // `indeterminate` is a DOM property with no attribute, so the server HTML has no
+  // `:indeterminate`.
+  '.indeterminate': isIndeterminate.value,
   'data-indeterminate': isIndeterminate.value ? '' : undefined,
   ...attributes.value,
 }));
-
-// HTML has no attribute for `indeterminate`, so the server HTML has none, and the property comes
-// after the mount.
-watch(
-  [element, isIndeterminate],
-  ([el, value]) => {
-    if (el) el.indeterminate = value;
-  },
-  { flush: 'post', immediate: true },
-);
 
 useFieldControl(field, element, {
   // The `element` slot can give the element another `id`.

@@ -1,4 +1,4 @@
-import { computed, mergeProps, onMounted, onUnmounted, useId, watch, type Ref } from 'vue';
+import { computed, mergeProps, onUnmounted, useId, watch, type Ref } from 'vue';
 import { givenId } from '../common/id';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import type { CollapsiblePart } from './part';
@@ -55,14 +55,6 @@ export function useCollapsiblePanel(
       style.setProperty(variable, `${sizes[index]}px`),
     );
   }
-
-  // Before Vue 3.5.41 and 3.6.0-rc.3, the server writes a bare `hidden`, and the hydration keeps it
-  // (test/measurements/collapsible.test.ts). Find-in-page then skips the panel.
-  onMounted(() => {
-    if (!part.open && options.hiddenUntilFound()) {
-      options.element.value?.setAttribute('hidden', 'until-found');
-    }
-  });
 
   function onBeforematch(event: Event) {
     // The event bubbles from a panel in the panel.

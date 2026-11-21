@@ -4,7 +4,7 @@
     "https://vuejs.org/guide/built-ins/teleport.html#disabling-teleport",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/dialog/portal/DialogPortal.tsx#L33-L42",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L176-L181",
-    "https://github.com/vuejs/core/blob/v3.5.12/packages/runtime-core/src/components/Teleport.ts#L387-L407"
+    "https://github.com/vuejs/core/blob/v3.5.46/packages/runtime-core/src/components/Teleport.ts#L486-L512"
   ],
   "behavior": "Each Portal part takes `disabled`, as `<Teleport>` does. A disabled portal renders its content in place, also in the server HTML, and it ignores `to`. A dialog in place that is not modal has the tab order of the document. A modal dialog in place keeps the focus in its popup. Base UI renders its portal only after the mount.",
   "dueWith": "packages/react/src/dialog/portal/DialogPortal.tsx"

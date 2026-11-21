@@ -34,9 +34,9 @@ providePortalTarget((inherited) => root.portalTarget ?? inherited);
 
 // The server and the hydration render a kept content in its item with no `<Teleport>`: the server
 // render of a component with no `ssrRender`, such as one of the package in Nuxt, drops a
-// `<Teleport>` with no target, and Vue 3.5.12 cannot hydrate one. The `<Teleport>` comes after the
-// mount, disabled while no viewport is there, and the kept content mounts again in it. A
-// client-only mount renders the `<Teleport>` at once, so the kept content mounts one time.
+// `<Teleport>` with no target. The `<Teleport>` comes after the mount, disabled while no viewport
+// is there, and the kept content mounts again in it. A client-only mount renders the `<Teleport>`
+// at once, so the kept content mounts one time.
 const clientOnly =
   // eslint-disable-next-line no-restricted-globals -- `setup` has no element for `ownerDocument`. The typeof check tells a server from a client.
   typeof document !== 'undefined' && getCurrentInstance()?.vnode.el === null;

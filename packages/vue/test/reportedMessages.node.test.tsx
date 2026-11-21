@@ -42,7 +42,7 @@ describe('reported messages in Node', () => {
     {
       name: 'reports the active effect message on Vue 3.5',
       text: activeEffectMessage,
-      vueVersion: '3.5.45',
+      vueVersion: '3.5.46',
       isReported: true,
     },
     {
