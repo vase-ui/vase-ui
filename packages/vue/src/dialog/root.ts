@@ -122,7 +122,7 @@ export function useDialogRoot<Payload>(
     lockScroll: modal.value === true,
     // With a backdrop, the page gets no pointer, and a release in the popup cancels a press.
     pressStart: modal.value === 'trap-focus' && backdrops.value === 0,
-    touchDrag: modal.value !== true && backdrops.value === 0,
+    tapEnd: modal.value !== true && backdrops.value === 0,
     triggerInUse: false,
   }));
 
