@@ -39,6 +39,7 @@ import { Popover } from '@vase-ui/vue/popover';
 
 .popup {
   --background: white;
+  position: relative;
   width: 15rem;
   padding: 0.75rem;
   border: 1px solid;
@@ -81,8 +82,8 @@ import { Popover } from '@vase-ui/vue/popover';
     bottom: 0;
     left: 50%;
     box-sizing: border-box;
-    width: 8.5px;
-    height: 8.5px;
+    width: calc(6px * sqrt(2));
+    height: calc(6px * sqrt(2));
     border: 1px solid;
     background-color: var(--background);
     transform: translate(-50%, 50%) rotate(45deg);
