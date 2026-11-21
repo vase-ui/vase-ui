@@ -20,12 +20,14 @@ import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
 
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 const popup = () => byTestId('popup');
+const popups = () => [...document.querySelectorAll<HTMLElement>('[data-testid="popup"]')];
 const byId = (id: string) => document.getElementById(id)!;
 // The fixed element of a modal dialog.
 const BLOCK = 'body > div[role="presentation"]:not([data-testid])';
@@ -1327,13 +1329,23 @@ describe('the viewport, the backdrop and the leave', () => {
     const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
     await userEvent.click(trigger);
     const first = await opened();
-    // The leave lasts 300 ms. A press after its end also gives one popup.
+    const backdrop = byTestId('backdrop')!;
+    // The click comes in the task where the leave starts. The popup and the backdrop leave in
+    // 300 ms, but Firefox can end the leave of a popup that closes before the first frame of its
+    // enter at the next frame, and the backdrop then leaves alone. So the case reads the page when
+    // the new popup comes.
+    const reopened = readWhen(
+      () => first.classList.contains('pop-leave-active'),
+      () => trigger.click(),
+    );
+    const leaving = readWhen(
+      () => popups().some((element) => element !== first),
+      () => [first, backdrop].filter((element) => element.isConnected),
+    );
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(trigger);
-    expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
-    await waitFor(() => expect(first.isConnected).toBe(false));
-    const second = await opened();
-    await waitFor(() => expect(second.className).toBe(''));
+    await reopened;
+    expect(await leaving).toEqual([]);
+    await waitFor(() => expect(popup()!.className).toBe(''));
   });
 
   test('a press in a popup in a viewport keeps its default action, so a field takes the focus', async () => {
