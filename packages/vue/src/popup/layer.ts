@@ -417,7 +417,9 @@ function onPointerup(event: PointerEvent) {
     // The close takes the backdrop or the fixed element away from under the tap. The browser then
     // gives the `click` of the tap to the element of the page under it, unless the `touchend` of
     // the tap is canceled (test/measurements/popup.test.ts).
-    if (onLayer) addEventListener(target, 'touchend', (end) => end.preventDefault(), { once: true });
+    if (onLayer) {
+      addEventListener(target, 'touchend', (end) => end.preventDefault(), { once: true });
+    }
     return;
   }
   pressing = false;
