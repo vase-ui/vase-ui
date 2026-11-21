@@ -4,8 +4,6 @@ import { Slider } from '@ark-ui/vue/slider';
 
 <template>
   <Slider.Root :default-value="[50]">
-    <Slider.Label>Label</Slider.Label>
-    <Slider.ValueText />
     <Slider.Control>
       <Slider.Track>
         <Slider.Range />

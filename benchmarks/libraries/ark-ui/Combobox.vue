@@ -29,7 +29,6 @@ function filterOptions(details: Combobox.InputValueChangeDetails) {
           <Combobox.Empty>No results</Combobox.Empty>
           <Combobox.Item v-for="item in collection.items" :key="item" :item="item">
             <Combobox.ItemText>{{ item }}</Combobox.ItemText>
-            <Combobox.ItemIndicator />
           </Combobox.Item>
         </Combobox.Content>
       </Combobox.Positioner>

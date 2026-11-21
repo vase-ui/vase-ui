@@ -4,7 +4,7 @@ import { Menu } from '@ark-ui/vue/menu';
 
 <template>
   <Menu.Root>
-    <Menu.Trigger data-bench="trigger">Open<Menu.Indicator /></Menu.Trigger>
+    <Menu.Trigger data-bench="trigger">Open</Menu.Trigger>
     <Menu.Positioner>
       <Menu.Content data-bench="popup">
         <Menu.Item value="item-1">Item 1</Menu.Item>

@@ -4,10 +4,15 @@ import { Tooltip } from '@ark-ui/vue/tooltip';
 
 <template>
   <Tooltip.Root>
-    <Tooltip.Trigger data-bench="trigger">Trigger</Tooltip.Trigger>
+    <Tooltip.Trigger data-bench="trigger">Open</Tooltip.Trigger>
     <Teleport to="body">
       <Tooltip.Positioner>
-        <Tooltip.Content data-bench="popup">Tooltip</Tooltip.Content>
+        <Tooltip.Content data-bench="popup">
+          <Tooltip.Arrow>
+            <Tooltip.ArrowTip />
+          </Tooltip.Arrow>
+          Tooltip
+        </Tooltip.Content>
       </Tooltip.Positioner>
     </Teleport>
   </Tooltip.Root>

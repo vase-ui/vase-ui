@@ -12,14 +12,12 @@ const collection = createListCollection({ items: options });
       <Select.Trigger data-bench="trigger">
         <Select.ValueText />
       </Select.Trigger>
-      <Select.Indicator />
     </Select.Control>
     <Teleport to="body">
       <Select.Positioner>
         <Select.Content data-bench="popup">
           <Select.Item v-for="item in collection.items" :key="item" :item="item">
             <Select.ItemText>{{ item }}</Select.ItemText>
-            <Select.ItemIndicator />
           </Select.Item>
         </Select.Content>
       </Select.Positioner>
