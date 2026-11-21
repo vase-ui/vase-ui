@@ -42,11 +42,8 @@ export interface Layer {
    * at it.
    */
   readonly triggerInUse: boolean;
-  /**
-   * A touch outside closes the popup at its end and at a drag. Else only a tap closes it, at
-   * `click`.
-   */
-  readonly touchDrag: boolean;
+  /** A tap outside closes the popup at its `pointerup`. Else a tap closes it at its `click`. */
+  readonly tapEnd: boolean;
   /**
    * The element that the block leaves free, in the place of the active trigger of `triggerInUse`.
    * `null` leaves none.
@@ -156,8 +153,8 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     get triggerInUse() {
       return current.value.triggerInUse;
     },
-    get touchDrag() {
-      return current.value.touchDrag;
+    get tapEnd() {
+      return current.value.tapEnd;
     },
     get hole() {
       return current.value.hole;
@@ -337,15 +334,15 @@ function outsideEntries(event: Event) {
   );
 }
 
-interface TouchGesture {
+/** A touch that started outside, while it can be a tap. */
+interface Tap {
   x: number;
   y: number;
   time: number;
-  moved: boolean;
   entries: Entry[];
 }
 
-let touch: TouchGesture | null = null;
+let tap: Tap | null = null;
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
@@ -354,22 +351,21 @@ function onPointerdown(event: PointerEvent) {
   if (event.pointerType === 'touch') {
     // A second touch makes a pinch, which zooms the page. The gesture then closes nothing.
     if (!event.isPrimary) {
-      touch = null;
+      tap = null;
       for (const entry of stack) entry.pressOutside = undefined;
       return;
     }
     const outside = outsideEntries(event);
     // A touch that rests more than 1 s selects text or opens the menu of the system.
-    touch = {
+    tap = {
       x: event.clientX,
       y: event.clientY,
       time: event.timeStamp,
-      moved: false,
-      entries: outside.filter((entry) => entry.layer.touchDrag),
+      entries: outside.filter((entry) => entry.layer.tapEnd),
     };
-    // A layer with no drag rule closes at the `click` of a tap.
+    // The other layers close at the `click` of a tap.
     for (const entry of stack) {
-      entry.pressOutside = entry.layer.touchDrag ? undefined : outside.includes(entry);
+      entry.pressOutside = entry.layer.tapEnd ? undefined : outside.includes(entry);
       entry.releaseOutside = undefined;
     }
     return;
@@ -390,22 +386,18 @@ function onPointerdown(event: PointerEvent) {
   );
 }
 
+// A touch that moves more than 10 px drags or scrolls, and is no tap. A drag on an element with
+// `touch-action: none` ends with `pointerup` (test/measurements/popup.test.ts).
 function onPointermove(event: PointerEvent) {
-  if (!touch || event.pointerType !== 'touch') return;
-  const distance = Math.hypot(event.clientX - touch.x, event.clientY - touch.y);
-  if (distance > 5) touch.moved = true;
-  if (distance > 10) {
-    const { entries } = touch;
-    touch = null;
-    closeOutside(event, entries);
-  }
+  if (!tap || event.pointerType !== 'touch') return;
+  if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10) tap = null;
 }
 
 // Chromium on Android opens the menu of the system at a long press of about 650 ms, with
 // `contextmenu`, and sends no `click`. That touch then closes nothing at its end.
 function onContextmenu() {
-  if (!touch) return;
-  touch = null;
+  if (!tap) return;
+  tap = null;
   for (const entry of stack) entry.pressOutside = undefined;
 }
 
@@ -415,10 +407,12 @@ function onPointerup(event: PointerEvent) {
     for (const entry of stack) {
       if (entry.pressOutside !== undefined) entry.releaseOutside = entry.pressOutside;
     }
-    if (!touch) return;
-    const { entries, moved, time } = touch;
-    touch = null;
-    if (moved || event.timeStamp - time < 1000) closeOutside(event, entries);
+    if (!tap) return;
+    const { entries, time } = tap;
+    tap = null;
+    // A touch that scrolls the page ends with `pointercancel` (test/measurements/popup.test.ts),
+    // and it closes nothing (VUE-172).
+    if (event.type === 'pointerup' && event.timeStamp - time < 1000) closeOutside(event, entries);
     return;
   }
   pressing = false;
@@ -433,7 +427,8 @@ function onPointerup(event: PointerEvent) {
 // the edge of the popup (test/measurements/popup.test.ts). The layer reads the press and the
 // release.
 function onClick(event: MouseEvent) {
-  // A click of a key, of a script or of an assistive tool has no press. A touch closes at its end.
+  // A click of a key, of a script or of an assistive tool has no press. A tap closes a layer with
+  // `tapEnd` at its `pointerup`.
   const withPress = event.detail !== 0;
   const outside = outsideEntries(event);
   const entries = fromTop().filter((entry) => {

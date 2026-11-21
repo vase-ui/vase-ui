@@ -810,7 +810,7 @@ describe('the dismissal', () => {
   );
 
   test.skipIf(server.browser !== 'chromium')(
-    'a touch outside closes at its end after a tap or a drag of more than 5 px, and at a move of more than 10 px; a touch that rests more than 1 s closes nothing',
+    'a touch outside closes at the `pointerup` of a tap, also of a tap that moves 8 px; a touch that rests more than 1 s or that moves more than 10 px closes nothing',
     async () => {
       const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');
       try {
@@ -824,28 +824,20 @@ describe('the dismissal', () => {
           popup: { initialFocus: false },
         });
         const point = centerOf(other);
-        let current = await mountPopover(setup());
+        const current = await mountPopover(setup());
         await placed();
         await touchDrag(point, point, 0, 1200);
+        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
         await nextTick();
         expect(popup()).not.toBe(null);
         await touchDrag(point, point, 0);
         await closed();
         current.unmount();
-        current = await mountPopover(setup());
-        await placed();
-        await touchDrag(point, { x: point.x + 8, y: point.y }, 2, 1200);
-        await closed();
-        current.unmount();
         await mountPopover(setup());
         await placed();
-        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await touchDrag(point, { x: point.x + 8, y: point.y }, 2);
         await closed();
-        expect(events).toEqual([
-          'outside-press pointerup',
-          'outside-press pointerup',
-          'outside-press pointermove',
-        ]);
+        expect(events).toEqual(['outside-press pointerup', 'outside-press pointerup']);
       } finally {
         other.remove();
       }

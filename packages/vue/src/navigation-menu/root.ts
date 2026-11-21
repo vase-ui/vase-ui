@@ -185,7 +185,7 @@ export function useNavigationMenuRoot(
     trap: false,
     lockScroll: false,
     triggerInUse: true,
-    touchDrag: true,
+    tapEnd: true,
     inside: inline.value ? [] : [element.value],
   }));
   usePopupFocus(popup, layer, {

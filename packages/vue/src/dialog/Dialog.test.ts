@@ -699,14 +699,34 @@ describe('modal', () => {
       },
     );
 
-    // The fixed element of a modal dialog and the backdrop take each touch from the page. The
-    // backdrop has no scroll of its own, so a drag on it sends `pointermove`.
+    test.each(['trap-focus', false] as const)(
+      'with modal=%s and no backdrop closes at the `pointerup` of a tap',
+      async (modal) => {
+        append('div', surface);
+        const reasons = await touchDialog(modal);
+        await touchDrag(point, point, 1);
+        await closed();
+        expect(reasons).toEqual(['outside-press pointerup']);
+      },
+    );
+
+    // A drag is no tap. The backdrop has no scroll of its own, so a drag on it sends `pointermove`.
     test.each([
-      { modal: true, backdrop: undefined },
-      { modal: 'trap-focus', backdrop: 'position: fixed; inset: 0; touch-action: none' },
-      { modal: false, backdrop: 'position: fixed; inset: 0; touch-action: none' },
+      { modal: true, on: 'the fixed element', backdrop: undefined },
+      {
+        modal: 'trap-focus',
+        on: 'the backdrop',
+        backdrop: 'position: fixed; inset: 0; touch-action: none',
+      },
+      {
+        modal: false,
+        on: 'the backdrop',
+        backdrop: 'position: fixed; inset: 0; touch-action: none',
+      },
+      { modal: 'trap-focus', on: 'the page', backdrop: undefined },
+      { modal: false, on: 'the page', backdrop: undefined },
     ] as const)(
-      'with modal=$modal closes nothing at a drag on the fixed element or the backdrop',
+      'with modal=$modal closes nothing at a drag on $on',
       async ({ modal, backdrop }) => {
         append('div', surface);
         const reasons = await touchDialog(modal, backdrop);
@@ -714,17 +734,6 @@ describe('modal', () => {
         await new Promise((resolve) => setTimeout(resolve, 50));
         expect(popup()).not.toBe(null);
         expect(reasons).toEqual([]);
-      },
-    );
-
-    test.each(['trap-focus', false] as const)(
-      'with modal=%s and no backdrop closes at a drag',
-      async (modal) => {
-        append('div', surface);
-        const reasons = await touchDialog(modal);
-        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
-        await closed();
-        expect(reasons).toEqual(['outside-press pointermove']);
       },
     );
 
