@@ -424,13 +424,13 @@ describe('a real touch that starts outside a native popover', () => {
 
   // Playwright can only tap in WebKit, so the case runs in Chromium. A measurement by hand in Safari
   // on iOS 26.5, in the iPhone 17 Simulator, gives these results:
-  // - A swipe of 150 px that scrolls the page sends `pointermove` at 10 px and at 20 px, then
-  //   `pointercancel`, and no `click`. The popover stays open.
-  // - A move of 20 px sends `click`.
+  // - A swipe of 150 px that scrolls the page sends `pointermove` past 10 px, then `pointercancel`,
+  //   and no `click`. The popover stays open.
+  // - A move of 20 px on `touch-action: none` sends `pointerup` and `click`.
   // - A drag of 60 px on `touch-action: none` sends `pointerup` and no `click`. The popover closes
   //   at that `pointerup`.
   test.skipIf(server.browser !== 'chromium')(
-    'closes at the `click` of a tap and of a move of 8 px; a drag of 40 px on `touch-action: none` sends `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 10 px; neither closes it',
+    'closes at a tap and at a move of 8 px, which send `click`; a drag of 40 px on `touch-action: none` sends `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 10 px; neither closes it',
     async () => {
       html(`<div style="height: 3000px"></div>
         <div id="surface" style="position: fixed; left: 0; bottom: 0; width: 200px; height: 100px; touch-action: none"></div>

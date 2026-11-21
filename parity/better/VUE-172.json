@@ -5,11 +5,12 @@
     "https://w3c.github.io/pointerevents/#the-pointercancel-event",
     "https://github.com/mui/base-ui/issues/1214"
   ],
-  "behavior": "A touch outside an open popup closes it only when the touch is a tap: it ends with `pointerup` in less than 1 s, and it moves 10 px or less. A touch that scrolls the page ends with `pointercancel` and closes nothing, as a native popover stays open in Chromium and WebKit. A drag of more than 10 px closes nothing. In Base UI, a touch that scrolls the page closes a Popover, a Menu or a Select.",
+  "behavior": "A touch outside an open popup closes it only at a tap. A tap ends with `pointerup` in less than 1 s and moves 10 px or less. A touch that scrolls the page ends with `pointercancel` and closes nothing, as a native popover stays open in Chromium and WebKit. A drag of more than 10 px on an element that does not scroll also closes nothing. There, Chromium keeps a native popover open, and Safari closes it. A dialog with `modal` true or with a backdrop closes at the `click` of a tap. In Base UI, a touch that scrolls the page closes a Popover, a Menu or a Select.",
   "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts",
   "families": [
     "popover",
     "dialog",
+    "drawer",
     "menu",
     "context-menu",
     "menubar",

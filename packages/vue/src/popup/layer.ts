@@ -349,7 +349,8 @@ let pressing = false;
 // The layer decides at `pointerdown` which layers the press can close.
 function onPointerdown(event: PointerEvent) {
   if (event.pointerType === 'touch') {
-    // A second touch makes a pinch, which zooms the page. The gesture then closes nothing.
+    // A second touch makes a gesture of two fingers, such as a pinch. It is no tap, and it closes
+    // nothing.
     if (!event.isPrimary) {
       tap = null;
       for (const entry of stack) entry.pressOutside = undefined;

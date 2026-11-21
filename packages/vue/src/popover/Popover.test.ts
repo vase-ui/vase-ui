@@ -11,7 +11,7 @@ import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import PopoverViewportParts from '../../test/fixtures/PopoverViewportParts.vue';
 import PopoverWithDialog from '../../test/fixtures/PopoverWithDialog.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { movePointerThrough, touchDrag } from '../../test/pointer';
+import { firePointer, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { readWhen } from '../../test/wait';
@@ -843,6 +843,35 @@ describe('the dismissal', () => {
       }
     },
   );
+
+  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 10 px, that rests 1 s or that the browser cancels closes nothing', async () => {
+    const other = appendOutside('div', 'width: 100px; height: 100px');
+    const events: string[] = [];
+    await mountPopover({
+      root: {
+        defaultOpen: true,
+        onOpenChange: (_: boolean, details: PopoverRootChangeEventDetails) =>
+          events.push(`${details.reason} ${details.event.type}`),
+      },
+      popup: { initialFocus: false },
+    });
+    await placed();
+    const { x, y } = centerOf(other);
+    const touch = { pointerType: 'touch', isPrimary: true, clientX: x, clientY: y };
+    const moved = { ...touch, clientX: x + 11 };
+    await firePointer.down(other, { ...touch, timeStamp: 1000 });
+    await firePointer.move(other, { ...moved, timeStamp: 1050 });
+    await firePointer.up(other, { ...moved, timeStamp: 1100 });
+    await firePointer.down(other, { ...touch, timeStamp: 2000 });
+    await firePointer.up(other, { ...touch, timeStamp: 3000 });
+    await firePointer.down(other, { ...touch, timeStamp: 4000 });
+    await firePointer.cancel(other, { ...touch, timeStamp: 4050 });
+    expect(events).toEqual([]);
+    await firePointer.down(other, { ...touch, timeStamp: 5000 });
+    await firePointer.up(other, { ...touch, timeStamp: 5999 });
+    await closed();
+    expect(events).toEqual(['outside-press pointerup']);
+  });
 
   test('a popover that a hover opened stays open while the pointer is in its child popup', async () => {
     const { trigger } = await mountPopover({
