@@ -61,6 +61,7 @@ const READ_BY_NO_TEST_PATHS = [
   'docs/public/mark.svg',
   'docs/components/slider.md',
   'docs/handbook/styling.md',
+  'benchmarks/libraries/vase-ui/Dialog.vue',
 ];
 
 for (const path of READ_BY_NO_TEST_PATHS) {

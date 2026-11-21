@@ -17,6 +17,7 @@ minimumReleaseAgeExclude:
   - '@vue/shared@3.5.46' # A package of Vue 3.5.46.
   - vue@3.5.46 # A package of Vue 3.5.46.
 packages:
+  - benchmarks
   - docs
   - fixtures/*
   - packages/*

@@ -61,6 +61,7 @@ const READ_BY_NO_TEST = [
   /^prettier\.config\.js$/,
   /^docs\/public\//,
   /^docs\/.+\.md$/,
+  /^benchmarks\//,
 ];
 
 /** A test file can load one of these files. Vitest then finds the test file. */

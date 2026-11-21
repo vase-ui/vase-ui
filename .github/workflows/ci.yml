@@ -75,6 +75,7 @@ jobs:
       - run: pnpm check:package
       - run: pnpm parity:check
       - run: pnpm docs:typecheck
+      - run: pnpm benchmarks:typecheck
       - run: pnpm docs:build
 
   # CONTRIBUTING.md, "Pull requests", gives the form of a title. On a pull request, this job reads
