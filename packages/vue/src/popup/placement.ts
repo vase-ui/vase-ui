@@ -700,6 +700,18 @@ const insets: Middleware = {
     } else if (await platform.isElement?.(parent)) {
       box = await platform.getDimensions(parent as Element);
     }
+    if (parent === win) {
+      // Floating UI gives `x` and `y` in pixels of the floating element, which a CSS `zoom` makes
+      // differ from the pixels of the view. Its conversion gives the size of one such pixel.
+      const pixel = await platform.convertOffsetParentRelativeRectToViewportRelativeRect?.({
+        elements,
+        rect: { x: 0, y: 0, width: 1, height: 1 },
+        offsetParent: win,
+        strategy,
+      });
+      const scale = pixel?.width || 1;
+      box = { width: box.width / scale, height: box.height / scale };
+    }
     const side = getSide(placement);
     const data: Insets = {
       x: side === 'left' ? 'right' : 'left',

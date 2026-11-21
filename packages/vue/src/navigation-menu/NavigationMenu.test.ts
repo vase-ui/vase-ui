@@ -1091,6 +1091,28 @@ describe('the placement', () => {
     expect(Math.round(place.top)).toBe(Math.round(trigger.bottom + 4));
   });
 
+  test('under `zoom: 1.5` on <html>, a popup on the side `top` is at its side offset above the trigger', async () => {
+    const { style } = document.documentElement;
+    style.zoom = '1.5';
+    onTestFinished(() => {
+      style.zoom = '';
+    });
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      list: { style: 'display: flex; margin: 300px 0 0 40px; padding: 0; list-style: none' },
+      positioner: { side: 'top', sideOffset: 4, collisionAvoidance: { side: 'none' } },
+    });
+    await shows('one');
+    await placed();
+    expect(get('positioner').style.bottom).toMatch(/px$/);
+    const trigger = get('trigger-one').getBoundingClientRect();
+    const place = get('positioner').getBoundingClientRect();
+    expect(Math.abs(place.bottom - (trigger.top - 1.5 * 4))).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(centerOf(get('positioner')).x - centerOf(get('trigger-one')).x),
+    ).toBeLessThanOrEqual(1);
+  });
+
   test.each(['top', 'left'] as const)(
     'with the side `%s`, the edge of the popup at the trigger stays at its place while the size changes',
     async (side) => {
