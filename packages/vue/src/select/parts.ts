@@ -178,7 +178,7 @@ export namespace Backdrop {
  * @cssVariable `--anchor-height` The height of the anchor, in pixels.
  * @cssVariable `--available-width` The width that the popup can fill before it overflows the boundary, in pixels.
  * @cssVariable `--available-height` The height that the popup can fill before it overflows the boundary, in pixels.
- * @cssVariable `--transform-origin` The origin of a scale animation of the popup, at the anchor.
+ * @cssVariable `--transform-origin` The point that the popup grows from, for the `transform-origin` of the popup. It is at the arrow, on the edge of the anchor. With no arrow, it is at the aligned edge of the popup or at the center of the anchor. A popup over the trigger grows from the middle of the value.
  */
 export const Positioner: typeof SelectPositioner = SelectPositioner;
 export namespace Positioner {

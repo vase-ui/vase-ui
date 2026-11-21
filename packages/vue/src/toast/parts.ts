@@ -159,7 +159,7 @@ export namespace Close {
  * @cssVariable `--anchor-height` The height of the anchor, in pixels.
  * @cssVariable `--available-width` The width from the anchor to the edge of the collision boundary, in pixels.
  * @cssVariable `--available-height` The height from the anchor to the edge of the collision boundary, in pixels.
- * @cssVariable `--transform-origin` The point that the toast grows from.
+ * @cssVariable `--transform-origin` The point that the toast grows from, for the `transform-origin` of the toast. It is at the arrow, on the edge of the anchor. With no arrow, it is at the aligned edge of the toast or at the center of the anchor.
  * @cssVariable `--toast-index` The place of the toast in the list. The frontmost toast has 0.
  */
 export const Positioner: typeof ToastPositioner = ToastPositioner;

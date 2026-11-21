@@ -14,6 +14,7 @@ import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { firePointer, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { scaleOrigin } from '../../test/scaleOrigin';
 import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
@@ -1928,6 +1929,118 @@ describe('the placement', () => {
       },
     );
 
+    test.each([
+      {
+        name: 'a popup with a margin',
+        side: 'bottom',
+        popup: 'margin: 16px',
+        point: 'the center of the anchor',
+      },
+      {
+        name: 'a positioner with a padding',
+        side: 'top',
+        positioner: 'padding: 6px',
+        popup: 'position: relative; border: 1px solid',
+        arrow: true,
+        point: 'the arrow',
+      },
+      {
+        name: 'a popup with no border, which a margin of its title moves',
+        side: 'right',
+        title: 'margin: 16px 0',
+        point: 'the center of the anchor',
+      },
+    ])(
+      'VUE-194: in $name, the transform origin is at $point, on the edge of the anchor',
+      async ({ side, popup: popupStyle, positioner: positionerStyle, title, arrow }) => {
+        placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, side, sideOffset: 8, style: positionerStyle },
+          popup: { style: `width: 120px; ${popupStyle ?? ''}` },
+          title: title ? { style: title } : undefined,
+          arrow: arrow ? { style: 'width: 10px; height: 10px' } : undefined,
+        });
+        await opened();
+        await placed();
+        const vertical = side !== 'right';
+        await waitFor(() =>
+          expect(positioner()!.style.getPropertyValue('--transform-origin')).toMatch(/px/),
+        );
+        const box = anchor.getBoundingClientRect();
+        const cross = arrow ? centerOf(byTestId('arrow')) : centerOf(anchor);
+        const edge = { top: box.top, right: box.right, bottom: box.bottom }[side]!;
+        const origin = scaleOrigin(popup()!);
+        expect(
+          Math.abs((vertical ? origin.x : origin.y) - (vertical ? cross.x : cross.y)),
+        ).toBeLessThanOrEqual(0.5);
+        expect(Math.abs((vertical ? origin.y : origin.x) - edge)).toBeLessThanOrEqual(0.5);
+      },
+    );
+
+    test.each([true, false])(
+      'VUE-195: in a popup with a CSS zoom and a margin, the arrow points at the center of the anchor, and the transform origin is at the arrow, or at the center of the anchor with no arrow (arrow: %s)',
+      async (arrow) => {
+        placeAnchor('left: 300px; top: 200px; width: 50px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, sideOffset: 8 },
+          popup: {
+            style: 'width: 120px; position: relative; border: 1px solid; margin: 8px; zoom: 2',
+          },
+          arrow: arrow ? { style: 'width: 10px; height: 10px' } : undefined,
+        });
+        await opened();
+        await placed();
+        const center = centerOf(anchor).x;
+        if (arrow) {
+          const element = byTestId('arrow');
+          await waitFor(() => expect(element.style.left).toMatch(/px$/));
+          expect(element).not.toHaveAttribute('data-uncentered');
+          expect(Math.abs(centerOf(element).x - center)).toBeLessThanOrEqual(0.5);
+        }
+        const origin = scaleOrigin(popup()!);
+        expect(Math.abs(origin.x - center)).toBeLessThanOrEqual(0.5);
+        expect(Math.abs(origin.y - anchor.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0.5);
+      },
+    );
+
+    test('VUE-195: in a popup with `zoom: 2`, `arrowPadding` is in the pixels of the popup', async () => {
+      placeAnchor('left: 150px; top: 200px; width: 40px; height: 20px');
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: { anchor, align: 'start' },
+        popup: { style: 'width: 120px; position: relative; border: 4px solid; zoom: 2' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      await placed();
+      const arrow = byTestId('arrow');
+      await waitFor(() => expect(arrow).toHaveAttribute('data-uncentered'));
+      const space = arrow.getBoundingClientRect().left - popup()!.getBoundingClientRect().left - 8;
+      expect(Math.abs(space - 2 * 5)).toBeLessThanOrEqual(0.5);
+    });
+
+    test('VUE-195: under a CSS zoom of a positioned ancestor, the shift stops at half the arrow and half the collision padding from the anchor', async () => {
+      const container = document.body.appendChild(document.createElement('div'));
+      container.style.cssText = 'position: fixed; inset: 0; zoom: 1.5';
+      onTestFinished(() => container.remove());
+      anchor = container.appendChild(document.createElement('div'));
+      anchor.style.cssText =
+        'position: absolute; left: -25px; top: 200px; width: 20px; height: 20px';
+      await mountPopover({
+        root: { defaultOpen: true },
+        portal: { to: container },
+        positioner: { anchor },
+        popup: { style: 'width: 160px' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      await placed();
+      const overlap = anchor.getBoundingClientRect().right - popup()!.getBoundingClientRect().left;
+      expect(Math.abs(overlap - 1.5 * (10 / 2 + (5 + 5) / 2))).toBeLessThanOrEqual(0.5);
+    });
+
     test('the alignment flips at the edge of the view; with `side: shift`, the popup shifts and keeps its alignment, and grows from the anchor', async () => {
       placeAnchor(`left: ${innerWidth - 40}px; top: 200px; width: 20px; height: 20px`);
       const wide = { style: 'width: 200px' };
@@ -1956,11 +2069,14 @@ describe('the placement', () => {
       await mountPopover({
         root: { defaultOpen: true },
         positioner: { anchor, sideOffset: 4, collisionAvoidance: { side: 'shift' } },
-        popup: { style: 'height: 200px' },
+        popup: { style: 'height: 200px; margin: 16px' },
       });
       await opened();
       await placed();
-      expect(positioner()!.style.getPropertyValue('--transform-origin')).not.toMatch(/ -4px$/);
+      const origin = scaleOrigin(popup()!);
+      const center = centerOf(anchor);
+      expect(Math.abs(origin.x - center.x)).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(origin.y - center.y)).toBeLessThanOrEqual(0.5);
     });
 
     test('a popup stays at an anchor that left the view; with `sticky`, it shifts into the view', async () => {

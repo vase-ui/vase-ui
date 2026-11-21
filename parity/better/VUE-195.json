@@ -1,0 +1,23 @@
+{
+  "id": "VUE-195",
+  "evidence": [
+    "https://drafts.csswg.org/css-viewport/#zoom-property",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/zoom",
+    "https://base-ui.com/react/components/popover"
+  ],
+  "behavior": "An arrow in a popup with a CSS `zoom` points at the center of its anchor. Its place and `arrowPadding` are in the pixels of its nearest positioned ancestor. A Select popup over the trigger with a `zoom` puts the text of the selected item over the text of the value. In the Popover demo of Base UI, a `zoom: 2` on the popup moves the arrow 225 px off the center of the trigger.",
+  "dueWith": "packages/react/src/internals/useAnchorPositioning.ts",
+  "families": [
+    "popover",
+    "tooltip",
+    "preview-card",
+    "menu",
+    "context-menu",
+    "menubar",
+    "navigation-menu",
+    "select",
+    "combobox",
+    "autocomplete",
+    "toast"
+  ]
+}

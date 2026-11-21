@@ -38,7 +38,13 @@ function given<Key extends keyof PlacementProps>(key: Key): PlacementProps[Key] 
 }
 
 const placement = usePlacement(
-  { open: true, activeTrigger: null },
+  {
+    open: true,
+    activeTrigger: null,
+    get popup() {
+      return provider.rootElement(props.toast.id);
+    },
+  },
   {
     get side() {
       return given('side') ?? 'top';

@@ -1,0 +1,23 @@
+{
+  "id": "VUE-194",
+  "evidence": [
+    "https://drafts.csswg.org/css-transforms-1/#transform-origin-property",
+    "https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetleft",
+    "https://base-ui.com/react/components/popover"
+  ],
+  "behavior": "`--transform-origin` is in the pixels of the popup, from its border box: the arrow or the aligned edge or the center of the anchor, on the edge of the anchor. A margin of the popup, a padding of the positioner, a margin that collapses through the popup and a `zoom` of the popup do not move it. A Select popup over the trigger grows from the middle of the value, also after it grows while the user scrolls the list. In the Popover demo of Base UI, a 16 px margin on the popup moves the origin 16 px off the edge of the trigger.",
+  "dueWith": "packages/react/src/internals/useAnchorPositioning.ts",
+  "families": [
+    "popover",
+    "tooltip",
+    "preview-card",
+    "menu",
+    "context-menu",
+    "menubar",
+    "navigation-menu",
+    "select",
+    "combobox",
+    "autocomplete",
+    "toast"
+  ]
+}
