@@ -269,7 +269,7 @@ describe('without keepMounted', () => {
     expect(events).toEqual(['loaded', 'loading', 'loaded']);
   });
 
-  test('the part reads no element, so a lazy image from srcset below the view stays (measurement M7)', async () => {
+  test('the part reads no element, so a lazy image from srcset below the view stays', async () => {
     const picture = await pictureThatBrowserHas();
     const { img, events } = mountAvatar({
       loading: 'lazy',
@@ -393,7 +393,9 @@ describe('with keepMounted', () => {
       crossorigin: 'anonymous',
     });
     await nextTick();
-    // WebKit requests `src` at once, also when `loading` and `srcset` come later (measurement M3).
+    // WebKit requests `src` at once, also when `loading` and `srcset` come later
+    // (test/measurements/avatar.test.ts, "WebKit requests src at once in an img that gets src first
+    // and lazy, srcset and the request options later, before it is in the document").
     const names = ['crossorigin', 'referrerpolicy', 'loading', 'sizes', 'srcset', 'src'];
     expect(
       img()!

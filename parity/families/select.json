@@ -298,7 +298,7 @@
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the items: the keys, a disabled item, the press, the drag and the release, Enter and Space, and the highlight and its attribute. A listener that calls `preventDefault()` stops the list, so `preventVaseUIHandler` has no case."
+      "reason": "`Select.test.ts` tests the items: the keys, a disabled item, the press, the drag and the release, Enter and Space, and the highlight and its attribute. A listener that calls `preventDefault()` stops the list, so the cases of `preventBaseUIHandler` do not apply."
     },
     {
       "upstream": "packages/react/src/select/label/SelectLabel.test.tsx",

@@ -140,7 +140,7 @@ test('an event has its arguments and the text of its JSDoc', () => {
   ]);
 });
 
-test('a slot has its slot props, and the default slot has the shared description', () => {
+test('a slot has its slot props, and the default and element slots have the shared descriptions', () => {
   assert.deepEqual(part('Sample.Popup').slots, [
     {
       name: 'default',
@@ -148,10 +148,12 @@ test('a slot has its slot props, and the default slot has the shared description
       props: [{ name: 'state', type: 'SamplePopupState' }],
     },
     {
-      name: 'render',
-      description: '',
+      name: 'element',
+      description:
+        'Renders your element in place of the element of the part. Bind `props` with `v-bind` and `elementRef` with `:ref`.',
       props: [
         { name: 'props', type: 'Record<string, unknown>' },
+        { name: 'elementRef', type: '(element: unknown) => void' },
         { name: 'state', type: 'SamplePopupState' },
       ],
     },

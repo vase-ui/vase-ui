@@ -56,7 +56,7 @@
       "describe": ["<Avatar.Image />", "prop: keepMounted"],
       "title": "lets a user handler prevent the status update",
       "kind": "not-applicable",
-      "reason": "The status is not a change that a listener cancels, and `preventVaseUIHandler` does not exist. A developer who wants no picture renders no `Avatar.Image`."
+      "reason": "The status is not a change that a listener cancels, and Vase UI has no `preventBaseUIHandler`. A developer who wants no picture renders no `Avatar.Image`."
     },
     {
       "upstream": "packages/react/src/avatar/image/AvatarImage.test.tsx",

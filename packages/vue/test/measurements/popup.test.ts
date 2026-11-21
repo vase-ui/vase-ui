@@ -55,7 +55,7 @@ function centerOf(target: Element) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-describe('Tab after a key listener moved the focus (M1)', () => {
+describe('Tab after a key listener moved the focus', () => {
   test('goes on from the element that has the focus: a listener on Tab that moves the focus and lets the key go on sends the focus past that element', async () => {
     html(`<input id="trigger" aria-label="Trigger"><input id="after" aria-label="After">
       <div id="popup"><input id="first" aria-label="First"><input id="last" aria-label="Last"></div>`);
@@ -68,7 +68,7 @@ describe('Tab after a key listener moved the focus (M1)', () => {
   });
 });
 
-describe('inert (M2)', () => {
+describe('inert', () => {
   test('a press on inert content has the element under it that is not inert as its target, and no listener of the content runs', async () => {
     html(
       `<div id="page" inert style="height: 200px"><button id="covered" style="width: 100px; height: 40px">Covered</button></div>`,
@@ -95,7 +95,7 @@ describe('inert (M2)', () => {
   });
 });
 
-describe('a press in a same-origin frame (M3)', () => {
+describe('a press in a same-origin frame', () => {
   test('sends `focusout` with no related target to a focused control of the page, and the frame is the active element one task later; no pointer event reaches the page', async () => {
     html(`<input id="control" aria-label="Control">
       <iframe id="frame" style="width: 200px; height: 100px" srcdoc="<button style='width: 150px; height: 60px'>In</button>"></iframe>`);
@@ -123,7 +123,7 @@ describe('a press in a same-origin frame (M3)', () => {
   });
 });
 
-describe('a focused element that leaves (M4)', () => {
+describe('a focused element that leaves', () => {
   test('leaves the focus on <body>; only Chromium sends `focusout` at the removal; the next Tab goes on after its place', async () => {
     html(
       `<input id="first" aria-label="First"><div id="list"><input id="a" aria-label="A"><input id="b" aria-label="B"><input id="c" aria-label="C"></div><input id="last" aria-label="Last">`,
@@ -139,7 +139,7 @@ describe('a focused element that leaves (M4)', () => {
   });
 });
 
-describe('the scroll of the page (M5, N4)', () => {
+describe('the scroll of the page', () => {
   test('`overflow: hidden` on the element that scrolls the view stops the wheel', async () => {
     const { win, html: page } = await createScrollDocument();
     page.style.overflow = 'hidden';
@@ -169,7 +169,7 @@ describe('the scroll of the page (M5, N4)', () => {
   });
 });
 
-describe('focus() (M6)', () => {
+describe('focus()', () => {
   test('with `preventScroll` scrolls nothing', () => {
     html(`<div style="height: 3000px"></div><input id="far" aria-label="Far">`);
     element('far').focus({ preventScroll: true });
@@ -193,7 +193,7 @@ describe('focus() (M6)', () => {
   });
 });
 
-describe('a press (M7)', () => {
+describe('a press', () => {
   test('that drags across the edge of a box gives `pointerdown` and `pointerup` the element under the pointer, and `click` the common ancestor', async () => {
     html(`<div id="outside" style="position: fixed; left: 0; top: 0; width: 100px; height: 100px"></div>
       <div id="popup" style="position: fixed; left: 200px; top: 0; width: 100px; height: 100px"></div>`);
@@ -212,7 +212,7 @@ describe('a press (M7)', () => {
   });
 });
 
-describe('two nested teleports to <body> that render in one update (M8, N2)', () => {
+describe('two nested teleports to <body> that render in one update', () => {
   test.each([
     { afterMount: false, defer: false },
     { afterMount: false, defer: true },
@@ -229,7 +229,7 @@ describe('two nested teleports to <body> that render in one update (M8, N2)', ()
   });
 });
 
-describe('a <Transition> that mounts in the update of the open (M9)', () => {
+describe('a <Transition> that mounts in the update of the open', () => {
   test.each([
     { appear: false, classes: '' },
     { appear: true, classes: 'm-enter-from m-enter-active' },
@@ -246,7 +246,7 @@ describe('a <Transition> that mounts in the update of the open (M9)', () => {
   );
 });
 
-describe('the first frame after an open (N1)', () => {
+describe('the first frame after an open', () => {
   test('shows the floating element at the place of Floating UI: it places in microtasks', async () => {
     const scene = reactive({ open: false });
     mount(MeasureFirstFrame, { scene });
@@ -263,7 +263,7 @@ describe('the first frame after an open (N1)', () => {
   });
 });
 
-describe('the tab stops of a container (N3)', () => {
+describe('the tab stops of a container', () => {
   // WebKit on macOS gives Tab a link only by a setting of the system, as it does for a button.
   test('are the stops of the Tab key of the browser; the Tab of WebKit on macOS skips the link', async () => {
     html(`<input id="start" aria-label="Start"><div id="box">
@@ -297,7 +297,7 @@ describe('the tab stops of a container (N3)', () => {
   });
 });
 
-describe('an open while the popup leaves (N5)', () => {
+describe('an open while the popup leaves', () => {
   test('mounts a second popup element beside the leaving one; the `<Transition>` of Vapor removes the leaving one', async () => {
     const scene = reactive({ open: true });
     const { root: app } = mount(MeasureTransitionReopen, { scene });
@@ -312,7 +312,7 @@ describe('an open while the popup leaves (N5)', () => {
   });
 });
 
-describe('a double click on a fixed element over text (N9)', () => {
+describe('a double click on a fixed element over text', () => {
   test('selects a word of the page in Firefox and WebKit, and nothing in Chromium; `user-select: none` on the element selects nothing', async () => {
     html(`<p style="font-size: 40px; margin: 0">Some text of the page</p>
       <div id="cover" style="position: fixed; inset: 0"></div>`);
@@ -329,7 +329,7 @@ describe('a double click on a fixed element over text (N9)', () => {
   });
 });
 
-describe('a mouse press on a scrollbar that takes room (N10)', () => {
+describe('a mouse press on a scrollbar that takes room', () => {
   test('sends `pointerdown`, `mousedown`, `pointerup`, in WebKit also `mouseup`, with a point outside the client box of the element that scrolls, and no `click`', async ({
     skip,
   }) => {
@@ -360,7 +360,7 @@ describe('a mouse press on a scrollbar that takes room (N10)', () => {
   });
 });
 
-describe('a real touch outside (N11)', () => {
+describe('a real touch outside', () => {
   // The protocol injects a touch with no long press, so a rest is a tap
   // (https://chromium.googlesource.com/chromium/src/+/main/content/browser/renderer_host/input/touch_emulator_impl.cc).
   // On Linux, Windows and ChromeOS, a touch that stops a fling sends no `click`
@@ -392,7 +392,7 @@ describe('a real touch outside (N11)', () => {
   );
 });
 
-describe('a mouse that moves from a trigger across a gap to a popup (N7)', () => {
+describe('a mouse that moves from a trigger across a gap to a popup', () => {
   test('sends `pointerleave` of the trigger and `pointermove` of the element under the gap before the `pointerenter` of the popup, with the pointer type `mouse`', async () => {
     html(`<button id="trigger" style="position: fixed; left: 0; top: 0; width: 100px; height: 40px">Trigger</button>
       <div id="popup" style="position: fixed; left: 0; top: 80px; width: 200px; height: 100px"></div>`);
@@ -444,7 +444,7 @@ async function darkColumns(target: Element, y: number) {
   return [columns[0], columns.at(-1)];
 }
 
-describe('the variables of a positioner (N8)', () => {
+describe('the variables of a positioner', () => {
   test('a box at a fractional place covers more pixels than a box of the same width at the place that Floating UI rounds to pixels; the width in pixels covers the same ones', async () => {
     html(`<div id="scene" style="position: fixed; left: 0; top: 0; width: 300px; height: 90px; background: white">
       <div style="position: absolute; left: 10.4px; top: 0; width: 100.3px; height: 20px; background: black"></div>

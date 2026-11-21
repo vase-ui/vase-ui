@@ -15,7 +15,6 @@ export const previewCardHandle: PreviewCard.Handle<number> = PreviewCard.createH
 export const tooltipHandle: Tooltip.Handle<number> = Tooltip.createHandle<number>();
 
 export function useHandles() {
-  // No handle has a store.
   for (const handle of [menuHandle, popoverHandle, previewCardHandle, tooltipHandle]) {
     const open: boolean = handle.isOpen;
     if (open) handle.close();

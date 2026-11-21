@@ -57,7 +57,7 @@ const tagsData: Tag[] = [
 ];
 
 function groupTags(tags: Tag[]): TagGroup[] {
-  const groups: { [key: string]: Tag[] } = {};
+  const groups: Record<string, Tag[]> = {};
   tags.forEach((t) => {
     (groups[t.group] ??= []).push(t);
   });

@@ -46,7 +46,7 @@ function elementProps() {
 }
 
 // The browser gives the input the focus with no focus ring, and WebKit on macOS gives it no focus
-// (`test/measurements/slider.test.ts`, S8).
+// (`test/measurements/slider.test.ts`, "a click on the label of a clipped range input").
 function onClick(event: MouseEvent) {
   if (!event.defaultPrevented) slider.thumbs.find(Boolean)?.input?.focus({ focusVisible: true });
 }

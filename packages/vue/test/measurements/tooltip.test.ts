@@ -39,7 +39,7 @@ function record(target: EventTarget, types: string[]) {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const BOX = 'display: block; width: 120px; height: 40px';
 
-describe('a mouse on a disabled control (T1)', () => {
+describe('a mouse on a disabled control', () => {
   test.each([
     ['a <button disabled>', `<button id="t" disabled style="${BOX}">x</button>`],
     [
@@ -63,7 +63,7 @@ describe('a mouse on a disabled control (T1)', () => {
   });
 });
 
-describe('`:focus-visible` at `focusin` (T2, T3, T9)', () => {
+describe('`:focus-visible` at `focusin`', () => {
   test('a Tab to a control gives it `:focus-visible` at `focusin`', async () => {
     html(
       `<button id="start">Start</button><input id="input" aria-label="Input"><span id="span" tabindex="0">x</span><button id="button">x</button>`,
@@ -110,7 +110,7 @@ describe('`:focus-visible` at `focusin` (T2, T3, T9)', () => {
   });
 });
 
-describe('a tap (T9)', () => {
+describe('a tap', () => {
   // Only Chromium has the protocol of a real touch in the test browsers.
   test.skipIf(server.browser !== 'chromium')(
     'a tap on an <input> gives `pointerdown` before `focusin`, and the input matches `:focus-visible`',
@@ -132,7 +132,7 @@ describe('a tap (T9)', () => {
   );
 });
 
-describe('a trigger in a trigger (T4)', () => {
+describe('a trigger in a trigger', () => {
   test('`pointerover` and `focusin` reach the inner element first and the outer one with the same event object, also across an open shadow root; the outer gets no `pointerleave` while the pointer is on the inner one', async () => {
     html(`<div id="outer" tabindex="-1" style="display: block; width: 300px; height: 80px"><span id="host" style="display: inline-block; width: 100px; height: 80px"></span></div>
       <button id="away">Away</button>`);
@@ -165,7 +165,7 @@ describe('a trigger in a trigger (T4)', () => {
   });
 });
 
-describe('a key on a focused button (T5)', () => {
+describe('a key on a focused button', () => {
   test('Enter and Space give one `click` each with `detail` 0, and no `pointerdown`', async () => {
     html('<button id="t">x</button>');
     const log: string[] = [];
@@ -178,7 +178,7 @@ describe('a key on a focused button (T5)', () => {
   });
 });
 
-describe('a press after the focus (T6)', () => {
+describe('a press after the focus', () => {
   test('a press on an element with no tab stop gives `focusout` with no related target and leaves the focus on <body>; with `tabindex="-1"`, the element is the related target', async () => {
     html(
       `<input id="t" aria-label="T"><div id="text" style="${BOX}">text</div><div id="popup" tabindex="-1" style="${BOX}">text</div>`,
@@ -197,7 +197,7 @@ describe('a press after the focus (T6)', () => {
   });
 });
 
-describe('`data-instant` and a leave of Vue (T7, T8)', () => {
+describe('`data-instant` and a leave of Vue', () => {
   test.each(['fade', 'spin'] as const)(
     '%s: an attribute that is on the element before the leave gives a leave of no time',
     async (name) => {
@@ -243,7 +243,7 @@ describe('`data-instant` and a leave of Vue (T7, T8)', () => {
   });
 });
 
-describe('the window that loses the focus (TN1)', () => {
+describe('the window that loses the focus', () => {
   // A window that loses the focus needs a headed browser with two windows. The test browsers run
   // headless, and each page keeps the focus, so `Tooltip.test.ts` sends the events of that case.
   test('a headless browser keeps the focus of the page', () => {

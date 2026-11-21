@@ -17,6 +17,10 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ]);
 
+// A native form control, a form element, a native label and an image take no `as` (CONTRIBUTING.md,
+// "The element of a part"). Only the `element` slot replaces their element.
+const ELEMENTS_WITH_NO_AS = new Set(['fieldset', 'form', 'img', 'input', 'label', 'output']);
+
 const REACT_EVENT_HANDLER = /\bReact\.\w*Event|BaseUIEvent|EventHandler</;
 
 export interface ExpectedProp {
@@ -26,6 +30,8 @@ export interface ExpectedProp {
   compareDefault: boolean;
   /** A controlled prop (`x` with `defaultX`) must have the default `undefined`. */
   controlled: boolean;
+  /** The part can leave the prop out. */
+  optional?: boolean;
   /** The name of the Base UI row that needs the prop. */
   row: string;
 }
@@ -149,14 +155,17 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
       continue;
     }
     if (row.name === 'render') {
+      // Base UI's `render` is the slot `element` and the prop `as`. With no `as`, a part renders
+      // its own element, so `as` has no default.
       expected.props.set('as', {
         required: false,
-        default: part.tag === null ? null : `'${part.tag}'`,
-        compareDefault: part.tag !== null,
+        default: null,
+        compareDefault: false,
         controlled: false,
+        optional: part.tag !== null && ELEMENTS_WITH_NO_AS.has(part.tag),
         row: row.name,
       });
-      expected.slots.set('render', row.name);
+      expected.slots.set('element', row.name);
       expected.exposed.set('element', row.name);
       if (part.tag === null || !VOID_ELEMENTS.has(part.tag)) {
         expected.slots.set('default', expected.slots.get('default') ?? row.name);
@@ -183,27 +192,4 @@ export function expectedSurface(part: SurfacePart, file: SurfaceFile): ExpectedS
     }
   }
   return expected;
-}
-
-/**
- * A part of the refactored form takes the slot `element` in place of the slot `render`. Its prop
- * `as`, where it has one, has no default: with no `as`, the part renders its own element. The check
- * accepts both forms until each family has the new one.
- */
-export function acceptElementSlot(
-  expected: ExpectedSurface,
-  actual: { props: ReadonlyMap<string, unknown>; slots: ReadonlyMap<string, unknown> },
-): void {
-  const row = expected.slots.get('render');
-  const as = expected.props.get('as');
-  if (row === undefined || !actual.slots.has('element')) {
-    return;
-  }
-  if (as && actual.props.has('as')) {
-    expected.props.set('as', { ...as, default: null, compareDefault: false });
-  } else {
-    expected.props.delete('as');
-  }
-  expected.slots.delete('render');
-  expected.slots.set('element', row);
 }

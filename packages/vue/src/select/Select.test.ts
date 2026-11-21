@@ -129,7 +129,7 @@ describe('the parts', () => {
     expect(trigger()).toHaveAttribute('aria-controls', 'second');
   });
 
-  test('a Select.List that leaves gives the listbox back to the popup, and a popup that leaves is no longer named', async () => {
+  test('a Select.List that leaves gives the listbox back to the popup, and the trigger names no popup that leaves', async () => {
     const show = reactive({ list: true, popup: true });
     await mountSelect({ list: {}, show, root: { defaultOpen: true } });
     await opened();

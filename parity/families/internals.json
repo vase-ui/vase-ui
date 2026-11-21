@@ -97,7 +97,7 @@
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.ts",
       "kind": "not-applicable",
-      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. A Vase UI Menu part writes its `id` prop or its default id on its element, and each part that names it names that id. A part that another part names reads the `id` of its own element from the mount on, with `useRegisteredId`."
+      "reason": "The file reads the id of a React element that is given as `render`. It gives the id to the owner through a ref callback. A Vase UI Menu part writes its `id` prop or its default id on its element, and each part that names it names that id. A part that names another part reads the `id` from the element of that part."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",

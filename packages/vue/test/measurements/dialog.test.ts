@@ -59,7 +59,7 @@ function centerOf(target: Element) {
 
 const BUTTON = 'position: fixed; left: 100px; top: 100px; width: 100px; height: 40px';
 
-describe('an inert element that covers the page (D1)', () => {
+describe('an inert element that covers the page', () => {
   test('lets a press reach the element under it, and Tab does not go into it', async () => {
     html(`<button id="under" style="${BUTTON}">Under</button>
       <div inert><div id="cover" style="position: fixed; inset: 0"><input id="inside" aria-label="Inside"></div></div>`);
@@ -77,7 +77,7 @@ describe('an inert element that covers the page (D1)', () => {
   });
 });
 
-describe('an element over a button that leaves at `pointerdown` (D2)', () => {
+describe('an element over a button that leaves at `pointerdown`', () => {
   test.each(['remove', 'display: none'])(
     'with %s gives the button no `click`; after a removal only Firefox sends `click`, to the common ancestor',
     async (how) => {
@@ -97,7 +97,7 @@ describe('an element over a button that leaves at `pointerdown` (D2)', () => {
   );
 });
 
-describe('a part in a `<Transition>` in an element (D3)', () => {
+describe('a part in a `<Transition>` in an element', () => {
   test.each([
     { viewportStays: true, classes: 't-leave-from t-leave-active' },
     { viewportStays: false, classes: null },
@@ -114,7 +114,7 @@ describe('a part in a `<Transition>` in an element (D3)', () => {
   );
 });
 
-describe('the focused element gets `inert` (D4)', () => {
+describe('the focused element gets `inert`', () => {
   test('gives the focus to <body> with `blur` and a `focusout` with no related target; the next Tab goes to the first control that is not inert', async () => {
     html(`<div id="page"><input id="before" aria-label="Before"><input id="trigger" aria-label="Trigger"></div>
       <div id="popup"><input id="first" aria-label="First"></div>`);
@@ -134,7 +134,7 @@ describe('the focused element gets `inert` (D4)', () => {
   });
 });
 
-describe('a focus in the task that removes `inert` (D5)', () => {
+describe('a focus in the task that removes `inert`', () => {
   test('moves the focus to a control under the element that was inert', () => {
     html(`<div id="page" inert><input id="trigger" aria-label="Trigger"></div>
       <div id="popup"><input id="first" aria-label="First"></div>`);
@@ -147,7 +147,7 @@ describe('a focus in the task that removes `inert` (D5)', () => {
   });
 });
 
-describe('a press over an inert popup below a fixed element (D6)', () => {
+describe('a press over an inert popup below a fixed element', () => {
   test('has the fixed element as its target', async () => {
     html(`<div inert style="position: fixed; left: 0; top: 0; width: 300px; height: 300px">
         <button id="lower" style="width: 200px; height: 200px">Lower</button></div>
@@ -158,7 +158,7 @@ describe('a press over an inert popup below a fixed element (D6)', () => {
   });
 });
 
-describe('a press on a fixed element that is not focusable (D7)', () => {
+describe('a press on a fixed element that is not focusable', () => {
   test.each([
     { prevent: false, active: 'body', typed: '' },
     { prevent: true, active: 'field', typed: 'x' },
@@ -180,7 +180,9 @@ describe('a press on a fixed element that is not focusable (D7)', () => {
     },
   );
 
-  test('with preventDefault() at mousedown, a double click selects no text of the page under it (N9 of popup.test.ts selects text with no listener)', async () => {
+  // With no listener, the double click selects text: `popup.test.ts`, "a double click on a fixed
+  // element over text".
+  test('with preventDefault() at mousedown, a double click selects no text of the page under it', async () => {
     html(`<p style="font-size: 40px; margin: 0">Some text of the page</p>
       <div id="block" style="position: fixed; inset: 0"></div>`);
     element('block').addEventListener('mousedown', (event) => event.preventDefault());
@@ -190,7 +192,7 @@ describe('a press on a fixed element that is not focusable (D7)', () => {
   });
 });
 
-describe('a drag of a scrollbar that takes room, with preventDefault() at mousedown (D8)', () => {
+describe('a drag of a scrollbar that takes room, with preventDefault() at mousedown', () => {
   test('sends `mousedown` with a point outside the client box, and scrolls the element', async ({
     skip,
   }) => {
@@ -224,7 +226,7 @@ describe('a drag of a scrollbar that takes room, with preventDefault() at moused
   });
 });
 
-describe('the hooks of a component in a component (D9)', () => {
+describe('the hooks of a component in a component', () => {
   test('`onMounted` runs for the child first; `onBeforeMount` runs for the parent first only in the virtual DOM', async () => {
     const log: string[] = [];
     mount(MeasureMountOrder, { depth: 1, log: { add: (entry: string) => log.push(entry) } });
@@ -236,7 +238,7 @@ describe('the hooks of a component in a component (D9)', () => {
   });
 });
 
-describe('a dialog in place in a composite (D10)', () => {
+describe('a dialog in place in a composite', () => {
   test.each(['toolbar', 'tabs'])(
     'in a %s keeps the focus in the popup at the arrow keys, Home and End',
     async (host) => {
@@ -262,7 +264,7 @@ describe('a dialog in place in a composite (D10)', () => {
   );
 });
 
-describe('a component that replaces another one (D12)', () => {
+describe('a component that replaces another one', () => {
   async function swap(wrapper: string, gates: Record<string, Promise<void>> = {}) {
     const log: string[] = [];
     const scene = reactive({ page: 'A' });
@@ -351,7 +353,7 @@ describe('a component that replaces another one (D12)', () => {
   });
 });
 
-describe('a real pinch outside (D11)', () => {
+describe('a real pinch outside', () => {
   test.skipIf(server.browser !== 'chromium')(
     'sends a second `pointerdown` with `isPrimary` false',
     async () => {
@@ -388,7 +390,7 @@ describe('a real pinch outside (D11)', () => {
   );
 });
 
-describe('an attribute that the first client render changes (D13)', () => {
+describe('an attribute that the first client render changes', () => {
   test('Vue reports no message for `aria-expanded`; the virtual DOM keeps the value of the server HTML, and Vapor writes the value of the client', async () => {
     const root = await renderOnServer('MeasureHydratedAttribute', { expanded: false });
     hydrate(MeasureHydratedAttribute, { expanded: true }, root);

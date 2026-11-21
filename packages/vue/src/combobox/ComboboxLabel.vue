@@ -37,7 +37,7 @@ const state = computed<ComboboxLabelState>(() => ({
 }));
 
 // A press on the label moves the focus to the control. A `<label>` would open a popup at a press
-// on its button (test/measurements/combobox.test.ts, C9).
+// on its button (test/measurements/combobox.test.ts, "a press on a `<label for>` of a button").
 function onClick() {
   if (!context.disabled) context.control?.focus();
 }

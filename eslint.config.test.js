@@ -60,7 +60,7 @@ const WAIT_IMPORT =
   "import { expect } from 'vitest';\nimport { screen, waitFor, within } from '#test-utils';\n\n";
 const WAIT_FILES = [
   ['a test file', `${SRC}/DialogRoot.test.tsx`],
-  ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
+  ['a test helper', 'packages/vue/test/helper.tsx'],
 ];
 const VNODE_HINT = 'mounts a vnode one time';
 const VNODE_IMPORT = "import { describe, it } from 'vitest';\n\n";
@@ -74,12 +74,6 @@ const INPUT_SYNC_SAMPLES = [
     '(event.target as HTMLTextAreaElement).value = text;',
     'Vue value binding',
   ],
-  [
-    'a handled input value',
-    'const handledHiddenValue = input.value; read(handledHiddenValue);',
-    'second copy',
-  ],
-  ['a handled input text', 'const handledText = input.value; read(handledText);', 'second copy'],
 ];
 
 const reported = [
@@ -406,7 +400,7 @@ const reported = [
   },
   {
     name: 'a React event key in a test helper',
-    file: 'packages/vue/test/describeConformance.tsx',
+    file: 'packages/vue/test/helper.tsx',
     code: 'export const props = { onMouseEnter() {} };\n',
     ruleId: 'no-restricted-syntax',
     hint: 'onMouseenter',
@@ -732,8 +726,8 @@ const reported = [
       "describe.skipIf(false)('a root', () => {\n  const popup = <div />;\n\n  it('renders', () => {\n    void popup;\n  });\n});\n",
     ],
     [
-      'a vnode in a row of it.each in a shared suite',
-      'packages/vue/test/popupConformanceTests.tsx',
+      'a vnode in a row of it.each in a test helper',
+      'packages/vue/test/helper.tsx',
       "it.each([{ name: 'a button', node: <button /> }])('renders $name', () => {});\n",
     ],
   ].map(([name, file, code]) => ({
@@ -1031,7 +1025,7 @@ const reported = [
   ].flatMap(([name, code]) =>
     [
       ['a test file', `${SRC}/DialogRoot.test.tsx`],
-      ['a shared suite', 'packages/vue/test/popupConformanceTests.tsx'],
+      ['a test helper', 'packages/vue/test/helper.tsx'],
     ].map(([place, file]) => ({
       name: `${name} in ${place}`,
       file,
@@ -1418,7 +1412,7 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
   {
     name: 'a call of select with an argument in a function ref',
     file: `${SRC}/DialogRoot.test.tsx`,
-    code: "declare const store: { select: (key: string) => unknown };\n\nexport const node = () => <input ref={() => store.select('open')} />;\n",
+    code: "declare const root: { select: (value: string) => void };\n\nexport const node = () => <input ref={() => root.select('open')} />;\n",
   },
   {
     name: 'a focus call in a function ref in a source file',
@@ -1426,13 +1420,13 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: "import { h } from 'vue';\n\nexport const node = () => h('input', { ref: (element) => (element as HTMLElement | null)?.focus() });\n",
   },
   {
-    name: 'a getBy query in waitFor in a shared suite',
-    file: 'packages/vue/test/popupConformanceTests.tsx',
+    name: 'a getBy query in waitFor in a test helper',
+    file: 'packages/vue/test/helper.tsx',
     code: `${WAIT_IMPORT}await waitFor(() => {\n  expect(screen.getByRole('dialog')).toHaveFocus();\n});\nawait waitFor(() => expect(within(document.body).getAllByRole('option')).toHaveLength(2));\n`,
   },
   {
-    name: 'an import of fireEvent, createEvent and isInaccessible from Testing Library in a shared suite',
-    file: 'packages/vue/test/popupConformanceTests.tsx',
+    name: 'an import of fireEvent, createEvent and isInaccessible from Testing Library in a test helper',
+    file: 'packages/vue/test/helper.tsx',
     code: "import { createEvent, fireEvent, isInaccessible } from '@testing-library/dom';\n\nexport const used = [createEvent, fireEvent, isInaccessible];\n",
   },
   {
@@ -1446,9 +1440,9 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: `import { it } from 'vitest';\n\nconst popup = () => <div />;\n\nit.each([{ name: 'a button', node: () => <button>{popup()}</button> }])(\n  'renders $name',\n  ({ node }) => {\n    void node();\n  },\n);\n`,
   },
   {
-    name: 'a vnode in a case and as the argument of a shared suite',
+    name: 'a vnode in a case and as the argument of a test helper',
     file: `${SRC}/DialogRoot.test.tsx`,
-    code: `${VNODE_IMPORT}declare function describeConformance(element: unknown): void;\n\ndescribe('a root', () => {\n  describeConformance(<div />);\n\n  it('renders', () => {\n    const node = <div />;\n    void node;\n  });\n});\n`,
+    code: `${VNODE_IMPORT}declare function checkPart(element: unknown): void;\n\ndescribe('a root', () => {\n  checkPart(<div />);\n\n  it('renders', () => {\n    const node = <div />;\n    void node;\n  });\n});\n`,
   },
   {
     name: 'a vnode in a constant of the module in a type test',
@@ -1464,11 +1458,6 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     name: 'a vnode in a constant of the script setup of a test SFC',
     file: `${SRC}/DialogRootInTemplate.test.vue`,
     code: `<script setup lang="ts">\nimport { h } from 'vue';\n\nconst element = h('span');\n</script>\n\n<template>\n  <component :is="element" />\n</template>\n`,
-  },
-  {
-    name: 'imports of both KeepAlive hooks in a test file',
-    file: `${SRC}/DialogRoot.test.tsx`,
-    code: "import { onActivated, onDeactivated } from 'vue';\n\nexport const hooks = [onActivated, onDeactivated];\n",
   },
   {
     name: 'an import of useFloating in placement.ts',
@@ -1491,9 +1480,9 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     code: "// https://github.com/mui/base-ui/issues/979\nexport const INERT = 'data-vase-ui-inert';\nexport const attribute = (name: string) => `data-vase-ui-${name}`;\nexport const event = new Event('vase-ui');\n",
   },
   {
-    name: 'an attribute name of Vase UI and a component whose name starts with Transition in a template',
+    name: 'an attribute name of Vase UI in a template',
     file: `${SRC}/DialogRoot.vue`,
-    code: `<script setup lang="ts">\nimport TransitionStatusProbe from './TransitionStatusProbe.vue';\n</script>\n\n<template>\n  <TransitionStatusProbe data-vase-ui-inert="" class="vase-ui-disable-scrollbar" />\n</template>\n`,
+    code: `<template>\n  <div data-vase-ui-inert="" class="vase-ui-disable-scrollbar" />\n</template>\n`,
   },
   {
     name: 'a style key that has a vendor prefix in its CSS form',

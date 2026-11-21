@@ -52,8 +52,8 @@ const frames = () =>
   new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 const activeId = () => document.activeElement?.id || document.activeElement?.localName;
 
-describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
-  test('T1: a key that comes back while its old element leaves gets a new element at once, with the enter classes and no class at the end', async () => {
+describe('<TransitionGroup>', () => {
+  test('a key that comes back while its old element leaves gets a new element at once, with the enter classes and no class at the end', async () => {
     const list = ref(['a', 'b']);
     mountVue(FADE, () =>
       h(TransitionGroup, { name: 't' }, () =>
@@ -73,7 +73,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     expect(read()).toEqual(['']);
   });
 
-  test('T2: Vue does not patch an element that leaves, a DOM write stays, `onBeforeUnmount` comes before the leave classes, and an inline `transition: none` removes the element at once', async () => {
+  test('Vue does not patch an element that leaves, a DOM write stays, `onBeforeUnmount` comes before the leave classes, and an inline `transition: none` removes the element at once', async () => {
     const list = ref(['a', 'b', 'c']);
     const items: Record<
       string,
@@ -138,7 +138,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
       writes: false,
     },
   ])(
-    'T3: the move code of the group writes nothing on a stack where $name',
+    'the move code of the group writes nothing on a stack where $name',
     async ({ css, writes }) => {
       const list = ref(['b', 'c']);
       mountVue(
@@ -173,7 +173,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     },
   );
 
-  test('T9: the element of a slot that is the root of an item gets the enter and the leave classes; Vue warns in development', async () => {
+  test('the element of a slot that is the root of an item gets the enter and the leave classes; Vue warns in development', async () => {
     const list = ref(['b']);
     const Part = {
       props: ['id'],
@@ -205,7 +205,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     }
   });
 
-  test('T14: with `duration`, the keyed element stays while its child animates; with none, Vue removes it at once', async () => {
+  test('with `duration`, the keyed element stays while its child animates; with none, Vue removes it at once', async () => {
     const results: boolean[] = [];
     for (const duration of [undefined, 200]) {
       const list = ref(['a']);
@@ -231,7 +231,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
   });
 });
 
-describe('a pointer at rest (T4, T5, T6, T11)', () => {
+describe('a pointer at rest', () => {
   const LAYOUT =
     '<style>#vp { position: fixed; top: 300px; left: 300px; width: 200px; height: 0 } .toast { position: absolute; top: 0; left: 0; width: 200px; height: 40px; background: #ccc; transition: transform 200ms }</style><div id="vp"></div>';
 
@@ -254,13 +254,13 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     return { atOnce, afterAMove: log.splice(0) };
   }
 
-  test('T4: a toast under the pointer gets `inert`: `mouseleave` at the next move in Chromium, and at once or at the next move in Firefox and WebKit', async () => {
+  test('a toast under the pointer gets `inert`: `mouseleave` at the next move in Chromium, and at once or at the next move in Firefox and WebKit', async () => {
     const { atOnce, afterAMove } = await atRest(() => (element('a').inert = true));
     expect([...atOnce, ...afterAMove]).toEqual(['mouseleave']);
     if (engine === 'chromium') expect(atOnce).toEqual([]);
   });
 
-  test('T5: a toast under the pointer leaves the document: `mouseleave` at once in Firefox, at once or at the next move in Chromium, never in WebKit, which sends a `mouseover` outside', async () => {
+  test('a toast under the pointer leaves the document: `mouseleave` at once in Firefox, at once or at the next move in Chromium, never in WebKit, which sends a `mouseover` outside', async () => {
     const overs: string[] = [];
     const onMouseover = (event: MouseEvent) =>
       overs.push((event.target as Element).id || (event.target as Element).localName);
@@ -281,7 +281,7 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     }
   });
 
-  test('T6: a toast under the pointer moves away in a transition: `mouseleave` at once in Firefox and WebKit, at the next move in Chromium', async () => {
+  test('a toast under the pointer moves away in a transition: `mouseleave` at once in Firefox and WebKit, at the next move in Chromium', async () => {
     const { atOnce, afterAMove } = await atRest(
       () => (element('a').style.transform = 'translateX(400px)'),
     );
@@ -291,7 +291,7 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
     );
   });
 
-  test('T11: a toast comes under the pointer: `mouseenter` at once in Firefox and WebKit, at the next move in Chromium', async () => {
+  test('a toast comes under the pointer: `mouseenter` at once in Firefox and WebKit, at the next move in Chromium', async () => {
     const result = await atRest(
       (vp) => (vp.innerHTML = '<div class="toast" id="a">a</div>'),
       false,
@@ -304,12 +304,12 @@ describe('a pointer at rest (T4, T5, T6, T11)', () => {
   });
 });
 
-describe('the size of a content (T7)', () => {
+describe('the size of a content', () => {
   test.each([
     { name: 'height auto', style: '', calls: 1 },
     { name: 'height 100%', style: 'height: 100%', calls: 0 },
   ])(
-    'T7: a ResizeObserver on a content with $name in a root of a fixed height gets $calls calls when its text grows',
+    'a ResizeObserver on a content with $name in a root of a fixed height gets $calls calls when its text grows',
     async ({ style, calls }) => {
       html(
         `<div style="width: 200px; height: 20px; overflow: hidden"><div id="content" style="${style}">short</div></div>`,
@@ -328,8 +328,8 @@ describe('the size of a content (T7)', () => {
   );
 });
 
-describe('the focus of the window (T8, T20)', () => {
-  test('T8, T20: the focus that goes into a frame of the page gives the window `blur`; one task later the page has the focus and the frame is the active element in the three', async () => {
+describe('the focus of the window', () => {
+  test('the focus that goes into a frame of the page gives the window `blur`; one task later the page has the focus and the frame is the active element in the three', async () => {
     html(
       `<button id="outer">Outer</button><iframe id="frame" title="Frame" style="width: 200px; height: 100px" srcdoc="<button style='width: 150px; height: 60px'>In</button>"></iframe>`,
     );
@@ -370,7 +370,7 @@ describe('the focus of the window (T8, T20)', () => {
   });
 });
 
-describe('Tab and the sentinels (T10)', () => {
+describe('Tab and the sentinels', () => {
   test.each([
     {
       name: 'beside',
@@ -385,7 +385,7 @@ describe('Tab and the sentinels (T10)', () => {
       forward: ['s1', 't2', 'i2', 't3'],
     },
   ])(
-    'T10: with the sentinels $name the container, Tab from the container skips an inert root, and Shift+Tab from the first root goes to the first sentinel',
+    'with the sentinels $name the container, Tab from the container skips an inert root, and Shift+Tab from the first root goes to the first sentinel',
     async ({ markup, forward }) => {
       html(markup);
       element('vp').focus();
@@ -402,7 +402,7 @@ describe('Tab and the sentinels (T10)', () => {
   );
 });
 
-describe('a touch (T12, T22, N1, N2, N3)', () => {
+describe('a touch', () => {
   // A page that scrolls on the two axes, with a fixed box.
   function touchBox(touchAction: string) {
     html(
@@ -438,7 +438,7 @@ describe('a touch (T12, T22, N1, N2, N3)', () => {
     { touchAction: 'pan-x', dx: 12, dy: 0, end: 'pointercancel' },
     { touchAction: 'pan-x', dx: 0, dy: 12, end: 'pointerup' },
   ])(
-    'T12, N1, N2: a touch drag on `touch-action: $touchAction` by ($dx, $dy) ends with $end, and sends no `mouseleave`',
+    'a touch drag on `touch-action: $touchAction` by ($dx, $dy) ends with $end, and sends no `mouseleave`',
     async ({ touchAction, dx, dy, end }) => {
       const { log } = touchBox(touchAction);
       const start = { x: 200, y: 140 };
@@ -453,7 +453,7 @@ describe('a touch (T12, T22, N1, N2, N3)', () => {
     { touchAction: 'pan-y', dx: 1, dy: 0 },
     { touchAction: 'pan-x', dx: 0, dy: 1 },
   ])(
-    'T22, N3: the first `pointermove` of a touch drag on `touch-action: $touchAction` in steps of 1 px comes at 1 px',
+    'the first `pointermove` of a touch drag on `touch-action: $touchAction` in steps of 1 px comes at 1 px',
     async ({ touchAction, dx, dy }) => {
       const { log } = touchBox(touchAction);
       const start = { x: 200, y: 140 };
@@ -464,8 +464,8 @@ describe('a touch (T12, T22, N1, N2, N3)', () => {
   );
 });
 
-describe('a focused element that leaves (T13, T18, T21)', () => {
-  test('T13: leaves the focus on <body>; only Chromium sends `focusout`; the next Tab goes on after its place', async () => {
+describe('a focused element that leaves', () => {
+  test('leaves the focus on <body>; only Chromium sends `focusout`; the next Tab goes on after its place', async () => {
     html(
       '<div id="vp" tabindex="-1"><div id="a" tabindex="0">a</div><div id="b" tabindex="0">b</div></div>',
     );
@@ -480,7 +480,7 @@ describe('a focused element that leaves (T13, T18, T21)', () => {
     expect(activeId()).toBe('b');
   });
 
-  test('T18: a focused root that gets `inert` sends `focusout`, and the focus goes to <body>', async () => {
+  test('a focused root that gets `inert` sends `focusout`, and the focus goes to <body>', async () => {
     html('<div id="vp" tabindex="-1"><div id="a" tabindex="0">a</div></div>');
     const log: string[] = [];
     element('vp').addEventListener('focusout', () => log.push('focusout'));
@@ -491,7 +491,7 @@ describe('a focused element that leaves (T13, T18, T21)', () => {
     expect(activeId()).toBe('body');
   });
 
-  test('T21: `blur()` on the focused root sends `focusout` with no related target; the later removal sends nothing', async () => {
+  test('`blur()` on the focused root sends `focusout` with no related target; the later removal sends nothing', async () => {
     html(
       '<div id="vp"><div id="a" tabindex="0">a</div><div id="b" tabindex="0" inert>b</div></div>',
     );
@@ -509,9 +509,9 @@ describe('a focused element that leaves (T13, T18, T21)', () => {
   });
 });
 
-describe(':focus-visible (T15, T16, T17)', () => {
+describe(':focus-visible', () => {
   test.each([{ options: undefined }, { options: { focusVisible: true } }])(
-    'T15: a root that a key listener focuses after Tab matches :focus-visible, with the options $options',
+    'a root that a key listener focuses after Tab matches :focus-visible, with the options $options',
     async ({ options }) => {
       html(
         '<input id="before" aria-label="Before"><div id="vp" tabindex="-1"><div id="a" tabindex="0">a</div><div id="b" tabindex="0">b</div></div>',
@@ -530,7 +530,7 @@ describe(':focus-visible (T15, T16, T17)', () => {
   );
 
   test.each(['a press on a button', 'Tab', 'a press on a text input', 'no focus'])(
-    'T16: a region that an F6 listener focuses with `preventScroll` matches :focus-visible after $0',
+    'a region that an F6 listener focuses with `preventScroll` matches :focus-visible after $0',
     async (origin) => {
       html(
         '<input id="text" aria-label="Text"><button id="button">Button</button><div id="vp" tabindex="-1">Region</div>',
@@ -556,7 +556,7 @@ describe(':focus-visible (T15, T16, T17)', () => {
     },
   );
 
-  test('T17: a mouse press on a root and on a button in it gives no :focus-visible; WebKit on macOS focuses the root for the button', async () => {
+  test('a mouse press on a root and on a button in it gives no :focus-visible; WebKit on macOS focuses the root for the button', async () => {
     html(
       '<div id="root" tabindex="0" style="width: 300px; height: 80px"><button id="close">Close</button></div>',
     );
@@ -572,9 +572,9 @@ describe(':focus-visible (T15, T16, T17)', () => {
   });
 });
 
-describe('a mouse drag on text (T19)', () => {
+describe('a mouse drag on text', () => {
   test.each(['both axes', 'one axis'])(
-    'T19: with the box on $0, an inline `user-select: none` from the press selects nothing in the three; with no rule WebKit selects text, and Firefox on one axis; `preventDefault()` of `pointermove` does not stop Firefox on one axis',
+    'with the box on $0, an inline `user-select: none` from the press selects nothing in the three; with no rule WebKit selects text, and Firefox on one axis; `preventDefault()` of `pointermove` does not stop Firefox on one axis',
     async (axes) => {
       const selected: Record<string, boolean> = {};
       for (const how of ['nothing', 'pointermove', 'user-select']) {

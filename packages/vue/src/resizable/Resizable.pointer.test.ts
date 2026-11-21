@@ -259,7 +259,8 @@ describe('a drag', () => {
 
 describe('the focus, the selection and the click', () => {
   // Each browser shows a ring for a focus that a script gives, unless a mouse gave the last focus
-  // (M5).
+  // (test/measurements/resizable.test.ts, "focus() in a press matches :focus-visible unless a
+  // mouse gave the last focus or the call has focusVisible: false").
   test.each(['a mouse', 'a key'])(
     'a press gives the handle the focus with no focus ring, after %s moved the focus',
     async (before) => {

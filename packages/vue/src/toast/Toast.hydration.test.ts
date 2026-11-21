@@ -4,7 +4,7 @@ import ToastServer from '../../test/fixtures/ToastServer.vue';
 import { hydrate, renderOnServer } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
-describe('server render and hydration (B10)', () => {
+describe('server render and hydration', () => {
   test('a viewport in place is in the server HTML with the toasts of a setup: the variables with no height, no sentinel and no alert', async () => {
     const root = await renderOnServer('ToastServer');
     const viewport = root.querySelector('[role="region"]')!;

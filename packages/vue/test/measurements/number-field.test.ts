@@ -413,7 +413,7 @@ async function touchUp(element: Element, distance: number) {
 }
 
 describe.runIf(server.browser === 'chromium')('a touch in Chromium', () => {
-  test('M1: a drag of one finger scrolls the page from an inline span with touch-action pinch-zoom, and not from a flex item with it or from a span that cancels touchstart', async () => {
+  test('a drag of one finger scrolls the page from an inline span with touch-action pinch-zoom, and not from a flex item with it or from a span that cancels touchstart', async () => {
     const container = html(`<div style="height: 4000px">
       <p><span id="inline" style="touch-action: pinch-zoom">inline</span></p>
       <p style="display: flex"><span id="item" style="touch-action: pinch-zoom">item</span></p>
@@ -435,7 +435,7 @@ describe.runIf(server.browser === 'chromium')('a touch in Chromium', () => {
     });
   });
 
-  test('M2: a touch that scrolls the page from a button sends pointercancel before 460 ms; a touch that stays 700 ms on a button with user-select none gets no contextmenu and no pointercancel', async () => {
+  test('a touch that scrolls the page from a button sends pointercancel before 460 ms; a touch that stays 700 ms on a button with user-select none gets no contextmenu and no pointercancel', async () => {
     const container = html(`<div style="height: 4000px">
       <button type="button" style="user-select: none; -webkit-user-select: none">+</button></div>`);
     const button = container.querySelector('button')!;
@@ -460,7 +460,7 @@ describe.runIf(server.browser === 'chromium')('a touch in Chromium', () => {
 });
 
 describe('a form reset', () => {
-  test('M3: a capture listener on the root node of a control gets the reset and the formdata of its form, with the form as its target, also for a control that the form attribute gives to it, in a document and in a shadow root; both events bubble', () => {
+  test('a capture listener on the root node of a control gets the reset and the formdata of its form, with the form as its target, also for a control that the form attribute gives to it, in a document and in a shadow root; both events bubble', () => {
     const container = html('<div id="host"></div>');
     const host = container.querySelector('#host')!;
     const shadow = host.attachShadow({ mode: 'open' });

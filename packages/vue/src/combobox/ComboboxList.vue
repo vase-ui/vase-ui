@@ -42,7 +42,8 @@ function elementProps() {
       // In a grid the attribute says that the cells cannot change.
       'aria-readonly': context.readonly && !context.grid ? 'true' : undefined,
       'data-empty': context.empty ? '' : undefined,
-      // A press in the list keeps the focus on the input (test/measurements/combobox.test.ts, C1).
+      // A press in the list keeps the focus on the input (test/measurements/combobox.test.ts, "a
+      // press in a popup while a text input has the focus").
       onMousedown: (event: MouseEvent) => event.preventDefault(),
     },
     attrs,

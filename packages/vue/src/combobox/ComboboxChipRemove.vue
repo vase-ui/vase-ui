@@ -52,7 +52,8 @@ function elementProps() {
   return button.mergeAttributes(
     {
       tabindex: -1,
-      // The input keeps the focus (test/measurements/combobox.test.ts, C1).
+      // The input keeps the focus (test/measurements/combobox.test.ts, "a press in a popup while a
+      // text input has the focus").
       onMousedown: (event: MouseEvent) => event.preventDefault(),
       onClick,
     },

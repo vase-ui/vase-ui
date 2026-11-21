@@ -58,7 +58,7 @@ function recordEvents(types: string[], ...targets: EventTarget[]) {
   return log;
 }
 
-describe('M1: the server render of siblings', () => {
+describe('the server render of siblings', () => {
   test('the first of three siblings has the names of all only with onServerPrefetch', async () => {
     const plain = await renderOnServer('MeasureServerSiblings', { showNames: true });
     const names = (element: Element) =>
@@ -82,7 +82,7 @@ describe('M1: the server render of siblings', () => {
   });
 });
 
-describe('M2: a hydration with other values', () => {
+describe('a hydration with other values', () => {
   const serverState = {
     flex: '1 1 0px',
     label: 'Server',
@@ -133,7 +133,7 @@ describe('M2: a hydration with other values', () => {
   });
 });
 
-describe('M3: flex items that get their final flex in the flush after the mount', () => {
+describe('flex items that get their final flex in the flush after the mount', () => {
   function mountItems(props: { read?: boolean; transition?: string }) {
     const runs: number[] = [];
     const container = document.body.appendChild(document.createElement('div'));
@@ -242,7 +242,7 @@ describe('the press of a div with pointer capture', () => {
   }
 
   // `user-select` and `selectstart` are of limited availability (MDN), so no part rests on them.
-  test('M4: a press that moves across text selects it only in WebKit, also with user-select: none; a prevented mousedown or selectstart selects nothing', async () => {
+  test('a press that moves across text selects it only in WebKit, also with user-select: none; a prevented mousedown or selectstart selects nothing', async () => {
     releaseAfterTest();
     const results: Record<string, string> = {};
     for (const press of [
@@ -265,7 +265,7 @@ describe('the press of a div with pointer capture', () => {
   // A focus that the browser gives at a press never shows a ring. A focus that a script gives in
   // the press shows one unless a mouse gave the focus before, in each browser. The option
   // `focusVisible: false` of `focus()` stops the ring in each browser.
-  test('M5: focus() in a press matches :focus-visible unless a mouse gave the last focus or the call has focusVisible: false', async () => {
+  test('focus() in a press matches :focus-visible unless a mouse gave the last focus or the call has focusVisible: false', async () => {
     releaseAfterTest();
     const results: Record<string, string> = {};
     for (const focus of ['pointerdown', 'mousedown'] as const) {
@@ -299,7 +299,7 @@ describe('the press of a div with pointer capture', () => {
     });
   });
 
-  test('M6: the release of a mouse drag that moved sends a click to the div', async () => {
+  test('the release of a mouse drag that moved sends a click to the div', async () => {
     releaseAfterTest();
     const { target } = pressTarget();
     const log = recordEvents(['click'], target);
@@ -311,7 +311,7 @@ describe('the press of a div with pointer capture', () => {
   });
 
   test.skipIf(server.browser !== 'chromium')(
-    'M6: the release of a touch drag that moved sends a click in Chromium',
+    'the release of a touch drag that moved sends a click in Chromium',
     async () => {
       const { target } = pressTarget();
       target.style.touchAction = 'none';
@@ -325,7 +325,7 @@ describe('the press of a div with pointer capture', () => {
 
 // The pointer capture of a press is in `pointer-press.test.ts`.
 
-test('M9: a focused div that loses its tabindex loses the focus at the next rendering in each browser', async () => {
+test('a focused div that loses its tabindex loses the focus at the next rendering in each browser', async () => {
   const target = html('<div id="target" tabindex="0">Target</div>')
     .firstElementChild as HTMLElement;
   target.focus();
@@ -335,7 +335,7 @@ test('M9: a focused div that loses its tabindex loses the focus at the next rend
   expect(document.activeElement).toBe(document.body);
 });
 
-describe('M10: an absolute child outside the box of its parent', () => {
+describe('an absolute child outside the box of its parent', () => {
   const markup = `
     <div id="first" style="position: absolute; left: 100px; top: 100px; width: 2px; height: 200px">
       <span id="first-target" style="position: absolute; top: 0; bottom: 0; left: 50%; width: 20px; translate: -50% 0"></span>
@@ -367,7 +367,7 @@ describe('M10: an absolute child outside the box of its parent', () => {
   });
 });
 
-describe('M11: a ResizeObserver callback that changes the size of the items that it observes', () => {
+describe('a ResizeObserver callback that changes the size of the items that it observes', () => {
   type Reaction = 'at once' | 'in a microtask' | 'in a frame';
 
   /**

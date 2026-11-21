@@ -30,7 +30,7 @@
     {
       "upstream": "packages/utils/src/store/useStore.ts",
       "kind": "not-applicable",
-      "reason": "The hook subscribes a React component to a store through `useSyncExternalStore`. A Vue `computed` that calls `select` of the store does this work."
+      "reason": "The hook subscribes a React component to a store through `useSyncExternalStore`. A Vue `computed` that reads reactive state does this work."
     },
     {
       "upstream": "packages/utils/src/lruMemoize.ts",
@@ -155,7 +155,7 @@
     {
       "upstream": "packages/utils/src/store/Store.spec.ts",
       "kind": "not-applicable",
-      "reason": "It tests the type of `Store.create`, which the Vue store does not have."
+      "reason": "It tests the type of `Store.create`. Vase UI has no store class."
     },
     {
       "upstream": "packages/utils/src/store/ReactStore.test.tsx",
