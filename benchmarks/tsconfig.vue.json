@@ -10,7 +10,6 @@
     "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true,
     "noUncheckedSideEffectImports": true,
-    "exactOptionalPropertyTypes": false,
     "noPropertyAccessFromIndexSignature": false,
     "types": ["node"]
   },

@@ -65,6 +65,7 @@ To run `pnpm test:vapor` or `pnpm test:vapor-parts` on your machine, install the
 - ESLint renders each page with the VitePress of `docs`. Do not add `vitepress` to the root `package.json`. The release job `stage` installs the root dependencies in a step that can get an OIDC token.
 - `postcss` in `docs/package.json` has the version that Vite uses, as `pnpm why postcss -r` shows. The workspace then has one copy. Change the version when Vite uses another one.
 - `tailwindcss` of `docs` and `@tailwindcss/vite` of `docs` and `packages/vue` have the same exact version. The plugin depends on that exact version, so another version installs a second copy.
+- A tool in `benchmarks/package.json` that `packages/vue` also has, such as `vite` or `vue-tsc`, has the version of `packages/vue`. The workspace then has one copy of the tool.
 - The CI jobs that start a browser run in the image `mcr.microsoft.com/playwright`, which has the browsers of one Playwright version. When you change the version of `playwright`, change the tag of each image in `.github/workflows/ci.yml`.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
@@ -359,7 +360,7 @@ Run `pnpm lint:fix`, then `pnpm typecheck` and `pnpm lint`. The last two show th
 
 ### Compiler flags
 
-- The root project, `docs` and `packages/vue` extend `@tsconfig/strictest`. A flag of the preset is off only for a reason that this section gives.
+- The root project, `benchmarks`, `docs` and `packages/vue` extend `@tsconfig/strictest`. A flag of the preset is off only for a reason that this section gives.
 - `packages/vue` has two projects: `tsconfig.build.json` for the source, and `tsconfig.test.json` for each file of the package. The build, `pnpm parity:check` and the API reference read the first.
 - The test project has `noUncheckedIndexedAccess`, `noImplicitOverride`, `noUnusedLocals` and `noUnusedParameters` off. A ported test can then keep the text of the Base UI test.
 - `exactOptionalPropertyTypes` is off in the package. With the flag, the built declarations give a listener no `| undefined`. The consumer project of `pnpm check:package` sets the flag and passes `undefined` to an optional prop and to a listener.
@@ -593,7 +594,7 @@ The workspace project `benchmarks` measures the size of Vase UI and of other com
 | Command | Function |
 | --- | --- |
 | `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. Run `pnpm build` first. |
-| `pnpm benchmarks:size` | Builds each app. Then it writes `benchmarks/results.json`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, and the version of each library and framework. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
+| `pnpm benchmarks:size` | Builds each app. Then it writes `benchmarks/results.json`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
 | `pnpm benchmarks:typecheck` | Runs vue-tsc on the Vue files and tsc on the React files. The job `check` of CI runs it, so a pull request that changes the API of Vase UI also corrects the fixtures. Run `pnpm build` first. |
 
 A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base UI. Each fixture follows these rules, so that each library gets the same conditions:

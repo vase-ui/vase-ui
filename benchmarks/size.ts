@@ -16,10 +16,7 @@ interface Size {
  * Builds the app, then sums the bytes of each JavaScript and CSS file. The HTML file does not
  * count.
  */
-async function sizeOf(app: App | undefined): Promise<Size | null> {
-  if (app === undefined) {
-    return null;
-  }
+async function sizeOf(app: App): Promise<Size> {
   await buildApp(app);
   const size = { raw: 0, gzip: 0, brotli: 0 };
   for (const file of globSync('**/*.{js,css}', { cwd: app.outDir })) {
@@ -39,19 +36,19 @@ function installed(name: string): { package: string; version: string } {
   return { package: manifest.name, version: manifest.version };
 }
 
-const emptyApps: Record<string, Size | null> = {};
+const emptyApps: Record<string, Size> = {};
 for (const setup of SETUPS) {
   emptyApps[setup.id] = await sizeOf(emptyApp(setup));
 }
 
-// A library without a fixture for a scenario gets `null`.
 const apps: Record<string, Record<string, Record<string, Size | null>>> = {};
 for (const scenario of SCENARIOS) {
   const scenarioApps: Record<string, Record<string, Size | null>> = {};
   for (const setup of SETUPS) {
     const setupApps: Record<string, Size | null> = {};
     for (const library of librariesOf(setup)) {
-      setupApps[library.id] = await sizeOf(libraryApp(setup, library, scenario));
+      const app = libraryApp(setup, library, scenario);
+      setupApps[library.id] = app === undefined ? null : await sizeOf(app);
     }
     scenarioApps[setup.id] = setupApps;
   }

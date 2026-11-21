@@ -49,7 +49,6 @@ export function libraryApp(setup: Setup, library: Library, scenario: string): Ap
   };
 }
 
-/** Each library of the framework of `setup`. */
 export function librariesOf(setup: Setup): Library[] {
   return LIBRARIES.filter((library) => library.framework === setup.framework);
 }
@@ -128,7 +127,6 @@ function appConfig(app: App): InlineConfig {
   };
 }
 
-/** Each app: the empty app of each setup, then each scenario of each library in each setup. */
 function allApps(): App[] {
   return SETUPS.flatMap((setup) => [
     emptyApp(setup),
