@@ -252,7 +252,7 @@ export function useMenuRoot<Payload>(
       trap: false,
       lockScroll: blocks && (root.interaction !== 'touch' || fullWidth.value),
       triggerInUse: true,
-      touchDrag: true,
+      tapEnd: true,
       hole:
         current === 'context' ? null : current === 'menubar' ? menubar.value?.element : undefined,
       inside: current === 'menubar' ? menubar.value?.triggers : undefined,

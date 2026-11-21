@@ -17,7 +17,7 @@ import DialogWithPopovers from '../../test/fixtures/DialogWithPopovers.vue';
 import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
 import DialogWithSelect from '../../test/fixtures/DialogWithSelect.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { touchDrag } from '../../test/pointer';
+import { sendTouch, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -699,14 +699,34 @@ describe('modal', () => {
       },
     );
 
-    // The fixed element of a modal dialog and the backdrop take each touch from the page. The
-    // backdrop has no scroll of its own, so a drag on it sends `pointermove`.
+    test.each(['trap-focus', false] as const)(
+      'with modal=%s and no backdrop closes at the `pointerup` of a tap',
+      async (modal) => {
+        append('div', surface);
+        const reasons = await touchDialog(modal);
+        await touchDrag(point, point, 1);
+        await closed();
+        expect(reasons).toEqual(['outside-press pointerup']);
+      },
+    );
+
+    // A drag is no tap. The backdrop has no scroll of its own, so a drag on it sends `pointermove`.
     test.each([
-      { modal: true, backdrop: undefined },
-      { modal: 'trap-focus', backdrop: 'position: fixed; inset: 0; touch-action: none' },
-      { modal: false, backdrop: 'position: fixed; inset: 0; touch-action: none' },
+      { modal: true, on: 'the fixed element', backdrop: undefined },
+      {
+        modal: 'trap-focus',
+        on: 'the backdrop',
+        backdrop: 'position: fixed; inset: 0; touch-action: none',
+      },
+      {
+        modal: false,
+        on: 'the backdrop',
+        backdrop: 'position: fixed; inset: 0; touch-action: none',
+      },
+      { modal: 'trap-focus', on: 'the page', backdrop: undefined },
+      { modal: false, on: 'the page', backdrop: undefined },
     ] as const)(
-      'with modal=$modal closes nothing at a drag on the fixed element or the backdrop',
+      'with modal=$modal closes nothing at a drag on $on',
       async ({ modal, backdrop }) => {
         append('div', surface);
         const reasons = await touchDialog(modal, backdrop);
@@ -717,41 +737,16 @@ describe('modal', () => {
       },
     );
 
-    test.each(['trap-focus', false] as const)(
-      'with modal=%s and no backdrop closes at a drag',
-      async (modal) => {
-        append('div', surface);
-        const reasons = await touchDialog(modal);
-        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
-        await closed();
-        expect(reasons).toEqual(['outside-press pointermove']);
-      },
-    );
-
-    test('a pinch closes nothing', async () => {
+    // A touch that moves more than 10 px is no tap by itself, so the two touches stay.
+    test('a touch of two fingers closes nothing', async () => {
       append('div', surface);
       await touchDialog(false);
-      const { cdp } = await import('vitest/browser');
-      const session = cdp();
-      const frame = window.frameElement!.getBoundingClientRect();
-      const scale = frame.width / window.innerWidth || 1;
-      const at = (x: number, y: number) => ({
-        x: frame.left + x * scale,
-        y: frame.top + y * scale,
-      });
-      await session.send('Input.dispatchTouchEvent', {
-        type: 'touchStart',
-        touchPoints: [at(60, 250)],
-      });
-      await session.send('Input.dispatchTouchEvent', {
-        type: 'touchStart',
-        touchPoints: [at(60, 250), at(100, 350)],
-      });
-      await session.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [at(60, 230), at(100, 380)],
-      });
-      await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await sendTouch('touchStart', [{ x: 60, y: 250 }]);
+      await sendTouch('touchStart', [
+        { x: 60, y: 250 },
+        { x: 100, y: 350 },
+      ]);
+      await sendTouch('touchEnd', []);
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(popup()).not.toBe(null);
     });
