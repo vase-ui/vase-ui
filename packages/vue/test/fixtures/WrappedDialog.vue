@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="Payload = unknown">
-import { Dialog } from '@vase-ui/vue/dialog';
-import type { DialogRootEmits, DialogRootProps } from '@vase-ui/vue/dialog';
+import { Dialog } from '../../src/dialog';
+import type { DialogRootEmits, DialogRootProps } from '../../src/dialog';
 
 interface Props extends /* @vue-ignore */ DialogRootProps<Payload> {}
 interface Emits extends /* @vue-ignore */ DialogRootEmits {}
