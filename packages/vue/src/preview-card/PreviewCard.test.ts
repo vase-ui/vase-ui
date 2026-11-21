@@ -10,6 +10,7 @@ import PreviewCardSlots from '../../test/fixtures/PreviewCardSlots.vue';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readAfter, readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -36,26 +37,6 @@ function rootEvents(log: string[], props: Props = {}) {
     onOpenChange: (open: boolean, details: PreviewCardRootChangeEventDetails) =>
       log.push(`openChange ${open} ${details.reason}`),
     'onUpdate:open': (open: boolean) => log.push(`update ${open}`),
-  });
-}
-
-/**
- * Resolves with the value of `read` `ms` milliseconds after the next `type` event of `target`. A
- * command of `userEvent` can take more time than a delay, so a wait that starts after the command
- * can end after the delay. The window gets the event in the capture phase, before the listeners of
- * the parts. A timer of `ms` or more that a part starts in that event or later runs after this one
- * (https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#run-steps-after-a-timeout).
- */
-function readAfter<T>(target: Element, type: string, ms: number, read: () => T) {
-  return new Promise<T>((resolve) => {
-    const remove = () => window.removeEventListener(type, listener, true);
-    function listener(event: Event) {
-      if (event.target !== target) return;
-      remove();
-      setTimeout(() => resolve(read()), ms);
-    }
-    window.addEventListener(type, listener, true);
-    onTestFinished(remove);
   });
 }
 
@@ -638,16 +619,34 @@ describe('the hover', () => {
       });
       await userEvent.hover(byId('a'));
       await waitFor(() => expect(byId('a')).toHaveAttribute('data-popup-open'));
+      // The hover on `b` comes in the task where the leave of 300 ms starts, which can end before a
+      // command ends.
+      const atHover = readWhen(
+        () => !byId('a').hasAttribute('data-popup-open'),
+        async () => {
+          byId('b').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+          await nextTick();
+          return byId('b').hasAttribute('data-popup-open');
+        },
+      );
       await userEvent.hover(byId('outside'));
-      await waitFor(() => expect(byId('a')).not.toHaveAttribute('data-popup-open'));
+      expect(await atHover).toBe(true);
       await userEvent.hover(byId('b'));
-      expect(byId('b')).toHaveAttribute('data-popup-open');
       await userEvent.hover(byId('outside'));
       await waitFor(() => expect(byId('b')).not.toHaveAttribute('data-popup-open'));
-      await wait(400);
+      // The leave ends: Vue removes the card, or the animation of `[hidden]` ends.
+      await waitFor(() =>
+        expect(
+          popup()
+            ?.getAnimations()
+            .some((animation) => animation.playState === 'running'),
+        ).not.toBe(true),
+      );
+      const beforeOpen = readAfter(byId('a'), 'pointerenter', 100, () =>
+        byId('a').hasAttribute('data-popup-open'),
+      );
       await userEvent.hover(byId('a'));
-      await wait(100);
-      expect(byId('a')).not.toHaveAttribute('data-popup-open');
+      expect(await beforeOpen).toBe(false);
       await waitFor(() => expect(byId('a')).toHaveAttribute('data-popup-open'));
       unmount();
     }
@@ -657,10 +656,21 @@ describe('the hover', () => {
     mount(PreviewCardInTransition, { trigger: { delay: 150, closeDelay: 0 } });
     await userEvent.hover(byId('a'));
     await waitFor(() => expect(byId('a')).toHaveAttribute('data-popup-open'));
+    // The hover on `b` comes in the task where the leave of 300 ms starts, and the check 50 ms after
+    // it. A command can end after the leave or after the delay.
+    const atHover = readWhen(
+      () => !byId('a').hasAttribute('data-popup-open'),
+      async () => {
+        const leaving = popup();
+        byId('b').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+        await wait(50);
+        return { leaving, open: byId('b').hasAttribute('data-popup-open') };
+      },
+    );
     await userEvent.keyboard('{Escape}');
-    expect(popup()).not.toBe(null);
-    await userEvent.hover(byId('b'));
-    expect(byId('b')).not.toHaveAttribute('data-popup-open');
+    const { leaving, open } = await atHover;
+    expect(leaving).not.toBe(null);
+    expect(open).toBe(false);
     await waitFor(() => expect(byId('b')).toHaveAttribute('data-popup-open'));
   });
 

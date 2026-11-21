@@ -14,6 +14,7 @@ import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -1378,9 +1379,17 @@ describe('the hover (L9)', () => {
     const { trigger } = await mountPopover({
       triggers: [{ key: 't', attrs: { openOnHover: true, delay: 0 } }],
     });
+    // A press command can come more than 500 ms after the open on a busy machine. The click of the
+    // DOM comes in the task of the open.
+    const pressed = readWhen(
+      () => popup() !== null,
+      () => {
+        trigger().click();
+        return popup();
+      },
+    );
     await userEvent.hover(trigger());
-    const element = await opened();
-    await userEvent.click(trigger());
+    const element = await pressed;
     await nextTick();
     expect(popup()).toBe(element);
     expect(trigger()).toHaveAttribute('data-pressed');
@@ -1450,9 +1459,14 @@ describe('the hover (L9)', () => {
     await userEvent.hover(element);
     const first = await opened();
     trigger.delay = 10_000;
+    // The hover comes in the task where the leave starts. A close in the enter reverses its
+    // transition, so the leave can end in some milliseconds, before a command ends.
+    const reopened = readWhen(
+      () => first.classList.contains('pop-leave-active'),
+      () => element.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })),
+    );
     await userEvent.hover(appendOutside('button'));
-    await waitFor(() => expect(first.className).toContain('pop-leave-active'));
-    await userEvent.hover(element);
+    await reopened;
     await nextTick();
     expect(log.at(-2)).toBe('openChange true trigger-hover');
     await waitFor(() => expect(popup() ?? first).not.toBe(first));
@@ -1578,11 +1592,21 @@ describe('the hover (L9)', () => {
     await placed();
     const trigger = document.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
     await userEvent.hover(trigger);
+    // The hover comes in the task where the leave starts: the leave of 100 ms can end before a
+    // command ends.
+    const atReopen = readWhen(
+      () => trigger.getAttribute('aria-expanded') === 'false',
+      async () => {
+        const leaving = popup();
+        trigger.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+        await nextTick();
+        return { leaving, expanded: trigger.getAttribute('aria-expanded') };
+      },
+    );
     await userEvent.pointer({ coords: { x: innerWidth - 2, y: innerHeight - 2 } });
-    await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'false'));
-    expect(popup()).not.toBe(null);
-    await userEvent.hover(trigger);
-    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    const { leaving, expanded } = await atReopen;
+    expect(leaving).not.toBe(null);
+    expect(expanded).toBe('true');
   });
 
   test('an Escape stops the pending hover open of another trigger', async () => {
@@ -1648,11 +1672,18 @@ describe('the placement (L10)', () => {
     await opened();
     await waitFor(() => expect(log).toEqual(['after-enter']));
     const place = positioner()!.getBoundingClientRect().toJSON();
+    // The move and the check start in the task where the leave starts: the leave of 100 ms can end
+    // before a command ends.
+    const placeInLeave = readWhen(
+      () => popup()?.classList.contains('pop-leave-active') === true,
+      async () => {
+        document.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!.style.marginLeft = '100px';
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        return positioner()!.getBoundingClientRect().toJSON();
+      },
+    );
     await userEvent.keyboard('{Escape}');
-    await nextTick();
-    document.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!.style.marginLeft = '100px';
-    await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(positioner()!.getBoundingClientRect().toJSON()).toEqual(place);
+    expect(await placeInLeave).toEqual(place);
   });
 
   describe('at an anchor', () => {
@@ -2016,8 +2047,10 @@ describe('more behaviors of the parts', () => {
     const { trigger, exposed } = await mountPopover({
       triggers: [{ key: 't', attrs: { openOnHover: true, delay: 80 } }],
     });
+    // The close request comes in the task of the `pointerenter`, after the listener of the trigger:
+    // the open waits 80 ms, and a command can take more time.
+    trigger().addEventListener('pointerenter', () => exposed.root.close(), { once: true });
     await userEvent.hover(trigger());
-    exposed.root.close();
     await new Promise((resolve) => setTimeout(resolve, 150));
     expect(popup()).toBe(null);
   });
