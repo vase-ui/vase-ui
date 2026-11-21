@@ -344,8 +344,8 @@ let tap: Tap | null = null;
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
-// The largest move of a tap. Chromium sends `click` for a touch that moves 15 px, and Safari on iOS
-// for one that moves 44 px (test/measurements/popup.test.ts).
+// The largest move of a tap in each engine. Chromium sends `click` for a touch that moves 15 px, and
+// Safari on iOS for one that moves 44 px (test/measurements/popup.test.ts).
 const TAP_SLOP = 15;
 
 // The layer decides at `pointerdown` which layers the press can close.
