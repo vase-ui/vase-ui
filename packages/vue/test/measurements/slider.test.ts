@@ -110,24 +110,35 @@ describe('S1: a pointerdown listener that focuses the input of a thumb', () => {
     },
   );
 
-  // A tap gives the compatibility `mousedown` after `pointerup`. A drag gives none.
+  // A tap gives `pointerup`, the compatibility `mousedown` and `click`. A listener that prevents the
+  // default action of `pointerdown` stops the `mousedown`. A drag gives `pointerup` only.
   test.runIf(chromium).each([
-    { prevent: '', tap: 'body' },
-    { prevent: 'mousedown', tap: 'range' },
-    { prevent: 'pointerdown', tap: 'range' },
+    { prevent: '', tap: 'body', tapEvents: ['pointerup', 'mousedown', 'click'] },
+    { prevent: 'mousedown', tap: 'range', tapEvents: ['pointerup', 'mousedown', 'click'] },
+    { prevent: 'pointerdown', tap: 'range', tapEvents: ['pointerup', 'click'] },
   ] as const)(
     'touch in Chromium, with the default action of "$prevent" prevented: a tap leaves the focus on $tap, a drag on the input',
-    async ({ prevent, tap }) => {
+    async ({ prevent, tap, tapEvents }) => {
       const { element } = control(prevent);
+      const events: string[] = [];
+      for (const type of ['pointerup', 'mousedown', 'click']) {
+        element.addEventListener(type, () => events.push(type));
+      }
       const start = center(element);
       const from = { x: start.x - 60, y: start.y };
       await touchDrag(from, from, 1);
       await settle();
-      expect(pressState(element).focus).toBe(tap);
+      expect({ focus: pressState(element).focus, events: events.splice(0) }).toEqual({
+        focus: tap,
+        events: tapEvents,
+      });
       (document.activeElement as HTMLElement).blur();
       await touchDrag(from, { x: from.x + 50, y: from.y });
       await settle();
-      expect(pressState(element).focus).toBe('range');
+      expect({ focus: pressState(element).focus, events }).toEqual({
+        focus: 'range',
+        events: ['pointerup'],
+      });
     },
   );
 });
