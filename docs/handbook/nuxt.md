@@ -47,6 +47,7 @@ const handle = Dialog.createHandle();
 
 - A page loads only the components that it uses.
 - `nuxt prepare` writes the types of the components and the namespaces, so vue-tsc checks a template with no import.
+- A type has no auto-import. Import it from the entry point, such as `import type { DialogRootProps } from '@vase-ui/vue/dialog'`.
 - A component of your app wins over a component of Vase UI with the same name. Nuxt reads `<Dialog.Root>` as `DialogRoot`, so `components/dialog/Root.vue` wins over `Dialog.Root`. Use the option `prefix` to keep the two apart.
 
 ## Options
