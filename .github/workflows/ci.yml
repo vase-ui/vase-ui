@@ -275,13 +275,13 @@ jobs:
       matrix:
         # An entry with `project` runs that project of `vitest.config.ts`. The project `vapor`
         # mounts each test in a Vapor app. The entry `chromium` also runs the project `node`.
-        # The entries `vue-3.6` run the tests that mount with `test/render.ts` in four setups of
-        # Vue 3.6: a virtual DOM app or a Vapor app, with the parts compiled as virtual DOM or
-        # Vapor components. Each family in `REFACTORED_FOLDERS` adds to their time, so they run
-        # in shards. Vitest puts the files in shards by a hash of their paths, not by their time,
-        # so the slowest shard can take two times as long as the fastest. Add a shard when a shard
-        # takes more than two thirds of the time limit. The number after the slash is the number
-        # of shards. When you add or remove a shard, change that number in each shard.
+        # The entries `vue-3.6` run the browser tests of `src` and of `test/measurements` in four
+        # setups of Vue 3.6: a virtual DOM app or a Vapor app, with the parts compiled as virtual
+        # DOM or Vapor components. They run in shards. Vitest puts the files in shards by a hash
+        # of their paths, not by their time, so the slowest shard can take two times as long as
+        # the fastest. Add a shard when a shard takes more than two thirds of the time limit. The
+        # number after the slash is the number of shards. When you add or remove a shard, change
+        # that number in each shard.
         include:
           - project: chromium
           - project: vapor

@@ -38,8 +38,6 @@ const RUN_EACH_TEST = [
   /^\.node-version$/,
   /(?:^|\/)tsconfig[^/]*\.json$/,
   /^packages\/vue\/vitest\.[^/]*config\.ts$/,
-  // The configurations read the list of the folders whose tests run with Vue 3.6.
-  /^packages\/vue\/test\/refactoredFolders\.ts$/,
   // The module graph misses two files of `test/server`: `renderOnServer` loads `renderToHtml.ts` by
   // a path, and a test runs `printSegmentLayouts.ts` in a child process. The configuration starts
   // the shell script.
@@ -64,12 +62,6 @@ const READ_BY_NO_TEST = [
   /^docs\/public\//,
   /^docs\/.+\.md$/,
 ];
-
-/**
- * `packages/vue/test/refactoredFolders.ts` lists each folder of `src` with these two files. A new
- * or deleted one changes the list, as a change of that file does.
- */
-const REFACTORED_FOLDER_FILE = /^packages\/vue\/src\/[^/]+\/(?:index|types)\.ts$/;
 
 /** A test file can load one of these files. Vitest then finds the test file. */
 const LOADED_BY_TESTS = [/^packages\/vue\/(?:src|test|scripts)\//, /^docs\//];
@@ -128,15 +120,6 @@ export function selectTests(
   const hasRule = (path: string) =>
     matches(READ_BY_NO_TEST, path) || path.startsWith(FIXTURES) || matches(LOADED_BY_TESTS, path);
   if (paths.some((path) => matches(RUN_EACH_TEST, path) || !hasRule(path))) {
-    return all;
-  }
-  if (
-    changes.some(
-      (change) =>
-        (change.status === 'A' || change.status === 'D') &&
-        REFACTORED_FOLDER_FILE.test(change.path),
-    )
-  ) {
     return all;
   }
   // `import.meta.glob` in a test file reads the folders of the demos. The module graph of that
