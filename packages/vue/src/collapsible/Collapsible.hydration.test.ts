@@ -32,8 +32,7 @@ describe('server render and hydration', () => {
       const element = root.querySelector('.Panel');
       if (hidden === undefined) expect(element).toBeNull();
       else {
-        // Before Vue 3.5.41 and 3.6.0-rc.3, the server writes a bare `hidden`.
-        expect(element).toHaveAttribute('hidden');
+        expect(element).toHaveAttribute('hidden', hidden);
         expect(element?.hasAttribute('inert')).toBe(hidden === '');
       }
       hydrate(CollapsibleParts, props, root);

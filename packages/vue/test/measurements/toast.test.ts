@@ -12,7 +12,6 @@ import {
   ref,
   renderSlot,
   TransitionGroup,
-  version,
   type App,
   type Slots,
 } from 'vue';
@@ -174,8 +173,7 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     },
   );
 
-  // Measured with Vue 3.5.12, 3.5.45 and 3.6.0-rc.15.
-  test('T9: the element of a slot that is the root of an item gets the enter and the leave classes, but not with Vue 3.5.12; Vue warns in development', async () => {
+  test('T9: the element of a slot that is the root of an item gets the enter and the leave classes; Vue warns in development', async () => {
     const list = ref(['b']);
     const Part = {
       props: ['id'],
@@ -194,12 +192,11 @@ describe('<TransitionGroup> (T1, T2, T3, T9, T14)', () => {
     list.value = ['a', 'b'];
     await nextTick();
     const a = document.querySelector('[data-id="a"]')!;
-    const animates = version !== '3.5.12';
-    expect(a.className).toBe(animates ? 't-enter-from t-enter-active' : '');
+    expect(a.className).toBe('t-enter-from t-enter-active');
     await wait(400);
     list.value = ['b'];
     await nextTick();
-    if (animates) expect(a.className).toBe('t-leave-from t-leave-active');
+    expect(a.className).toBe('t-leave-from t-leave-active');
     // The root of the component is the fragment of the slot.
     const messages = takeReportedMessages();
     expect(messages.length).toBeGreaterThan(0);

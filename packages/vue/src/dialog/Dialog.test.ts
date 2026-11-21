@@ -1300,11 +1300,8 @@ describe('the viewport, the backdrop and the leave', () => {
         log.add(entry);
         const [part = '', ...classes] = entry.split(' ');
         classesAtLeave[part] = classes;
-        // The update of the close patches the viewport after the start of the leave in Vue 3.5.12.
         if (part === 'popup') {
-          queueMicrotask(() =>
-            inertAtLeave.push(viewport.isConnected, viewport.inert, backdrop.inert),
-          );
+          inertAtLeave.push(viewport.isConnected, viewport.inert, backdrop.inert);
         }
       },
     };

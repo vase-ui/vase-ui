@@ -133,7 +133,6 @@ export interface NavigationMenuContentProps
   keepMounted?: boolean | undefined;
   /**
    * The props of the `<Transition>` around the element, such as `name`, for the change of the item.
-   * Vue animates a `<Transition>` around the part only from Vue 3.5.41.
    */
   transition?: TransitionProps | undefined;
 }

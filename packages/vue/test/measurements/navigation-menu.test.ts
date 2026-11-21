@@ -3,7 +3,7 @@
 // `NavigationMenu.test.ts`.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { nextTick, reactive, version } from 'vue';
+import { nextTick, reactive } from 'vue';
 import MeasureScopedTeleport from '../fixtures/MeasureScopedTeleport.vue';
 import MeasureTeleportScene from '../fixtures/MeasureTeleportScene.vue';
 import NavigationMenuParts from '../fixtures/NavigationMenuParts.vue';
@@ -14,10 +14,6 @@ import { waitFor } from '../waitFor';
 const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const get = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!;
-
-// Vue gives the hooks of a `<Transition>` to the child of a `<Teleport>` root from Vue 3.5.41.
-const patchOf35 = version.startsWith('3.5.') ? Number(version.split('.')[2]) : Infinity;
-const animatesTeleportRoot = patchOf35 >= 41;
 
 let root: HTMLElement | undefined;
 
@@ -45,7 +41,7 @@ function parts(host: ParentNode) {
 }
 
 describe('a <Transition> of the developer around a part with a <Teleport> root (M1, M2)', () => {
-  test('the element gets the enter and the leave classes from Vue 3.5.41; before, it gets none and leaves at once', async () => {
+  test('the element gets the enter and the leave classes', async () => {
     const scene = sceneOf({ target: 'view' });
     ({ root } = mount(MeasureTeleportScene, { scene, around: true }));
     await nextTick();
@@ -59,13 +55,9 @@ describe('a <Transition> of the developer around a part with a <Teleport> root (
     await nextTick();
     const leaveStart = parts(root);
     await waitFor(() => expect(parts(root!)).toEqual([]));
-    if (animatesTeleportRoot) {
-      expect(enterStart).toEqual(['view:a:t-enter-from t-enter-active']);
-      expect(enterNext).toEqual(['view:a:t-enter-active t-enter-to']);
-      expect(leaveStart).toEqual(['view:a:t-leave-from t-leave-active']);
-    } else {
-      expect([enterStart, enterNext, leaveStart]).toEqual([['view:a:-'], ['view:a:-'], []]);
-    }
+    expect(enterStart).toEqual(['view:a:t-enter-from t-enter-active']);
+    expect(enterNext).toEqual(['view:a:t-enter-active t-enter-to']);
+    expect(leaveStart).toEqual(['view:a:t-leave-from t-leave-active']);
     takeReportedMessages();
   });
 
@@ -76,11 +68,10 @@ describe('a <Transition> of the developer around a part with a <Teleport> root (
     await wait(150);
     scene.shown = 'b';
     await nextTick();
-    expect(parts(root)).toEqual(
-      animatesTeleportRoot
-        ? ['view:a:t-leave-from t-leave-active', 'view:b:t-enter-from t-enter-active']
-        : ['view:b:-'],
-    );
+    expect(parts(root)).toEqual([
+      'view:a:t-leave-from t-leave-active',
+      'view:b:t-enter-from t-enter-active',
+    ]);
     takeReportedMessages();
   });
 });
@@ -140,7 +131,6 @@ describe('an element that leaves (M5)', () => {
     await nextTick();
     const next = root.querySelector<HTMLElement>('[data-name="b"]')!;
     expect(next.dataset.direction).toBe('right');
-    // Before Vue 3.5.41 the old element goes at once, with the value of its last render.
     expect(old.dataset.direction).toBe('none');
     takeReportedMessages();
   });
