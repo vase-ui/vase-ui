@@ -1076,8 +1076,9 @@ describe('item alignment', () => {
     await userEvent.click(trigger());
     await opened();
     const text = item('i20').firstElementChild!;
+    // As in `expectAligned`, the text can be one pixel of the list off: 2 px at `zoom: 2`.
     await waitFor(() =>
-      expect(Math.abs(middleOf(text) - middleOf(byTestId('value')))).toBeLessThanOrEqual(0.5),
+      expect(Math.abs(middleOf(text) - middleOf(byTestId('value')))).toBeLessThan(2),
     );
   });
 
