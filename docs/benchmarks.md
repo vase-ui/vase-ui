@@ -1,6 +1,6 @@
 ---
 order: 5
-description: The size and the render time of Vase UI and of other component libraries.
+description: The features and the size of Vase UI and of other component libraries.
 ---
 
 <script setup lang="ts">
@@ -18,7 +18,7 @@ This page compares Vase UI with other unstyled component libraries: the features
 
 ## How to read the numbers
 
-- Each Vue library has two setups. A virtual DOM app is a Vue 3.5 app of `createApp`. A Vapor app is a Vue 3.6 app of `createVaporApp`.
+- We measure each Vue library in two setups. A virtual DOM app is a Vue 3.5 app of `createApp`. A Vapor app is a Vue 3.6 app of `createVaporApp`.
 - Each library on this page is made of virtual DOM components. A Vapor app renders them through `vaporInteropPlugin`, so each app of a library in that setup also holds the runtime of the plugin.
 - Vue 3.6 is a prerelease. A failure in a Vapor app can be a fault of the prerelease.
 - Each comparison is between libraries in one setup. The page does not compare the two setups.

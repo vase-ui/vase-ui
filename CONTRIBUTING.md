@@ -611,8 +611,8 @@ The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.
 
 - `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
 - The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
-- In a row of the kind `support`, the value is `yes`, `no` or `partial`. In a row of the kind `fact`, the value is a text, such as a count or a date.
-- A note that starts with "Our check" gives the result of a check in Chromium of the example in the docs. Use it only where the docs do not give the fact.
+- In a row of the kind `support`, the value is `yes`, `no`, `partial` or `not-applicable`. Use `not-applicable` for a feature that the framework of the library does not have, such as a Nuxt module for a React library. In a row of the kind `fact`, the value is a text, such as a count or a date.
+- A note that starts with "Our check" gives the result of a check in Chromium of the example in the docs. Use such a check only where the docs do not give the fact, or for a hydration result.
 - `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Run `pnpm benchmarks:size` in the pull request that moves a pin.
 
 ## Releases

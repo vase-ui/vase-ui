@@ -31,8 +31,6 @@ export interface Results {
   };
 }
 
-export type Support = 'yes' | 'no' | 'partial';
-
 export interface FeatureCell {
   value: string;
   note?: string;
@@ -41,7 +39,7 @@ export interface FeatureCell {
 
 export interface FeatureRow {
   feature: string;
-  /** `support`: each value is `yes`, `no` or `partial`. `fact`: each value is a text. */
+  /** `support`: each value is `yes`, `no`, `partial` or `not-applicable`. `fact`: each value is a text. */
   kind: 'support' | 'fact';
   cells: Record<LibraryId, FeatureCell>;
 }

@@ -7,20 +7,32 @@
           "feature": "Focus trap in a modal dialog",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/components/dialog" },
-            "reka-ui": { "value": "yes", "source": "https://reka-ui.com/docs/components/dialog" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/dialog"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
             "ark-ui": {
               "value": "yes",
               "note": "The `trapFocus` prop.",
               "source": "https://ark-ui.com/vue/docs/components/dialog"
             },
-            "headless-ui": { "value": "yes", "source": "https://headlessui.com/v1/vue/dialog" },
+            "headless-ui": {
+              "value": "yes",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
             "vuetify0": {
               "value": "yes",
               "note": "The native `showModal()` of the browser.",
               "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
             },
-            "base-ui": { "value": "yes", "source": "https://base-ui.com/react/components/dialog" }
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
           }
         },
         {
@@ -32,7 +44,10 @@
               "note": "The `finalFocus` prop changes the element.",
               "source": "https://vase-ui.com/components/dialog#custom-focus-management"
             },
-            "reka-ui": { "value": "yes", "source": "https://reka-ui.com/docs/components/dialog" },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
             "ark-ui": {
               "value": "yes",
               "note": "The `finalFocusEl` prop changes the element.",
@@ -40,12 +55,12 @@
             },
             "headless-ui": {
               "value": "yes",
-              "note": "Not in the docs. Our check gave this result.",
+              "note": "Our check. The docs do not give it.",
               "source": "https://headlessui.com/v1/vue/dialog"
             },
             "vuetify0": {
               "value": "yes",
-              "note": "Not in the docs. Our check gave this result.",
+              "note": "Our check. The docs do not give it.",
               "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
             },
             "base-ui": {
@@ -59,15 +74,30 @@
           "feature": "The title names the dialog and the description describes it",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/components/dialog" },
-            "reka-ui": { "value": "yes", "source": "https://reka-ui.com/docs/components/dialog" },
-            "ark-ui": { "value": "yes", "source": "https://ark-ui.com/vue/docs/components/dialog" },
-            "headless-ui": { "value": "yes", "source": "https://headlessui.com/v1/vue/dialog" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/dialog"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/dialog"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
+            "headless-ui": {
+              "value": "yes",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
             "vuetify0": {
               "value": "yes",
               "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
             },
-            "base-ui": { "value": "yes", "source": "https://base-ui.com/react/components/dialog" }
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/dialog"
+            }
           }
         },
         {
@@ -82,15 +112,18 @@
               "value": "yes",
               "source": "https://reka-ui.com/docs/components/dialog#nested-dialog"
             },
-            "ark-ui": { "value": "yes", "source": "https://ark-ui.com/vue/docs/components/dialog" },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/dialog"
+            },
             "headless-ui": {
               "value": "yes",
-              "note": "Not in the docs. Our check gave this result.",
+              "note": "Our check. The docs do not give it.",
               "source": "https://headlessui.com/v1/vue/dialog"
             },
             "vuetify0": {
               "value": "yes",
-              "note": "Not in the docs. Our check gave this result.",
+              "note": "Our check. The docs do not give it.",
               "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
             },
             "base-ui": {
@@ -118,7 +151,10 @@
               "note": "`[data-has-nested]` and `--nested-layer-count`.",
               "source": "https://ark-ui.com/vue/docs/components/dialog"
             },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue/dialog" },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue/dialog"
+            },
             "vuetify0": {
               "value": "no",
               "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
@@ -188,14 +224,17 @@
               "value": "no",
               "source": "https://ark-ui.com/vue/docs/overview/getting-started"
             },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue" },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
             "vuetify0": {
               "value": "yes",
               "note": "Through `vaporInteropPlugin`. The guide calls it pre-release until Vue 3.6 is stable.",
               "source": "https://0.vuetifyjs.com/guide/integration/vapor"
             },
             "base-ui": {
-              "value": "no",
+              "value": "not-applicable",
               "note": "A React library.",
               "source": "https://base-ui.com/react/overview/quick-start"
             }
@@ -231,7 +270,7 @@
               "source": "https://0.vuetifyjs.com/guide/integration/vapor"
             },
             "base-ui": {
-              "value": "no",
+              "value": "not-applicable",
               "note": "A React library.",
               "source": "https://base-ui.com/react/overview/quick-start"
             }
@@ -255,14 +294,17 @@
               "value": "no",
               "source": "https://ark-ui.com/vue/docs/overview/getting-started"
             },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue" },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
             "vuetify0": {
               "value": "no",
               "note": "The Nuxt guide installs it with a Nuxt plugin.",
               "source": "https://0.vuetifyjs.com/guide/integration/nuxt"
             },
             "base-ui": {
-              "value": "no",
+              "value": "not-applicable",
               "note": "A React library.",
               "source": "https://base-ui.com/react/overview/quick-start"
             }
@@ -313,8 +355,14 @@
           "feature": "Typeahead in Menu and Select",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/components/select" },
-            "reka-ui": { "value": "yes", "source": "https://reka-ui.com/docs/components/select" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/select"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/select"
+            },
             "ark-ui": {
               "value": "yes",
               "note": "The `typeahead` prop.",
@@ -329,14 +377,20 @@
               "value": "yes",
               "source": "https://0.vuetifyjs.com/components/forms/select"
             },
-            "base-ui": { "value": "yes", "source": "https://base-ui.com/react/components/select" }
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/select"
+            }
           }
         },
         {
           "feature": "A filter in Combobox",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/components/combobox" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/combobox"
+            },
             "reka-ui": {
               "value": "yes",
               "source": "https://reka-ui.com/docs/components/combobox#custom-filtering"
@@ -406,7 +460,10 @@
           "feature": "Values in a native form submission",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/handbook/forms" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/handbook/forms"
+            },
             "reka-ui": {
               "value": "yes",
               "note": "The `name` prop.",
@@ -427,23 +484,41 @@
               "note": "The `name` prop.",
               "source": "https://0.vuetifyjs.com/components/forms/select"
             },
-            "base-ui": { "value": "yes", "source": "https://base-ui.com/react/handbook/forms" }
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/handbook/forms"
+            }
           }
         },
         {
           "feature": "A Field part for the label, the description and the error",
           "kind": "support",
           "cells": {
-            "vase-ui": { "value": "yes", "source": "https://vase-ui.com/components/field" },
-            "reka-ui": { "value": "yes", "source": "https://reka-ui.com/docs/components/field" },
-            "ark-ui": { "value": "yes", "source": "https://ark-ui.com/vue/docs/components/field" },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue" },
+            "vase-ui": {
+              "value": "yes",
+              "source": "https://vase-ui.com/components/field"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "source": "https://reka-ui.com/docs/components/field"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "source": "https://ark-ui.com/vue/docs/components/field"
+            },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
             "vuetify0": {
               "value": "partial",
               "note": "Input has Description and Error parts. The docs list no Field component.",
               "source": "https://0.vuetifyjs.com/components/forms/input"
             },
-            "base-ui": { "value": "yes", "source": "https://base-ui.com/react/components/field" }
+            "base-ui": {
+              "value": "yes",
+              "source": "https://base-ui.com/react/components/field"
+            }
           }
         },
         {
@@ -465,7 +540,10 @@
               "note": "The `dir` prop.",
               "source": "https://ark-ui.com/vue/docs/utilities/locale"
             },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue/tabs" },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue/tabs"
+            },
             "vuetify0": {
               "value": "yes",
               "note": "The `useRtl` composable.",
@@ -502,13 +580,19 @@
               "note": "Date Picker and Date Input.",
               "source": "https://ark-ui.com/vue/docs/components/date-picker"
             },
-            "headless-ui": { "value": "no", "source": "https://headlessui.com/v1/vue" },
+            "headless-ui": {
+              "value": "no",
+              "source": "https://headlessui.com/v1/vue"
+            },
             "vuetify0": {
               "value": "partial",
               "note": "Time Picker. The `createCalendar` composable gives a month grid.",
               "source": "https://0.vuetifyjs.com/components/forms/time-picker"
             },
-            "base-ui": { "value": "no", "source": "https://base-ui.com/react/overview/quick-start" }
+            "base-ui": {
+              "value": "no",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
           }
         }
       ]
@@ -520,7 +604,10 @@
           "feature": "Components of the ten in this comparison",
           "kind": "fact",
           "cells": {
-            "vase-ui": { "value": "10", "source": "https://vase-ui.com/quick-start" },
+            "vase-ui": {
+              "value": "10",
+              "source": "https://vase-ui.com/quick-start"
+            },
             "reka-ui": {
               "value": "10",
               "note": "Menu is DropdownMenu.",
@@ -540,7 +627,10 @@
               "note": "Accordion is ExpansionPanel.",
               "source": "https://0.vuetifyjs.com/introduction/getting-started"
             },
-            "base-ui": { "value": "10", "source": "https://base-ui.com/react/overview/quick-start" }
+            "base-ui": {
+              "value": "10",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
           }
         },
         {

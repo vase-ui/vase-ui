@@ -68,8 +68,8 @@ test('each feature row has a cell with a source for each library', () => {
       assert.match(cell.source, /^https:\/\//, `"${row.feature}", ${library.id}: the source`);
       if (row.kind === 'support') {
         assert.ok(
-          ['yes', 'no', 'partial'].includes(cell.value),
-          `"${row.feature}", ${library.id}: "${cell.value}" is not yes, no or partial.`,
+          ['yes', 'no', 'partial', 'not-applicable'].includes(cell.value),
+          `"${row.feature}", ${library.id}: "${cell.value}" is not yes, no, partial or not-applicable.`,
         );
       }
     }

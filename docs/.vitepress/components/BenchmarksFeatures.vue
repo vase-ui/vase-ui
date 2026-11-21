@@ -4,7 +4,12 @@ import { data } from '../../benchmarks.data.ts';
 import ScrollBox from './ScrollBox.vue';
 import TextWithCode from './TextWithCode.vue';
 
-const SUPPORT_TEXT: Record<string, string> = { yes: 'Yes', no: 'No', partial: 'Partly' };
+const SUPPORT_TEXT: Record<string, string> = {
+  yes: 'Yes',
+  no: 'No',
+  partial: 'Partly',
+  'not-applicable': 'Not applicable',
+};
 
 function valueText(row: FeatureRow, value: string): string {
   return row.kind === 'support' ? (SUPPORT_TEXT[value] ?? value) : value;
