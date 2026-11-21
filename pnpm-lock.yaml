@@ -188,6 +188,8 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@floating-ui/core@1.8.0': eeeb2279e490acac2832eb9237d6c7203dd244759a3fa41a26fc6baa6b85f8d5
+  '@floating-ui/dom@1.8.0': 62f78926c3884a3a90b3e70af3bf342471a5720bd0d004f6d7fbed6e6c633478
   '@vitest/browser-playwright@5.1.0': f28bdf36759c53cc19564289282c98ad2682879e3cbe0867afa2aed628fd0771
   '@vue/language-core@3.3.14': b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48
   rolldown-plugin-dts@0.30.1: cf1d1a226d8a5d9c9674460fe7e6577c94b941be8d70a66f9ad6daf7c5429a3e
@@ -5463,20 +5465,20 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@floating-ui/core@1.8.0':
+  '@floating-ui/core@1.8.0(patch_hash=eeeb2279e490acac2832eb9237d6c7203dd244759a3fa41a26fc6baa6b85f8d5)':
     dependencies:
       '@floating-ui/utils': 0.2.12
 
-  '@floating-ui/dom@1.8.0':
+  '@floating-ui/dom@1.8.0(patch_hash=62f78926c3884a3a90b3e70af3bf342471a5720bd0d004f6d7fbed6e6c633478)':
     dependencies:
-      '@floating-ui/core': 1.8.0
+      '@floating-ui/core': 1.8.0(patch_hash=eeeb2279e490acac2832eb9237d6c7203dd244759a3fa41a26fc6baa6b85f8d5)
       '@floating-ui/utils': 0.2.12
 
   '@floating-ui/utils@0.2.12': {}
 
   '@floating-ui/vue@2.0.1(vue@3.5.46(typescript@6.0.3))':
     dependencies:
-      '@floating-ui/dom': 1.8.0
+      '@floating-ui/dom': 1.8.0(patch_hash=62f78926c3884a3a90b3e70af3bf342471a5720bd0d004f6d7fbed6e6c633478)
       '@floating-ui/utils': 0.2.12
       vue: 3.5.46(typescript@6.0.3)
 
