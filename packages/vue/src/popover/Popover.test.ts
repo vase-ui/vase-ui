@@ -92,6 +92,16 @@ function centerOf(element: Element) {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+/** The point that a scale of `element` about `var(--transform-origin)` keeps in its place. */
+function scaleOrigin(element: HTMLElement) {
+  element.style.transformOrigin = 'var(--transform-origin)';
+  const before = element.getBoundingClientRect();
+  element.style.scale = '0.5';
+  const after = element.getBoundingClientRect();
+  element.style.scale = '';
+  return { x: 2 * after.left - before.left, y: 2 * after.top - before.top };
+}
+
 describe('the parts', () => {
   test('render their native elements with their roles in <body>; a template ref has element; the attributes of the developer win', async () => {
     const { trigger, exposed } = await mountPopover({
@@ -1901,6 +1911,80 @@ describe('the placement', () => {
         const place = arrow.getBoundingClientRect();
         const space = align === 'start' ? place.left - box.left - 4 : box.right - 4 - place.right;
         expect(Math.abs(space - 5)).toBeLessThanOrEqual(0.5);
+      },
+    );
+
+    test.each([
+      {
+        name: 'a popup with a margin',
+        side: 'bottom',
+        popup: 'margin: 16px',
+        point: 'the center of the anchor',
+      },
+      {
+        name: 'a positioner with a padding',
+        side: 'top',
+        positioner: 'padding: 6px',
+        popup: 'position: relative; border: 1px solid',
+        arrow: true,
+        point: 'the arrow',
+      },
+      {
+        name: 'a popup with no border, which a margin of its title moves',
+        side: 'right',
+        title: 'margin: 16px 0',
+        point: 'the center of the anchor',
+      },
+    ])(
+      'VUE-194: in $name, the transform origin is at $point, on the edge of the anchor',
+      async ({ side, popup: popupStyle, positioner: positionerStyle, title, arrow }) => {
+        placeAnchor('left: 100px; top: 200px; width: 50px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, side, sideOffset: 8, style: positionerStyle },
+          popup: { style: `width: 120px; ${popupStyle ?? ''}` },
+          title: title ? { style: title } : undefined,
+          arrow: arrow ? { style: 'width: 10px; height: 10px' } : undefined,
+        });
+        await opened();
+        await placed();
+        const vertical = side !== 'right';
+        await waitFor(() =>
+          expect(positioner()!.style.getPropertyValue('--transform-origin')).not.toBe(''),
+        );
+        const box = anchor.getBoundingClientRect();
+        const cross = arrow ? centerOf(byTestId('arrow')) : centerOf(anchor);
+        const edge = { top: box.top, right: box.right, bottom: box.bottom }[side]!;
+        const origin = scaleOrigin(popup()!);
+        expect(
+          Math.abs((vertical ? origin.x : origin.y) - (vertical ? cross.x : cross.y)),
+        ).toBeLessThanOrEqual(0.5);
+        expect(Math.abs((vertical ? origin.y : origin.x) - edge)).toBeLessThanOrEqual(0.5);
+      },
+    );
+
+    test.each([true, false])(
+      'VUE-195: in a popup with a CSS zoom, the arrow points at the center of the anchor, and the transform origin is at the arrow, or at the center of the anchor with no arrow (arrow: %s)',
+      async (arrow) => {
+        placeAnchor('left: 300px; top: 200px; width: 50px; height: 20px');
+        await mountPopover({
+          root: { defaultOpen: true },
+          positioner: { anchor, sideOffset: 8 },
+          popup: { style: 'width: 120px; position: relative; border: 1px solid; zoom: 2' },
+          arrow: arrow ? { style: 'width: 10px; height: 10px' } : undefined,
+        });
+        await opened();
+        await placed();
+        const center = centerOf(anchor).x;
+        if (arrow) {
+          const element = byTestId('arrow');
+          await waitFor(() => expect(element.style.left).toMatch(/px$/));
+          expect(element).not.toHaveAttribute('data-uncentered');
+          expect(Math.abs(centerOf(element).x - center)).toBeLessThanOrEqual(0.5);
+        }
+        const origin = scaleOrigin(popup()!);
+        expect(Math.abs(origin.x - center)).toBeLessThanOrEqual(0.5);
+        expect(Math.abs(origin.y - anchor.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0.5);
       },
     );
 

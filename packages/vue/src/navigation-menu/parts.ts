@@ -156,7 +156,7 @@ export namespace Backdrop {
  * @cssVariable `--anchor-height` The height of the trigger, in pixels.
  * @cssVariable `--available-width` The width from the trigger to the edge of the collision boundary, in pixels.
  * @cssVariable `--available-height` The height from the trigger to the edge of the collision boundary, in pixels.
- * @cssVariable `--transform-origin` The point that the popup grows from.
+ * @cssVariable `--transform-origin` The point that the popup grows from, for the `transform-origin` of the popup. It is at the arrow, on the edge of the anchor. With no arrow, it is at the aligned edge of the popup or at the center of the anchor.
  * @cssVariable `--positioner-width` The width of the popup, and at a change of the item the width of the new content, in pixels.
  * @cssVariable `--positioner-height` The height of the popup, and at a change of the item the height of the new content, in pixels.
  */

@@ -1027,6 +1027,60 @@ describe('item alignment', () => {
     await waitFor(() => expect(positioner.getBoundingClientRect().height).toBeGreaterThan(before));
   });
 
+  const longList = Array.from({ length: 40 }, (_, index) => ({
+    value: `i${index}`,
+    text: `Item ${index}`,
+  }));
+  const middleOf = (element: Element) => {
+    const { top, height } = element.getBoundingClientRect();
+    return top + height / 2;
+  };
+
+  test.each([
+    { value: 'i2', style: '' },
+    { value: 'i20', style: 'margin: 16px' },
+  ])(
+    'VUE-194: a popup over the trigger grows from the text of the selected item $value (popup style: "$style")',
+    async ({ value, style }) => {
+      await mountSelect({
+        ...aligned,
+        items: longList,
+        root: { defaultValue: value },
+        trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+        popup: { style: `transform-origin: var(--transform-origin); ${style}` },
+      });
+      await userEvent.click(trigger());
+      await opened();
+      const text = item(value).firstElementChild!;
+      const positioner = byTestId('positioner');
+      await waitFor(() =>
+        expect(positioner.style.getPropertyValue('--transform-origin')).toMatch(/^50% .+%$/),
+      );
+      const element = popup();
+      const before = element.getBoundingClientRect();
+      element.style.scale = '0.5';
+      const after = element.getBoundingClientRect();
+      element.style.scale = '';
+      expect(Math.abs(2 * after.top - before.top - middleOf(text))).toBeLessThanOrEqual(0.5);
+    },
+  );
+
+  test('VUE-195: in a popup with a CSS zoom, puts the text of the selected item over the text of the value', async () => {
+    await mountSelect({
+      ...aligned,
+      items: longList,
+      root: { defaultValue: 'i20' },
+      trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+      popup: { style: 'zoom: 2' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    const text = item('i20').firstElementChild!;
+    await waitFor(() =>
+      expect(Math.abs(middleOf(text) - middleOf(byTestId('value')))).toBeLessThanOrEqual(0.5),
+    );
+  });
+
   test('a resize of the window closes the popup', async () => {
     const log: string[] = [];
     await mountSelect({ ...aligned, root: rootEvents(log, { defaultValue: 'banana' }) });

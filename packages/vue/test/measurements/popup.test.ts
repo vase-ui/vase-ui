@@ -488,3 +488,49 @@ describe('the containing block of an arrow', () => {
     ]);
   });
 });
+
+describe('a CSS zoom in a positioner', () => {
+  test('the offsets, the borders and the sizes of a zoomed popup and of its arrow are in their own pixels, and `left`, `zoom` and a variable of the positioner resolve in them', () => {
+    html(`<div id="positioner" style="position: absolute; left: 100px; top: 100px; border: 3px solid; padding: 4px; --origin: 30px 7px">
+      <div id="popup" style="position: relative; zoom: 200%; margin-left: 10px; border: 4px solid; width: 100px; height: 50px; transform-origin: var(--origin)">
+        <div id="arrow" style="position: absolute; left: 10px; top: 0; width: 10px; height: 10px"></div>
+      </div></div>`);
+    const positioner = element('positioner').getBoundingClientRect();
+    const popup = element('popup');
+    const box = popup.getBoundingClientRect();
+    const arrow = element('arrow');
+    popup.style.scale = '0.5';
+    const scaled = popup.getBoundingClientRect();
+    popup.style.scale = '';
+    expect({
+      zoom: getComputedStyle(popup).zoom,
+      popup: [popup.offsetLeft, popup.clientLeft, popup.clientWidth],
+      popupFromPositioner: box.left - positioner.left,
+      arrow: [arrow.offsetLeft, arrow.clientWidth],
+      arrowFromPopup: arrow.getBoundingClientRect().left - box.left,
+      origin: 2 * scaled.left - box.left - box.left,
+    }).toEqual({
+      zoom: '2',
+      // (4 + 2 * 10) / 2
+      popup: [12, 4, 100],
+      popupFromPositioner: 3 + 4 + 2 * 10,
+      arrow: [10, 10],
+      arrowFromPopup: 2 * 4 + 2 * 10,
+      origin: 2 * 30,
+    });
+  });
+
+  test('under a zoom of an ancestor too, Chromium and Firefox give the offset of the popup in its own pixels, and WebKit divides it only by the zoom of the popup', () => {
+    html(`<div style="zoom: 2"><div id="positioner" style="position: absolute; left: 100px; top: 100px; padding: 4px">
+      <div id="popup" style="position: relative; zoom: 1.5; margin-left: 10px; width: 100px; height: 50px"></div>
+      </div></div>`);
+    const popup = element('popup');
+    const fromPositioner =
+      popup.getBoundingClientRect().left - element('positioner').getBoundingClientRect().left;
+    // (2 * 4 + 3 * 10) px: in pixels of the popup, 38 / 3; WebKit gives 38 / 1.5.
+    expect({ fromPositioner, offsetLeft: popup.offsetLeft }).toEqual({
+      fromPositioner: 38,
+      offsetLeft: server.browser === 'webkit' ? 25 : 13,
+    });
+  });
+});

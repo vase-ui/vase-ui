@@ -28,7 +28,6 @@ describe('alignedPlace', () => {
       idealHeight: 515,
       room: 700,
       margins: 20,
-      transformOrigin: '50% 75%',
     });
   });
 
@@ -47,7 +46,7 @@ describe('alignedPlace', () => {
     expect(place.left).toBe(287);
   });
 
-  test('with no text, starts at the inline start of the trigger and has no transform origin', () => {
+  test('with no text, starts at the inline start of the trigger', () => {
     const place = alignedPlace({
       trigger: box(10, 300, 80, 30),
       positioner: box(50, 0, 108, 0),
@@ -59,22 +58,7 @@ describe('alignedPlace', () => {
       rtl: false,
     });
     expect(place.left).toBe(10);
-    expect(place.transformOrigin).toBe(undefined);
     expect(place.idealHeight).toBe(700 - 300 + 10 + 2);
-  });
-
-  test('centers the transform origin when the positioner has no height', () => {
-    const place = alignedPlace({
-      trigger: box(10, 300, 80, 30),
-      positioner: box(10, 0, 108, 0),
-      value: box(10, 300, 60, 30),
-      text: box(10, 100, 80, 30),
-      view,
-      margin,
-      borderBottom: 0,
-      rtl: false,
-    });
-    expect(place.transformOrigin).toBe('50% 50%');
   });
 });
 

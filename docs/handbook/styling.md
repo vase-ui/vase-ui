@@ -83,6 +83,14 @@ Set the `dir` attribute on `<html>`, or on an element around the parts. Each par
 
 <<< ../examples/styling/TextDirection.vue{7}
 
+## Zoom
+
+A CSS `zoom` on a popup, or on an element in it, scales the popup and its arrow. The arrow points at the anchor, and `--transform-origin` is in the pixels of the popup.
+
+Give `zoom` to the popup, not to its positioner. Floating UI places the positioner in the pixels of its offset parent, so a `zoom` of the positioner moves it away from its anchor.
+
+In WebKit, a popup with a `zoom` in an ancestor with a `zoom` has `offsetLeft` and `offsetTop` in other pixels. There, a margin of the popup or a padding of the positioner moves its arrow and its transform origin.
+
 ## Tailwind CSS
 
 Give the Tailwind CSS classes to the `class` attribute of each part. Use the variants of the state selectors: `aria-expanded:`, `disabled:`, `data-highlighted:`.
