@@ -29,6 +29,17 @@ describe('server render and hydration', () => {
     expect(input).toHaveAttribute('aria-controls', byTestId(document.body, 'list')!.id);
   });
 
+  test('an input with an id of its own: the text input of the form keeps the id of the server HTML in the hydration, then takes the id of the input', async () => {
+    const props = { input: { id: 'own' } };
+    const root = await renderOnServer('ComboboxParts', props);
+    const textInput = root.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!;
+    expect(textInput.id).toMatch(/-hidden-input$/);
+    expect(textInput.id).not.toBe('own-hidden-input');
+    hydrate(ComboboxParts, props, root);
+    await waitFor(() => expect(textInput.id).toBe('own-hidden-input'));
+    expect(root.querySelector('input[aria-hidden="true"]')).toBe(textInput);
+  });
+
   test('a trigger before the input is the control in the server HTML and the first render, and the input is the control after the mount', async () => {
     const props = { triggerFirst: true };
     const root = await renderOnServer('ComboboxParts', props);
