@@ -95,7 +95,6 @@ export function usePopoverRoot<Payload>(
       trap: trap.value,
       lockScroll: modal && (root.interaction !== 'touch' || fullWidth.value),
       triggerInUse: true,
-      tapEnd: true,
     };
   });
 

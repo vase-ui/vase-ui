@@ -208,7 +208,6 @@ export function useSelectRoot(
     trap: false,
     lockScroll: (props.modal || aligned.value) && (root.interaction !== 'touch' || fullWidth.value),
     triggerInUse: true,
-    tapEnd: true,
   }));
 
   const list = useList({

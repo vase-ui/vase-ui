@@ -10,6 +10,7 @@ import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { readAfter, readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
+import { waitForPositioned } from '../../test/waitForPositioned';
 
 type Props = Record<string, unknown>;
 
@@ -643,6 +644,58 @@ describe('the hover', () => {
     tooltips[0]!.triggers = [];
     await sleep(200);
     expect(log).toEqual([]);
+  });
+
+  // At the document, a move in a shadow tree has the host of the tree as its target.
+  test('a popup that a hover opened stays open while the pointer moves on its trigger in a shadow root', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    onTestFinished(() => host.remove());
+    const shadow = host.attachShadow({ mode: 'open' });
+    mount(
+      TooltipParts,
+      {
+        tooltips: [
+          {
+            name: 's',
+            triggers: [{ key: 's', attrs: { delay: 0, style: 'width: 200px; height: 40px' } }],
+          },
+        ],
+      },
+      shadow,
+    );
+    await nextTick();
+    const box = shadow.querySelector('[data-key="s"]')!.getBoundingClientRect();
+    await userEvent.pointer({ coords: { x: box.left + 20, y: box.top + 20 } });
+    const element = await opened('s');
+    await userEvent.pointer({ coords: { x: box.left + 60, y: box.top + 20 } });
+    await sleep(50);
+    expect(element.isConnected).toBe(true);
+  });
+
+  test('a popup in a shadow root that a hover opened stays open while the pointer is on it', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    onTestFinished(() => host.remove());
+    const shadow = host.attachShadow({ mode: 'open' });
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          portal: { to: shadow },
+          positioner: { side: 'bottom', sideOffset: 10 },
+          triggers: [{ key: 't', attrs: { delay: 0 } }],
+        },
+      ],
+    });
+    await userEvent.hover(trigger());
+    const element = await waitFor(() => {
+      const found = shadow.querySelector<HTMLElement>('[data-testid="popup-t"]');
+      expect(found).not.toBe(null);
+      return found!;
+    });
+    await waitForPositioned(shadow.querySelector<HTMLElement>('[data-testid="positioner-t"]')!);
+    await userEvent.pointer({ coords: centerOf(element) });
+    await sleep(100);
+    expect(element.isConnected).toBe(true);
   });
 });
 

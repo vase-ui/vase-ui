@@ -2,7 +2,13 @@ import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
-import { createRenderer, screen, takeReportedMessages, waitSingleFrame } from '#test-utils';
+import {
+  createRenderer,
+  screen,
+  takeReportedMessages,
+  waitFor,
+  waitSingleFrame,
+} from '#test-utils';
 
 describe('test setup', () => {
   const { render } = createRenderer();
@@ -96,6 +102,34 @@ describe('task boundary between tests', () => {
     it('keeps the fake timers of the last test', () => {
       expect(vi.isFakeTimers()).toBe(true);
     });
+  });
+});
+
+describe('the page between tests', () => {
+  // Vitest runs the tests of a file in order. In each pair, the first test fails, and the second test
+  // reads the page.
+
+  // The step after the wait adds an element to `<body>`.
+  let isSecondTestRunning = false;
+  it('times out in a wait that ends in the next test', { fails: true, timeout: 1 }, async () => {
+    await waitFor(() => expect(isSecondTestRunning).toBe(true));
+    document.body.append(document.createElement('output'));
+  });
+
+  it('gets no element of a step of the last test after its time-out', async () => {
+    isSecondTestRunning = true;
+    await waitSingleFrame();
+    await waitSingleFrame();
+
+    expect(document.body.children).toHaveLength(0);
+  });
+
+  it('fails by an element that it leaves in <body>', { fails: true }, () => {
+    document.body.append(document.createElement('output'));
+  });
+
+  it('starts with an empty <body> after the test that left an element', () => {
+    expect(document.body.children).toHaveLength(0);
   });
 });
 

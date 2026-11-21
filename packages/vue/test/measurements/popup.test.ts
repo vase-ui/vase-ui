@@ -406,8 +406,8 @@ describe('a real touch that starts outside a native popover', () => {
         (event) => {
           const { clientX, clientY } = event as PointerEvent;
           if (type === 'pointerdown') start = { x: clientX, y: clientY };
-          const far = Math.hypot(clientX - start.x, clientY - start.y) > 10;
-          add(log.pointer, type === 'pointermove' && far ? 'pointermove past 10 px' : type);
+          const far = Math.hypot(clientX - start.x, clientY - start.y) > 15;
+          add(log.pointer, type === 'pointermove' && far ? 'pointermove past 15 px' : type);
         },
         { capture: true, signal: controller.signal },
       );
@@ -424,13 +424,17 @@ describe('a real touch that starts outside a native popover', () => {
 
   // Playwright can only tap in WebKit, so the case runs in Chromium. A measurement by hand in Safari
   // on iOS 26.5, in the iPhone 17 Simulator, gives these results:
-  // - A swipe of 150 px that scrolls the page sends `pointermove` past 10 px, then `pointercancel`,
+  // - A swipe of 150 px that scrolls the page sends `pointermove` past 15 px, then `pointercancel`,
   //   and no `click`. The popover stays open.
-  // - A move of 20 px on `touch-action: none` sends `pointerup` and `click`.
-  // - A drag of 60 px on `touch-action: none` sends `pointerup` and no `click`. The popover closes
-  //   at that `pointerup`.
+  // - On `touch-action: none`, a move of 44 px sends `pointerup` and `click`, and a move of 46 px
+  //   sends `pointerup` and no `click`. A drag of 60 px closes the popover at its `pointerup`.
+  // - A tap sends `click` only to an element with a listener of `click` or `mousedown` of its own. A
+  //   listener of the window gets no `click` of a tap on another element.
+  // A measurement by hand in Chrome 124 on Android 15, in the Android Emulator at 420 dpi, gives a
+  // smaller limit: on `touch-action: none`, a move of 8 px sends `click`, and a move of 8.1 px sends
+  // `pointerup` and no `click`.
   test.skipIf(server.browser !== 'chromium')(
-    'closes at a tap and at a move of 8 px, which send `click`; a drag of 40 px on `touch-action: none` sends `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 10 px; neither closes it',
+    'closes at a tap and at a move of 15 px, which send `click`; a move of 16 px and a drag of 40 px on `touch-action: none` send `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 15 px; none of them closes it',
     async () => {
       html(`<div style="height: 3000px"></div>
         <div id="surface" style="position: fixed; left: 0; bottom: 0; width: 200px; height: 100px; touch-action: none"></div>
@@ -442,7 +446,8 @@ describe('a real touch that starts outside a native popover', () => {
       const results: unknown[] = [];
       for (const [from, to, steps] of [
         [surface, surface, 0],
-        [surface, { x: surface.x + 8, y: surface.y }, 2],
+        [surface, { x: surface.x + 15, y: surface.y }, 3],
+        [surface, { x: surface.x + 16, y: surface.y }, 4],
         [surface, { x: surface.x + 40, y: surface.y }, 4],
         [{ x: 100, y: 300 }, { x: 100, y: 150 }, 25],
       ] as const) {
@@ -471,18 +476,60 @@ describe('a real touch that starts outside a native popover', () => {
           scrolled: false,
         },
         {
-          pointer: ['pointerdown', 'pointermove', 'pointermove past 10 px', 'pointerup'],
+          pointer: ['pointerdown', 'pointermove', 'pointermove past 15 px', 'pointerup'],
           touch,
           open: true,
           scrolled: false,
         },
         {
-          pointer: ['pointerdown', 'pointermove', 'pointermove past 10 px', 'pointercancel'],
+          pointer: ['pointerdown', 'pointermove', 'pointermove past 15 px', 'pointerup'],
+          touch,
+          open: true,
+          scrolled: false,
+        },
+        {
+          pointer: ['pointerdown', 'pointermove', 'pointermove past 15 px', 'pointercancel'],
           touch,
           open: true,
           scrolled: true,
         },
       ]);
+    },
+  );
+});
+
+describe('a real tap on an element that leaves at its `pointerup`', () => {
+  // A measurement by hand in Safari on iOS 26.5, in the iPhone 17 Simulator, and in Chrome 124 on
+  // Android 15, in the Android Emulator, gives the same results for a button under the element.
+  test.skipIf(server.browser !== 'chromium')(
+    'sends `click` and the mouse events to the element under it, which takes the focus; a `touchend` listener of the element that left gets the event, and its `preventDefault()` cancels the mouse events and the `click`',
+    async () => {
+      const results: Record<string, string[]> = {};
+      for (const cancel of [false, true]) {
+        html(`<input id="under" aria-label="Under" style="position: fixed; left: 0; top: 0; width: 200px; height: 100px">
+          <div id="cover" style="position: fixed; inset: 0"></div>`);
+        const log = record(document, ['mousedown', 'focusin', 'mouseup', 'click']);
+        const cover = element('cover');
+        cover.addEventListener('pointerup', () => queueMicrotask(() => cover.remove()));
+        cover.addEventListener('touchend', (event) => {
+          log.push(`touchend ${cover.isConnected ? 'in' : 'out of'} the document`);
+          if (cancel) event.preventDefault();
+        });
+        await touchDrag({ x: 100, y: 50 }, { x: 100, y: 50 }, 0);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        results[cancel ? 'canceled' : 'not canceled'] = [...log];
+        root!.remove();
+      }
+      expect(results).toEqual({
+        'not canceled': [
+          'touchend out of the document',
+          'mousedown under',
+          'focusin under',
+          'mouseup under',
+          'click under',
+        ],
+        canceled: ['touchend out of the document'],
+      });
     },
   );
 });

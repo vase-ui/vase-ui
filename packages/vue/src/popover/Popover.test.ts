@@ -810,7 +810,7 @@ describe('the dismissal', () => {
   );
 
   test.skipIf(server.browser !== 'chromium')(
-    'a touch outside closes at the `pointerup` of a tap, also of a tap that moves 8 px; a touch that rests more than 1 s or that moves more than 10 px closes nothing',
+    'a touch outside closes at the `pointerup` of a tap, also of a tap that moves 8 px; a touch that rests more than 1 s or that moves 9 px closes nothing',
     async () => {
       const other = appendOutside('div', 'width: 100px; height: 100px; touch-action: none');
       try {
@@ -827,7 +827,7 @@ describe('the dismissal', () => {
         const current = await mountPopover(setup());
         await placed();
         await touchDrag(point, point, 0, 1200);
-        await touchDrag(point, { x: point.x + 40, y: point.y }, 4);
+        await touchDrag(point, { x: point.x + 9, y: point.y }, 3);
         await nextTick();
         expect(popup()).not.toBe(null);
         await touchDrag(point, point, 0);
@@ -844,7 +844,7 @@ describe('the dismissal', () => {
     },
   );
 
-  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 10 px, that rests 1 s or that the browser cancels closes nothing', async () => {
+  test('VUE-172: a dispatched touch outside closes at the `pointerup` of a tap; a touch that moves more than 8 px, that rests 1 s, that opens the menu of the system or that the browser cancels closes nothing', async () => {
     const other = appendOutside('div', 'width: 100px; height: 100px');
     const events: string[] = [];
     await mountPopover({
@@ -858,7 +858,7 @@ describe('the dismissal', () => {
     await placed();
     const { x, y } = centerOf(other);
     const touch = { pointerType: 'touch', isPrimary: true, clientX: x, clientY: y };
-    const moved = { ...touch, clientX: x + 11 };
+    const moved = { ...touch, clientX: x + 6, clientY: y + 6 };
     await firePointer.down(other, { ...touch, timeStamp: 1000 });
     await firePointer.move(other, { ...moved, timeStamp: 1050 });
     await firePointer.up(other, { ...moved, timeStamp: 1100 });
@@ -866,6 +866,9 @@ describe('the dismissal', () => {
     await firePointer.up(other, { ...touch, timeStamp: 3000 });
     await firePointer.down(other, { ...touch, timeStamp: 4000 });
     await firePointer.cancel(other, { ...touch, timeStamp: 4050 });
+    await firePointer.down(other, { ...touch, timeStamp: 4500 });
+    other.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
+    await firePointer.up(other, { ...touch, timeStamp: 4600 });
     expect(events).toEqual([]);
     await firePointer.down(other, { ...touch, timeStamp: 5000 });
     await firePointer.up(other, { ...touch, timeStamp: 5999 });
