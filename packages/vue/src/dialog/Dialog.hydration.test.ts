@@ -83,7 +83,9 @@ describe('server render and hydration', () => {
     await waitFor(() => expect(first).toHaveAttribute('aria-expanded', 'true'));
   });
 
-  // In Vue 3.6, the async `setup` of a Vapor component does not make a `<Suspense>` wait.
+  // In a Vapor app with virtual DOM parts, Vue 3.6 skips the Vapor slot content of the trigger when
+  // the async component hydrates late, and reports a mismatch. Vue 3.6 runs no `<Suspense>` in a
+  // Vapor app with Vapor parts.
   test.skipIf(inject('app').startsWith('vapor')).each([true, false])(
     'a trigger with a handle that hydrates after its root, open=%s at that time, hydrates with no message and shows the state of the root',
     async (open) => {

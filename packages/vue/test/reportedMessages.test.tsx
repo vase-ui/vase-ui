@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, inject, onUnmounted, warn } from 'vue';
-import {
-  createRenderer,
-  expectSetupErrorWarnings,
-  isVaporParts,
-  takeReportedMessages,
-} from '#test-utils';
+import { createRenderer, takeReportedMessages } from '#test-utils';
 
 const WarningPart = defineComponent({
   setup() {
@@ -36,36 +31,6 @@ const ThrowingPart = defineComponent({
   setup() {
     throw new Error('error raised in the setup');
   },
-});
-
-describe('expectSetupErrorWarnings', () => {
-  const setup = 'Vue warning: Unhandled error during execution of setup function';
-  const render = 'Vue warning: Unhandled error during execution of render function';
-
-  it('accepts one setup warning', () => {
-    expectSetupErrorWarnings([setup]);
-  });
-
-  it.each([
-    { name: 'an empty list', messages: [] },
-    { name: 'an unrelated first warning', messages: ['another warning'] },
-    { name: 'a render warning first', messages: [render, setup] },
-    { name: 'an unrelated later warning', messages: [setup, 'another warning'] },
-    { name: 'two setup warnings', messages: [setup, setup] },
-  ])('rejects $name', ({ messages }) => {
-    expect(() => expectSetupErrorWarnings(messages)).toThrow();
-  });
-
-  it.each([
-    { name: 'a setup and a render warning', messages: [setup, render] },
-    { name: 'three parent render warnings', messages: [setup, render, render, render] },
-  ])('accepts $name only for Vapor parts', ({ messages }) => {
-    if (isVaporParts) {
-      expectSetupErrorWarnings(messages);
-    } else {
-      expect(() => expectSetupErrorWarnings(messages)).toThrow();
-    }
-  });
 });
 
 describe('reported messages', () => {

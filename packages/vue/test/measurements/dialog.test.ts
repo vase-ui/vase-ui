@@ -323,7 +323,8 @@ describe('a component that replaces another one', () => {
       );
     });
 
-    // In Vue 3.6, the async `setup` of a Vapor component does not make a `<Suspense>` wait.
+    // In a Vapor template, the `<Suspense>` of Vue 3.6 gets no pending branch: the new Vapor page
+    // replaces the old one before its async `setup` ends.
     test.skipIf(vaporFixtures())(
       'the effect of a new page that waits runs after the wait, and never when the old page comes back',
       async () => {
