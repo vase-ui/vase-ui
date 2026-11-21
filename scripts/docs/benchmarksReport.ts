@@ -20,10 +20,10 @@ export interface Size {
 type SizeResult = Size | null | undefined;
 
 export interface Results {
-  date?: string;
+  date: string;
   commit: string;
   libraries: Record<string, { package: string; version: string }>;
-  setups: Partial<Record<ResultSetup, { package: string; version: string }>>;
+  setups: Record<ResultSetup, { package: string; version: string }>;
   tools: Record<string, string>;
   size: {
     emptyApp: Partial<Record<ResultSetup, Size>>;
@@ -78,7 +78,7 @@ export interface SizeLoss {
 }
 
 export interface BenchmarksReport {
-  date?: string;
+  date: string;
   commit: string;
   libraries: { id: LibraryId; name: string; package: string; version: string }[];
   setups: { id: ResultSetup; name: string; package: string; version: string }[];
@@ -88,7 +88,7 @@ export interface BenchmarksReport {
   features: Features;
 }
 
-export const LIBRARY_NAMES: Record<LibraryId, string> = {
+const LIBRARY_NAMES: Record<LibraryId, string> = {
   'vase-ui': 'Vase UI',
   'reka-ui': 'Reka UI',
   'ark-ui': 'Ark UI',
@@ -97,7 +97,7 @@ export const LIBRARY_NAMES: Record<LibraryId, string> = {
   'base-ui': 'Base UI',
 };
 
-export const SETUP_NAMES: Record<ResultSetup, string> = {
+const SETUP_NAMES: Record<ResultSetup, string> = {
   vdom: 'Virtual DOM app',
   'vapor-interop': 'Vapor app',
   react: 'React app',
@@ -159,7 +159,7 @@ function sizeTable(results: Results, setup: TableSetup): SizeTable {
  * Each cell where another library adds fewer gzip bytes than Vase UI in the same row. The added
  * bytes leave out the framework, so a Base UI cell compares with Vase UI in the same way.
  */
-export function sizeLossesOf(tables: readonly SizeTable[]): SizeLoss[] {
+function sizeLossesOf(tables: readonly SizeTable[]): SizeLoss[] {
   return tables.flatMap((table) =>
     table.rows.flatMap((row) => {
       const vase = row.added['vase-ui'];
@@ -190,18 +190,14 @@ export function sizeLossesOf(tables: readonly SizeTable[]): SizeLoss[] {
 export function benchmarksReportOf(results: Results, features: Features): BenchmarksReport {
   const sizeTables = TABLE_SETUPS.map((setup) => sizeTable(results, setup));
   return {
-    ...(results.date === undefined ? {} : { date: results.date }),
+    date: results.date,
     commit: results.commit,
     libraries: LIBRARIES.map((library) => ({
       id: library.id,
       name: LIBRARY_NAMES[library.id],
-      package: results.libraries[library.id]?.package ?? library.package,
-      version: results.libraries[library.id]?.version ?? 'not measured yet',
+      ...results.libraries[library.id],
     })),
-    setups: RESULT_SETUPS.flatMap((id) => {
-      const setup = results.setups[id];
-      return setup === undefined ? [] : [{ id, name: SETUP_NAMES[id], ...setup }];
-    }),
+    setups: RESULT_SETUPS.map((id) => ({ id, name: SETUP_NAMES[id], ...results.setups[id] })),
     tools: results.tools,
     sizeTables,
     sizeLosses: sizeLossesOf(sizeTables),

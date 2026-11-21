@@ -29,7 +29,9 @@ function valueText(row: FeatureRow, value: string): string {
       </thead>
       <tbody v-for="group in data.features.groups" :key="group.name">
         <tr>
-          <th scope="rowgroup" :colspan="data.libraries.length + 1">{{ group.name }}</th>
+          <th scope="rowgroup" :colspan="data.libraries.length + 1">
+            <span class="group-name">{{ group.name }}</span>
+          </th>
         </tr>
         <tr v-for="row in group.rows" :key="row.feature">
           <th scope="row">{{ row.feature }}</th>
@@ -50,3 +52,20 @@ function valueText(row: FeatureRow, value: string): string {
     </table>
   </ScrollBox>
 </template>
+
+<style scoped>
+/* The box scrolls the columns of the libraries sideways. The names of the features and of the groups
+   stay in view. */
+thead th:first-child,
+th[scope='row'] {
+  position: sticky;
+  inset-inline-start: 0;
+}
+
+/* A group name sticks inside its wide cell, at the padding of the cell. */
+.group-name {
+  display: inline-block;
+  position: sticky;
+  inset-inline-start: 0.75rem;
+}
+</style>

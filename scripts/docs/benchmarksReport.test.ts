@@ -8,9 +8,14 @@ function size(gzip: number): Size {
 }
 
 const results: Results = {
+  date: '2026-01-01T00:00:00.000Z',
   commit: '0'.repeat(40),
   libraries: {},
-  setups: {},
+  setups: {
+    vdom: { package: 'vue', version: '3.5.0' },
+    'vapor-interop': { package: 'vue', version: '3.6.0' },
+    react: { package: 'react', version: '19.0.0' },
+  },
   tools: {},
   size: {
     emptyApp: { vdom: size(100), 'vapor-interop': size(200), react: size(500) },

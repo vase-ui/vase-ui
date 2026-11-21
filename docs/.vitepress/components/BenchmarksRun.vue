@@ -23,7 +23,7 @@ const TOOL_NAMES: Record<string, string> = {
       <tbody>
         <tr>
           <th scope="row">Date (UTC)</th>
-          <td>{{ data.date?.slice(0, 10) ?? 'Not recorded' }}</td>
+          <td>{{ data.date.slice(0, 10) }}</td>
         </tr>
         <tr>
           <th scope="row">Vase UI commit</th>
