@@ -923,6 +923,25 @@ describe('the active trigger leaves', () => {
 });
 
 describe('the arrow', () => {
+  test('VUE-193: the arrow in a positioned popup with a border points at the center of the link', async () => {
+    const { trigger } = await mountCard({
+      root: { defaultOpen: true },
+      triggers: [
+        {
+          key: 't',
+          attrs: { style: 'position: fixed; left: 300px; top: 200px; width: 40px; display: block' },
+        },
+      ],
+      popup: { style: 'position: relative; width: 160px; border: 1px solid' },
+      arrow: { style: 'width: 10px; height: 10px' },
+    });
+    await opened();
+    await placed();
+    const arrow = byTestId('arrow');
+    await waitFor(() => expect(arrow.style.left).toMatch(/px$/));
+    expect(Math.abs(centerOf(arrow).x - centerOf(trigger()).x)).toBeLessThanOrEqual(0.5);
+  });
+
   test('VUE-160: an arrow that replaces another arrow keeps its place after the old arrow leaves', async () => {
     const arrows = reactive({ first: true, second: false });
     const positioner = reactive<Props>({ sideOffset: 0 });

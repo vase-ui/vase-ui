@@ -194,8 +194,9 @@ export namespace Popup {
 }
 
 /**
- * An element that points to the trigger.
+ * An element that points to the center of the trigger.
  * Renders a `<div>` element.
+ * Its place is in the padding box of its nearest positioned ancestor: the popup when the popup has a `position`, else the positioner.
  * It renders nothing while the popup covers the trigger.
  * @selector `[data-side]` The side of the trigger that the popup is on.
  * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
