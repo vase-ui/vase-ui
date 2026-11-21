@@ -13,7 +13,7 @@ const SELF = 'scripts/repo/history.test.ts';
 /** Files that hold history by design, and text that the repository copies from Base UI or GitHub. */
 const SKIPPED_FILES = [
   /^CHANGELOG\.md$/,
-  /^docs\/methodology\.md$/,
+  /^docs\/philosophy\.md$/,
   /^THANKS\.md$/, // `pnpm thanks:render` writes it.
   /^pnpm-lock\.yaml$/,
   /^patches\//,
