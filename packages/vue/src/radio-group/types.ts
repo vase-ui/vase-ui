@@ -10,7 +10,10 @@ export interface RadioGroupProps<Value = any>
    * its own value.
    */
   modelValue?: Value;
-  /** The value at the mount of a group that has no `modelValue`. */
+  /**
+   * The value of a group that has no `modelValue`, at the mount and at a native reset of the
+   * form.
+   */
   defaultValue?: Value;
   /**
    * The name of the radios in the data of the form. The `name` of a `Field.Root` around the group

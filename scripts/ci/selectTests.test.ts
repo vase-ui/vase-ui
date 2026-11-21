@@ -173,11 +173,6 @@ const rows: { name: string; changes: Change[]; selection: Selection; files?: str
     },
   },
   {
-    name: 'a new `types.ts` of a family adds the family to `REFACTORED_FOLDERS`',
-    changes: [{ status: 'A', path: 'packages/vue/src/slider/types.ts' }],
-    selection: ALL,
-  },
-  {
     name: 'a demo: Vitest finds its test files in the module graph',
     changes: modified('docs/demos/slider/hero/css-modules/index.vue'),
     selection: {

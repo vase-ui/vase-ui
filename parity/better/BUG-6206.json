@@ -4,6 +4,7 @@
     "https://github.com/mui/base-ui/issues/6206",
     "https://github.com/mui/base-ui/issues/5765"
   ],
-  "behavior": "A native reset of the form gives a control the `v-model` value of its mount, or else its default value. The control emits only `update:modelValue`, also when `v-model` controls it. Its field then has `data-filled` only when that value is not empty.",
-  "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx"
+  "behavior": "A native reset of the form gives a control the `v-model` value of its mount, or else the default value that it has at the reset, as a native control does. The control emits only `update:modelValue`, also when `v-model` controls it. Its field is then not dirty, and it has `data-filled` only when that value is not empty.",
+  "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
+  "families": ["select", "combobox", "autocomplete"]
 }

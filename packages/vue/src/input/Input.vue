@@ -6,7 +6,7 @@ import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
 import { givenId } from '../common/id';
 import { useModel } from '../common/model';
-import { controlAttributes, fieldKey, useFieldControl } from '../field/control';
+import { controlAttributes, fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputChangeEventDetails, InputProps, InputState } from './types';
 
@@ -32,10 +32,9 @@ useDeferredServerRender();
 const generatedId = useId();
 const { element, setElement } = useElement<TextElement>();
 
-const firstValue = String(props.modelValue ?? props.defaultValue ?? '');
-const { value, setOwn } = useModel(
+const { value, setOwn, resetValue } = useModel(
   () => (props.modelValue === undefined ? undefined : String(props.modelValue)),
-  firstValue,
+  String(props.modelValue ?? props.defaultValue ?? ''),
 );
 
 const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
@@ -63,8 +62,9 @@ const ownProps = computed(() => ({
 watch(value, (next) => field?.setValue(next, next !== ''), { immediate: true });
 
 useFormReset(element, () => {
-  field?.onReset(firstValue);
-  if (value.value !== firstValue) changeValue(firstValue);
+  const reset = resetValue(String(props.defaultValue ?? ''));
+  field?.onReset(reset);
+  if (value.value !== reset) changeValue(reset);
 });
 
 useFieldControl(field, element, {
@@ -78,7 +78,7 @@ useFieldControl(field, element, {
 defineExpose({ element });
 
 function elementProps() {
-  return mergeProps(ownProps.value, attrs);
+  return mergeProps(ownProps.value, joinDescribedBy(attrs, field));
 }
 
 // The binding of `value` writes only a value that changed. When the parent refuses a value, or a

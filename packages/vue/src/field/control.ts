@@ -3,7 +3,7 @@ import { watch, type InjectionKey, type Ref } from 'vue';
 export interface FieldState {
   /** The focus left the control one time or more. */
   touched: boolean;
-  /** The value differs from the first value of the field. */
+  /** The value differs from the value at the mount or at the last native reset of the form. */
   dirty: boolean;
   /** `null` while the field has no validity. */
   valid: boolean | null;
@@ -78,7 +78,10 @@ export interface FieldForControl {
   onEdit(): void;
   /** The focus left `element`, the element of the control or of an item of a group. */
   onLeave(element: Element): void;
-  /** A native reset of the form of the control, which gave the control `value`. */
+  /**
+   * A native reset of the form of the control, which gave the control `value`. The value is then
+   * the first value of the field.
+   */
   onReset(value: unknown): void;
 }
 
@@ -113,25 +116,33 @@ export function controlAttributes(field: FieldForControl) {
   };
 }
 
-/** The ARIA attributes that a field gives to the element of its control. */
+/**
+ * The ARIA attributes that a field gives to the element of its control, but for
+ * `aria-describedby`, which `joinDescribedBy` gives.
+ */
 export function controlAria(field: FieldForControl) {
   return {
     'aria-invalid': field.state.valid === false ? 'true' : undefined,
     'aria-labelledby': field.labelledBy,
-    'aria-describedby': field.describedBy,
   };
 }
 
 /**
- * The `aria-describedby` of a control whose developer gives ids too: the ids of the developer, then
- * the ids of the field. `null` of the developer removes the ids of the field.
+ * The attributes of the developer for the element of a control, with the ids of the developer and
+ * then the ids of the field in `aria-describedby`, so that the user gets both descriptions. `null`
+ * of the developer removes the ids of the field.
  */
-export function describedByWith(field: FieldForControl, given: unknown) {
-  if (given === null) return null;
-  return (
-    [typeof given === 'string' ? given : undefined, field.describedBy].filter(Boolean).join(' ') ||
-    undefined
+export function joinDescribedBy(attrs: Record<string, unknown>, field: FieldForControl | null) {
+  if (!field) return attrs;
+  const given = attrs['aria-describedby'];
+  if (given === null) return attrs;
+  // Each id one time. Chromium reads the text of an id again for each time that the list names it
+  // (test/measurements/field.test.ts).
+  const ids = new Set(
+    `${typeof given === 'string' ? given : ''} ${field.describedBy ?? ''}`.split(/\s+/),
   );
+  ids.delete('');
+  return { ...attrs, 'aria-describedby': [...ids].join(' ') || undefined };
 }
 
 /** Makes the element the control of its field while the element is mounted. */

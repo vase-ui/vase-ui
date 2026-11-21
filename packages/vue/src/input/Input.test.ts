@@ -366,6 +366,21 @@ describe('native forms', () => {
     expect(log).toEqual([...emitsFor('x'), 'update ', ...emitsFor('x')]);
   });
 
+  test('a reset gives the defaultValue of the reset, after a change of it, and the field is not dirty', async () => {
+    const log: string[] = [];
+    const attrs = recordEmits(log, { defaultValue: 'first' });
+    const { root } = mount(InputsInForm, { inputs: [attrs], field: {} });
+    const input = root.querySelector('input')!;
+    attrs.defaultValue = 'second';
+    await nextTick();
+    expect(input).toHaveValue('first');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(input).toHaveValue('second');
+    expect(log).toEqual(['update second']);
+    expect(input).not.toHaveAttribute('data-dirty');
+  });
+
   test('a reset that changes no value emits nothing', async () => {
     const log: string[] = [];
     const { root } = mount(InputsInForm, { inputs: [recordEmits(log, { defaultValue: 'a' })] });

@@ -99,6 +99,24 @@ describe('the constraint validation', () => {
   });
 });
 
+describe('the field', () => {
+  test.each([
+    { control: 'input', inputInPopup: false },
+    { control: 'trigger', inputInPopup: true },
+  ])(
+    'aria-describedby of the developer comes before the ids of the field, on the $control',
+    async ({ control, inputInPopup }) => {
+      await mountForm({
+        field: { invalid: true },
+        inputInPopup,
+        [control]: { 'aria-describedby': 'hint' },
+      });
+      await waitFor(() => expect(byTestId('error')).not.toBe(null));
+      expect(byTestId(control)).toHaveAttribute('aria-describedby', `hint ${byTestId('error').id}`);
+    },
+  );
+});
+
 describe('the reset', () => {
   test('puts back the default value and text, and emits only the update events', async () => {
     const log: string[] = [];
@@ -120,6 +138,58 @@ describe('the reset', () => {
     expect(log).toEqual(['update:modelValue Apple', 'update:inputValue Apple']);
     expect(entries()).toEqual([['a', 'Apple']]);
     expect((byTestId('input') as HTMLInputElement).value).toBe('Apple');
+  });
+});
+
+describe('the reset of a controlled root or of a changed default', () => {
+  test('BUG-6206: a controlled root gets the value and the text of its mount, with the update events only, and its field is not dirty', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'a',
+      modelValue: 'Apple',
+      inputValue: 'Apple',
+      onValueChange: () => log.push('valueChange'),
+      onInputValueChange: () => log.push('inputValueChange'),
+    });
+    root['onUpdate:modelValue'] = (value: string) => {
+      log.push(`update:modelValue ${value}`);
+      root.modelValue = value;
+    };
+    root['onUpdate:inputValue'] = (text: string) => {
+      log.push(`update:inputValue ${text}`);
+      root.inputValue = text;
+    };
+    await mountForm({ root, field: { 'data-testid': 'field' } });
+    await userEvent.click(byTestId('input'));
+    await userEvent.click(byTestId('item-Cherry'));
+    await waitFor(() => expect(entries()).toEqual([['a', 'Cherry']]));
+    expect(byTestId('field')).toHaveAttribute('data-dirty');
+    log.length = 0;
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update:modelValue Apple', 'update:inputValue Apple']);
+    expect(entries()).toEqual([['a', 'Apple']]);
+    expect((byTestId('input') as HTMLInputElement).value).toBe('Apple');
+    expect(byTestId('field')).not.toHaveAttribute('data-dirty');
+  });
+
+  test('an uncontrolled root gets the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'a',
+      defaultValue: 'Apple',
+      'onUpdate:modelValue': (value: string) => log.push(`update:modelValue ${value}`),
+      'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+    });
+    await mountForm({ root });
+    root.defaultValue = 'Cherry';
+    await nextTick();
+    expect(entries()).toEqual([['a', 'Apple']]);
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update:modelValue Cherry', 'update:inputValue Cherry']);
+    expect(entries()).toEqual([['a', 'Cherry']]);
+    expect((byTestId('input') as HTMLInputElement).value).toBe('Cherry');
   });
 });
 

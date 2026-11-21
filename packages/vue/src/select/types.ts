@@ -67,7 +67,7 @@ export interface SelectRootProps<Value = any, Multiple extends boolean | undefin
    */
   modelValue?: SelectValue<Value, Multiple> | null | undefined;
   /**
-   * The value at the mount of an uncontrolled root.
+   * The value of an uncontrolled root, at the mount and at a native reset of the form.
    * @default null
    */
   defaultValue?: SelectValue<Value, Multiple> | null | undefined;

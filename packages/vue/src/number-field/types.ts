@@ -7,7 +7,7 @@ export interface NumberFieldRootProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as'> {
   /** The value. `null` is an empty field, and `NaN` counts as `null`. */
   modelValue?: number | null;
-  /** The first value of a field with no `modelValue`. */
+  /** The value of a field with no `modelValue`, at the mount and at a native reset of the form. */
   defaultValue?: number;
   /** The least value. The Home key sets it. */
   min?: number;

@@ -791,6 +791,28 @@ describe('the form', () => {
     },
   );
 
+  test.each([
+    { order: 'the field root first', reversed: false },
+    { order: 'the field part first', reversed: true },
+  ])(
+    'a reset gives the defaultValue of the reset, and the field is not dirty, with $order',
+    async ({ reversed }) => {
+      const log: string[] = [];
+      const root = logged(log, { defaultValue: day('2026-11-18') });
+      const { form, formInput, fieldRoot } = await mountPicker({
+        root,
+        fieldRoot: { name: 'when', 'data-testid': 'field' },
+      });
+      root.defaultValue = day('2026-12-24');
+      await nextTick();
+      expect(formInput.value).toBe('2026-11-18');
+      await resetForm(form, reversed);
+      expect(log).toEqual(['update 2026-12-24']);
+      expect(formInput.value).toBe('2026-12-24');
+      expect(fieldRoot()).not.toHaveAttribute('data-dirty');
+    },
+  );
+
   test('clear() of the field gives update only', async () => {
     const log: string[] = [];
     const { exposed, segments } = await mountPicker({

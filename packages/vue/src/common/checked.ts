@@ -44,9 +44,7 @@ export function useChecked(options: {
   show?(element: HTMLInputElement): void;
 }) {
   const { field } = options;
-  // A controlled part goes back to the model of its mount at a reset.
-  const firstModel = options.model();
-  const own = useModel(options.model, firstModel ?? options.defaultChecked());
+  const own = useModel(options.model, options.model() ?? options.defaultChecked());
   const owner = () => options.owner?.();
   const checked = computed(() => owner()?.checked ?? own.value.value);
 
@@ -58,7 +56,7 @@ export function useChecked(options: {
       group.onReset(event);
       return;
     }
-    const reset = firstModel ?? options.defaultChecked();
+    const reset = own.resetValue(options.defaultChecked());
     field?.onReset(reset);
     if (checked.value === reset) return;
     own.setOwn(reset);

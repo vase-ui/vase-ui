@@ -15,7 +15,7 @@ export interface OTPFieldRootProps
   length: number;
   /** The code. With no value, the field owns its code. */
   modelValue?: string;
-  /** The first code of a field that owns its code. */
+  /** The code of a field that owns its code, at the mount and at a native reset of the form. */
   defaultValue?: string;
   /**
    * The characters that a slot accepts.

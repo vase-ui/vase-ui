@@ -1,5 +1,5 @@
-// Runs the tests that mount with `test/render.ts` with Vue 3.6, in the setups of virtual DOM and
-// Vapor:
+// Runs the browser tests of the `.test.ts` files of `src` and `test/measurements`, and of
+// `test/as.test.ts`, with Vue 3.6, in the setups of virtual DOM and Vapor:
 //   pnpm exec vitest run --config vitest.vue-3.6.config.ts
 import { createRequire } from 'node:module';
 import vue from '@vitejs/plugin-vue';
@@ -12,7 +12,6 @@ import { collectGarbage } from './test/server/collectGarbage.ts';
 import { contextOptions, engineInstances } from './test/server/engineInstances.ts';
 import type * as RenderToHtml from './test/server/renderToHtml.ts';
 import type { AppKind } from './test/render.ts';
-import { REFACTORED_FOLDERS } from './test/refactoredFolders.ts';
 
 const compiler = createRequire(import.meta.url)('vue-3.6/compiler-sfc');
 
@@ -81,12 +80,7 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
     optimizeDeps: { include: ['axe-core'] },
     test: {
       name,
-      include: [
-        ...REFACTORED_FOLDERS.map((folder) => `src/${folder}/**/*.test.ts`),
-        'test/measurements/*.test.ts',
-        'test/as.test.ts',
-        'src/use-element/*.test.ts',
-      ],
+      include: ['src/**/*.test.ts', 'test/measurements/*.test.ts', 'test/as.test.ts'],
       exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
       retry: 0,
       setupFiles: ['./test/setup.ts'],

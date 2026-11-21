@@ -2,8 +2,9 @@
 // what the browser or Vue does with a range input in a slider, so that `Slider` has code only where
 // they do not do it. Where the browsers differ, the measurement states each one.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
-import { cdp, server, userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import { byName, chromiumNodes, propertyOf } from '../accessibilityTree';
 import MeasureRangeInput from '../fixtures/MeasureRangeInput.vue';
 import { platform } from '../../src/common/platform';
 import { touchDrag } from '../pointer';
@@ -368,13 +369,6 @@ describe('S8: a click on the label of a clipped range input', () => {
   );
 });
 
-type AXNode = {
-  name?: { value: string };
-  value?: { value: unknown };
-  properties?: { name: string; value: { value: unknown } }[];
-};
-type FrameTree = { frame: { id: string }; childFrames?: FrameTree[] };
-
 describe('S9: the accessibility tree of Chromium', () => {
   // Playwright reads the accessibility tree of Chromium only.
   test.runIf(chromium)(
@@ -383,24 +377,16 @@ describe('S9: the accessibility tree of Chromium', () => {
       html(`<input type="range" aria-label="Plain" min="0" max="10" value="3">
         <input type="range" aria-label="Writing mode" value="3" style="writing-mode:vertical-lr">
         <input type="range" aria-label="ARIA" value="3" aria-orientation="vertical">`);
-      const session = cdp();
-      await session.send('Accessibility.enable');
-      const { frameTree } = (await session.send('Page.getFrameTree')) as { frameTree: FrameTree };
-      const found: Record<string, { value: unknown; orientation: unknown }> = {};
-      const visit = async (tree: FrameTree) => {
-        const { nodes } = (await session.send('Accessibility.getFullAXTree', {
-          frameId: tree.frame.id,
-        })) as { nodes: AXNode[] };
-        for (const node of nodes) {
-          const name = node.name?.value ?? '';
-          if (['Plain', 'Writing mode', 'ARIA'].includes(name)) {
-            const orientation = node.properties?.find((p) => p.name === 'orientation');
-            found[name] = { value: node.value?.value, orientation: orientation?.value.value };
-          }
-        }
-        for (const child of tree.childFrames ?? []) await visit(child);
-      };
-      await visit(frameTree);
+      const nodes = await chromiumNodes();
+      const found = Object.fromEntries(
+        ['Plain', 'Writing mode', 'ARIA'].map((name) => {
+          const node = byName(nodes, name);
+          return [
+            name,
+            { value: node?.value?.value, orientation: propertyOf(node, 'orientation') },
+          ];
+        }),
+      );
       expect(found).toEqual({
         Plain: { value: 3, orientation: 'horizontal' },
         'Writing mode': { value: 3, orientation: 'vertical' },

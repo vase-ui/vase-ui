@@ -1,4 +1,5 @@
-import { computed, shallowRef, watch } from 'vue';
+import { computed, inject, provide, shallowRef, watch } from 'vue';
+import { fieldKey, type FieldForControl } from '../../field/control';
 import { useFormReset } from '../formEvents';
 import { usePickerPopup } from './popup';
 import type { PickerForPart } from './root';
@@ -34,6 +35,11 @@ export function usePickerField(picker: PickerForPart<unknown>, part: string) {
     { flush: 'post' },
   );
   useFormReset(inputElement, (event) => picker.reset(event));
+  // The root gives a native reset to the `Field`. The field root has the value of the picker as its
+  // model, so its reset would give the model of its mount, also after a change of `defaultValue`.
+  const outer = inject(fieldKey, null);
+  if (outer)
+    provide(fieldKey, Object.create(outer, { onReset: { value() {} } }) as FieldForControl);
 
   function onKeydown(event: KeyboardEvent) {
     if (

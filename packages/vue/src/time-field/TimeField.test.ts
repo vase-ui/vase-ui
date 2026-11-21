@@ -166,6 +166,22 @@ describe('the form input', () => {
     expect(formInput.value).toBe('15:04:00');
   });
 
+  test('a native reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const field = record(log, {
+      defaultValue: time('09:30'),
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { formInput, form } = await mountFields([field]);
+    field.defaultValue = time('17:45');
+    await nextTick();
+    expect(formInput.value).toBe('09:30');
+    form.reset();
+    await settle();
+    expect(log).toEqual(['update 17:45:00']);
+    expect(formInput.value).toBe('17:45');
+  });
+
   test('checks a range through midnight natively', async () => {
     const field = reactive<Record<string, unknown>>({
       defaultValue: time('23:00'),

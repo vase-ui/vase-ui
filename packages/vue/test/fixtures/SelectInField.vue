@@ -14,6 +14,7 @@ defineProps({
   show: { type: Object as PropType<{ b?: boolean }>, default: () => ({}) },
   field: Object as PropType<Attrs>,
   root: Object as PropType<Attrs>,
+  trigger: Object as PropType<Attrs>,
   fieldset: Object as PropType<Attrs>,
   noField: Boolean,
   vaseForm: Boolean,
@@ -37,7 +38,7 @@ defineProps({
       <Field.Root v-else v-bind="field">
         <Field.Label>Letter</Field.Label>
         <Select.Root v-bind="root">
-          <Select.Trigger data-testid="trigger"><Select.Value /></Select.Trigger>
+          <Select.Trigger data-testid="trigger" v-bind="trigger"><Select.Value /></Select.Trigger>
           <Select.Portal>
             <Select.Positioner :align-item-with-trigger="false">
               <Select.Popup data-testid="popup">

@@ -539,7 +539,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
       typeChecker().getPropertiesOfType(typeChecker().getTypeAtLocation(expression)),
     ).map(propertyName);
   };
-  const exposedNames = (file: string): string[] => {
+  const exposeArgument = (file: string): ts.Expression | undefined => {
     const sourceFile = checker.getProgram()?.getSourceFile(file);
     const visit = (node: ts.Node): ts.Expression | undefined => {
       if (
@@ -551,8 +551,38 @@ export function createVaseProject(tsconfig: string): VaseProject {
       }
       return ts.forEachChild(node, visit);
     };
-    const expression = sourceFile && visit(sourceFile);
-    return expression ? expressionPropertyNames(expression) : [];
+    return sourceFile && visit(sourceFile);
+  };
+  /**
+   * The exposed members in the sequence of `defineExpose`. vue-component-meta leaves out a member
+   * that has the name of a prop, such as `validate` of `Field.Root`. The argument of
+   * `defineExpose` then gives its type and its text.
+   */
+  const readExposed = (file: string, listed: readonly (MemberSurface & { name: string })[]) => {
+    const exposed = new Map(
+      listed.map(({ name, type, description }) => [name, { type, description }]),
+    );
+    const argument = exposeArgument(file);
+    if (!argument) {
+      return exposed;
+    }
+    const argumentType = typeChecker().getTypeAtLocation(argument);
+    const fromArgument = (name: string): MemberSurface | undefined => {
+      const property = argumentType.getProperty(name);
+      return (
+        property && {
+          type: typeText(typeChecker().getTypeOfSymbol(property)),
+          description: documentationOf(property),
+        }
+      );
+    };
+    return new Map([
+      ...expressionPropertyNames(argument).flatMap((name): [string, MemberSurface][] => {
+        const member = exposed.get(name) ?? fromArgument(name);
+        return member ? [[name, member]] : [];
+      }),
+      ...exposed,
+    ]);
   };
   // `getJsDocTags` gives a property that an interface declares again with no tag the tags of the
   // declaration in the base interface. The declarations of a property of an `Omit` or a `Pick` are
@@ -755,9 +785,6 @@ export function createVaseProject(tsconfig: string): VaseProject {
       }
       const declaredEmits = readEmits(source, file);
       const listed = new Set(meta.events.map(({ name }) => name));
-      const exposed = new Map(
-        meta.exposed.map(({ name, type, description }) => [name, { type, description }]),
-      );
       return {
         description: documentationOf(resolve(symbol)),
         props,
@@ -785,15 +812,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
           ]),
         ),
         // vue-component-meta lists the members in the order of the checker. For an object with a
-        // spread, the checker lists the parts from the last to the first. `defineExpose` keeps the
-        // sequence of the source.
-        exposed: new Map([
-          ...exposedNames(file).flatMap((name): [string, MemberSurface][] => {
-            const member = exposed.get(name);
-            return member ? [[name, member]] : [];
-          }),
-          ...exposed,
-        ]),
+        // spread, the checker lists the parts from the last to the first.
+        exposed: readExposed(file, meta.exposed),
       };
     },
 

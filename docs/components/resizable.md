@@ -281,7 +281,7 @@ A root can be in a panel of another root. Each root keeps its own layout. Where 
 
 ### A handle with no size
 
-A handle can have no size, such as a handle at the border of two panels. Its pointer target takes a press within 5 px of its center. The handle also has the keys, the focus and the role of each other handle.
+A handle can have no size, such as a handle at the border of two panels. Its pointer target takes a press within 5 px of its center. The handle also has the keys, the focus and the role of each other handle. In the `element` slot, end your element with `<span v-bind="targetProps" />`, the pointer target of the handle.
 
 <DemoFrame>
   <DemoResizableEdges />

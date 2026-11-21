@@ -412,6 +412,41 @@ describe('native forms', () => {
     expect(focused()).toBe('hdd');
   });
 
+  test('a reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const group = reactive<Record<string, unknown>>({
+      defaultValue: 'ssd',
+      'onUpdate:modelValue': (value: unknown) => log.push(`update ${String(value)}`),
+    });
+    const { root, checked } = await mountGroup({ group, items: choices('ssd', 'hdd') });
+    group.defaultValue = 'hdd';
+    await nextTick();
+    expect(checked()).toBe('ssd');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toBe('hdd');
+    expect(log).toEqual(['update hdd']);
+  });
+
+  test('a reset gives a controlled group the array of its mount, which a radio has as its value', async () => {
+    const values = reactive({ small: ['s'], large: ['l'] });
+    const group = groupModel([], values.small);
+    const { root, radio, checked } = await mountGroup({
+      group,
+      items: [
+        { key: 'small', value: values.small },
+        { key: 'large', value: values.large },
+      ],
+    });
+    expect(checked()).toBe('small');
+    radio('large').click();
+    await nextTick();
+    expect(checked()).toBe('large');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toBe('small');
+  });
+
   test('a reset gives the first value with one update:modelValue; nothing for no change, a prevented reset or another form', async () => {
     const log: string[] = [];
     const group = groupModel(log, 'ssd', false);
@@ -440,6 +475,16 @@ describe('native forms', () => {
 });
 
 describe('in a field', () => {
+  test('aria-describedby of the developer comes before the ids of the field, on the group and on a radio', async () => {
+    const { group, radio } = await mountGroup({
+      group: { 'aria-describedby': 'group-hint' },
+      items: [{ key: 'ssd', attrs: { 'aria-describedby': 'hint' } }],
+      field: {},
+    });
+    expect(group).toHaveAttribute('aria-describedby', 'group-hint description');
+    expect(radio('ssd')).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group; the group has aria-invalid, and each radio data-invalid', async () => {
     const field = reactive<Record<string, unknown>>({ invalid: true });
     const { root, group, radio } = await mountGroup({ items: choices('ssd'), field });

@@ -34,7 +34,7 @@ export function useFormListener<Type extends keyof HTMLElementEventMap>(
 /**
  * Calls `onReset` after each native reset of the form that owns the element, when no listener
  * prevented the reset. Vue writes the `value` and `checked` attributes at each value, so the form
- * resets a control to its last value, and the part gives its first value itself.
+ * resets a control to its last value, and the part gives the value of the reset itself.
  */
 export function useFormReset(
   element: Readonly<Ref<FormControl | null>>,

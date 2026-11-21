@@ -45,7 +45,8 @@ const emit = defineEmits<{
 defineSlots<{
   /**
    * The content of the field. `validity` has a flag for each failure and `valid`, and `errors` has
-   * the messages. `value` and `initialValue` are the value of the control and its first value.
+   * the messages. `value` is the value of the control. `initialValue` is its value at the mount or
+   * at the last native reset of the form.
    */
   default?(scope: {
     state: FieldRootState;
@@ -227,6 +228,7 @@ provide(fieldKey, {
   },
   onReset(next) {
     dropValidation();
+    firstValue.value = next;
     value.value = next;
     if (state.value.touched) emit('update:touched', false);
     ownTouched.value = false;

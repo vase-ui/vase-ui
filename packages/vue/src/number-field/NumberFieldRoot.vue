@@ -55,9 +55,10 @@ const asValue = (value: number | null | undefined): Value =>
   value === null || value === undefined || Number.isNaN(value) ? null : value;
 const model = () => (props.modelValue === undefined ? undefined : asValue(props.modelValue));
 const firstModel = model();
-/** The value of the mount, which a native reset gives back. */
-const firstValue = firstModel === undefined ? asValue(props.defaultValue) : firstModel;
-const { value, setOwn } = useModel(model, firstValue);
+const { value, setOwn, resetValue } = useModel(
+  model,
+  firstModel === undefined ? asValue(props.defaultValue) : firstModel,
+);
 
 // A format with the same content is the same format, so that an inline object of the parent does
 // not format typed text again at each render.
@@ -96,7 +97,7 @@ const typedRange = computed(() =>
 // The user typed since the focus or the last commit.
 let edited = false;
 // The value of the last commit, or of the focus.
-let committed: Value = firstValue;
+let committed: Value = value.value;
 
 watch(numberText, (_, before) => {
   // Typed text that is a number takes the new format. Other typed text stays.
@@ -134,12 +135,13 @@ watch(
 );
 
 useFormReset(hiddenInput, () => {
-  field?.onReset(firstValue);
+  const reset = resetValue(asValue(props.defaultValue));
+  field?.onReset(reset);
   typed.value = null;
   edited = false;
-  if (value.value !== firstValue) {
-    setOwn(firstValue);
-    emit('update:modelValue', firstValue);
+  if (value.value !== reset) {
+    setOwn(reset);
+    emit('update:modelValue', reset);
   }
 });
 

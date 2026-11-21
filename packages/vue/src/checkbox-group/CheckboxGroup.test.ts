@@ -342,6 +342,22 @@ describe('in a native form', () => {
     ]);
   });
 
+  test('a reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const group = reactive<Record<string, unknown>>({
+      defaultValue: ['fuji'],
+      'onUpdate:modelValue': (value: string[]) => log.push(`group ${value.join(',')}`),
+    });
+    const { root, checked } = await mountGroup({ group, items: apples('fuji', 'gala') });
+    group.defaultValue = ['gala'];
+    await nextTick();
+    expect(checked()).toEqual(['fuji']);
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(checked()).toEqual(['gala']);
+    expect(log).toEqual(['group gala']);
+  });
+
   test('a reset gives the first value with one update:modelValue, and starts the cycle of the parent again', async () => {
     const log: string[] = [];
     const group = groupModel(log, ['fuji'], false);
@@ -372,9 +388,38 @@ describe('in a native form', () => {
     await settle();
     expect(checked()).toEqual(['fuji']);
   });
+
+  test.each([
+    { edit: 'push', change: (value: string[]) => value.push('gala'), shown: ['fuji', 'gala'] },
+    { edit: 'splice', change: (value: string[]) => value.splice(0, 1, 'gala'), shown: ['gala'] },
+  ])(
+    'a reset gives a controlled group the value of its mount, also after a $edit on the array of the model',
+    async ({ change, shown }) => {
+      const log: string[] = [];
+      const group = groupModel(log, ['fuji']);
+      const { root, checked } = await mountGroup({ group, items: apples('fuji', 'gala') });
+      change(group.modelValue as string[]);
+      await nextTick();
+      expect(checked()).toEqual(shown);
+      root.querySelector('form')!.reset();
+      await settle();
+      expect(log).toEqual(['group fuji']);
+      expect(checked()).toEqual(['fuji']);
+    },
+  );
 });
 
 describe('in a field', () => {
+  test('aria-describedby of the developer comes before the ids of the field, on the group and on a checkbox', async () => {
+    const { group, box } = await mountGroup({
+      group: { 'aria-describedby': 'group-hint' },
+      items: [{ key: 'fuji', value: 'fuji', attrs: { 'aria-describedby': 'hint' } }],
+      field: {},
+    });
+    expect(group).toHaveAttribute('aria-describedby', 'group-hint description');
+    expect(box('fuji')).toHaveAttribute('aria-describedby', 'hint description');
+  });
+
   test('the label names the group with aria-labelledby and has no for; the descriptions describe the group and each checkbox', async () => {
     const { root, group, box } = await mountGroup({ items: apples('fuji'), field: {} });
     const label = root.querySelector('label')!;

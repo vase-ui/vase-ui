@@ -3,7 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomplete';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
-import { mount } from '../../test/render';
+import { mount, settle } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -152,6 +152,44 @@ describe('the form', () => {
     await mountAutocomplete({ inputInPopup: true, root: { name: 'tag', defaultValue: 'docs' } });
     await waitFor(() => expect([...new FormData(form()).entries()]).toEqual([['tag', 'docs']]));
     expect(byTestId('trigger')).toHaveTextContent('docs');
+  });
+
+  test('BUG-6206: a reset gives a controlled root the text of its mount, with update:modelValue only', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'tag',
+      modelValue: 'fix',
+      onValueChange: () => log.push('valueChange'),
+    });
+    root['onUpdate:modelValue'] = (text: string) => {
+      log.push(`update ${text}`);
+      root.modelValue = text;
+    };
+    await mountAutocomplete({ root });
+    await userEvent.type(input(), 'es');
+    await waitFor(() => expect(input().value).toBe('fixes'));
+    log.length = 0;
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update fix']);
+    expect(input().value).toBe('fix');
+  });
+
+  test('a reset gives the defaultValue of the reset, after a change of it', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({
+      name: 'tag',
+      defaultValue: 'fix',
+      'onUpdate:modelValue': (text: string) => log.push(`update ${text}`),
+    });
+    await mountAutocomplete({ root });
+    root.defaultValue = 'docs';
+    await nextTick();
+    expect(input().value).toBe('fix');
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update docs']);
+    expect(input().value).toBe('docs');
   });
 
   test('`submitOnItemClick` submits the form of the root after a pick, also from an input in the popup', async () => {

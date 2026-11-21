@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import type { ResizableLayout, ResizableRootChangeEventDetails } from '@vase-ui/vue/resizable';
 import ResizableHandleTag from '../../test/fixtures/ResizableHandleTag.vue';
 import ResizableLayoutFixture from '../../test/fixtures/ResizableLayout.vue';
+import ResizableThinHandleInSlot from '../../test/fixtures/ResizableThinHandleInSlot.vue';
 import { penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
 import {
@@ -361,6 +362,19 @@ describe('a handle with no size', () => {
     expect(at('h1')).toHaveFocus();
     await release();
     expect(grows(root, 'a', 'b')).toEqual(['60', '40']);
+  });
+
+  test.each([
+    { name: 'the span of targetProps', target: true, grows: ['60', '40'] },
+    { name: 'no span', target: false, grows: ['50', '50'] },
+  ])('in the element slot, with $name, a press 4 px beside its center', async (row) => {
+    const { root } = mount(ResizableThinHandleInSlot, { target: row.target });
+    await settle();
+    const center = centerOf(byKey(root, 'h1'));
+    await userEvent.pointer({ coords: { x: center.x + 4, y: center.y }, keys: '[MouseLeft>]' });
+    await moveTo({ x: center.x + 44, y: center.y });
+    await release();
+    expect(grows(root, 'a', 'b')).toEqual(row.grows);
   });
 
   test('--resizable-handle-hit-area-size widens the target', async () => {

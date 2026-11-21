@@ -443,6 +443,7 @@ const COMBOBOX_ROOT_MEMBERS = ['close', 'element', 'inputElement'];
 
 for (const { family, part, members } of [
   { family: 'select', part: 'Select.Root', members: ['element', 'inputElement', 'close'] },
+  { family: 'field', part: 'Field.Root', members: ['element', 'validate'] },
   { family: 'combobox', part: 'Combobox.Root', members: COMBOBOX_ROOT_MEMBERS },
   { family: 'autocomplete', part: 'Autocomplete.Root', members: COMBOBOX_ROOT_MEMBERS },
   {

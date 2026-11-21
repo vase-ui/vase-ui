@@ -926,22 +926,25 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     formElement,
     isEqual: () => isEqual.value,
     reset() {
-      const firstOwn = valueModelOf(source.defaultValue ?? null) ?? (multiple() ? NO_VALUES : null);
+      const resetValue = valueState.resetValue(
+        valueModelOf(source.defaultValue ?? null) ?? (multiple() ? NO_VALUES : null),
+      );
       if (
-        source.value === undefined &&
         source.mode !== 'none' &&
-        isSelectedValueDirty(valueModel.value, firstOwn, isEqual.value)
+        isSelectedValueDirty(valueModel.value, resetValue, isEqual.value)
       ) {
-        valueState.setOwn(firstOwn);
-        emit.updateValue(firstOwn);
+        valueState.setOwn(resetValue);
+        emit.updateValue(resetValue);
       }
-      const resetText =
+      const resetText = textState.resetValue(
         source.defaultText ??
-        (source.mode === 'single' && inputIsControl.value ? labelOf(firstOwn) : '');
-      if (source.text === undefined && text.value !== resetText) {
+          (source.mode === 'single' && inputIsControl.value ? labelOf(resetValue) : ''),
+      );
+      if (text.value !== resetText) {
         textState.setOwn(resetText);
         emit.updateText(resetText);
       }
+      return source.mode === 'none' ? resetText : resetValue;
     },
   });
 
