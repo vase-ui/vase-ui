@@ -166,7 +166,7 @@ describe('focus and selection', () => {
     selecting!.setSelectionRange(6, 6);
     selecting!.focus();
     expect(selection(selecting!)).toEqual([0, 6]);
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(last);
     expect(selection(last!)).toEqual([0, 6]);
   });

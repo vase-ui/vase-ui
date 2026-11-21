@@ -522,7 +522,7 @@ describe('size variables', () => {
     inside.focus();
     expect(document.activeElement).not.toBe(inside);
     trigger.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(root.querySelector('[aria-label=After]'));
   });
 

@@ -463,6 +463,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - For a mouse, the browser sends `pointerdown` and `mousedown` in one task, and `pointerup`, `mouseup` and `click` in a later task. A case that depends on a 0 ms timer of a part dispatches the events of one task in one `Promise.all`.
 - A case that asserts what a part does when an element loses the focus moves the real focus, with `blur()` or `focus()` on another element. A dispatched `focusout` does not move the focus.
 - To assert that a timer did no work, call `await wait(0)` after the action. One frame is not a wait for a 0 ms timer.
+- Press Tab with `userEvent.keyboard('{Tab}')`. `userEvent.tab()` runs no script in the frame of the test before its key, so after a focus that a script moved into the frame, WebKit can send its `keydown` to the page of Vitest.
 - A command of `userEvent` can take some seconds on a busy machine. A check before the end of a delay starts at the event that starts the delay, with `readAfter`. An action that must come in a delay, a press window or a leave comes in the task where it starts, with `readWhen` or a listener of the event.
 - Do not poll a state that exists only while an animation runs. Record it in a `MutationObserver`. Then wait for a state that stays, such as `hidden` or the removal of the element.
 - Give a duration of 100 s to each animation that a case ends with its own call, such as `finish()`. A late frame can end a short animation before the part reads it.

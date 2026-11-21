@@ -244,8 +244,19 @@ describe('`data-instant` and a leave of Vue', () => {
 });
 
 describe('the window that loses the focus', () => {
-  // A window that loses the focus needs a headed browser with two windows. The test browsers run
-  // headless, and each page keeps the focus, so `Tooltip.test.ts` sends the events of that case.
+  // A window that loses the focus needs a headed browser with two windows. Playwright keeps each
+  // page that it drives focused, also in a headed browser with a window manager. So no case here
+  // can take the focus from the window, and `Tooltip.test.ts` sends the events.
+  //
+  // The measurement for those events used headed browsers with no Playwright on Linux, on a
+  // virtual display (Xvfb) with a window manager (Openbox): Chromium 158 and the WebKit GTK 27.2
+  // MiniBrowser of Playwright 1.65, and Firefox 160 of Mozilla. A Tab moved the focus to a button.
+  // Then `xdotool` gave the focus to another window, and gave it back.
+  // - Chromium and Firefox: the button gets `blur` and `focusout` with no related target, then the
+  //   window gets `blur`. In the listener and one task later, the button is the active element, and
+  //   `document.hasFocus()` is false. At the return, the window gets `focus`, then the button gets
+  //   `focus` and `focusin` with no related target, and it matches `:focus-visible`.
+  // - WebKit: the button gets `blur` and `focus`, and no `focusout` or `focusin`.
   test('a headless browser keeps the focus of the page', () => {
     html('<button id="t">x</button>');
     element('t').focus();

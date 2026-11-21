@@ -4,7 +4,8 @@
 //
 // No test can make these two cases:
 // - The window loses the focus and gets it back while a link has the focus. Playwright keeps each
-//   page in the focused state, so no event reaches the page.
+//   page in the focused state, so no event reaches the page. `tooltip.test.ts` gives the events of
+//   headed browsers.
 // - Safari on macOS: the focus is in the address bar, and Tab (Option+Tab with the default system
 //   setting) moves it to a link of the page. A script cannot start the focus in the UI of the
 //   browser.

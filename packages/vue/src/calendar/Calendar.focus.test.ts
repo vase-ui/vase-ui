@@ -73,9 +73,9 @@ describe('the tab stop', () => {
   test('takes the focus of Tab, and the next Tab leaves the grid', async () => {
     const { container } = await mountCalendar({ parts: {} });
     container.querySelectorAll<HTMLElement>('[role=group] > button')[1]!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toHaveAttribute('aria-label', 'Wednesday, November 18, 2026');
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement?.id).toBe('after');
   });
 

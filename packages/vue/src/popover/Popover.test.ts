@@ -2133,6 +2133,15 @@ describe('the viewport', () => {
     observer.observe(positioner()!, { attributes: true });
     await userEvent.click(byId('two'));
     await waitFor(() => expect(element).toHaveAttribute('data-instant', 'trigger-change'));
+    // The old content leaves two frames after the move, and the size animation ends 80 ms after
+    // it. On a busy machine, the animation can end first, and the positioner then gets the size of
+    // the two contents again before the size of the new one.
+    await waitFor(() => {
+      expect(element.querySelectorAll('.content')).toHaveLength(1);
+      expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(
+        `${element.offsetHeight}px`,
+      );
+    });
     observer.disconnect();
     const [start, next, end] = popupSizes;
     expect([popupSizes.length, start, end]).toEqual([3, old, '']);

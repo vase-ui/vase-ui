@@ -285,9 +285,9 @@ describe('a control in a closed kept element that CSS shows', () => {
       <div class="Shown" hidden="until-found"><input id="found" aria-label="Found"></div>
       <input id="after" aria-label="After">`);
     element('before').focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(element('plain'));
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(element('after'));
     const focused = ['plain', 'inert', 'found'].map((id) => {
       element(id).focus();

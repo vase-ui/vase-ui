@@ -45,7 +45,7 @@ describe('a button that leaves in a <Transition> with a leave of 300 ms', () => 
     leaving.inert = inert;
     await userEvent.pointer({ coords: centerOf(leaving), keys: '[MouseLeft]' });
     container.querySelector<HTMLElement>('#before')!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     return { clicks: exposed.clicks as number, focused: document.activeElement?.id };
   }
 

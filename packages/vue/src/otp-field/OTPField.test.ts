@@ -637,14 +637,14 @@ describe('the focus and the tab stop', () => {
     });
     expect(tabStops()).toEqual([3]);
     root.querySelector<HTMLElement>('#before')!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe(3);
     await userEvent.keyboard('{ArrowLeft}');
     expect(tabStops()).toEqual([2]);
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(root.querySelector('#after'));
     expect(tabStops()).toEqual([3]);
-    await userEvent.tab({ shift: true });
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(focused()).toBe(3);
     expect(slots[3]).toHaveFocus();
   });
@@ -728,7 +728,7 @@ describe('the focus and the tab stop', () => {
     await settle();
     expect(tabStops()).toEqual([3]);
     document.querySelector<HTMLElement>('#before')!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe(3);
   });
 
