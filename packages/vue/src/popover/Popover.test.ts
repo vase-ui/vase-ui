@@ -133,7 +133,7 @@ describe('the parts', () => {
   });
 });
 
-describe('the root (L1)', () => {
+describe('the root', () => {
   test('a press on the trigger opens and closes the popover; openChange comes before update:open', async () => {
     const log: string[] = [];
     const { trigger } = await mountPopover({ root: rootEvents(log) });
@@ -243,7 +243,7 @@ describe('the root (L1)', () => {
   });
 });
 
-describe('the handle (L1)', () => {
+describe('the handle', () => {
   test('connects triggers outside the root; open(id) opens for that trigger; isOpen and close() follow', async () => {
     const handle = Popover.createHandle<string>();
     mount(PopoverHandles, { handle });
@@ -276,7 +276,7 @@ describe('the handle (L1)', () => {
   });
 });
 
-describe('in the DOM (L2)', () => {
+describe('in the DOM', () => {
   test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until each leave ends', async () => {
     const log: string[] = [];
     mount(PopoverInTransition, {
@@ -360,7 +360,7 @@ describe('in the DOM (L2)', () => {
   });
 });
 
-describe('the portal (L3)', () => {
+describe('the portal', () => {
   test('a portal in a portal with a container goes to that container; `to` of `null` renders nothing; `disabled` renders in place', async () => {
     const container = document.body.appendChild(document.createElement('div'));
     try {
@@ -403,7 +403,7 @@ describe('the portal (L3)', () => {
   });
 });
 
-describe('the dismissal (L4)', () => {
+describe('the dismissal', () => {
   test('one cancel() gives one openChange for one Escape', async () => {
     const log: string[] = [];
     const root = rootEvents(log, { defaultOpen: true });
@@ -869,7 +869,7 @@ describe('the dismissal (L4)', () => {
   });
 });
 
-describe('modal (3.2, L4 to L6)', () => {
+describe('modal', () => {
   test('`true` locks the scroll and renders a fixed element with a hole at the trigger; a press on it closes; a press on the trigger closes', async () => {
     const log: string[] = [];
     const { trigger } = await mountPopover({ root: rootEvents(log, { modal: true }) });
@@ -1051,7 +1051,7 @@ describe('modal (3.2, L4 to L6)', () => {
   });
 });
 
-describe('the focus (L7)', () => {
+describe('the focus', () => {
   test('goes to the first tab stop at a press open, to the popup when it has none, and back to the trigger at the close', async () => {
     const { trigger } = await mountPopover();
     await userEvent.click(trigger());
@@ -1244,7 +1244,7 @@ describe('the focus (L7)', () => {
   });
 });
 
-describe('the trigger (L8)', () => {
+describe('the trigger', () => {
   test('a disabled trigger opens nothing; Enter and Space open a trigger that is not a button', async () => {
     const { trigger, unmount } = await mountPopover({
       triggers: [{ key: 't', attrs: { disabled: true } }],
@@ -1287,7 +1287,7 @@ describe('the trigger (L8)', () => {
   });
 });
 
-describe('the hover (L9)', () => {
+describe('the hover', () => {
   test('VUE-171: a pointer that crosses another hover trigger in the triangle to the popup moves nothing; one that rests there moves the popup', async () => {
     const { trigger } = await mountPopover({
       triggers: [
@@ -1626,7 +1626,7 @@ describe('the hover (L9)', () => {
   });
 });
 
-describe('the placement (L10)', () => {
+describe('the placement', () => {
   test.each(['inline-end', 'inline-start'] as const)(
     'writes the side, the alignment and the variables; `%s` follows the direction of the positioner',
     async (side) => {
@@ -2089,7 +2089,7 @@ describe('more behaviors of the parts', () => {
   });
 });
 
-describe('the viewport (L11)', () => {
+describe('the viewport', () => {
   test('a move to another trigger gives the direction and the new content; keyed content leaves and enters', async () => {
     const log: string[] = [];
     mount(PopoverViewportParts, { log: { add: (entry: string) => log.push(entry) } });

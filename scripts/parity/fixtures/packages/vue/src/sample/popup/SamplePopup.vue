@@ -27,7 +27,7 @@ import { computed, mergeProps, ref, useAttrs } from 'vue';
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<SamplePopupProps>(), {
-  as: 'div',
+  as: undefined,
   side: 'bottom',
   keepMounted: false,
   disabled: false,
@@ -35,7 +35,11 @@ const props = withDefaults(defineProps<SamplePopupProps>(), {
 
 defineSlots<{
   default(props: { state: SamplePopupState }): unknown;
-  render(props: { props: Record<string, unknown>; state: SamplePopupState }): unknown;
+  element?(scope: {
+    props: Record<string, unknown>;
+    elementRef: (element: unknown) => void;
+    state: SamplePopupState;
+  }): unknown;
 }>();
 
 const attrs = useAttrs();
@@ -53,7 +57,6 @@ function setElement(value: unknown) {
 
 function elementProps() {
   return mergeProps(attrs, {
-    ref: setElement,
     'data-open': '',
     'data-side': props.side,
   });
@@ -63,6 +66,15 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <slot
+    v-if="$slots.element"
+    name="element"
+    :props="elementProps()"
+    :elementRef="setElement"
+    :state="state"
+  />
+  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">
+    <slot :state="state" />
+  </component>
+  <div v-else v-bind="elementProps()" :ref="setElement"><slot :state="state" /></div>
 </template>

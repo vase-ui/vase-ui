@@ -24,7 +24,7 @@ afterEach(() => {
 const hidden =
   'position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap';
 
-describe('M1: the order of setup', () => {
+describe('the order of setup', () => {
   const numbers = (container: Element) =>
     [...container.querySelectorAll('output')].map((output) => output.textContent);
   const inOrder = ['0', '1', '2', '3', '4', '5'];
@@ -39,7 +39,7 @@ describe('M1: the order of setup', () => {
   });
 });
 
-describe('M2: the key of the selected character', () => {
+describe('the key of the selected character', () => {
   test('sends one input event with the inputType insertText', async () => {
     const input = html('<input value="1" aria-label="Slot">').querySelector('input')!;
     const types: string[] = [];
@@ -52,7 +52,7 @@ describe('M2: the key of the selected character', () => {
   });
 });
 
-describe('M3: a form that finds a hidden input invalid', () => {
+describe('a form that finds a hidden input invalid', () => {
   test('gives the hidden input the focus', () => {
     const form = html(
       `<form><input tabindex="-1" aria-hidden="true" required style="${hidden}"></form>`,
@@ -62,7 +62,7 @@ describe('M3: a form that finds a hidden input invalid', () => {
   });
 });
 
-describe('M4: a list that children fill after a change of the parent', () => {
+describe('a list that children fill after a change of the parent', () => {
   test('has the old count in the post-flush watcher of the parent, and the new count a tick later', async () => {
     const scene = reactive({ count: 2 });
     const log: string[] = [];
@@ -75,7 +75,7 @@ describe('M4: a list that children fill after a change of the parent', () => {
   });
 });
 
-describe('M5: Enter in a form with six text inputs and one hidden text input', () => {
+describe('Enter in a form with six text inputs and one hidden text input', () => {
   const buttons = {
     submit: '<button>Submit</button>',
     image: '<input type="image" alt="Submit">',

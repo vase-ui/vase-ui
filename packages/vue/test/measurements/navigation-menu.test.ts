@@ -1,6 +1,5 @@
-// Measurements for Navigation Menu. M1 to M6, N2, N3 and N4 use native elements and plain Vue, with
-// no code of the library. N1, N5, N6 and N9 measure the parts. N7 and N8 are cases of
-// `NavigationMenu.test.ts`.
+// Measurements for Navigation Menu. The cases outside "the parts" use native elements and plain
+// Vue, with no code of the library.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
@@ -40,7 +39,7 @@ function parts(host: ParentNode) {
   );
 }
 
-describe('a <Transition> of the developer around a part with a <Teleport> root (M1, M2)', () => {
+describe('a <Transition> of the developer around a part with a <Teleport> root', () => {
   test('the element gets the enter and the leave classes', async () => {
     const scene = sceneOf({ target: 'view' });
     ({ root } = mount(MeasureTeleportScene, { scene, around: true }));
@@ -76,7 +75,7 @@ describe('a <Transition> of the developer around a part with a <Teleport> root (
   });
 });
 
-describe('a disabled <Teleport> with no target (M3)', () => {
+describe('a disabled <Teleport> with no target', () => {
   test('renders in place with no warning, and the same element moves to a target and back with the text of its input', async () => {
     const scene = sceneOf({ shown: 'a' });
     ({ root } = mount(MeasureTeleportScene, { scene }));
@@ -97,7 +96,7 @@ describe('a disabled <Teleport> with no target (M3)', () => {
   });
 });
 
-describe('a target in an element that leaves (M4)', () => {
+describe('a target in an element that leaves', () => {
   test('the ref of the target gets null at the close; the content stays in it for the leave, and goes with it', async () => {
     const scene = sceneOf({ target: 'view', shown: 'a' });
     const refs: (string | null)[] = [];
@@ -120,7 +119,7 @@ describe('a target in an element that leaves (M4)', () => {
   });
 });
 
-describe('an element that leaves (M5)', () => {
+describe('an element that leaves', () => {
   test('Vue writes no attribute on it in the update of its leave', async () => {
     const scene = sceneOf({ target: 'view', shown: 'a' });
     ({ root } = mount(MeasureTeleportScene, { scene, around: true }));
@@ -136,7 +135,7 @@ describe('an element that leaves (M5)', () => {
   });
 });
 
-describe('the scope id of the parent (M6)', () => {
+describe('the scope id of the parent', () => {
   test('reaches the element of a part with an element root, and not that of a part with a <Teleport> root', async () => {
     ({ root } = mount(MeasureScopedTeleport));
     await nextTick();
@@ -147,7 +146,7 @@ describe('the scope id of the parent (M6)', () => {
   });
 });
 
-describe('a real pointer that crosses an element (N2)', () => {
+describe('a real pointer that crosses an element', () => {
   test('the element under a point of the path gets pointerenter', async () => {
     root = document.body.appendChild(document.createElement('div'));
     root.innerHTML =
@@ -170,7 +169,7 @@ describe('a real pointer that crosses an element (N2)', () => {
   });
 });
 
-describe('Tab after a key listener moved the focus to a sentinel (N3)', () => {
+describe('Tab after a key listener moved the focus to a sentinel', () => {
   function scene(stop: string) {
     root = document.body.appendChild(document.createElement('div'));
     root.innerHTML = `<input id="trigger" aria-label="Trigger"><input id="next" aria-label="Next"><span id="sentinel" tabindex="0"></span>${stop}<input id="end" aria-label="End">`;
@@ -202,7 +201,7 @@ describe('Tab after a key listener moved the focus to a sentinel (N3)', () => {
   });
 });
 
-describe('a MutationObserver of new content (N4)', () => {
+describe('a MutationObserver of new content', () => {
   test('runs before the paint: a size that its callback writes is the size of the next frame', async () => {
     root = document.body.appendChild(document.createElement('div'));
     root.innerHTML =
@@ -224,7 +223,7 @@ describe('a MutationObserver of new content (N4)', () => {
 });
 
 describe('the parts', () => {
-  test('N1: the classes of `transition` on a content, in each setup of the app', async () => {
+  test('the classes of `transition` on a content, in each setup of the app', async () => {
     mount(NavigationMenuParts, {
       root: { defaultValue: 'one' },
       contents: { two: { transition: { name: 'slide' }, class: 'animated' } },
@@ -240,7 +239,7 @@ describe('the parts', () => {
     expect(get('content-two').className).toContain('slide-enter-to');
   });
 
-  test('N5: 200 fast opens, changes and closes give no size of zero, and the last size is that of the content', async () => {
+  test('200 fast opens, changes and closes give no size of zero, and the last size is that of the content', async () => {
     mount(NavigationMenuParts, { popup: { class: 'sized' } });
     await nextTick();
     const values = new Set<string>();
@@ -275,7 +274,7 @@ describe('the parts', () => {
     { name: 'mounts open', setup: { root: { defaultValue: 'one' } } },
     { name: 'is kept, and opens at another trigger', setup: { portal: { keepMounted: true } } },
   ])(
-    'N6: a positioner with a transition of its place that $name runs no transition',
+    'a positioner with a transition of its place that $name runs no transition',
     async ({ setup }) => {
       // The CSS of the demos: a transition of the place, with none while `data-instant` is on.
       const style = document.head.appendChild(document.createElement('style'));
@@ -301,7 +300,7 @@ describe('the parts', () => {
     },
   );
 
-  test('N9: a kept, closed positioner with a size and a ::before takes no pointer', async () => {
+  test('a kept, closed positioner with a size and a ::before takes no pointer', async () => {
     mount(NavigationMenuParts, {
       portal: { keepMounted: true },
       positioner: { class: 'demo-positioner' },

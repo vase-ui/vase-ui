@@ -17,7 +17,9 @@ import type { PopupRoot } from './root';
 /**
  * A `mousedown` listener of an element that covers the page. A press on such an element moves the
  * focus to `<body>`, and a double click selects text of the page in Firefox and WebKit. The default
- * action of `mousedown` does both (test/measurements/dialog.test.ts, N9 of popup.test.ts).
+ * action of `mousedown` does both (test/measurements/dialog.test.ts, "a press on a fixed element
+ * that is not focusable", and test/measurements/popup.test.ts, "a double click on a fixed element
+ * over text").
  */
 export function keepFocus(event: MouseEvent) {
   if (event.target === event.currentTarget) event.preventDefault();

@@ -1,7 +1,6 @@
-// Measurements for Select and its list: with native elements and plain Vue (SM1 to SM8, and the
-// pointer rule, the focus and the scroll of the list), and through the parts (SN1 to SN4). Each one
-// states what the browser or Vue does, so that the parts have code only where they do not do it.
-// SN5 is `Select.test.ts` "animation" in the Vapor setups.
+// Measurements for Select and its list: with native elements and plain Vue, and through the parts
+// ("the parts"). Each one states what the browser or Vue does, so that the parts have code only
+// where they do not do it. In the Vapor setups, "animation" of `Select.test.ts` measures the parts.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import {
@@ -44,7 +43,7 @@ function centerOf(target: Element) {
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('a key on a closed native select (SM1)', () => {
+describe('a key on a closed native select', () => {
   test('selects the next option whose text starts with it, with `input` and `change`, and no popup', async () => {
     html(
       '<select id="s"><option>Apple</option><option>Banana</option><option>Cherry</option></select>',
@@ -60,7 +59,7 @@ describe('a key on a closed native select (SM1)', () => {
   });
 });
 
-describe('a visually hidden required input (SM2)', () => {
+describe('a visually hidden required input', () => {
   test.each(['text', 'hidden'])(
     'of type %s: a text input validates and takes the focus at a failure; a hidden input does not validate',
     (type) => {
@@ -129,7 +128,7 @@ function mountTransition(
 
 const STYLE = `.flex { display: flex } .pop-enter-active, .pop-leave-active { transition: opacity 100ms linear } .pop-enter-from, .pop-leave-to { opacity: 0 }`;
 
-describe('v-show on the root element of a component in a <Transition> of the developer (SM3, SM7)', () => {
+describe('v-show on the root element of a component in a <Transition> of the developer', () => {
   test('runs the enter and the leave with one call of each hook; the closed element has display none, and the leave needs no CSS rule', async () => {
     html(`<style>${STYLE}</style>`);
     const { log, open } = mountTransition({ open: false }, {});
@@ -167,7 +166,7 @@ describe('v-show on the root element of a component in a <Transition> of the dev
   });
 });
 
-describe('an invisible box of a closed popup at an old place (SM4)', () => {
+describe('an invisible box of a closed popup at an old place', () => {
   test.each([
     {
       name: 'a box with a size',
@@ -183,7 +182,7 @@ describe('an invisible box of a closed popup at an old place (SM4)', () => {
   });
 });
 
-describe('a click on a native label of a button (SM5)', () => {
+describe('a click on a native label of a button', () => {
   test('gives the button one `click` and no `pointerdown`; `detail` is 0 in WebKit only', async () => {
     html(
       '<label id="l" for="b" style="display: block; height: 30px">Label</label><button id="b" type="button">B</button>',
@@ -196,7 +195,7 @@ describe('a click on a native label of a button (SM5)', () => {
   });
 });
 
-describe('a popup that a press shows under the pointer (SM6)', () => {
+describe('a popup that a press shows under the pointer', () => {
   test('gets `pointerup`; the `click` of the press goes to the common ancestor of the trigger and the popup', async () => {
     html(
       '<button id="t" type="button" style="position: absolute; left: 50px; top: 50px; width: 200px; height: 40px">T</button><div id="pop" hidden style="position: absolute; left: 40px; top: 20px; width: 220px; height: 100px"><div id="item" style="height: 100px">Item</div></div>',
@@ -218,7 +217,7 @@ describe('a popup that a press shows under the pointer (SM6)', () => {
   });
 });
 
-describe('the focus ring after a submit that the validation blocks (SM8)', () => {
+describe('the focus ring after a submit that the validation blocks', () => {
   test.each([
     { option: {}, ring: server.browser === 'webkit' },
     { option: { focusVisible: true }, ring: true },
@@ -283,7 +282,7 @@ describe('the list', () => {
 });
 
 describe('the parts', () => {
-  test('a kept positioner shows its new place in the first frame of its second open, after its anchor moved (SN1)', async () => {
+  test('a kept positioner shows its new place in the first frame of its second open, after its anchor moved', async () => {
     mount(SelectParts);
     await nextTick();
     const trigger = document.querySelector<HTMLElement>('[data-testid="trigger"]')!;
@@ -301,7 +300,7 @@ describe('the parts', () => {
     expect(document.documentElement.scrollWidth).toBe(width);
   });
 
-  test('the rectangle of a popup with a `transform` of an enter class is smaller than its place, so the alignment reads it with no transform (SN2)', async () => {
+  test('the rectangle of a popup with a `transform` of an enter class is smaller than its place, so the alignment reads it with no transform', async () => {
     html('<style>.small { transform: scale(0.5) }</style>');
     mount(SelectParts, {
       root: { defaultValue: 'banana' },
@@ -322,7 +321,7 @@ describe('the parts', () => {
     expect(Math.abs(rect.top + rect.height / 2 - (value.top + value.height / 2))).toBeLessThan(1);
   });
 
-  test('a trigger in a scaled element: the rectangles have the scale, and the item text of a popup in <body> is over the value with no division (SN3)', async () => {
+  test('a trigger in a scaled element: the rectangles have the scale, and the item text of a popup in <body> is over the value with no division', async () => {
     mount(SelectParts, {
       root: {
         defaultValue: 'banana',
@@ -343,7 +342,7 @@ describe('the parts', () => {
     expect(Math.abs(rect.left - value.left)).toBeLessThan(1);
   });
 
-  test('an item gets the `keyup` of an Enter held on the trigger while the focus moves to it, and no `click`; a `click` of a script selects (SN4)', async () => {
+  test('an item gets the `keyup` of an Enter held on the trigger while the focus moves to it, and no `click`; a `click` of a script selects', async () => {
     mount(SelectParts);
     await nextTick();
     const trigger = document.querySelector<HTMLElement>('[data-testid="trigger"]')!;

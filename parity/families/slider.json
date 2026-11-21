@@ -54,31 +54,31 @@
       "upstream": "packages/react/src/slider/control/SliderControl.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.pointer.test.ts",
-      "reason": "`Slider.pointer.test.ts` tests the press and the drag with pointer events and capture: the nearest thumb, the thumbs at `max`, the least distance, a value area of 0, the end of a press, a second pointer, and a disabled or removed control. The touch rows go: the slider has no touch listener, and `touch-action: none` keeps a touch drag. The rows of a range that the parent edits during a drag go: each move starts from the values that the slider shows. One row stays: a parent removes a value during a drag."
+      "reason": "`Slider.pointer.test.ts` tests the press and the drag with pointer events and capture: the nearest thumb, the thumbs at `max`, the least distance, a value area of 0, the end of a press, a second pointer, and a disabled or removed control. The touch cases do not apply: the slider has no touch listener, and `touch-action: none` keeps a touch drag. The cases of a range that the parent edits during a drag do not apply: each move starts from the values that the slider shows. The file tests the case of a parent that removes a value during a drag."
     },
     {
       "upstream": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.pointer.test.ts",
-      "reason": "`Slider.pointer.test.ts` tests the indicator of `thumbAlignment=\"edge\"`: each end is at the centre of its thumb. `Slider.test.ts` tests the inline style and the state attributes. The rows of `--start-position`, `--relative-size` and `visibility` go: no part sets them."
+      "reason": "`Slider.pointer.test.ts` tests the indicator of `thumbAlignment=\"edge\"`: each end is at the centre of its thumb. `Slider.test.ts` tests the inline style and the state attributes. The cases of `--start-position`, `--relative-size` and `visibility` do not apply: no part sets them."
     },
     {
       "upstream": "packages/react/src/slider/label/SliderLabel.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.Label` is a native `<label>` for the input of the first thumb. A click gives that input the focus and the focus ring in each browser. `Slider.test.ts` tests its `for`, its id, a click, and the `aria-labelledby` of the root and of each input. The shadow root rows go: `for` is the rule of the platform."
+      "reason": "`Slider.Label` is a native `<label>` for the input of the first thumb. A click gives that input the focus and the focus ring in each browser. `Slider.test.ts` tests its `for`, its id, a click, and the `aria-labelledby` of the root and of each input. The shadow root cases do not apply: `for` is the rule of the platform."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These rows go: the default `aria-valuetext` of a range, `aria-valuenow` (the native value is the value), `preventVaseUIHandler`, the reason `none` of a reset, the touch listeners, and each `KeepAlive` row."
+      "reason": "`Slider.test.ts` tests the value, the grid, the events, the keys, the names, the text and the disabled state. `Slider.pointer.test.ts` tests the press, and the focus ring after a press and after a key. `Slider.field.test.ts` tests the form, the reset, the field and the fieldset. `Slider.hydration.test.ts` tests the server HTML. These cases do not apply: the default `aria-valuetext` of a range, `aria-valuenow` (the native value is the value), `preventBaseUIHandler`, the reason `none` of a reset and the touch listeners."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the page do not get them. `getAriaLabel` and `data-index` go: give each thumb an `aria-label` and a class. The rows of the measured `edge` thumb go: CSS places it. The `aria-valuetext` of a `format` has the locale of `Slider.Value`, also before the hydration (VUE-170)."
+      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the page do not get them. The cases of `getAriaLabel` and `data-index` do not apply: give each thumb an `aria-label` and a class. The cases of the measured `edge` thumb do not apply: CSS places it. The `aria-valuetext` of a `format` has the locale of `Slider.Value`, also before the hydration (VUE-170)."
     },
     {
       "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",
@@ -96,25 +96,25 @@
       "upstream": "packages/react/src/slider/utils/getPushedThumbValues.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/slider/values.test.ts",
-      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The cases of `initialValues` and of live values do not apply: the functions have no such parameters, and each move starts from the values that the slider shows."
     },
     {
       "upstream": "packages/react/src/slider/utils/getSliderValue.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/slider/values.test.ts",
-      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The cases of `initialValues` and of live values do not apply: the functions have no such parameters, and each move starts from the values that the slider shows."
     },
     {
       "upstream": "packages/react/src/slider/utils/resolveThumbCollision.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/slider/values.test.ts",
-      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The cases of `initialValues` and of live values do not apply: the functions have no such parameters, and each move starts from the values that the slider shows."
     },
     {
       "upstream": "packages/react/src/slider/utils/roundValueToStep.test.ts",
       "kind": "replaced",
       "test": "packages/vue/src/slider/values.test.ts",
-      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The rows of `initialValues` and of live values go with those parameters: each move starts from the values that the slider shows."
+      "reason": "`values.test.ts` tests the grid, the limits of a key and the rules `none`, `push` and `swap`, with the rows of this file that state a result for values, a thumb and a target. The cases of `initialValues` and of live values do not apply: the functions have no such parameters, and each move starts from the values that the slider shows."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",

@@ -1167,7 +1167,8 @@ async function expectNavigationMenuPage(page: Page, { hydrated }: { hydrated: bo
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
-// trigger of a handle has the closed form, because a server attaches no store to a handle.
+// trigger of a handle has the closed form: a server runs no post effect, so no root takes the
+// handle.
 async function expectMenuPageOnServer(page: Page) {
   const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-pressed'];
   const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);

@@ -319,7 +319,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   // The user typed text after the open.
   const typed = shallowRef(false);
   // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
-  // the text of its input until the next open (test/measurements/combobox.test.ts, N1).
+  // the text of its input until the next open (test/measurements/combobox.test.ts, "a kept popup
+  // that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
   const query = computed(() => {
     if (kept.value) return kept.value.query;

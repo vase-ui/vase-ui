@@ -10,7 +10,7 @@ interface RawNavigatorData {
   readonly maxTouchPoints: number;
 }
 
-// The legacy fields `userAgent` and `platform` work in each browser.
+// The fields `userAgent` and `platform` work in each browser.
 // A development build reads `userAgentData` on Chromium, so DevTools shows no deprecation warning.
 // A production build drops that branch.
 function readRawData(): RawNavigatorData {

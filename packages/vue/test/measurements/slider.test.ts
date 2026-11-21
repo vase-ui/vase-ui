@@ -93,7 +93,7 @@ async function mousePress(from: { x: number; y: number }, to = from) {
   };
 }
 
-describe('S1: a pointerdown listener that focuses the input of a thumb', () => {
+describe('a pointerdown listener that focuses the input of a thumb', () => {
   test.each([
     { prevent: '', focus: 'body', selected: !chromium },
     { prevent: 'mousedown', focus: 'range', selected: false },
@@ -144,7 +144,7 @@ describe('S1: a pointerdown listener that focuses the input of a thumb', () => {
   );
 });
 
-describe('S2: :focus-visible of the input after a press', () => {
+describe(':focus-visible of the input after a press', () => {
   test.each([false, true])(
     'a script focus in the press gives the input :focus-visible in each browser, also after the release and a key (Tab before the press: %s)',
     async (tab) => {
@@ -202,7 +202,7 @@ describe('S2: :focus-visible of the input after a press', () => {
 
 // The pointer capture of a press is in `pointer-press.test.ts`.
 
-describe('S4: a touch drag in a page that scrolls on the axis of the drag', () => {
+describe('a touch drag in a page that scrolls on the axis of the drag', () => {
   test.runIf(chromium).each([
     { axis: 'x', touchAction: '', end: 'pointercancel' },
     { axis: 'x', touchAction: 'none', end: 'pointerup' },
@@ -233,7 +233,7 @@ describe('S4: a touch drag in a page that scrolls on the axis of the drag', () =
   );
 });
 
-describe('S5: a focused range input that becomes disabled', () => {
+describe('a focused range input that becomes disabled', () => {
   test('keeps the focus in the task of the change, and has no focus after a frame in each browser', async () => {
     html('<input type="range" aria-label="Volume">');
     const input = root!.querySelector('input')!;
@@ -247,7 +247,7 @@ describe('S5: a focused range input that becomes disabled', () => {
   });
 });
 
-describe('S6: Vue and a range input with min, max and value in one object for v-bind', () => {
+describe('Vue and a range input with min, max and value in one object for v-bind', () => {
   function mountInput(state: { max: number; value: number; accept: boolean }) {
     const model = reactive({
       min: 0,
@@ -278,7 +278,7 @@ describe('S6: Vue and a range input with min, max and value in one object for v-
   });
 });
 
-describe('S7: the native keys of a range input', () => {
+describe('the native keys of a range input', () => {
   async function valueAfter(key: string, options: { dir?: string; vertical?: boolean } = {}) {
     html(`<div dir="${options.dir ?? 'ltr'}">
       <input type="range" aria-label="Volume" min="0" max="100" value="50"
@@ -343,7 +343,7 @@ describe('S7: the native keys of a range input', () => {
   });
 });
 
-describe('S8: a click on the label of a clipped range input', () => {
+describe('a click on the label of a clipped range input', () => {
   // WebKit on macOS gives a control that is not a text field no focus at a click.
   test.each([
     { listener: 'nothing', focus: !(webkit && platform.os.mac), ring: false },
@@ -369,7 +369,7 @@ describe('S8: a click on the label of a clipped range input', () => {
   );
 });
 
-describe('S9: the accessibility tree of Chromium', () => {
+describe('the accessibility tree of Chromium', () => {
   // Playwright reads the accessibility tree of Chromium only.
   test.runIf(chromium)(
     'a range input with no aria-valuenow has the value of the input; writing-mode gives it a vertical orientation, and aria-orientation does not',

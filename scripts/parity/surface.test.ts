@@ -179,6 +179,21 @@ const seeds: { name: string; file: string; edits: [string, string][]; message: s
     message: 'missing emit `update:open` (Base UI row `onOpenChange`)',
   },
   {
+    name: 'a missing element slot',
+    file: POPUP,
+    edits: [
+      [
+        '  element?(scope: {\n    props: Record<string, unknown>;\n    elementRef: (element: unknown) => void;\n    state: SamplePopupState;\n  }): unknown;\n',
+        '',
+      ],
+      [
+        '  <slot\n    v-if="$slots.element"\n    name="element"\n    :props="elementProps()"\n    :elementRef="setElement"\n    :state="state"\n  />\n  <component :is="as" v-else-if="as"',
+        '  <component :is="as" v-if="as"',
+      ],
+    ],
+    message: 'missing slot `element` (Base UI row `render`)',
+  },
+  {
     name: 'a missing slot',
     file: ROOT,
     edits: [
@@ -314,6 +329,32 @@ for (const { name, file, edits, message } of seeds) {
     assert.equal(problems[0].includes(message), true, problems[0]);
   });
 }
+
+const POPUP_WITH_NO_AS: [string, string][] = [
+  ['  /** The tag or component to render. */\n  as?: string | Component | undefined;\n', ''],
+  ['  as: undefined,\n', ''],
+  [
+    '  <component :is="as" v-else-if="as" v-bind="elementProps()" :ref="setElement">\n    <slot :state="state" />\n  </component>\n',
+    '',
+  ],
+];
+
+test('the check reports a missing prop as of a part that Base UI renders as a <div>', () => {
+  const problems = withEdits(POPUP, POPUP_WITH_NO_AS, () => check().problems);
+  assert.equal(problems.length, 1, problems.join('\n'));
+  assert.equal(problems[0].includes('missing prop `as` (Base UI row `render`)'), true, problems[0]);
+});
+
+test('a part that Base UI renders as a native form element needs no prop as', () => {
+  const types = readFileSync(join(FIXTURES, 'sample.types.md'), 'utf8');
+  const fieldset = types.replace('Renders a `<div>` element.', 'Renders a `<fieldset>` element.');
+  assert.notEqual(fieldset, types);
+  const fieldsetExtract = { ...extract, surface: [readTypesMd(TYPES_MD, fieldset)] };
+  const { problems } = withEdits(POPUP, POPUP_WITH_NO_AS, () =>
+    check(makeFamily(), fieldsetExtract),
+  );
+  assert.deepEqual(problems, []);
+});
 
 test('only a value export from an SFC is a component', () => {
   const entry = join(SAMPLE, 'index.ts');
@@ -659,8 +700,9 @@ test('the slot props of a slot are the properties of its first parameter', () =>
   const entry = join(SAMPLE, 'index.ts');
   const [popup] = project.findExports(entry, 'Popup');
   const [root] = project.findExports(entry, 'Root');
-  assert.deepEqual(project.readComponent(popup)?.slots.get('render')?.props, [
+  assert.deepEqual(project.readComponent(popup)?.slots.get('element')?.props, [
     { name: 'props', type: 'Record<string, unknown>' },
+    { name: 'elementRef', type: '(element: unknown) => void' },
     { name: 'state', type: 'SamplePopupState' },
   ]);
   assert.deepEqual(project.readComponent(root)?.slots.get('default')?.props, [

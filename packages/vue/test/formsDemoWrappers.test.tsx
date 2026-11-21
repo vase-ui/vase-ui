@@ -50,12 +50,12 @@ describe('the wrappers of the Forms demos', () => {
   });
 
   it('gives a slot that the caller adds after the mount to the part', async () => {
-    const { setProps } = await render(<DescriptionWithSlot useRender={false} />);
+    const { setProps } = await render(<DescriptionWithSlot withElementSlot={false} />);
 
     expect(screen.getByTestId('description').tagName).toBe('P');
     expect(screen.getByTestId('description')).toHaveTextContent('plain');
 
-    await setProps({ useRender: true });
+    await setProps({ withElementSlot: true });
     await flushMicrotasks();
 
     expect(screen.getByTestId('description').tagName).toBe('SPAN');
@@ -107,13 +107,13 @@ function ClearAndEmptyWithElement() {
   );
 }
 
-function DescriptionWithSlot({ useRender }: { useRender: boolean }) {
+function DescriptionWithSlot({ withElementSlot }: { withElementSlot: boolean }) {
   return (
     <Field.Root>
       <Field.Description
         data-testid="description"
         v-slots={
-          useRender
+          withElementSlot
             ? {
                 element: ({
                   props,

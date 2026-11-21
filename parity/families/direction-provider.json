@@ -29,7 +29,7 @@
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.spec.tsx",
       "kind": "not-applicable",
-      "reason": "The types of `DirectionProvider` and `useDirection` go with the cut. `dir` is a native attribute, and its type is that of Vue."
+      "reason": "The types of `DirectionProvider` and `useDirection` are cut too. `dir` is a native attribute, and its type is that of Vue."
     },
     {
       "upstream": "packages/react/src/direction-provider/DirectionProvider.test.tsx",

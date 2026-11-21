@@ -2,12 +2,12 @@
 // library. Each one states what the browser or Vue does, so that the family has code only where
 // they do not do it. Where the browsers differ, the measurement states each one.
 //
-// P3. The window loses the focus and gets it back while a link has the focus: Playwright keeps each
-// page in the focused state, so no event reaches the page, and no test can make the case.
-//
-// P9. Safari on macOS: the focus is in the address bar, and Tab (Option+Tab with the default system
-// setting) moves it to a link of the page. A script cannot start the focus in the UI of the browser
-// (P3), so a person reads `:focus-visible` in the `focusin` listener of the link. Not read yet.
+// No test can make these two cases:
+// - The window loses the focus and gets it back while a link has the focus. Playwright keeps each
+//   page in the focused state, so no event reaches the page.
+// - Safari on macOS: the focus is in the address bar, and Tab (Option+Tab with the default system
+//   setting) moves it to a link of the page. A script cannot start the focus in the UI of the
+//   browser.
 import { computePosition, inline, type Middleware } from '@floating-ui/vue';
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
@@ -44,7 +44,7 @@ function linesOf(target: Element) {
   return new Set([...target.getClientRects()].map((rect) => Math.round(rect.top))).size;
 }
 
-describe('the rectangles of a link that wraps (P1)', () => {
+describe('the rectangles of a link that wraps', () => {
   test('one rectangle for each line of plain text; more than one for a line with elements in Chromium, and with text of two directions in Chromium and Firefox', () => {
     html(
       wrapped('plain', 'This is a long text that wraps across more lines') +
@@ -63,7 +63,7 @@ describe('the rectangles of a link that wraps (P1)', () => {
   });
 });
 
-describe(':focus-visible of a link in its `focusin` listener (P2)', () => {
+describe(':focus-visible of a link in its `focusin` listener', () => {
   function recordFocusin() {
     const log: boolean[] = [];
     element('link').addEventListener('focusin', () =>
@@ -118,7 +118,7 @@ describe(':focus-visible of a link in its `focusin` listener (P2)', () => {
   });
 });
 
-describe('inline() of Floating UI (P4)', () => {
+describe('inline() of Floating UI', () => {
   const round = (rect: { x: number; y: number; width: number; height: number }) =>
     [rect.x, rect.y, rect.width, rect.height].map(Math.round).join(',');
 
@@ -206,7 +206,7 @@ describe('inline() of Floating UI (P4)', () => {
   });
 });
 
-describe('a mouse that moves down a wrapped link (P5)', () => {
+describe('a mouse that moves down a wrapped link', () => {
   test('leaves the link in the space between two lines, and enters it again at the next line, with the pointer type `mouse`', async () => {
     html(wrapped('link', 'This is a long text that wraps across more lines'));
     const log: string[] = [];
@@ -229,7 +229,7 @@ describe('a mouse that moves down a wrapped link (P5)', () => {
   });
 });
 
-describe('a mouse press on text of a box while a link has the focus (P6)', () => {
+describe('a mouse press on text of a box while a link has the focus', () => {
   test.each([
     { tabindex: false, related: 'null', after: 'body' },
     { tabindex: true, related: 'card', after: 'card' },
@@ -250,7 +250,7 @@ describe('a mouse press on text of a box while a link has the focus (P6)', () =>
   );
 });
 
-describe('pointerenter while a mouse moves in one element (P7)', () => {
+describe('pointerenter while a mouse moves in one element', () => {
   test('comes one time in Firefox and WebKit, and can come again at each move in Chromium', async () => {
     html(
       `<a id="link" href="#x" style="position: fixed; left: 100px; top: 100px; display: block; width: 200px; height: 40px">Link</a>`,
@@ -264,7 +264,7 @@ describe('pointerenter while a mouse moves in one element (P7)', () => {
   });
 });
 
-describe('the point of pointerenter on a wrapped link (P8)', () => {
+describe('the point of pointerenter on a wrapped link', () => {
   test.each(['above', 'below', 'left', 'right'] as const)(
     'from %s is in the rectangle of its line, with no tolerance',
     async (from) => {
@@ -320,7 +320,7 @@ describe('the point of pointerenter on a wrapped link (P8)', () => {
   );
 });
 
-describe('a link that a `v-if` with a new `key` replaces in one update (Q1)', () => {
+describe('a link that a `v-if` with a new `key` replaces in one update', () => {
   test('a `flush: post` watcher of "a mounted link has the id" reads no `false`; the removal of the link gives `false`', async () => {
     const scene = reactive({ shown: true, key: 0 });
     const log: boolean[] = [];
@@ -338,7 +338,7 @@ describe('a link that a `v-if` with a new `key` replaces in one update (Q1)', ()
   });
 });
 
-describe('a kept element that leaves with CSS (Q2)', () => {
+describe('a kept element that leaves with CSS', () => {
   test('a transition on [hidden] gives a running animation during the exit', async () => {
     html(`<style>
       #kept { transition: opacity 300ms }
@@ -370,7 +370,7 @@ describe('a kept element that leaves with CSS (Q2)', () => {
   });
 });
 
-describe('a focused link that Vue removes (Q3)', () => {
+describe('a focused link that Vue removes', () => {
   test('gets `focusout` only in Chromium, after the scope of its component stopped, while it is in the document; one task later it is out of the document', async () => {
     const scene = reactive({ shown: true });
     const log: string[] = [];

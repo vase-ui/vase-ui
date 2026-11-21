@@ -401,9 +401,12 @@ export function useSwipeTracker(options: SwipeTrackerOptions) {
       onPointermove,
       onPointerup,
       onPointercancel: onCancel,
-      // After a press of another button, Chromium sends no `pointerup` (M2).
+      // After a press of another button, Chromium sends no `pointerup`
+      // (test/measurements/drawer.test.ts, "a press of the right button in a mouse drag with
+      // capture").
       onLostpointercapture: onCancel,
-      // The menu of the context is the one event that the three browsers send at that press (M2).
+      // The menu of the context is the one event that the three browsers send at that press (the
+      // same measurement).
       onContextmenu: onCancel,
     },
     /** The swipe takes each move of its touch from the browser. */

@@ -215,7 +215,7 @@
       "title": "starts the hold once a touch press settles and ignores the compatibility click",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.test.ts",
-      "reason": "A held touch steps first at the first repeat, 460 ms after the press, and a tap steps at its click. A touch that becomes a scroll gets `pointercancel` before then (`test/measurements/number-field.test.ts`, M2), so no timer and no count of moves tell a hold from a scroll. The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
+      "reason": "A held touch steps first at the first repeat, 460 ms after the press, and a tap steps at its click. A touch that becomes a scroll gets `pointercancel` before then (`test/measurements/number-field.test.ts`, \"a touch that scrolls the page from a button sends pointercancel before 460 ms\"), so no timer and no count of moves tell a hold from a scroll. The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
@@ -223,7 +223,7 @@
       "title": "does not start the hold when the touch moves like a scroll",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.test.ts",
-      "reason": "A touch that moves like a scroll gets `pointercancel`, and the hold ends with no step (M2). The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
+      "reason": "A touch that moves like a scroll gets `pointercancel`, and the hold ends with no step. The case \"a touch press steps at the click of a tap, repeats after 460 ms when held, and does not step after a pointercancel\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",

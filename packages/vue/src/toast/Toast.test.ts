@@ -125,7 +125,7 @@ describe('the parts', () => {
   });
 });
 
-describe('the list (B1)', () => {
+describe('the list', () => {
   test('add gives the id; a new id has the prefix of the library; the newest toast is first', async () => {
     const { manager } = await mountToasts();
     const first = manager.add({ title: 'One' });
@@ -249,7 +249,7 @@ describe('the list (B1)', () => {
   });
 });
 
-describe('the timers (B2)', () => {
+describe('the timers', () => {
   function fakeTimers() {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   }
@@ -398,7 +398,7 @@ describe('the timers (B2)', () => {
   );
 });
 
-describe('enter and leave (B3)', () => {
+describe('enter and leave', () => {
   const LEAVE = '.toast-leave-active { transition: opacity 200ms } .toast-leave-to { opacity: 0 }';
 
   test('a root in a <TransitionGroup> gets the leave classes at a close, and `onRemove` comes after the leave', async () => {
@@ -450,7 +450,7 @@ describe('enter and leave (B3)', () => {
     expect(onRemove).not.toHaveBeenCalled();
   });
 
-  test('N5: with JavaScript hooks, `onRemove` and the end of the held leave come after `done`', async () => {
+  test('with JavaScript hooks, `onRemove` and the end of the held leave come after `done`', async () => {
     let finish!: () => void;
     const { manager } = await mountToasts({
       list: {
@@ -468,7 +468,7 @@ describe('enter and leave (B3)', () => {
   });
 });
 
-describe('the stack (B4)', () => {
+describe('the stack', () => {
   test('writes the index, the offset, the natural height of each toast and the height of the front toast; a toast behind has `data-behind`', async () => {
     // A style that gives each toast the height of the front toast changes no measure.
     style('[data-id] { height: var(--toast-frontmost-height, 10px) }');
@@ -494,7 +494,7 @@ describe('the stack (B4)', () => {
     expect(back.style.getPropertyValue('--toast-offset-y')).toBe('0px');
   });
 
-  test('measures the natural height again when the content changes, also in a root with a fixed height (T7)', async () => {
+  test('measures the natural height again when the content changes, also in a root with a fixed height', async () => {
     style(
       '[data-id] { height: 20px; overflow: hidden } [data-id] [data-testid="content"] { height: 100% }',
     );
@@ -510,7 +510,7 @@ describe('the stack (B4)', () => {
   });
 });
 
-describe('hover, focus and the window (B5)', () => {
+describe('hover, focus and the window', () => {
   test('the stack stays expanded from a close under the pointer to the end of the leave', async () => {
     style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
     const { manager } = await mountToasts();
@@ -581,7 +581,7 @@ describe('hover, focus and the window (B5)', () => {
   });
 });
 
-describe('the keys (B6)', () => {
+describe('the keys', () => {
   test('F6 moves the focus to the viewport; F6 in it returns the focus to its origin', async () => {
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' });
@@ -793,7 +793,7 @@ describe('the keys (B6)', () => {
   });
 });
 
-describe('the names and the announcements (B7)', () => {
+describe('the names and the announcements', () => {
   test('VUE-56: the root names its last title; when that title goes, the one that stays; a default slot is content', async () => {
     const list = reactive<Props>({ titleText: 'Slot title', secondTitle: true });
     const { manager } = await mountToasts({ list });
@@ -974,7 +974,7 @@ describe('the names and the announcements (B7)', () => {
   });
 });
 
-describe('anchored toasts (B9)', () => {
+describe('anchored toasts', () => {
   test('the positioner places the toast at the anchor of `positionerProps`; a prop of the part wins; the default side is `top`; `class` and `style` of the toast are under those of the developer', async () => {
     const positioner = reactive<Props>({ class: 'mine', style: { zIndex: 2 } });
     const { exposed } = mount(ToastAnchored, { positioner });

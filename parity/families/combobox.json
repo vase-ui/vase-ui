@@ -93,7 +93,7 @@
       "upstream": "packages/react/src/combobox/input/ComboboxInput.gecko.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/test/measurements/combobox.test.ts",
-      "reason": "The caret after `setSelectionRange` is at the same index in each direction in each browser (C13), so the input has no code for Gecko. The measurement states it."
+      "reason": "The caret after `setSelectionRange` is at the same index in each direction in each browser, so the input has no code for Gecko. The measurement \"the caret after setSelectionRange in each direction\" states it."
     },
     {
       "upstream": "packages/react/src/combobox/input/ComboboxInput.test.tsx",
@@ -302,7 +302,7 @@
     {
       "upstream": "packages/react/src/combobox/collection/GroupCollectionContext.tsx",
       "kind": "not-applicable",
-      "reason": "The context gave the items of a group to `Collection`, which is cut. `v-for` reads the items of the group."
+      "reason": "The context of Base UI gives the items of a group to `Collection`, which is cut. `v-for` reads the items of the group."
     },
     {
       "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicator.tsx",
@@ -312,7 +312,7 @@
     {
       "upstream": "packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx",
       "kind": "not-applicable",
-      "reason": "The hidden dismiss buttons are cut: they had a fixed English name, and the Tab order of the popup layer is the way out of the popup."
+      "reason": "The hidden dismiss buttons are cut: they have a fixed English name, and the Tab order of the popup layer is the way out of the popup."
     },
     {
       "upstream": "packages/react/src/combobox/utils/stateAttributesMapping.ts",

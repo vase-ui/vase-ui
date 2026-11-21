@@ -1,5 +1,5 @@
 import { basename, dirname, join } from 'node:path';
-import { acceptElementSlot, expectedSurface, normalizeDefault } from './mapping.ts';
+import { expectedSurface, normalizeDefault } from './mapping.ts';
 import type { ExpectedSurface } from './mapping.ts';
 import { COMPONENT_MEMBER_KINDS, labelOf, memberOf, targetOf } from './parityFiles.ts';
 import type {
@@ -158,7 +158,11 @@ function compareNativeListeners(
 function membersOf(expected: ExpectedSurface, actual: ComponentSurface): PartMembers {
   return {
     expected: {
-      prop: new Map([...expected.props].map(([name, { row }]) => [name, row])),
+      prop: new Map(
+        [...expected.props]
+          .filter(([name, { optional }]) => !optional || actual.props.has(name))
+          .map(([name, { row }]) => [name, row]),
+      ),
       emit: expected.emits,
       slot: expected.slots,
       exposed: expected.exposed,
@@ -335,7 +339,6 @@ function comparePart(
   }
   if (actual) {
     context.read.add(keyOf(file.file, part.name));
-    acceptElementSlot(expected, actual);
     const members = membersOf(expected, actual);
     context.members.set(part.name, [...(context.members.get(part.name) ?? []), members]);
     compareProps(expected, actual, add);

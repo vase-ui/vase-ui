@@ -197,11 +197,11 @@ function portals() {
 
 // A closed popup that stays in the DOM is `hidden`, or `inert` as the list of a select. A popup of
 // the popup layer can be a child of `<body>`, and a portal can move it to a container in the demo,
-// so the case reads the dialogs, the menus and the lists of the whole document. The older popups
-// have `data-open`. A tooltip popup has no role: it is the element with a side in its positioner. A
-// preview card has no role and no attribute of its open state, so its positioner in `<body>` counts
-// while a link of the demo has `data-popup-open`. The content of an open item of a navigation menu
-// is the element that its trigger names in `aria-controls`, also in a viewport in place.
+// so the case reads the dialogs, the menus and the lists of the whole document. A tooltip popup has
+// no role: it is the element with a side in its positioner. A preview card has no role and no
+// attribute of its open state, so its positioner in `<body>` counts while a link of the demo has
+// `data-popup-open`. The content of an open item of a navigation menu is the element that its
+// trigger names in `aria-controls`, also in a viewport in place.
 function openPopups(family: string | undefined) {
   const tooltip = family === 'tooltip' ? ', [data-side] > [data-side]:not([hidden])' : '';
   const cards =
@@ -211,11 +211,6 @@ function openPopups(family: string | undefined) {
   return [
     ...new Set([
       ...cards,
-      ...portals().flatMap((portal) =>
-        [portal, ...portal.querySelectorAll<HTMLElement>('[data-open]')].filter((element) =>
-          element.matches('[data-open]'),
-        ),
-      ),
       ...document.querySelectorAll<HTMLElement>(
         `:is([role="dialog"], [role="alertdialog"], [role="menu"]):not([hidden]), [role="listbox"]:not([inert], [inert] *, [hidden] *)${tooltip}`,
       ),
@@ -355,11 +350,6 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
               expect(openPopups(family).filter((popup) => !openBefore.has(popup))).not.toHaveLength(
                 0,
               );
-            });
-            // A popup has its starting style until the frame after its mount. A style sheet gives
-            // that style `opacity: 0`, and axe gives no contrast for text that a reader cannot see.
-            await waitFor(() => {
-              expect([...document.querySelectorAll('[data-starting-style]')]).toEqual([]);
             });
             await waitFor(() => {
               expect(runningAnimations()).toEqual([]);

@@ -704,7 +704,8 @@ watch(
 
 // Each new panel space changes the box of a panel or of the root. A delivery of panels alone
 // waits for the next frame: the root then gives a fixed panel its pixels with no loop error of
-// the observer (M11).
+// the observer (test/measurements/resizable.test.ts, "a ResizeObserver callback that changes the
+// size of the items that it observes").
 watch(
   () => (mounted.value ? [element.value, ...panels.value.map((panel) => panel.element)] : []),
   (elements, _, onCleanup) => {

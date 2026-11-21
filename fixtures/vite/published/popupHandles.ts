@@ -10,7 +10,6 @@ interface Payload {
   label: string;
 }
 
-// No handle has a store.
 const handles: (
   | Menu.Handle<Payload>
   | Popover.Handle<Payload>

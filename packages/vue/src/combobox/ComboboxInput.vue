@@ -129,7 +129,8 @@ function write(text: string, event: Event) {
     if (!context.openOnInputClick) context.request(false, 'input-clear', event);
   }
   // A script and an autofill send an `input` with no `inputType`, or `insertReplacementText`
-  // (test/measurements/combobox.test.ts, C4). Such a text opens nothing.
+  // (test/measurements/combobox.test.ts, "the `inputType` of an `input` event"). Such a text opens
+  // nothing.
   const inputType = (event as InputEvent).inputType;
   if (event.type === 'compositionend' || (inputType && inputType !== 'insertReplacementText')) {
     context.onTyped(text, event);
@@ -176,7 +177,8 @@ function onMousedown(event: MouseEvent) {
 }
 
 // Home and End move the caret and scroll the input there, the same in each browser
-// (test/measurements/combobox.test.ts, C3 and C14).
+// (test/measurements/combobox.test.ts, "Home and End in a text input" and "the scroll of a text
+// input after a script moved the caret").
 function moveCaret(el: HTMLInputElement, toEnd: boolean) {
   const at = toEnd ? el.value.length : 0;
   el.setSelectionRange(at, at);

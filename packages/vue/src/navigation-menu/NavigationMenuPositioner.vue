@@ -62,7 +62,8 @@ const sizes = shallowRef<ReturnType<typeof usePopupSizes> | null>(null);
 provide(sizesKey, sizes);
 
 // While the window changes its size, and 100 ms after, a style skips its animation. So does the
-// first place of an open (test/measurements/navigation-menu.test.ts, N6).
+// first place of an open (test/measurements/navigation-menu.test.ts, "a positioner with a
+// transition of its place that $name runs no transition").
 const resizing = shallowRef(false);
 const opening = shallowRef(popup.open);
 watch(

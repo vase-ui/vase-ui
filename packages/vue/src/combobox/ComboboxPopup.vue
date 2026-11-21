@@ -63,7 +63,8 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed ? true : undefined,
       inert: closed ? true : undefined,
-      // A press on the popup keeps the focus on the input (test/measurements/combobox.test.ts, C1).
+      // A press on the popup keeps the focus on the input (test/measurements/combobox.test.ts, "a
+      // press in a popup while a text input has the focus").
       onMousedown: (event: MouseEvent) => {
         if (event.target === event.currentTarget) event.preventDefault();
       },

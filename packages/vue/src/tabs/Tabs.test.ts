@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { markRaw, nextTick, reactive } from 'vue';
 import type { TabsRootChangeEventDetails } from '@vase-ui/vue/tabs';
@@ -1168,21 +1168,16 @@ describe('other families', () => {
     expect(panel('other')).not.toHaveAttribute('hidden');
   });
 
-  // In a Vapor app with Vapor parts, Vue 3.6 runs no portal of Popover and Dialog: the portal
-  // returns a render function, and a Vapor component must return a block.
-  test.skipIf(inject('app') === 'vapor').each(['popover', 'dialog'] as const)(
-    'works inside a %s',
-    async (host) => {
-      mount(TabsInPopups, { host });
-      await nextTick();
-      await waitForLaterMillisecond(async () => {
-        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
-        await waitFor(() => expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus());
-      });
-      await press('{ArrowRight}');
-      expect(screen.getByRole('tab', { name: 'Projects' })).toHaveFocus();
-    },
-  );
+  test.each(['popover', 'dialog'] as const)('works inside a %s', async (host) => {
+    mount(TabsInPopups, { host });
+    await nextTick();
+    await waitForLaterMillisecond(async () => {
+      await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+      await waitFor(() => expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus());
+    });
+    await press('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Projects' })).toHaveFocus();
+  });
 
   test('VUE-87: a toolbar item in a panel and beside the panels stays an item of the toolbar', async () => {
     mount(TabsInPopups, { host: 'toolbar' });
