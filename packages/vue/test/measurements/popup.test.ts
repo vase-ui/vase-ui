@@ -430,6 +430,9 @@ describe('a real touch that starts outside a native popover', () => {
   //   sends `pointerup` and no `click`. A drag of 60 px closes the popover at its `pointerup`.
   // - A tap sends `click` only to an element with a listener of `click` or `mousedown` of its own. A
   //   listener of the window gets no `click` of a tap on another element.
+  // A measurement by hand in Chrome 124 on Android 15, in the Android Emulator at 420 dpi, gives a
+  // smaller limit: on `touch-action: none`, a move of 8 px sends `click`, and a move of 8.1 px sends
+  // `pointerup` and no `click`.
   test.skipIf(server.browser !== 'chromium')(
     'closes at a tap and at a move of 15 px, which send `click`; a move of 16 px and a drag of 40 px on `touch-action: none` send `pointerup` and no `click`, and a touch that scrolls the page sends `pointercancel` after moves past 15 px; none of them closes it',
     async () => {
@@ -496,8 +499,8 @@ describe('a real touch that starts outside a native popover', () => {
 });
 
 describe('a real tap on an element that leaves at its `pointerup`', () => {
-  // A measurement by hand in Safari on iOS 26.5, in the iPhone 17 Simulator, gives the same results
-  // for a button under the element.
+  // A measurement by hand in Safari on iOS 26.5, in the iPhone 17 Simulator, and in Chrome 124 on
+  // Android 15, in the Android Emulator, gives the same results for a button under the element.
   test.skipIf(server.browser !== 'chromium')(
     'sends `click` and the mouse events to the element under it, which takes the focus; a `touchend` listener of the element that left gets the event, and its `preventDefault()` cancels the mouse events and the `click`',
     async () => {

@@ -157,18 +157,19 @@ async function mountOpen({ fixture, props, popup }: Family) {
 }
 
 test.each(openFamilies)(
-  'VUE-172: $name: a dispatched touch outside that moves 16 px closes nothing; a tap that moves 15 px closes at its `pointerup` and leaves its `touchend` to the page',
+  'VUE-172: $name: a dispatched touch outside that moves more than 8 px closes nothing; a tap that moves 8 px closes at its `pointerup` and leaves its `touchend` to the page',
   async (family) => {
     const { outside, shown } = await mountOpen(family);
     const { x, y } = centerOf(outside);
     const touch = { pointerType: 'touch', isPrimary: true, clientX: x, clientY: y };
-    const far = { ...touch, clientX: x + 16 };
+    // 8.5 px, with 6 px on each axis.
+    const far = { ...touch, clientX: x + 6, clientY: y + 6 };
     await firePointer.down(outside, { ...touch, timeStamp: 1000 });
     await firePointer.move(outside, { ...far, timeStamp: 1050 });
     await firePointer.up(outside, { ...far, timeStamp: 1100 });
     await nextTick();
     expect(shown()).toBe(true);
-    const near = { ...touch, clientX: x + 9, clientY: y + 12 };
+    const near = { ...touch, clientX: x + 8 };
     await firePointer.down(outside, { ...touch, timeStamp: 2000 });
     await firePointer.move(outside, { ...near, timeStamp: 2050 });
     await firePointer.up(outside, { ...near, timeStamp: 2100 });

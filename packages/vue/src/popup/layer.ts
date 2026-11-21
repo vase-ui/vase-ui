@@ -344,9 +344,10 @@ let tap: Tap | null = null;
 /** From a `pointerdown` of the main button to its `pointerup`. */
 let pressing = false;
 
-// The largest move of a tap. Chromium sends `click` for a touch that moves 15 px and not for one that
-// moves 16 px. Safari on iOS sends it for a move of 44 px (test/measurements/popup.test.ts).
-const TAP_SLOP = 15;
+// The largest move of a tap in each measured browser. Chromium on Android sends `click` for a touch
+// that moves 8 px and not for one that moves 8.1 px. Chromium on a desktop sends it up to 15 px, and
+// Safari on iOS up to 44 px (test/measurements/popup.test.ts).
+const TAP_SLOP = 8;
 
 // The layer decides at `pointerdown` which layers the press can close.
 function onPointerdown(event: PointerEvent) {

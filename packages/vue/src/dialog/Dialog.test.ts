@@ -728,7 +728,7 @@ describe('modal', () => {
       },
     );
 
-    // A touch that moves more than 15 px is no tap by itself, so the two touches stay.
+    // A touch that moves more than 8 px is no tap by itself, so the two touches stay.
     test('a touch of two fingers closes nothing', async () => {
       append('div', surface);
       await touchDialog(false);
