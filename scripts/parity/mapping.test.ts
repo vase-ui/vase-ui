@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { acceptElementSlot, expectedSurface, normalizeDefault } from './mapping.ts';
+import { expectedSurface, normalizeDefault } from './mapping.ts';
 import type { PropRow, SurfaceFile, SurfacePart } from './typesMd.ts';
 
 function row(
@@ -43,7 +43,7 @@ function summarize(part: SurfacePart, file = makeFile(part)) {
   return {
     props: [...expected.props].map(
       ([name, prop]) =>
-        `${name}<-${prop.row}${prop.required ? ' required' : ''}${prop.compareDefault ? ` default ${prop.default}` : ''}${prop.controlled ? ' controlled' : ''}`,
+        `${name}<-${prop.row}${prop.required ? ' required' : ''}${prop.compareDefault ? ` default ${prop.default}` : ''}${prop.controlled ? ' controlled' : ''}${prop.optional ? ' optional' : ''}`,
     ),
     emits: [...expected.emits.keys()],
     slots: [...expected.slots.keys()],
@@ -63,30 +63,34 @@ const rules: {
   expected: Partial<ReturnType<typeof summarize>>;
 }[] = [
   {
-    name: 'render needs the prop as with the tag as its default, the render slot, the default slot and the element',
+    name: 'render needs the element slot, the default slot, the exposed element, and an optional as with no default',
     part: makePart([row('render')], { tag: 'button' }),
     expected: {
-      props: ["as<-render default 'button'"],
-      slots: ['render', 'default'],
+      props: ['as<-render optional'],
+      slots: ['element', 'default'],
       exposed: ['element'],
     },
   },
   {
-    name: 'render with no stated tag does not compare the default of as, and the part has a default slot',
+    name: 'render with no stated tag needs the default slot',
     part: makePart([row('render')]),
-    expected: { props: ['as<-render'], slots: ['render', 'default'], exposed: ['element'] },
+    expected: {
+      props: ['as<-render optional'],
+      slots: ['element', 'default'],
+      exposed: ['element'],
+    },
   },
   {
     name: 'render with a void tag needs no default slot',
     part: makePart([row('render')], { tag: 'input' }),
-    expected: { props: ["as<-render default 'input'"], slots: ['render'], exposed: ['element'] },
+    expected: { props: ['as<-render optional'], slots: ['element'], exposed: ['element'] },
   },
   {
     name: 'children needs the default slot also for a void tag',
     part: makePart([row('render'), row('children')], { tag: 'img' }),
     expected: {
-      props: ["as<-render default 'img'"],
-      slots: ['render', 'default'],
+      props: ['as<-render optional'],
+      slots: ['element', 'default'],
       exposed: ['element'],
     },
   },
@@ -223,35 +227,6 @@ test('expectedSurface refuses an actionsRef row with no Actions block anywhere',
     message:
       /docs\/sample\/types\.md: "Part" has the row "actionsRef", but it has no Actions block/,
   });
-});
-
-test('acceptElementSlot maps the row render to the slot element of a part with no prop as', () => {
-  const part = makePart([row('render')], { tag: 'input' });
-  const expected = expectedSurface(part, makeFile(part));
-  acceptElementSlot(expected, { props: new Map(), slots: new Map([['element', {}]]) });
-  assert.deepEqual([...expected.props.keys()], []);
-  assert.deepEqual([...expected.slots.keys()], ['element']);
-  assert.deepEqual([...expected.exposed.keys()], ['element']);
-});
-
-test('acceptElementSlot keeps the prop as with no default, and maps the row render to the slot element, of a part with the prop as', () => {
-  const part = makePart([row('render')], { tag: 'div' });
-  const expected = expectedSurface(part, makeFile(part));
-  acceptElementSlot(expected, {
-    props: new Map([['as', {}]]),
-    slots: new Map([['element', {}]]),
-  });
-  assert.deepEqual([...expected.props.keys()], ['as']);
-  assert.equal(expected.props.get('as')?.compareDefault, false);
-  assert.deepEqual([...expected.slots.keys()].sort(), ['default', 'element']);
-});
-
-test('acceptElementSlot keeps the prop as and the slot render of a part with no slot element', () => {
-  const part = makePart([row('render')], { tag: 'div' });
-  const expected = expectedSurface(part, makeFile(part));
-  acceptElementSlot(expected, { props: new Map([['as', {}]]), slots: new Map() });
-  assert.deepEqual([...expected.props.keys()], ['as']);
-  assert.deepEqual([...expected.slots.keys()], ['render', 'default']);
 });
 
 const defaults: [string, string | null, string | null][] = [
