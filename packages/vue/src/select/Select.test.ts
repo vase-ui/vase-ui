@@ -12,8 +12,9 @@ import SelectParts from '../../test/fixtures/SelectParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { clientCenter, touchDrag } from '../../test/pointer';
 import { mount, mountError, settle } from '../../test/render';
+import { scaleOrigin } from '../../test/scaleOrigin';
 import { takeReportedMessages } from '../../test/reportedMessages';
-import { wait } from '../../test/wait';
+import { wait, waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -1040,28 +1041,73 @@ describe('item alignment', () => {
     { value: 'i2', style: '' },
     { value: 'i20', style: 'margin: 16px' },
   ])(
-    'VUE-194: a popup over the trigger grows from the text of the selected item $value (popup style: "$style")',
+    'VUE-194: a popup over the trigger grows from the middle of the value, under the text of the item $value (popup style: "$style")',
     async ({ value, style }) => {
       await mountSelect({
         ...aligned,
         items: longList,
         root: { defaultValue: value },
         trigger: { style: 'position: fixed; top: 400px; left: 20px' },
-        popup: { style: `transform-origin: var(--transform-origin); ${style}` },
+        popup: { style },
       });
       await userEvent.click(trigger());
       await opened();
-      const text = item(value).firstElementChild!;
-      const positioner = byTestId('positioner');
       await waitFor(() =>
-        expect(positioner.style.getPropertyValue('--transform-origin')).toMatch(/^50% .+%$/),
+        expect(byTestId('positioner').style.getPropertyValue('--transform-origin')).toMatch(
+          /^50% .+%$/,
+        ),
       );
-      const element = popup();
-      const before = element.getBoundingClientRect();
-      element.style.scale = '0.5';
-      const after = element.getBoundingClientRect();
-      element.style.scale = '';
-      expect(Math.abs(2 * after.top - before.top - middleOf(text))).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(scaleOrigin(popup()).y - middleOf(byTestId('value')))).toBeLessThanOrEqual(
+        0.5,
+      );
+      expect(
+        Math.abs(middleOf(item(value).firstElementChild!) - middleOf(byTestId('value'))),
+      ).toBeLessThan(1);
+    },
+  );
+
+  test('VUE-194: a popup over the trigger that grows while the user scrolls the list keeps its transform origin at the value', async () => {
+    await mountSelect({
+      ...aligned,
+      items: longList,
+      root: { defaultValue: 'i1' },
+      trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    const positioner = byTestId('positioner');
+    const before = positioner.getBoundingClientRect().height;
+    popup().scrollTop = 40;
+    await waitFor(() => expect(positioner.getBoundingClientRect().height).toBeGreaterThan(before));
+    // The origin follows in the task of the growth.
+    await waitSingleFrame();
+    expect(Math.abs(scaleOrigin(popup()).y - middleOf(byTestId('value')))).toBeLessThanOrEqual(0.5);
+  });
+
+  test.each([
+    { name: 'a border at the bottom of the popup', value: 'i20', popup: 'border: 2px solid' },
+    {
+      name: 'a padding and a border of the positioner',
+      value: 'i2',
+      positioner: 'padding: 6px; border: 3px solid',
+    },
+    { name: 'other margins of the positioner', value: 'i20', positioner: 'margin: 30px 0 10px' },
+  ])(
+    'puts the text of the selected item over the text of the value with $name',
+    async ({ value, popup: popupStyle, positioner }) => {
+      await mountSelect({
+        ...aligned,
+        items: longList,
+        root: { defaultValue: value },
+        trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+        positioner: { style: positioner },
+        popup: { style: popupStyle },
+      });
+      await userEvent.click(trigger());
+      await opened();
+      expect(
+        Math.abs(middleOf(item(value).firstElementChild!) - middleOf(byTestId('value'))),
+      ).toBeLessThan(1);
     },
   );
 
@@ -1080,6 +1126,64 @@ describe('item alignment', () => {
     await waitFor(() =>
       expect(Math.abs(middleOf(text) - middleOf(byTestId('value')))).toBeLessThan(2),
     );
+  });
+
+  test('VUE-195: a popup over the trigger with a CSS zoom grows by the scroll of its list, up to its max-height', async () => {
+    await mountSelect({
+      ...aligned,
+      items: longList,
+      root: { defaultValue: 'i1' },
+      trigger: { style: `position: fixed; top: ${innerHeight - 300}px; left: 20px` },
+      popup: { style: 'zoom: 2; max-height: 200px' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    const positioner = byTestId('positioner');
+    const before = positioner.getBoundingClientRect().height;
+    expect(before).toBeLessThan(2 * 200 - 20);
+    popup().scrollTop = 10;
+    await waitFor(() =>
+      expect(Math.abs(positioner.getBoundingClientRect().height - (before + 2 * 10))).toBeLessThan(
+        1,
+      ),
+    );
+    popup().scrollTop = 100;
+    await waitFor(() =>
+      expect(Math.abs(positioner.getBoundingClientRect().height - 2 * 200)).toBeLessThan(1),
+    );
+  });
+
+  test('VUE-195: a popup over the trigger with a CSS zoom, pinned to the top of the view, grows by the scroll of its list', async () => {
+    await mountSelect({
+      ...aligned,
+      items: longList,
+      root: { defaultValue: 'i38' },
+      trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+      popup: { style: 'zoom: 2' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    const positioner = byTestId('positioner');
+    expect(Math.abs(positioner.getBoundingClientRect().top - 10)).toBeLessThan(1);
+    const before = positioner.getBoundingClientRect().height;
+    popup().scrollTop -= 10;
+    await waitFor(() =>
+      expect(Math.abs(positioner.getBoundingClientRect().height - (before + 2 * 10))).toBeLessThan(
+        1,
+      ),
+    );
+  });
+
+  test('VUE-195: a popup with a CSS zoom goes to the anchored place when the room below the trigger is less than its content', async () => {
+    await mountSelect({
+      ...aligned,
+      root: { defaultValue: 'apple' },
+      trigger: { style: `position: fixed; top: ${innerHeight - 95}px; left: 20px` },
+      popup: { style: 'zoom: 2; max-height: 60px; line-height: 20px' },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    expect(byTestId('positioner')).toHaveAttribute('data-side', 'top');
   });
 
   test('a resize of the window closes the popup', async () => {

@@ -17,7 +17,6 @@ describe('alignedPlace', () => {
       text: box(14, 105, 80, 30),
       view,
       margin,
-      borderBottom: 0,
       rtl: false,
     });
     // The text is 105 px below the top of the positioner, so the popup starts 105 px above it.
@@ -39,7 +38,6 @@ describe('alignedPlace', () => {
       text: box(20, 0, 80, 30),
       view,
       margin,
-      borderBottom: 0,
       rtl: true,
     });
     // 0 + (390 - 100) = 290, and the positioner must end 5 px before the edge: 400 - 5 - 108.
@@ -54,11 +52,34 @@ describe('alignedPlace', () => {
       text: undefined,
       view,
       margin,
-      borderBottom: 2,
       rtl: false,
     });
     expect(place.left).toBe(10);
-    expect(place.idealHeight).toBe(700 - 300 + 10 + 2);
+    // From the top of the trigger to the bottom margin of the view.
+    expect(place.idealHeight).toBe(720 - 300 - 10);
+  });
+
+  test('with another margin at the top than at the bottom, the place puts the text over the value', () => {
+    const place = alignedPlace({
+      trigger: box(10, 300, 80, 30),
+      positioner: box(10, 0, 108, 160),
+      value: box(10, 300, 60, 30),
+      text: box(14, 105, 80, 30),
+      view,
+      margin: { top: 30, bottom: 10 },
+      rtl: false,
+    });
+    const pin = pinnedPlace({
+      place,
+      trigger: box(10, 300, 80, 30),
+      positionerHeight: 160,
+      maxScrollTop: 0,
+      scrollHeight: 160,
+      minHeight: 100,
+      maxHeight: Infinity,
+    });
+    // The top margin, the top of the place and the text in the positioner end at the trigger.
+    expect(30 + pin!.top! + 105).toBe(300);
   });
 });
 
@@ -71,7 +92,6 @@ describe('pinnedPlace', () => {
     text: box(10, 0, 80, 30),
     view,
     margin,
-    borderBottom: 0,
     rtl: false,
   });
 
@@ -97,7 +117,6 @@ describe('pinnedPlace', () => {
       text: box(10, 300, 80, 30),
       view: { width: 400, height: 400 },
       margin,
-      borderBottom: 0,
       rtl: false,
     });
     expect(

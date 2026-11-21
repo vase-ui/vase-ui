@@ -33,7 +33,7 @@ export interface AlignedPlace {
   height: number;
   /** The scroll of the list that puts the text of the item over the text of the value. */
   scrollTop: number;
-  /** The height that the popup needs below the top of the view to align its item. */
+  /** The height from the top that aligns the item to the bottom margin of the view. */
   idealHeight: number;
   /** The height of the view inside the margins of the positioner. */
   room: number;
@@ -53,7 +53,6 @@ export function alignedPlace(input: {
   text: Box | undefined;
   view: { width: number; height: number };
   margin: { top: number; bottom: number };
-  borderBottom: number;
   rtl: boolean;
 }): AlignedPlace {
   const { trigger, positioner, value, text, view, margin, rtl } = input;
@@ -65,7 +64,7 @@ export function alignedPlace(input: {
     offsetY =
       text.top - positioner.top + text.height / 2 - (value.top - trigger.top + value.height / 2);
   }
-  const idealHeight = room - trigger.top + offsetY + margin.bottom + input.borderBottom;
+  const idealHeight = view.height - margin.bottom - (trigger.top - offsetY);
   const height = Math.min(room, idealHeight);
   return {
     left: clamp(left, VIEW_PADDING, view.width - VIEW_PADDING - positioner.width),
@@ -248,6 +247,9 @@ export function useItemAlignment(
   let maxHeight = Infinity;
   // The size of a pixel of the list in pixels of the positioner: a CSS `zoom` in the positioner.
   let listZoom = 1;
+  // The heights are of the border box. The `height` of a positioner with `content-box` leaves out
+  // its padding and its border.
+  let paddingAndBorder = 0;
   let run = 0;
 
   watch(
@@ -302,12 +304,20 @@ export function useItemAlignment(
         ...read,
         view: { width: view.clientWidth, height: view.clientHeight },
         margin,
-        borderBottom: (Number.parseFloat(popupStyles.borderBottomWidth) || 0) * popupZoom,
         rtl: styles.direction === 'rtl',
       });
+      paddingAndBorder =
+        styles.boxSizing === 'border-box'
+          ? 0
+          : pixels(styles.paddingTop, 0) +
+            pixels(styles.paddingBottom, 0) +
+            pixels(styles.borderTopWidth, 0) +
+            pixels(styles.borderBottomWidth, 0);
       const style: CSSProperties = {
+        display: 'flex',
+        flexDirection: 'column',
         left: `${first.left}px`,
-        height: `${first.height}px`,
+        height: `${first.height - paddingAndBorder}px`,
         maxHeight: 'none',
         marginTop: `${margin.top}px`,
         marginBottom: `${margin.bottom}px`,
@@ -337,24 +347,33 @@ export function useItemAlignment(
       height = pin.height;
       place.value = {
         ...style,
-        height: `${pin.height}px`,
+        height: `${pin.height - paddingAndBorder}px`,
         ...(pin.top === undefined ? { bottom: '0' } : { top: `${pin.top}px` }),
       };
       await nextTick();
       if (current !== run || !root.open) return;
       scrollTo(scroller, pin.scrollTop, listZoom);
       context.scrollable.value = scrollEdges(scroller);
-      if (!text?.isConnected) return;
-      // The popup grows from the selected item, at the place of this open.
-      const origin = readWithoutTransforms(popup, () => {
-        const box = popup.getBoundingClientRect();
-        const item = text.getBoundingClientRect();
-        return (item.top + item.height / 2 - box.top) / box.height;
-      });
-      place.value = { ...place.value, '--transform-origin': `50% ${origin * 100}%` };
+      setOrigin();
     },
     { flush: 'post' },
   );
+
+  /**
+   * The popup grows from the middle of the value, which the text of the selected item covers after
+   * the place. A popup that grows while the list scrolls keeps the origin at the value.
+   */
+  function setOrigin() {
+    const popup = root.popup;
+    const target = context.valueElement.value ?? root.activeTrigger;
+    if (!popup || !target || !place.value) return;
+    const origin = readWithoutTransforms(popup, () => {
+      const box = popup.getBoundingClientRect();
+      const { top, height } = target.getBoundingClientRect();
+      return (top + height / 2 - box.top) / box.height;
+    });
+    place.value = { ...place.value, '--transform-origin': `50% ${origin * 100}%` };
+  }
 
   watch(
     () => (root.open && aligned.value ? context.positioner.value : null),
@@ -387,7 +406,8 @@ export function useItemAlignment(
         full = grown.full;
         if (grown.height !== undefined) {
           height = grown.height;
-          place.value = { ...place.value, height: `${grown.height}px` };
+          place.value = { ...place.value, height: `${grown.height - paddingAndBorder}px` };
+          void nextTick(setOrigin);
         }
         const target = grown.scrollTop;
         if (target !== undefined) void nextTick(() => scrollTo(scroller, target, listZoom));

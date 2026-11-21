@@ -110,10 +110,12 @@ function elementProps() {
       'data-align': state.value.align,
       inert: root.open ? undefined : true,
       class: hidesScrollbar.value ? styleDisableScrollbar.className : undefined,
-      // The popup fills the positioner that covers the trigger, and its list scrolls.
+      // The margin box of the popup fills the positioner that covers the trigger, and its list
+      // scrolls.
       style: aligned
         ? {
-            height: '100%',
+            flex: '1',
+            minHeight: '0',
             ...(ownsList.value && {
               position: 'relative',
               maxHeight: '100%',
