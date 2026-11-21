@@ -131,10 +131,8 @@ export function createRenderer() {
     recordVueWarnings(app);
     const container = document.createElement('div');
     document.body.append(container);
-    const mark = markClock();
-    app.mount(container);
-
-    let isMounted = true;
+    // The container goes after the case also when a part throws in the mount.
+    let isMounted = false;
     function unmount() {
       if (isMounted) {
         isMounted = false;
@@ -142,6 +140,9 @@ export function createRenderer() {
       }
     }
     mounted.push({ unmount, container });
+    const mark = markClock();
+    app.mount(container);
+    isMounted = true;
 
     await nextTick();
     await waitPastStampsSince(mark);
