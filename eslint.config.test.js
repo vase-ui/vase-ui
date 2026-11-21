@@ -658,6 +658,13 @@ const reported = [
     ruleId: 'no-restricted-properties',
     hint: 'test/pointer.ts',
   })),
+  {
+    name: 'tab of userEvent in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "import { userEvent } from 'vitest/browser';\n\nexport const press = userEvent.tab();\n",
+    ruleId: 'no-restricted-properties',
+    hint: "userEvent.keyboard('{Tab}')",
+  },
   ...WAIT_FILES.flatMap(([place, file]) =>
     [
       [

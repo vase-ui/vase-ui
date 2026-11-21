@@ -528,8 +528,8 @@ describe('activation', () => {
       tabs: items('a', 'b'),
     });
     tab('b').focus();
-    await userEvent.tab({ shift: true });
-    await userEvent.tab();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    await userEvent.keyboard('{Tab}');
     await settle();
     expect(log).toEqual([]);
   });

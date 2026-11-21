@@ -182,13 +182,13 @@ describe('Tab after a key listener moved the focus to a sentinel', () => {
 
   test('the browser moves the focus on from the sentinel', async () => {
     scene('<input id="stop" aria-label="Stop">');
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(document.activeElement!.id).toBe('stop');
   });
 
   test('to a link: Chromium and Firefox; WebKit by the setting of the system, and always with Option', async () => {
     scene('<a id="stop" href="#stop">Stop</a>');
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     if (server.browser !== 'webkit') {
       expect(document.activeElement!.id).toBe('stop');
       return;

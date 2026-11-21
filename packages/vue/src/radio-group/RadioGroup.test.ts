@@ -218,14 +218,14 @@ describe('the keyboard', () => {
         .map((input) => input.id);
     expect(stops()).toEqual(['b']);
     root.querySelector<HTMLElement>('#before')!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('b');
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('after');
     items[1]!.attrs = { disabled: true };
     await settle();
     expect(stops()).toEqual(['a']);
-    await userEvent.tab({ shift: true });
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(focused()).toBe('a');
     items.unshift({ key: 'z' });
     await settle();
@@ -249,11 +249,11 @@ describe('the keyboard', () => {
     expect(radio('b')).not.toHaveAttribute('name');
     expect(radio('a')).toHaveAttribute('name', 'storage');
     root.querySelector<HTMLElement>('#before')!.focus();
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('a');
-    await userEvent.tab();
+    await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('after');
-    await userEvent.tab({ shift: true });
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(focused()).toBe('a');
   });
 
