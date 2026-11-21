@@ -97,7 +97,7 @@ export namespace Trigger {
  * @cssVariable `--anchor-height` The height of the anchor.
  * @cssVariable `--available-width` The width that the popup has before it goes out of its collision boundary.
  * @cssVariable `--available-height` The height that the popup has before it goes out of its collision boundary.
- * @cssVariable `--transform-origin` The `transform-origin` that makes the popup grow from its anchor.
+ * @cssVariable `--transform-origin` The point that the popup grows from, for the `transform-origin` of the popup. It is on the edge of the anchor, at the aligned edge of the popup or at the center of the anchor.
  */
 export const Positioner: typeof DateRangePickerPositioner = DateRangePickerPositioner;
 export namespace Positioner {

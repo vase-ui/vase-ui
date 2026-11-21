@@ -83,6 +83,16 @@ Set the `dir` attribute on `<html>`, or on an element around the parts. Each par
 
 <<< ../examples/styling/TextDirection.vue{7}
 
+## Zoom
+
+A CSS `zoom` on a popup, or on an element in it, scales the popup and its arrow. The arrow points at the anchor, and `--transform-origin` is in the pixels of the popup.
+
+Give `zoom` to the popup, not to its positioner. Floating UI places the positioner in the pixels of its offset parent, so a `zoom` of the positioner moves it away from its anchor.
+
+Floating UI 1.8.0 reads a `zoom` of an ancestor only on the offset parent of the positioner, and only when that element has a height. Another `zoom`, such as one on `<html>` or `<body>`, moves the popup away from its anchor: up to 255 px at `zoom: 1.5`. With `positionMethod: 'fixed'`, each `zoom` of an ancestor does this. [floating-ui#3492](https://github.com/floating-ui/floating-ui/pull/3492) has a fix, which is not in a release. Until then, render the portal with `to` into an element with the `zoom`, a `position` and a height.
+
+In WebKit, when an ancestor and the popup both have a `zoom`, a margin of the popup or a padding of the positioner moves the arrow and the transform origin. A 16 px margin moves them 24 px under `zoom: 1.5` on the ancestor.
+
 ## Tailwind CSS
 
 Give the Tailwind CSS classes to the `class` attribute of each part. Use the variants of the state selectors: `aria-expanded:`, `disabled:`, `data-highlighted:`.

@@ -87,7 +87,7 @@ export namespace Backdrop {
  * @cssVariable `--anchor-height` The height of the anchor, in pixels.
  * @cssVariable `--available-width` The width that the popup can have before it goes over the edge of the collision boundary.
  * @cssVariable `--available-height` The height that the popup can have before it goes over the edge of the collision boundary.
- * @cssVariable `--transform-origin` The point of the popup that faces the anchor: at the arrow, or at the aligned edge of a popup with no arrow. Give it to `transform-origin` for an animation that scales the popup.
+ * @cssVariable `--transform-origin` The point that the popup grows from, for the `transform-origin` of the popup. It is at the arrow, on the edge of the anchor. With no arrow, it is at the aligned edge of the popup or at the center of the anchor.
  * @cssVariable `--positioner-width` The width of the popup, in pixels, with a `PreviewCard.Viewport` in the popup. During a move to another trigger, the width of the new content.
  * @cssVariable `--positioner-height` The height of the popup, in pixels, with a `PreviewCard.Viewport` in the popup. During a move to another trigger, the height of the new content.
  */

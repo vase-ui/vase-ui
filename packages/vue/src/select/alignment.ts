@@ -3,6 +3,7 @@ import { clamp } from '../common/clamp';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
 import { platform as floatingPlatform } from '@floating-ui/vue';
+import { relativeZoom } from '../popup/placement';
 import { computed, nextTick, shallowRef, watch, type CSSProperties } from 'vue';
 import {
   getMaxScrollOffset,
@@ -32,13 +33,12 @@ export interface AlignedPlace {
   height: number;
   /** The scroll of the list that puts the text of the item over the text of the value. */
   scrollTop: number;
-  /** The height that the popup needs below the top of the view to align its item. */
+  /** The height from the top that aligns the item to the bottom margin of the view. */
   idealHeight: number;
   /** The height of the view inside the margins of the positioner. */
   room: number;
   /** The sum of the top and the bottom margins of the positioner. */
   margins: number;
-  transformOrigin: string | undefined;
 }
 
 /**
@@ -53,7 +53,6 @@ export function alignedPlace(input: {
   text: Box | undefined;
   view: { width: number; height: number };
   margin: { top: number; bottom: number };
-  borderBottom: number;
   rtl: boolean;
 }): AlignedPlace {
   const { trigger, positioner, value, text, view, margin, rtl } = input;
@@ -65,12 +64,8 @@ export function alignedPlace(input: {
     offsetY =
       text.top - positioner.top + text.height / 2 - (value.top - trigger.top + value.height / 2);
   }
-  const idealHeight = room - trigger.top + offsetY + margin.bottom + input.borderBottom;
+  const idealHeight = view.height - margin.bottom - (trigger.top - offsetY);
   const height = Math.min(room, idealHeight);
-  const origin =
-    positioner.height > 0
-      ? ((text?.top ?? 0) + (text?.height ?? 0) / 2 - positioner.top) / positioner.height
-      : 0.5;
   return {
     left: clamp(left, VIEW_PADDING, view.width - VIEW_PADDING - positioner.width),
     height,
@@ -78,7 +73,6 @@ export function alignedPlace(input: {
     idealHeight,
     room,
     margins: margin.top + margin.bottom,
-    transformOrigin: text ? `50% ${clamp(origin * 100, 0, 100)}%` : undefined,
   };
 }
 
@@ -215,10 +209,13 @@ function readWithoutTransforms<T>(element: HTMLElement, read: () => T): T {
   }
 }
 
-/** Scrolls `scroller` to `top`, where `max` is the end. */
-function scrollTo(scroller: HTMLElement, top: number | 'max') {
+/**
+ * Scrolls `scroller` to `top`, where `max` is the end. `top` is in pixels of the positioner, and
+ * `zoom` is the size of a pixel of the list in them.
+ */
+function scrollTo(scroller: HTMLElement, top: number | 'max', zoom: number) {
   const max = getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight);
-  scroller.scrollTop = top === 'max' ? max : clamp(top, 0, max);
+  scroller.scrollTop = top === 'max' ? max : clamp(top / zoom, 0, max);
 }
 
 /** The list can scroll up and down: a distance of 1 px or less counts as none. */
@@ -248,6 +245,11 @@ export function useItemAlignment(
   let margins = 0;
   let height = 0;
   let maxHeight = Infinity;
+  // The size of a pixel of the list in pixels of the positioner: a CSS `zoom` in the positioner.
+  let listZoom = 1;
+  // The heights are of the border box. The `height` of a positioner with `content-box` leaves out
+  // its padding and its border.
+  let paddingAndBorder = 0;
   let run = 0;
 
   watch(
@@ -289,39 +291,48 @@ export function useItemAlignment(
       const text = item && context.itemTexts.get(item.element);
       // A `zoom` of the page scales the rectangles and not the styles (test/popupLayout.test.tsx).
       const scale = floatingPlatform.getScale(positioner) as { x: number; y: number };
+      listZoom = relativeZoom(scroller, positioner);
+      const popupZoom = relativeZoom(popup, positioner);
       const read = readWithoutTransforms(popup, () => ({
         trigger: boxOf(trigger, scale),
         positioner: boxOf(positioner, scale),
         value: context.valueElement.value ? boxOf(context.valueElement.value, scale) : undefined,
         text: text?.isConnected ? boxOf(text, scale) : undefined,
-        scrollHeight: scroller.scrollHeight,
+        scrollHeight: scroller.scrollHeight * listZoom,
       }));
       const first = alignedPlace({
         ...read,
         view: { width: view.clientWidth, height: view.clientHeight },
         margin,
-        borderBottom: Number.parseFloat(popupStyles.borderBottomWidth) || 0,
         rtl: styles.direction === 'rtl',
       });
+      paddingAndBorder =
+        styles.boxSizing === 'border-box'
+          ? 0
+          : pixels(styles.paddingTop, 0) +
+            pixels(styles.paddingBottom, 0) +
+            pixels(styles.borderTopWidth, 0) +
+            pixels(styles.borderBottomWidth, 0);
       const style: CSSProperties = {
+        display: 'flex',
+        flexDirection: 'column',
         left: `${first.left}px`,
-        height: `${first.height}px`,
+        height: `${first.height - paddingAndBorder}px`,
         maxHeight: 'none',
         marginTop: `${margin.top}px`,
         marginBottom: `${margin.bottom}px`,
-        '--transform-origin': first.transformOrigin,
       };
       place.value = { ...style, visibility: 'hidden' };
       await nextTick();
       if (current !== run || !root.open) return;
       maxHeight = popupStyles.maxHeight.endsWith('px')
-        ? pixels(popupStyles.maxHeight, Infinity)
+        ? pixels(popupStyles.maxHeight, Infinity) * popupZoom
         : Infinity;
       const pin = pinnedPlace({
         place: first,
         trigger: read.trigger,
         positionerHeight: read.positioner.height,
-        maxScrollTop: getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight),
+        maxScrollTop: getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight) * listZoom,
         scrollHeight: read.scrollHeight,
         minHeight: pixels(styles.minHeight, MIN_HEIGHT),
         maxHeight,
@@ -336,16 +347,33 @@ export function useItemAlignment(
       height = pin.height;
       place.value = {
         ...style,
-        height: `${pin.height}px`,
+        height: `${pin.height - paddingAndBorder}px`,
         ...(pin.top === undefined ? { bottom: '0' } : { top: `${pin.top}px` }),
       };
       await nextTick();
       if (current !== run || !root.open) return;
-      scrollTo(scroller, pin.scrollTop);
+      scrollTo(scroller, pin.scrollTop, listZoom);
       context.scrollable.value = scrollEdges(scroller);
+      setOrigin();
     },
     { flush: 'post' },
   );
+
+  /**
+   * The popup grows from the middle of the value, which the text of the selected item covers after
+   * the place. A popup that grows while the list scrolls keeps the origin at the value.
+   */
+  function setOrigin() {
+    const popup = root.popup;
+    const target = context.valueElement.value ?? root.activeTrigger;
+    if (!popup || !target || !place.value) return;
+    const origin = readWithoutTransforms(popup, () => {
+      const box = popup.getBoundingClientRect();
+      const { top, height } = target.getBoundingClientRect();
+      return (top + height / 2 - box.top) / box.height;
+    });
+    place.value = { ...place.value, '--transform-origin': `50% ${origin * 100}%` };
+  }
 
   watch(
     () => (root.open && aligned.value ? context.positioner.value : null),
@@ -372,16 +400,17 @@ export function useItemAlignment(
           room: ownerDocument(scroller).documentElement.clientHeight - margins,
           maxHeight,
           pinned,
-          scrollTop: scroller.scrollTop,
-          maxScrollTop: getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight),
+          scrollTop: scroller.scrollTop * listZoom,
+          maxScrollTop: getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight) * listZoom,
         });
         full = grown.full;
         if (grown.height !== undefined) {
           height = grown.height;
-          place.value = { ...place.value, height: `${grown.height}px` };
+          place.value = { ...place.value, height: `${grown.height - paddingAndBorder}px` };
+          void nextTick(setOrigin);
         }
         const target = grown.scrollTop;
-        if (target !== undefined) void nextTick(() => scrollTo(scroller, target));
+        if (target !== undefined) void nextTick(() => scrollTo(scroller, target, listZoom));
       }
       context.scrollable.value = scrollEdges(scroller);
     },

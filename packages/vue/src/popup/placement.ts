@@ -163,8 +163,11 @@ function physicalSide(side: Side, rtl: boolean): PhysicalSide {
  * is open.
  */
 export function usePlacement(
-  /** The open state and the active trigger. A placement with no popup root gives them as values. */
-  root: Pick<PopupRoot, 'open' | 'activeTrigger'>,
+  /**
+   * The open state, the active trigger and the popup element. A placement with no popup root gives
+   * them as values.
+   */
+  root: Pick<PopupRoot, 'open' | 'activeTrigger' | 'popup'>,
   props: Required<Omit<PlacementProps, 'anchor' | 'collisionAvoidance'>> &
     Pick<PlacementProps, 'anchor' | 'collisionAvoidance'>,
   options: {
@@ -276,13 +279,16 @@ export function usePlacement(
               props.sticky || options.shiftAcross?.()
                 ? undefined
                 : limitShift((state) => {
-                    const arrow = arrowElement.value?.getBoundingClientRect();
+                    const arrow = arrowElement.value;
                     if (!arrow) return {};
                     const vertical = getSideAxis(getSide(state.placement)) === 'y';
                     const room = vertical
                       ? padding.value.left + padding.value.right
                       : padding.value.top + padding.value.bottom;
-                    return { offset: (vertical ? arrow.width : arrow.height) / 2 + room / 2 };
+                    const size =
+                      (vertical ? arrow.offsetWidth : arrow.offsetHeight) *
+                      relativeZoom(arrow, state.elements.floating);
+                    return { offset: size / 2 + room / 2 };
                   }),
           });
     // https://floating-ui.com/docs/flip#combining-with-shift
@@ -320,6 +326,7 @@ export function usePlacement(
       })),
       transformOrigin(() => ({
         arrow: arrowElement.value,
+        popup: root.popup,
         sideOffset: (state: MiddlewareState) => readOffset(props.sideOffset, state),
         shiftsCrossAxis: props.sticky || shiftsSide,
       })),
@@ -449,13 +456,55 @@ interface ArrowOptions {
   padding: number;
 }
 
+interface ArrowData {
+  x?: number;
+  y?: number;
+  centerOffset: number;
+  alignmentOffset?: number;
+  /**
+   * The center of the arrow on the align axis, from the border edge of the floating element, in
+   * its pixels. With no arrow, the center of the anchor.
+   */
+  center: number;
+}
+
 /**
- * The padding box of the nearest positioned ancestor of the arrow on an axis: the distance of its
- * start from the border edge of the floating element, and its length. That ancestor is the popup
- * when it has a `position`, else the floating element. A transform also makes a static popup the
- * containing block of the arrow, but the transform of an enter animation ends
- * (test/measurements/popup.test.ts), so the place skips a static popup. The offsets ignore
- * transforms.
+ * The size of a pixel of `element` in pixels of `ancestor`: the product of the CSS `zoom` of
+ * `element` and of its ancestors in `ancestor`.
+ */
+export function relativeZoom(element: Element, ancestor: Element) {
+  const win = ownerWindow(ancestor);
+  let zoom = 1;
+  for (let node: Element | null = element; node && node !== ancestor; node = node.parentElement) {
+    zoom *= Number.parseFloat(win.getComputedStyle(node).zoom);
+  }
+  return zoom;
+}
+
+/**
+ * The distance of the border edge of `element` from the border edge of the floating element on an
+ * axis, in pixels of the floating element. An offset is in pixels of its own element
+ * (test/measurements/popup.test.ts). The offsets ignore transforms.
+ */
+function offsetIn(element: HTMLElement, floating: HTMLElement, x: boolean) {
+  let distance = 0;
+  for (let node: HTMLElement | null = element; node && node !== floating;) {
+    const parent = node.offsetParent as HTMLElement | null;
+    distance += (x ? node.offsetLeft : node.offsetTop) * relativeZoom(node, floating);
+    if (parent)
+      distance += (x ? parent.clientLeft : parent.clientTop) * relativeZoom(parent, floating);
+    node = parent;
+  }
+  return distance;
+}
+
+/**
+ * The padding box of the nearest positioned ancestor of the arrow on an axis, in pixels of the
+ * floating element: the distance of its start from the border edge of the floating element, its
+ * length, and the size of its pixel. That ancestor is the popup when it has a `position`, else the
+ * floating element. A transform also makes a static popup the containing block of the arrow, but
+ * the transform of an enter animation ends (test/measurements/popup.test.ts), so the place skips a
+ * static popup.
  */
 function arrowContainingBlock(arrow: HTMLElement | null, floating: HTMLElement, axis: 'x' | 'y') {
   const x = axis === 'x';
@@ -465,20 +514,20 @@ function arrowContainingBlock(arrow: HTMLElement | null, floating: HTMLElement, 
     block = block.offsetParent as HTMLElement | null;
   }
   block ??= floating;
-  let start = x ? floating.clientLeft : floating.clientTop;
-  let element: HTMLElement | null = block;
-  while (element && element !== floating) {
-    start += x ? element.offsetLeft + element.clientLeft : element.offsetTop + element.clientTop;
-    element = element.offsetParent as HTMLElement | null;
-  }
-  return { start, length: x ? block.clientWidth : block.clientHeight };
+  const zoom = relativeZoom(block, floating);
+  return {
+    start: offsetIn(block, floating, x) + (x ? block.clientLeft : block.clientTop) * zoom,
+    length: (x ? block.clientWidth : block.clientHeight) * zoom,
+    zoom,
+  };
 }
 
 /**
  * The `arrow()` of Floating UI. The place of the arrow is in the padding box of its nearest
  * positioned ancestor, so the borders and the place of that box in the floating element do not
- * move the arrow off the center. With no arrow, it gives the center of the anchor to the transform
- * origin.
+ * move the arrow off the center. The place and `padding` are in pixels of that box, and a CSS
+ * `zoom` in the floating element scales them. With no arrow, it gives the center of the anchor to
+ * the transform origin.
  * @see https://floating-ui.com/docs/arrow
  */
 function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
@@ -487,23 +536,25 @@ function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
     async fn(state) {
       const { x, y, placement, rects, platform, elements, middlewareData } = state;
       const { element, padding } = evaluate(options, state);
-      const paddingObject = getPaddingObject(element ? padding : 0);
       const axis = getAlignmentAxis(placement);
       const length = getAxisLength(axis);
       const coords = { x, y };
-      const arrowSize = element ? await platform.getDimensions(element) : { width: 0, height: 0 };
+      const box = arrowContainingBlock(element, elements.floating, axis);
+      const paddingObject = getPaddingObject(element ? padding * box.zoom : 0);
+      const arrowZoom = element ? relativeZoom(element, elements.floating) : 1;
+      const dimensions = element ? await platform.getDimensions(element) : { width: 0, height: 0 };
+      const arrowLength = dimensions[length] * arrowZoom;
       const minProp = axis === 'y' ? 'top' : 'left';
       const maxProp = axis === 'y' ? 'bottom' : 'right';
-      const box = arrowContainingBlock(element, elements.floating, axis);
       const clientSize = box.length || rects.floating[length];
       // A large padding would move the arrow off the center.
-      const largest = clientSize / 2 - arrowSize[length] / 2 - 1;
+      const largest = clientSize / 2 - arrowLength / 2 - 1;
       const min = Math.min(paddingObject[minProp], largest);
       const maxPadding = Math.min(paddingObject[maxProp], largest);
-      const max = clientSize - arrowSize[length] - maxPadding;
+      const max = clientSize - arrowLength - maxPadding;
       const referenceCenter =
         rects.reference[axis] + rects.reference[length] / 2 - coords[axis] - box.start;
-      const center = referenceCenter - arrowSize[length] / 2;
+      const center = referenceCenter - arrowLength / 2;
       const place = clamp(min, center, max);
       // On a small anchor, the arrow of an aligned popup can point at nothing. The popup then moves
       // one time, and `shift()` still acts.
@@ -512,28 +563,29 @@ function arrow(options: (state: MiddlewareState) => ArrowOptions): Middleware {
         !middlewareData.arrow &&
         getAlignment(placement) != null &&
         center !== place &&
-        rects.reference[length] / 2 - (center < min ? min : maxPadding) - arrowSize[length] / 2 < 0;
+        rects.reference[length] / 2 - (center < min ? min : maxPadding) - arrowLength / 2 < 0;
       const alignmentOffset = moves ? (center < min ? center - min : center - max) : 0;
-      return {
-        [axis]: coords[axis] + alignmentOffset,
-        data: {
-          [axis]: place,
-          centerOffset: center - place - alignmentOffset,
-          ...(moves && { alignmentOffset }),
-        },
-        reset: moves,
+      const data: ArrowData = {
+        // The `left` or the `top` of the arrow, in its own pixels.
+        [axis]: place / arrowZoom,
+        centerOffset: center - place - alignmentOffset,
+        ...(moves && { alignmentOffset }),
+        center: box.start + place + arrowLength / 2,
       };
+      return { [axis]: coords[axis] + alignmentOffset, data, reset: moves };
     },
   };
 }
 
 /**
- * The `--transform-origin` of the popup: the arrow, or the aligned edge of a popup with no arrow, on
- * the align axis; the edge that faces the anchor on the side axis.
+ * The `--transform-origin` of the popup, in the pixels and from the border edge of the popup: the
+ * center of the arrow, or the aligned edge of a popup with no arrow, on the align axis; the edge of
+ * the anchor that faces the popup on the side axis.
  */
 function transformOrigin(
   options: () => {
     arrow: HTMLElement | null;
+    popup: HTMLElement | null;
     sideOffset: (state: MiddlewareState) => number;
     shiftsCrossAxis: boolean;
   },
@@ -542,11 +594,17 @@ function transformOrigin(
     name: 'transformOrigin',
     fn(state) {
       const { elements, middlewareData: data, placement, platform, rects, y } = state;
-      const { arrow: arrowElement, sideOffset, shiftsCrossAxis } = options();
+      const { arrow: arrowElement, popup: popupElement, sideOffset, shiftsCrossAxis } = options();
+      const floating = elements.floating;
+      const popup = popupElement ?? floating;
+      const zoom = relativeZoom(popup, floating);
       const side = getSide(placement);
       const align = getAlignment(placement);
       const vertical = getSideAxis(side) === 'y';
       const gap = sideOffset(state);
+      // The start of the popup in the floating element, on the align axis and on the side axis.
+      const crossStart = offsetIn(popup, floating, vertical);
+      const alongStart = offsetIn(popup, floating, !vertical);
       let cross: string;
       // An aligned popup with no arrow grows from its aligned edge, until a shift of more than
       // 1 px breaks the alignment.
@@ -556,23 +614,23 @@ function transformOrigin(
         Math.abs(vertical ? data.shift?.x || 0 : data.shift?.y || 0) <= 1
       ) {
         cross =
-          (align === 'start') === (vertical && platform.isRTL?.(elements.floating) === true)
-            ? '100%'
-            : '0%';
+          (align === 'start') === (vertical && platform.isRTL?.(floating) === true) ? '100%' : '0%';
       } else {
-        // The center of the arrow from the padding edge of the floating element, where the popup
-        // starts.
-        const axis = vertical ? 'x' : 'y';
-        const { start } = arrowContainingBlock(arrowElement, elements.floating, axis);
-        const border = vertical ? elements.floating.clientLeft : elements.floating.clientTop;
-        const at = vertical ? data.arrow?.x || 0 : data.arrow?.y || 0;
-        const length = vertical ? arrowElement?.clientWidth || 0 : arrowElement?.clientHeight || 0;
-        cross = `${start - border + at + length / 2}px`;
+        const center = (data.arrow as ArrowData | undefined)?.center ?? 0;
+        cross = `${(center - crossStart) / zoom}px`;
       }
-      let along = side === 'top' || side === 'left' ? `calc(100% + ${gap}px)` : `${-gap}px`;
+      let along: string;
+      if (side === 'top' || side === 'left') {
+        // The space between the end edges of the popup and of the floating element.
+        const end =
+          (vertical ? floating.offsetHeight : floating.offsetWidth) -
+          alongStart -
+          (vertical ? popup.offsetHeight : popup.offsetWidth) * zoom;
+        along = `calc(100% + ${(end + gap) / zoom}px)`;
+      } else along = `${-(alongStart + gap) / zoom}px`;
       // A popup that a shift moved over its anchor grows from the center of the anchor.
       if (shiftsCrossAxis && vertical && Math.abs(data.shift?.y || 0) > gap) {
-        along = `${rects.reference.y + rects.reference.height / 2 - y}px`;
+        along = `${(rects.reference.y + rects.reference.height / 2 - y - alongStart) / zoom}px`;
       }
       return { data: { value: vertical ? `${cross} ${along}` : `${along} ${cross}` } };
     },
