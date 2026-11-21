@@ -20,6 +20,7 @@ describe('server render and hydration', () => {
     expect(box!.value).toBe('yes');
     expect(box!.required).toBe(true);
     expect(box).toHaveAttribute('data-indeterminate');
+    expect(box).not.toHaveAttribute('indeterminate');
     expect(disabled).toHaveAttribute('disabled');
     hydrate(Checkboxes, props, root);
     await nextTick();

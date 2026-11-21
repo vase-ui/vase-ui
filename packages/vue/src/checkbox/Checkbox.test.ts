@@ -79,6 +79,7 @@ describe('the element', () => {
     attrs.indeterminate = true;
     await nextTick();
     expect(mark).toHaveAttribute('data-mark', 'mixed');
+    expect(box!.indeterminate).toBe(true);
   });
 
   test('renders its element as the root, for Transition', async () => {
