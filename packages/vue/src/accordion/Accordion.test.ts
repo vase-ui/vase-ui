@@ -360,6 +360,17 @@ describe('the panels', () => {
   });
 });
 
+describe('the size of the content', () => {
+  test('an open writes it in --accordion-panel-height and --accordion-panel-width', async () => {
+    const { panel, press } = await mountAccordion({ items: items('a') });
+    await press('a');
+    await waitFor(() =>
+      expect(panel('a')!.style.getPropertyValue('--accordion-panel-height')).toMatch(/^\d+px$/),
+    );
+    expect(panel('a')!.style.getPropertyValue('--accordion-panel-width')).toMatch(/^\d+px$/);
+  });
+});
+
 describe('animation', () => {
   test('in a <Transition>, the panel of one item leaves while the panel of the other enters', async () => {
     const { press, log } = await mountAccordion({
