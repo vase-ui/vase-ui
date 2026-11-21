@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, onTestFinished, vi } from 'vitest';
 import { reset } from '../src/common/error';
 import { failOnReportedMessages } from './reportedMessages';
 
@@ -20,6 +20,7 @@ if (typeof document !== 'undefined') {
   // Fake timers replace the global `setTimeout`. This reference stays the timer of the browser.
   const browserSetTimeout = globalThis.setTimeout;
   const { commands, server, userEvent } = await import('vitest/browser');
+  const { waitFor } = await import('./waitFor');
 
   // Firefox collects the garbage of the earlier test files of the page late. One cycle collection
   // then visits millions of objects and stops the page for some seconds, in the test that runs at
@@ -160,9 +161,15 @@ if (typeof document !== 'undefined') {
   // the test set in an earlier task can run in the next test. Vitest runs the `onTestFinished`
   // hooks after the `afterEach` hooks and in reverse order. This hook is the second that a test
   // registers, after the hook of `failOnReportedMessages`. The wait for the commands, the close of
-  // the validation popup, the stop of a fling, the pointer move and the wait for a timer then run
-  // after each unmount and before the check of the messages. A command can put the pointer in the
-  // page, so the move comes after the wait for the commands.
+  // the validation popup, the stop of a fling, the pointer move, the wait for an empty `<body>` and
+  // the wait for a timer then run after each unmount and before the check of the messages. A
+  // command can put the pointer in the page, so the move comes after the wait for the commands.
+  //
+  // After the unmount of a Vapor app, an element that leaves in a `<Transition>` stays in `<body>`
+  // until its leave ends. Vitest gives Playwright the place of an element among its siblings
+  // (`:nth-child`). When an earlier element of `<body>` goes after a command of a later test
+  // starts, the selector finds no element, and the command waits until its time-out. So a test
+  // ends when `<body>` is empty.
   beforeEach(() => {
     onTestFinished(async () => {
       endedTestCount += 1;
@@ -181,6 +188,7 @@ if (typeof document !== 'undefined') {
         // A point outside the page.
         await userEvent.pointer({ coords: { x: -1, y: -1 } });
       }
+      await waitFor(() => expect(document.body.children).toHaveLength(0));
       await new Promise<void>((resolve) => {
         browserSetTimeout(resolve, 0);
       });

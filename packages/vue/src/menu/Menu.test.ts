@@ -12,7 +12,7 @@ import MenuHandleTrigger from '../../test/fixtures/MenuHandleTrigger.vue';
 import MenuPartAlone from '../../test/fixtures/MenuPartAlone.vue';
 import MenuViewportParts from '../../test/fixtures/MenuViewportParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { holdPress, touchDrag } from '../../test/pointer';
+import { holdPress, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -1418,16 +1418,18 @@ describe('more behaviors of the parts', () => {
     await placed();
     await userEvent.hover(item('sub'));
     await opened(subPopup);
-    // A move from the trigger up and away from the submenu, outside the triangle.
-    const away = async () => {
+    // A move from the trigger up and away from the submenu, outside the triangle. The moves are
+    // events of the page, 10 ms apart: the move back must come in the close delay of 400 ms, and a
+    // command can take more time.
+    const away = () => {
       const box = item('sub').getBoundingClientRect();
-      await userEvent.pointer([
-        { coords: { x: box.left + 10, y: box.top - 2 } },
-        { coords: centerOf(item('a')) },
+      return movePointerThrough(centerOf(item('sub')), [
+        { x: box.left + 10, y: box.top - 2 },
+        centerOf(item('a')),
       ]);
     };
     await away();
-    await userEvent.hover(item('sub'));
+    await movePointerThrough(centerOf(item('a')), [centerOf(item('sub'))]);
     await new Promise((resolve) => setTimeout(resolve, 500));
     expect(subPopup()).not.toBe(null);
     await away();
