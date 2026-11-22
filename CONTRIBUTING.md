@@ -66,7 +66,7 @@ Before `pnpm test:vapor`, `pnpm test:vapor-parts` or `pnpm --filter @vase-ui/vue
 - `postcss` in `docs/package.json` has the version that Vite uses, as `pnpm why postcss -r` shows. The workspace then has one copy. Change the version when Vite uses another one.
 - `tailwindcss` of `docs` and `@tailwindcss/vite` of `docs` and `packages/vue` have the same exact version. The plugin depends on that exact version, so another version installs a second copy.
 - A tool in `benchmarks/package.json` that `packages/vue` also has, such as `vite` or `vue-tsc`, has the version of `packages/vue`. The workspace then has one copy of the tool.
-- The CI jobs that start a browser run in the image `mcr.microsoft.com/playwright`, which has the browsers of one Playwright version. When you change the version of `playwright`, change the tag of each image in `.github/workflows/ci.yml`.
+- The CI jobs that start a browser run in the image `mcr.microsoft.com/playwright`, which has the browsers of one Playwright version. When you change the version of `playwright`, change the tag of each image in `.github/workflows/ci.yml` and `.github/workflows/benchmarks.yml`.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - Import the middleware, `computePosition`, `autoUpdate` and the types of Floating UI from `@floating-ui/vue`. pnpm does not link `@floating-ui/dom` or `@floating-ui/core`, because the package does not depend on them.

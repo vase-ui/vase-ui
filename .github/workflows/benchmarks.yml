@@ -1,0 +1,169 @@
+name: Benchmarks
+
+# A person starts the timing run by hand and records its artifact `results` in a pull request.
+# CONTRIBUTING.md, "Benchmarks", gives the steps. A pull request that changes the benchmarks runs the
+# job `smoke`. The check `required` of CI does not need this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: Rounds of each page
+        type: number
+        default: 30
+  pull_request:
+    paths:
+      - 'benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+
+permissions: {}
+
+concurrency:
+  group: benchmarks-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+# A job that starts a browser runs in the Playwright image of `ci.yml`, with the same options.
+# CONTRIBUTING.md, "Tool versions", says when to change the tag.
+jobs:
+  size:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Each job writes only its part of the results, so that the job `results` can merge the parts.
+      - name: Measure the sizes
+        run: |
+          rm benchmarks/results.json
+          pnpm benchmarks:size
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: results-size
+          path: benchmarks/results.json
+
+  time:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    # One job times one engine and one setup, so that each job stays below this limit.
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium]
+        setup: [vdom, vapor-interop]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm benchmarks:build
+      - name: Time the renders
+        env:
+          ENGINE: ${{ matrix.engine }}
+          SETUP: ${{ matrix.setup }}
+          ROUNDS: ${{ inputs.rounds }}
+        run: |
+          rm benchmarks/results.json
+          pnpm benchmarks:time --engine "$ENGINE" --setup "$SETUP" --rounds "$ROUNDS"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: results-time-${{ matrix.engine }}-${{ matrix.setup }}
+          path: benchmarks/results.json
+
+  results:
+    needs: [size, time]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: results-*
+          path: parts
+      - name: Merge the parts
+        env:
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          jq -s --arg run "$RUN" 'reduce .[] as $part ({}; . * $part) | .run = $run'
+          parts/*/results.json > results.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: results
+          path: results.json
+
+  # One round of each setup in Chromium. The job fails when the failed scenarios of the virtual DOM
+  # app and of the React app differ from those of the recorded run. The Vapor app uses a prerelease
+  # of Vue, so its differences go only to the summary.
+  smoke:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cp benchmarks/results.json "$RUNNER_TEMP/recorded.json"
+      - run: pnpm benchmarks:size
+      - run: pnpm benchmarks:build
+      - run: pnpm benchmarks:time --engine chromium --setup vdom --rounds 1
+      - run: pnpm benchmarks:time --engine chromium --setup vapor-interop --rounds 1
+      - name: Compare the failed scenarios with the recorded run
+        shell: bash
+        run: |
+          # Each failed cell of a setup: the metric, the library and the reason.
+          failures() {
+            jq -r --arg setup "$2" '.time.chromium[$setup].metrics | to_entries[] | .key as $metric
+              | .value | to_entries[] | select(.value | type == "object")
+              | "\($metric), \(.key): \(.value.failed)"' "$1" | sort
+          }
+          recorded="$RUNNER_TEMP/recorded.json"
+          status=0
+          for setup in vdom vapor-interop; do
+            if ! jq -e --arg setup "$setup" '.time.chromium[$setup]' "$recorded" > /dev/null; then
+              echo "The recorded results have no run of $setup." >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            if ! changes=$(diff <(failures "$recorded" "$setup") <(failures benchmarks/results.json "$setup")); then
+              {
+                echo "### Failed scenarios of $setup that differ from the recorded run"
+                echo
+                echo "~~~diff"
+                echo "$changes"
+                echo "~~~"
+              } >> "$GITHUB_STEP_SUMMARY"
+              [[ "$setup" == vdom ]] && status=1
+            fi
+          done
+          exit "$status"
