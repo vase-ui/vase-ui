@@ -51,6 +51,9 @@ function measure(page: Page, action: Action, condition: Condition): Promise<numb
 
 /** Closes the popup with a real Escape press. The time starts at the `keydown` event. */
 async function close(page: Page): Promise<number> {
+  // The time of a close depends on the point of the frame at the press: about 5 ms or about 17 ms.
+  // Each press starts after two frames, so each close starts at the same point.
+  await page.evaluate(() => window.benchmarkDriver.nextFrames());
   await page.evaluate(() => {
     window.benchmarkDriver.measureNextKeydown({ kind: 'closed' });
   });
@@ -228,7 +231,7 @@ async function main(): Promise<void> {
   const reactSetup = SETUPS.find((item) => item.framework === 'react');
   const setupOf = (library: Library): Setup =>
     library.framework === 'react' && reactSetup ? reactSetup : setup;
-  const hasHeap = engine === 'chromium';
+  const hasCdp = engine === 'chromium';
 
   /** The page of each library for each visit, or a reason that the cell has no samples. */
   const cells = new Map<Visit, Map<Library, { path: string } | { failed: string } | null>>();
@@ -253,7 +256,7 @@ async function main(): Promise<void> {
     }
     cells.set(visit, visitCells);
     for (const measureName of visit.measures) {
-      if (measureName === 'heap' && !hasHeap) {
+      if (measureName === 'heap' && !hasCdp) {
         continue;
       }
       metrics[metricOf(visit.scenario, measureName)] = Object.fromEntries(
@@ -294,7 +297,7 @@ async function main(): Promise<void> {
     browserVersion: browser.version(),
     playwright: (require('playwright/package.json') as { version: string }).version,
     machine: machine(),
-    cpuThrottle: hasHeap ? CPU_THROTTLE : null,
+    cpuThrottle: hasCdp ? CPU_THROTTLE : null,
     rounds: 0,
     metrics,
   };
@@ -319,7 +322,7 @@ async function main(): Promise<void> {
           throw new Error('The page is not cross-origin isolated.');
         }
         await page.evaluate(() => window.benchmarkDriver.nextFrames());
-        const cdp = hasHeap ? await context.newCDPSession(page) : undefined;
+        const cdp = hasCdp ? await context.newCDPSession(page) : undefined;
         await cdp?.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
         return runSteps(page, cdp, visit);
       };
