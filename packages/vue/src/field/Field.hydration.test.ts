@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick } from 'vue';
+import FieldPartsReplaced from '../../test/fixtures/FieldPartsReplaced.vue';
 import FieldWithInput from '../../test/fixtures/FieldWithInput.vue';
 import PartsAfterControl from '../../test/fixtures/PartsAfterControl.vue';
 import PartsBeforeControl from '../../test/fixtures/PartsBeforeControl.vue';
@@ -55,6 +56,15 @@ describe('server render and hydration', () => {
     hydrate(PartsAfterControl, props, root);
     await nextTick();
     expect(input).toHaveAttribute('aria-describedby', 'description error');
+  });
+
+  test('VUE-17: the server HTML of a control with no label has no aria-labelledby', async () => {
+    const props = { scene: { label: false } };
+    const root = await renderOnServer('FieldPartsReplaced', props);
+    expect(root.querySelector('input')).not.toHaveAttribute('aria-labelledby');
+    hydrate(FieldPartsReplaced, props, root);
+    await nextTick();
+    expect(root.querySelector('input')).not.toHaveAttribute('aria-labelledby');
   });
 
   test('the server HTML of a group and its radios names the label, the description and the error that come after them', async () => {

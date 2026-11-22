@@ -173,6 +173,25 @@ describe('a native checkbox', () => {
   });
 });
 
+describe('Enter on a native checkbox, radio or switch', () => {
+  test('submits its form through the submit button, and submits no form that has no submit button', async () => {
+    html(`<form><input type="checkbox" id="checkbox"><input type="radio" id="radio">
+        <input type="checkbox" role="switch" id="switch"><button>Go</button></form>
+      <form><input type="checkbox" id="alone"></form>`);
+    const submitters: (string | null)[] = [];
+    root!.addEventListener('submit', (event) => {
+      submitters.push(event.submitter?.textContent ?? null);
+      event.preventDefault();
+    });
+    for (const id of ['checkbox', 'radio', 'switch', 'alone']) {
+      root!.querySelector<HTMLInputElement>(`#${id}`)!.focus();
+      await userEvent.keyboard('{Enter}');
+    }
+    expect(submitters).toEqual(['Go', 'Go', 'Go']);
+    expect(root!.querySelectorAll('input:checked')).toHaveLength(0);
+  });
+});
+
 describe('the formdata event', () => {
   test('an entry that a listener of the form appends is in new FormData(form), with a submitter, and in a GET submit', async () => {
     html(`<form method="get" target="formdata-frame" action="/formdata-measurement">

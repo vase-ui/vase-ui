@@ -14,8 +14,8 @@ export function useFieldGroup(group: {
   focusElement?: () => HTMLElement | undefined;
   /** The `name` of the group, for a field with no name. */
   name?: () => string | undefined;
-  /** The value in the values of a form, when it is not the value that the group gives the field. */
-  formValue?: () => unknown;
+  /** The value in the values of `form`, when it is not the value that the group gives the field. */
+  formValue?: (form: HTMLFormElement) => unknown;
   /** In `blur` mode, a leave counts a missing value. */
   countsMissingAtLeave?: boolean;
 }) {

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { CheckboxChangeEventDetails } from '@vase-ui/vue/checkbox';
@@ -111,6 +111,34 @@ describe('the group', () => {
     await nextTick();
     box('fuji').click();
     expect(group.modelValue).toEqual(['gala']);
+  });
+
+  test('an empty string is a value; a defaultValue of null is empty; a value that no checkbox has fills the field', async () => {
+    const empty = await mountGroup({
+      group: { defaultValue: [''] },
+      items: [{ key: 'none', value: '' }, ...apples('fuji')],
+    });
+    expect(empty.checked()).toEqual(['none']);
+    empty.box('none').click();
+    await nextTick();
+    expect(empty.checked()).toEqual([]);
+    const log: string[] = [];
+    const nothing = await mountGroup({
+      group: { defaultValue: null, onValueChange: (value: string[]) => log.push(value.join(',')) },
+      items: apples('fuji'),
+    });
+    nothing.box('fuji').click();
+    expect(log).toEqual(['fuji']);
+    const { group, box } = await mountGroup({
+      group: { defaultValue: ['pink'] },
+      items: apples('fuji'),
+      field: {},
+    });
+    expect(group).toHaveAttribute('data-filled');
+    box('fuji').click();
+    box('fuji').click();
+    await nextTick();
+    expect(group).toHaveAttribute('data-filled');
   });
 
   test('VUE-35: a controlled group shows its prop again, follows a change in place, and null is empty', async () => {
@@ -251,6 +279,38 @@ describe('the parent checkbox', () => {
     expect(await press()).toEqual(['fuji', 'gala', 'pink']);
     expect(await press()).toEqual([]);
     expect(await press()).toEqual(['fuji', 'pink']);
+  });
+
+  test('the indeterminate prop makes the parent indeterminate, also with no checked child', async () => {
+    const { box } = await mountGroup({
+      group: { modelValue: [], allValues: ['fuji'] },
+      items: [{ ...parent, attrs: { indeterminate: true } }, ...apples('fuji')],
+    });
+    expect(box('all').indeterminate).toBe(true);
+    expect(box('all')).toHaveAttribute('data-indeterminate');
+  });
+
+  test('a press on a child that a listener cancels does not change the selection that the parent gives back', async () => {
+    const group = reactive<Record<string, unknown>>({
+      allValues: ['fuji', 'gala', 'pink'],
+      defaultValue: ['fuji'],
+      onValueChange: (value: string[], details: CheckboxChangeEventDetails) => {
+        if (value.includes('gala') && value.length === 2) details.cancel();
+      },
+    });
+    const { box, checked } = await mountGroup({
+      group,
+      items: [parent, ...apples('fuji', 'gala', 'pink')],
+    });
+    box('gala').click();
+    await settle();
+    const children = () => checked().filter((id) => id !== 'all');
+    expect(children()).toEqual(['fuji']);
+    for (const expected of [['fuji', 'gala', 'pink'], [], ['fuji']]) {
+      box('all').click();
+      await settle();
+      expect(children()).toEqual(expected);
+    }
   });
 
   test('a disabled child keeps its state, also when it becomes disabled after the mount', async () => {
@@ -544,6 +604,18 @@ describe('in a field', () => {
     expect(root.querySelectorAll('input:invalid')).toHaveLength(0);
   });
 
+  test('the label of a Field.Item names the parent checkbox, and a click on it ticks all', async () => {
+    const { root, checked } = await mountGroup({
+      group: { allValues: ['fuji', 'gala'] },
+      items: [{ ...parent, item: {} }, ...apples('fuji', 'gala')],
+      field: {},
+    });
+    const label = root.querySelector<HTMLLabelElement>('[role=group] > div label')!;
+    expect(label).toHaveAttribute('for', 'all');
+    await userEvent.click(label);
+    expect(checked()).toEqual(['all', 'fuji', 'gala']);
+  });
+
   test('a Field.Item gives its checkbox a label, a description and its own disabled state', async () => {
     const { root, box } = await mountGroup({
       items: [
@@ -563,6 +635,203 @@ describe('in a field', () => {
     expect(galaItem!.querySelector('label')).toHaveAttribute('data-disabled');
     expect(galaItem!.querySelector('p')).toHaveAttribute('data-disabled');
     expect(fujiItem).not.toHaveAttribute('data-disabled');
+  });
+});
+
+describe('validation of the group', () => {
+  const required = (...keys: string[]): Item[] =>
+    keys.map((key) => ({ key, value: key, attrs: { required: true } }));
+
+  test('two required checkboxes keep the error until both are checked, at a submit and in change mode', async () => {
+    const submitted: unknown[] = [];
+    const { root, box, submit } = await mountGroup({
+      group: { defaultValue: [] },
+      items: required('http', 'https'),
+      field: { name: 'protocols' },
+      form: { onSubmit: () => submitted.push(true) },
+    });
+    const field = root.querySelector('form > div')!;
+    submit();
+    await nextTick();
+    expect(field).toHaveAttribute('data-invalid');
+    expect(root.querySelector('#error')).toHaveTextContent(box('http').validationMessage);
+    box('https').click();
+    await settle();
+    submit();
+    await nextTick();
+    expect(field).toHaveAttribute('data-invalid');
+    box('http').click();
+    await settle();
+    submit();
+    await nextTick();
+    expect(field).toHaveAttribute('data-valid');
+    expect(submitted).toHaveLength(1);
+
+    const changes = await mountGroup({
+      group: { defaultValue: [] },
+      items: required('http', 'https'),
+      field: { validationMode: 'change' },
+    });
+    const changeField = changes.root.querySelector('form > div')!;
+    changes.box('https').click();
+    await settle();
+    expect(changeField).toHaveAttribute('data-invalid');
+    changes.box('http').click();
+    await settle();
+    expect(changeField).toHaveAttribute('data-valid');
+  });
+
+  test('in blur mode, a leave shows the error of the unchecked required checkbox, and a press on it removes the error', async () => {
+    const { root, box } = await mountGroup({
+      group: { defaultValue: [] },
+      items: required('http', 'https'),
+      field: { validationMode: 'blur' },
+    });
+    const field = root.querySelector('form > div')!;
+    box('https').focus();
+    box('https').click();
+    await settle();
+    expect(field).not.toHaveAttribute('data-invalid');
+    await leave(box('https'));
+    expect(field).toHaveAttribute('data-invalid');
+    box('http').click();
+    await settle();
+    expect(field).toHaveAttribute('data-valid');
+  });
+
+  test('a disabled required checkbox does not count, and the required rule stays after a checked checkbox unmounts', async () => {
+    const submitted: unknown[] = [];
+    const items = reactive<Item[]>([
+      { key: 'https', value: 'https', attrs: { required: true } },
+      { key: 'http', value: 'http', attrs: { required: true, disabled: true } },
+      { key: 'ftp', value: 'ftp', attrs: { required: true } },
+    ]);
+    const { root, box, submit } = await mountGroup({
+      group: { defaultValue: [] },
+      items,
+      field: { name: 'protocols' },
+      form: { onSubmit: () => submitted.push(true) },
+    });
+    box('ftp').click();
+    await settle();
+    items.pop();
+    await settle();
+    submit();
+    await nextTick();
+    expect(root.querySelector('form > div')).toHaveAttribute('data-invalid');
+    expect(box('https')).toHaveFocus();
+    box('https').click();
+    await settle();
+    submit();
+    expect(submitted).toHaveLength(1);
+  });
+
+  test('a submit validates the array in submit mode, and each later press validates it again', async () => {
+    const validated: unknown[] = [];
+    const { root, box, submit } = await mountGroup({
+      group: { defaultValue: [] },
+      items: apples('one', 'two', 'three'),
+      field: {
+        name: 'numbers',
+        validate: (value: string[]) => (
+          validated.push([...value]),
+          value.length < 2 ? 'Pick two.' : null
+        ),
+      },
+    });
+    const invalid = () => [...root.querySelectorAll('input')].map((input) => input.ariaInvalid);
+    box('two').click();
+    await settle();
+    expect(validated).toEqual([]);
+    submit();
+    await nextTick();
+    expect(invalid()).toEqual(['true', 'true', 'true']);
+    box('one').click();
+    await settle();
+    expect(validated).toEqual([['two'], ['two', 'one']]);
+    expect(invalid()).toEqual([null, null, null]);
+  });
+
+  test('in change mode, a change of modelValue by the parent validates the array', async () => {
+    const validated: unknown[] = [];
+    const group = reactive<Record<string, unknown>>({ modelValue: [] });
+    const { box } = await mountGroup({
+      group,
+      items: apples('one', 'two'),
+      field: {
+        validationMode: 'change',
+        validate: (value: string[]) => (
+          validated.push([...value]),
+          value.includes('one') ? 'No.' : null
+        ),
+      },
+    });
+    group.modelValue = ['one'];
+    await settle();
+    expect(validated).toEqual([['one']]);
+    expect(box('two')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('the message of validate leaves a checkbox that became disabled', async () => {
+    const http = reactive<Record<string, unknown>>({});
+    const { box } = await mountGroup({
+      group: { defaultValue: [] },
+      items: [{ key: 'http', value: 'http', attrs: http }, ...apples('https')],
+      field: {
+        validationMode: 'change',
+        validate: (value: string[]) => (value.length < 2 ? 'Pick two.' : null),
+      },
+    });
+    box('http').click();
+    await settle();
+    expect(box('http').validationMessage).toBe('Pick two.');
+    http.disabled = true;
+    await settle();
+    box('https').click();
+    await settle();
+    expect(box('http').validity.customError).toBe(false);
+  });
+
+  test('a Form gets the checked checkboxes that are mounted, enabled and in the form; validate gets the whole value; a checkbox that another form owns does not block', async () => {
+    const other = document.body.appendChild(document.createElement('form'));
+    other.id = 'other-form';
+    onTestFinished(() => other.remove());
+    const values: unknown[] = [];
+    const validated: unknown[] = [];
+    const red = reactive<Record<string, unknown>>({ disabled: true });
+    const pink = reactive<Record<string, unknown>>({ required: true });
+    const { box, submit } = await mountGroup({
+      group: { defaultValue: ['fuji', 'red', 'gala', 'gone'] },
+      items: [
+        { key: 'fuji', value: 'fuji', attrs: { form: 'other-form' } },
+        { key: 'red', value: 'red', attrs: red },
+        ...apples('gala'),
+        { key: 'pink', value: 'pink', attrs: pink },
+      ],
+      field: {
+        name: 'apples',
+        validate: (value: string[], formValues: { apples: string[] }) =>
+          void validated.push([[...value], formValues.apples]),
+      },
+      form: { onSubmit: (_event: SubmitEvent, given: unknown) => values.push(given) },
+    });
+    submit();
+    expect(values).toEqual([]);
+    expect(box('pink')).toHaveFocus();
+    pink.form = 'other-form';
+    await nextTick();
+    submit();
+    red.disabled = false;
+    await nextTick();
+    submit();
+    expect(values).toEqual([{ apples: ['gala'] }, { apples: ['red', 'gala'] }]);
+    expect(validated).toEqual([
+      [['fuji', 'red', 'gala', 'gone'], ['gala']],
+      [
+        ['fuji', 'red', 'gala', 'gone'],
+        ['red', 'gala'],
+      ],
+    ]);
   });
 });
 

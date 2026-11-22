@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import type { CheckboxChangeEventDetails } from '@vase-ui/vue/checkbox';
 import { dataAttributes, leave } from '../../test/field';
 import CheckboxInField from '../../test/fixtures/CheckboxInField.vue';
+import CheckboxInForm from '../../test/fixtures/CheckboxInForm.vue';
 import CheckboxInSlot from '../../test/fixtures/CheckboxInSlot.vue';
 import CheckboxInTransition from '../../test/fixtures/CheckboxInTransition.vue';
 import AppleGroup from '../../test/fixtures/AppleGroup.vue';
@@ -82,6 +83,11 @@ describe('the element', () => {
     expect(box!.indeterminate).toBe(true);
   });
 
+  test('a role of the developer wins over the native role', async () => {
+    const { boxes } = await mountBoxes([{ role: 'switch' }]);
+    expect(boxes[0]).toHaveAttribute('role', 'switch');
+  });
+
   test('renders its element as the root, for Transition', async () => {
     const scene = reactive({ shown: false });
     const { root } = mount(CheckboxInTransition, { scene });
@@ -156,6 +162,73 @@ describe('a press', () => {
     expect(log).toEqual(['checkedChange true']);
     expect(boxes[0]!.checked).toBe(false);
     expect(boxes[0]!.indeterminate).toBe(true);
+  });
+});
+
+describe('clicks, the keyboard and the label', () => {
+  test('a click reaches the ancestors one time, and not after the developer stops it; a click that the developer prevents changes nothing', async () => {
+    const log: string[] = [];
+    const { root, boxes } = await mountBoxes([
+      record(log),
+      record(log, { onClick: (event: MouseEvent) => event.stopPropagation() }),
+      record(log, { onClick: (event: MouseEvent) => event.preventDefault() }),
+    ]);
+    const clicked: EventTarget[] = [];
+    root.addEventListener('click', (event) => clicked.push(event.target!));
+    for (const box of boxes) box.click();
+    await settle();
+    expect(clicked).toEqual([boxes[0], boxes[2]]);
+    expect(boxes.map((box) => box.checked)).toEqual([true, true, false]);
+    expect(log).toEqual(['checkedChange true', 'update true', 'checkedChange true', 'update true']);
+  });
+
+  test('Space and a click on the label around it change it, Enter does not; a disabled checkbox ignores a click', async () => {
+    const log: string[] = [];
+    const { root, boxes } = await mountBoxes([record(log), { disabled: true }]);
+    const [box, disabled] = boxes;
+    box!.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(box!.checked).toBe(false);
+    await userEvent.keyboard(' ');
+    expect(box!.checked).toBe(true);
+    await userEvent.click(root.querySelector('label')!);
+    expect(box!.checked).toBe(false);
+    disabled!.click();
+    expect(disabled!.checked).toBe(false);
+    expect(log).toEqual([
+      'checkedChange true',
+      'update true',
+      'checkedChange false',
+      'update false',
+    ]);
+  });
+
+  test('the element follows a modelValue that the parent writes', async () => {
+    const box = models([], { modelValue: false });
+    const { boxes } = await mountBoxes([box]);
+    box.modelValue = true;
+    await nextTick();
+    expect(boxes[0]!.checked).toBe(true);
+    box.modelValue = false;
+    await nextTick();
+    expect(boxes[0]!.checked).toBe(false);
+  });
+
+  test('Enter submits the form through its submit button and changes nothing, also when read-only; a keydown that the developer prevents stops the submit', async () => {
+    const { form, boxes } = await mountBoxes([
+      {},
+      { readonly: true },
+      { onKeydown: (event: KeyboardEvent) => event.preventDefault() },
+    ]);
+    const submitters: (HTMLElement | null)[] = [];
+    form.addEventListener('submit', (event) => submitters.push(event.submitter));
+    for (const box of boxes) {
+      box.focus();
+      await userEvent.keyboard('{Enter}');
+    }
+    const button = form.querySelector('button[type=submit]');
+    expect(submitters).toEqual([button, button]);
+    expect(boxes.map((box) => box.checked)).toEqual([false, false, false]);
   });
 });
 
@@ -286,6 +359,19 @@ describe('native forms', () => {
     expect([...new FormData(root.querySelector('form')!)]).toEqual([]);
   });
 
+  test('with the form attribute, the other form gets the entry and the uncheckedValue', async () => {
+    const { root, form } = await mountBoxes([
+      { name: 'a', form: 'other', defaultChecked: true },
+      { name: 'b', form: 'other', uncheckedValue: 'off' },
+    ]);
+    expect([...new FormData(form)]).toEqual([]);
+    expect([...new FormData(root.querySelector<HTMLFormElement>('#other')!)]).toEqual([
+      ['a', 'on'],
+      ['other', 'other'],
+      ['b', 'off'],
+    ]);
+  });
+
   test('a reset gives the first state and emits update:modelValue only for a change; it keeps indeterminate', async () => {
     const log: string[] = [];
     const bound = models(log, { modelValue: true });
@@ -395,5 +481,101 @@ describe('in a field', () => {
     await settle();
     expect(dataAttributes(field)).toEqual([]);
     expect(input.validity.valueMissing).toBe(true);
+  });
+
+  test('the label names the checkbox by its id: after the id changes or goes, with an empty id, and for a new checkbox', async () => {
+    const box = reactive<Record<string, unknown>>({ id: 'first' });
+    const scene = reactive({ key: 'a' });
+    const { root } = mount(CheckboxInForm, { field: {}, box, scene });
+    await nextTick();
+    const label = root.querySelector('label')!;
+    const input = () => root.querySelector('input')!;
+    expect(label).toHaveAttribute('for', 'first');
+    box.id = 'second';
+    await settle();
+    expect(label).toHaveAttribute('for', 'second');
+    box.id = '';
+    await settle();
+    expect(input().id).not.toBe('');
+    expect(label).toHaveAttribute('for', input().id);
+    box.id = 'third';
+    await settle();
+    delete box.id;
+    await settle();
+    expect(input().id).not.toBe('third');
+    expect(label).toHaveAttribute('for', input().id);
+    box.id = 'third';
+    await settle();
+    delete box.id;
+    scene.key = 'b';
+    await settle();
+    expect(input().id).not.toBe('third');
+    expect(label).toHaveAttribute('for', input().id);
+    await userEvent.click(label);
+    expect(input().checked).toBe(true);
+  });
+
+  test('a leave gives the checkbox data-touched; a new checkbox that is unchecked takes data-filled from the field', async () => {
+    const box = reactive<Record<string, unknown>>({ modelValue: true });
+    const scene = reactive({ key: 'a' });
+    const { root } = mount(CheckboxInForm, { field: {}, box, scene });
+    await nextTick();
+    const field = root.querySelector('form > div')!;
+    expect(field).toHaveAttribute('data-filled');
+    root.querySelector('input')!.focus();
+    await leave(root.querySelector('input')!);
+    expect(root.querySelector('input')).toHaveAttribute('data-touched');
+    box.modelValue = false;
+    scene.key = 'b';
+    await settle();
+    expect(field).not.toHaveAttribute('data-filled');
+  });
+
+  test('in change mode, a change of modelValue by the parent validates', async () => {
+    const validated: unknown[] = [];
+    const box = reactive<Record<string, unknown>>({ modelValue: false });
+    const { root } = mount(CheckboxInField, {
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => (validated.push(value), value ? 'No.' : null),
+      },
+      box,
+    });
+    await nextTick();
+    box.modelValue = true;
+    await settle();
+    expect(validated).toEqual([true]);
+    expect(root.querySelector('input')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('in a Form: a change removes the error of the form; a submit shows the error of a required checkbox, and each change then validates', async () => {
+    const form = reactive<Record<string, unknown>>({ errors: { terms: 'Read the terms.' } });
+    form['onUpdate:errors'] = (errors: unknown) => (form.errors = errors);
+    const { root } = mount(CheckboxInForm, {
+      form,
+      field: { name: 'terms' },
+      box: { required: true },
+    });
+    await nextTick();
+    const box = root.querySelector('input')!;
+    const error = () => root.querySelector('#error');
+    expect(box).toHaveAttribute('aria-invalid', 'true');
+    expect(error()).toHaveTextContent('Read the terms.');
+    box.click();
+    await settle();
+    expect(form.errors).toEqual({});
+    box.click();
+    await settle();
+    expect(box).not.toHaveAttribute('aria-invalid');
+    root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
+    await settle();
+    expect(box).toHaveAttribute('aria-invalid', 'true');
+    expect(error()).toHaveTextContent(box.validationMessage);
+    box.click();
+    await settle();
+    expect(box).not.toHaveAttribute('aria-invalid');
+    box.click();
+    await settle();
+    expect(box).toHaveAttribute('aria-invalid', 'true');
   });
 });

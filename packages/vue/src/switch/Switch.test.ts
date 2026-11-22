@@ -139,6 +139,36 @@ describe('the state', () => {
   });
 });
 
+describe('clicks and the keyboard', () => {
+  test('a click reaches the ancestors one time, and not after the developer stops it; a disabled switch ignores a click', async () => {
+    const log: string[] = [];
+    const { root, inputs } = await mountSwitches([
+      record(log),
+      record(log, { onClick: (event: MouseEvent) => event.stopPropagation() }),
+      { disabled: true },
+    ]);
+    const clicked: EventTarget[] = [];
+    root.addEventListener('click', (event) => clicked.push(event.target!));
+    for (const input of inputs) input.click();
+    await settle();
+    expect(clicked).toEqual([inputs[0]]);
+    expect(inputs.map((input) => input.checked)).toEqual([true, true, false]);
+    expect(log).toEqual(['checkedChange true', 'update true', 'checkedChange true', 'update true']);
+  });
+
+  test('Space changes it; Enter does not change it and submits the form through its submit button', async () => {
+    const { form, inputs } = await mountSwitches([{}]);
+    const submitters: (HTMLElement | null)[] = [];
+    form.addEventListener('submit', (event) => submitters.push(event.submitter));
+    inputs[0]!.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(inputs[0]!.checked).toBe(false);
+    expect(submitters).toEqual([form.querySelector('button[type=submit]')]);
+    await userEvent.keyboard(' ');
+    expect(inputs[0]!.checked).toBe(true);
+  });
+});
+
 describe('required', () => {
   test('the native attribute makes an off switch fail, and the state of the element slot has it', async () => {
     const attrs = reactive<Record<string, unknown>>({ required: true });
@@ -187,6 +217,19 @@ describe('native forms', () => {
     await nextTick();
     expect([...new FormData(form)]).toEqual([
       ['a', 'on'],
+      ['b', 'off'],
+    ]);
+  });
+
+  test('with the form attribute, the other form gets the entry and the uncheckedValue', async () => {
+    const { root, form } = await mountSwitches([
+      { name: 'a', form: 'other', defaultChecked: true },
+      { name: 'b', form: 'other', uncheckedValue: 'off' },
+    ]);
+    expect([...new FormData(form)]).toEqual([]);
+    expect([...new FormData(root.querySelector<HTMLFormElement>('#other')!)]).toEqual([
+      ['a', 'on'],
+      ['other', 'other'],
       ['b', 'off'],
     ]);
   });
@@ -244,6 +287,23 @@ describe('in a field', () => {
     input.click();
     await settle();
     expect(dataAttributes(input)).toEqual(['data-valid']);
+  });
+
+  test('in change mode, a change of modelValue by the parent validates', async () => {
+    const validated: unknown[] = [];
+    const attrs = reactive<Record<string, unknown>>({ modelValue: false });
+    const { root } = mount(SwitchInField, {
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => (validated.push(value), value ? 'No.' : null),
+      },
+      attrs,
+    });
+    await nextTick();
+    attrs.modelValue = true;
+    await settle();
+    expect(validated).toEqual([true]);
+    expect(root.querySelector('input')).toHaveAttribute('aria-invalid', 'true');
   });
 
   test('a cancelled press tells the field nothing', async () => {

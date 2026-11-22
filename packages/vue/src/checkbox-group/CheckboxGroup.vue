@@ -49,10 +49,13 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
   ownDisabled: () => props.disabled || inDisabledFieldset.value,
   readOnly: () => false,
   inputs: () => inputs.value,
-  // A form gets the values of the checked checkboxes that are mounted and enabled.
-  formValue: () =>
+  // A form gets the values of the checked checkboxes that are mounted, enabled and in that form,
+  // as the form data has them.
+  formValue: (form) =>
     value.value.filter((v: string) =>
-      checkboxes.some((checkbox) => checkbox.value === v && !checkbox.disabled),
+      checkboxes.some(
+        (checkbox) => checkbox.value === v && !checkbox.disabled && checkbox.element.form === form,
+      ),
     ),
 });
 const isDisabled = computed<boolean>(
