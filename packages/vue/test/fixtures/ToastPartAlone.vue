@@ -6,7 +6,9 @@ import ToastManagerAlone from './ToastManagerAlone.vue';
 // A part outside its parent. With `inProvider`, the part is in a provider with no root.
 defineProps({
   part: {
-    type: String as PropType<'Root' | 'Viewport' | 'Title' | 'Arrow' | 'useToastManager'>,
+    type: String as PropType<
+      'Root' | 'Viewport' | 'Positioner' | 'Title' | 'Description' | 'Arrow' | 'useToastManager'
+    >,
     required: true,
   },
   inProvider: Boolean,

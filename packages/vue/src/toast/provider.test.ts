@@ -36,12 +36,24 @@ describe('the list with no viewport', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  test('`close` calls `onRemove` at once for a toast with no mounted root', async () => {
+  test('VUE-203: `close` calls `onRemove` at once for a toast with no mounted root, also before an add with its id; a second close calls nothing; the add makes a new toast', async () => {
     const { provider } = await mountProviders();
     const log: string[] = [];
-    provider.add({ id: 'a', onClose: () => log.push('close'), onRemove: () => log.push('remove') });
+    provider.add({
+      id: 'a',
+      title: 'Saving',
+      onClose: () => log.push('close'),
+      onRemove: () => log.push('remove'),
+    });
+    provider.close('a');
+    expect(ids(provider)).toEqual([]);
     provider.close('a');
     expect(log).toEqual(['close', 'remove']);
+    provider.add({ id: 'a', onRemove: () => log.push('remove again') });
+    expect(log).toEqual(['close', 'remove']);
+    expect(ids(provider)).toEqual(['a']);
+    expect(provider.toasts[0]!.title).toBe(undefined);
+    expect(provider.toasts[0]!.updateKey).toBe(0);
   });
 
   test('a change of `timeout` and `limit` holds for a part that adds a toast in the same update', async () => {
@@ -112,6 +124,83 @@ describe('the timers', () => {
     }
   });
 
+  test.each([
+    { name: 'two stops', timeout: 5000, steps: [1000, 1000, 1000, 1000], left: 3000 },
+    { name: 'stops after 40 ms each', timeout: 100, steps: [40, 0, 40, 0], left: 20 },
+  ])('the time that runs between $name adds up', async ({ timeout, steps, left }) => {
+    const { provider } = await mountProviders();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    provider.add({ id: 'a', timeout });
+    for (let index = 0; index < steps.length; index += 2) {
+      await advance(steps[index]!);
+      provider.setInteraction({ hover: true });
+      await advance(steps[index + 1]!);
+      provider.setInteraction({ hover: false });
+    }
+    await advance(left - 1);
+    expect(ids(provider)).toEqual(['a']);
+    await advance(2);
+    expect(ids(provider)).toEqual([]);
+  });
+
+  test.each([
+    {
+      name: 'the close of the last toast',
+      end: (provider: ToastProviderForParts) => provider.close('a'),
+    },
+    { name: 'the close of each toast', end: (provider: ToastProviderForParts) => provider.close() },
+    {
+      name: 'the close of the last toast with a time while a loading toast stays',
+      end: (provider: ToastProviderForParts) => provider.close('a'),
+      loading: true,
+    },
+    {
+      name: 'an update of the last toast with a time to the timeout 0',
+      end: (provider: ToastProviderForParts) => provider.update('a', { timeout: 0 }),
+    },
+  ])('after $name, a stop holds for a new toast', async ({ end, loading }) => {
+    const { provider } = await mountProviders();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    if (loading) provider.add({ id: 'loading', type: 'loading' });
+    provider.add({ id: 'a', timeout: 100 });
+    provider.setInteraction({ hover: true });
+    end(provider);
+    provider.add({ id: 'c', timeout: 100 });
+    provider.setInteraction({ hover: true });
+    await advance(200);
+    expect(ids(provider)).toContain('c');
+  });
+
+  test('an update of the timeout while the timers stop gets a timer that waits, and runs after the stop', async () => {
+    const { provider } = await mountProviders();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    provider.add({ id: 'a', timeout: 100 });
+    provider.setInteraction({ hover: true });
+    provider.update('a', { timeout: 100 });
+    await advance(200);
+    expect(ids(provider)).toEqual(['a']);
+    provider.setInteraction({ hover: false });
+    await advance(100);
+    expect(ids(provider)).toEqual([]);
+  });
+
+  test.each(['hover', 'focus'] as const)(
+    'a window with no focus keeps them stopped when the %s ends',
+    async (state) => {
+      const { provider } = await mountProviders();
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      provider.add({ id: 'a', timeout: 100 });
+      provider.setInteraction({ [state]: true });
+      provider.setInteraction({ windowFocused: false });
+      provider.setInteraction({ [state]: false });
+      await advance(500);
+      expect(ids(provider)).toEqual(['a']);
+      provider.setInteraction({ windowFocused: true });
+      await advance(150);
+      expect(ids(provider)).toEqual([]);
+    },
+  );
+
   test('stop at the unmount of the provider', async () => {
     const { provider, unmount } = await mountProviders();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
@@ -127,6 +216,7 @@ describe('a manager', () => {
   test('adds to each mounted provider from the mount to the unmount, and follows a change of the prop; with no mounted provider it keeps no toast', async () => {
     const first = Toast.createToastManager();
     first.add({ id: 'before' });
+    expect(first.add({})).toMatch(/^vase-ui-toast-\d+$/);
     const props = reactive<Props>({ toastManager: first });
     const { provider, unmount } = await mountProviders({ count: 2, provider: props });
     expect(ids(provider)).toEqual([]);

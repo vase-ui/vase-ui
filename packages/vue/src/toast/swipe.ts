@@ -146,6 +146,7 @@ export function useToastSwipe(options: {
         clientX - gesture.cancelBaseline.x,
         clientY - gesture.cancelBaseline.y,
       );
+      gesture.maxDisplacement = Math.max(gesture.maxDisplacement, displacement);
       if (displacement > SWIPE_THRESHOLD) {
         gesture.cancelled = false;
         direction.value = gesture.intended;

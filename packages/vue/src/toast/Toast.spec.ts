@@ -19,6 +19,59 @@ manager.update('id', (toast) => ({ data: { file: `${toast.data?.file ?? ''}!` } 
 // @ts-expect-error `size` is not a key of the data.
 manager.add({ data: { size: 1 } });
 
+// The data of an update replaces the whole value, so it has each key of the type.
+interface Payload {
+  id: string;
+  count: number;
+}
+const typed = Toast.createToastManager<Payload>();
+// @ts-expect-error The data has no `count`.
+typed.add({ data: { id: 'a' } });
+// @ts-expect-error The data has no `count`.
+typed.update('a', { data: { id: 'a' } });
+typed.update('a', (toast) => {
+  expectType<Payload | undefined, typeof toast.data>(toast.data);
+  return { data: { id: 'a', count: 2 } };
+});
+// @ts-expect-error The function returns data with no `count`.
+typed.update('a', () => ({ data: { id: 'a' } }));
+
+// Only the loading state takes an `id`, and each state takes the data.
+void typed.promise(Promise.resolve(2), {
+  loading: { id: 'a', data: { id: 'a', count: 0 } },
+  success: (value) => ({ data: { id: 'a', count: value } }),
+  error: 'Failed',
+});
+void typed.promise(Promise.resolve(2), {
+  loading: 'Loading',
+  // @ts-expect-error `id` is only for the loading state.
+  success: { id: 'a', title: 'Done' },
+  // @ts-expect-error `id` is only for the loading state.
+  error: { id: 'a', title: 'Failed' },
+});
+
+// A manager with no type takes the type of the data at each call.
+const untyped = Toast.createToastManager();
+expectType<string, ReturnType<typeof untyped.add>>(
+  untyped.add<Payload>({ data: { id: 'a', count: 3 } }),
+);
+// @ts-expect-error The data has no `count`.
+untyped.update<Payload>('a', { data: { id: 'a' } });
+void untyped.promise<number, Payload>(Promise.resolve(5), {
+  loading: { id: 'a' },
+  success: (value) => ({ data: { id: 'a', count: value } }),
+  error: 'Failed',
+});
+
+// A function is data, and a function of `update` gets it.
+type Callable = () => string;
+const callable = Toast.createToastManager<Callable>();
+callable.add({ data: () => 'first' });
+callable.update('a', (toast) => {
+  expectType<Callable | undefined, typeof toast.data>(toast.data);
+  return { data: toast.data };
+});
+
 declare const result: UseToastManagerReturnValue<Data>;
 expectType<ComputedRef<ToastObject<Data>[]>, typeof result.toasts>(result.toasts);
 const promised = result.promise(Promise.resolve(1), {

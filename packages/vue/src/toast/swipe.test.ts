@@ -6,7 +6,7 @@ import {
   updateSwipeCancelBaseline,
 } from './swipe';
 
-describe('the swipe math of Drawer and Toast', () => {
+describe('the swipe math of Toast', () => {
   it('damps only a delta toward a direction that does not dismiss', () => {
     expect(applyDirectionalDamping(100, 100, ['down', 'right'])).toEqual({ x: 100, y: 100 });
     expect(applyDirectionalDamping(-100, -100, ['down', 'right'])).toEqual({ x: -10, y: -10 });

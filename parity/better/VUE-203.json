@@ -1,0 +1,9 @@
+{
+  "id": "VUE-203",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/store.ts#L301-L333",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/useToastManager.test.tsx#L182-L243"
+  ],
+  "behavior": "A toast that closes while it has no mounted root, such as a toast of a provider with no viewport, leaves the list at once, and its `onRemove` runs at once. An add with its id then makes a new toast. In Base UI, such a toast stays in the list in its exit until a root mounts and ends the exit, so its `onRemove` waits, and an add with its id replaces it and drops that `onRemove`.",
+  "dueWith": "packages/react/src/toast/store.ts"
+}
