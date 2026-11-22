@@ -1,0 +1,12 @@
+{
+  "id": "VUE-197",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx#L55",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/accordion/root/AccordionRoot.test.tsx#L19",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/accordion/panel/AccordionPanel.test.tsx#L31",
+    "https://html.spec.whatwg.org/multipage/interaction.html#the-hidden-attribute"
+  ],
+  "behavior": "`hiddenUntilFound` keeps a closed panel in the DOM with `hidden=\"until-found\"`, because find-in-page needs the content. `keepMounted` of `false` changes nothing then, and the part gives no warning. Base UI gives a warning in a development build.",
+  "dueWith": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx",
+  "families": ["accordion"]
+}

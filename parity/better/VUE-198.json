@@ -1,0 +1,10 @@
+{
+  "id": "VUE-198",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/tabs/root/TabsRoot.test.tsx#L522",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/tabs/tab/TabsTab.test.tsx#L164",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+  ],
+  "behavior": "A tab activates at the `click` of a pointer press and at Enter and Space. With `activateOnFocus`, it also activates at a key of the list that moves the focus: an arrow key, Home or End. A focus that a pointer press or a script gives activates no tab. A press that leaves the tab before the release gives the tab no `click`, and a press of the secondary button gives no `click`, so neither activates a tab. With `activateOnFocus`, Base UI activates a tab at its focus event, except during a press of the secondary button. So in Base UI, a press of the primary button activates the tab before the release.",
+  "dueWith": "packages/react/src/tabs/tab/TabsTab.tsx"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-199",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/tabs/root/TabsRoot.test.tsx#L657",
+    "https://html.spec.whatwg.org/multipage/form-elements.html#selectedness-setting-algorithm"
+  ],
+  "behavior": "With no `modelValue` and no `defaultValue`, the first tab that is not disabled is active, as the first option of a native `<select>` that is not disabled is selected. The server HTML has that tab and its panel. Base UI has the implicit default value `0`: with tabs of the values `1`, `0` and `2`, the tab of the value `0` is active.",
+  "dueWith": "packages/react/src/tabs/root/TabsRoot.tsx"
+}

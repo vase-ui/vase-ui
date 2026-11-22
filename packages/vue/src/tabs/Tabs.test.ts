@@ -304,7 +304,7 @@ describe('the first value', () => {
     },
   );
 
-  test('a list whose tab of value 0 is not first starts on its first tab', async () => {
+  test('VUE-199: a list whose tab of value 0 is not first starts on its first tab', async () => {
     const log: string[] = [];
     const { selected } = await mountTabs({
       root: rootEvents(log),
@@ -575,7 +575,7 @@ describe('activation', () => {
     expect(log).toEqual([]);
   });
 
-  test('a press of the right or the middle button activates nothing, also with activateOnFocus', async () => {
+  test('VUE-198: a press of the right or the middle button activates nothing, also with activateOnFocus', async () => {
     const log: string[] = [];
     const { tab } = await mountTabs({
       root: rootModel(log, 'a'),
@@ -587,6 +587,32 @@ describe('activation', () => {
     await userEvent.click(tab('b'), { button: 'middle' });
     expect(log).toEqual([]);
     await userEvent.click(tab('b'));
+    expect(log).toEqual(['valueChange b none', 'update b']);
+  });
+
+  test('VUE-198: with activateOnFocus, a press activates its tab at the release, and a press that leaves the tab before the release activates nothing', async () => {
+    const log: string[] = [];
+    const { tab } = await mountTabs({
+      root: rootModel(log, 'a'),
+      list: { activateOnFocus: true },
+      tabs: items('a', 'b', 'c'),
+    });
+    const center = (key: string) => {
+      const rect = tab(key).getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    };
+    await userEvent.pointer({ coords: center('b'), keys: '[MouseLeft>]' });
+    await settle();
+    expect(log).toEqual([]);
+    await userEvent.pointer({ keys: '[/MouseLeft]' });
+    expect(log).toEqual(['valueChange b none', 'update b']);
+    const outside = { x: center('c').x, y: tab('c').getBoundingClientRect().bottom + 40 };
+    await userEvent.pointer([
+      { coords: center('c'), keys: '[MouseLeft>]' },
+      { coords: outside },
+      { keys: '[/MouseLeft]' },
+    ]);
+    await settle();
     expect(log).toEqual(['valueChange b none', 'update b']);
   });
 
@@ -859,7 +885,7 @@ describe('keys', () => {
 });
 
 describe('the tab stop', () => {
-  test('is the active tab, also a disabled one; with no active tab, the first tab', async () => {
+  test('VUE-200: is the active tab, also a disabled one; with no active tab, the first tab', async () => {
     const root = reactive<Record<string, unknown>>({ modelValue: 'a' });
     const { tabStops } = await mountTabs({
       root,

@@ -507,6 +507,19 @@ describe('the panels', () => {
     expect(found.panel('c')).not.toHaveAttribute('inert');
     expect(found.panel('d')).toBeNull();
   });
+
+  test('VUE-197: hiddenUntilFound of the root or of a panel keeps a closed panel with hidden="until-found", also with keepMounted of false', async () => {
+    const fromRoot = await mountAccordion({
+      root: { hiddenUntilFound: true, keepMounted: false },
+      items: [{ key: 'a' }, { key: 'b', panel: { keepMounted: false } }],
+    });
+    expect(fromRoot.panel('a')).toHaveAttribute('hidden', 'until-found');
+    expect(fromRoot.panel('b')).toHaveAttribute('hidden', 'until-found');
+    const fromPanel = await mountAccordion({
+      items: [{ key: 'c', panel: { hiddenUntilFound: true, keepMounted: false } }],
+    });
+    expect(fromPanel.panel('c')).toHaveAttribute('hidden', 'until-found');
+  });
 });
 
 describe('the size of the content', () => {
