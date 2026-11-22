@@ -3,7 +3,14 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { chromium, firefox, webkit, type CDPSession, type Page } from 'playwright';
+import {
+  chromium,
+  firefox,
+  webkit,
+  type CDPSession,
+  type ConsoleMessage,
+  type Page,
+} from 'playwright';
 import { preview } from 'vite';
 import { hydrationApp, libraryApp, SERVER_RENDER_ERROR_FILE } from './build.ts';
 import { installDriver, type Action, type Condition } from './harness/driver.ts';
@@ -44,6 +51,9 @@ function measure(page: Page, action: Action, condition: Condition): Promise<numb
 
 /** Closes the popup with a real Escape press. The time starts at the `keydown` event. */
 async function close(page: Page): Promise<number> {
+  // The time of a close depends on the point of the frame at the press: about 5 ms or about 17 ms.
+  // Each press starts after two frames, so each close starts at the same point.
+  await page.evaluate(() => window.benchmarkDriver.nextFrames());
   await page.evaluate(() => {
     window.benchmarkDriver.measureNextKeydown({ kind: 'closed' });
   });
@@ -142,6 +152,18 @@ async function runSteps(
   }
 }
 
+/**
+ * The text of a console message. For an `Error` object, Firefox gives only the text `Error`, so the
+ * text comes from the object in the page. A page that is closed gives the text of Playwright.
+ */
+async function textOf(message: ConsoleMessage): Promise<string> {
+  const error = await message
+    .args()[0]
+    ?.evaluate((value) => (value instanceof Error ? String(value) : undefined))
+    .catch(() => undefined);
+  return error ?? message.text();
+}
+
 function timeout(milliseconds: number): { promise: Promise<never>; clear: () => void } {
   let timer: NodeJS.Timeout | undefined;
   const promise = new Promise<never>((_, reject) => {
@@ -209,7 +231,7 @@ async function main(): Promise<void> {
   const reactSetup = SETUPS.find((item) => item.framework === 'react');
   const setupOf = (library: Library): Setup =>
     library.framework === 'react' && reactSetup ? reactSetup : setup;
-  const hasHeap = engine === 'chromium';
+  const hasCdp = engine === 'chromium';
 
   /** The page of each library for each visit, or a reason that the cell has no samples. */
   const cells = new Map<Visit, Map<Library, { path: string } | { failed: string } | null>>();
@@ -234,7 +256,7 @@ async function main(): Promise<void> {
     }
     cells.set(visit, visitCells);
     for (const measureName of visit.measures) {
-      if (measureName === 'heap' && !hasHeap) {
+      if (measureName === 'heap' && !hasCdp) {
         continue;
       }
       metrics[metricOf(visit.scenario, measureName)] = Object.fromEntries(
@@ -258,7 +280,8 @@ async function main(): Promise<void> {
     preview: {
       host: '127.0.0.1',
       port: 0,
-      // A page with cross-origin isolation reads `performance.now()` in steps of 5 microseconds.
+      // With cross-origin isolation, `performance.now()` has steps of 5 microseconds in Chromium and
+      // 20 in Firefox and WebKit. Without it, the steps are 100 and 1,000.
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin',
         'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -274,7 +297,7 @@ async function main(): Promise<void> {
     browserVersion: browser.version(),
     playwright: (require('playwright/package.json') as { version: string }).version,
     machine: machine(),
-    cpuThrottle: hasHeap ? CPU_THROTTLE : null,
+    cpuThrottle: hasCdp ? CPU_THROTTLE : null,
     rounds: 0,
     metrics,
   };
@@ -286,25 +309,25 @@ async function main(): Promise<void> {
     try {
       await context.addInitScript(installDriver);
       const page = await context.newPage();
-      const messages: string[] = [];
+      const messages: Promise<string>[] = [];
       page.on('console', (message) => {
         if (message.type() === 'error' || message.type() === 'warning') {
-          messages.push(message.text());
+          messages.push(textOf(message));
         }
       });
-      page.on('pageerror', (error) => messages.push(error.message));
+      page.on('pageerror', (error) => messages.push(Promise.resolve(error.message)));
       const run = async () => {
         await page.goto(new URL(path, origin).href);
         if (!(await page.evaluate(() => crossOriginIsolated))) {
           throw new Error('The page is not cross-origin isolated.');
         }
         await page.evaluate(() => window.benchmarkDriver.nextFrames());
-        const cdp = hasHeap ? await context.newCDPSession(page) : undefined;
+        const cdp = hasCdp ? await context.newCDPSession(page) : undefined;
         await cdp?.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
         return runSteps(page, cdp, visit);
       };
       const measures = await Promise.race([run(), limit.promise]);
-      const [message] = messages;
+      const [message] = await Promise.all(messages);
       if (message !== undefined) {
         throw new Error(message);
       }

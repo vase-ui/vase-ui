@@ -342,19 +342,18 @@ function timeParts(results: Results): TimePart[] {
   );
 }
 
+/** The tables of each job. A job with no metric of a group, such as the heap in Firefox, has no table of it. */
 function timeTables(parts: readonly TimePart[]): TimeTable[] {
   return parts.flatMap(({ run, part }) => {
     const columns = columnsOf(run.setup).map((library) => library.id);
-    return TIME_GROUPS.map((group) => ({
-      run,
-      group,
-      columns,
-      rows: VISITS.flatMap((visit) =>
+    return TIME_GROUPS.flatMap((group) => {
+      const rows = VISITS.flatMap((visit) =>
         visit.measures
           .filter((measure) => groupOf(visit, measure) === group)
           .flatMap((measure) => timeRow(part, columns, visit, measure) ?? []),
-      ),
-    }));
+      );
+      return rows.length === 0 ? [] : [{ run, group, columns, rows }];
+    });
   });
 }
 
