@@ -31,6 +31,78 @@ const results: Results = {
 
 const report = benchmarksReportOf(results, { groups: [] });
 
+/** Samples of 30 rounds, and the same samples times a factor. */
+function rounds(factor = 1): number[] {
+  return Array.from({ length: 30 }, (_, round) => (10 + (round % 7)) * factor);
+}
+
+const timed = benchmarksReportOf(
+  {
+    ...results,
+    time: {
+      chromium: {
+        vdom: {
+          browserVersion: '1.0',
+          playwright: '1.0.0',
+          machine: { os: 'Linux', cpu: 'CPU', cores: 4, memory: 2 ** 34 },
+          cpuThrottle: 4,
+          rounds: 30,
+          metrics: {
+            'Dialog.mount': { 'vase-ui': rounds(), 'reka-ui': rounds(0.8) },
+            'Dialog.heap': { 'vase-ui': rounds(1000), 'reka-ui': rounds(900) },
+            'Dialog.open': {
+              'vase-ui': rounds(),
+              'reka-ui': rounds(0.8),
+              'ark-ui': { failed: 'No "open" state 5000 ms after the step.' },
+              'headless-ui': rounds(1.2),
+              vuetify0: null,
+              'base-ui': rounds(1.01),
+            },
+          },
+        },
+      },
+    },
+  },
+  { groups: [] },
+);
+
+test('a time table compares each library with Vase UI and keeps the reason of a failure', () => {
+  const popup = timed.timeTables.find((table) => table.group === 'popup');
+  const cells = popup?.rows.find((row) => row.metric === 'Dialog.open')?.cells;
+  const vase = cells?.['vase-ui'];
+  assert.ok(typeof vase === 'object' && vase.kind === 'samples' && vase.comparison === undefined);
+  const reka = cells?.['reka-ui'];
+  assert.ok(typeof reka === 'object' && reka.kind === 'samples');
+  assert.equal(reka.comparison?.verdict, 'faster');
+  assert.deepEqual(cells?.['ark-ui'], {
+    kind: 'failed',
+    reason: 'No "open" state 5000 ms after the step.',
+  });
+  assert.equal(cells?.vuetify0, 'not-provided');
+});
+
+test('the heap has a table of its own, in bytes', () => {
+  const memory = timed.timeTables.find((table) => table.group === 'memory');
+  assert.deepEqual(
+    memory?.rows.map((row) => [row.metric, row.unit]),
+    [['Dialog.heap', 'bytes']],
+  );
+  const reka = memory?.rows[0]?.cells['reka-ui'];
+  assert.ok(typeof reka === 'object' && reka.kind === 'samples');
+  assert.equal(reka.comparison?.verdict, 'faster');
+});
+
+test('the list of losses names the measure of each time cell where another library is faster', () => {
+  assert.deepEqual(
+    timed.timeLosses.map((loss) => [loss.label, loss.library]),
+    [
+      ['Dialog: Mount', 'reka-ui'],
+      ['Dialog: Open', 'reka-ui'],
+      ['Dialog: Memory', 'reka-ui'],
+    ],
+  );
+});
+
 test('the list of losses has each library that adds fewer gzip bytes than Vase UI', () => {
   assert.deepEqual(report.sizeLosses, [
     { setup: 'vdom', label: 'Dialog', library: 'reka-ui', libraryBytes: 40, vaseBytes: 50 },

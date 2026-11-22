@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { data } from '../../benchmarks.data.ts';
+import { engineName, setupName } from './benchmarksFormat.ts';
 import { vaseUiCommitUrl } from './links.ts';
 import ScrollBox from './ScrollBox.vue';
 
@@ -33,9 +34,40 @@ const TOOL_NAMES: Record<string, string> = {
             </a>
           </td>
         </tr>
+        <tr v-if="data.run">
+          <th scope="row">Workflow run</th>
+          <td>
+            <a :href="data.run">{{ data.run.split('/').at(-1) }}</a>
+          </td>
+        </tr>
         <tr v-for="(version, tool) in data.tools" :key="tool">
           <th scope="row">{{ TOOL_NAMES[tool] ?? tool }}</th>
           <td>{{ version }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollBox>
+  <ScrollBox v-if="data.timeRuns.length > 0" label="Runs of the render time">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Engine and setup</th>
+          <th scope="col">Browser</th>
+          <th scope="col">CPU slowdown</th>
+          <th scope="col">Rounds</th>
+          <th scope="col">Machine</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="run in data.timeRuns" :key="`${run.engine} ${run.setup}`">
+          <th scope="row">{{ engineName(run.engine) }}, {{ setupName(run.setup) }}</th>
+          <td>{{ run.browserVersion }}</td>
+          <td>{{ run.cpuThrottle === null ? 'None' : `${String(run.cpuThrottle)} times` }}</td>
+          <td>{{ run.rounds }}</td>
+          <td>
+            {{ run.machine.cpu }}, {{ run.machine.cores }} logical CPUs,
+            {{ Math.round(run.machine.memory / 2 ** 30) }} GiB, {{ run.machine.os }}
+          </td>
         </tr>
       </tbody>
     </table>
