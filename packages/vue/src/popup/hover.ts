@@ -77,7 +77,7 @@ export function usePopupHover(
   const openTimer = useTimeout();
   const closeTimer = useTimeout();
   const restTimer = useTimeout();
-  let openedAt = -Infinity;
+  let openedAt = Infinity;
   /** The pointer is on a trigger in this trigger. */
   let onInner = false;
   // The `pointerenter` of the pointer that is on the trigger.
@@ -109,6 +109,16 @@ export function usePopupHover(
     () => openTimer.clear(),
   );
 
+  // The time of a hover open holds until the close. After it, a press keeps a popup open that code
+  // opened.
+  watch(
+    () => !!root()?.open,
+    (open) => {
+      if (!open) openedAt = Infinity;
+    },
+    { flush: 'sync' },
+  );
+
   function openAt(event: PointerEvent) {
     const element = options.trigger.value;
     const current = root();
@@ -131,10 +141,10 @@ export function usePopupHover(
     ) {
       return;
     }
-    current.request(true, 'trigger-hover', event, element);
-    if (current.open && current.reason === 'trigger-hover') {
-      openedAt = ownerWindow(element).performance.now();
-    }
+    // The time starts at the accepted request: a controlled root opens later, when its parent
+    // writes the `open` prop.
+    const details = current.request(true, 'trigger-hover', event, element);
+    if (!details.isCanceled) openedAt = ownerWindow(element).performance.now();
   }
 
   function startOpen(event: PointerEvent, current: PopupRoot) {
@@ -219,6 +229,9 @@ export function usePopupHover(
   let over: 'trigger' | 'popup' | 'outside' = 'trigger';
   let enteredPopup = false;
   let following = false;
+  // The last press in the popup was on an element with `aria-haspopup`, such as a menu trigger. The
+  // popup then stays open as after a press, until it closes.
+  let pressedOpener = false;
   const inTriangle = shallowRef(false);
   watch(
     closedBy,
@@ -230,12 +243,14 @@ export function usePopupHover(
       over = byHover ? 'trigger' : 'outside';
       from = null;
       enteredPopup = false;
+      pressedOpener = false;
       following = true;
       const current = root();
       if (current) approaches.set(current, approach);
       onCleanup(
         mergeCleanups(
           addEventListener(doc, 'pointermove', (event) => follow(event, byHover), true),
+          addEventListener(doc, 'pointerdown', onPress, true),
           byHover &&
             addEventListener(doc.documentElement, 'pointerleave', () => {
               if (!enteredPopup || !options.stayAfterEnter) close();
@@ -326,8 +341,16 @@ export function usePopupHover(
     if (!passesOn()) close();
   }
 
+  function onPress(event: PointerEvent) {
+    const popup = root()?.popup;
+    const target = event.composedPath()[0] as Node;
+    if (!popup || target.nodeType !== Node.ELEMENT_NODE || !popup.contains(target)) return;
+    const opener = (target as Element).closest('[aria-haspopup]:not([aria-haspopup="false"])');
+    pressedOpener = !!opener && popup.contains(opener);
+  }
+
   function close() {
-    if (closeTimer.isStarted() || options.closes?.() === false) return;
+    if (closeTimer.isStarted() || pressedOpener || options.closes?.() === false) return;
     // The timer stops when a press keeps the popup open or the popup moves to another trigger.
     closeTimer.start(options.closeDelay(), () =>
       root()?.request(false, 'trigger-hover', new Event('vase-ui')),
@@ -353,7 +376,7 @@ export function usePopupHover(
     approaches(point: Point) {
       return following && approach(point);
     },
-    /** A press closes the open popup: it came more than 500 ms after the hover open. */
+    /** A press closes the open popup: it came more than 500 ms after the hover open of this open. */
     closesAtPress(event: Event) {
       return !(root()?.reason === 'trigger-hover' && event.timeStamp - openedAt < PATIENT_PRESS);
     },

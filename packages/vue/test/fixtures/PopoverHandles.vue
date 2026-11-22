@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { useTemplateRef, type PropType } from 'vue';
 import { Popover } from '../../src/popover';
+import CallAtMount from './CallAtMount.vue';
 
 // Two triggers outside the root, with a handle, and one trigger in the root. With `noRoot`, no root
-// has the handle.
+// has the handle. A child of the root calls `atMount` in its `onMounted`.
 const props = defineProps({
   handle: { type: Object as PropType<InstanceType<typeof Popover.Handle>>, required: true },
   root: Object as PropType<Record<string, unknown>>,
   noRoot: Boolean,
+  atMount: Function as PropType<() => void>,
 });
 const rootPart = useTemplateRef('rootPart');
 defineExpose({ root: rootPart, handle: props.handle });
@@ -19,6 +21,7 @@ defineExpose({ root: rootPart, handle: props.handle });
   <Popover.Root v-if="!noRoot" ref="rootPart" :handle v-bind="root">
     <template #default="{ payload }">
       <Popover.Trigger id="inside">Inside</Popover.Trigger>
+      <CallAtMount v-if="atMount" :call="atMount" />
       <Popover.Portal>
         <Popover.Positioner>
           <Popover.Popup data-testid="popup">{{ payload }}</Popover.Popup>

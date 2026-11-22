@@ -4,7 +4,7 @@ import { Popover } from '../../src/popover';
 
 // With `inRoot`, the part is in a root with no portal.
 defineProps({
-  part: { type: String as PropType<'Trigger' | 'Popup' | 'Positioner'>, required: true },
+  part: { type: String as PropType<'Trigger' | 'Popup' | 'Positioner' | 'Close'>, required: true },
   inRoot: Boolean,
 });
 </script>

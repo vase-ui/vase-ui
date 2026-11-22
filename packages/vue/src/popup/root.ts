@@ -47,7 +47,7 @@ export interface PopupRoot<Payload = unknown> {
   readonly keepMounted: boolean;
   /** The reason of the last accepted change. */
   readonly reason: string | undefined;
-  /** The input of the last accepted open. */
+  /** The input of the last accepted open. An open by the `open` prop has none. */
   readonly interaction: InteractionType;
   /** The input of the last accepted close. */
   readonly closeInteraction: InteractionType;
@@ -313,6 +313,10 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const instant = shallowRef<string>();
   const closeRequests = shallowRef(0);
 
+  // The input of an accepted open that the state does not show yet: a controlled root shows it
+  // when its parent writes the `open` prop.
+  let requestedInput: InteractionType | undefined;
+
   const givenPayload = shallowRef<{ value: Payload }>();
   const activeTriggerId = computed(() => state.activeTriggerId());
   const activeEntry = computed(() =>
@@ -386,8 +390,11 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     state.emitChange(next, entry, details);
     if (details.isCanceled) return details;
     reason.value = why;
-    if (next) interaction.value = input;
-    else closeInteraction.value = input;
+    if (next) interaction.value = requestedInput = input;
+    else {
+      closeInteraction.value = input;
+      requestedInput = undefined;
+    }
     instant.value = options.instantOf?.(next, why, event);
     if (next && entry !== undefined) {
       givenPayload.value = payload ?? (entry ? undefined : givenPayload.value);
@@ -416,6 +423,8 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   watch(
     open,
     (isOpen) => {
+      if (isOpen) interaction.value = requestedInput ?? '';
+      requestedInput = undefined;
       if (instant.value === 'trigger-change') instant.value = undefined;
       if (isOpen || keepMounted.value) return;
       const elements = leavingElements

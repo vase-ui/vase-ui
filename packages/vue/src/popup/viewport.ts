@@ -117,14 +117,17 @@ export function usePopupViewport(
     if (slot.value === sizes) slot.value = null;
   });
 
-  // The default flush runs before the render of the new content, so the popup has its old size.
+  // The default flush runs before the render of the new content, so the popup has its old size. A
+  // close during the animations of a move ends that move, and the popup gets no instant state.
   watch(
     () => (root.open ? root.activeTrigger : null),
-    async (trigger, previous) => {
+    async (trigger, previous, onCleanup) => {
       if (!trigger || !previous || !root.popup) return;
+      let stopped = false;
+      onCleanup(() => (stopped = true));
       direction.value = directionBetween(previous, trigger);
       const ended = await steps.resize();
-      if (ended && options.triggerChange) root.setInstant('trigger-change');
+      if (ended && !stopped && options.triggerChange) root.setInstant('trigger-change');
     },
   );
 

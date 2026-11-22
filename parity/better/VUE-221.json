@@ -1,0 +1,10 @@
+{
+  "id": "VUE-221",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L426-L500",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/popover/root/PopoverRoot.test.tsx#L1469-L1500"
+  ],
+  "behavior": "A press of the mouse on an element outside a popover that is not modal closes the popover at the release, with the reason `outside-press`, also when the press gives that element the focus. The press and the release decide, so a press that starts outside and ends in the popup closes nothing. In Base UI, a press that moves the focus out of the popup closes the popover at the press, with the reason `focus-out`. A pressed button takes the focus in Chromium, and not in Firefox and WebKit on macOS, so in Base UI the moment and the reason of the close depend on the browser.",
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+  "families": ["popover"]
+}

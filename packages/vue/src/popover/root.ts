@@ -88,7 +88,8 @@ export function usePopoverRoot<Payload>(
     return {
       escape: true,
       outsidePress: true,
-      focusOut: true,
+      // A popover that a hover opened keeps the order of the page for the focus.
+      focusOut: !hoverOpen.value,
       pressStart: props.modal === 'trap-focus' && trap.value,
       block: modal,
       hide: trap.value ? (props.modal === true ? 'inert' : 'aria-hidden') : false,
