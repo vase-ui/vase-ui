@@ -32,9 +32,9 @@ const { element, setElement } = useElement<HTMLElement>();
 const isOpen = () => provider.toasts.some((toast) => toast.id === props.toast.id);
 const place = computed(() => provider.place(props.toast.id));
 /**
- * The focus is in the root, from the keyboard or from a press. Firefox moves the focus at Tab
- * before Vue renders a change of its `keydown` listener (test/measurements/toast.test.ts), so a
- * press ends the hidden state of the parts before the Tab.
+ * The focus is in the root, from the keyboard or from a press. At Tab, Firefox moves the focus
+ * before Vue renders a change that a `keydown` listener makes (test/measurements/toast.test.ts).
+ * So the press ends the hidden state of the parts, before the Tab.
  */
 const focusWithin = shallowRef(false);
 // An alert in the parent of the viewport announces a toast of high priority, so the polite viewport

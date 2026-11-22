@@ -88,7 +88,7 @@
       "upstream": "packages/react/src/toast/close/ToastClose.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the close button: its `<button type=\"button\">`, the close at a press, and `aria-hidden` and no tab stop while the stack is collapsed (VUE-232)."
+      "reason": "`Toast.test.ts` tests the close button: its `<button type=\"button\">`, the close at a press, and `aria-hidden` and no tab stop while the stack is collapsed and the focus is not in its toast (VUE-232)."
     },
     {
       "upstream": "packages/react/src/toast/content/ToastContent.test.tsx",
