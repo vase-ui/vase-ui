@@ -88,6 +88,22 @@ describe('the renders', () => {
     }
   });
 
+  test('a mount with no text makes no collator, and the first typed text makes one', async () => {
+    const collator = vi.spyOn(Intl, 'Collator');
+    try {
+      // The filter of a locale stays for the page, so the case takes a locale of its own.
+      mount(ComboboxRenders, { count: () => '', root: { locale: 'de-CH' } });
+      await nextTick();
+      expect(collator).not.toHaveBeenCalled();
+      await userEvent.click(document.querySelector<HTMLInputElement>('[data-testid="input"]')!);
+      await userEvent.keyboard('9');
+      await waitFor(() => expect(document.querySelectorAll('[role="option"]')).toHaveLength(57));
+      expect(collator).toHaveBeenCalled();
+    } finally {
+      collator.mockRestore();
+    }
+  });
+
   test('an open by ArrowDown over 300 items checks the visibility of the first item and its list only', async () => {
     mount(ComboboxRenders, { count: () => '' });
     await nextTick();
