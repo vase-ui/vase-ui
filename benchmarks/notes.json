@@ -1,0 +1,256 @@
+{
+  "notes": [
+    {
+      "id": "note-dialog-size",
+      "title": "Dialog: size",
+      "measures": ["Dialog.size"],
+      "reason": "The bytes give the stacking layer of a modal dialog: Escape, a press outside, and an inert page. They also give the focus trap and the scroll lock that keeps each element in place.",
+      "sources": [
+        {
+          "name": "#799",
+          "url": "https://github.com/vase-ui/vase-ui/pull/799"
+        },
+        {
+          "name": "#811",
+          "url": "https://github.com/vase-ui/vase-ui/pull/811"
+        },
+        {
+          "name": "#817",
+          "url": "https://github.com/vase-ui/vase-ui/pull/817"
+        }
+      ]
+    },
+    {
+      "id": "note-popover-size",
+      "title": "Popover: size",
+      "measures": ["Popover.size"],
+      "reason": "Floating UI places the popup before its first frame, and that is the largest part of the bytes. The rest give the stacking layer, the focus rules, the hover rules, the scroll lock and the `aria-owns` element of the portal.",
+      "sources": [
+        {
+          "name": "#799",
+          "url": "https://github.com/vase-ui/vase-ui/pull/799"
+        },
+        {
+          "name": "#800",
+          "url": "https://github.com/vase-ui/vase-ui/pull/800"
+        },
+        {
+          "name": "#805",
+          "url": "https://github.com/vase-ui/vase-ui/pull/805"
+        },
+        {
+          "name": "#813",
+          "url": "https://github.com/vase-ui/vase-ui/pull/813"
+        },
+        {
+          "name": "#817",
+          "url": "https://github.com/vase-ui/vase-ui/pull/817"
+        }
+      ]
+    },
+    {
+      "id": "note-tooltip-size",
+      "title": "Tooltip: size",
+      "measures": ["Tooltip.size"],
+      "reason": "Floating UI places the popup before its first frame, and that is the largest part of the bytes. The rest give the hover rules, the delay group and the stacking layer for Escape.",
+      "sources": [
+        {
+          "name": "#800",
+          "url": "https://github.com/vase-ui/vase-ui/pull/800"
+        },
+        {
+          "name": "#805",
+          "url": "https://github.com/vase-ui/vase-ui/pull/805"
+        }
+      ]
+    },
+    {
+      "id": "note-menu-size",
+      "title": "Menu: size",
+      "measures": ["Menu.size"],
+      "reason": "Floating UI and the placement before the first frame are the largest part of the bytes. The rest give the keyboard list and its typeahead, the submenus and their safe triangle, the filter input, the press rules and the stacking layer.",
+      "sources": [
+        {
+          "name": "#795",
+          "url": "https://github.com/vase-ui/vase-ui/pull/795"
+        },
+        {
+          "name": "#804",
+          "url": "https://github.com/vase-ui/vase-ui/pull/804"
+        },
+        {
+          "name": "#806",
+          "url": "https://github.com/vase-ui/vase-ui/pull/806"
+        },
+        {
+          "name": "#810",
+          "url": "https://github.com/vase-ui/vase-ui/pull/810"
+        }
+      ]
+    },
+    {
+      "id": "note-select-size",
+      "title": "Select: size",
+      "measures": ["Select.size"],
+      "reason": "Floating UI and the placement before the first frame are the largest part of the bytes. The rest give the alignment of the selected item over the trigger, the keyboard list, the typeahead, the press rules, the Field and the form.",
+      "sources": [
+        {
+          "name": "#798",
+          "url": "https://github.com/vase-ui/vase-ui/pull/798"
+        },
+        {
+          "name": "#806",
+          "url": "https://github.com/vase-ui/vase-ui/pull/806"
+        },
+        {
+          "name": "#809",
+          "url": "https://github.com/vase-ui/vase-ui/pull/809"
+        }
+      ]
+    },
+    {
+      "id": "note-combobox-size",
+      "title": "Combobox: size",
+      "measures": ["Combobox.size"],
+      "reason": "The root is the largest part of the bytes: the filter, the inline completion, the chips of many values, virtualized lists and the form value. Floating UI and the placement before the first frame are the next part.",
+      "sources": [
+        {
+          "name": "#798",
+          "url": "https://github.com/vase-ui/vase-ui/pull/798"
+        },
+        {
+          "name": "#803",
+          "url": "https://github.com/vase-ui/vase-ui/pull/803"
+        },
+        {
+          "name": "#806",
+          "url": "https://github.com/vase-ui/vase-ui/pull/806"
+        }
+      ]
+    },
+    {
+      "id": "note-slider-size",
+      "title": "Slider: size",
+      "measures": ["Slider.size"],
+      "reason": "The bytes give the behaviors of the Base UI slider: `thumbCollisionBehavior`, `thumbAlignment`, `minStepsBetweenValues`, `largeStep` and the `valueCommitted` event. Each thumb also has a form input and joins the Field.",
+      "sources": [
+        {
+          "name": "Slider",
+          "url": "/components/slider#api-reference"
+        }
+      ]
+    },
+    {
+      "id": "note-tabs-size",
+      "title": "Tabs: size",
+      "measures": ["Tabs.size"],
+      "reason": "The bytes give `Tabs.Indicator`, which follows the size and the place of the active tab, and its script that places the indicator before the hydration.",
+      "sources": [
+        {
+          "name": "Tabs",
+          "url": "/components/tabs#api-reference"
+        }
+      ]
+    },
+    {
+      "id": "note-all-components-size",
+      "title": "All ten components: size",
+      "measures": ["AllComponents.size"],
+      "reason": "The app holds the bytes of each note above one time. Popover, Tooltip, Menu, Select and Combobox share Floating UI, the placement and the stacking layer.",
+      "sources": []
+    },
+    {
+      "id": "note-closed-popup",
+      "title": "Mount a closed popup",
+      "measures": [
+        "Combobox.mount",
+        "Dialog.mount",
+        "Menu.mount",
+        "Popover.mount",
+        "Select.mount",
+        "Tooltip.mount",
+        "Combobox.heap",
+        "Dialog.heap",
+        "Menu.heap",
+        "Popover.heap",
+        "Select.heap",
+        "Tooltip.heap"
+      ],
+      "reason": "Each popup makes the state of its first open at its mount, and each instance keeps that state in memory. That state holds the open model, the triggers, the portal, the stacking layer, the form state and the rules of the press, focus and hover.",
+      "sources": [
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    },
+    {
+      "id": "note-tabs-indicator",
+      "title": "Tabs: the indicator",
+      "measures": ["Tabs.mount", "Tabs.heap"],
+      "reason": "The Vase UI app mounts `Tabs.Indicator`, the Base UI part that follows the active tab, and the other apps have no indicator. At its mount, the indicator reads the size and the place of the active tab, which costs one more layout of the page.",
+      "sources": [
+        {
+          "name": "Tabs",
+          "url": "/components/tabs#api-reference"
+        },
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    },
+    {
+      "id": "note-checkbox-memory",
+      "title": "Checkbox: memory",
+      "measures": ["Checkbox.heap"],
+      "reason": "Each Checkbox joins its Field, its Fieldset and its form, and keeps the states that its data attributes show, such as checked and indeterminate.",
+      "sources": [
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    },
+    {
+      "id": "note-popup-open",
+      "title": "Open a popup",
+      "measures": ["Dialog.open", "Popover.open", "Menu.open", "Select.open", "Combobox.open"],
+      "reason": "An open mounts the content of the popup, moves the focus into it and adds it to the stacking layer. A closed popup has no content in the DOM, and a positioned popup gets its place before its first frame.",
+      "sources": [
+        {
+          "name": "#805",
+          "url": "https://github.com/vase-ui/vase-ui/pull/805"
+        }
+      ]
+    },
+    {
+      "id": "note-popup-close",
+      "title": "Close a popup",
+      "measures": ["Dialog.close", "Popover.close", "Menu.close", "Select.close", "Combobox.close"],
+      "reason": "A close returns the focus to the trigger, removes the popup from the stacking layer and stops the updates of its place. Then the content of the closed popup leaves the DOM.",
+      "sources": [
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    },
+    {
+      "id": "note-long-list-open",
+      "title": "Open a list of 1,000 options",
+      "measures": ["Select.openLong", "Combobox.openLong"],
+      "reason": "A closed popup has no options in the DOM, so each open mounts the 1,000 options and adds each one to the keyboard list. Vuetify0 keeps its options in the DOM after its first open, as `keepMounted` does in Vase UI.",
+      "sources": [
+        {
+          "name": "#806",
+          "url": "https://github.com/vase-ui/vase-ui/pull/806"
+        },
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    }
+  ]
+}

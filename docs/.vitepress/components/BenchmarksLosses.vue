@@ -10,28 +10,50 @@ import {
   setupName,
 } from './benchmarksFormat.ts';
 import ScrollBox from './ScrollBox.vue';
+import TextWithCode from './TextWithCode.vue';
 
 const PERCENT = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 
-const parts = data.sizeTables.map((table) => ({
-  setup: table.setup,
-  sizeLosses: data.sizeLosses.filter((loss) => loss.setup === table.setup),
-  timeLosses: data.timeLosses.filter((loss) => loss.setup === table.setup),
-  timed: data.timeRuns.some((run) => run.setup === table.setup),
-}));
+// The `*` of a size cell links to its note also when the row loses only in raw or Brotli bytes, so
+// the note shows with no row below it.
+const sizeNotes = new Set(
+  data.sizeTables.flatMap((table) => table.rows.flatMap((row) => Object.values(row.notes))),
+);
+
+/** The losses of each note, in the sequence of `notes.json`. */
+const groups = data.notes
+  .map((note) => ({
+    ...note,
+    sizeLosses: data.sizeLosses.filter((loss) => loss.note === note.id),
+    timeLosses: data.timeLosses.filter((loss) => loss.note === note.id),
+  }))
+  .filter((group) => sizeNotes.has(group.id) || group.timeLosses.length > 0);
 </script>
 
 <template>
-  <template v-for="part in parts" :key="part.setup">
-    <h3>{{ setupName(part.setup) }}</h3>
-    <p v-if="part.sizeLosses.length === 0">
-      In each measured row, each other library adds as many gzip bytes as Vase UI, or more.
+  <p v-if="groups.length === 0">
+    In each measured row, each other Vue library is as large as Vase UI or larger, and no other Vue
+    library is faster or uses less memory.
+  </p>
+  <template v-for="group in groups" :key="group.id">
+    <h3 :id="group.id" tabindex="-1">
+      {{ group.title }}
+      <a class="header-anchor" :href="`#${group.id}`" :aria-label="`Permalink to “${group.title}”`"
+        >&#8203;</a
+      >
+    </h3>
+    <p><TextWithCode :text="group.reason" /></p>
+    <p v-if="group.sources.length > 0">
+      Sources:
+      <template v-for="(source, index) in group.sources" :key="source.url"
+        >{{ index === 0 ? '' : ', ' }}<a :href="source.url">{{ source.name }}</a></template
+      >.
     </p>
-    <ScrollBox v-else :label="`Where Vase UI is larger: ${setupName(part.setup)}`">
+    <ScrollBox v-if="group.sizeLosses.length > 0" :label="`${group.title}: size`">
       <table>
         <thead>
           <tr>
-            <th scope="col">App</th>
+            <th scope="col">Setup and app</th>
             <th scope="col">Library</th>
             <th scope="col">Library adds (gzip bytes)</th>
             <th scope="col">Vase UI adds (gzip bytes)</th>
@@ -39,8 +61,8 @@ const parts = data.sizeTables.map((table) => ({
           </tr>
         </thead>
         <tbody>
-          <tr v-for="loss in part.sizeLosses" :key="`${loss.label} ${loss.library}`">
-            <th scope="row">{{ loss.label }}</th>
+          <tr v-for="loss in group.sizeLosses" :key="`${loss.setup} ${loss.label} ${loss.library}`">
+            <th scope="row">{{ setupName(loss.setup) }}, {{ loss.label }}</th>
             <td>{{ libraryName(loss.library) }}</td>
             <td>{{ formatBytes(loss.libraryBytes) }}</td>
             <td>{{ formatBytes(loss.vaseBytes) }}</td>
@@ -53,19 +75,11 @@ const parts = data.sizeTables.map((table) => ({
         </tbody>
       </table>
     </ScrollBox>
-    <p v-if="!part.timed">The render times of this setup are not measured yet.</p>
-    <p v-else-if="part.timeLosses.length === 0">
-      In each measured row, no other library is faster than Vase UI or uses less memory, by the rule
-      of <a href="#how-to-read-the-numbers">How to read the numbers</a>.
-    </p>
-    <ScrollBox
-      v-else
-      :label="`Where Vase UI is slower or uses more memory: ${setupName(part.setup)}`"
-    >
+    <ScrollBox v-if="group.timeLosses.length > 0" :label="`${group.title}: time and memory`">
       <table>
         <thead>
           <tr>
-            <th scope="col">Measure</th>
+            <th scope="col">Engine, setup and measure</th>
             <th scope="col">Library</th>
             <th scope="col">Library median</th>
             <th scope="col">Vase UI median</th>
@@ -73,8 +87,13 @@ const parts = data.sizeTables.map((table) => ({
           </tr>
         </thead>
         <tbody>
-          <tr v-for="loss in part.timeLosses" :key="`${loss.engine} ${loss.label} ${loss.library}`">
-            <th scope="row">{{ engineName(loss.engine) }}, {{ loss.label }}</th>
+          <tr
+            v-for="loss in group.timeLosses"
+            :key="`${loss.engine} ${loss.setup} ${loss.label} ${loss.library}`"
+          >
+            <th scope="row">
+              {{ engineName(loss.engine) }}, {{ setupName(loss.setup) }}, {{ loss.label }}
+            </th>
             <td>{{ libraryName(loss.library) }}</td>
             <td>{{ formatMeasure(loss.libraryMedian, loss.unit) }}</td>
             <td>{{ formatMeasure(loss.vaseMedian, loss.unit) }}</td>

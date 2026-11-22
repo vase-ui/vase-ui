@@ -8,6 +8,7 @@ import BenchmarksFeatures from './.vitepress/components/BenchmarksFeatures.vue';
 import BenchmarksLosses from './.vitepress/components/BenchmarksLosses.vue';
 import BenchmarksRun from './.vitepress/components/BenchmarksRun.vue';
 import BenchmarksSize from './.vitepress/components/BenchmarksSize.vue';
+import BenchmarksSpeed from './.vitepress/components/BenchmarksSpeed.vue';
 import BenchmarksTime from './.vitepress/components/BenchmarksTime.vue';
 </script>
 
@@ -17,16 +18,33 @@ This page compares Vase UI with other unstyled component libraries: the features
 
 <BenchmarksRun />
 
+## Summary
+
+Vase UI is a port of Base UI to Vue. It gives the users and the developers of an app these behaviors:
+
+- Vase UI has each component of Base UI, and a Vase UI test runs each Base UI test case that applies to Vue ([Components of Base UI](#feature-components-of-base-ui), [Parity](/parity)).
+- A dialog or a drawer can open from another one, and the one below gets a style hook while the one on top is open ([dialogs](#feature-a-style-hook-on-a-dialog-while-a-dialog-on-top-of-it-is-open), [drawers](#feature-a-drawer-that-opens-from-a-drawer)).
+- A touch outside an open popup closes it only at a tap, so a touch that scrolls the page closes no popup ([Popover](/components/popover#differences-behavior)).
+- Toasts have a manager that a script calls, a stack, a limit, a swipe to close, and an announcement at once of an important toast ([Toast](#feature-a-toast-manager-that-a-script-calls)).
+- The values of the date and time components are `Temporal` values ([Dates and times](#feature-the-type-of-a-date-or-time-value)).
+- In a virtual DOM app, the server HTML of each app hydrates with no message, and the docs show Vapor mode and a Nuxt module ([hydration](#feature-hydration-of-the-server-html-of-each-app-in-a-virtual-dom-app), [Vapor mode](#feature-vapor-mode-in-the-docs), [Nuxt](#feature-nuxt-module)).
+- In each engine, the table below gives the time of each other Vue library over the time of Vase UI ([Render time](#render-time)).
+
+<BenchmarksSpeed />
+
+A cell is the geometric mean of the ratios of all time measures of the two setups. It also gives the count of measures where Vase UI is faster.
+
 ## How to read the numbers
 
 - We measure each Vue library in two setups. A virtual DOM app is a Vue 3.5 app of `createApp`. A Vapor app is a Vue 3.6 app of `createVaporApp`.
 - Each library on this page is made of virtual DOM components. A Vapor app renders them through `vaporInteropPlugin`, so each app of a library in that setup also holds the runtime of the plugin.
 - Vue 3.6 is a prerelease. A failure in a Vapor app can be a fault of the prerelease.
 - Each comparison is between libraries in one setup. The page does not compare the two setups.
-- A time or memory cell gives the median and the 90th percentile (p90) of the samples. In each column except Vase UI, it also gives the ratio to Vase UI, with its 99% interval.
+- A time or memory cell gives the median and the 90th percentile (p90) of the samples. In each column of a Vue library except Vase UI, it also gives the ratio to Vase UI, with its 99% interval.
 - A time cell reads "Slower" or "Faster" only when the whole interval is above 1.05 or below 0.95. A memory cell reads "More" or "Less" by the same rule. Each other cell reads "No difference above 5% detected". A wide interval does not show that two libraries take the same time.
+- A `*` marks each cell where another Vue library adds fewer bytes, is faster or uses less memory than Vase UI. It links to the behavior that costs the bytes, the time or the memory.
 - The numbers of two engines do not compare.
-- Base UI is a React library, and Vase UI is its port to Vue. Its column is a reference from another framework, in the tables of the virtual DOM app.
+- Base UI is a React library, and Vase UI is its port to Vue. Its column is a reference from another framework, in the tables of the virtual DOM app. The page gives no ratio and no verdict for it.
 - shadcn-vue and Nuxt UI use Reka UI for their behavior, so the Reka UI column applies to them.
 - PrimeVue 5 needs a license key, so this page does not measure it.
 - Vase UI is not affiliated with the other projects.
@@ -89,7 +107,7 @@ The heap that the mount of 100 instances adds in Chromium, after a garbage colle
 
 ## Where Vase UI is larger or slower
 
-The site build makes this list from the tables above. It has each row where another library adds fewer gzip bytes than Vase UI. The percent is the difference divided by the bytes of the other library. It also has each time or memory cell that reads "Faster" or "Less".
+The site build makes this list from the tables above. It has each row where another Vue library adds fewer gzip bytes than Vase UI. The percent is the difference divided by the bytes of the other library. It also has each time or memory cell that reads "Faster" or "Less". Each group starts with the behavior that costs the bytes, the time or the memory.
 
 <BenchmarksLosses />
 

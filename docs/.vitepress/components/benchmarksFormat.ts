@@ -55,9 +55,9 @@ export function libraryName(id: string): string {
   return data.libraries.find((library) => library.id === id)?.name ?? id;
 }
 
-/** The head of the column of a library in a table: Base UI is the one library for React. */
+/** The head of the column of a library in a table: Base UI is the reference from React. */
 export function columnName(id: string): string {
-  return id === 'base-ui' ? `${libraryName(id)} (React)` : libraryName(id);
+  return id === 'base-ui' ? `${libraryName(id)} (React reference)` : libraryName(id);
 }
 
 export function setupName(setup: string): string {

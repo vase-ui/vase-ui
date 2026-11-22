@@ -33,7 +33,7 @@ function valueText(row: FeatureRow, value: string): string {
             <span class="group-name">{{ group.name }}</span>
           </th>
         </tr>
-        <tr v-for="row in group.rows" :key="row.feature">
+        <tr v-for="row in group.rows" :id="row.id" :key="row.feature">
           <th scope="row">{{ row.feature }}</th>
           <td v-for="library in data.libraries" :key="library.id">
             <strong>{{ valueText(row, row.cells[library.id].value) }}</strong

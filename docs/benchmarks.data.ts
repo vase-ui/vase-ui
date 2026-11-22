@@ -6,6 +6,6 @@ declare const data: BenchmarksReport;
 export { data };
 
 export default defineLoader({
-  watch: ['../benchmarks/results.json', '../benchmarks/features.json'],
+  watch: ['../benchmarks/results.json', '../benchmarks/features.json', '../benchmarks/notes.json'],
   load: () => loadBenchmarksReport(),
 });

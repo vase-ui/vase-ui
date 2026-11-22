@@ -631,13 +631,21 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 5. Put `data-bench="trigger"` on the trigger button, `data-bench="input"` on the input of a Combobox, and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
 6. Read the documentation of a library and install its npm package. Do not copy its source.
 
-The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json` and `benchmarks/features.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
+The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
 
 - `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
 - The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
 - In a row of the kind `support`, the value is `yes`, `no`, `partial` or `not-applicable`. Use `not-applicable` for a feature that the framework of the library does not have, such as a Nuxt module for a React library. In a row of the kind `fact`, the value is a text, such as a count or a date.
 - A note that starts with "Our check" gives the result of our own check: of the example in the docs in Chromium, or of the apps of `benchmarks` in Chromium, Firefox and WebKit. Use such a check only where the docs do not give the fact, or for the result of a hydration or of an app.
 - `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Record a run in the pull request that moves a pin.
+
+The page compares Vase UI with each other Vue library. Base UI is a reference from React, with no ratio and no verdict. Where another Vue library adds fewer bytes, is faster or uses less memory, the cell gets a `*` that links to a note of `benchmarks/notes.json`:
+
+- A note has an `id`, which is its anchor on the page, a `title`, its `measures`, a `reason` and its `sources`.
+- A measure is a metric of `results.json`, such as `Dialog.open`, or the size of a scenario, such as `Dialog.size`. Each measure is in one note only.
+- The `reason` gives, in one or two sentences, the behavior that costs the bytes, the time or the memory. A source is the pull request or the measurement that shows it.
+- Before you write a note for a new loss, profile it. When the work pays for no behavior, fix the code. Do not write a note for it.
+- `pnpm test:docs` fails when a cell where Vase UI loses has no note, and when a note names a metric that no table has or that another note names.
 
 `benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
 

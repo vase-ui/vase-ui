@@ -55,6 +55,26 @@ export interface Features {
   groups: { name: string; rows: FeatureRow[] }[];
 }
 
+/** A note of `benchmarks/notes.json`: the behavior that costs the bytes, the time or the memory. */
+export interface Note {
+  /** The anchor of the note on the page. */
+  id: string;
+  title: string;
+  /**
+   * The metrics of the note: a metric of a time table, such as `Dialog.open`, or the size of a
+   * scenario, such as `Dialog.size`.
+   */
+  measures: string[];
+  /** One or two sentences. */
+  reason: string;
+  /** The pull requests and the measurements that show the reason. */
+  sources: { name: string; url: string }[];
+}
+
+export interface Notes {
+  notes: Note[];
+}
+
 /** A cell of a size table: the bytes, or the reason that there are none. */
 export type SizeCell = Size | 'not-provided' | 'not-measured';
 
@@ -66,7 +86,14 @@ export interface SizeRow {
   app: Record<string, SizeCell>;
   /** The bytes of the app minus the bytes of the empty app of its setup. Not in the row `EmptyApp`. */
   added: Record<string, SizeCell>;
+  /**
+   * The note of each unit in which another Vue library adds fewer bytes than Vase UI. Such a unit
+   * with no note in `notes.json` is in `BenchmarksReport.missingNotes`.
+   */
+  notes: Partial<Record<SizeUnit, string>>;
 }
+
+export type SizeUnit = keyof Size;
 
 export interface SizeTable {
   setup: TableSetup;
@@ -75,21 +102,26 @@ export interface SizeTable {
   rows: SizeRow[];
 }
 
-/** One row where another library adds fewer gzip bytes than Vase UI in the same table. */
+/** One row where another Vue library adds fewer gzip bytes than Vase UI in the same table. */
 export interface SizeLoss {
   setup: TableSetup;
   label: string;
   library: LibraryId;
   libraryBytes: number;
   vaseBytes: number;
+  /** The id of the note of the row, or `undefined` when `notes.json` has none. */
+  note: string | undefined;
 }
 
 /** A group of time metrics with a heading of its own on the page. */
 export type TimeGroup = 'mount' | 'popup' | 'list' | 'hydration' | 'memory';
 
-/** A cell of a time table. Each comparison is with Vase UI in the same table. */
+/**
+ * A cell of a time table. Each comparison is with Vase UI in the same table, and only a Vue library
+ * has one. `note` is the id of the note of a cell where the library is faster or uses less memory.
+ */
 export type TimeTableCell =
-  | { kind: 'samples'; median: number; p90: number; comparison?: Comparison }
+  | { kind: 'samples'; median: number; p90: number; comparison?: Comparison; note?: string }
   | { kind: 'failed'; reason: string }
   | 'not-provided'
   | 'not-measured';
@@ -123,16 +155,31 @@ export interface TimeTable {
   rows: TimeRow[];
 }
 
-/** One metric where the whole interval of the ratio of another library is below the band. */
+/** One metric where the whole interval of the ratio of another Vue library is below the band. */
 export interface TimeLoss {
   engine: string;
   setup: TableSetup;
+  /** The key of the metric, such as `Dialog.open`. */
+  metric: string;
   label: string;
   unit: 'ms' | 'bytes';
   library: LibraryId;
   libraryMedian: number;
   vaseMedian: number;
   comparison: Comparison;
+  /** The id of the note of the metric, or `undefined` when `notes.json` has none. */
+  note: string | undefined;
+}
+
+/** The time of a Vue library over the time of Vase UI, across the time metrics of one engine. */
+export interface Speed {
+  library: LibraryId;
+  /** The geometric mean of the ratios to Vase UI. */
+  ratio: number;
+  /** The metrics where Vase UI is faster, by the rule of the tables. */
+  faster: number;
+  /** The metrics where the two libraries have samples. */
+  metrics: number;
 }
 
 export interface BenchmarksReport {
@@ -147,7 +194,15 @@ export interface BenchmarksReport {
   timeRuns: TimeRun[];
   timeTables: TimeTable[];
   timeLosses: TimeLoss[];
-  features: Features;
+  /** The time of each other Vue library against Vase UI, for each engine. */
+  speed: { engine: string; libraries: Speed[] }[];
+  /** The features, with the anchor of each row, such as `feature-nuxt-module`. */
+  features: { groups: { name: string; rows: (FeatureRow & { id: string })[] }[] };
+  notes: Note[];
+  /** Each cell where Vase UI loses and `notes.json` has no note for its metric. */
+  missingNotes: string[];
+  /** Each metric of `notes.json` that no table has, or that more than one note names. */
+  unknownMeasures: string[];
 }
 
 const LIBRARY_NAMES: Record<LibraryId, string> = {
@@ -203,42 +258,78 @@ function minus(app: SizeCell, empty: SizeCell): SizeCell {
   };
 }
 
-function sizeTable(results: Results, setup: TableSetup): SizeTable {
+/** A Vue library that the page compares with Vase UI. Base UI is a reference from React. */
+function isCompared(id: LibraryId): boolean {
+  return (
+    id !== 'vase-ui' &&
+    LIBRARIES.some((library) => library.id === id && library.framework === 'vue')
+  );
+}
+
+const SIZE_UNITS: readonly SizeUnit[] = ['raw', 'gzip', 'brotli'];
+
+/** The metric of the size of a scenario in `notes.json`, such as `Dialog.size`. */
+function sizeMetricOf(scenario: string): string {
+  return `${scenario}.size`;
+}
+
+/** The units in which another Vue library adds fewer bytes than Vase UI in the row. */
+function losingUnits(row: SizeRow, columns: readonly LibraryId[]): SizeUnit[] {
+  const vase = row.added['vase-ui'];
+  if (vase === undefined || typeof vase === 'string') {
+    return [];
+  }
+  return SIZE_UNITS.filter((unit) =>
+    columns.some((library) => {
+      const other = row.added[library];
+      return isCompared(library) && typeof other === 'object' && other[unit] < vase[unit];
+    }),
+  );
+}
+
+type NoteOf = (metric: string) => string | undefined;
+
+function sizeTable(results: Results, setup: TableSetup, noteOf: NoteOf): SizeTable {
   const libraries = columnsOf(setup);
-  const emptyRow: SizeRow = { scenario: 'EmptyApp', label: 'Empty app', app: {}, added: {} };
+  const columns = libraries.map((library) => library.id);
+  const emptyRow: SizeRow = {
+    scenario: 'EmptyApp',
+    label: 'Empty app',
+    app: {},
+    added: {},
+    notes: {},
+  };
   for (const library of libraries) {
     emptyRow.app[library.id] = cellOf(results.size.emptyApp[resultSetupOf(setup, library)]);
   }
   const rows = SCENARIOS.map((scenario): SizeRow => {
-    const row: SizeRow = { scenario, label: labelOf(scenario), app: {}, added: {} };
+    const row: SizeRow = { scenario, label: labelOf(scenario), app: {}, added: {}, notes: {} };
     for (const library of libraries) {
       const resultSetup = resultSetupOf(setup, library);
       const app = cellOf(results.size.apps[scenario]?.[resultSetup]?.[library.id]);
       row.app[library.id] = app;
       row.added[library.id] = minus(app, emptyRow.app[library.id]);
     }
+    const note = noteOf(sizeMetricOf(scenario));
+    for (const unit of losingUnits(row, columns)) {
+      row.notes[unit] = note;
+    }
     return row;
   });
-  return { setup, columns: libraries.map((library) => library.id), rows: [emptyRow, ...rows] };
+  return { setup, columns, rows: [emptyRow, ...rows] };
 }
 
-/**
- * Each cell where another library adds fewer gzip bytes than Vase UI in the same row. The added
- * bytes leave out the framework, so a Base UI cell compares with Vase UI in the same way.
- */
+/** Each cell where another Vue library adds fewer gzip bytes than Vase UI in the same row. */
 function sizeLossesOf(tables: readonly SizeTable[]): SizeLoss[] {
   return tables.flatMap((table) =>
     table.rows.flatMap((row) => {
       const vase = row.added['vase-ui'];
-      if (row.scenario === 'EmptyApp' || vase === undefined || typeof vase === 'string') {
+      if (vase === undefined || typeof vase === 'string') {
         return [];
       }
       return table.columns.flatMap((library) => {
         const other = row.added[library];
-        if (library === 'vase-ui' || other === undefined || typeof other === 'string') {
-          return [];
-        }
-        return other.gzip < vase.gzip
+        return isCompared(library) && typeof other === 'object' && other.gzip < vase.gzip
           ? [
               {
                 setup: table.setup,
@@ -246,6 +337,7 @@ function sizeLossesOf(tables: readonly SizeTable[]): SizeLoss[] {
                 library,
                 libraryBytes: other.gzip,
                 vaseBytes: vase.gzip,
+                note: row.notes.gzip,
               },
             ]
           : [];
@@ -275,8 +367,15 @@ const TIME_GROUPS: TimeGroup[] = ['mount', 'popup', 'list', 'hydration', 'memory
 /** The engines of the time tables, in the sequence of the page. */
 const ENGINES = ['chromium', 'firefox', 'webkit'];
 
-/** A cell of a time table. `reference` is the cell of Vase UI, or `undefined` in its own column. */
-function timeCell(cell: TimeCell | undefined, reference: TimeCell | undefined): TimeTableCell {
+/**
+ * A cell of a time table. `reference` is the cell of Vase UI, or `undefined` in a column with no
+ * comparison. `note` is the note of the metric.
+ */
+function timeCell(
+  cell: TimeCell | undefined,
+  reference: TimeCell | undefined,
+  note: string | undefined,
+): TimeTableCell {
   if (cell === undefined || (Array.isArray(cell) && cell.length === 0)) {
     return 'not-measured';
   }
@@ -286,13 +385,14 @@ function timeCell(cell: TimeCell | undefined, reference: TimeCell | undefined): 
   if (!Array.isArray(cell)) {
     return { kind: 'failed', reason: cell.failed };
   }
+  const comparison =
+    Array.isArray(reference) && reference.length > 0 ? compare(cell, reference) : undefined;
   return {
     kind: 'samples',
     median: median(cell),
     p90: quantile(cell, 0.9),
-    ...(Array.isArray(reference) && reference.length > 0
-      ? { comparison: compare(cell, reference) }
-      : {}),
+    ...(comparison ? { comparison } : {}),
+    ...(comparison?.verdict === 'faster' && note !== undefined ? { note } : {}),
   };
 }
 
@@ -302,6 +402,7 @@ function timeRow(
   columns: readonly LibraryId[],
   visit: Visit,
   measure: Measure,
+  noteOf: NoteOf,
 ): TimeRow | undefined {
   const metric = metricOf(visit.scenario, measure);
   const cells = part.metrics[metric];
@@ -309,6 +410,7 @@ function timeRow(
     return undefined;
   }
   const title = `${labelOf(visit.scenario)}: ${MEASURE_NAMES[measure]}`;
+  const note = noteOf(metric);
   return {
     metric,
     label: visit.kind === 'popup' || visit.kind === 'list' ? title : labelOf(visit.scenario),
@@ -317,7 +419,7 @@ function timeRow(
     cells: Object.fromEntries(
       columns.map((library) => [
         library,
-        timeCell(cells[library], library === 'vase-ui' ? undefined : cells['vase-ui']),
+        timeCell(cells[library], isCompared(library) ? cells['vase-ui'] : undefined, note),
       ]),
     ),
   };
@@ -343,14 +445,14 @@ function timeParts(results: Results): TimePart[] {
 }
 
 /** The tables of each job. A job with no metric of a group, such as the heap in Firefox, has no table of it. */
-function timeTables(parts: readonly TimePart[]): TimeTable[] {
+function timeTables(parts: readonly TimePart[], noteOf: NoteOf): TimeTable[] {
   return parts.flatMap(({ run, part }) => {
     const columns = columnsOf(run.setup).map((library) => library.id);
     return TIME_GROUPS.flatMap((group) => {
       const rows = VISITS.flatMap((visit) =>
         visit.measures
           .filter((measure) => groupOf(visit, measure) === group)
-          .flatMap((measure) => timeRow(part, columns, visit, measure) ?? []),
+          .flatMap((measure) => timeRow(part, columns, visit, measure, noteOf) ?? []),
       );
       return rows.length === 0 ? [] : [{ run, group, columns, rows }];
     });
@@ -378,12 +480,14 @@ function timeLossesOf(tables: readonly TimeTable[]): TimeLoss[] {
           {
             engine: table.run.engine,
             setup: table.run.setup,
+            metric: row.metric,
             label: row.title,
             unit: row.unit,
             library,
             libraryMedian: cell.median,
             vaseMedian: vase.median,
             comparison: cell.comparison,
+            note: cell.note,
           },
         ];
       });
@@ -391,10 +495,90 @@ function timeLossesOf(tables: readonly TimeTable[]): TimeLoss[] {
   );
 }
 
-export function benchmarksReportOf(results: Results, features: Features): BenchmarksReport {
-  const sizeTables = TABLE_SETUPS.map((setup) => sizeTable(results, setup));
+/** The time metrics of each engine, as the ratio of each other Vue library to Vase UI. */
+function speedOf(tables: readonly TimeTable[]): BenchmarksReport['speed'] {
+  return ENGINES.flatMap((engine) => {
+    const ratios = new Map<LibraryId, { logs: number[]; faster: number }>();
+    for (const table of tables) {
+      if (table.run.engine !== engine || table.group === 'memory') {
+        continue;
+      }
+      for (const row of table.rows) {
+        for (const library of table.columns) {
+          const cell = row.cells[library];
+          if (typeof cell !== 'object' || cell.kind !== 'samples' || !cell.comparison) {
+            continue;
+          }
+          const entry = ratios.get(library) ?? { logs: [], faster: 0 };
+          entry.logs.push(Math.log(cell.comparison.ratio));
+          entry.faster += cell.comparison.verdict === 'slower' ? 1 : 0;
+          ratios.set(library, entry);
+        }
+      }
+    }
+    const libraries = LIBRARIES.flatMap((library): Speed[] => {
+      const entry = ratios.get(library.id);
+      return entry === undefined
+        ? []
+        : [
+            {
+              library: library.id,
+              ratio: Math.exp(entry.logs.reduce((sum, log) => sum + log, 0) / entry.logs.length),
+              faster: entry.faster,
+              metrics: entry.logs.length,
+            },
+          ];
+    });
+    return libraries.length === 0 ? [] : [{ engine, libraries }];
+  });
+}
+
+/** The metrics that a note can name: each time metric and the size of each scenario. */
+const NOTE_MEASURES = new Set([
+  ...VISITS.flatMap((visit) => visit.measures.map((measure) => metricOf(visit.scenario, measure))),
+  ...SCENARIOS.map(sizeMetricOf),
+]);
+
+/** Each metric of the notes that no table has, or that more than one note names. */
+function unknownMeasuresOf(notes: readonly Note[]): string[] {
+  const measures = notes.flatMap((note) => note.measures);
+  return measures.filter(
+    (measure, index) => !NOTE_MEASURES.has(measure) || measures.indexOf(measure) !== index,
+  );
+}
+
+function missingNotesOf(sizeTables: readonly SizeTable[], timeLosses: readonly TimeLoss[]) {
+  const size = sizeTables.flatMap((table) =>
+    table.rows.flatMap((row) =>
+      losingUnits(row, table.columns)
+        .filter((unit) => row.notes[unit] === undefined)
+        .map((unit) => `${table.setup} ${sizeMetricOf(row.scenario)}, ${unit} bytes`),
+    ),
+  );
+  const time = timeLosses
+    .filter((loss) => loss.note === undefined)
+    .map((loss) => `${loss.engine} ${loss.setup} ${loss.metric}, ${loss.library}`);
+  return [...size, ...time];
+}
+
+/** The anchor of a row of the features table, such as `feature-nuxt-module`. */
+function featureAnchor(feature: string): string {
+  return `feature-${feature
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')}`;
+}
+
+export function benchmarksReportOf(
+  results: Results,
+  features: Features,
+  { notes }: Notes,
+): BenchmarksReport {
+  const noteOf: NoteOf = (metric) => notes.find((note) => note.measures.includes(metric))?.id;
+  const sizeTables = TABLE_SETUPS.map((setup) => sizeTable(results, setup, noteOf));
   const parts = timeParts(results);
-  const tables = timeTables(parts);
+  const tables = timeTables(parts, noteOf);
+  const timeLosses = timeLossesOf(tables);
   return {
     date: results.date,
     commit: results.commit,
@@ -410,14 +594,27 @@ export function benchmarksReportOf(results: Results, features: Features): Benchm
     sizeLosses: sizeLossesOf(sizeTables),
     timeRuns: parts.map(({ run }) => run),
     timeTables: tables,
-    timeLosses: timeLossesOf(tables),
-    features,
+    timeLosses,
+    speed: speedOf(tables),
+    features: {
+      groups: features.groups.map((group) => ({
+        ...group,
+        rows: group.rows.map((row) => ({ ...row, id: featureAnchor(row.feature) })),
+      })),
+    },
+    notes,
+    missingNotes: missingNotesOf(sizeTables, timeLosses),
+    unknownMeasures: unknownMeasuresOf(notes),
   };
 }
 
-/** Reads `benchmarks/results.json` and `benchmarks/features.json`. */
+/** Reads `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. */
 export function loadBenchmarksReport(): BenchmarksReport {
   const read = (path: string): unknown =>
     JSON.parse(readRepositoryFile(REPOSITORY_ROOT, `benchmarks/${path}`));
-  return benchmarksReportOf(read('results.json') as Results, read('features.json') as Features);
+  return benchmarksReportOf(
+    read('results.json') as Results,
+    read('features.json') as Features,
+    read('notes.json') as Notes,
+  );
 }
