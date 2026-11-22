@@ -738,6 +738,23 @@ describe('highlight', () => {
     expect(exposed.highlights.at(-1)).toBe('Item 4 0');
   });
 
+  test('a virtualized list with no filtered value does not prevent an arrow key', async () => {
+    mount(ComboboxVirtual);
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    await userEvent.keyboard('zz');
+    await waitFor(() => expect(itemNames()).toEqual([]));
+    expect(popup()).not.toBe(null);
+    const down = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    });
+    input().dispatchEvent(down);
+    expect(down.defaultPrevented).toBe(false);
+  });
+
   test('typed text sets no scroll position of a virtualized list', async () => {
     mount(ComboboxVirtual);
     await nextTick();

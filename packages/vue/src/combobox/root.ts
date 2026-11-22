@@ -870,9 +870,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     const rowStep = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
     const cellStep = source.grid && current !== -1 ? stepInRow(event.key) : 0;
     if (rowStep === 0 && cellStep === 0) return false;
-    event.preventDefault();
     const count = filteredValues.value.length;
-    if (count === 0) return true;
+    if (count === 0) return false;
+    event.preventDefault();
     const next =
       cellStep === 0 ? nextRow(current, rowStep, count) : nextCell(current, cellStep, count);
     emitHighlight(next === -1 ? undefined : filteredValues.value[next], next, 'keyboard', event);
@@ -890,8 +890,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     return (key === 'ArrowRight') !== rtl ? 1 : -1;
   }
 
-  // The value of the same column in the next row. A shorter last row gives its last value. A list
-  // that is no grid has one column.
+  // The value of the same column in the next row. A shorter last row gives its last value.
   function nextRow(current: number, step: number, count: number) {
     if (current === -1) return step === 1 ? 0 : count - 1;
     const columns = source.grid ? columnCount() : 1;
@@ -913,7 +912,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   }
 
   // The rows of a virtual window have the columns of the full grid, and the last row can be
-  // shorter. With no mounted row, the grid has one column.
+  // shorter.
   function columnCount() {
     const counts = new Map<Element | null, number>();
     for (const { element } of list.items()) {
