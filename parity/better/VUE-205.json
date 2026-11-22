@@ -1,0 +1,12 @@
+{
+  "id": "VUE-205",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/utils/useToastLabelPart.test.tsx#L147",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/utils/useToastLabelPart.test.tsx#L154",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/action/ToastAction.test.tsx#L136",
+    "https://www.w3.org/TR/accname-1.2/#computation-steps"
+  ],
+  "behavior": "With the `element` slot, the developer renders the element of `Toast.Title`, `Toast.Description` and `Toast.Action`, and the part does not know its content before the render. So the part renders the slot also when the toast has no such label. The root names an element of that slot only while the element is in the DOM and has content, so a toast whose title element is empty takes its name from its description (`VUE-99`). Base UI renders no element for a `render` prop with no children when the toast has no label.",
+  "dueWith": "packages/react/src/toast/utils/useToastLabelPart.ts",
+  "families": ["toast"]
+}

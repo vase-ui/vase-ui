@@ -3,14 +3,14 @@ import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
-import { hasContent, useHasSlot } from './label';
+import { hasContent, useHasContent, useHasSlot } from './label';
 import { injectToastRoot } from './root';
 import type { ToastDescriptionProps, ToastDescriptionState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<ToastDescriptionProps>();
-defineSlots<{
+const slots = defineSlots<{
   default?(scope: { state: ToastDescriptionState }): unknown;
   element?(scope: ElementSlotProps<ToastDescriptionState>): unknown;
 }>();
@@ -25,6 +25,7 @@ const label = computed(() => root.toast.description);
 const needed = computed(() => hasSlot.value || hasContent(label.value));
 const { waiting } = useEnterAfterLeave(() => needed.value, element);
 const shown = computed(() => needed.value && !waiting.value);
+const filled = useHasContent(element);
 
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part
 // registers before the call.
@@ -33,7 +34,7 @@ const unregister = root.addLabel('description', {
     return elementId.value;
   },
   get shown() {
-    return shown.value;
+    return shown.value && (!slots.element || filled.value);
   },
 });
 onUnmounted(unregister);
