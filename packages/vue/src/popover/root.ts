@@ -1,7 +1,8 @@
 import { computed, inject, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue';
 import { createError } from '../common/createError';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInPopup, useLayer, type Layer } from '../popup/layer';
+import { isInPopup, type Layer } from '../popup/layer';
+import { useModalLayer } from '../popup/modal';
 import { PopupHandle, usePopupRoot, type PopupRoot } from '../popup/root';
 import { useHandleRoot } from '../popup/trigger';
 import { useFullWidth, type usePlacement } from '../popup/placement';
@@ -89,7 +90,7 @@ export function usePopoverRoot<Payload>(
   const hoverOpen = computed(() => root.reason === 'trigger-hover');
   // A touch screen reader needs a way out of a popup that keeps the focus.
   const trap = computed(() => props.modal !== false && closes.value > 0 && !hoverOpen.value);
-  const layer = useLayer(root, () => {
+  const layer = useModalLayer(root, () => {
     const modal = props.modal === true && !hoverOpen.value && !!positioner.value;
     return {
       escape: true,

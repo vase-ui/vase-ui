@@ -23,6 +23,7 @@ import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import type { Align, Side, usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
+import { useScrollLock } from '../popup/useScrollLock';
 import type {
   SelectItems,
   SelectRootChangeEventDetails,
@@ -212,6 +213,10 @@ export function useSelectRoot(
     lockScroll: (props.modal || aligned.value) && (root.interaction !== 'touch' || fullWidth.value),
     triggerInUse: true,
   }));
+  useScrollLock(
+    () => root.open && layer.lockScroll,
+    () => root.activeTrigger,
+  );
 
   const list = useList({
     orientation: () => 'vertical',

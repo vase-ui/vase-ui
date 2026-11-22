@@ -14,32 +14,32 @@
     {
       "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file, and `src/popup/owner.test.ts` tests the element that owns the popup. The cases of `JSDOM-only coverage` that keep the place of Tab after the trigger leaves run only in JSDOM, where a Tab of the test library starts at `<body>`. The file of Base UI has no code that keeps that place. In a browser, the next Tab starts at the sequential focus navigation starting point of the browser."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file, and `src/popup/owner.test.ts` tests the element that owns the popup. The cases of `JSDOM-only coverage` that keep the place of Tab after the trigger leaves run only in JSDOM, where a Tab of the test library starts at `<body>`. The file of Base UI has no code that keeps that place. In a browser, the next Tab starts at the sequential focus navigation starting point of the browser."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/FocusGuard.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/enqueueFocus.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/markOthers.test.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
     },
     {
       "upstream": "packages/react/src/utils/popups/focus/markOthers.ts",
       "kind": "not-applicable",
-      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/layer.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
+      "reason": "`src/popup/focus.ts` replaces the file: the initial focus, the trap of a modal popup and the return of the focus. `src/popup/modal.ts` makes the page outside a modal popup inert. Each popup family tests the focus in its own test file."
     },
     {
       "upstream": "packages/react/test/floating-ui-tests/Navigation.tsx",

@@ -31,6 +31,13 @@ export interface List {
    */
   items(options?: { hidden?: boolean }): ListItem[];
   /**
+   * The first item of `items()` that matches. It checks only the items up to that item, so a long
+   * list costs less than with `items()`.
+   */
+  find(match?: (item: ListItem) => boolean): ListItem | undefined;
+  /** The place of the item in `items()`, or -1. It checks only the items up to that item. */
+  indexOf(item: ListItem): number;
+  /**
    * The first or the last item that is not disabled. A key that opens a popup highlights it, and
    * an arrow key in the open list still reaches a disabled item.
    */
@@ -184,12 +191,22 @@ export function useList(options: ListOptions): List {
     return !container?.checkVisibility({ visibilityProperty: true }) && element.checkVisibility();
   }
 
-  function items(itemOptions?: { hidden?: boolean }) {
+  // The items in the document, in the order of the document.
+  function connected() {
     void addedVersion.value;
-    const connected = [...added.values()].filter(({ element }) => element.isConnected);
-    return inDocumentOrder(connected, (item) => item.element, options.container()).filter(
-      ({ element }) => reachable(element, itemOptions?.hidden),
-    );
+    const inDocument = [...added.values()].filter(({ element }) => element.isConnected);
+    return inDocumentOrder(inDocument, (item) => item.element, options.container());
+  }
+
+  function items(itemOptions?: { hidden?: boolean }) {
+    return connected().filter(({ element }) => reachable(element, itemOptions?.hidden));
+  }
+
+  // A check of the visibility takes the most time, so it comes after the match.
+  function find(match: (item: ListItem) => boolean = () => true, reversed = false) {
+    const all = connected();
+    if (reversed) all.reverse();
+    return all.find((item) => match(item) && reachable(item.element));
   }
 
   // The item that a step from the element reaches, in the order of the document. A walk from the
@@ -312,10 +329,16 @@ export function useList(options: ListOptions): List {
       return itemHighlights.get(item)?.value ?? false;
     },
     items,
-    edge(which) {
-      const enabled = items().filter((item) => !item.disabled);
-      return which === 'first' ? enabled[0] : enabled.at(-1);
+    find: (match) => find(match),
+    indexOf(item) {
+      let index = 0;
+      for (const each of connected()) {
+        if (each === item) return reachable(item.element) ? index : -1;
+        if (reachable(each.element)) index += 1;
+      }
+      return -1;
     },
+    edge: (which) => find((item) => !item.disabled, which === 'last'),
     text(item) {
       return (item.label ?? item.element.textContent ?? '').trim();
     },

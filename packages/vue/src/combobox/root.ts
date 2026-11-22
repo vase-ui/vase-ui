@@ -38,6 +38,7 @@ import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
+import { useScrollLock } from '../popup/useScrollLock';
 import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
 import { filterItems, sameItems, type FilterItemToString, type ItemFilter } from './filter';
 import { useComboboxForm } from './form';
@@ -382,19 +383,20 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     else if (!data.value) next = EMPTY_ARRAY;
     else {
       const filter = source.filter;
+      const queryText = query.value;
       const keepsEach =
         filter === null ||
-        query.value === '' ||
+        queryText === '' ||
         source.completion === 'inline' ||
         source.completion === 'none';
-      const matches: ItemFilter = filter ?? coreFilter.value.contains;
-      const queryText = query.value;
-      const toLabel = itemToString.value;
-      next = filterItems(
-        data.value as unknown[] | Group[],
-        keepsEach ? () => true : (item) => item != null && matches(item, queryText, toLabel),
-        source.limit,
-      );
+      // A list that keeps each item needs no filter, so the first mount makes no collator.
+      let keeps: (item: unknown) => boolean = () => true;
+      if (!keepsEach) {
+        const matches: ItemFilter = filter ?? coreFilter.value.contains;
+        const toLabel = itemToString.value;
+        keeps = (item) => item != null && matches(item, queryText, toLabel);
+      }
+      next = filterItems(data.value as unknown[] | Group[], keeps, source.limit);
     }
     // The same items give the same list, so a key that keeps them renders no item.
     return previous && sameItems(previous, next) ? previous : next;
@@ -488,6 +490,10 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       triggerInUse: true,
     };
   });
+  useScrollLock(
+    () => root.open && layer.lockScroll,
+    () => root.activeTrigger,
+  );
   const popupFocus = shallowRef<{ initialFocus?: FocusTarget; finalFocus?: FocusTarget }>({});
   const focus = usePopupFocus(root, layer, {
     takesFocus: () => !inputIsControl.value,
@@ -524,7 +530,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (given !== undefined) return given;
     if (source.virtualized)
       return findItemIndex(filteredValues.value, entry?.value(), isEqual.value);
-    return list.items().indexOf(item);
+    return list.indexOf(item);
   }
 
   function emitHighlight(
@@ -577,17 +583,16 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   }
 
   function itemOfIndex(index: number) {
-    return list.items().find((item) => indexOf(item) === index) ?? null;
+    return list.find((item) => indexOf(item) === index) ?? null;
   }
 
   function highlightSelected() {
-    const items = list.items();
     const pick = lastPick;
     const picked =
       pick && isSelected(pick.value)
-        ? items.find((item) => compareItemEquality(valueOf(item), pick.value, isEqual.value))
+        ? list.find((item) => compareItemEquality(valueOf(item), pick.value, isEqual.value))
         : undefined;
-    const selected = picked ?? items.find((item) => isSelected(valueOf(item)));
+    const selected = picked ?? list.find((item) => isSelected(valueOf(item)));
     if (selected) list.highlight(selected, 'none');
     else if (source.virtualized && hasValue.value && source.mode !== 'none') {
       const index = filteredValues.value.findIndex((each) => isSelected(each));
@@ -630,13 +635,12 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
         // A new popup waits while the old one leaves, so its items mount later.
-        if (list.items().length === 0 && hasValue.value && source.mode !== 'none') {
+        if (hasValue.value && source.mode !== 'none' && !list.find()) {
           highlightSelectedLater.value = true;
           return;
         }
-        const items = list.items();
         if (source.autoHighlight === 'always') {
-          list.highlight(items[0] ?? null, 'none');
+          list.highlight(list.find() ?? null, 'none');
         } else if (key && (source.mode !== 'none' || source.autoHighlight)) {
           list.highlight(
             list.edge(key.key === 'ArrowUp' ? 'last' : 'first') ?? null,
@@ -762,9 +766,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         if (!expanded.value) return;
         const item = selected
           ? undefined
-          : list
-              .items()
-              .find((each) => compareItemEquality(valueOf(each), itemValue, isEqual.value));
+          : list.find((each) => compareItemEquality(valueOf(each), itemValue, isEqual.value));
         if (item) list.highlight(item, 'none');
         else if (!highlightSelected()) list.highlight(null, 'none');
       });
@@ -804,13 +806,13 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       if (source.virtualized) emitHighlight(undefined, -1, 'none', event);
     }
     // Each typed text shows the list from its top.
-    const first = list.items()[0]?.element ?? listElement.value;
+    const first = list.find()?.element ?? listElement.value;
     if (!source.virtualized && first) resetScroll(first);
     if (hasText && !disabled.value && !source.readonly) request(true, 'input-change', event);
     void nextTick(() => {
       if (!expanded.value) return;
       if (hasText ? !!source.autoHighlight : source.autoHighlight === 'always') {
-        const item = list.items()[0];
+        const item = list.find();
         if (item) list.highlight(item, 'none');
         // Items that come later, such as the results of a request, get the highlight.
         else highlightFirst.value = true;
@@ -832,7 +834,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   watch(
     () =>
       highlightSelectedLater.value && expanded.value
-        ? list.items().find((item) => isSelected(valueOf(item)))
+        ? list.find((item) => isSelected(valueOf(item)))
         : undefined,
     (item) => {
       if (!item) return;
@@ -842,7 +844,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     { flush: 'post' },
   );
   watch(
-    () => (highlightFirst.value ? list.items()[0] : undefined),
+    () => (highlightFirst.value ? list.find() : undefined),
     (item) => {
       if (!item) return;
       highlightFirst.value = false;
@@ -948,7 +950,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 
   const press = usePopupPress(root, {
     itemAt(path) {
-      const item = list.items().find(({ element }) => path.includes(element));
+      const item = list.find(({ element }) => path.includes(element));
       return item && !item.disabled ? item.element : null;
     },
     inside: (element) => isInPopup(layer, element) || !!layer.inside?.includes(element),
@@ -1136,7 +1138,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       mountedItems.value += 1;
       // The item of the value that a key reached in a virtual window gets the highlight.
       if (source.virtualized && lastHighlight.index !== -1) {
-        const listItem = list.items().find((each) => each.element === element);
+        const listItem = list.find((each) => each.element === element);
         if (listItem && indexOf(listItem) === lastHighlight.index) list.highlight(listItem, 'none');
       }
       return () => {

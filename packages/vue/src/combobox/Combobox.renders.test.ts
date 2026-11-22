@@ -88,7 +88,42 @@ describe('the renders', () => {
     }
   });
 
-  test('a highlight step over 300 items checks the visibility of the next item, and of each item one time for the index of its event', async () => {
+  test('a mount with no text makes no collator, and the first typed text makes one', async () => {
+    const collator = vi.spyOn(Intl, 'Collator');
+    try {
+      // The filter of a locale stays for the page, so the case takes a locale of its own.
+      mount(ComboboxRenders, { count: () => '', root: { locale: 'de-CH' } });
+      await nextTick();
+      expect(collator).not.toHaveBeenCalled();
+      await userEvent.click(document.querySelector<HTMLInputElement>('[data-testid="input"]')!);
+      await userEvent.keyboard('9');
+      await waitFor(() => expect(document.querySelectorAll('[role="option"]')).toHaveLength(57));
+      expect(collator).toHaveBeenCalled();
+    } finally {
+      collator.mockRestore();
+    }
+  });
+
+  test('an open by ArrowDown over 300 items checks the visibility of the first item and its list only', async () => {
+    mount(ComboboxRenders, { count: () => '' });
+    await nextTick();
+    document.querySelector<HTMLInputElement>('[data-testid="input"]')!.focus();
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() =>
+        expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 0'),
+      );
+      await nextTick();
+      const first = document.querySelector('[role="option"]');
+      const list = document.querySelector('[role="listbox"]');
+      expect(new Set(read.mock.contexts)).toEqual(new Set([first, list]));
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  test('a highlight step over 300 items checks the visibility of the next item, and of the items up to it for the index of its event', async () => {
     await openList();
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() =>
@@ -102,7 +137,7 @@ describe('the renders', () => {
         expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 1'),
       );
       await nextTick();
-      expect(read).toHaveBeenCalledTimes(301);
+      expect(read).toHaveBeenCalledTimes(3);
     } finally {
       read.mockRestore();
     }

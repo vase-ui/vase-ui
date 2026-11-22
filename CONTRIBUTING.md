@@ -312,7 +312,8 @@ A part handles the events that the browser sends. It detects no value that an el
 `src/popup` holds what each popup family shares. A popup family writes its parts, its root contract and the rules of its layer. `popover/root.ts` is the model of a root contract.
 
 - `usePopupRoot` of `root.ts` holds the open state of a root: its models, its triggers, the active trigger, the payload, the popup element and the change events. A root calls it in `setup` and gives the result to its parts.
-- `useLayer` of `layer.ts` puts an open root in the stack of open popups. Its rules give what the root does, such as the close on Escape, the trap of the Tab key, `inert` on the rest of the page and the scroll lock.
+- `useLayer` of `layer.ts` puts an open root in the stack of open popups. Its rules give what the root does, such as the close on Escape and the trap of the Tab key.
+- A root that can hide the rest of the page calls `useModalLayer` of `modal.ts` in place of `useLayer`. It writes `inert` or `aria-hidden` on the rest of the page and applies the `lockScroll` rule. Another root that can lock the scroll gives its `lockScroll` rule to `useScrollLock`. A family that never hides the page does not import `modal.ts`, so its bundle does not have that code.
 - `usePopupTrigger` of `trigger.ts` registers a trigger with its root while it is mounted. A trigger outside its root has a `handle`, a subclass of `PopupHandle` such as `PopoverHandle`.
 - `usePlacement` of `placement.ts` places a positioner beside its anchor with `useFloating` of Floating UI.
 - `focus.ts` moves the focus into a popup at the open and returns it at the close. `hover.ts` opens a popup for a hover of its trigger. `press.ts` handles the press, the drag and the release of a popup that a press opens.
