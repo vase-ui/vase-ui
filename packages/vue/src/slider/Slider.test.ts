@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
@@ -76,6 +76,7 @@ describe('the parts', () => {
     expect(group.tagName).toBe('DIV');
     expect(exposed.root.element).toBe(group);
     expect(exposed.control.element).toBe(group.querySelector('[style*="touch-action"]'));
+    expect(exposed.control.element).not.toHaveAttribute('tabindex');
     expect(exposed.thumbs[0].element).toBe(thumb());
     expect(exposed.thumbs[0].input).toBe(input());
     expect(root.querySelector('[role=group] label')!.tagName).toBe('LABEL');
@@ -229,7 +230,7 @@ describe('the value', () => {
 
   test('an action on a model off the grid or out of order gives one event with the shown form', async () => {
     const log: string[] = [];
-    const root = sliderModel(log, [2, 1]);
+    const root = sliderModel(log, Object.freeze([2, 1]));
     const { input } = await mountSlider({ root, thumbs: [{}, {}] });
     input(0).dispatchEvent(new Event('input', { bubbles: true }));
     await settle();
@@ -379,18 +380,29 @@ describe('the keys', () => {
       expect(await after(`{Shift>}{${down[0]}}{/Shift}`)).toBe(50);
       expect(await after('{End}')).toBe(100);
       expect(await after('{Home}')).toBe(0);
+      expect(input()).toHaveAttribute('aria-orientation', orientation);
+      // A large step stops at the ends.
+      expect(await after(`{${up[0]}}`)).toBe(1);
+      expect(await after(`{Shift>}{${down[1]}}{/Shift}`)).toBe(0);
+      expect(await after(`{${up[1]}}`)).toBe(1);
+      expect(await after('{PageDown}')).toBe(0);
+      expect(await after('{End}{ArrowDown}')).toBe(99);
+      expect(await after(`{Shift>}{${up[0]}}{/Shift}`)).toBe(100);
+      expect(await after(`{${down[1]}}`)).toBe(99);
+      expect(await after('{PageUp}')).toBe(100);
     },
   );
 
   test('a key prevents its default action and stops at the ends with no event; End gives the largest value of the grid', async () => {
     const log: string[] = [];
     const root = sliderModel(log, 95);
-    Object.assign(root, { step: 10, max: 99 });
     const prevented: boolean[] = [];
-    const { input, values } = await mountSlider({
-      root,
-      thumbs: [{ onKeydown: (event: KeyboardEvent) => prevented.push(event.defaultPrevented) }],
+    Object.assign(root, {
+      step: 10,
+      max: 99,
+      onKeydown: (event: KeyboardEvent) => prevented.push(event.defaultPrevented),
     });
+    const { input, values } = await mountSlider({ root });
     await press(input(), '{End}{ArrowRight}{Enter}');
     expect(values()).toEqual([90]);
     expect(prevented).toEqual([true, true, false]);
@@ -405,6 +417,47 @@ describe('the keys', () => {
     expect(values()).toEqual([26]);
     await press(input(), '{PageDown}');
     expect(values()).toEqual([20]);
+  });
+
+  test('a key from a value of the parent off the grid goes to the next value of the grid', async () => {
+    const log: string[] = [];
+    const { input, values } = await mountSlider({ root: sliderModel(log, 5.4698) });
+    expect(values()).toEqual([5]);
+    await press(input(), '{ArrowRight}');
+    expect(values()).toEqual([6]);
+    expect(log[0]).toBe('change 6 keyboard 0');
+  });
+
+  test('a keydown listener of a thumb gets each key, and its preventDefault() keeps the value, as on a native range input', async () => {
+    const log: string[] = [];
+    const keys: string[] = [];
+    const { input, values } = await mountSlider({
+      root: sliderModel(log, 50),
+      thumbs: [
+        {
+          onKeydown: (event: KeyboardEvent) => {
+            keys.push(event.key);
+            event.preventDefault();
+          },
+        },
+      ],
+    });
+    await press(input(), '{ArrowRight}{End}{PageDown}{Enter}');
+    await settle();
+    expect(keys).toEqual(['ArrowRight', 'End', 'PageDown', 'Enter']);
+    expect(values()).toEqual([50]);
+    expect(log).toEqual([]);
+  });
+
+  test('the keys change the value of a slider in a shadow root', async () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    onTestFinished(() => host.remove());
+    const shadow = host.attachShadow({ mode: 'open' });
+    const { root } = mount(SliderParts, { root: { defaultValue: 50 } }, shadow);
+    await nextTick();
+    const input = root.querySelector<HTMLInputElement>('input[type=range]')!;
+    await press(input, '{ArrowRight}');
+    expect(input.valueAsNumber).toBe(51);
   });
 
   test('in a range, a key stops at the limit of the thumb, with the least distance; Home and End go to the limits', async () => {
@@ -423,10 +476,9 @@ describe('the keys', () => {
   test('Ctrl, Alt and Meta with a key change nothing and keep the shortcut of the browser', async () => {
     const log: string[] = [];
     const prevented: boolean[] = [];
-    const { input, values } = await mountSlider({
-      root: sliderModel(log, 50),
-      thumbs: [{ onKeydown: (event: KeyboardEvent) => prevented.push(event.defaultPrevented) }],
-    });
+    const root = sliderModel(log, 50);
+    root.onKeydown = (event: KeyboardEvent) => prevented.push(event.defaultPrevented);
+    const { input, values } = await mountSlider({ root });
     for (const modifier of ['Control', 'Alt', 'Meta']) {
       for (const key of ['ArrowRight', 'ArrowDown', 'PageUp', 'End']) {
         await press(input(), `{${modifier}>}{${key}}{/${modifier}}`);

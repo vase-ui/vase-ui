@@ -87,6 +87,19 @@ describe('the native form', () => {
     await settle();
     expect(input.value).toBe('1');
     expect(log).toEqual(['change 12 input-change', 'update 12', 'update 1']);
+    root.form = undefined;
+    await nextTick();
+    expect(input.form).toBe(form);
+    expect(hidden.form).toBe(form);
+  });
+
+  test('a form attribute of the developer on the input wins over the form prop of the root', async () => {
+    const { other, input, hidden, form } = await mountField({
+      root: { name: 'amount', form: 'form' },
+      input: { form: 'other' },
+    });
+    expect(input.form).toBe(other);
+    expect(hidden.form).toBe(form);
   });
 
   test('a fill of the hidden input gives valueChange and valueCommitted with none, in the range', async () => {
@@ -107,6 +120,25 @@ describe('the native form', () => {
       'update 10',
       'commit 10 none',
     ]);
+  });
+
+  test('a fill that empties the hidden input empties the field', async () => {
+    const log: string[] = [];
+    const { input, hidden } = await mountField({ root: record(log, { defaultValue: 5 }) });
+    fill(hidden, '');
+    await settle();
+    expect(input.value).toBe('');
+    expect(log).toEqual(['change null none', 'update null', 'commit null none']);
+  });
+
+  test('a fill of a field in change mode validates the number', async () => {
+    const validated: unknown[] = [];
+    const { hidden } = await mountInField({
+      field: { validationMode: 'change', validate: (value: unknown) => void validated.push(value) },
+    });
+    fill(hidden, '42');
+    await settle();
+    expect(validated).toEqual([42]);
   });
 
   test('a fill of a disabled or read-only field, and a cancelled fill, change nothing', async () => {
@@ -212,6 +244,23 @@ describe('the native form', () => {
     expect(document.activeElement).toBe(input);
   });
 
+  test('a focus of the hidden input goes to the text input with the caret at the end, unless a focus listener of the developer sets the selection', async () => {
+    const { input, hidden } = await mountField({ root: { defaultValue: 100 } });
+    input.setSelectionRange(0, 0);
+    hidden.focus();
+    await settle();
+    expect(document.activeElement).toBe(input);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([3, 3]);
+    const selected = await mountField({
+      root: { defaultValue: 100 },
+      input: { onFocus: (event: FocusEvent) => (event.target as HTMLInputElement).select() },
+    });
+    selected.hidden.focus();
+    await settle();
+    expect(document.activeElement).toBe(selected.input);
+    expect([selected.input.selectionStart, selected.input.selectionEnd]).toEqual([0, 3]);
+  });
+
   test('with min and step, the form refuses a number off the grid; with no step it accepts each number', async () => {
     const root = reactive<Attrs>({ min: 0, step: 1, defaultValue: 1.5 });
     const { hidden } = await mountField({ root });
@@ -315,6 +364,87 @@ describe('Field and Form', () => {
       'data-touched',
     ]);
     expect(dataAttributes(input)).toEqual(['data-dirty', 'data-filled', 'data-touched']);
+  });
+
+  test('the text input has data-filled while the field has a number', async () => {
+    const { input } = await mountInField({ root: {} });
+    expect(input).not.toHaveAttribute('data-filled');
+    await typeAtEnd(input, '1');
+    await settle();
+    expect(input).toHaveAttribute('data-filled');
+    await typeAtEnd(input, '{Backspace}');
+    await settle();
+    expect(input).not.toHaveAttribute('data-filled');
+  });
+
+  test('validationMode submit: a blocked submit shows the error; then each change validates, and the parts show the state', async () => {
+    const field = {
+      name: 'amount',
+      validate: (value: unknown) => (value === 1 ? 'Not 1.' : null),
+    };
+    const { form, input, numberField, root } = await mountInField({
+      field,
+      root: { required: true },
+    });
+    await typeAtEnd(input, '1');
+    await leave(input);
+    expect(input).not.toHaveAttribute('aria-invalid');
+    await typeAtEnd(input, '{Backspace}');
+    await leave(input);
+    form.requestSubmit();
+    await settle();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(numberField).toHaveAttribute('data-invalid');
+    await typeAtEnd(input, '2');
+    await settle();
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(numberField).toHaveAttribute('data-valid');
+    expect(input).toHaveAttribute('data-valid');
+    await typeAtEnd(input, '{Backspace}1');
+    await settle();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(root.querySelector('#error')).toHaveTextContent('Not 1.');
+  });
+
+  test('after a submit that a required empty field blocks, the increment button removes the error', async () => {
+    const { form, input, root } = await mountInField({
+      field: { name: 'amount' },
+      root: { required: true },
+    });
+    form.requestSubmit();
+    await settle();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.click(root.querySelector<HTMLElement>('[aria-label=Increase]')!);
+    await settle();
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input.value).toBe('0');
+  });
+
+  test('validationMode change: a change of the value of the parent validates it', async () => {
+    const root = reactive<Attrs>({ modelValue: null });
+    const { input } = await mountInField({
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => (value === 5 ? 'Not 5.' : null),
+      },
+      root,
+    });
+    expect(input).not.toHaveAttribute('aria-invalid');
+    root.modelValue = 5;
+    await settle();
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('validationMode blur: validate gets the number in the range', async () => {
+    const validated: unknown[] = [];
+    const { input } = await mountInField({
+      field: { validationMode: 'blur', validate: (value: unknown) => void validated.push(value) },
+      root: { max: 10 },
+    });
+    await typeAtEnd(input, '1000');
+    await leave(input);
+    expect(validated).toEqual([10]);
+    expect(input.value).toBe('10');
   });
 
   test('an edit removes the error that the form gives the field', async () => {

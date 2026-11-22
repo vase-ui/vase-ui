@@ -57,7 +57,7 @@ export function useStepButton(
   watch(
     () => root.state.disabled || root.state.readonly,
     (off) => {
-      if (off) hold.end();
+      if (off) hold.cancel();
     },
   );
 

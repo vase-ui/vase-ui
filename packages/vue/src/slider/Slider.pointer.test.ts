@@ -9,6 +9,8 @@ import SliderControlSwap from '../../test/fixtures/SliderControlSwap.vue';
 import SliderParts from '../../test/fixtures/SliderParts.vue';
 import { penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
+import { waitSingleFrame } from '../../test/wait';
+import { waitFor } from '../../test/waitFor';
 
 type Attrs = Record<string, unknown>;
 
@@ -136,6 +138,11 @@ describe('a press on the control', () => {
     await slider.down(70);
     await slider.cancel();
     expect(log).toEqual(['change 70 track-press 0', 'commit 70 track-press pointercancel']);
+    expect(slider.group).not.toHaveAttribute('data-dragging');
+    // The press is over: a later move and release change nothing.
+    await slider.move(90);
+    await slider.up(90);
+    expect(log).toHaveLength(2);
     log.length = 0;
     root.onValueChange = (_: unknown, details: SliderRootChangeEventDetails) => details.cancel();
     await nextTick();
@@ -178,8 +185,11 @@ describe('a press on the control', () => {
     const control = reactive<Attrs>({});
     const slider = await mountSlider({ root, control });
     await slider.down(50);
+    expect(document.activeElement).toBe(slider.inputs()[0]);
     root.disabled = true;
     await nextTick();
+    // The browser takes the focus from a control that becomes disabled, at its next rendering.
+    await waitFor(() => expect(document.activeElement).not.toBe(slider.inputs()[0]));
     root.disabled = false;
     await nextTick();
     await slider.move(60);
@@ -231,6 +241,56 @@ describe('a press on the control', () => {
     ]);
   });
 
+  test('a mousedown on the control reaches the listeners of the page with its target, and changes nothing', async () => {
+    const log: string[] = [];
+    const slider = await mountSlider({ root: sliderModel(log, 0) });
+    const targets: (EventTarget | null)[] = [];
+    const record = (event: Event) => targets.push(event.target);
+    document.addEventListener('mousedown', record);
+    onTestFinished(() => document.removeEventListener('mousedown', record));
+    slider.root.addEventListener('mousedown', record);
+    slider.control.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 50 }));
+    expect(targets).toEqual([slider.control, slider.control]);
+    expect(log).toEqual([]);
+  });
+
+  test('a press on a control with no thumb changes nothing', async () => {
+    const log: string[] = [];
+    const slider = await mountSlider({ root: sliderModel(log, 20), thumbs: [] });
+    const down = await slider.down(60);
+    await slider.move(80);
+    await slider.up(80);
+    expect(down.defaultPrevented).toBe(false);
+    expect(log).toEqual([]);
+  });
+});
+
+describe('a press and the values of the parent', () => {
+  test.each([
+    { name: 'removes a value', first: [10, 20, 30], next: [10, 20] },
+    { name: 'adds a value', first: [10, 20], next: [10, 20, 30] },
+  ])(
+    'a parent that $name during a press: the end commits nothing, and the next press works',
+    async ({ first, next }) => {
+      const log: string[] = [];
+      const root = sliderModel(log, first);
+      const thumbs = reactive<Attrs[]>(first.map(() => ({})));
+      const slider = await mountSlider({ root, thumbs });
+      await slider.down(20, {}, slider.thumb(1));
+      await slider.move(25);
+      expect(log).toEqual([`change 10,25${first.length > 2 ? ',30' : ''} drag 1`]);
+      log.length = 0;
+      root.modelValue = next;
+      thumbs.splice(0, thumbs.length, ...next.map(() => ({})));
+      await nextTick();
+      await slider.up(25);
+      expect(log).toEqual([]);
+      await slider.down(80);
+      await slider.up(80);
+      expect(log.at(-1)).toMatch(/^commit .*80 track-press pointerup$/);
+    },
+  );
+
   test('a parent removes a value during a drag: no error, and the next press works', async () => {
     const log: string[] = [];
     const root = sliderModel(log, [20, 60]);
@@ -244,6 +304,79 @@ describe('a press on the control', () => {
     await slider.up(30);
     expect(log).toEqual(['change 30 track-press 0', 'commit 30 track-press pointerup']);
   });
+
+  test('a move after a parent adds a value during a press: the end commits the values of that move', async () => {
+    const log: string[] = [];
+    const root = sliderModel(log, [10, 20]);
+    const thumbs = reactive<Attrs[]>([{}, {}]);
+    const slider = await mountSlider({ root, thumbs });
+    await slider.down(20, {}, slider.thumb(1));
+    await slider.move(25);
+    root.modelValue = [10, 20, 30];
+    thumbs.push({});
+    await nextTick();
+    log.length = 0;
+    await slider.move(27);
+    await slider.up(27);
+    expect(log).toEqual(['change 10,27,30 drag 1', 'commit 10,27,30 drag pointerup']);
+  });
+
+  test('a single value in an array stays an array after a press', async () => {
+    const updates: unknown[] = [];
+    const root = reactive<Attrs>({ defaultValue: [25] });
+    root['onUpdate:modelValue'] = (value: unknown) => updates.push(value);
+    root.onValueCommitted = (value: unknown) => updates.push(value);
+    const slider = await mountSlider({ root });
+    await slider.down(50);
+    await slider.up(50);
+    expect(updates).toEqual([[50], [50]]);
+  });
+
+  test('a drag from a value of the parent out of the range gives values in the range', async () => {
+    const log: string[] = [];
+    const root = sliderModel(log, [19, 41]);
+    Object.assign(root, { min: 20, max: 40 });
+    const slider = await mountSlider({ root, thumbs: [{}, {}] });
+    expect(slider.values()).toEqual([20, 40]);
+    await slider.down(100, {}, slider.thumb(1));
+    await slider.move(20);
+    await slider.up(20);
+    for (const value of slider.values()) {
+      expect(value).toBeGreaterThanOrEqual(20);
+      expect(value).toBeLessThanOrEqual(40);
+    }
+    expect(log.at(-1)).toMatch(/^commit /);
+  });
+});
+
+describe('the end of a press', () => {
+  test.each([
+    { name: 'one thumb', model: 20, thumbs: [{}], committed: '40' },
+    { name: 'a range', model: [20, 80], thumbs: [{}, {}], committed: '40,80' },
+  ])(
+    '$name: the end commits the last accepted change when a later move is cancelled, also at another place',
+    async ({ model, thumbs, committed }) => {
+      const log: string[] = [];
+      const root = sliderModel(log, model);
+      let cancel = false;
+      const record = root.onValueChange as (
+        value: unknown,
+        details: SliderRootChangeEventDetails,
+      ) => void;
+      root.onValueChange = (value: unknown, details: SliderRootChangeEventDetails) => {
+        record(value, details);
+        if (cancel) details.cancel();
+      };
+      const slider = await mountSlider({ root, thumbs });
+      await slider.down(20, {}, slider.thumb(0));
+      await slider.move(40);
+      cancel = true;
+      await slider.move(60);
+      await slider.up(70);
+      expect(log.at(-1)).toBe(`commit ${committed} drag pointerup`);
+      expect(slider.values().join(',')).toBe(committed);
+    },
+  );
 });
 
 describe('the element of the control', () => {
@@ -344,6 +477,18 @@ describe('thumbs that meet in a drag', () => {
     expect(log.at(-1)).toBe('commit 40,50,80 drag pointerup');
   });
 
+  test('swap: a press on the track moves the nearest thumb, and the drag goes on with the neighbour and the focus', async () => {
+    const log: string[] = [];
+    const root = sliderModel(log, [20, 40]);
+    root.thumbCollisionBehavior = 'swap';
+    const slider = await mountSlider({ root, thumbs: [{}, {}] });
+    await slider.down(20);
+    await slider.move(70);
+    expect(document.activeElement).toBe(slider.inputs()[1]);
+    await slider.up(70);
+    expect(log.slice(-2)).toEqual(['change 40,70 drag 1', 'commit 40,70 drag pointerup']);
+  });
+
   test('swap: the drag keeps the distance from the pointer to the centre of the thumb, and 0 for a thumb with no element', async () => {
     const log: string[] = [];
     const root = sliderModel(log, [20, 40]);
@@ -415,6 +560,63 @@ describe('the geometry', () => {
   });
 });
 
+describe('the places of the thumbs and of the indicator', () => {
+  /** The center of each thumb and the two ends of the indicator, in px from the start of the control. */
+  function places(slider: Awaited<ReturnType<typeof mountSlider>>) {
+    const control = slider.control.getBoundingClientRect();
+    const indicator = slider.control
+      .querySelector<HTMLElement>('[style*="inherit"]')!
+      .getBoundingClientRect();
+    const fromStart = (x: number) => Math.round(x - control.left);
+    return {
+      thumbs: slider.inputs().map((input) => {
+        const thumb = input.parentElement!.getBoundingClientRect();
+        return fromStart(thumb.left + thumb.width / 2);
+      }),
+      indicator: [fromStart(indicator.left), fromStart(indicator.right)],
+    };
+  }
+
+  test('a thumb is at its value after a drag and after a change of the parent, also a change out of the range', async () => {
+    const log: string[] = [];
+    const root = sliderModel(log, [20, 40]);
+    const slider = await mountSlider({ root, thumbs: [{}, {}] });
+    expect(places(slider)).toEqual({ thumbs: [20, 40], indicator: [20, 40] });
+    await slider.down(40, {}, slider.thumb(1));
+    await slider.move(70);
+    await slider.up(70);
+    expect(places(slider)).toEqual({ thumbs: [20, 70], indicator: [20, 70] });
+    root.modelValue = [33, 72];
+    await nextTick();
+    expect(places(slider)).toEqual({ thumbs: [33, 72], indicator: [33, 72] });
+    root.modelValue = [-7.31, 119.9];
+    await nextTick();
+    expect(places(slider)).toEqual({ thumbs: [0, 100], indicator: [0, 100] });
+  });
+
+  test.each([
+    { name: 'one thumb', model: 30, thumbs: [{}], indicator: [0, 30] },
+    { name: 'a range', model: [30, 70], thumbs: [{}, {}], indicator: [30, 70] },
+  ])(
+    '$name: the indicator goes from the start of the axis, or from the first thumb, to the last thumb, in each direction and on each axis',
+    async ({ model, thumbs, indicator }) => {
+      const rtl = await mountSlider({ root: { defaultValue: model, dir: 'rtl' }, thumbs });
+      const box = rtl.control.getBoundingClientRect();
+      const bar = rtl.control.querySelector('[style*="inherit"]')!.getBoundingClientRect();
+      expect([box.right - bar.right, box.right - bar.left].map(Math.round)).toEqual(indicator);
+      const vertical = await mountSlider({
+        root: { defaultValue: model, orientation: 'vertical' },
+        thumbs,
+      });
+      const column = vertical.control.getBoundingClientRect();
+      const fill = vertical.control.querySelector('[style*="inherit"]')!.getBoundingClientRect();
+      expect([column.bottom - fill.bottom, column.bottom - fill.top].map(Math.round)).toEqual(
+        indicator,
+      );
+    },
+  );
+});
+
 describe('thumbAlignment edge', () => {
   test('a thumb is in the control at min, in the middle and at max; the indicator ends at the centre of the thumb, also after the thumb gets another size', async () => {
     const root = reactive<Attrs>({ defaultValue: 0, thumbAlignment: 'edge' });
@@ -435,11 +637,11 @@ describe('thumbAlignment edge', () => {
     await nextTick();
     expect(place()).toEqual([90, 100]);
     root.modelValue = 30;
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await waitSingleFrame();
     await settle();
     expect(indicator.getBoundingClientRect().width).toBeCloseTo(32);
     thumbs[0]!.style = 'width: 20px; height: 10px';
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await waitSingleFrame();
     await settle();
     // The centre of a thumb of 20 px at 30 %: 10 + 0.3 × 80.
     expect(indicator.getBoundingClientRect().width).toBeCloseTo(34);
@@ -473,7 +675,7 @@ describe('thumbAlignment edge', () => {
     const slider = await mountSlider({ root, thumbs });
     const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
     const ends = async () => {
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await waitSingleFrame();
       await settle();
       const control = slider.control.getBoundingClientRect();
       const rect = indicator.getBoundingClientRect();
@@ -486,12 +688,56 @@ describe('thumbAlignment edge', () => {
     expect(await ends()).toEqual([0, 100]);
   });
 
+  test('the indicator ends at the centre of the thumb after the slider shows, from a parent with display none', async () => {
+    const hidden = document.body.appendChild(document.createElement('div'));
+    hidden.style.display = 'none';
+    onTestFinished(() => hidden.remove());
+    const { root } = mount(
+      SliderParts,
+      { root: { defaultValue: 30, thumbAlignment: 'edge' } },
+      hidden,
+    );
+    await settle();
+    hidden.style.display = '';
+    const indicator = root.querySelector<HTMLElement>('[style*="inherit"]')!;
+    // The centre of a thumb of 10 px at 30 %: 5 + 0.3 × 90.
+    await waitSingleFrame();
+    await settle();
+    expect(indicator.getBoundingClientRect().width).toBeCloseTo(32);
+  });
+
+  test.each([
+    { name: 'the last thumb unmounts', next: ['a', 'b'], ends: [23, 50] },
+    { name: 'the first thumb unmounts', next: ['b', 'c'], ends: [50, 77] },
+  ])(
+    'a range: when $name, each end of the indicator goes to the centre of the new end thumb',
+    async ({ next, ends }) => {
+      const values: Record<string, number> = { a: 20, b: 50, c: 80 };
+      const root = reactive<Attrs>({ modelValue: [20, 50, 80], thumbAlignment: 'edge' });
+      const thumbs = reactive<Attrs[]>([{ key: 'a' }, { key: 'b' }, { key: 'c' }]);
+      const slider = await mountSlider({ root, thumbs });
+      const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
+      const indicatorEnds = async () => {
+        await waitSingleFrame();
+        await settle();
+        const control = slider.control.getBoundingClientRect();
+        const rect = indicator.getBoundingClientRect();
+        return [rect.left - control.left, rect.right - control.left].map(Math.round);
+      };
+      // The centre of a thumb of 10 px at a value: 5 + value × 0.9.
+      expect(await indicatorEnds()).toEqual([23, 77]);
+      root.modelValue = next.map((key) => values[key]!);
+      thumbs.splice(0, 3, ...next.map((key) => ({ key })));
+      expect(await indicatorEnds()).toEqual(ends);
+    },
+  );
+
   test('VUE-148: after a change to the vertical axis, the thumb and the end of the indicator use the size of the thumb on that axis', async () => {
     const root = reactive<Attrs>({ defaultValue: 30, thumbAlignment: 'edge' });
     const slider = await mountSlider({ root, thumbs: [{ style: 'width: 20px; height: 10px' }] });
     const indicator = slider.control.querySelector<HTMLElement>('[style*="inherit"]')!;
     const frame = async () => {
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await waitSingleFrame();
       await settle();
     };
     await frame();

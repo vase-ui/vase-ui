@@ -543,6 +543,26 @@ describe('an element that is not a native button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { name: 'disabled', attrs: { disabled: true } },
+    { name: 'disabled, with the focus', attrs: { disabled: true, focusableWhenDisabled: true } },
+  ])(
+    '$name: a press runs the pointer listeners of the developer, and no mouse or click listener',
+    async ({ attrs }) => {
+      const events = ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'];
+      const listeners = Object.fromEntries(
+        events.map((type) => [`on${type[0]!.toUpperCase()}${type.slice(1)}`, vi.fn()]),
+      );
+      const { element } = await mountInSlot('span', { ...attrs, ...listeners });
+      await userEvent.click(element(), { force: true });
+      expect(listeners.onPointerdown).toHaveBeenCalledOnce();
+      expect(listeners.onPointerup).toHaveBeenCalledOnce();
+      expect(listeners.onMousedown).not.toHaveBeenCalled();
+      expect(listeners.onMouseup).not.toHaveBeenCalled();
+      expect(listeners.onClick).not.toHaveBeenCalled();
+    },
+  );
+
   test('the attributes and listeners of the developer reach only the element of the slot, also inside another element', async () => {
     const onClick = vi.fn();
     const { element } = await mountInSlot('wrapped', { 'aria-label': 'Save', onClick });

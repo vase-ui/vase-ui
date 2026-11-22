@@ -7,10 +7,10 @@ const REPEAT = 60;
 /**
  * The hold of a button that steps. A press of the main button steps, and a hold repeats the step
  * after 460 ms and then each 60 ms, until a step does nothing. The repeat pauses while the pointer
- * is out of the button. The hold ends at the release, at `pointercancel`, at `end()` and at the
- * unmount. A mouse steps at the press. A touch steps at its click, or at the first repeat when it
- * stays, because the browser cancels a touch that becomes a scroll before then. The click of a
- * press that stepped steps no more: `takeClick()` tells it.
+ * is out of the button. The hold ends at the release, at `pointercancel` and at the unmount.
+ * `cancel()` stops it before the release. A mouse steps at the press. A touch steps at its click,
+ * or at the first repeat when it stays, because the browser cancels a touch that becomes a scroll
+ * before then. The click of a press that stepped steps no more: `takeClick()` tells it.
  */
 export function useHold<Press>(options: {
   /** Starts a hold at a press of the main button. With no result, no hold starts. */
@@ -28,6 +28,8 @@ export function useHold<Press>(options: {
     stepped: boolean;
     /** The pointer is out of the button. */
     out: boolean;
+    /** `cancel()` stopped the hold. Its release only takes the click. */
+    cancelled: boolean;
     timer?: ReturnType<typeof setTimeout>;
   }
   let hold: Hold | undefined;
@@ -53,6 +55,7 @@ export function useHold<Press>(options: {
       mouse,
       stepped: false,
       out: false,
+      cancelled: false,
     };
     hold = current;
     const repeat = () => {
@@ -70,9 +73,9 @@ export function useHold<Press>(options: {
     if (event.pointerId !== current?.pointerId) return;
     end();
     // The click of a press comes before a timer that starts at its release.
-    pressed = current.mouse || current.stepped;
+    pressed = current.mouse || current.stepped || current.cancelled;
     if (pressed) setTimeout(() => (pressed = false));
-    options.release?.(current.press, event);
+    if (!current.cancelled) options.release?.(current.press, event);
   }
 
   function onCancel(event: PointerEvent) {
@@ -93,9 +96,16 @@ export function useHold<Press>(options: {
       onPointerleave: () => hold && (hold.out = true),
       onPointerenter: () => hold && (hold.out = false),
     },
-    /** Ends the hold with no release. */
-    end,
-    /** The click is the click of a press that stepped. It steps no more. */
+    /**
+     * Stops the hold before the release: it steps no more, and its release calls no `release`. The
+     * click of its press steps nothing, also when the button is enabled again before the release.
+     */
+    cancel() {
+      if (!hold) return;
+      clearTimeout(hold.timer);
+      hold.cancelled = true;
+    },
+    /** The click is the click of a press that stepped or that `cancel()` stopped. It steps no more. */
     takeClick() {
       const taken = pressed;
       pressed = false;

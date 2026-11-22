@@ -54,7 +54,7 @@
       "upstream": "packages/react/src/slider/control/SliderControl.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.pointer.test.ts",
-      "reason": "`Slider.pointer.test.ts` tests the press and the drag with pointer events and capture: the nearest thumb, the thumbs at `max`, the least distance, a value area of 0, the end of a press, a second pointer, and a disabled or removed control. The touch cases do not apply: the slider has no touch listener, and `touch-action: none` keeps a touch drag. The cases of a range that the parent edits during a drag do not apply: each move starts from the values that the slider shows. The file tests the case of a parent that removes a value during a drag."
+      "reason": "`Slider.pointer.test.ts` tests the press and the drag with pointer events and capture: the nearest thumb, the thumbs at `max`, the least distance, a value area of 0, the end of a press, a second pointer, and a disabled or removed control. The touch cases do not apply: the slider has no touch listener, and `touch-action: none` keeps a touch drag. Each move starts from the values that the slider shows. When the parent adds or removes a value during a press, the end of the press commits only a later change, and the next press works."
     },
     {
       "upstream": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
@@ -78,7 +78,7 @@
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/slider/Slider.test.ts",
-      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the page do not get them. The cases of `getAriaLabel` and `data-index` do not apply: give each thumb an `aria-label` and a class. The cases of the measured `edge` thumb do not apply: CSS places it. The `aria-valuetext` of a `format` has the locale of `Slider.Value`, also before the hydration (VUE-170)."
+      "reason": "`Slider.test.ts` tests where the attributes of a thumb go, its input, the `element` slot with `inputProps` and `inputRef`, `getAriaValueText`, the active thumb and its `z-index`. A `preventDefault()` in a keydown listener of the developer keeps the value, as on a native range input. `Slider.pointer.test.ts` tests the blur and the focus that show the focus ring at a key after a press: the field and the listeners of the page do not get them. The cases of `getAriaLabel` and `data-index` do not apply: give each thumb an `aria-label` and a class. The cases of the measured `edge` thumb do not apply: CSS places it. The `aria-valuetext` of a `format` has the locale of `Slider.Value`, also before the hydration (VUE-170)."
     },
     {
       "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",

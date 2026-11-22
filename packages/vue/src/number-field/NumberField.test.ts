@@ -307,13 +307,19 @@ describe('the value and the text', () => {
     expect(log).toEqual(['change 56 input-change', 'change 6 keyboard']);
   });
 
-  test('NaN in the model is an empty field; an undefined model keeps the value', async () => {
+  test('NaN or null in the model is an empty field; an undefined model keeps the value', async () => {
     const root = reactive<Attrs>({ modelValue: NaN });
     const { input, hidden } = await mountField({ root });
     expect(input.value).toBe('');
     expect(hidden.value).toBe('');
     expect(input).not.toHaveAttribute('aria-valuenow');
     expect(input).not.toHaveAttribute('aria-valuetext');
+    root.modelValue = 3;
+    await nextTick();
+    root.modelValue = null;
+    await nextTick();
+    expect(input.value).toBe('');
+    expect(hidden.value).toBe('');
     root.modelValue = 3;
     await nextTick();
     root.modelValue = undefined;
@@ -883,11 +889,28 @@ describe('steps', () => {
     expect(log).toEqual([]);
   });
 
-  test('a step after a typed edit starts from the typed number', async () => {
-    const { input } = await mountField({ root: { defaultValue: 1 } });
+  test('a step after a typed edit starts from the typed number, from a key, a click and a mouse press', async () => {
+    const { input, increment } = await mountField({ root: { defaultValue: 1 } });
     await typeAtEnd(input, '5');
     await userEvent.keyboard('{ArrowUp}');
     expect(input.value).toBe('16');
+    await typeAtEnd(input, '0');
+    increment.click();
+    await settle();
+    expect(input.value).toBe('161');
+    await typeAtEnd(input, '0');
+    await userEvent.click(increment);
+    await settle();
+    expect(input.value).toBe('1,611');
+  });
+
+  test('a focus from Tab keeps the selection of the browser', async () => {
+    const { root, input } = await mountField({ root: { defaultValue: 100 } });
+    const before = root.insertBefore(document.createElement('input'), root.firstChild);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(input);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 3]);
   });
 });
 
@@ -948,6 +971,12 @@ describe('the buttons', () => {
     vi.advanceTimersByTime(600);
     await nextTick();
     expect(input.value).toBe('5');
+    // A pointer that comes back after the release starts no hold.
+    pointer(increment, 'pointerleave');
+    pointer(increment, 'pointerenter');
+    vi.advanceTimersByTime(600);
+    await nextTick();
+    expect(input.value).toBe('5');
     expect(commits(log)).toEqual(['commit 5 increment-press']);
   });
 
@@ -995,6 +1024,42 @@ describe('the buttons', () => {
     vi.advanceTimersByTime(1000);
     expect(log).toEqual([]);
   });
+
+  test('a pen press steps at its click, as a touch, and does not move the focus to the input', async () => {
+    const log: string[] = [];
+    const { input, increment } = await mountField({ root: record(log, { defaultValue: 0 }) });
+    const pen = { pointerType: 'pen' };
+    expect(pointer(increment, 'pointerdown', pen).defaultPrevented).toBe(false);
+    pointer(increment, 'pointerup', pen);
+    await settle();
+    expect(log).toEqual([]);
+    increment.click();
+    await settle();
+    expect(commits(log)).toEqual(['commit 1 increment-press']);
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  test.each([
+    { pointerType: 'touch', value: '0' },
+    { pointerType: 'mouse', value: '1' },
+  ])(
+    'the click of a $pointerType press that the field disables and enables again steps nothing',
+    async ({ pointerType, value }) => {
+      const log: string[] = [];
+      const root = record(log, { defaultValue: 0 });
+      const { increment, input } = await mountField({ root });
+      pointer(increment, 'pointerdown', { pointerType });
+      root.disabled = true;
+      await nextTick();
+      root.disabled = false;
+      await nextTick();
+      pointer(increment, 'pointerup', { pointerType });
+      increment.click();
+      await settle();
+      expect(input.value).toBe(value);
+      expect(commits(log)).toEqual([]);
+    },
+  );
 
   test('a press on a disabled button that is not a native button steps nothing', async () => {
     const { root } = mount(NumberFieldParts, { root: { defaultValue: 1, disabled: true } });
@@ -1099,6 +1164,10 @@ describe('the wheel', () => {
     expect(ignored.map((event) => event.defaultPrevented)).toEqual([false, false, false]);
     expect(wheel(input, { deltaX: -100, shiftKey: true }).defaultPrevented).toBe(true);
     expect(commits(log)).toEqual(['commit 15 wheel']);
+    // A vertical wheel with a small horizontal distance steps.
+    expect(wheel(input, { deltaY: 1, deltaX: -0.5 }).defaultPrevented).toBe(true);
+    expect(wheel(input, { deltaY: 0.5, deltaX: -100 }).defaultPrevented).toBe(false);
+    expect(commits(log)).toEqual(['commit 15 wheel', 'commit 14 wheel']);
   });
 
   test('without allowWheelScrub, or in a read-only field, the wheel scrolls the page', async () => {
@@ -1214,6 +1283,27 @@ describe('the scrub area', () => {
     const area = container.querySelector('span[role=presentation]')!;
     expect(pointer(area, 'pointerdown').defaultPrevented).toBe(false);
     expect(container.querySelector('[data-scrubbing]')).toBeNull();
+  });
+
+  test('another mouse button starts no scrub; a mouse press keeps a selection that a focus listener of the developer sets', async () => {
+    const log: string[] = [];
+    const { input, area } = await mountField({
+      root: record(log, { defaultValue: 100 }),
+      area: {},
+      input: { onFocus: (event: FocusEvent) => (event.target as HTMLInputElement).select() },
+    });
+    expect(
+      pointer(area, 'pointerdown', { button: 2, clientX: 0, clientY: 0 }).defaultPrevented,
+    ).toBe(false);
+    pointer(window, 'pointermove', { clientX: 10, clientY: 0 });
+    pointer(window, 'pointerup');
+    await nextTick();
+    expect(log).toEqual([]);
+    expect(area).not.toHaveAttribute('data-scrubbing');
+    pointer(area, 'pointerdown', { clientX: 0, clientY: 0 });
+    expect(document.activeElement).toBe(input);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 3]);
+    pointer(window, 'pointerup');
   });
 
   test('a press and a release with no move give a label in the area its click, which focuses the input, and commit nothing', async () => {

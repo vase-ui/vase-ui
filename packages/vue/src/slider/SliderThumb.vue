@@ -175,11 +175,13 @@ function inputProps() {
       style: inputStyle.value,
       onFocus,
       onBlur,
-      onKeydown,
       onInput,
       value: value.value,
     },
     joinDescribedBy(ofInput, field),
+    // After the listeners of the developer, so that `preventDefault()` there keeps the value, as
+    // it does on a native range input.
+    { onKeydown },
   );
 }
 
@@ -208,7 +210,7 @@ function onInput(event: Event) {
 }
 
 function onKeydown(event: KeyboardEvent) {
-  if (!KEYS.has(event.key)) return;
+  if (!KEYS.has(event.key) || event.defaultPrevented) return;
   if (event.ctrlKey || event.altKey || event.metaKey) {
     // The shortcut of the browser stays. Chromium and WebKit also change a range input at an arrow
     // key with Ctrl, Alt or Meta, and Firefox does not, so the thumb refuses that change.
