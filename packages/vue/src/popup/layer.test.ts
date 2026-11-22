@@ -302,20 +302,15 @@ test.skipIf(server.browser !== 'chromium').each(covered)(
   },
 );
 
-// A mouse press on the element that covers the page closes these popups at `pointerdown`. The
-// close gives the focus to `focused`, or leaves it there.
-const pressedCovers: (Omit<Family, 'popup'> & {
-  cover: string;
-  trigger: string;
-  focused: string;
-})[] = [
+// A mouse press on the element that covers the page closes these popups at `pointerdown`. After the
+// close, the trigger has the focus.
+const pressedCovers: (Omit<Family, 'popup'> & { cover: string; trigger: string })[] = [
   {
     name: 'Menu',
     fixture: MenuParts,
     props: {},
     cover: BLOCK,
     trigger: '[data-testid="trigger"]',
-    focused: '[data-testid="trigger"]',
   },
   {
     name: 'Select',
@@ -323,7 +318,6 @@ const pressedCovers: (Omit<Family, 'popup'> & {
     props: {},
     cover: BLOCK,
     trigger: '[data-testid="trigger"]',
-    focused: '[data-testid="trigger"]',
   },
   {
     name: 'Combobox with modal true',
@@ -331,37 +325,33 @@ const pressedCovers: (Omit<Family, 'popup'> & {
     props: { root: { modal: true } },
     cover: BLOCK,
     trigger: '[data-testid="input"]',
-    focused: '[data-testid="input"]',
   },
   {
-    name: "Popover with modal 'trap-focus', a Close and a backdrop",
+    name: "Popover with 'trap-focus' and a backdrop",
     fixture: PopoverParts,
     props: { root: { modal: 'trap-focus' }, close: {}, backdrop },
     cover: BACKDROP,
     trigger: '[data-key="t"]',
-    focused: '[data-key="t"]',
   },
   {
-    name: "Dialog with modal 'trap-focus' and a viewport",
+    name: "Dialog with 'trap-focus' and a viewport",
     fixture: DialogParts,
     props: { root: { modal: 'trap-focus' }, viewport: backdrop },
     cover: '[data-testid="viewport"]',
     trigger: '[data-key="t"]',
-    focused: '[data-key="t"]',
   },
   {
-    name: "Drawer with modal 'trap-focus'",
+    name: "Drawer with 'trap-focus'",
     fixture: DrawerParts,
     props: { root: { modal: 'trap-focus' } },
     cover: '[data-testid="viewport"]',
     trigger: '[data-testid="trigger"]',
-    focused: '[data-testid="trigger"]',
   },
 ];
 
 test.each(pressedCovers)(
   '$name: a mouse press on the element that covers the page closes the popup, and the focus stays where the close puts it',
-  async ({ fixture, props, cover, trigger, focused }) => {
+  async ({ fixture, props, cover, trigger }) => {
     mount(fixture, props);
     await nextTick();
     await userEvent.click(document.querySelector(trigger)!);
@@ -376,7 +366,7 @@ test.each(pressedCovers)(
     );
     await userEvent.pointer({ coords: point, keys: '[MouseLeft]' });
     await waitFor(() => expect(popup.checkVisibility()).toBe(false));
-    expect(document.activeElement).toBe(document.querySelector(focused));
+    expect(document.activeElement).toBe(document.querySelector(trigger));
   },
 );
 

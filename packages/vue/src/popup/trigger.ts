@@ -199,10 +199,10 @@ export function usePopupTrigger(
 
   /**
    * A press that opens, closes or keeps open the popup at `pointerdown` can move the focus before
-   * its `mousedown`, also for a change that the parent applies: into the popup, or to the trigger or
-   * `finalFocus`. The `mousedown` would then give the focus to the button, and in WebKit on macOS to
-   * `<body>` (test/measurements/select.test.ts). A press that moves no focus keeps the `mousedown`
-   * of a button.
+   * its `mousedown`: into the popup, or to the trigger or `finalFocus`. A change that the parent
+   * applies is also in place at the `mousedown`. The `mousedown` would then give the focus to the
+   * button, and in WebKit on macOS to `<body>` (test/measurements/select.test.ts). A press that
+   * moves no focus keeps the `mousedown` of a button.
    */
   function onMousedown(event: MouseEvent) {
     const focused = activeElement(ownerDocument(event.currentTarget as Element));
