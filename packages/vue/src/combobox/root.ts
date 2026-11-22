@@ -103,6 +103,14 @@ export interface RootEmit {
   highlight: (value: unknown, details: ComboboxRootHighlightEventDetails) => void;
 }
 
+/** A mounted item: its value, its state and its text. */
+export interface MountedItem {
+  value: unknown;
+  disabled: boolean;
+  /** The text that the item renders. */
+  text: string;
+}
+
 /** What a mounted item gives to its root. */
 interface ItemEntry {
   value(): unknown;
@@ -137,6 +145,8 @@ export interface ComboboxRootContext {
   readonly shownText: string;
   /** The text of the close, which an input in a kept popup shows until the next open. */
   readonly keptText: string | null;
+  /** A fill of the browser keeps the closed popup in the DOM, so that its items stay mounted. */
+  readonly keepsPopup: boolean;
   readonly hasValue: boolean;
   /** The data of `items`, or `undefined`. */
   readonly data: readonly unknown[] | undefined;
@@ -175,7 +185,9 @@ export interface ComboboxRootContext {
   /** The text of a value in the form data. */
   formTextOf(value: unknown): string;
   /** The mounted items, also those of a closed popup that stays in the DOM, in the order of the document. */
-  mountedItems(): { value: unknown; disabled: boolean }[];
+  mountedItems(): MountedItem[];
+  /** The mounted items, else the items that were mounted at the last close. */
+  lastItems(): MountedItem[];
   /** Asks for a change of the open state. */
   request(open: boolean, reason: ComboboxRootChangeEventReason, event: Event): void;
   /** Changes the text. Gives `false` when a listener cancelled the change. */
@@ -184,12 +196,23 @@ export interface ComboboxRootContext {
   setValue(value: unknown, details: ComboboxRootChangeEventDetails): boolean;
   /** Picks the value of an item at a `click`. */
   select(value: unknown, event: MouseEvent): void;
-  /** The input got typed text, after its update of the text. */
-  onTyped(text: string, event: Event): void;
+  /**
+   * The input got typed text, after its update of the text. `hadValue`: the root had a value
+   * before the text, which an emptied text of a single combobox clears.
+   */
+  onTyped(text: string, event: Event, hadValue: boolean): void;
+  /** The browser filled the input with a text that is no query. */
+  onFilled(text: string): void;
+  /** Keeps the closed popup in the DOM from now on. */
+  keepPopup(): void;
+  /** Puts back the text as a close does. */
+  resetText(event: Event): void;
   /** A key on the control: the arrow keys of the list. Gives `true` when it used the key. */
   onListKeydown(event: KeyboardEvent): boolean;
   /** Clicks the highlighted item for a key. Gives `false` with no highlight. */
   clickHighlighted(event: KeyboardEvent): boolean;
+  /** Removes the highlight of the item of a value that a chip removed. */
+  unhighlight(value: unknown, event: Event): void;
   /** Opens for an arrow key, and highlights by the key after the items mounted. */
   openByKey(event: KeyboardEvent): void;
   /** The press of a mouse that opened the popup: its release selects the item under it, or closes. */
@@ -323,10 +346,20 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const typed = shallowRef(false);
   // With `autoHighlight`, the first item that mounts after the text gets the highlight.
   const highlightFirst = shallowRef(false);
+  /**
+   * The selected item gets the highlight when it mounts: at the mount of an inline list, and at an
+   * open that waits for the leave of the old popup.
+   */
+  const highlightSelectedLater = shallowRef(false);
   // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
   // the text of its input until the next open (test/measurements/combobox.test.ts, "a kept popup
   // that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
+  // The text of an autofill of the input, which is no query (Base UI).
+  const filledText = shallowRef<string | null>(null);
+  // With no `items`, the labels of a fill are the text of the items, so the popup stays from the
+  // first fill on, as in Base UI.
+  const keepsPopup = shallowRef(false);
   const query = computed(() => {
     if (kept.value) return kept.value.query;
     const trimmed = text.value.trim();
@@ -334,6 +367,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (source.mode === 'single' && !typed.value && trimmed === labelOf(valueModel.value).trim()) {
       return '';
     }
+    if (!typed.value && text.value === filledText.value) return '';
     return trimmed;
   });
   const filteredItems = computed<readonly unknown[]>((previous) => {
@@ -456,6 +490,20 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     finalFocus: () => popupFocus.value.finalFocus,
     tabIntoPopup: () => inputIsControl.value,
   });
+  // An input that is the control keeps the focus while the popup is open, so the popup returns no
+  // focus at its close. A `finalFocus` of the developer still gets the focus, as in Base UI.
+  watch(
+    () => root.open,
+    (open) => {
+      const target = popupFocus.value.finalFocus;
+      if (open || source.inline || !inputIsControl.value || target === undefined) return;
+      if (root.reason === 'focus-out' || root.reason === 'outside-press') return;
+      const element = typeof target === 'function' ? target(root.closeInteraction) : target;
+      if (typeof element === 'object' && element?.isConnected)
+        element.focus({ preventScroll: true });
+    },
+    { flush: 'sync' },
+  );
   const expanded = computed(() => root.open || source.inline);
 
   // The highlight.
@@ -499,20 +547,21 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       const completes =
         !source.readonly && (source.completion === 'both' || source.completion === 'inline');
       completion.value = completes && item && reason === 'keyboard' ? labelOf(valueOf(item)) : null;
-      if (item) emitHighlight(valueOf(item), indexOf(item), reason, event);
+      if (item) emitHighlight(valueOf(item), highlightedIndex.value, reason, event);
       else if (!source.virtualized || reason !== 'none')
         emitHighlight(undefined, -1, reason, event);
+      // A highlight of the user wins over a highlight that waits for its item.
+      if (reason !== 'none') highlightSelectedLater.value = false;
     },
   });
-  // An item that changes its value gives a new highlight event. A new highlight already gave its
-  // event in `onHighlight`, with this value.
+  // The event of a highlight step and the watcher below read one count of the items.
+  const highlightedIndex = computed(() => (list.highlighted ? indexOf(list.highlighted) : -1));
+  // An item that changes its value, or its place in the list, gives a new highlight event. A new
+  // highlight already gave its event in `onHighlight`, with this value and index.
   watch(
-    () => (list.highlighted ? valueOf(list.highlighted) : undefined),
-    (itemValue) => {
-      const item = list.highlighted;
-      if (item && !Object.is(itemValue, lastHighlight.value)) {
-        emitHighlight(itemValue, indexOf(item), 'none', undefined);
-      }
+    [() => list.highlighted && valueOf(list.highlighted), highlightedIndex],
+    ([itemValue, index]) => {
+      if (list.highlighted) emitHighlight(itemValue, index, 'none', undefined);
     },
     { flush: 'post' },
   );
@@ -557,13 +606,16 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       typed.value = false;
       completion.value = null;
       highlightFirst.value = false;
+      highlightSelectedLater.value = false;
       const key = openKey;
       openKey = undefined;
       if (!open) {
         list.highlight(null, 'none');
-        lastHighlight = { value: undefined, index: -1 };
+        // The highlight event of no item resets the last highlight. A virtualized list emits none
+        // for a highlight that it removes.
+        if (source.virtualized) lastHighlight = { value: undefined, index: -1 };
         kept.value = root.keepMounted ? { query: query.value, text: text.value } : null;
-        resetText();
+        resetText(new Event('vase-ui'), root.reason === 'item-press');
         return;
       }
       kept.value = null;
@@ -571,6 +623,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       void nextTick(() => {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
+        // A new popup waits while the old one leaves, so its items mount later.
+        if (list.items().length === 0 && hasValue.value && source.mode !== 'none') {
+          highlightSelectedLater.value = true;
+          return;
+        }
         const items = list.items();
         if (source.autoHighlight === 'always') {
           list.highlight(items[0] ?? null, 'none');
@@ -586,31 +643,42 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   );
 
   // At a close, the text goes back: the label of the value in an input outside the popup, else
-  // no text. Autocomplete keeps its text, which is its value.
-  function resetText() {
-    if (source.mode === 'none') return;
-    const event = new Event('vase-ui');
+  // no text. Autocomplete keeps its text, which is its value. Gives `false` when the text stays.
+  function resetText(event: Event, itemPress = false) {
+    if (source.mode === 'none') return false;
     if (source.mode === 'single' && inputIsControl.value && !source.inline) {
       const label = labelOf(valueModel.value);
-      setText(label, createComboboxDetails(label === '' ? 'input-clear' : 'none', event));
-      return;
+      return setText(label, createComboboxDetails(label === '' ? 'input-clear' : 'none', event));
     }
-    if (text.value === '' || (source.inline && source.mode === 'single')) return;
-    setText('', createComboboxDetails('input-clear', event, root.reason === 'item-press'));
+    if (text.value === '' || (source.inline && source.mode === 'single')) return true;
+    return setText('', createComboboxDetails('input-clear', event, itemPress));
   }
 
-  // An input in the popup starts with no text: the label of the value is in the trigger.
   onMounted(() => {
+    // An input in the popup starts with no text: the label of the value is in the trigger.
     if (followsLabel() && !inputIsControl.value) textState.setOwn('');
+    // An inline list gives the highlight to the selected item once it mounts, as in Base UI.
+    if (source.inline && hasValue.value && source.mode !== 'none') {
+      highlightSelectedLater.value = true;
+    }
   });
 
-  // The text of a single combobox follows the label of its value.
+  // The text of a single combobox follows the label of its value at a new label and at new
+  // `items` (Base UI). A typed text stays, and so does a text that the user emptied in the same
+  // update. An open by a typed text ends `typed`, so new `items` keep each text that is a query.
+  // An inline list shows its value, so it keeps an emptied text at new `items`, as at a blur.
   watch(
-    () => labelOf(valueModel.value),
-    (label) => {
-      if (followsLabel() && inputIsControl.value && !typed.value && text.value !== label) {
-        setText(label, createComboboxDetails('none', new Event('vase-ui')));
-      }
+    [() => labelOf(valueModel.value), () => source.items, text] as const,
+    ([label, items, current], [oldLabel, oldItems, previous]) => {
+      if (!followsLabel() || !inputIsControl.value || current === label) return;
+      const newLabel = label !== oldLabel;
+      if (!newLabel && (items === oldItems || source.inline)) return;
+      const ofUser =
+        current === ''
+          ? typed.value && current !== previous
+          : typed.value || (!newLabel && query.value !== '');
+      if (ofUser) return;
+      if (setText(label, createComboboxDetails('none', new Event('vase-ui')))) typed.value = false;
     },
   );
 
@@ -677,8 +745,23 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       if (!setValue(next, details)) return;
       if (!selected) lastPick = { value: itemValue };
       if (text.value.trim() === '') return;
-      if (inputIsControl.value && !source.inline) request(false, 'item-press', pick);
-      else setText('', createComboboxDetails('input-clear', pick, true));
+      if (inputIsControl.value && !source.inline) {
+        request(false, 'item-press', pick);
+        return;
+      }
+      if (!setText('', createComboboxDetails('input-clear', pick, true))) return;
+      // With the whole list back, the highlight goes to the picked item, also when the parent
+      // refused it, or after a deselect to the first selected item, as in Base UI.
+      void nextTick(() => {
+        if (!expanded.value) return;
+        const item = selected
+          ? undefined
+          : list
+              .items()
+              .find((each) => compareItemEquality(valueOf(each), itemValue, isEqual.value));
+        if (item) list.highlight(item, 'none');
+        else if (!highlightSelected()) list.highlight(null, 'none');
+      });
       return;
     }
     if (
@@ -698,13 +781,16 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     form?.requestSubmit();
   }
 
-  function onTyped(typedText: string, event: Event) {
+  function onTyped(typedText: string, event: Event, hadValue: boolean) {
     typed.value = true;
+    filledText.value = null;
+    highlightSelectedLater.value = false;
     completion.value = null;
     const hasText = typedText.trim() !== '';
-    // With `autoHighlight`, an emptied text gives the highlight to the selected item, else keeps
-    // the highlighted item (Base UI).
-    const previous = !hasText && source.autoHighlight === true ? list.highlighted : null;
+    // With `autoHighlight`, an emptied text gives the highlight to the selected item. With no
+    // value, it keeps the highlighted item (Base UI).
+    const previous =
+      !hasText && source.autoHighlight === true && !hadValue ? list.highlighted : null;
     if (!previous) list.highlight(null, 'none', event);
     // Each typed text shows the list from its top.
     const first = list.items()[0]?.element ?? listElement.value;
@@ -717,12 +803,33 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         if (item) list.highlight(item, 'none');
         // Items that come later, such as the results of a request, get the highlight.
         else highlightFirst.value = true;
-      } else if (!hasText) {
-        highlightSelected();
+        return;
       }
+      // A text that the parent keeps is no emptied text, so the selected item gets no highlight.
+      if (!hasText && text.value.trim() === '') highlightSelected();
     });
   }
 
+  // The first item of `autoHighlight` waits only for its typed text, while `autoHighlight` is on.
+  watch(
+    () => text.value.trim() === '' || !source.autoHighlight,
+    (drop) => {
+      if (drop) highlightFirst.value = false;
+    },
+  );
+  // The selected item gets the highlight when it mounts.
+  watch(
+    () =>
+      highlightSelectedLater.value && expanded.value
+        ? list.items().find((item) => isSelected(valueOf(item)))
+        : undefined,
+    (item) => {
+      if (!item) return;
+      highlightSelectedLater.value = false;
+      list.highlight(item, 'none');
+    },
+    { flush: 'post' },
+  );
   watch(
     () => (highlightFirst.value ? list.items()[0] : undefined),
     (item) => {
@@ -807,6 +914,28 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     };
   }
 
+  function readMountedItems() {
+    return inDocumentOrder(
+      [...itemEntries].filter(([element]) => element.isConnected),
+      ([element]) => element,
+      listElement.value,
+    ).map(([element, entry]) => ({
+      value: entry.value(),
+      disabled: entry.disabled(),
+      text: element.textContent?.trim() ?? '',
+    }));
+  }
+  // The items of the last close, for the typeahead of a closed trigger after its popup unmounted
+  // them, as in Base UI.
+  let closedItems: MountedItem[] = [];
+  watch(
+    () => root.open,
+    (open) => {
+      if (!open) closedItems = readMountedItems();
+    },
+    { flush: 'sync' },
+  );
+
   const context: ComboboxRootContext = {
     family: source.family,
     root,
@@ -861,6 +990,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     get keptText() {
       return kept.value?.text ?? null;
     },
+    get keepsPopup() {
+      return keepsPopup.value;
+    },
     get hasValue() {
       return hasValue.value;
     },
@@ -911,19 +1043,33 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       return collection.value || source.itemToStringLabel ? labelOf : undefined;
     },
     formTextOf,
-    mountedItems: () =>
-      inDocumentOrder(
-        [...itemEntries].filter(([element]) => element.isConnected),
-        ([element]) => element,
-        listElement.value,
-      ).map(([, entry]) => ({ value: entry.value(), disabled: entry.disabled() })),
+    mountedItems: readMountedItems,
+    lastItems() {
+      const mounted = readMountedItems();
+      return mounted.length > 0 || root.open ? mounted : closedItems;
+    },
     request,
     setText,
     setValue,
     select,
     onTyped,
+    onFilled(filled) {
+      filledText.value = filled;
+    },
+    keepPopup() {
+      keepsPopup.value = true;
+    },
+    resetText(event) {
+      // The text that goes back is no typed text, so it follows a new label of the value.
+      if (resetText(event)) typed.value = false;
+    },
     onListKeydown,
     clickHighlighted,
+    unhighlight(itemValue, event) {
+      const item = list.highlighted;
+      if (!item || !compareItemEquality(valueOf(item), itemValue, isEqual.value)) return;
+      list.highlight(null, event.type.startsWith('key') ? 'keyboard' : 'pointer', event);
+    },
     openByKey,
     press,
     addInput: (input) => add(inputs, input),
@@ -1050,15 +1196,25 @@ export function injectPositioner(context: ComboboxRootContext, part: string) {
   return placement;
 }
 
+// The elements that handle their own press: a control, a link, an editable element, a button role
+// and a tab stop.
+const INTERACTIVE =
+  'button,a[href],[role="button"],select,input,textarea,[contenteditable]:not([contenteditable="false"]),[tabindex]:not([tabindex="-1"])';
+
 /**
- * A press on the padding around the input moves the focus to the input and opens the popup, as a
- * press on the input does.
+ * A press on the group of the input or on the chips, out of their buttons and their input, moves
+ * the focus to the input and opens the popup, as a press on the input does. A press on a chip gives
+ * it no focus.
  */
 export function pressAroundInput(context: ComboboxRootContext, event: MouseEvent) {
-  if (event.target !== event.currentTarget || event.button !== 0) return;
+  const target = event.target as Element | null;
+  const around = event.currentTarget as Element;
+  if (event.button !== 0 || !target || !around.contains(target)) return;
+  const interactive = target === around ? null : target.closest(INTERACTIVE);
+  if (interactive && around.contains(interactive)) return;
+  event.preventDefault();
   const input = context.inputIsControl ? context.control : null;
   if (!input || context.disabled) return;
-  event.preventDefault();
   input.focus();
   if (context.openOnInputClick) context.request(true, 'input-press', event);
 }

@@ -16,7 +16,10 @@ defineProps({
   trigger: Boolean,
   /** A trigger before the group of the input. */
   triggerFirst: Boolean,
+  /** A clear button with these props: in the group of the input, else after the trigger. */
   clear: Object as PropType<Props>,
+  /** The clear button of `clear` is in the popup, after its input. */
+  clearInPopup: Boolean,
   label: Boolean,
   input: Object as PropType<Props>,
   portal: Object as PropType<Props>,
@@ -29,8 +32,8 @@ defineProps({
   button: Boolean,
   /** A separator after the list, with these props. */
   separator: Object as PropType<Props>,
-  /** `scene.popup` set to `false` unmounts the popup. */
-  scene: { type: Object as PropType<{ popup?: boolean }>, default: () => ({}) },
+  /** `scene.popup` set to `false` unmounts the popup, and `scene.trigger` the trigger of `trigger`. */
+  scene: { type: Object as PropType<{ popup?: boolean; trigger?: boolean }>, default: () => ({}) },
   /** The items render the label of an object, as `{ value, label }`. */
   labels: Boolean,
   /** The items are groups `{ name, items }`. */
@@ -68,14 +71,26 @@ export const FRUITS = [
     <Combobox.InputGroup v-else data-testid="group">
       <Combobox.Input data-testid="input" v-bind="input" />
       <Combobox.Clear v-if="clear" data-testid="clear" v-bind="clear" />
-      <Combobox.Trigger v-if="trigger" data-testid="trigger">Open</Combobox.Trigger>
+      <Combobox.Trigger v-if="trigger && scene.trigger !== false" data-testid="trigger">
+        Open
+      </Combobox.Trigger>
     </Combobox.InputGroup>
+    <Combobox.Clear
+      v-if="inputInPopup && clear && !clearInPopup"
+      data-testid="clear"
+      v-bind="clear"
+    />
     <Combobox.Portal v-bind="portal">
       <Combobox.Positioner data-testid="positioner" v-bind="positioner">
         <Combobox.Popup v-if="scene.popup !== false" data-testid="popup" v-bind="popup">
           <Combobox.InputGroup v-if="inputInPopup" data-testid="popup-group">
             <Combobox.Input data-testid="input" v-bind="input" />
           </Combobox.InputGroup>
+          <Combobox.Clear
+            v-if="inputInPopup && clear && clearInPopup"
+            data-testid="clear"
+            v-bind="clear"
+          />
           <Combobox.Status v-if="status" data-testid="status">Ten fruits.</Combobox.Status>
           <Combobox.Empty v-if="empty" data-testid="empty">No fruit.</Combobox.Empty>
           <Combobox.List data-testid="list" v-bind="list">

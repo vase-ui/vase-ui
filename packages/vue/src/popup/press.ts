@@ -73,6 +73,8 @@ export function usePopupPress(
     { press, trigger, delays }: { press: MouseEvent; trigger: Element; delays: PressDelays },
     event: PointerEvent,
   ) {
+    // A trigger that left the DOM during the press ends the gesture.
+    if (!trigger.isConnected) return;
     if (event.type !== 'pointerup' || isReleaseAtPressPoint(press, event)) return;
     const elapsed = event.timeStamp - press.timeStamp;
     const path = event.composedPath().filter(isElement);

@@ -25,7 +25,10 @@ watch(
 );
 
 const disabled = computed(() => context.disabled);
-const state = computed<ComboboxChipState>(() => ({ disabled: disabled.value }));
+const state = computed<ComboboxChipState>(() => ({
+  disabled: disabled.value,
+  readonly: context.readonly,
+}));
 provide(chipKey, {
   get element() {
     return element.value;
@@ -42,16 +45,23 @@ function remove(event: Event) {
   if (!el || !Array.isArray(values) || context.readonly || disabled.value) return;
   const index = chips.indexOf(el);
   if (index === -1) return;
-  context.setValue(
-    values.filter((_, at) => at !== index),
-    createComboboxDetails('none', event),
-  );
+  const removed = values[index];
+  if (
+    !context.setValue(
+      values.filter((_, at) => at !== index),
+      createComboboxDetails('none', event),
+    )
+  )
+    return;
+  context.unhighlight(removed, event);
 }
 
 function onKeydown(event: KeyboardEvent) {
   if (event.target !== event.currentTarget || event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
+  // The chips of a disabled or read-only root take no key.
+  if (disabled.value || context.readonly) return;
   const el = element.value;
   if (!el) return;
   const index = chips.indexOf(el);
@@ -75,10 +85,13 @@ function onKeydown(event: KeyboardEvent) {
   }
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
     event.preventDefault();
-    if (!context.disabled) context.openByKey(event);
+    context.openByKey(event);
+    // An input that renders only while the popup is open mounts in this update.
+    void nextTick(() => context.input?.focus());
     return;
   }
-  // Enter, Space and a character go to the input.
+  // Enter and Space go to the input and type nothing. A character goes to the input and types.
+  if (event.key === 'Enter' || event.key === ' ') event.preventDefault();
   if (event.key === 'Enter' || event.key.length === 1) input?.focus();
 }
 
@@ -89,7 +102,13 @@ function onFocus(event: FocusEvent) {
 
 function elementProps() {
   return mergeProps(
-    { tabindex: -1, 'data-disabled': disabled.value ? '' : undefined, onKeydown, onFocus },
+    {
+      tabindex: -1,
+      'data-disabled': disabled.value ? '' : undefined,
+      'data-readonly': context.readonly ? '' : undefined,
+      onKeydown,
+      onFocus,
+    },
     attrs,
   );
 }

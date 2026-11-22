@@ -1,0 +1,11 @@
+{
+  "id": "VUE-225",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L1288-L1295",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L1311-L1312",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L6072-L6089"
+  ],
+  "behavior": "When the focus leaves the input of `Combobox` while its popup is closed, the text goes back as at a close: to the label of the value, or to no text with `multiple`. After the user leaves the input, it thus shows no text that is not the value, also when the parent keeps a value that the user emptied. Base UI keeps that text until the `items` change or the popup closes.",
+  "dueWith": "packages/react/src/combobox/root/AriaCombobox.tsx",
+  "families": ["combobox"]
+}

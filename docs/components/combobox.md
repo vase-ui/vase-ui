@@ -65,7 +65,7 @@ An input with a list of predefined items to select.
 - **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
 - **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
 - **Form controls must have an accessible name**: Label the control with a native `<label>`, `<Field.Label>` or `<Combobox.Label>`. `<Combobox.Label>` names the control: the input, or the trigger when the input is in the popup. When no label is visible, give the control an `aria-label`. See the [forms guide](/handbook/forms).
-- **Closing animations**: Put a `<Transition appear>` around `<Combobox.Popup>`. Without `keepMounted`, the popup mounts at each open, so the `<Transition>` needs `appear`. The popup stays in the DOM until its leave ends. See the [animation guide](/handbook/animation).
+- **Closing animations**: Put a `<Transition appear>` around `<Combobox.Popup>`. Without `keepMounted`, the popup mounts at each open, so the `<Transition>` needs `appear`. The popup stays in the DOM until its leave ends. A close puts the text back at once. An open during the leave starts with that text and with each item. See the [animation guide](/handbook/animation).
 
 ## Anatomy
 

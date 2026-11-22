@@ -1,0 +1,11 @@
+{
+  "id": "VUE-224",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L603-L610",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L1643-L1654",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L4924-L4965"
+  ],
+  "behavior": "With `items`, a fill of the browser matches the form text and the label of each item of `items`. The label is the text that the input shows and that the filter reads: `label` of an object item, or the result of `itemToStringLabel`. The root mounts no list for the match. Base UI mounts the closed list when no form text and no label matches, and it then reads the rendered text of each item.",
+  "dueWith": "packages/react/src/combobox/root/AriaCombobox.tsx",
+  "families": ["combobox"]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "VUE-220",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L804-L835",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/AriaCombobox.tsx#L952-L991",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L6325-L6388",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L6632-L6663"
+  ],
+  "behavior": "At a close, the text of `Combobox` goes back in the same update: to the label of the value in an input that is the control, and to no text in other inputs. The popup that leaves in a `<Transition>` keeps the items that it showed, and its input is inert. An open during the leave starts as each open does: with the text of the close, with each item, and with the highlight on the selected item. A text that the user types during the leave is a new query. A close that the parent does not apply changes no text and no filter. So the result of a close and a new open does not depend on the duration of the exit animation. Base UI resets the text of a single combobox when the exit animation ends. An open during the animation keeps the typed text and its filter, and an open after the animation does not. Base UI also empties the text of a multiple combobox at a close that the parent does not apply.",
+  "dueWith": "packages/react/src/combobox/root/AriaCombobox.tsx",
+  "families": ["combobox"]
+}

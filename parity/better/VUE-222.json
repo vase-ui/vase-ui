@@ -1,0 +1,12 @@
+{
+  "id": "VUE-222",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/popup/ComboboxPopup.tsx#L117",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx#L15-L46",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/popover/popup/PopoverPopup.tsx#L74",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L1246-L1273"
+  ],
+  "behavior": "`modal` of `Combobox.Root` locks the scroll of the page and blocks the pointer outside the popup. It sets no focus trap. Tab from the last tab stop of the popup closes the popup and moves the focus on, as in `Select` and `Menu`. Each user thus has a way out of the popup with no close button. A modal `Popover` traps the focus only with a `Popover.Close` part, for the same reason. Base UI keeps the focus in a modal popup that holds the input: Tab from the last tab stop goes back to the input. Its way out for a touch screen reader is a hidden button with the fixed name \"Dismiss\".",
+  "dueWith": "packages/react/src/combobox/popup/ComboboxPopup.tsx",
+  "families": ["combobox", "autocomplete"]
+}

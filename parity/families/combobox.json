@@ -551,6 +551,11 @@
       "entry": "Empty",
       "stateField": "empty",
       "reason": "The state says that the list is empty, for an element of the developer in the `element` slot."
+    },
+    {
+      "entry": "Chip",
+      "stateField": "readonly",
+      "reason": "A chip has no role that takes `aria-readonly`, so a chip of a read-only root has `readonly` in its state and the attribute `data-readonly`, where Base UI writes `aria-readonly`."
     }
   ],
   "returnTypeDifferences": [
