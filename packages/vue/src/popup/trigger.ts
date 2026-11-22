@@ -31,7 +31,8 @@ export function useHandleRoot<Payload>(handle: () => PopupHandle<Payload> | unde
 export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigger) {
   // The server and the first render know the root of the setup. A server stops an immediate
   // watcher after its first run, and its cleanup would remove the trigger. From the mount, the
-  // watcher follows the root, which a handle can give after the mount.
+  // watcher follows the root, which a handle can give after the mount. It follows at once, so that
+  // `open(id)` in the `onMounted` of a child of a root that takes the handle finds the trigger.
   const removeInitial = root()?.addTrigger(entry);
   onMounted(() => {
     removeInitial?.();
@@ -40,7 +41,7 @@ export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigge
       (current, _, onCleanup) => {
         if (current) onCleanup(current.addTrigger(entry));
       },
-      { immediate: true },
+      { immediate: true, flush: 'sync' },
     );
   });
 }

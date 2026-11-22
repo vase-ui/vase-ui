@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick } from 'vue';
+import { nextTick, reactive } from 'vue';
 import { AlertDialog, type AlertDialogRootChangeEventDetails } from '@vase-ui/vue/alert-dialog';
+import DialogHandleScene from '../../test/fixtures/DialogHandleScene.vue';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
 import DialogPartAlone from '../../test/fixtures/DialogPartAlone.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
@@ -97,6 +98,89 @@ describe('Alert Dialog', () => {
     handle.openWithPayload('given');
     await opened();
     expect(byTestId('payload')).toHaveTextContent('given');
+    expect(handle.isOpen).toBe(true);
+  });
+
+  test('an open root with a handle and `defaultTriggerId` marks that trigger, in the root and outside it', async () => {
+    const handle = AlertDialog.createHandle();
+    const { trigger } = await mountAlertDialog({
+      root: { handle, defaultOpen: true, defaultTriggerId: 'inside' },
+      triggers: [{ key: 't', attrs: { id: 'inside' } }],
+    });
+    let element = await opened();
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-expanded', 'true'));
+    expect(trigger()).toHaveAttribute('aria-controls', element.id);
+    expect(handle.isOpen).toBe(true);
+    handle.close();
+    await closed();
+    const scene = reactive({
+      triggerHandle: AlertDialog.createHandle(),
+      rootHandle: undefined as unknown,
+      roots: ['r'],
+      triggers: ['detached'],
+    });
+    scene.rootHandle = scene.triggerHandle;
+    mount(DialogHandleScene, {
+      alert: true,
+      scene,
+      root: { defaultOpen: true, defaultTriggerId: 'detached' },
+    });
+    element = await waitFor(() => {
+      expect(byTestId('popup-r')).not.toBe(null);
+      return byTestId('popup-r')!;
+    });
+    await waitFor(() => expect(byId('detached')).toHaveAttribute('aria-expanded', 'true'));
+    expect(byId('detached')).toHaveAttribute('aria-controls', element.id);
+    expect(scene.triggerHandle.isOpen).toBe(true);
+  });
+
+  test('a parent that refuses a close keeps the trigger expanded and the handle open', async () => {
+    const handle = AlertDialog.createHandle();
+    const root = reactive<Props>({ handle, open: false });
+    root['onUpdate:open'] = (open: boolean) => {
+      if (open) root.open = true;
+    };
+    const { trigger } = await mountAlertDialog({ root, close: { 'data-testid': 'close' } });
+    await userEvent.click(trigger());
+    await opened();
+    expect(handle.isOpen).toBe(true);
+    await userEvent.click(byTestId('close')!);
+    await nextTick();
+    expect(popup()).not.toBe(null);
+    expect(trigger()).toHaveAttribute('aria-expanded', 'true');
+    expect(handle.isOpen).toBe(true);
+  });
+
+  test('a root with a handle that mounts again after an unmount while open connects its trigger, and a press on its backdrop closes nothing', async () => {
+    const handle = AlertDialog.createHandle();
+    const scene = reactive({
+      triggerHandle: handle,
+      rootHandle: handle,
+      roots: ['r'],
+      triggers: ['a'],
+    });
+    mount(DialogHandleScene, { alert: true, scene });
+    await nextTick();
+    await userEvent.click(byId('a'));
+    let element = await waitFor(() => {
+      expect(byTestId('popup-r')).not.toBe(null);
+      return byTestId('popup-r')!;
+    });
+    expect(byId('a')).toHaveAttribute('aria-controls', element.id);
+    scene.roots = [];
+    await waitFor(() => expect(byTestId('popup-r')).toBe(null));
+    scene.roots = ['r'];
+    await nextTick();
+    expect(byTestId('popup-r')).toBe(null);
+    await userEvent.click(byId('a'));
+    element = await waitFor(() => {
+      expect(byTestId('popup-r')).not.toBe(null);
+      return byTestId('popup-r')!;
+    });
+    expect(byId('a')).toHaveAttribute('aria-controls', element.id);
+    await userEvent.click(byTestId('backdrop-r')!, { force: true });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(byTestId('popup-r')).not.toBe(null);
     expect(handle.isOpen).toBe(true);
   });
 

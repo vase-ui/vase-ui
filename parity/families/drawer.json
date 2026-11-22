@@ -33,13 +33,13 @@
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.test.ts",
-      "reason": "`Drawer.test.ts` tests the popup: its role and attributes, the first focus on the popup element and `initialFocus`, the negative snap point offset of a drawer that closes up, the count and the heights of nested drawers, a dialog in a drawer that is no nested drawer, and the error for a popup with no viewport. The popup throws in place of a warning. The cases about the order of React effects and the owner stack have no counterpart."
+      "reason": "`Drawer.test.ts` tests the popup: its role and attributes, the first focus on the popup element and `initialFocus`, the negative snap point offset of a drawer that closes up, the count and the heights of nested drawers, a dialog in a drawer that is no nested drawer, and the error for a popup with no viewport. The popup throws in place of a warning. The cases about the order of React effects and the owner stack have no counterpart. `Drawer.nested.test.ts` tests the border in the frontmost height, and the nested state and the height of the drawer below while a nested drawer leaves."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.test.ts",
-      "reason": "`Drawer.test.ts` tests the root: the dialog behavior, the handle, the snap point events and the order of the events at a close, the back gesture of Android, and a drawer that counts as a dialog for a dialog. `Drawer.swipe.test.ts` tests the swipe with its threshold and its speed, the snap points of a swipe, a cancelled close and a parent that keeps the drawer open. A snap point change comes after `update:open` at a close. The store and the effect order of React have no counterpart."
+      "reason": "`Drawer.test.ts` tests the root: the dialog behavior, the handle, the snap point events and the order of the events at a close, the back gesture of Android, and a drawer that counts as a dialog for a dialog. `Drawer.swipe.test.ts` tests the swipe with its threshold and its speed, the snap points of a swipe, a cancelled close and a parent that keeps the drawer open. A snap point change comes after `update:open` at a close. The store and the effect order of React have no counterpart. `Drawer.swipe.test.ts` also tests a flick with still samples at its end for `snapToSequentialPoints`, and a cancelled close that keeps the snap point."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
@@ -57,13 +57,13 @@
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
-      "reason": "`Drawer.swipe.test.ts` tests the swipe area: the open at 1 px with the area as the trigger, the popup that follows the finger from its closed place, the release, a release outside the popup that closes nothing, a disabled area, an area that becomes inert, no text selection and the focus that stays, and a swipe while the popup of the last close leaves: the popup enters at the place of the finger after the leave. The Indent has the progress of the Backdrop. Pointer Events carry the swipe, so the cases about touch events and compatibility pointer events have no counterpart."
+      "reason": "`Drawer.swipe.test.ts` tests the swipe area: the open at 1 px with the area as the trigger, the popup that follows the finger from its closed place, the release, a release outside the popup that closes nothing, a disabled area, an area that becomes disabled or inert in a swipe, an open that the parent refuses, a press outside after a swipe that opened the drawer, no text selection and the focus that stays, and a swipe while the popup of the last close leaves: the popup enters at the place of the finger after the leave. The Indent has the progress of the Backdrop. Pointer Events carry the swipe, so the cases about touch events and compatibility pointer events have no counterpart."
     },
     {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
-      "reason": "`Drawer.swipe.test.ts` tests the swipe of the viewport: the release, the square root against the direction, a fast flick, the leave from the place of the drag with `data-swipe-dismiss`, a cancelled close, the elements where a mouse starts no swipe, no text selection, the press of another button, a render in a swipe, a popup that goes, a nested drawer, a listener that stops the press, the snap points, and with a real touch in Chromium: a scroller at its edge and not, a drag across the axis, a touch that starts outside the popup, a `touchmove` listener in the popup, a range input and a selection. The `touchmove` listener is on the viewport element. Pointer Events carry the swipe, so the cases about the touch path, a non-cancelable `touchmove` and the order of React effects have no counterpart."
+      "reason": "`Drawer.swipe.test.ts` tests the swipe of the viewport: the release, the square root against the direction, a fast flick, the leave from the place of the drag with `data-swipe-dismiss`, a cancelled close, the elements where a mouse starts no swipe, no text selection and the clear of a selection in the popup, the press of another button, a render in a swipe, a popup that goes, a nested drawer, a listener that stops the press, the snap points, and with a real touch in Chromium: a scroller at its edge and not, a drag across the axis, a touch that starts outside the popup, a `touchmove` listener in the popup, a range input and a selection. The `touchmove` listener is on the viewport element. Pointer Events carry the swipe, so the cases about the touch path, a non-cancelable `touchmove` and the order of React effects have no counterpart."
     },
     {
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",

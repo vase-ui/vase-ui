@@ -178,12 +178,13 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
       { immediate: true, flush: 'sync' },
     );
     // A popup in a shadow root gets the focus events of that root there. The document gets no
-    // focus event for a move of the focus in one shadow root.
+    // focus event for a move of the focus in one shadow root. Each shadow root around the popup
+    // listens, so that a closed one decides an event in it.
     watch(
       () => (root.open ? root.popup : null),
       (popup, _, onCleanup) => {
         if (!popup) return;
-        onCleanup(followRootNode(popup, (node) => (isShadowRoot(node) ? listen(node) : undefined)));
+        onCleanup(followRootNode(popup, () => mergeCleanups(...shadowRootsOf(popup).map(listen))));
       },
       { immediate: true, flush: 'post' },
     );
@@ -215,18 +216,44 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
 // Each document and each shadow root of a popup gets one set of listeners.
 const listeners = new Map<Node, { count: number; stop(): void }>();
 
+/** The shadow root of the node, and each shadow root around its host, from the inner one. */
+function shadowRootsOf(node: Node) {
+  const roots: ShadowRoot[] = [];
+  for (let each = node.getRootNode(); isShadowRoot(each); each = each.host.getRootNode()) {
+    roots.push(each);
+  }
+  return roots;
+}
+
+/**
+ * A listener outside a closed shadow root sees the host of the root in place of the elements in it.
+ * When a popup is in that root or in a shadow root in it, the listener of the root gets the event
+ * later in the capture phase, with the whole path. So that listener decides a press and a click,
+ * which can close a popup at once. At a release, it writes the state of the press after the
+ * document.
+ */
+function decidedInRoot<E extends Event>(handler: (event: E) => void) {
+  return (event: E) => {
+    const path = event.composedPath();
+    for (const node of listeners.keys()) {
+      if (isShadowRoot(node) && !path.includes(node) && path.includes(node.host)) return;
+    }
+    handler(event);
+  };
+}
+
 function listen(node: Document | ShadowRoot) {
   let entry = listeners.get(node);
   if (!entry) {
     entry = {
       count: 0,
       stop: mergeCleanups(
-        addEventListener(node, 'pointerdown', onPointerdown as EventListener, true),
+        addEventListener(node, 'pointerdown', decidedInRoot(onPointerdown) as EventListener, true),
         addEventListener(node, 'pointermove', onPointermove as EventListener, true),
         addEventListener(node, 'pointerup', onPointerup as EventListener, true),
         addEventListener(node, 'pointercancel', onPointerup as EventListener, true),
         addEventListener(node, 'contextmenu', onContextmenu, true),
-        addEventListener(node, 'click', onClick as EventListener, true),
+        addEventListener(node, 'click', decidedInRoot(onClick) as EventListener, true),
         addEventListener(node, 'focusout', onFocusout as EventListener),
         addEventListener(node, 'keydown', onKeydown as EventListener),
         addEventListener(node, 'compositionend', onCompositionend, true),
@@ -459,23 +486,38 @@ function onFocusout(event: FocusEvent) {
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {
     if (!entry.layer.focusOut || !isPathInside(entry, path)) continue;
-    // A focus in a shadow root has the host of the root as the related target here.
-    if (related && !related.shadowRoot) {
-      if (!insideElements(entry).some((element) => element.contains(related))) {
+    if (related) {
+      const inside = insideElements(entry);
+      if (inside.some((element) => element.contains(related))) continue;
+      // A move of the focus into a shadow root has the host of the root, or of a shadow root
+      // around it, as its related target. The element in the root has the focus one task later.
+      const roots = inside.flatMap((element) => {
+        const around = shadowRootsOf(element);
+        return around.some((each) => each.host === related) ? around.slice(0, 1) : [];
+      });
+      if (roots.length === 0) {
         entry.layer.root.request(false, 'focus-out', event);
+        continue;
       }
+      setTimeout(() => {
+        const active = roots.map((root) => root.activeElement);
+        if (
+          stack.includes(entry) &&
+          !insideElements(entry).some((element) => active.some((each) => element.contains(each)))
+        ) {
+          entry.layer.root.request(false, 'focus-out', event);
+        }
+      });
       continue;
     }
     // A press in a frame moves the focus there with no related target. The active element is the
-    // frame one task later (test/measurements/popup.test.ts), and so is the element in a shadow
-    // root.
+    // frame one task later (test/measurements/popup.test.ts).
     const doc = ownerDocument(event.target as Element);
     setTimeout(() => {
       const active = activeElement(doc);
       if (
         stack.includes(entry) &&
-        !!active &&
-        (related || active.localName === 'iframe') &&
+        active?.localName === 'iframe' &&
         !insideElements(entry).some((element) => contains(element, active))
       ) {
         entry.layer.root.request(false, 'focus-out', event);

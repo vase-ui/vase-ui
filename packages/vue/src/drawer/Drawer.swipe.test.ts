@@ -425,6 +425,28 @@ describe('the swipe that closes', () => {
     expect(get('viewport').style.userSelect).toBe('');
   });
 
+  test.each([
+    { place: 'in the popup', cleared: true },
+    { place: 'outside the popup', cleared: false },
+  ])(
+    'the start of a mouse swipe clears a selection $place: $cleared',
+    async ({ place, cleared }) => {
+      const outside = document.body.appendChild(document.createElement('p'));
+      outside.textContent = 'Outside text';
+      const selection = getSelection()!;
+      onTestFinished(() => {
+        selection.removeAllRanges();
+        outside.remove();
+      });
+      await mountDrawer({ root: { defaultOpen: true, modal: false } });
+      selection.selectAllChildren(place === 'in the popup' ? get('text') : outside);
+      const release = await press(textOf('text'), { x: 0, y: 60 });
+      await nextTick();
+      expect(selection.isCollapsed).toBe(cleared);
+      await release();
+    },
+  );
+
   test('ends at a press of the other button with no close, and the later release closes nothing', async () => {
     const log: string[] = [];
     await mountDrawer({ root: rootEvents(log) });
@@ -685,6 +707,50 @@ describe('snap points', () => {
     expect(byTestId('popup')).not.toBe(null);
     expect(log).toEqual(['snapPointChange null']);
   });
+
+  test.each([true, false])(
+    'with `snapToSequentialPoints`, a short flick moves to the next point, with a still sample at its end=%s',
+    async (still) => {
+      const log: string[] = [];
+      await mountSheet(log, { snapToSequentialPoints: true });
+      flick(get('text'), textOf(), await mousePointerId(textOf()), [
+        [0, 1008],
+        [-12, 1024],
+        [-24, 1040],
+        [-36, 1056],
+        ...(still ? ([[-36.5, 1072]] as [number, number][]) : []),
+      ]);
+      await waitFor(() => expect(log).toEqual(['snapPointChange 300px swipe']));
+    },
+  );
+
+  test('with `snapToSequentialPoints`, a drag that rests with still samples before the release stays at its point', async () => {
+    const log: string[] = [];
+    await mountSheet(log, { snapToSequentialPoints: true });
+    flick(get('text'), textOf(), await mousePointerId(textOf()), [
+      [0, 1008],
+      [-40, 1024],
+      [-40, 1040],
+      [-40, 1056],
+      [-40, 1072],
+    ]);
+    await wait(50);
+    // As in Base UI, the release asks for its point also when it is the active one.
+    expect(log.filter((entry) => entry !== 'snapPointChange 100px swipe')).toEqual([]);
+    expect(get('popup').style.getPropertyValue('--drawer-snap-point-offset')).toBe('300px');
+  });
+
+  test('a close that a listener cancels keeps the point and emits no change of it', async () => {
+    const log: string[] = [];
+    await mountSheet(log, {
+      onOpenChange: (_: boolean, details: { cancel(): void }) => details.cancel(),
+    });
+    await userEvent.keyboard('{Escape}');
+    await nextTick();
+    expect(byTestId('popup')).not.toBe(null);
+    expect(get('popup').style.getPropertyValue('--drawer-snap-point-offset')).toBe('300px');
+    expect(log).toEqual([]);
+  });
 });
 
 describe('the swipe area', () => {
@@ -756,6 +822,90 @@ describe('the swipe area', () => {
     await nextTick();
     expect(byTestId('popup')).not.toBe(null);
     expect(log).toEqual(['openChange true swipe swipe-area']);
+  });
+
+  test.each(['a press', 'a click with no press'])(
+    'lets %s outside the popup close the drawer after a swipe opened it',
+    async (outside) => {
+      const { log } = await mountArea();
+      await drag(centerOf('swipe-area'), { x: 0, y: -250 }, 10);
+      await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+      await wait(50);
+      if (outside === 'a press') {
+        await userEvent.pointer({ coords: { x: 5, y: 5 }, keys: '[MouseLeft]' });
+      } else {
+        document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+      await closed();
+      expect(log).toEqual([
+        'openChange true swipe swipe-area',
+        'openChange false outside-press swipe-area',
+      ]);
+    },
+  );
+
+  test('lets a press outside the popup close the drawer after a context menu ended the swipe that opened it', async () => {
+    const { log } = await mountArea();
+    get('swipe-area').addEventListener('contextmenu', (event) => event.preventDefault());
+    const release = await press(centerOf('swipe-area'), { x: 0, y: -250 }, 10);
+    onTestFinished(release);
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    // The menu of the context takes the release, so the page gets no `pointerup`.
+    get('swipe-area').dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }),
+    );
+    await wait(50);
+    expect(byTestId('popup')).not.toBe(null);
+    for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+      document.body.dispatchEvent(
+        type.startsWith('pointer')
+          ? new PointerEvent(type, { bubbles: true, pointerType: 'mouse', isPrimary: true })
+          : new MouseEvent(type, { bubbles: true, detail: 1 }),
+      );
+    }
+    await closed();
+    expect(log).toEqual([
+      'openChange true swipe swipe-area',
+      'openChange false outside-press swipe-area',
+    ]);
+  });
+
+  test('keeps no swipe state and asks for no close when a parent refuses the open', async () => {
+    const log: string[] = [];
+    await mountArea({
+      root: {
+        open: false,
+        onOpenChange: (open: boolean) => log.push(`openChange ${open}`),
+      },
+      portal: { keepMounted: true },
+    });
+    const release = await press(centerOf('swipe-area'), { x: 0, y: -120 }, 6);
+    await nextTick();
+    expect(get('popup').hidden).toBe(true);
+    await release();
+    await nextTick();
+    expect(get('popup').hasAttribute('data-swiping')).toBe(false);
+    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    expect(get('swipe-area').hasAttribute('data-swiping')).toBe(false);
+    expect(log).toEqual(['openChange true']);
+  });
+
+  test('ends a swipe when the area becomes disabled; the drawer stays open, and an outside press closes it', async () => {
+    const area = reactive<Props>({ disabled: false });
+    await mountArea({ swipeArea: area });
+    const release = await press(centerOf('swipe-area'), { x: 0, y: -60 }, 4);
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    expect(get('popup').hasAttribute('data-swiping')).toBe(true);
+    area.disabled = true;
+    await nextTick();
+    expect(get('popup').hasAttribute('data-swiping')).toBe(false);
+    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    expect(get('swipe-area').hasAttribute('data-disabled')).toBe(true);
+    await release();
+    await wait(50);
+    expect(byTestId('popup')).not.toBe(null);
+    await userEvent.pointer({ coords: { x: 5, y: 5 }, keys: '[MouseLeft]' });
+    await closed();
   });
 
   test('goes on after the open makes the area inert', async () => {

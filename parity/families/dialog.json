@@ -50,7 +50,7 @@
       "upstream": "packages/react/src/dialog/close/DialogClose.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the close button: a press closes with `close-press`, a disabled button closes nothing, and a press on the button of a closed dialog emits nothing. A listener cancels a close with `details.cancel()`."
+      "reason": "`Dialog.test.ts` tests the close button: a press closes with `close-press`, a disabled button closes nothing, and a press on the button of a closed dialog emits nothing. A listener cancels a close with `details.cancel()`. `Dialog.parts.test.ts` tests a disabled close button of another element and an `onClick` of `undefined`."
     },
     {
       "upstream": "packages/react/src/dialog/description/DialogDescription.test.tsx",
@@ -62,25 +62,25 @@
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the popup: its element and attributes, the first focus, `initialFocus` and `finalFocus`, the return of the focus (BUG-5519, BUG-6037), the Tab order, the nested state and the error with no root. The arrow keys need no code (test/measurements/dialog.test.ts, \"a dialog in place in a composite\")."
+      "reason": "`Dialog.test.ts` tests the popup: its element and attributes, the first focus, `initialFocus` and `finalFocus`, the return of the focus (BUG-5519, BUG-6037), the Tab order, the nested state and the error with no root. The arrow keys need no code (test/measurements/dialog.test.ts, \"a dialog in place in a composite\"). `Dialog.focus.test.ts` tests each value of `initialFocus` and `finalFocus`, the focus of a removed element and the return to the trigger of a select or a menu."
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the portal: `keepMounted`, `to`, a `null` target and `disabled` (VUE-128). The portal renders no element of its own, so its `render` and `className` have no element."
+      "reason": "`Dialog.test.ts` tests the portal: `keepMounted`, `to`, a `null` target and `disabled` (VUE-128). The portal renders no element of its own, so its `render` and `className` have no element. `Dialog.parts.test.ts` tests an async component in the popup of a dialog in a `<Suspense>`."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the handle: triggers outside the root, `open(id)`, `open(null)`, an unknown id, `openWithPayload()`, `close()`, `isOpen`, a handle with no root, a root that gets or loses its handle, two mounted roots with one handle, and a `<Suspense>` that replaces a page."
+      "reason": "`Dialog.test.ts` tests the handle: triggers outside the root, `open(id)`, `open(null)`, an unknown id, `openWithPayload()`, `close()`, `isOpen`, a handle with no root, a root that gets or loses its handle, two mounted roots with one handle, and a `<Suspense>` that replaces a page. `Dialog.handle.test.ts` tests a root that changes its handle, roots that share a handle, a root that mounts again, the payload of an open popup and the active trigger. A handle gives no warning for a call with no root or for an unknown trigger id."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the close action, each value of `modal`, the dismissal, the focus, nested dialogs and the stack. `Dialog.hydration.test.ts` tests the server render."
+      "reason": "`Dialog.test.ts` tests the root through the parts: the open state with each reason, `v-model:open` and `v-model:trigger-id`, `cancel()`, the close action, each value of `modal`, the dismissal, the focus, nested dialogs and the stack. `Dialog.hydration.test.ts` tests the server render. `Dialog.layers.test.ts` tests nested dialogs and a press in a closed shadow root, also in one closed shadow root in another, sibling dialogs and the count of three levels. `Dialog.parts.test.ts` tests the open state and the dismissal with a menu or a select in the popup. `Dialog.scrollLock.test.ts` tests the scroll lock beside the lock of another overlay."
     },
     {
       "upstream": "packages/react/src/dialog/title/DialogTitle.test.tsx",
@@ -92,13 +92,13 @@
       "upstream": "packages/react/src/dialog/trigger/DialogTrigger.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the trigger: its element and attributes, `aria-expanded`, `aria-controls` while the popup is in the document (VUE-73), a disabled trigger, Enter and Space on an element that is not a button, and the error with no root."
+      "reason": "`Dialog.test.ts` tests the trigger: its element and attributes, `aria-expanded`, `aria-controls` while the popup is in the document (VUE-73), a disabled trigger, Enter and Space on an element that is not a button, and the error with no root. `Dialog.parts.test.ts` tests that a disabled trigger is out of the Tab order, also on another element."
     },
     {
       "upstream": "packages/react/src/dialog/viewport/DialogViewport.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/Dialog.test.ts",
-      "reason": "`Dialog.test.ts` tests the viewport: its role, `hidden` and `inert` with `keepMounted`, `inert` while its popup leaves, the nested states, and a press on it that closes the dialog."
+      "reason": "`Dialog.test.ts` tests the viewport: its role, `hidden` and `inert` with `keepMounted`, `inert` while its popup leaves, the nested states, and a press on it that closes the dialog. `Dialog.parts.test.ts` tests that the viewport is in the DOM only while the dialog is open."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",

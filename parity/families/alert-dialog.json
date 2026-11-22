@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/alert-dialog/AlertDialog.test.ts",
-      "reason": "`AlertDialog.test.ts` tests the alert dialog: the role and `aria-modal`, the inert page, no close at a press on the backdrop and on the fixed element, Escape, a close that a listener refuses, the close button, the seven parts of Dialog below its root and the handle. `Dialog.test.ts` tests the count of nested dialogs across the two families."
+      "reason": "`AlertDialog.test.ts` tests the alert dialog: the role and `aria-modal`, the inert page, no close at a press on the backdrop and on the fixed element, Escape, a close that a listener refuses, the close button, the seven parts of Dialog below its root and the handle. `Dialog.test.ts` tests the count of nested dialogs across the two families. `AlertDialog.test.ts` also tests a root with a handle: `defaultTriggerId`, a close that the parent refuses and a root that mounts again."
     },
     {
       "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx",

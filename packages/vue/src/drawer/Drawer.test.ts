@@ -152,6 +152,33 @@ describe('Drawer', () => {
       ]);
     });
 
+    test('the parts render the tag of `as`, and the attributes of the developer win', async () => {
+      await mountDrawer({
+        root: { defaultOpen: true },
+        swipeArea: { as: 'section' },
+        viewport: { as: 'section', role: 'none' },
+        popup: { as: 'section', 'aria-label': 'Sheet' },
+        content: { as: 'section' },
+      });
+      const popup = await opened();
+      expect(popup.localName).toBe('section');
+      expect(popup).toHaveAttribute('aria-label', 'Sheet');
+      expect(get('viewport').localName).toBe('section');
+      expect(get('viewport')).toHaveAttribute('role', 'none');
+      expect(get('content').localName).toBe('section');
+      expect(get('swipe-area').localName).toBe('section');
+    });
+
+    test('a disabled trigger is disabled and opens nothing', async () => {
+      await mountDrawer({ trigger: { disabled: true } });
+      const trigger = get('trigger');
+      expect(trigger).toBeDisabled();
+      await userEvent.click(trigger, { force: true });
+      await nextTick();
+      expect(byTestId('popup')).toBe(null);
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
     test('names the popup with the title and the description of Dialog', async () => {
       await mountDrawer({ root: { defaultOpen: true }, title: true });
       const popup = await opened();

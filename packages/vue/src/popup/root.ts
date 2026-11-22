@@ -211,11 +211,15 @@ export function interactionOf(event: Event): InteractionType {
   );
 }
 
-const handleRoots = new WeakMap<PopupHandle, ShallowRef<PopupRoot | null>>();
+// The mounted roots of each handle, in the order in which they took it, and the last one of them.
+const handleRoots = new WeakMap<
+  PopupHandle,
+  { roots: PopupRoot[]; holder: ShallowRef<PopupRoot | null> }
+>();
 
 /** The root that has the handle as `handle`, while it is mounted. */
 export function rootOfHandle<Payload>(handle: PopupHandle<Payload>) {
-  return (handleRoots.get(handle)?.value ?? null) as PopupRoot<Payload> | null;
+  return (handleRoots.get(handle)?.holder.value ?? null) as PopupRoot<Payload> | null;
 }
 
 /**
@@ -224,7 +228,7 @@ export function rootOfHandle<Payload>(handle: PopupHandle<Payload>) {
  */
 export class PopupHandle<Payload = unknown> {
   constructor() {
-    handleRoots.set(this, shallowRef(null));
+    handleRoots.set(this, { roots: [], holder: shallowRef(null) });
     // A reactive proxy of the handle would be another key of the map.
     markRaw(this);
   }
@@ -528,14 +532,17 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   // of a request. It runs before `onMounted` of the children, and not while a `<Suspense>` waits
   // for the page of the root. When a `<Suspense>` replaces a page, the old root releases its handle
   // before the new root takes it (test/measurements/dialog.test.ts). Of two mounted roots with one
-  // handle, the last one holds it.
+  // handle, the last one holds it, and the one before holds it again when the last one goes.
   watchPostEffect((onCleanup) => {
     const handle = 'handle' in options ? options.handle() : undefined;
-    const holder = handle && handleRoots.get(handle);
-    if (!holder) return;
+    const entry = handle && handleRoots.get(handle);
+    if (!entry) return;
+    const { roots, holder } = entry;
+    roots.push(root);
     holder.value = root;
     onCleanup(() => {
-      if (holder.value === root) holder.value = null;
+      roots.splice(roots.indexOf(root), 1);
+      holder.value = roots.at(-1) ?? null;
     });
   });
 
