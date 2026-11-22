@@ -597,9 +597,21 @@ The workspace project `benchmarks` measures the size of Vase UI and of other com
 
 | Command | Function |
 | --- | --- |
-| `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. Run `pnpm build` first. |
-| `pnpm benchmarks:size` | Builds each app. Then it writes `benchmarks/results.json`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the date, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
+| `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. It also renders `AllComponents` of each library on the server, and builds the page that hydrates that HTML into `benchmarks/dist/hydration/<setup>/<library>`. When the server render throws or reports an error, that folder holds only the reason, in `server-render-error.txt`. Run `pnpm build` first. |
+| `pnpm benchmarks:size` | Builds each app. Then it writes all of `benchmarks/results.json` except the part `time`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the date, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
+| `pnpm benchmarks:time --engine <engine> --setup <setup> [--rounds <count>]` | Times the apps of `benchmarks/dist` in a Playwright browser: `chromium`, `firefox` or `webkit`. The setup is `vdom` or `vapor-interop`, and `vdom` also times Base UI. Each round opens each page of each library once, in a random sequence, in a new browser context. The default is 30 rounds. After each round, it writes the samples to the part `time.<engine>.<setup>` of `benchmarks/results.json`. Run `pnpm benchmarks:build` first. |
+| `pnpm test:benchmarks` | Tests the statistics of the results. `pnpm lint` runs it. |
 | `pnpm benchmarks:typecheck` | Runs vue-tsc on the Vue files and tsc on the React files. The job `check` of CI runs it, so a pull request that changes the API of Vase UI also corrects the fixtures. Run `pnpm build` first. |
+
+`pnpm benchmarks:time` gives each library the same input:
+
+- A mount visit starts 100 instances of each component. In Chromium, it also gives the heap that the mount adds, after a garbage collection.
+- A popup visit opens and closes Dialog, Popover, Menu, Select and Combobox five times, then times one more pair. A click on the trigger opens Dialog and Popover. ArrowDown on the focused trigger opens Menu and Select. ArrowDown on the focused input opens Combobox. A real Escape press closes each popup.
+- Each timed open starts from a closed popup. When the focus on its input opens a Combobox, an Escape press closes it before the timed ArrowDown.
+- A list visit does the same with 1,000 options in Select and Combobox. Then it times one ArrowDown, and for Combobox the filter `9`, which leaves 271 options.
+- A hydration visit times the hydration of the server HTML of `AllComponents`.
+- A console error, a console warning or an uncaught error fails the sample. The cell then shows the reason, and the run goes on without the cell.
+- Chromium runs with its CPU four times slower.
 
 A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base UI. Each fixture follows these rules, so that each library gets the same conditions:
 

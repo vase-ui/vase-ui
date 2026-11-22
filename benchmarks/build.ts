@@ -1,8 +1,10 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { build, type InlineConfig, type Plugin } from 'vite';
+import type { ServerRender } from './harness/serverRender.ts';
 import { LIBRARIES, SCENARIOS, SETUPS, type Library, type Setup } from './scenarios.ts';
 
 // The compiler of Vue loads its production build only when `NODE_ENV` is `production` at its first
@@ -14,6 +16,10 @@ const { default: vue } = await import('@vitejs/plugin-vue');
 const require = createRequire(import.meta.url);
 const HARNESS = join(import.meta.dirname, 'harness');
 const LIBRARIES_FOLDER = join(import.meta.dirname, 'libraries');
+const DIST = join(import.meta.dirname, 'dist');
+
+/** The file in which the build of a hydration page records why its server render failed. */
+export const SERVER_RENDER_ERROR_FILE = 'server-render-error.txt';
 
 /** One app: the empty app of a setup, or a scenario of a library. */
 export interface App {
@@ -36,7 +42,7 @@ export function emptyApp(setup: Setup): App {
     setup,
     entry: setup.emptyAppEntry,
     scenarioFile: join(HARNESS, setup.framework, `EmptyApp.${extension}`),
-    outDir: join(import.meta.dirname, 'dist', setup.id, 'EmptyApp'),
+    outDir: join(DIST, setup.id, 'EmptyApp'),
   };
 }
 
@@ -50,8 +56,23 @@ export function libraryApp(setup: Setup, library: Library, scenario: string): Ap
     setup,
     entry: setup.entry,
     scenarioFile,
-    outDir: join(import.meta.dirname, 'dist', setup.id, library.id, scenario),
+    outDir: join(DIST, setup.id, library.id, scenario),
   };
+}
+
+/**
+ * The page that hydrates the server HTML of `AllComponents` of a library, or `undefined` when the
+ * library has no such fixture.
+ */
+export function hydrationApp(setup: Setup, library: Library): App | undefined {
+  const app = libraryApp(setup, library, 'AllComponents');
+  return (
+    app && {
+      ...app,
+      entry: setup.hydrateEntry,
+      outDir: join(DIST, 'hydration', setup.id, library.id),
+    }
+  );
 }
 
 export function librariesOf(setup: Setup): Library[] {
@@ -101,7 +122,7 @@ function frameworkPlugins(setup: Setup): Plugin[] {
  * The one Vite config of each app: the defaults of Vite for a production build, with one
  * JavaScript chunk.
  */
-function appConfig(app: App): InlineConfig {
+function appConfig(app: App, plugins: Plugin[] = []): InlineConfig {
   const { setup } = app;
   // The alias gives the app one copy of Vue, the one of the setup, also when a library or the
   // workspace package resolves another version of `vue`.
@@ -118,7 +139,9 @@ function appConfig(app: App): InlineConfig {
     configFile: false,
     root: HARNESS,
     logLevel: 'warn',
-    plugins: [...frameworkPlugins(setup), entryScript(app.entry)],
+    // A relative base lets `time.ts` open each app in a folder of `dist`.
+    base: './',
+    plugins: [...frameworkPlugins(setup), entryScript(app.entry), ...plugins],
     resolve: {
       alias: [{ find: '#scenario', replacement: app.scenarioFile }, ...frameworkAlias],
     },
@@ -145,8 +168,75 @@ export async function buildApp(app: App): Promise<void> {
   await build(appConfig(app));
 }
 
+/** Builds the server entry of the setup for the app, and renders the app in this process. */
+async function renderOnServer(app: App, outDir: string): Promise<ServerRender> {
+  await build({
+    ...appConfig(app),
+    ssr: { noExternal: true },
+    build: {
+      ssr: app.setup.serverEntry,
+      outDir,
+      emptyOutDir: true,
+      rolldownOptions: { output: { codeSplitting: false, entryFileNames: 'server.js' } },
+    },
+  });
+  const server = (await import(pathToFileURL(join(outDir, 'server.js')).href)) as {
+    render: () => ServerRender | Promise<ServerRender>;
+  };
+  const rendered = await server.render();
+  const [error] = rendered.errors;
+  if (error !== undefined) {
+    throw new Error(error);
+  }
+  return rendered;
+}
+
+/** Puts the server HTML in the page of the hydration build. */
+function serverHtml({ html, teleports }: ServerRender): Plugin {
+  return {
+    name: 'server-html',
+    transformIndexHtml: {
+      order: 'pre',
+      // Vue hydrates a teleport to `body` from the first child of `body`.
+      handler: (page) =>
+        page
+          .replace('<body>', `<body>${teleports.body ?? ''}`)
+          .replace('<div id="app"></div>', `<div id="app">${html}</div>`),
+    },
+  };
+}
+
+/**
+ * Renders the app on the server, and builds the page that hydrates that HTML. When the server
+ * render fails, the folder of the page holds only the reason, and the build goes on.
+ */
+export async function buildHydrationApp(app: App): Promise<void> {
+  rmSync(app.outDir, { recursive: true, force: true });
+  let rendered: ServerRender;
+  try {
+    // The build of the page empties the folder, so the server build goes there first.
+    rendered = await renderOnServer(app, join(app.outDir, 'server'));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const reason = `The server render failed: ${message.split('\n')[0] ?? ''}`;
+    console.warn(`${app.outDir}: ${reason}`);
+    mkdirSync(app.outDir, { recursive: true });
+    writeFileSync(join(app.outDir, SERVER_RENDER_ERROR_FILE), reason);
+    return;
+  }
+  await build(appConfig(app, [serverHtml(rendered)]));
+}
+
 if (import.meta.main) {
   for (const app of allApps()) {
     await buildApp(app);
+  }
+  for (const setup of SETUPS) {
+    for (const library of librariesOf(setup)) {
+      const app = hydrationApp(setup, library);
+      if (app) {
+        await buildHydrationApp(app);
+      }
+    }
   }
 }

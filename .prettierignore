@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 parity/upstream.json
 parity/families/*.upstream.json
+benchmarks/results.json
 THANKS.md
 docs/demos/**/*.module.css

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { globSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { brotliCompressSync, gzipSync } from 'node:zlib';
 import { version as viteVersion } from 'vite';
@@ -55,6 +55,11 @@ for (const scenario of SCENARIOS) {
   apps[scenario] = scenarioApps;
 }
 
+const RESULTS_FILE = join(import.meta.dirname, 'results.json');
+// `time.ts` writes the part `time` of the file.
+const { time } = existsSync(RESULTS_FILE)
+  ? (JSON.parse(readFileSync(RESULTS_FILE, 'utf8')) as { time?: unknown })
+  : {};
 const results = {
   date: new Date().toISOString(),
   commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
@@ -70,5 +75,6 @@ const results = {
     vite: viteVersion,
   },
   size: { emptyApp: emptyApps, apps },
+  time,
 };
-writeFileSync(join(import.meta.dirname, 'results.json'), `${JSON.stringify(results, null, 2)}\n`);
+writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);
