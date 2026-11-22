@@ -332,10 +332,19 @@ describe('in the DOM', () => {
     mount(PreviewCardInTransition, { root: { defaultOpen: true, defaultTriggerId: 'a' } });
     const element = await opened();
     await placed();
+    // The leave of 300 ms can end before the command ends, so the case reads the page when the
+    // leave starts.
+    const atLeave = readWhen(
+      () => element.classList.contains('card-leave-active') || !element.isConnected,
+      () => ({
+        leaving: element.classList.contains('card-leave-active'),
+        positioner: positioner(),
+      }),
+    );
     await userEvent.click(byId('outside'));
-    await nextTick();
-    expect(element.className).toContain('card-leave-active');
-    expect(positioner()).not.toBe(null);
+    const { leaving, positioner: positionerAtLeave } = await atLeave;
+    expect(leaving).toBe(true);
+    expect(positionerAtLeave).not.toBe(null);
     await closed();
     await waitFor(() => expect(positioner()).toBe(null));
   });

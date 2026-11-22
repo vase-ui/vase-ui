@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 
-// A button with a click listener in a `<Transition>` with a leave of 300 ms, between two buttons.
+// A button with a click listener in a `<Transition>` with a leave of 100 s, between two buttons.
 // `hide()` starts the leave. `clicks` counts the clicks of the leaving button.
 const shown = shallowRef(true);
 const clicks = shallowRef(0);
@@ -21,7 +21,7 @@ defineExpose({
 
 <style>
 .measure-leave-leave-active {
-  transition: opacity 300ms linear;
+  transition: opacity 100s linear;
 }
 .measure-leave-leave-to {
   opacity: 0;

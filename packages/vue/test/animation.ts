@@ -1,3 +1,6 @@
+import { expect } from 'vitest';
+import { waitFor } from './waitFor';
+
 const EVENT_FRAMES = 180;
 
 /**
@@ -103,4 +106,14 @@ export function nextEvent(
       }
     };
   });
+}
+
+/**
+ * Waits until `element` has an animation or a transition, and ends each one with `finish()`. A case
+ * gives such an animation a duration of 100 s, so that its state stays until the case ends it. A
+ * `<Transition>` then gets the end event.
+ */
+export async function finishAnimations(element: Element) {
+  await waitFor(() => expect(element.getAnimations().length).toBeGreaterThan(0));
+  for (const animation of element.getAnimations()) animation.finish();
 }

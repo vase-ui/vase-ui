@@ -5,6 +5,7 @@ import { Tooltip, type TooltipRootChangeEventDetails } from '@vase-ui/vue/toolti
 import TooltipComposed from '../../test/fixtures/TooltipComposed.vue';
 import TooltipPartAlone from '../../test/fixtures/TooltipPartAlone.vue';
 import TooltipParts from '../../test/fixtures/TooltipParts.vue';
+import { finishAnimations } from '../../test/animation';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -1088,6 +1089,9 @@ describe('the group', () => {
       });
       await userEvent.hover(trigger('a'));
       const first = await opened('a');
+      // A close in the enter of 10 s reverses it, and the leave then lasts only as long as the
+      // enter ran. So the case ends the enter first.
+      if (transition === 'tip') await finishAnimations(first);
       await userEvent.keyboard('{Escape}');
       await nextTick();
       expect(first.isConnected).toBe(true);

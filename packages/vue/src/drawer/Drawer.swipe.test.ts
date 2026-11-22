@@ -3,9 +3,10 @@ import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { DrawerSnapPoint } from '@vase-ui/vue/drawer';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
+import { finishAnimations } from '../../test/animation';
 import { touchDrag } from '../../test/pointer';
 import { mount } from '../../test/render';
-import { wait } from '../../test/wait';
+import { readWhen, wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -38,6 +39,21 @@ async function mountDrawer(setup: Props = {}) {
 
 async function closed() {
   await waitFor(() => expect(byTestId('popup')).toBe(null));
+}
+
+/** Gives each transition of `kind` in the fixture 100 s, so that it lasts until the case ends it. */
+function holdTransition(kind: 'enter' | 'leave') {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = `.drawer-test-${kind}-active { transition-duration: 100s; }`;
+  onTestFinished(() => style.remove());
+}
+
+/** Ends the held leave of each element, and waits until Vue removes it. */
+async function endLeave(...elements: HTMLElement[]) {
+  for (const element of elements) {
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+  }
 }
 
 /** A point at the text near the top of an element. */
@@ -253,16 +269,29 @@ describe('the swipe that closes', () => {
     const popup = get('popup');
     const backdrop = get('backdrop');
     await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+    // By the speed of the release, the leave lasts from 20 ms to 200 ms. It can end before the
+    // command of the release ends, so the case reads the popup and the backdrop when it starts.
+    const atLeave = readWhen(
+      () => popup.classList.contains('drawer-test-leave-active') || !popup.isConnected,
+      () => ({
+        leaving: popup.classList.contains('drawer-test-leave-active'),
+        dismiss: [popup, backdrop].map((element) => element.hasAttribute('data-swipe-dismiss')),
+        swiping: popup.hasAttribute('data-swiping'),
+        movement: popup.style.getPropertyValue('--drawer-swipe-movement-y'),
+        strength: Number(popup.style.getPropertyValue('--drawer-swipe-strength')),
+        transition: popup.style.transition,
+      }),
+    );
     await drag(textOf(), { x: 0, y: 200 });
-    await nextTick();
-    expect(popup.isConnected).toBe(true);
-    expect(popup.classList.contains('drawer-test-leave-active')).toBe(true);
-    expect(popup.hasAttribute('data-swipe-dismiss')).toBe(true);
-    expect(backdrop.hasAttribute('data-swipe-dismiss')).toBe(true);
-    expect(popup.hasAttribute('data-swiping')).toBe(false);
-    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('200px');
-    expect(Number(popup.style.getPropertyValue('--drawer-swipe-strength'))).toBeLessThanOrEqual(1);
-    expect(popup.style.transition).toBe('');
+    const { strength, ...marks } = await atLeave;
+    expect(marks).toEqual({
+      leaving: true,
+      dismiss: [true, true],
+      swiping: false,
+      movement: '200px',
+      transition: '',
+    });
+    expect(strength).toBeLessThanOrEqual(1);
     await waitFor(() => expect(popup.isConnected).toBe(false));
   });
 
@@ -309,11 +338,9 @@ describe('the swipe that closes', () => {
   ])(
     'opens $drawer at its open place again after a swipe close, with the open $when the leave',
     async ({ prefix, when }) => {
-      // A leave of 1 s keeps the old popup in the DOM while the trigger opens the drawer again.
-      const slowLeave = document.createElement('style');
-      slowLeave.textContent = '.drawer-test-leave-active { transition-duration: 1s; }';
-      document.head.append(slowLeave);
-      onTestFinished(() => slowLeave.remove());
+      // The old popup stays in the DOM while the trigger opens the drawer again, until the case
+      // ends its leave.
+      holdTransition('leave');
       await mountDrawer(
         prefix
           ? { nested: { root: { defaultOpen: true }, transition: true } }
@@ -324,9 +351,10 @@ describe('the swipe that closes', () => {
       await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
       await drag(textOf(`${prefix}popup`), { x: 0, y: 200 });
       await waitFor(() => expect(popup.classList.contains('drawer-test-leave-active')).toBe(true));
-      if (when === 'after') await waitFor(() => expect(popup.isConnected).toBe(false));
+      if (when === 'after') await endLeave(popup);
       else expect(popup.isConnected).toBe(true);
       await userEvent.click(get(`${prefix}trigger`));
+      if (when === 'during') await endLeave(popup);
       await waitFor(() => expect([null, popup]).not.toContain(byTestId(`${prefix}popup`)));
       const next = get(`${prefix}popup`);
       await waitFor(() => expect(next.className).toBe('drawer-test-popup'));
@@ -506,20 +534,18 @@ describe('the swipe that closes', () => {
   });
 
   test('starts at the place of a popup whose enter runs', async () => {
-    // A slow enter is still at its start at the press.
-    await mountDrawer({
-      root: { defaultOpen: false },
-      transition: true,
-      popup: { style: { transitionDuration: '2s' } },
-    });
+    holdTransition('enter');
+    await mountDrawer({ root: { defaultOpen: false }, transition: true });
     await userEvent.click(get('trigger'));
-    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
-    await wait(100);
-    // A point at the bottom of the window is on the popup during the enter.
-    const release = await press({ x: 100, y: innerHeight - 10 }, { x: 0, y: 1 }, 1);
+    await waitFor(() => expect(byTestId('popup')?.getAnimations()).toHaveLength(1));
+    const popup = get('popup');
+    // The enter goes to its middle, so the popup is about 150 px below its open place at the press.
+    for (const animation of popup.getAnimations()) animation.currentTime = 50_000;
+    const release = await press(textOf(), { x: 0, y: 1 }, 1);
     await nextTick();
     expect(Number.parseFloat(sample().y)).toBeGreaterThan(100);
     await release();
+    for (const animation of popup.getAnimations()) animation.finish();
   });
 
   test('takes no swipe while a drawer in it is open, also for a nested drawer that is not modal', async () => {
@@ -780,14 +806,18 @@ describe('the swipe area', () => {
   });
 
   test('gives one popup to a swipe while the popup of the last close leaves, at the place of the finger after the leave', async () => {
+    // The popup and the backdrop of the close leave until the case ends their leave.
+    holdTransition('leave');
     await mountArea({ transition: true });
     await drag(centerOf('swipe-area'), { x: 0, y: -200 }, 10);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
-    await wait(250);
+    const popup = get('popup');
+    const backdrop = get('backdrop');
+    await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
     await userEvent.keyboard('{Escape}');
-    const leaving = get('popup');
     const release = await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
-    await waitFor(() => expect(leaving.isConnected).toBe(false));
+    expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([popup]);
+    await endLeave(popup, backdrop);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
     await nextTick();
