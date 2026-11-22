@@ -3,7 +3,14 @@ import { createRequire } from 'node:module';
 import os from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { chromium, firefox, webkit, type CDPSession, type Page } from 'playwright';
+import {
+  chromium,
+  firefox,
+  webkit,
+  type CDPSession,
+  type ConsoleMessage,
+  type Page,
+} from 'playwright';
 import { preview } from 'vite';
 import { hydrationApp, libraryApp, SERVER_RENDER_ERROR_FILE } from './build.ts';
 import { installDriver, type Action, type Condition } from './harness/driver.ts';
@@ -140,6 +147,18 @@ async function runSteps(
     case 'hydration':
       return { hydrate: await measure(page, { kind: 'start' }, { kind: 'hydrated' }) };
   }
+}
+
+/**
+ * The text of a console message. For an error, Firefox gives only the text `Error`, so the text
+ * comes from the error in the page. A page that is closed gives the text of Playwright.
+ */
+async function textOf(message: ConsoleMessage): Promise<string> {
+  const error = await message
+    .args()[0]
+    ?.evaluate((value) => (value instanceof Error ? String(value) : undefined))
+    .catch(() => undefined);
+  return error ?? message.text();
 }
 
 function timeout(milliseconds: number): { promise: Promise<never>; clear: () => void } {
@@ -286,13 +305,13 @@ async function main(): Promise<void> {
     try {
       await context.addInitScript(installDriver);
       const page = await context.newPage();
-      const messages: string[] = [];
+      const messages: Promise<string>[] = [];
       page.on('console', (message) => {
         if (message.type() === 'error' || message.type() === 'warning') {
-          messages.push(message.text());
+          messages.push(textOf(message));
         }
       });
-      page.on('pageerror', (error) => messages.push(error.message));
+      page.on('pageerror', (error) => messages.push(Promise.resolve(error.message)));
       const run = async () => {
         await page.goto(new URL(path, origin).href);
         if (!(await page.evaluate(() => crossOriginIsolated))) {
@@ -304,7 +323,7 @@ async function main(): Promise<void> {
         return runSteps(page, cdp, visit);
       };
       const measures = await Promise.race([run(), limit.promise]);
-      const [message] = messages;
+      const [message] = await Promise.all(messages);
       if (message !== undefined) {
         throw new Error(message);
       }
