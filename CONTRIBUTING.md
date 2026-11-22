@@ -620,7 +620,7 @@ The workspace project `benchmarks` measures the size and the render time of Vase
 - A list visit does the same with 1,000 options in Select and Combobox. Then it times one ArrowDown, and for Combobox the filter `9`, which leaves 271 options.
 - A hydration visit times the hydration of the server HTML of `AllComponents`.
 - A console error, a console warning or an uncaught error fails the sample. The cell then shows the reason, and the run goes on without the cell.
-- Chromium runs with its CPU four times slower.
+- Chromium runs with its CPU four times slower. Firefox and WebKit run with no slowdown and give no heap, because Playwright has no such control for them.
 
 A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base UI. Each fixture follows these rules, so that each library gets the same conditions:
 

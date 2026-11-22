@@ -61,6 +61,19 @@ const timed = benchmarksReportOf(
           },
         },
       },
+      firefox: {
+        vdom: {
+          browserVersion: '1.0',
+          playwright: '1.0.0',
+          machine: { os: 'Linux', cpu: 'CPU', cores: 4, memory: 2 ** 34 },
+          cpuThrottle: null,
+          rounds: 30,
+          metrics: {
+            'Dialog.mount': { 'vase-ui': rounds(), 'reka-ui': rounds() },
+            'Dialog.open': { 'vase-ui': rounds(), 'reka-ui': rounds() },
+          },
+        },
+      },
     },
   },
   { groups: [] },
@@ -90,6 +103,13 @@ test('the heap has a table of its own, in bytes', () => {
   const reka = memory?.rows[0]?.cells['reka-ui'];
   assert.ok(typeof reka === 'object' && reka.kind === 'samples');
   assert.equal(reka.comparison?.verdict, 'faster');
+});
+
+test('a job has no table of a group with no metric, such as the heap in Firefox', () => {
+  assert.deepEqual(
+    timed.timeTables.map((table) => `${table.run.engine} ${table.group}`),
+    ['chromium mount', 'chromium popup', 'chromium memory', 'firefox mount', 'firefox popup'],
+  );
 });
 
 test('the list of losses names the measure of each time cell where another library is faster', () => {

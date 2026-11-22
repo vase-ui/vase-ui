@@ -55,7 +55,7 @@ Each cell is the app minus the empty app of its setup.
 
 ## Render time
 
-Each table gives one engine and one setup. Chromium runs with its CPU four times slower, which is the setting of Lighthouse for a phone of the middle class.
+Each table gives one engine and one setup. Chromium runs with its CPU four times slower, which is the setting of Lighthouse for a phone of the middle class. Firefox and WebKit run with no CPU slowdown, because Playwright has no such control for them. Firefox and WebKit are the builds of Playwright for Linux, not the releases of Firefox and Safari.
 
 ### Mount 100 instances
 
@@ -83,7 +83,7 @@ The time to hydrate the server HTML of the app of all ten components.
 
 ### Memory
 
-The heap that the mount of 100 instances adds in Chromium, after a garbage collection.
+The heap that the mount of 100 instances adds in Chromium, after a garbage collection. Playwright gives no heap measure in Firefox and WebKit.
 
 <BenchmarksTime group="memory" />
 
@@ -99,7 +99,7 @@ The site build makes this list from the tables above. It has each row where anot
 - **Bytes.** The size is the sum of the bytes of each `.js` and `.css` file of the app. The compressed sizes come from the default levels of gzip and Brotli in Node.js. The results also record the versions of zlib and Brotli.
 - **Fixtures.** Each fixture uses the parts and the import form of the anatomy, or of the first example, in the docs of the library. It uses the default props and the same text as the other fixtures. It has no CSS, icons, animations or virtualization.
 - **Our checks.** We render each app of each library on the server with `renderToString` of Vue, and hydrate it in Chromium, Firefox and WebKit with `createSSRApp`, or with `createVaporSSRApp` and `vaporInteropPlugin`. For Base UI, we use `renderToString` and `hydrateRoot` of React. A teleport to `body` goes at the start of `body`, where the hydration of Vue looks for it. We record each message of the server render and of the hydration, and then use the app once. We also load each app with no server render in the three browsers, with three instances. A click or `ArrowDown` opens each popup, `ArrowDown` moves the highlight, the filter `9` leaves 271 of 1,000 options, and a real Escape press closes the popup. In a virtual DOM app and in the React app, each app of each library passes this check. For a dialog in a dialog, we open both dialogs, then press Escape, then press outside the top dialog. Each time, the top dialog closes and the dialog below it stays open.
-- **Pages.** Playwright opens each app from a local server, in a new browser context for each sample. Each page is cross-origin isolated, so `performance.now()` has steps of 5 microseconds in Chromium.
+- **Pages.** Playwright opens each app from a local server, in a new browser context for each sample. Each page is cross-origin isolated, so `performance.now()` has steps of 5 microseconds in Chromium and of 20 microseconds in Firefox and WebKit.
 - **Durations.** A step starts in a frame callback, as in Speedometer 3. A timer after that callback checks the end state, and when the state is not there, the check runs again after each frame. A duration counts the script, style, layout and paint work of the frame of the step.
 - **Close.** A browser closes a native dialog or a popover only on a real Escape press, so each library gets a real Escape press. The time starts at the `keydown` event. In Chromium, the next frame comes before the check, so a close also counts that frame.
 - **Start state.** Each timed open starts from a closed popup. Five untimed pairs of open and close come before the timed pair. A mount and a hydration have no untimed run.
