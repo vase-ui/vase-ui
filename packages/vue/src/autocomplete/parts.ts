@@ -189,7 +189,8 @@ export namespace Clear {
 
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
- * Renders no element.
+ * Renders a visually hidden `<span>` in place while the moved popup is open. Its `aria-owns` names
+ * the popup, so a screen reader reads the popup after the input.
  * With `keepMounted`, the closed popup keeps its list and the text of an input in it until the next
  * open.
  */

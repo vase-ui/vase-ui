@@ -139,7 +139,7 @@ describe('a modal popup', () => {
   });
 
   test.each([{ modal: false }, { modal: true }])(
-    'VUE-223: an open popup with modal $modal gives no element `aria-hidden` or `inert`',
+    'VUE-223: an open popup with modal $modal gives no element `aria-hidden` or `inert`, and an element after the input owns the popup',
     async ({ modal }) => {
       mount(ComboboxParts, { trigger: true, label: true, root: { modal } });
       await nextTick();
@@ -157,6 +157,10 @@ describe('a modal popup', () => {
       for (const element of page) {
         expect(element.closest('[aria-hidden="true"], [inert]')).toBe(null);
       }
+      const owner = document.querySelector(`[aria-owns="${popup()!.id}"]`)!;
+      expect(input().compareDocumentPosition(owner) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
     },
   );
 });
