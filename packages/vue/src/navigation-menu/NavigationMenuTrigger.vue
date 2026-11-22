@@ -28,8 +28,8 @@ useKeyGroupItem(element);
 const hover = usePopupHover(popup, {
   trigger: element,
   enabled: () => true,
-  // An open menu moves to another trigger at once.
-  delay: () => (root.popup.open || root.popup.leaving ? 0 : root.delay),
+  // An open menu, or a menu that leaves, goes to another trigger at once.
+  delay: () => (root.popup.open || root.leaving ? 0 : root.delay),
   closeDelay: () => root.closeDelay,
   inside: (target) => root.inside(target),
   closes: () => !root.inline,

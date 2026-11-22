@@ -1,0 +1,10 @@
+{
+  "id": "VUE-206",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/filter-dropdown/root/FilterDropdownRoot.tsx#L109-L124",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-root/MenuFilterRoot.scoping.test.tsx#L780-L823"
+  ],
+  "behavior": "The highlight of a filterable menu belongs to an item, not to an index of the list. When an item mounts before the highlighted item, the highlight stays on its item. `aria-activedescendant` of the input keeps the id of that item, and `itemHighlighted` reports nothing. Base UI keeps the highlight as an index. The new item takes that index, so Base UI removes the highlight and reports `undefined`.",
+  "dueWith": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.tsx",
+  "families": ["menu"]
+}

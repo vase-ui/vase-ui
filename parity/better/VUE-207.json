@@ -1,0 +1,11 @@
+{
+  "id": "VUE-207",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx#L49-L58",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx#L2664-L2727",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx#L2863-L2864",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx#L6352-L6396"
+  ],
+  "behavior": "While a submenu of a filterable menu is open, its trigger keeps the highlight in the parent menu, for an open by an arrow key, by Enter and by the pointer. The highlighted trigger shows the path to the open submenu, and `itemHighlighted` of the parent reports no change at the open and at the close. Base UI keeps the highlight of the trigger only for an open by the pointer. For an open by a key, it removes the highlight and `aria-activedescendant` of the parent input until the submenu closes.",
+  "dueWith": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx"
+}

@@ -1,6 +1,7 @@
 import {
   computed,
   inject,
+  nextTick,
   provide,
   shallowRef,
   watch,
@@ -37,6 +38,8 @@ export interface NavigationMenuRoot {
   readonly value: unknown;
   /** The value that the contents show: the value, or the value of the close while the popup leaves. */
   readonly shown: unknown;
+  /** From a close until the popup leaves the document, or until the leave of a kept popup ends. */
+  readonly leaving: boolean;
   readonly direction: NavigationMenuActivationDirection;
   readonly orientation: NavigationMenuOrientation;
   readonly nested: boolean;
@@ -151,20 +154,39 @@ export function useNavigationMenuRoot(
     { flush: 'sync' },
   );
 
+  // A kept popup stays in the DOM at a close, and CSS on `[hidden]` can animate its leave. It leaves
+  // until those animations end.
+  const keptLeaving = shallowRef(false);
+  let closes = 0;
+  watch(
+    () => popup.open,
+    async (open) => {
+      const close = ++closes;
+      keptLeaving.value = !open && popup.keepMounted;
+      if (!keptLeaving.value) return;
+      await nextTick();
+      const animations = popup.popup?.getAnimations() ?? [];
+      await Promise.allSettled(animations.map((animation) => animation.finished));
+      if (close === closes) keptLeaving.value = false;
+    },
+    { flush: 'sync' },
+  );
+  const leaving = computed(() => popup.leaving || keptLeaving.value);
+
   // While the popup leaves, it keeps the content and the viewport of its close.
   const lastShown = shallowRef<unknown>(null);
   watch(
-    [value, () => popup.leaving],
-    ([next, leaving]) => {
-      if (next != null && !leaving) lastShown.value = next;
+    [value, leaving],
+    ([next, isLeaving]) => {
+      if (next != null && !isLeaving) lastShown.value = next;
     },
     { flush: 'sync', immediate: true },
   );
-  const shown = computed(() => (popup.leaving ? lastShown.value : value.value));
+  const shown = computed(() => (leaving.value ? lastShown.value : value.value));
   const viewport = shallowRef<HTMLElement | null>(null);
   const lastViewport = shallowRef<HTMLElement | null>(null);
   watch(viewport, (element) => element && (lastViewport.value = element), { flush: 'sync' });
-  const target = computed(() => viewport.value ?? (popup.leaving ? lastViewport.value : null));
+  const target = computed(() => viewport.value ?? (leaving.value ? lastViewport.value : null));
 
   const element = shallowRef<HTMLElement | null>(null);
   const portals = shallowRef<{ readonly target: PortalTarget; readonly sentinels: Sentinels }[]>(
@@ -266,6 +288,9 @@ export function useNavigationMenuRoot(
     },
     get shown() {
       return shown.value;
+    },
+    get leaving() {
+      return leaving.value;
     },
     get direction() {
       return direction.value;

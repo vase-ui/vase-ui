@@ -1,0 +1,13 @@
+{
+  "id": "VUE-209",
+  "evidence": [
+    "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions",
+    "https://www.w3.org/TR/selectors-4/#the-empty-pseudo",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/filter-dropdown/empty/FilterDropdownEmpty.tsx#L22-L47",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/empty/ComboboxEmpty.tsx#L32-L47",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx#L2056-L2105"
+  ],
+  "behavior": "`Menu.Empty` keeps its element with `role=\"status\"` in the DOM while the popup is open, and adds its content when no item shows. A screen reader reads a live region that is in the DOM before its text changes, and `Combobox.Empty` has the same form. The element with no content matches `:empty`, so a style can hide it. Base UI renders the element only while no item shows, and it changes the text of the element for 200 ms after the mount to make a screen reader read it.",
+  "dueWith": "packages/react/src/filter-dropdown/empty/FilterDropdownEmpty.tsx",
+  "families": ["menu"]
+}

@@ -11,7 +11,7 @@ import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { activeElement } from '../common/shadowDom';
+import { activeElement, contains } from '../common/shadowDom';
 import { useScrollLock } from './useScrollLock';
 import { followRootNode } from '../common/observeRootNode';
 import type { PopupRoot } from './root';
@@ -459,21 +459,24 @@ function onFocusout(event: FocusEvent) {
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {
     if (!entry.layer.focusOut || !isPathInside(entry, path)) continue;
-    if (related) {
+    // A focus in a shadow root has the host of the root as the related target here.
+    if (related && !related.shadowRoot) {
       if (!insideElements(entry).some((element) => element.contains(related))) {
         entry.layer.root.request(false, 'focus-out', event);
       }
       continue;
     }
     // A press in a frame moves the focus there with no related target. The active element is the
-    // frame one task later (test/measurements/popup.test.ts).
+    // frame one task later (test/measurements/popup.test.ts), and so is the element in a shadow
+    // root.
     const doc = ownerDocument(event.target as Element);
     setTimeout(() => {
       const active = activeElement(doc);
       if (
         stack.includes(entry) &&
-        active?.localName === 'iframe' &&
-        !insideElements(entry).some((element) => element.contains(active))
+        !!active &&
+        (related || active.localName === 'iframe') &&
+        !insideElements(entry).some((element) => contains(element, active))
       ) {
         entry.layer.root.request(false, 'focus-out', event);
       }

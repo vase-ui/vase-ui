@@ -4,6 +4,7 @@ import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { platform } from '../common/platform';
 import { usePopupHover } from '../popup/hover';
 import { interactionOf } from '../popup/root';
+import { isVirtualPress } from '../popup/trigger';
 import { useMenuItem } from './item';
 import { injectMenu, registerSubmenuTrigger } from './root';
 import type { MenuSubmenuTriggerProps, MenuSubmenuTriggerState } from './types';
@@ -39,6 +40,7 @@ const item = useMenuItem({
   tag: useAsTag(() => props.as ?? 'div'),
   role: 'menuitem',
   menu: parent,
+  keep: () => submenu.root.open,
 });
 const { root } = submenu;
 const removeTrigger = root.addTrigger({
@@ -87,9 +89,10 @@ submenu.hover.value = {
   },
 };
 
-// A query that hides the trigger closes its submenu. A listener that cancels the close keeps it.
-watch(item.shown, (shown) => {
-  if (!shown && root.open) root.request(false, 'none', new Event('vase-ui'));
+// A query that the trigger does not match closes its submenu. A listener that cancels the close
+// keeps the submenu, and its trigger shows while it is open.
+watch(item.matches, (matches) => {
+  if (!matches && root.open) root.request(false, 'none', new Event('vase-ui'));
 });
 
 const open = computed(() => root.open);
@@ -107,14 +110,20 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 // A key that a listener prevented gave no click, and the click of this press is no key click.
-function onPointerdown() {
+// A press of a screen reader opens the submenu as a key does, and closes it as a press does.
+let virtualPress = false;
+function onPointerdown(event: PointerEvent) {
   keyClick = false;
+  virtualPress = isVirtualPress(event);
 }
 
 function onClick(event: MouseEvent) {
   const fromKey = keyClick;
+  const virtual = virtualPress || event.detail === 0;
   keyClick = false;
-  if (fromKey) {
+  virtualPress = false;
+  // A click with no press enters a submenu that a hover opened.
+  if (fromKey || (virtual && (!root.open || submenu.hoverOpen))) {
     submenu.openWithKey('first', 'trigger-press', event, element.value);
     return;
   }
@@ -125,7 +134,12 @@ function onClick(event: MouseEvent) {
 
 function elementProps() {
   const isOpen = open.value;
-  const controlled = isOpen ? (submenu.ids.list ?? submenu.ids.popup) : undefined;
+  // A filterable submenu opens a dialog, so its trigger controls the popup.
+  const controlled = isOpen
+    ? submenu.filter
+      ? submenu.ids.popup
+      : (submenu.ids.list ?? submenu.ids.popup)
+    : undefined;
   // A change of `aria-expanded` on the focused trigger makes VoiceOver read that change in place of
   // the first item of the submenu. `aria-haspopup` still says that the item opens a submenu.
   const silent = isOpen && platform.os.apple && root.interaction === 'keyboard';

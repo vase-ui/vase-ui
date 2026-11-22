@@ -87,6 +87,14 @@
       "reason": "`NavigationMenu.test.ts` tests the root through the parts: the value with each reason, `v-model`, `cancel()`, the falsy values, `close()`, the hover with `delay` and `closeDelay`, the triangle to the popup, the patient press, the keys, the Tab order, the return of the focus, the nested roots, the content, the size steps and the placement. `<Transition>` animates the popup and the backdrop, `transition` animates a content, and the hooks of `<Transition>` do the work of `unmount()`, `preventUnmountOnClose()` and `openChangeComplete`, so the parts render no transition status and no unmount action. A triangle flag of the hover does the work of the `pointer-events` styles of the safe polygon."
     },
     {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested menus", "inline nested viewport"],
+      "title": "seeds the popup width from the exiting panel when reopening after hovering a top-level link",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/NavigationMenu.open.test.ts",
+      "reason": "A kept popup that leaves with CSS on `[hidden]` keeps its panel. An open on another trigger during the leave changes its size in steps from that panel. A popup in a `<Transition>` cannot come back, so an open during its leave shows the new item in a new popup after the leave."
+    },
+    {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/NavigationMenu.test.ts",

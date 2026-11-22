@@ -8,7 +8,7 @@ import { addBarTrigger, menubarKey } from '../menubar/menu';
 import { usePopupHover } from '../popup/hover';
 import type { InteractionType } from '../popup/root';
 import { isVirtualPress, usePopupTrigger } from '../popup/trigger';
-import { useTriggerMenu, type MenuHandle } from './root';
+import { useTriggerMenu, type MenuContext, type MenuHandle } from './root';
 import type { MenuTriggerProps, MenuTriggerState } from './types';
 
 defineOptions({ inheritAttrs: false });
@@ -121,7 +121,8 @@ function openKeys(): [string, string | undefined] {
   const rtl = !!el && ownerWindow(el).getComputedStyle(el).direction === 'rtl';
   const across = rtl ? 'ArrowLeft' : 'ArrowRight';
   if (bar) return bar.orientation === 'horizontal' ? ['ArrowDown', undefined] : [across, undefined];
-  if (context.value?.orientation === 'horizontal') {
+  // The input of a filterable menu is above its list, so its trigger opens with Down and Up.
+  if (context.value?.orientation === 'horizontal' && !context.value.filter) {
     return [across, rtl ? 'ArrowRight' : 'ArrowLeft'];
   }
   return ['ArrowDown', 'ArrowUp'];
@@ -131,6 +132,7 @@ function onKeydown(event: KeyboardEvent) {
   const menu = context.value;
   if (!menu) return;
   if (trigger.open.value) {
+    if (relayToInput(menu, event)) return;
     if (!menu.onKeydown(event)) menu.focus.onTriggerKeydown(event);
     return;
   }
@@ -140,6 +142,26 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key !== first && event.key !== last) return;
   event.preventDefault();
   menu.openWithKey(event.key === first ? 'first' : 'last', 'list-navigation', event, element.value);
+}
+
+/**
+ * Up, Down and a typed character on the trigger of an open filterable menu, as after a hover open,
+ * go to its input. Left and Right do nothing, so they open no highlighted submenu. `true`: the
+ * trigger used the key.
+ */
+function relayToInput(menu: MenuContext, event: KeyboardEvent) {
+  const filter = menu.filter;
+  if (bar || !filter?.input.value || event.defaultPrevented) return false;
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') return true;
+  const typed =
+    event.key.length === 1 &&
+    event.key !== ' ' &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey;
+  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && !typed) return false;
+  filter.takeKey(event);
+  return true;
 }
 
 // While a menu of the bar is open, the pointer and the focus move it to another trigger.
@@ -162,7 +184,12 @@ function onBarFocus(event: FocusEvent) {
 function elementProps() {
   const menu = context.value;
   const open = trigger.open.value;
-  const controlled = open ? (menu?.ids.list ?? menu?.ids.popup) : undefined;
+  // A filterable menu opens a dialog, so its trigger controls the popup.
+  const controlled = open
+    ? menu?.filter
+      ? menu.ids.popup
+      : (menu?.ids.list ?? menu?.ids.popup)
+    : undefined;
   const own: Record<string, unknown> = {
     id: elementId.value,
     'aria-haspopup': menu?.filter ? 'dialog' : 'menu',

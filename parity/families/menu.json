@@ -157,16 +157,81 @@
       "reason": "`MenuFilter.test.ts` tests the scope of a provider: the root directly in it filters, and a submenu with no provider of its own stays plain."
     },
     {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.scoping.test.tsx",
+      "describe": [
+        "<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>",
+        "prop: onItemHighlighted"
+      ],
+      "title": "does not report the item that takes the highlighted index when an item is inserted",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.parts.test.ts",
+      "reason": "An item that mounts before the highlighted item leaves the highlight on its item, and the root reports nothing (`VUE-206`)."
+    },
+    {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menu/MenuFilter.test.ts",
       "reason": "`MenuFilter.test.ts` tests the filter: the match with `hidden`, the label, `filter` and `null`, the highlight with `autoHighlight`, the keys of the input, Enter and Space, Home and End, the query and its four reasons, the clear button, the real focus on an item, a horizontal list and a submenu that the query hides."
     },
     {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
+      "title": "supports a detached trigger in a filterable menu",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.parts.test.ts",
+      "reason": "A trigger outside the root opens the menu, and the popup and the list name it. `Menu.Empty` keeps its `status` region in the DOM with no content while an item shows (`VUE-209`)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "filtering"],
+      "title": "opens a virtually focused submenu with Enter from the input",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.submenu.test.ts",
+      "reason": "Enter opens the submenu with the focus in its input, and the parent keeps the trigger highlighted (`VUE-207`)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
+      "title": "omits aria-controls when the list renders with an explicitly empty id",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.parts.test.ts",
+      "reason": "An empty `id` counts as no `id`: the list gets a generated id, and the input names it in `aria-controls` (`VUE-93`)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": ["<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>", "accessible names"],
+      "title": "omits the list label when the trigger renders with an explicitly empty id",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.parts.test.ts",
+      "reason": "An empty `id` counts as no `id`: the trigger gets a generated id, and the list names it in `aria-labelledby` (`VUE-93`)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": [
+        "<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>",
+        "prop: onItemHighlighted"
+      ],
+      "title": "passes the keydown events when entering and leaving a filterable submenu",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.focus.test.ts",
+      "reason": "The keys that open and close a filterable submenu leave the trigger highlighted, so the parent reports no change of the highlight (`VUE-207`)."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "describe": [
+        "<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>",
+        "prop: onItemHighlighted"
+      ],
+      "title": "reports no keyboard reason when Enter opens a filterable submenu",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/MenuFilter.focus.test.ts",
+      "reason": "Enter opens a filterable submenu, and the parent keeps the trigger highlighted and reports nothing (`VUE-207`)."
+    },
+    {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.webkit.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/MenuFilter.test.ts",
-      "reason": "`MenuFilter.test.ts` tests the filter in WebKit: the input keeps the focus, and the highlight follows the keys."
+      "test": "packages/vue/src/menu/MenuFilter.parts.test.ts",
+      "reason": "`MenuFilter.parts.test.ts` tests the filter in WebKit: while the input has the focus, the highlighted item has `aria-selected`, also a link, a submenu trigger, a checkbox item, a radio item and an item of a filterable submenu. The attribute follows a new input that replaces the input, and it goes when the input leaves."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterItem.test.tsx",
@@ -189,14 +254,14 @@
     {
       "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.pointerFocus.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/MenuFilter.test.ts",
-      "reason": "`MenuFilter.test.ts` tests a filterable submenu: a pointer move in the popup gives the focus back to the input."
+      "test": "packages/vue/src/menu/MenuFilter.submenu.test.ts",
+      "reason": "`MenuFilter.submenu.test.ts` tests a press on the trigger of a filterable submenu: a mouse press opens the submenu with the focus in its input. A touch, a pen and a press on the trigger of a submenu that a hover opened give no focus to the input. A key click enters a submenu that a hover opened."
     },
     {
       "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/MenuFilter.test.ts",
-      "reason": "`MenuFilter.test.ts` tests a filterable submenu: it opens with the arrow key across the list, and it closes with the other one."
+      "test": "packages/vue/src/menu/MenuFilter.submenu.test.ts",
+      "reason": "`MenuFilter.submenu.test.ts` tests a filterable submenu: its controlled and uncontrolled query, and the reset of the query when the whole menu closes. It tests the keys on the trigger in a plain parent menu, and the close in a horizontal parent menu, also from a portal in a shadow root."
     },
     {
       "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.test.tsx",
@@ -289,10 +354,18 @@
       "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other."
     },
     {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "open change requests"],
+      "title": "reports a close after the parent declined a hover open without canceling it",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/Menu.pointer.test.ts",
+      "reason": "A hover open that a controlled root does not apply reports no close when the pointer leaves, because the menu did not open (`VUE-208`)."
+    },
+    {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/menu/Menu.test.ts",
-      "reason": "`Menu.test.ts` tests a root with no trigger part: a handle opens the menu of a trigger outside the root."
+      "test": "packages/vue/src/menu/Menu.triggerless.test.ts",
+      "reason": "`Menu.triggerless.test.ts` tests a root with no trigger part: Escape in a submenu closes the submenu only, and a menu at an outside anchor opens again with its submenu. A press or a hover on a second submenu closes the first one, and a submenu that is open at the mount opens with the menu."
     },
     {
       "upstream": "packages/react/src/menu/store/MenuStore.test.ts",
