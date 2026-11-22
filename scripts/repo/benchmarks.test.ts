@@ -36,7 +36,7 @@ test('results.json has the pinned version of each library', () => {
     assert.equal(
       results.libraries[library.id]?.version,
       versionOf(pins[library.package]),
-      `Run "pnpm benchmarks:size" after the pin of ${library.package} moves.`,
+      `Record a run of the workflow Benchmarks after the pin of ${library.package} moves.`,
     );
   }
 });
@@ -46,7 +46,7 @@ test('results.json has the pinned version of the framework of each setup', () =>
     assert.equal(
       results.setups[setup.id]?.version,
       versionOf(pins[setup.frameworkPackage]),
-      `Run "pnpm benchmarks:size" after the pin of ${setup.frameworkPackage} moves.`,
+      `Record a run of the workflow Benchmarks after the pin of ${setup.frameworkPackage} moves.`,
     );
   }
 });

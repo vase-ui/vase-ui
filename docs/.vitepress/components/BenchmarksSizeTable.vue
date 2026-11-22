@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { SizeTable } from '../../../scripts/docs/benchmarksReport.ts';
-import { data } from '../../benchmarks.data.ts';
-import { sizeCellText } from './benchmarksFormat.ts';
+import { columnName, sizeCellText } from './benchmarksFormat.ts';
 import ScrollBox from './ScrollBox.vue';
 
 const props = defineProps<{
@@ -13,11 +12,6 @@ const props = defineProps<{
   label: string;
 }>();
 
-function nameOf(id: string): string {
-  const library = data.libraries.find((item) => item.id === id);
-  return library?.id === 'base-ui' ? `${library.name} (React)` : (library?.name ?? id);
-}
-
 const rows = props.measure === 'app' ? props.table.rows : props.table.rows.slice(1);
 </script>
 
@@ -27,7 +21,9 @@ const rows = props.measure === 'app' ? props.table.rows : props.table.rows.slice
       <thead>
         <tr>
           <th scope="col">App</th>
-          <th v-for="column in table.columns" :key="column" scope="col">{{ nameOf(column) }}</th>
+          <th v-for="column in table.columns" :key="column" scope="col">
+            {{ columnName(column) }}
+          </th>
         </tr>
       </thead>
       <tbody>

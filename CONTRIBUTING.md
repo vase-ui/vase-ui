@@ -586,7 +586,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 
 ## Benchmarks
 
-The workspace project `benchmarks` measures the size of Vase UI and of other component libraries. Its `package.json` pins each library and each framework.
+The workspace project `benchmarks` measures the size and the render time of Vase UI and of other component libraries. Its `package.json` pins each library and each framework.
 
 - An app renders one scenario of one library, such as Dialog, in one setup. `benchmarks/scenarios.ts` lists the setups, the libraries and the scenarios.
 - The scenario `AllComponents` of a library renders each of its other fixtures one time.
@@ -599,7 +599,7 @@ The workspace project `benchmarks` measures the size of Vase UI and of other com
 | --- | --- |
 | `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. It also renders `AllComponents` of each library on the server, and builds the page that hydrates that HTML into `benchmarks/dist/hydration/<setup>/<library>`. When the server render throws or reports an error, that folder holds only the reason, in `server-render-error.txt`. Run `pnpm build` first. |
 | `pnpm benchmarks:size` | Builds each app. Then it writes all of `benchmarks/results.json` except the part `time`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the date, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
-| `pnpm benchmarks:time --engine <engine> --setup <setup> [--rounds <count>]` | Times the apps of `benchmarks/dist` in a Playwright browser: `chromium`, `firefox` or `webkit`. The setup is `vdom` or `vapor-interop`, and `vdom` also times Base UI. Each round opens each page of each library once, in a random sequence, in a new browser context. The default is 30 rounds. After each round, it writes the samples to the part `time.<engine>.<setup>` of `benchmarks/results.json`. Run `pnpm benchmarks:build` first. |
+| `pnpm benchmarks:time --engine <engine> --setup <setup> [--rounds <count>]` | Times the apps of `benchmarks/dist` in a Playwright browser: `chromium`, `firefox` or `webkit`. The setup is `vdom` or `vapor-interop`, and `vdom` also times Base UI. In each round, each visit opens the page of each library once, in a new browser context. The sequence of the libraries is random in each visit. The default is 30 rounds. After each round, it writes the samples to the part `time.<engine>.<setup>` of `benchmarks/results.json`. Run `pnpm benchmarks:build` first. |
 | `pnpm test:benchmarks` | Tests the statistics of the results. `pnpm lint` runs it. |
 | `pnpm benchmarks:typecheck` | Runs vue-tsc on the Vue files and tsc on the React files. The job `check` of CI runs it, so a pull request that changes the API of Vase UI also corrects the fixtures. Run `pnpm build` first. |
 
@@ -622,13 +622,22 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 5. Put `data-bench="trigger"` on the trigger button, `data-bench="input"` on the input of a Combobox, and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
 6. Read the documentation of a library and install its npm package. Do not copy its source.
 
-The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json` and `benchmarks/features.json`. Its list of the rows where Vase UI is larger comes from the results, so do not write that list by hand.
+The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json` and `benchmarks/features.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
 
 - `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
 - The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
 - In a row of the kind `support`, the value is `yes`, `no`, `partial` or `not-applicable`. Use `not-applicable` for a feature that the framework of the library does not have, such as a Nuxt module for a React library. In a row of the kind `fact`, the value is a text, such as a count or a date.
 - A note that starts with "Our check" gives the result of our own check: of the example in the docs in Chromium, or of the apps of `benchmarks` in Chromium, Firefox and WebKit. Use such a check only where the docs do not give the fact, or for the result of a hydration or of an app.
-- `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Run `pnpm benchmarks:size` in the pull request that moves a pin.
+- `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Record a run in the pull request that moves a pin.
+
+`benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
+
+1. Start the workflow on `main`, or on the branch of the pull request that moves a pin: `gh workflow run benchmarks.yml --ref <branch>`.
+2. When the run is complete, delete `benchmarks/results.json`.
+3. Download the artifact `results` of the run: `gh run download <run> --name results --dir benchmarks`.
+4. Commit `benchmarks/results.json` as `docs(benchmarks): record the results of <date>`.
+
+After each release, record a run in a pull request of its own.
 
 ## Releases
 
