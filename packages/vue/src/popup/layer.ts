@@ -310,6 +310,11 @@ function isPathInside(entry: Entry, path: readonly EventTarget[]) {
   return path.some((node) => inside.includes(node as Element));
 }
 
+/** The event path has an element of one of the layers, such as its backdrop. */
+function isPathOnLayer(entries: readonly Entry[], path: readonly EventTarget[]) {
+  return entries.some((entry) => layerElements(entry).some((element) => path.includes(element)));
+}
+
 // A press on an element that a script added to `<body>` after the open, and that no layer owns,
 // such as the element of a password tool, is no press outside.
 function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
@@ -397,9 +402,7 @@ function onPointerdown(event: PointerEvent) {
       y: event.clientY,
       time: event.timeStamp,
       entries,
-      onLayer: entries.some((entry) =>
-        layerElements(entry).some((element) => path.includes(element)),
-      ),
+      onLayer: isPathOnLayer(entries, path),
       target: path[0] as Element,
     };
     return;
@@ -412,12 +415,15 @@ function onPointerdown(event: PointerEvent) {
       entry.releaseOutside = undefined;
     }
   }
-  closeOutside(
-    event,
-    outside.filter(
-      ({ layer }) => layer.pressStart === 'each-button' || (layer.pressStart && event.button === 0),
-    ),
+  const closing = outside.filter(
+    ({ layer }) => layer.pressStart === 'each-button' || (layer.pressStart && event.button === 0),
   );
+  // The close removes the element of the press, such as a fixed element or a viewport, before the
+  // `mousedown`. The press then gives the focus to `<body>`, also in WebKit, which sends no
+  // `mousedown`. A canceled `pointerdown` keeps the focus where the close put it
+  // (test/measurements/popup.test.ts, "a mouse press on an element that leaves at `pointerdown`").
+  if (isPathOnLayer(closing, event.composedPath())) event.preventDefault();
+  closeOutside(event, closing);
 }
 
 // A touch that moves more than `TAP_SLOP` drags or scrolls, and is no tap. A drag on an element

@@ -1,9 +1,10 @@
 import { expect, onTestFinished, test } from 'vitest';
-import { server } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, type Component } from 'vue';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
+import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import NavigationMenuParts from '../../test/fixtures/NavigationMenuParts.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
@@ -298,6 +299,74 @@ test.skipIf(server.browser !== 'chromium').each(covered)(
     await waitFor(() => expect(shown()).toBe(false));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(clicks).toEqual([]);
+  },
+);
+
+// A mouse press on the element that covers the page closes these popups at `pointerdown`. After the
+// close, the trigger has the focus.
+const pressedCovers: (Omit<Family, 'popup'> & { cover: string; trigger: string })[] = [
+  {
+    name: 'Menu',
+    fixture: MenuParts,
+    props: {},
+    cover: BLOCK,
+    trigger: '[data-testid="trigger"]',
+  },
+  {
+    name: 'Select',
+    fixture: SelectParts,
+    props: {},
+    cover: BLOCK,
+    trigger: '[data-testid="trigger"]',
+  },
+  {
+    name: 'Combobox with modal true',
+    fixture: ComboboxParts,
+    props: { root: { modal: true } },
+    cover: BLOCK,
+    trigger: '[data-testid="input"]',
+  },
+  {
+    name: "Popover with 'trap-focus' and a backdrop",
+    fixture: PopoverParts,
+    props: { root: { modal: 'trap-focus' }, close: {}, backdrop },
+    cover: BACKDROP,
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: "Dialog with 'trap-focus' and a viewport",
+    fixture: DialogParts,
+    props: { root: { modal: 'trap-focus' }, viewport: backdrop },
+    cover: '[data-testid="viewport"]',
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: "Drawer with 'trap-focus'",
+    fixture: DrawerParts,
+    props: { root: { modal: 'trap-focus' } },
+    cover: '[data-testid="viewport"]',
+    trigger: '[data-testid="trigger"]',
+  },
+];
+
+test.each(pressedCovers)(
+  '$name: a mouse press on the element that covers the page closes the popup, and the focus stays where the close puts it',
+  async ({ fixture, props, cover, trigger }) => {
+    mount(fixture, props);
+    await nextTick();
+    await userEvent.click(document.querySelector(trigger)!);
+    const popup = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-testid="popup"]');
+      expect(element?.checkVisibility()).toBe(true);
+      return element!;
+    });
+    const point = { x: innerWidth - 10, y: 10 };
+    await waitFor(() =>
+      expect(document.elementFromPoint(point.x, point.y)?.matches(cover)).toBe(true),
+    );
+    await userEvent.pointer({ coords: point, keys: '[MouseLeft]' });
+    await waitFor(() => expect(popup.checkVisibility()).toBe(false));
+    expect(document.activeElement).toBe(document.querySelector(trigger));
   },
 );
 
