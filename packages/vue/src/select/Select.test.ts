@@ -1052,9 +1052,9 @@ describe('the layer', () => {
 });
 
 describe('item alignment', () => {
-  function expectAligned(edge: 'left' | 'right') {
+  function expectAligned(edge: 'left' | 'right', selected = 'banana') {
     const value = byTestId('value').getBoundingClientRect();
-    const text = item('banana').firstElementChild!.getBoundingClientRect();
+    const text = item(selected).firstElementChild!.getBoundingClientRect();
     expect(Math.abs(text.top + text.height / 2 - (value.top + value.height / 2))).toBeLessThan(1);
     expect(Math.abs(text[edge] - value[edge])).toBeLessThan(1);
   }
@@ -1248,6 +1248,79 @@ describe('item alignment', () => {
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(popup()).toHaveAttribute('hidden');
+  });
+
+  describe('with a CSS zoom on <html>', () => {
+    function zoomPage(zoom: number) {
+      const html = document.documentElement;
+      html.style.zoom = String(zoom);
+      onTestFinished(() => {
+        html.style.removeProperty('zoom');
+      });
+    }
+
+    const view = () => document.documentElement;
+
+    test.each([0.9, 1.25])(
+      'of %s, puts the text of the selected item over the text of the value, with the side none',
+      async (zoom) => {
+        zoomPage(zoom);
+        await mountSelect({
+          ...aligned,
+          items: longList,
+          root: { defaultValue: 'i1' },
+          trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+        });
+        await userEvent.click(trigger());
+        await opened();
+        expectAligned('left', 'i1');
+        expect(byTestId('positioner')).toHaveAttribute('data-side', 'none');
+      },
+    );
+
+    test.each([0.9, 1.25])(
+      'of %s, a popup over the trigger grows by the scroll of its list up to the margin at the top of the view',
+      async (zoom) => {
+        zoomPage(zoom);
+        await mountSelect({
+          ...aligned,
+          // Taller than the view also at a zoom of 0.9, so the popup can fill the view.
+          items: Array.from({ length: 80 }, (_, index) => ({
+            value: `i${index}`,
+            text: `Item ${index}`,
+          })),
+          root: { defaultValue: 'i1' },
+          trigger: { style: 'position: fixed; top: 400px; left: 20px' },
+        });
+        await userEvent.click(trigger());
+        await opened();
+        popup().scrollTop = 2000;
+        // The margins of the positioner are 10 px of its own pixels.
+        const positioner = byTestId('positioner');
+        await waitFor(() =>
+          expect(Math.abs(positioner.getBoundingClientRect().top - 10 * zoom)).toBeLessThan(1),
+        );
+        const bottom = view().clientHeight - 10 * zoom;
+        expect(Math.abs(positioner.getBoundingClientRect().bottom - bottom)).toBeLessThan(1);
+      },
+    );
+
+    test.each([0.9, 1.25])(
+      'of %s, a popup over a trigger at the right edge of the view keeps 5 px of its own pixels to that edge',
+      async (zoom) => {
+        zoomPage(zoom);
+        await mountSelect({
+          ...aligned,
+          root: { defaultValue: 'banana' },
+          trigger: { style: 'position: fixed; top: 400px; right: 0' },
+          popup: { style: 'width: 200px' },
+        });
+        await userEvent.click(trigger());
+        await opened();
+        const right = byTestId('positioner').getBoundingClientRect().right;
+        expect(Math.abs(right - (view().clientWidth - 5 * zoom))).toBeLessThan(1);
+      },
+    );
   });
 
   test('VUE-195: in a popup with a CSS zoom, puts the text of the selected item over the text of the value', async () => {

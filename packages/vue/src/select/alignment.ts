@@ -242,7 +242,8 @@ export function useItemAlignment(
   const place = shallowRef<CSSProperties | null>(null);
   let pinned: 'top' | 'bottom' | null = null;
   let full = true;
-  let margins = 0;
+  // The height of the view inside the margins of the positioner, in pixels of the positioner.
+  let room = 0;
   let height = 0;
   let maxHeight = Infinity;
   // The size of a pixel of the list in pixels of the positioner: a CSS `zoom` in the positioner.
@@ -289,7 +290,8 @@ export function useItemAlignment(
       const item =
         context.selectedItem() ?? (context.hasValue ? undefined : context.list.items()[0]);
       const text = item && context.itemTexts.get(item.element);
-      // A `zoom` of the page scales the rectangles and not the styles (test/popupLayout.test.tsx).
+      // Under a `zoom` of the page, the rectangles and the size of the view are in pixels of the
+      // view, and the styles are in pixels of the positioner (test/measurements/select.test.ts).
       const scale = floatingPlatform.getScale(positioner) as { x: number; y: number };
       listZoom = relativeZoom(scroller, positioner);
       const popupZoom = relativeZoom(popup, positioner);
@@ -302,7 +304,7 @@ export function useItemAlignment(
       }));
       const first = alignedPlace({
         ...read,
-        view: { width: view.clientWidth, height: view.clientHeight },
+        view: { width: view.clientWidth / scale.x, height: view.clientHeight / scale.y },
         margin,
         rtl: styles.direction === 'rtl',
       });
@@ -343,7 +345,7 @@ export function useItemAlignment(
         return;
       }
       ({ pinned, full } = pin);
-      margins = first.margins;
+      room = first.room;
       height = pin.height;
       place.value = {
         ...style,
@@ -397,7 +399,7 @@ export function useItemAlignment(
       if (aligned.value && pinned && !full && place.value?.visibility !== 'hidden') {
         const grown = grownPlace({
           height,
-          room: ownerDocument(scroller).documentElement.clientHeight - margins,
+          room,
           maxHeight,
           pinned,
           scrollTop: scroller.scrollTop * listZoom,

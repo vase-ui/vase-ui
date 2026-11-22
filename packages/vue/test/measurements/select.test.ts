@@ -281,6 +281,35 @@ describe('the list', () => {
   });
 });
 
+describe('a CSS zoom on <html>', () => {
+  test.each([0.9, 1.25])(
+    'of %s: `clientWidth` and `clientHeight` of <html> and the rectangles are in pixels of the view, and the styles of a fixed element are in its own pixels',
+    (zoom) => {
+      const view = document.documentElement;
+      const size = [view.clientWidth, view.clientHeight];
+      view.style.zoom = String(zoom);
+      onTestFinished(() => {
+        view.style.removeProperty('zoom');
+      });
+      html(`<div id="view" style="position: fixed; inset: 0"></div>
+        <div id="box" style="position: fixed; top: 400px; height: 100px"></div>`);
+      const fixed = element('view');
+      const { width, height } = fixed.getBoundingClientRect();
+      expect({
+        client: [view.clientWidth, view.clientHeight],
+        rectangle: [width, height],
+        offset: [fixed.offsetWidth, fixed.offsetHeight],
+        top: element('box').getBoundingClientRect().top,
+      }).toEqual({
+        client: size,
+        rectangle: size,
+        offset: size.map((length) => Math.round(length / zoom)),
+        top: 400 * zoom,
+      });
+    },
+  );
+});
+
 describe('the parts', () => {
   test('a kept positioner shows its new place in the first frame of its second open, after its anchor moved', async () => {
     mount(SelectParts);
