@@ -249,8 +249,17 @@ describe('press on the track', () => {
         : dir === 'ltr'
           ? at(track, 150, 5)
           : at(track, 50, 5);
+      // The axis is scrolling for 500 ms after the jump. A busy page can move the thumb later, so
+      // the case reads the attribute when it changes.
+      const scrolling: boolean[] = [];
+      const observer = new MutationObserver(() =>
+        scrolling.push(track.hasAttribute('data-scrolling')),
+      );
+      observer.observe(track, { attributeFilter: ['data-scrolling'] });
+      onTestFinished(() => observer.disconnect());
       await hold(point);
       expect(viewport[key]).toBe(position);
+      expect(scrolling[0]).toBe(true);
       // The thumb moves at the `scroll` event, which can come in the next frame.
       await waitFor(() => {
         const box = thumb.getBoundingClientRect();
@@ -259,7 +268,6 @@ describe('press on the track', () => {
           0,
         );
       });
-      expect(track).toHaveAttribute('data-scrolling');
       await moveTo(
         vertical
           ? { x: point.x, y: point.y - 20 }
@@ -268,6 +276,25 @@ describe('press on the track', () => {
       expect(viewport[key]).toBe(position + (position > 0 ? -100 : 100));
     },
   );
+
+  test('a press of another button on the track scrolls nothing and keeps scroll snap', async () => {
+    const { get, viewport } = await mountArea({
+      viewport: { style: 'scroll-snap-type: y mandatory' },
+    });
+    const track = get('vertical')!;
+    const point = at(track, 5, 150);
+    for (const button of [1, 2]) {
+      await fireEvent.pointerDown(track, {
+        pointerId: mouse,
+        button,
+        clientX: point.x,
+        clientY: point.y,
+      });
+      expect(viewport.scrollTop).toBe(0);
+      expect(snap(viewport)).toEqual(['y mandatory', '']);
+      expect(track).not.toHaveAttribute('data-scrolling');
+    }
+  });
 
   test('a press on an element in the thumb does not move the thumb', async () => {
     const { get, viewport } = await mountArea();
@@ -354,8 +381,11 @@ describe('wheel over a scrollbar', () => {
       const bar = get('horizontal')!;
       const toEnd = dir === 'ltr' ? 1 : -1;
       expect(await wheel(bar, { deltaX: -toEnd * 100 })).toBe(true);
+      expect(bar).not.toHaveAttribute('data-scrolling');
       expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(false);
       expect(viewport.scrollLeft).toBe(toEnd * 100);
+      expect(bar).toHaveAttribute('data-scrolling');
+      expect(get('vertical')).not.toHaveAttribute('data-scrolling');
       expect(await wheel(bar, { deltaX: toEnd * 1000 })).toBe(false);
       expect(viewport.scrollLeft).toBe(toEnd * 800);
       expect(await wheel(bar, { deltaX: toEnd * 100 })).toBe(true);

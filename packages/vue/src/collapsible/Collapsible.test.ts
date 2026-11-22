@@ -80,7 +80,7 @@ describe('the elements', () => {
   test('render a div, a button with type="button" and a div; a template ref has element; the attributes of the developer win', async () => {
     const { root, exposed, trigger, panel, press } = await mountCollapsible({
       root: { class: 'Root' },
-      trigger: { type: 'submit' },
+      trigger: { type: 'submit', id: 'custom-trigger-id' },
       panel: { role: 'region' },
     });
     const element = root.querySelector('.Root')!;
@@ -89,6 +89,7 @@ describe('the elements', () => {
     expect(exposed.trigger.element).toBe(trigger);
     expect(trigger.tagName).toBe('BUTTON');
     expect(trigger).toHaveAttribute('type', 'submit');
+    expect(trigger).toHaveAttribute('id', 'custom-trigger-id');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).not.toHaveAttribute('aria-controls');
     expect(panel()).toBeNull();
@@ -247,18 +248,42 @@ describe('the trigger', () => {
   test('a disabled trigger or root gives the button disabled and the disabled state; a press emits nothing', async () => {
     for (const setup of [{ trigger: { disabled: true } }, { root: { disabled: true } }]) {
       const log: string[] = [];
-      const { exposed, trigger, press } = await mountCollapsible({
+      const { root, exposed, trigger, press } = await mountCollapsible({
         ...setup,
         root: rootEvents(log, setup.root),
       });
       expect(trigger).toBeDisabled();
+      expect(trigger).not.toHaveAttribute('aria-disabled');
       expect(trigger).toHaveTextContent('Trigger disabled');
+      root.querySelector<HTMLElement>('[aria-label=Before]')!.focus();
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement).toBe(root.querySelector('[aria-label=After]'));
       await userEvent.click(trigger, { force: true });
       await press();
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(log).toEqual([]);
       expect(dataAttributes(exposed.root.element)).toEqual(setup.root ? ['data-disabled'] : []);
     }
+  });
+
+  test('a disabled trigger that is not a button has aria-disabled and tabindex -1; Tab passes it, and Enter and Space do nothing', async () => {
+    const log: string[] = [];
+    const { root, trigger } = await mountCollapsible({
+      root: rootEvents(log, { disabled: true }),
+      trigger: { as: 'span' },
+    });
+    expect(trigger).toHaveAttribute('role', 'button');
+    expect(trigger).toHaveAttribute('aria-disabled', 'true');
+    expect(trigger).toHaveAttribute('tabindex', '-1');
+    expect(trigger).not.toHaveAttribute('disabled');
+    root.querySelector<HTMLElement>('[aria-label=Before]')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('[aria-label=After]'));
+    trigger.focus();
+    await userEvent.keyboard('{Enter} ');
+    await nextTick();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(log).toEqual([]);
   });
 
   test('VUE-112: a disabled fieldset disables a native trigger, and its state says it', async () => {
@@ -286,22 +311,25 @@ describe('the trigger', () => {
 
 describe('the panel', () => {
   test('with keepMounted, a closed panel stays with hidden and inert, and its content keeps its state', async () => {
-    const { panel, press } = await mountCollapsible({
+    const { panel, press, trigger } = await mountCollapsible({
       panel: { keepMounted: true },
       scene: { input: true },
     });
     const element = panel()!;
     expect(element).toHaveAttribute('hidden', '');
     expect(element).toHaveAttribute('inert');
+    expect(trigger).not.toHaveAttribute('aria-controls');
     await press();
     expect(element).not.toHaveAttribute('hidden');
     expect(element).not.toHaveAttribute('inert');
+    expect(trigger).toHaveAttribute('aria-controls', element.id);
     const input = element.querySelector('input')!;
     input.value = 'kept';
     await press();
     expect(panel()).toBe(element);
     expect(element).toHaveAttribute('hidden', '');
     expect(input.value).toBe('kept');
+    expect(trigger).not.toHaveAttribute('aria-controls');
   });
 
   test('a kept panel that opens again keeps its element when it loses keepMounted', async () => {
@@ -512,6 +540,25 @@ describe('size variables', () => {
     await waitFor(() => expect(element.getBoundingClientRect().height).toBe(element.scrollHeight));
     await press();
     await waitFor(() => expect(runs).toEqual(['height', 'height']));
+  });
+
+  test('a kept panel that is open at the mount has no transition then, and a transition at a close and at the open after it', async () => {
+    const { panel, press } = await mountCollapsible({
+      root: { defaultOpen: true },
+      panel: { keepMounted: true, class: 'KeptSize' },
+      scene: { lines: 2 },
+    });
+    const element = panel()!;
+    const runs: string[] = [];
+    element.addEventListener('transitionrun', (event) => runs.push(event.propertyName));
+    await settle();
+    expect(runs).toEqual([]);
+    await press();
+    await waitFor(() => expect(runs).toEqual(['height']));
+    await waitFor(() => expect(element.getBoundingClientRect().height).toBe(0));
+    await press();
+    await waitFor(() => expect(runs).toEqual(['height', 'height']));
+    await waitFor(() => expect(element.getBoundingClientRect().height).toBe(element.scrollHeight));
   });
 
   test('a control in a closed kept panel that CSS shows takes no focus', async () => {

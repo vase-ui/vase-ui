@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -374,6 +374,34 @@ describe('a text input', () => {
     expect(await press('{ArrowRight}', '{ArrowRight}')).toEqual(['text', 'b']);
   });
 
+  test('in a vertical toolbar, a key moves the focus to an input and selects its text; the caret keys stay in it', async () => {
+    const { item } = await mountInputs({ orientation: 'vertical' });
+    const input = item<HTMLInputElement>('text');
+    item('a').focus();
+    expect(await press('{ArrowDown}')).toEqual(['text']);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 3]);
+    expect(await press('{ArrowRight}', '{ArrowDown}', '{ArrowUp}')).toEqual(['text', 'b', 'text']);
+    input.setSelectionRange(1, 1);
+    expect(await press('{ArrowLeft}', '{ArrowUp}')).toEqual(['text', 'a']);
+  });
+
+  test.each([
+    { orientation: 'horizontal', next: '{ArrowRight}', previous: '{ArrowLeft}' },
+    { orientation: 'vertical', next: '{ArrowDown}', previous: '{ArrowUp}' },
+  ])(
+    '$orientation: Tab leaves a disabled input and Shift+Tab comes back to it; the keys pass it',
+    async ({ orientation, next, previous }) => {
+      const { item } = await mountInputs({ orientation }, { disabled: true });
+      item('a').focus();
+      expect(await press(next, '{Tab}', '{Shift>}{Tab}{/Shift}')).toEqual([
+        'text',
+        'after',
+        'text',
+      ]);
+      expect(await press(next, previous, previous)).toEqual(['b', 'text', 'a']);
+    },
+  );
+
   test('an input keeps no key of the vertical axis, and a textarea keeps them while its caret is not at the edge', async () => {
     const { item } = await mountToolbar({ orientation: 'vertical' }, [
       { key: 'a' },
@@ -614,6 +642,39 @@ describe('disabled items', () => {
     },
   );
 
+  test('an enabled item with focusableWhenDisabled false takes the focus from the keys', async () => {
+    const { item } = await mountToolbar({}, [
+      { key: 'a' },
+      { key: 'b', attrs: { focusableWhenDisabled: false } },
+      { key: 'c' },
+    ]);
+    expect(item('b')).not.toHaveAttribute('disabled');
+    item('a').focus();
+    expect(await press('{ArrowRight}', '{ArrowRight}')).toEqual(['b', 'c']);
+  });
+
+  test('a disabled input and a disabled checkbox take a click again when they become enabled', async () => {
+    const text = reactive({ disabled: true });
+    const box = reactive({ disabled: true });
+    const { item } = await mountToolbar({}, [
+      { key: 'a' },
+      { key: 'text', kind: 'input', attrs: text },
+      { key: 'box', kind: 'checkbox', attrs: box },
+    ]);
+    item('a').focus();
+    await userEvent.click(item('text'), { force: true });
+    expect(focused()).toBe('a');
+    await userEvent.click(item('box'), { force: true });
+    expect(item<HTMLInputElement>('box').checked).toBe(false);
+    text.disabled = false;
+    box.disabled = false;
+    await nextTick();
+    await userEvent.click(item('text'));
+    expect(focused()).toBe('text');
+    await userEvent.click(item('box'));
+    expect(item<HTMLInputElement>('box').checked).toBe(true);
+  });
+
   test('a press that a capture listener stops before it reaches a disabled item leaves no stop on the item', async () => {
     const log: string[] = [];
     let stops = 1;
@@ -675,10 +736,25 @@ describe('Toolbar.Button with an element that is not a button', () => {
     const { item } = await mountToolbar({}, [
       { key: 'span', kind: 'span', attrs: recordEvents(log, 'span', ['click']) },
     ]);
+    const capture = () => log.push('document capture click');
+    const bubble = () => log.push('document click');
+    document.addEventListener('click', capture, true);
+    document.addEventListener('click', bubble);
+    onTestFinished(() => {
+      document.removeEventListener('click', capture, true);
+      document.removeEventListener('click', bubble);
+    });
     expect(item('span')).toHaveAttribute('role', 'button');
     item('span').focus();
     await userEvent.keyboard('{Enter} ');
-    expect(log).toEqual(['span click', 'span click']);
+    expect(log).toEqual([
+      'document capture click',
+      'span click',
+      'document click',
+      'document capture click',
+      'span click',
+      'document click',
+    ]);
   });
 });
 

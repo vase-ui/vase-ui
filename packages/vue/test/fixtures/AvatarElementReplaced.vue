@@ -5,7 +5,7 @@ import ExposedImage from './ExposedImage.vue';
 
 defineProps({
   kind: {
-    type: String as PropType<'own-source' | 'keyed' | 'component' | 'no-element'>,
+    type: String as PropType<'own-source' | 'own-sources' | 'keyed' | 'component' | 'no-element'>,
     required: true,
   },
   scene: { type: Object as PropType<{ picture: string }>, required: true },
@@ -25,6 +25,14 @@ defineProps({
               v-bind="imageProps"
               :ref="imageRef"
               :data-status="imageState.imageLoadingStatus"
+            />
+            <img
+              v-else-if="kind === 'own-sources'"
+              sizes="2px"
+              :srcset="`${scene.picture} 2w`"
+              :src="scene.picture"
+              v-bind="imageProps"
+              :ref="imageRef"
             />
             <img
               v-else-if="kind === 'keyed'"

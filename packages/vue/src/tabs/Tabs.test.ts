@@ -185,14 +185,18 @@ describe('the value', () => {
     const value = () => 'a function';
     // A reactive prop would give a proxy of the object, which is not strictly the object.
     const object = markRaw({});
+    const symbol = Symbol('4');
+    const pattern = markRaw(/5/);
     const root = reactive<Record<string, unknown>>({ modelValue: 1 });
-    const { selected, openPanels } = await mountTabs({
+    const { tab, panel, selected, openPanels } = await mountTabs({
       root,
       tabs: [
         { key: 'one', value: 1 },
         { key: 'text', value: '1' },
         { key: 'function', value },
         { key: 'object', value: object },
+        { key: 'symbol', value: symbol },
+        { key: 'pattern', value: pattern },
       ],
     });
     expect(selected()).toEqual(['one']);
@@ -201,10 +205,14 @@ describe('the value', () => {
       ['1', 'text'],
       [value, 'function'],
       [object, 'object'],
+      [symbol, 'symbol'],
+      [pattern, 'pattern'],
     ] as const) {
       root.modelValue = next;
       await nextTick();
       expect(selected()).toEqual([key]);
+      expect(openPanels()).toEqual([key]);
+      expect(panel(key)).toHaveAttribute('aria-labelledby', tab(key).id);
     }
     root.modelValue = null;
     await nextTick();
@@ -244,6 +252,18 @@ describe('the value', () => {
     await userEvent.click(tab('c'));
     expect(log).toEqual(['valueChange b none', 'update b']);
     expect(selected()).toEqual(['a']);
+  });
+
+  test('a function in defaultValue is the value of its tab; the root does not call it', async () => {
+    const log: string[] = [];
+    const value = () => 'b';
+    const { selected } = await mountTabs({
+      root: rootEvents(log, { defaultValue: value }),
+      tabs: [{ key: 'a' }, { key: 'function', value }, { key: 'b' }],
+    });
+    await settle();
+    expect(selected()).toEqual(['function']);
+    expect(log).toEqual([]);
   });
 
   test('an uncontrolled root keeps its value; undefined from a parent keeps the value that the root has', async () => {
@@ -352,7 +372,7 @@ describe('the changes that the root makes', () => {
       ...panel,
       attrs: { keepMounted: true },
     }));
-    const { selected } = await mountTabs({
+    const { selected, openPanels } = await mountTabs({
       root: rootEvents(log, { defaultValue: 'b' }),
       tabs,
       panels,
@@ -361,6 +381,7 @@ describe('the changes that the root makes', () => {
     await settle();
     expect(log).toEqual(['valueChange a disabled', 'update a']);
     expect(selected()).toEqual(['a']);
+    expect(openPanels()).toEqual(['a']);
   });
 
   test('a defaultValue that names a disabled tab stays until that tab is enabled one time', async () => {
@@ -402,11 +423,15 @@ describe('the changes that the root makes', () => {
   test("a value that no tab has gives the first tab that is not disabled, or null, with 'missing'", async () => {
     const log: string[] = [];
     const tabs = reactive<Item[]>(items('a', 'b', 'c'));
-    const { selected } = await mountTabs({ root: rootEvents(log, { defaultValue: 'b' }), tabs });
+    const { selected, tabStops } = await mountTabs({
+      root: rootEvents(log, { defaultValue: 'b' }),
+      tabs,
+    });
     tabs.splice(1, 1);
     await settle();
     expect(log).toEqual(['valueChange a missing', 'update a']);
     expect(selected()).toEqual(['a']);
+    expect(tabStops()).toEqual(['a']);
     tabs.splice(0, 2);
     await settle();
     expect(log.slice(2)).toEqual(['valueChange null missing', 'update null']);
@@ -418,6 +443,22 @@ describe('the changes that the root makes', () => {
     await mountTabs({ root: rootEvents(log, { defaultValue: 'z' }), tabs: items('a', 'b') });
     await settle();
     expect(log).toEqual(['valueChange a missing', 'update a']);
+  });
+
+  test('a kept panel whose tabs all leave is hidden and names no tab', async () => {
+    const log: string[] = [];
+    const tabs = reactive<Item[]>(items('a'));
+    const { panel } = await mountTabs({
+      root: rootEvents(log, { defaultValue: 'a' }),
+      tabs,
+      panels: [{ key: 'a', attrs: { keepMounted: true } }],
+    });
+    expect(panel('a')).not.toHaveAttribute('hidden');
+    tabs.splice(0, 1);
+    await settle();
+    expect(log).toEqual(['valueChange null missing', 'update null']);
+    expect(panel('a')).toHaveAttribute('hidden');
+    expect(panel('a')).not.toHaveAttribute('aria-labelledby');
   });
 
   test('emits nothing when the fallback is the value that the root has', async () => {
@@ -646,6 +687,93 @@ describe('keys', () => {
       await press(previous, '{Home}');
       expect(log).toEqual(['valueChange b', 'update b', 'valueChange a', 'update a']);
       expect(events[0]).toBe(`keydown ${next.slice(1, -1)}`);
+    },
+  );
+
+  test.each(layouts)(
+    'with activateOnFocus, the keys that loop and End activate the tab that they focus: $name',
+    async ({ orientation, dir, next, previous }) => {
+      const log: string[] = [];
+      const root = rootModel(log, 'a');
+      root.orientation = orientation;
+      const { tab, focused, selected } = await mountTabs({
+        root,
+        list: { activateOnFocus: true },
+        tabs: items('a', 'b', 'c'),
+        dir,
+      });
+      tab('a').focus();
+      const steps: unknown[] = [];
+      for (const key of [previous, next, '{End}', previous]) {
+        await press(key);
+        steps.push([focused(), selected()]);
+      }
+      expect(steps).toEqual([
+        ['c', ['c']],
+        ['a', ['a']],
+        ['c', ['c']],
+        ['b', ['b']],
+      ]);
+      expect(log).toEqual([
+        'valueChange c none',
+        'update c',
+        'valueChange a none',
+        'update a',
+        'valueChange c none',
+        'update c',
+        'valueChange b none',
+        'update b',
+      ]);
+    },
+  );
+
+  test.each([false, true])(
+    'Home and End focus a disabled first and last tab and activate nothing (activateOnFocus: %s)',
+    async (activateOnFocus) => {
+      const log: string[] = [];
+      const { tab, focused, selected } = await mountTabs({
+        root: rootEvents(log, { defaultValue: 'b' }),
+        list: { activateOnFocus },
+        tabs: [
+          { key: 'a', attrs: { disabled: true } },
+          { key: 'b' },
+          { key: 'c', attrs: { disabled: true } },
+        ],
+      });
+      tab('b').focus();
+      await press('{Home}');
+      expect([focused(), selected()]).toEqual(['a', ['b']]);
+      await press('{End}');
+      expect([focused(), selected()]).toEqual(['c', ['b']]);
+      expect(log).toEqual([]);
+    },
+  );
+
+  test.each([false, true])(
+    'a parent that writes the value one microtask later keeps the focus and the value together (activateOnFocus: %s)',
+    async (activateOnFocus) => {
+      const log: string[] = [];
+      const root = rootModel(log, 'a', false);
+      root['onUpdate:modelValue'] = (value: unknown) => {
+        log.push(`update ${String(value)}`);
+        void Promise.resolve().then(() => (root.modelValue = value));
+      };
+      const { tab, focused, selected } = await mountTabs({
+        root,
+        list: { activateOnFocus },
+        tabs: [{ key: 'a' }, { key: 'b', attrs: { disabled: true } }, { key: 'c' }],
+      });
+      tab('a').focus();
+      await press('{ArrowRight}');
+      expect([focused(), selected()]).toEqual(['b', ['a']]);
+      await press('{ArrowRight}');
+      if (!activateOnFocus) {
+        expect(log).toEqual([]);
+        await press('{Enter}');
+      }
+      await waitFor(() => expect(selected()).toEqual(['c']));
+      expect(focused()).toBe('c');
+      expect(log).toEqual(['valueChange c none', 'update c']);
     },
   );
 
@@ -1095,6 +1223,40 @@ describe('the activation direction', () => {
     expect(direction()).toBe('right');
   });
 
+  test('a value of the parent after a press that the parent ignores or that a listener cancels sets it', async () => {
+    for (const cancel of [false, true]) {
+      const log: string[] = [];
+      const root = rootModel(log, 'a', false);
+      if (cancel) {
+        root.onValueChange = (_: unknown, details: TabsRootChangeEventDetails) => details.cancel();
+      }
+      const { exposed, tab } = await mountTabs({
+        root,
+        list: { style: 'display: flex' },
+        tabs: items('a', 'b'),
+      });
+      const direction = () => exposed.root.element.getAttribute('data-activation-direction');
+      await userEvent.click(tab('b'));
+      expect(direction()).toBe('none');
+      root.modelValue = 'b';
+      await nextTick();
+      expect(direction()).toBe('right');
+    }
+  });
+
+  test('the state of a tab in the element slot has the activation direction', async () => {
+    // The span stands after the link on its line.
+    const root = reactive<Record<string, unknown>>({ modelValue: 'span' });
+    const { root: host } = mount(TabsElements, { root });
+    await nextTick();
+    const link = host.querySelector('a')!;
+    expect(link).toHaveAttribute('data-direction', 'none');
+    root.modelValue = 'link';
+    await nextTick();
+    expect(link).toHaveAttribute('data-direction', 'left');
+    expect(link).toHaveAttribute('data-activation-direction', 'left');
+  });
+
   test('uses the new orientation when the value and the orientation change together', async () => {
     const root = reactive<Record<string, unknown>>({ modelValue: 'b' });
     const { tab } = await mountTabs({
@@ -1265,6 +1427,11 @@ describe('the errors', () => {
   test.each([
     {
       part: 'list',
+      message:
+        'Vase UI: A part of Tabs must be inside <Tabs.Root>. Without a root the part has no value and no orientation. Put the part inside <Tabs.Root>.',
+    },
+    {
+      part: 'panel',
       message:
         'Vase UI: A part of Tabs must be inside <Tabs.Root>. Without a root the part has no value and no orientation. Put the part inside <Tabs.Root>.',
     },

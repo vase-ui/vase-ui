@@ -492,6 +492,38 @@ describe('in a toolbar', () => {
     expect(focused()).toBe('first');
   });
 
+  test.each([false, true])(
+    'Enter presses a toggle that the keys of the toolbar reach (multiple: %s)',
+    async (multiple) => {
+      const { element } = await mountInToolbar({ multiple });
+      element('first').focus();
+      await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+      expect(focused()).toBe('two');
+      await userEvent.keyboard('{Enter}');
+      expect(element('two')).toHaveAttribute('aria-pressed', 'true');
+      expect(element('one')).toHaveAttribute('aria-pressed', String(multiple));
+    },
+  );
+
+  test('the arrow keys of the toolbar skip a toggle that is disabled at the mount or later', async () => {
+    const scene = reactive({ disabledTwo: true });
+    const { element } = await mountInToolbar(scene);
+    element('one').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('alone');
+    scene.disabledTwo = false;
+    await nextTick();
+    element('one').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('two');
+    element('one').focus();
+    scene.disabledTwo = true;
+    await nextTick();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('alone');
+    expect(element('two')).not.toHaveAttribute('tabindex', '0');
+  });
+
   test.each([
     { name: 'a disabled toolbar', scene: { disabled: true } },
     { name: 'a disabled Toolbar.Group', scene: { groupDisabled: true } },

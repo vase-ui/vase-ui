@@ -187,6 +187,17 @@ describe('the value', () => {
     expect(values).toEqual([[['x', 'y']], [['x', 'y'], 'b'], ['b']]);
   });
 
+  test('with multiple, the value lists the items in the order of the presses', async () => {
+    const values: unknown[] = [];
+    const { press } = await mountAccordion({
+      root: { multiple: true, onValueChange: (value: unknown) => values.push(value) },
+      items: items('a', 'b'),
+    });
+    await press('b');
+    await press('a');
+    expect(values).toEqual([['b'], ['b', 'a']]);
+  });
+
   test('an item with no value has a generated value; defaultValue opens the items of its values', async () => {
     const values: unknown[][] = [];
     const { press, open } = await mountAccordion({
@@ -216,6 +227,51 @@ describe('the value', () => {
       expect(open()).toEqual([]);
       expect(log).toEqual(where === 'item' ? [] : ['openChange a true trigger-press']);
     }
+  });
+
+  test.each([
+    {
+      name: 'a close, without multiple',
+      where: 'root',
+      root: { defaultValue: ['a'] },
+      open: ['a'],
+    },
+    {
+      name: 'a close, with multiple',
+      where: 'root',
+      root: { defaultValue: ['a'], multiple: true },
+      open: ['a'],
+    },
+    { name: 'an open, without multiple', where: 'root', root: {}, open: [] },
+    { name: 'an open of a controlled root', where: 'root', root: { modelValue: [] }, open: [] },
+    { name: 'an open of a controlled root', where: 'item', root: { modelValue: [] }, open: [] },
+  ])('details.cancel() in the $where keeps the items as they are: $name', async (setup) => {
+    const log: string[] = [];
+    const { root, itemAttrs } = events(log, setup.root);
+    root['onUpdate:modelValue'] = (value: unknown[]) => {
+      log.push(`update ${JSON.stringify(value)}`);
+      root.modelValue = value;
+    };
+    const attrs: Record<string, unknown> = itemAttrs('a');
+    const cancel = (details: { cancel(): void }) => details.cancel();
+    if (setup.where === 'item') {
+      attrs.onOpenChange = (_: boolean, details: never) => cancel(details);
+    } else {
+      root.onValueChange = (value: unknown[], details: never) => {
+        log.push(`valueChange ${JSON.stringify(value)}`);
+        cancel(details);
+      };
+    }
+    const { press, open, panel } = await mountAccordion({ root, items: [{ key: 'a', attrs }] });
+    await press('a');
+    expect(open()).toEqual(setup.open);
+    expect(panel('a') !== null).toBe(setup.open.length > 0);
+    const next = JSON.stringify(setup.open.length ? [] : ['a']);
+    expect(log).toEqual(
+      setup.where === 'item'
+        ? []
+        : [`openChange a ${!setup.open.length} trigger-press`, `valueChange ${next}`],
+    );
   });
 
   test('v-model: a controlled root shows the value of its parent, and a change of the parent emits nothing', async () => {
@@ -286,6 +342,7 @@ describe('disabled', () => {
       ],
     });
     expect(trigger('a')).toBeDisabled();
+    expect(trigger('a')).not.toHaveAttribute('aria-disabled');
     for (const element of [item('a'), header('a')]) {
       expect(element).toHaveAttribute('data-disabled');
     }
@@ -296,6 +353,62 @@ describe('disabled', () => {
     await press('b');
     expect(open()).toEqual([]);
   });
+
+  test('a disabled root gives data-disabled to each item, header and panel', async () => {
+    const { item, header, panel } = await mountAccordion({
+      root: { disabled: true, defaultValue: ['a'], keepMounted: true },
+      items: items('a', 'b'),
+    });
+    for (const key of ['a', 'b']) {
+      for (const element of [item(key), header(key), panel(key)!]) {
+        expect(element).toHaveAttribute('data-disabled');
+      }
+    }
+  });
+
+  test('a disabled trigger that is not a button has aria-disabled and tabindex -1, and Tab passes it', async () => {
+    const { root, trigger } = await mountAccordion({
+      items: [{ key: 'a', attrs: { disabled: true }, trigger: { as: 'span' } }],
+    });
+    expect(trigger('a')).toHaveAttribute('role', 'button');
+    expect(trigger('a')).toHaveAttribute('aria-disabled', 'true');
+    expect(trigger('a')).toHaveAttribute('tabindex', '-1');
+    expect(trigger('a')).not.toHaveAttribute('disabled');
+    root.querySelector<HTMLElement>('[aria-label=Before]')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('[aria-label=After]'));
+  });
+
+  test.each([
+    { name: 'a button', trigger: {} },
+    { name: 'a span', trigger: { as: 'span' } },
+  ])(
+    'Tab reaches a trigger that is $name; Enter opens and closes it, and Space at its keyup',
+    async ({ trigger: triggerAttrs }) => {
+      const log: string[] = [];
+      const { itemAttrs } = events(log);
+      const { root, trigger, open } = await mountAccordion({
+        items: [{ key: 'a', attrs: itemAttrs('a'), trigger: triggerAttrs }],
+      });
+      root.querySelector<HTMLElement>('[aria-label=Before]')!.focus();
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement).toBe(trigger('a'));
+      expect(trigger('a').getAttribute('tabindex')).toBe(triggerAttrs.as ? '0' : null);
+      const states: unknown[] = [];
+      for (const key of ['{Enter}', '{Enter}', '{ >}', '{/ }', '{ >}', '{/ }']) {
+        await userEvent.keyboard(key);
+        await nextTick();
+        states.push(open());
+      }
+      expect(states).toEqual([['a'], [], [], ['a'], ['a'], []]);
+      expect(log).toEqual([
+        'openChange a true trigger-press',
+        'openChange a false trigger-press',
+        'openChange a true trigger-press',
+        'openChange a false trigger-press',
+      ]);
+    },
+  );
 
   test('Space on a trigger that is not a button opens the item at keyup', async () => {
     const { trigger, open } = await mountAccordion({
@@ -329,7 +442,40 @@ describe('ids and ARIA', () => {
     expect(accordion.panel('a')).toHaveAttribute('aria-labelledby', accordion.trigger('a').id);
   });
 
-  test('VUE-80: with no trigger, the panel has no aria-labelledby; a role of the developer wins', async () => {
+  test('a new id of the trigger goes to aria-labelledby, and an id that the developer removes gives the generated one', async () => {
+    const trigger = reactive<Record<string, unknown>>({});
+    const accordion = await mountAccordion({
+      root: { defaultValue: ['a'] },
+      items: [{ key: 'a', trigger }],
+    });
+    const generated = accordion.trigger('a').id;
+    expect(accordion.panel('a')).toHaveAttribute('aria-labelledby', generated);
+    for (const id of ['trigger-1', 'trigger-2']) {
+      trigger.id = id;
+      await nextTick();
+      expect(accordion.trigger('a')).toHaveAttribute('id', id);
+      expect(accordion.panel('a')).toHaveAttribute('aria-labelledby', id);
+    }
+    trigger.id = undefined;
+    await nextTick();
+    expect(accordion.trigger('a').id).toBe(generated);
+    expect(accordion.panel('a')).toHaveAttribute('aria-labelledby', generated);
+  });
+
+  test('VUE-80: an open trigger has no aria-controls while its panel is unmounted, and names the panel that mounts again', async () => {
+    const shown = reactive<Item[]>([{ key: 'a' }]);
+    const accordion = await mountAccordion({ root: { defaultValue: ['a'] }, items: shown });
+    shown[0]!.panel = false;
+    await nextTick();
+    expect(accordion.trigger('a')).toHaveAttribute('aria-expanded', 'true');
+    expect(accordion.trigger('a')).not.toHaveAttribute('aria-controls');
+    shown[0]!.panel = {};
+    await nextTick();
+    expect(accordion.trigger('a')).toHaveAttribute('aria-controls', accordion.panel('a')!.id);
+    expect(accordion.panel('a')).toHaveAttribute('aria-labelledby', accordion.trigger('a').id);
+  });
+
+  test('VUE-80: with no trigger, the panel has no aria-labelledby, and names the trigger that mounts again; a role of the developer wins', async () => {
     const shown = reactive<Item[]>([{ key: 'a', panel: { role: 'group', class: 'Group' } }]);
     const accordion = await mountAccordion({ root: { defaultValue: ['a'] }, items: shown });
     const element = accordion.root.querySelector('.Group')!;
@@ -338,6 +484,9 @@ describe('ids and ARIA', () => {
     shown[0]!.trigger = false;
     await nextTick();
     expect(element).not.toHaveAttribute('aria-labelledby');
+    shown[0]!.trigger = {};
+    await nextTick();
+    expect(element).toHaveAttribute('aria-labelledby', accordion.trigger('a').id);
   });
 });
 

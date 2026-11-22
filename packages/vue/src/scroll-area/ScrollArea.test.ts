@@ -705,6 +705,23 @@ describe('thumb', () => {
 });
 
 describe('right-to-left', () => {
+  test.each([
+    { name: 'before the inline start', at: 50, edge: 'right' },
+    { name: 'after the inline end', at: -850, edge: 'left' },
+  ] as const)(
+    'a position $name keeps the horizontal thumb at that edge and makes it shorter',
+    async ({ at, edge }) => {
+      const { get, viewport } = await mountArea({ root: { dir: 'rtl' } });
+      const [thumb, track] = [get('thumb-x')!, get('horizontal')!];
+      await reportPosition(viewport, 'scrollLeft', at);
+      const box = thumbBox(thumb, track);
+      expect(box[edge]).toBeCloseTo(0, 1);
+      expect(box.width).toBeCloseTo((40 * 1000) / 1050, 1);
+      await reportPosition(viewport, 'scrollLeft', -400);
+      expect(thumbBox(thumb, track)).toMatchObject({ right: 80, width: 40 });
+    },
+  );
+
   test('the edges, the scrollbars, the corner and the horizontal thumb follow the direction', async () => {
     const { get, viewport, area } = await mountArea({
       scene: { corner: true },
