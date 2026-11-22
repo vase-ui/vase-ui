@@ -39,7 +39,7 @@ function elementProps() {
   const { children: _children, ...actionAttrs } = root.toast.actionProps ?? {};
   // The attributes of the toast win, because they are of one toast.
   return button.mergeAttributes(
-    { 'data-type': state.value.type },
+    { 'data-type': state.value.type, ...(root.ariaHidden ? { tabindex: -1 } : {}) },
     mergeProps(attrs, actionAttrs as Record<string, unknown>),
   );
 }

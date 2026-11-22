@@ -29,10 +29,12 @@ const focused = shallowRef(false);
 const state = computed<ToastCloseState>(() => ({ type: root.toast.type }));
 
 function elementProps() {
+  // A collapsed stack hides the button from a screen reader until it gets the focus.
+  const ariaHidden = !root.expanded && !focused.value;
   return button.mergeAttributes(
     {
-      // A collapsed stack hides the button from a screen reader until it gets the focus.
-      'aria-hidden': !root.expanded && !focused.value ? 'true' : undefined,
+      'aria-hidden': ariaHidden ? 'true' : undefined,
+      ...(ariaHidden || root.ariaHidden ? { tabindex: -1 } : {}),
       'data-type': state.value.type,
       onClick: () => provider.close(root.toast.id),
       onFocus: () => (focused.value = true),

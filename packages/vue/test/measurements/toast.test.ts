@@ -402,6 +402,27 @@ describe('Tab and the sentinels', () => {
   );
 });
 
+describe('a container that has the tab stop of its content', () => {
+  test('Tab reaches it before its content, and Shift+Tab after; a `focus()` of a child in its `focusin` listener gives the child `:focus-visible`', async () => {
+    html(
+      '<input id="before" aria-label="Before"><div id="vp" tabindex="0"><div id="t1" tabindex="-1">1</div><div id="t2" tabindex="-1">2</div></div><input id="after" aria-label="After">',
+    );
+    const log: string[] = [];
+    element('vp').addEventListener('focusin', (event) => {
+      if (event.target !== element('vp')) return;
+      const from = (event.relatedTarget as Element | null)?.id;
+      log.push(`from ${from}`);
+      element(from === 'after' ? 't2' : 't1').focus();
+      log.push(`${activeId()} ${document.activeElement!.matches(':focus-visible')}`);
+    });
+    element('before').focus();
+    await userEvent.keyboard('{Tab}');
+    element('after').focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(log).toEqual(['from before', 't1 true', 'from after', 't2 true']);
+  });
+});
+
 describe('a touch', () => {
   // A page that scrolls on the two axes, with a fixed box.
   function touchBox(touchAction: string) {

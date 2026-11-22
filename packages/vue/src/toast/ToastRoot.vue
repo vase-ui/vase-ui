@@ -31,6 +31,9 @@ const { element, setElement } = useElement<HTMLElement>();
 
 const isOpen = () => provider.toasts.some((toast) => toast.id === props.toast.id);
 const place = computed(() => provider.place(props.toast.id));
+// An alert in the parent of the viewport announces a toast of high priority, so the polite viewport
+// does not announce it a second time.
+const ariaHidden = computed(() => props.toast.priority === 'high' && !provider.focused);
 const swipe = useToastSwipe({
   directions: (): SwipeDirection[] =>
     props.toast.positionerProps?.anchor === undefined ? [props.swipeDirection].flat() : [],
@@ -66,6 +69,9 @@ const context: ToastRootForParts = {
   },
   get behind() {
     return place.value.index > 0;
+  },
+  get ariaHidden() {
+    return ariaHidden.value;
   },
   addLabel(kind, label) {
     const entry = { kind, label };
@@ -143,11 +149,11 @@ function elementProps() {
   return mergeProps(
     {
       role: high ? 'alertdialog' : 'dialog',
-      tabindex: 0,
+      tabindex: ariaHidden.value ? -1 : 0,
       'aria-modal': 'false',
       'aria-labelledby': byDescription ? descriptionId : titleId,
       'aria-describedby': byDescription ? undefined : descriptionId,
-      'aria-hidden': high && !provider.focused ? 'true' : undefined,
+      'aria-hidden': ariaHidden.value ? 'true' : undefined,
       inert: props.toast.limited ? '' : undefined,
       'data-expanded': state.value.expanded ? '' : undefined,
       'data-type': state.value.type,
