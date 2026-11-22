@@ -40,10 +40,15 @@ function onClick(event: MouseEvent) {
   const index = chips.indexOf(el);
   if (index === -1) return;
   const details = createComboboxDetails('chip-remove-press', event);
-  context.setValue(
-    values.filter((_, at) => at !== index),
-    details,
-  );
+  const removed = values[index];
+  if (
+    context.setValue(
+      values.filter((_, at) => at !== index),
+      details,
+    )
+  ) {
+    context.unhighlight(removed, event);
+  }
   context.input?.focus();
   if (!details.isPropagationAllowed) event.stopPropagation();
 }

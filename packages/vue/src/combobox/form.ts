@@ -1,10 +1,11 @@
-import { inject } from 'vue';
+import { inject, nextTick } from 'vue';
 import { useIsHydrated } from '../common/hydration';
 import { useValueInputs } from '../common/valueInputs';
 import { fieldKey } from '../field/control';
 import { isSelectedValueDirty } from '../common/itemEquality';
 import type { ComboboxRootContext } from './root';
 import { createComboboxDetails } from './root';
+import type { ComboboxRootChangeEventDetails } from './types';
 
 /** The form inputs of a root (`useValueInputs`): the control is the control of the field. */
 export function useComboboxForm(
@@ -48,17 +49,27 @@ export function useComboboxForm(
       context.setText(filled, details);
       return;
     }
+    // With no `items`, the labels are the text of the items, which mount with the kept popup.
+    if (!context.data && context.mountedItems().length === 0) {
+      context.keepPopup();
+      void nextTick(() => selectFilled(filled, details));
+      return;
+    }
+    selectFilled(filled, details);
+  }
+
+  // A match of the form text wins over a match of a label of an earlier item (Base UI).
+  function selectFilled(filled: string, details: ComboboxRootChangeEventDetails) {
     const lower = filled.toLowerCase();
-    // The labels come from `items`, else from the mounted items of a kept popup.
-    const values = context.data
-      ? context.dataValues
-      : context.mountedItems().map((item) => item.value);
-    const match = values.find(
-      (value) =>
-        context.formTextOf(value).toLowerCase() === lower ||
-        context.labelOf(value).toLowerCase() === lower,
-    );
-    if (match !== undefined && !context.isSelected(match)) context.setValue(match, details);
+    const items = context.data
+      ? context.dataValues.map((value) => ({ value, labels: [context.labelOf(value)] }))
+      : context
+          .mountedItems()
+          .map(({ value, text }) => ({ value, labels: [context.labelOf(value), text] }));
+    const match =
+      items.find(({ value }) => context.formTextOf(value).toLowerCase() === lower) ??
+      items.find(({ labels }) => labels.some((label) => label?.toLowerCase() === lower));
+    if (match && !context.isSelected(match.value)) context.setValue(match.value, details);
   }
 
   const inputs = useValueInputs(field, {

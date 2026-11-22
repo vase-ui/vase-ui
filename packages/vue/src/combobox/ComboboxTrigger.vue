@@ -11,7 +11,7 @@ import {
 } from '../field/control';
 import { nextTextMatch, TYPEAHEAD_RESET_MS } from '../list/typeahead';
 import { interactionOf } from '../popup/root';
-import { isMouseClick, usePopupTrigger } from '../popup/trigger';
+import { isMouseClick, isVirtualPress, usePopupTrigger } from '../popup/trigger';
 import { createComboboxDetails, injectComboboxRoot, useTriggerIsControl } from './root';
 import type { ComboboxTriggerProps, ComboboxTriggerState } from './types';
 
@@ -79,15 +79,18 @@ function inputElement() {
 }
 
 // A press of the main mouse button acts at `pointerdown`, so the user can drag to an item.
-let openedByPress = false;
+let closedAtPress = false;
 function onPointerdown(event: PointerEvent) {
-  openedByPress = false;
+  closedAtPress = false;
   if (isDisabled.value || event.pointerType !== 'mouse' || event.button !== 0) return;
-  const wasOpen = root.open;
+  // The `click` of a press of a screen reader acts, as for a key.
+  if (isVirtualPress(event)) return;
+  closedAtPress = !root.open;
   if (isControl.value) trigger.onPointerdown(event);
   else pressBesideInput(event);
-  openedByPress = !wasOpen && root.open;
-  if (openedByPress && element.value) context.press.start(event, element.value, { item: 0 });
+  if (closedAtPress && root.open && element.value) {
+    context.press.start(event, element.value, { item: 0 });
+  }
 }
 
 function onClick(event: MouseEvent) {
@@ -105,9 +108,9 @@ function pressBesideInput(event: MouseEvent) {
 function onMousedown(event: MouseEvent) {
   // The input keeps the focus (test/measurements/combobox.test.ts, "a press in a popup while a
   // text input has the focus"). The popup that this press opened has the focus, which the button
-  // would take at `mousedown`.
-  if (!isControl.value || openedByPress) event.preventDefault();
-  openedByPress = false;
+  // would take at `mousedown`. A controlled open that the parent applies is in place then.
+  if (!isControl.value || (closedAtPress && root.open)) event.preventDefault();
+  closedAtPress = false;
 }
 
 // The typeahead of a closed trigger: a typed character selects the next item whose label starts
@@ -121,8 +124,8 @@ function typeahead(event: KeyboardEvent) {
   if (context.mode !== 'single' || context.readonly || root.open) return;
   if (event.key.length !== 1 || event.ctrlKey || event.altKey || event.metaKey) return;
   if (event.key === ' ' && typed === '') return;
-  // The labels come from `items`, else from the mounted items of a kept popup.
-  const mounted = context.mountedItems();
+  // The labels come from `items`, else from the mounted items, or those of the last close.
+  const mounted = context.lastItems();
   const values = context.data ? context.dataValues : mounted.map((item) => item.value);
   const current = values.findIndex((value) => context.isSelected(value));
   if (typed === '') typedFrom = current;
@@ -161,6 +164,8 @@ function elementProps() {
   const open = root.open;
   const own: Record<string, unknown> = isControl.value
     ? {
+        // The label of the combobox and the label of the field name the trigger.
+        ...(field && controlAttributes(field)),
         role: 'combobox',
         tabindex: 0,
         'aria-haspopup': 'dialog',
@@ -169,7 +174,6 @@ function elementProps() {
         'aria-readonly': context.readonly ? 'true' : undefined,
         'aria-labelledby':
           [context.labelId, field?.labelledBy].filter(Boolean).join(' ') || undefined,
-        ...(field && controlAttributes(field)),
       }
     : {
         tabindex: -1,

@@ -169,7 +169,7 @@ export namespace InputGroup {
  * Renders a `<button>` element.
  * When the trigger is the control, a key on the closed trigger of a single combobox selects the
  * next item whose label starts with the typed text. The labels come from `items`, else from the
- * items of a popup that `keepMounted` keeps.
+ * mounted items, or from the items that were mounted at the last close.
  * @selector `[aria-expanded="true"]` The popup is open.
  * @selector `[data-popup-side]` The side of the anchor that the open popup is on.
  * @selector `[data-list-empty]` The list has no item to show.
@@ -240,6 +240,7 @@ export namespace Chips {
  * A selected value of a multiple combobox.
  * Renders a `<div>` element.
  * @selector `[data-disabled]` The combobox is disabled.
+ * @selector `[data-readonly]` The combobox is read-only.
  */
 export const Chip: typeof ComboboxChip = ComboboxChip;
 export namespace Chip {
@@ -263,7 +264,7 @@ export namespace ChipRemove {
  * Moves its content to another place of the DOM, `<body>` by default.
  * Renders no element.
  * With `keepMounted`, the closed popup keeps its list and the text of an input in it until the next
- * open.
+ * open. A root with no `items` keeps the popup in the DOM from the first fill of the browser.
  */
 export const Portal: typeof ComboboxPortal = ComboboxPortal;
 export namespace Portal {
@@ -274,7 +275,7 @@ export namespace Portal {
 /**
  * An overlay under the popup.
  * Renders a `<div>` element.
- * @selector `[hidden]` The combobox is closed, and `keepMounted` of the portal keeps the backdrop in the DOM.
+ * @selector `[hidden]` The combobox is closed, and `keepMounted` of the portal or a fill of the browser keeps the backdrop in the DOM.
  */
 export const Backdrop: typeof ComboboxBackdrop = ComboboxBackdrop;
 export namespace Backdrop {
@@ -308,7 +309,7 @@ export namespace Positioner {
  * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
  * @selector `[data-anchor-hidden]` The anchor is out of view.
  * @selector `[data-empty]` The list has no item to show.
- * @selector `[hidden]` The combobox is closed, and `keepMounted` of the portal keeps the popup in the DOM.
+ * @selector `[hidden]` The combobox is closed, and `keepMounted` of the portal or a fill of the browser keeps the popup in the DOM.
  */
 export const Popup: typeof ComboboxPopup = ComboboxPopup;
 export namespace Popup {

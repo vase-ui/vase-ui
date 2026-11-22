@@ -192,8 +192,9 @@ export interface ComboboxRootProps<
   /**
    * The autofill purpose of the hidden text input, such as `'country-name'`. The input has no
    * name, so a browser reads its purpose from this attribute. Without `multiple`, an autofill selects
-   * the item whose value or label is the filled text. The labels come from `items`, else from the
-   * items of a popup that `keepMounted` keeps.
+   * the item whose value or label is the filled text. The labels come from `items`. With no `items`,
+   * they come from the `Combobox.Item` parts, and the root keeps the popup in the DOM from the first
+   * fill.
    */
   autocomplete?: string | undefined;
   /**
@@ -355,6 +356,7 @@ export interface ComboboxChipProps extends AsProps, /* @vue-ignore */ ChipAttrib
 
 export interface ComboboxChipState {
   disabled: boolean;
+  readonly: boolean;
 }
 
 export interface ComboboxChipRemoveProps
@@ -402,7 +404,10 @@ export interface ComboboxPopupProps
    * input in the popup; after a touch, the popup.
    */
   initialFocus?: FocusTarget | undefined;
-  /** The element that gets the focus at the close. By default: the trigger. */
+  /**
+   * The element that gets the focus at the close. By default: the trigger that is the control. An
+   * input that is the control keeps the focus.
+   */
   finalFocus?: FocusTarget | undefined;
 }
 

@@ -120,6 +120,7 @@ function showText() {
 }
 
 function write(text: string, event: Event) {
+  const hadValue = context.mode !== 'none' && context.hasValue;
   const accepted = context.setText(text, createComboboxDetails('input-change', event));
   // The parent can refuse or change a controlled text. Its answer arrives with its next render.
   void nextTick(showText);
@@ -134,7 +135,9 @@ function write(text: string, event: Event) {
   // nothing.
   const inputType = (event as InputEvent).inputType;
   if (event.type === 'compositionend' || (inputType && inputType !== 'insertReplacementText')) {
-    context.onTyped(text, event);
+    context.onTyped(text, event, hadValue);
+  } else if (inputType === 'insertReplacementText') {
+    context.onFilled(text);
   }
 }
 
@@ -276,6 +279,8 @@ function onBlur(event: FocusEvent) {
     leftHighlight = list.highlighted;
     list.highlight(null, 'none', event);
   }
+  // A text that the user left in the input of a closed popup goes back, as at a close.
+  if (isControl.value && !context.inline && !root.open) context.resetText(event);
   const to = event.relatedTarget as Element | null;
   if (field && isControl.value && !(to && isInPopup(context.layer, to))) {
     field.onLeave(event.currentTarget as Element);

@@ -56,9 +56,15 @@ function onClick(event: MouseEvent) {
   if (!isDisabled.value) context.select(props.value, event);
 }
 
+// A disabled item calls no click listener of the developer, as a disabled button does not.
+function stopWhileDisabled(event: MouseEvent) {
+  if (isDisabled.value) event.stopImmediatePropagation();
+}
+
 function elementProps() {
   return mergeProps(
     attributes.value,
+    { onClick: stopWhileDisabled },
     {
       id: givenId(props.id) ?? generatedId,
       role: inRow ? 'gridcell' : 'option',
