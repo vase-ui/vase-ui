@@ -26,7 +26,7 @@ export const isVaporApp = inject('testApp') === 'vapor';
 /** Whether the parts compile as Vapor components in this project. */
 export const isVaporParts = inject('testParts') === 'vapor';
 
-const vaporVersionMessage = `The projects \`vapor\` and \`vapor-parts\` need Vue 3.6. The installed Vue is ${Vue.version}.`;
+const vaporVersionMessage = `The projects \`vapor\` and \`vapor-parts\` need Vue 3.6. The installed Vue is ${Vue.version}. Run \`pnpm install:vue-3.6\` first.`;
 
 /**
  * Makes the app of a test. In the projects `vapor` and `vapor-parts`, it is a Vapor app
