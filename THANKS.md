@@ -4,11 +4,11 @@
 
 Vase UI is a port, so the people on this page did the hard part before we started. They spent years on focus management, screen readers and browser bugs. We carried their work across, and we thank each of them.
 
-Each list is GitHub's contributor list of the project, read on `2026-11-17` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
+Each list is GitHub's contributor list of the project, read on `2026-11-22` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
 
 ## Base UI
 
-The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd2a6987b3a01d000da6745a45f4690941e7a13`. Vase UI is a port of Base UI.
+The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `52fac378e79c7eeccb38ae97adb9d33d9650b177`. Vase UI is a port of Base UI.
 
 - [atomiks](https://github.com/atomiks)
 - [Michał Dudak](https://github.com/michaldudak)
@@ -26,8 +26,8 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd
 - [Benny Joo](https://github.com/hbjORbj)
 - [Takeru Chuganji](https://github.com/chuganzy)
 - [mapache-salvaje](https://github.com/mapache-salvaje)
-- [Flavien DELANGLE](https://github.com/flaviendelangle)
 - [Lukas Tyla](https://github.com/LukasTy)
+- [Flavien DELANGLE](https://github.com/flaviendelangle)
 - [Rom Grk](https://github.com/romgrk)
 - [Danilo Leal](https://github.com/danilo-leal)
 - [yyh](https://github.com/lyzno1)
@@ -47,6 +47,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd
 - [Varun Mulay](https://github.com/varunmulay22)
 - [Alexandre Fauquette](https://github.com/alexfauquette)
 - [Jiseong Park](https://github.com/jijiseong)
+- [Bernardo Belchior](https://github.com/bernardobelchior)
 - [Marco Moretti](https://github.com/marcosvega91)
 - [Matt](https://github.com/mbrookes)
 - [Sarthak Malik](https://github.com/sarthakmalik0810)
@@ -56,7 +57,6 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd
 - [Hakimuddin](https://github.com/onehanddev)
 - [povilass](https://github.com/povilass)
 - [albertdugba](https://github.com/albertdugba)
-- [Bernardo Belchior](https://github.com/bernardobelchior)
 - [yossarian](https://github.com/captain-yossarian)
 - [Andrew Cherniavskii](https://github.com/cherniavskii)
 - [Christopher Pruijsen](https://github.com/cpruijsen)
@@ -78,7 +78,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd
 - [Eduardo Souza Costa Araújo](https://github.com/EduardoSCosta)
 - [Ethan Standel](https://github.com/EthanStandel)
 - [fenghan34](https://github.com/fenghan34)
-- [Gilberto](https://github.com/gilsmt)
+- [Gilberto S.](https://github.com/gilsmt)
 - [hasanozacar](https://github.com/hasanozacar)
 - [haseeb](https://github.com/haseebdaone)
 - [Henry Q. Dineen](https://github.com/henryqdineen)
@@ -279,6 +279,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `6dd
 - [Rebecca Hong](https://github.com/rebeccahongsf)
 - [Rémy Oudemans](https://github.com/remyoudemans)
 - [Rhuan Barreto](https://github.com/rhuanbarreto)
+- [Raman Paulau](https://github.com/romansp)
 - [Rohan Perera](https://github.com/ropereraLK)
 - [Lukas Ruflair](https://github.com/ruflair)
 - [Rich](https://github.com/rvrvrv)
