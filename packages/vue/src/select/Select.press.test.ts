@@ -227,6 +227,19 @@ describe('the controlled open state', () => {
     expect(document.activeElement).toBe(popup());
   });
 
+  test('a press closes the popup that the parent holds, and the trigger keeps the focus', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    await mountSelect({ root });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(popup()));
+    await pressAt(trigger());
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    await settle();
+    expect(document.activeElement).toBe(trigger());
+  });
+
   test('the popup follows `open`; a close request with `open` true emits openChange and keeps the popup', async () => {
     const log: string[] = [];
     const root = reactive<Props>({

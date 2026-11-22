@@ -331,6 +331,30 @@ describe('the drag from the trigger', () => {
     },
   );
 
+  test.each([
+    { name: 'the input in the popup', setup: { inputInPopup: true } },
+    { name: 'the input outside', setup: { trigger: true } },
+  ])(
+    'with $name, a press on the trigger of a popup that the parent keeps open starts no drag: its release outside asks for no close',
+    async ({ setup }) => {
+      const log: string[] = [];
+      await mountParts({
+        ...setup,
+        root: {
+          open: true,
+          onOpenChange: (open: boolean, details: { reason: string }) =>
+            log.push(`${open} ${details.reason}`),
+        },
+      });
+      await opened();
+      const press = await holdPress(trigger());
+      await press.release({ x: 2, y: window.innerHeight - 2 });
+      await settle();
+      expect(log).toEqual(['false trigger-press']);
+      expect(popup()).not.toBe(null);
+    },
+  );
+
   test('a release on an item with no move from the press point selects nothing', async () => {
     const changes: unknown[] = [];
     await mountStatic({

@@ -62,8 +62,10 @@ function onPointerdown(event: PointerEvent) {
   }
 }
 
-// The popup that a press opened takes the focus before the `mousedown` of the press. So the
-// button does not take it. A change of `open` that the parent applies is in place then.
+// A press that opens or closes the popup moves the focus before its `mousedown`: into the popup,
+// or back to the trigger. The `mousedown` would give the focus to the button, and in WebKit on
+// macOS to `<body>` (test/measurements/select.test.ts). A change of `open` that the parent applies
+// is in place at the `mousedown`.
 function onMousedown(event: MouseEvent) {
   if (root.open !== openAtPress) event.preventDefault();
 }
