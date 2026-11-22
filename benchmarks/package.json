@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node build.ts",
     "size": "node size.ts",
+    "time": "node time.ts",
     "typecheck": "vue-tsc --noEmit -p tsconfig.vue.json && tsc --noEmit -p tsconfig.react.json"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
     "@vitejs/plugin-vue": "6.0.10",
+    "playwright": "1.65.0",
     "typescript": "6.0.3",
     "vite": "8.3.7",
     "vue-tsc": "3.3.14"

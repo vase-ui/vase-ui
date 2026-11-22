@@ -9,6 +9,10 @@ export interface Setup {
   entry: string;
   /** The entry of the empty app, from `harness`. */
   emptyAppEntry: string;
+  /** The entry of the page that hydrates the server HTML of `AllComponents`, from `harness`. */
+  hydrateEntry: string;
+  /** The entry of the server render of `AllComponents`, from `harness`. */
+  serverEntry: string;
   /** `true` when the setup compiles the SFCs of the harness and of the fixtures in Vapor mode. */
   vapor: boolean;
 }
@@ -26,6 +30,8 @@ export const SETUPS: readonly Setup[] = [
     frameworkPackage: 'vue',
     entry: 'vue/vdom.ts',
     emptyAppEntry: 'vue/vdom.ts',
+    hydrateEntry: 'vue/hydrateVdom.ts',
+    serverEntry: 'vue/server.ts',
     vapor: false,
   },
   {
@@ -36,6 +42,8 @@ export const SETUPS: readonly Setup[] = [
     frameworkPackage: 'vue-3.6',
     entry: 'vue/vaporInterop.ts',
     emptyAppEntry: 'vue/vapor.ts',
+    hydrateEntry: 'vue/hydrateVaporInterop.ts',
+    serverEntry: 'vue/server.ts',
     vapor: true,
   },
   {
@@ -44,6 +52,8 @@ export const SETUPS: readonly Setup[] = [
     frameworkPackage: 'react',
     entry: 'react/main.tsx',
     emptyAppEntry: 'react/main.tsx',
+    hydrateEntry: 'react/hydrate.tsx',
+    serverEntry: 'react/server.tsx',
     vapor: false,
   },
 ];
@@ -71,3 +81,44 @@ export const SCENARIOS: readonly string[] = [
   'Tooltip',
   'AllComponents',
 ];
+
+/** A measure of `time.ts`. Each one is a duration in milliseconds, except `heap`, in bytes. */
+export type Measure =
+  'mount' | 'heap' | 'open' | 'close' | 'openLong' | 'highlight' | 'filter' | 'hydrate';
+
+/** One page of `time.ts`, which gives the measures of one sample of one library. */
+export interface Visit {
+  scenario: string;
+  kind: 'mount' | 'popup' | 'list' | 'hydration';
+  measures: readonly Measure[];
+}
+
+/** The instances of the scenario in a mount visit. */
+export const MOUNT_INSTANCES = 100;
+/** The options of Select and Combobox in a list visit. */
+export const LONG_LIST_OPTIONS = 1000;
+/** The text of the filter of Combobox, and the count of the labels of the long list that hold it. */
+export const FILTER = { text: '9', options: 271 };
+
+const POPUP_SCENARIOS = ['Dialog', 'Popover', 'Menu', 'Select', 'Combobox'];
+
+export const VISITS: readonly Visit[] = [
+  ...SCENARIOS.filter((scenario) => scenario !== 'AllComponents').map((scenario): Visit => ({
+    scenario,
+    kind: 'mount',
+    measures: ['mount', 'heap'],
+  })),
+  ...POPUP_SCENARIOS.map((scenario): Visit => ({
+    scenario,
+    kind: 'popup',
+    measures: ['open', 'close'],
+  })),
+  { scenario: 'Select', kind: 'list', measures: ['openLong', 'highlight'] },
+  { scenario: 'Combobox', kind: 'list', measures: ['openLong', 'highlight', 'filter'] },
+  { scenario: 'AllComponents', kind: 'hydration', measures: ['hydrate'] },
+];
+
+/** The key of a measure of a scenario in `results.json`, such as `Dialog.open`. */
+export function metricOf(scenario: string, measure: Measure): string {
+  return `${scenario}.${measure}`;
+}
