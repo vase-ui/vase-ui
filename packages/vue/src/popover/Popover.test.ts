@@ -987,6 +987,42 @@ describe('modal', () => {
     expect(byId('outside')).not.toHaveAttribute('aria-hidden');
   });
 
+  // Firefox takes the scroll of `<body>` (useScrollLock.ts), and the margin of `<body>` moves the
+  // popup.
+  test.skipIf(server.browser === 'firefox')(
+    'a nested modal popover that locks a scrolled page whose scrollbars take room leaves the open popover in place',
+    async () => {
+      const style = document.head.appendChild(document.createElement('style'));
+      // The page scrolls on both axes. At the offset below, the trigger is in the view.
+      style.textContent = 'body { margin: 8px; padding: 600px 0 1000px; width: 3000px }';
+      const innerWidth = Object.getOwnPropertyDescriptor(window, 'innerWidth')!;
+      onTestFinished(() => {
+        window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+        style.remove();
+        Object.defineProperty(window, 'innerWidth', innerWidth);
+      });
+      window.scrollTo({ left: 30, top: 400, behavior: 'instant' });
+      // A scrollbar of 12 px. The frame of a test in Chromium shows no scrollbar.
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        value: document.documentElement.clientWidth + 12,
+      });
+      await mountPopover({ root: { defaultOpen: true }, nested: { root: { modal: true } } });
+      await opened();
+      await placed();
+      const place = popup()!.getBoundingClientRect().toJSON();
+      // The lock takes the scroll range away, and the scroll event places the popup again.
+      const scrolled = new Promise((resolve) => {
+        window.addEventListener('scroll', resolve, { once: true });
+      });
+      await userEvent.click(document.querySelector('[data-key="nested"]')!);
+      await waitFor(() => expect(isScrollLocked()).toBe(true));
+      await scrolled;
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(popup()!.getBoundingClientRect().toJSON()).toEqual(place);
+    },
+  );
+
   test('a modal popover that closes under an open Dialog leaves the page locked', async () => {
     const root = reactive<Props>({ open: true, modal: true });
     await mountPopover({ root });

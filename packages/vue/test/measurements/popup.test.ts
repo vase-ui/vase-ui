@@ -167,6 +167,84 @@ describe('the scroll of the page', () => {
     page.scrollTop = 300;
     expect(page.scrollTop).toBeLessThan(300);
   });
+
+  test('a sticky element in a fixed element that starts above the view sticks in Chromium and WebKit, and stays at its place in Firefox', async () => {
+    const { doc, html: page } = await createScrollDocument();
+    page.insertAdjacentHTML(
+      'beforeend',
+      `<div style="position: fixed; top: -2px; height: 4px">
+        <div id="sticky" style="position: sticky; top: 0"></div>
+      </div>`,
+    );
+    const { top } = doc.getElementById('sticky')!.getBoundingClientRect();
+    expect(top).toBe(server.browser === 'firefox' ? -2 : 0);
+  });
+
+  test('a fixed `<html>` with the scroll offset as its insets keeps the size of the view and the place of each element, and has no range to scroll; in Firefox a stuck sticky element moves', async () => {
+    const {
+      win,
+      doc,
+      html: page,
+    } = await createScrollDocument({
+      css: '::-webkit-scrollbar { width: 12px; height: 12px } html { padding: 7px }',
+    });
+    const box = 'width: 10px; height: 10px';
+    doc.body.insertAdjacentHTML(
+      'afterbegin',
+      `<div id="static" style="height: 10px; margin-top: 300px"></div>
+      <div id="absolute" style="position: absolute; top: 700px; left: 60px; ${box}"></div>
+      <div id="absolute-end" style="position: absolute; right: 10px; bottom: 10px; ${box}"></div>
+      <div id="fixed" style="position: fixed; right: 10px; bottom: 10px; ${box}"></div>
+      <div style="height: 1400px"><div id="sticky" style="position: sticky; top: 20px; ${box}"></div></div>`,
+    );
+    const ids = ['static', 'absolute', 'absolute-end', 'fixed', 'sticky'];
+    const places = () =>
+      ids.map((id) => [id, doc.getElementById(id)!.getBoundingClientRect().toJSON()]);
+    win.scrollTo({ left: 30, top: 600, behavior: 'instant' });
+    const size = [page.clientWidth, page.clientHeight];
+    const before = places();
+    Object.assign(page.style, {
+      position: 'fixed',
+      top: '-600px',
+      right: '30px',
+      bottom: '600px',
+      left: '-30px',
+      overflowY: 'scroll',
+      overflowX: 'scroll',
+    });
+    expect([page.clientWidth, page.clientHeight]).toEqual(size);
+    expect([page.scrollWidth - page.clientWidth, page.scrollHeight - page.clientHeight]).toEqual([
+      0, 0,
+    ]);
+    const moved = places()
+      .filter(([, place], index) => JSON.stringify(place) !== JSON.stringify(before[index]![1]))
+      .map(([id]) => id);
+    expect(moved).toEqual(server.browser === 'firefox' ? ['sticky'] : []);
+  });
+
+  test('where `<body>` gives the view its overflow, an overflow on a fixed `<html>` makes `<body>` scroll by itself, and a stuck sticky element moves; with the overflow on `<body>`, the element stays in Chromium and WebKit', async () => {
+    const tops: number[] = [];
+    for (const element of ['html', 'body'] as const) {
+      const page = await createScrollDocument({
+        css: '::-webkit-scrollbar { width: 12px; height: 12px } body { margin: 0; overflow-x: hidden }',
+      });
+      page.body.insertAdjacentHTML(
+        'afterbegin',
+        '<div id="sticky" style="position: sticky; top: 0; height: 10px"></div>',
+      );
+      page.win.scrollTo({ top: 600, behavior: 'instant' });
+      page[element].style.overflowY = 'scroll';
+      Object.assign(page.html.style, {
+        position: 'fixed',
+        top: '-600px',
+        right: '0px',
+        bottom: '600px',
+        left: '0px',
+      });
+      tops.push(page.doc.getElementById('sticky')!.getBoundingClientRect().top);
+    }
+    expect(tops).toEqual([-600, server.browser === 'firefox' ? -600 : 0]);
+  });
 });
 
 describe('focus()', () => {

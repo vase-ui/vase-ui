@@ -87,9 +87,9 @@ function getViewportScroller({ win, html, body }: Pick<ScrollDocument, 'win' | '
 
 /**
  * Says if the scroll lock holds the page of `doc`. With overlay scrollbars, the element that the
- * viewport follows is hidden. With scrollbars that take space, `<html>` keeps its scrollbar, and the
- * lock hides the overflow of `<body>`. A ported case calls it in place of `isScrollLocked` of
- * Base UI.
+ * viewport follows is hidden. With scrollbars that take space, the view keeps its scrollbar, and the
+ * lock fixes `<html>`, or hides the overflow of `<body>`. A ported case calls it in place of
+ * `isScrollLocked` of Base UI.
  */
 export function isScrollLocked(doc: Document = document) {
   const page = {
@@ -99,7 +99,11 @@ export function isScrollLocked(doc: Document = document) {
   };
   const hidden = (element: HTMLElement) =>
     /hidden|clip/.test(page.win.getComputedStyle(element).overflowY);
-  return hidden(getViewportScroller(page)) || (hidden(page.body) && !!page.body.style.height);
+  return (
+    hidden(getViewportScroller(page)) ||
+    (hidden(page.body) && !!page.body.style.height) ||
+    page.html.style.position === 'fixed'
+  );
 }
 
 /**

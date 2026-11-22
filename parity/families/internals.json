@@ -128,7 +128,7 @@
     {
       "upstream": "packages/react/test/scrollLock.ts",
       "kind": "not-applicable",
-      "reason": "`isScrollLocked` of `packages/vue/test/fixtures/scrollDocument.ts` does this work. It reads the computed overflow of the element that scrolls the page, and the marker `data-vase-ui-scroll-locked`."
+      "reason": "`isScrollLocked` of `packages/vue/test/fixtures/scrollDocument.ts` does this work. It reads the computed overflow of the element that scrolls the page and of `<body>`, and the position of `<html>`."
     },
     {
       "upstream": "packages/react/test/types.d.ts",

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, nextTick, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { createRenderer, wait } from '#test-utils';
@@ -10,7 +11,7 @@ import {
   isPageLocked,
 } from '../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../test/fixtures/scrollDocument';
-import { useScrollLock } from './useScrollLock';
+import { fixRoot, moveScrollToBody, useScrollLock } from './useScrollLock';
 
 const Locker = defineComponent({
   props: {
@@ -32,11 +33,25 @@ function inline(element: HTMLElement) {
   );
 }
 
-// A document whose scrollbars take room in Chromium and WebKit. Firefox on macOS has overlay
-// scrollbars, so its cases of such scrollbars do not run there.
-async function createInsetDocument(css = '') {
-  const page = await createScrollDocument({ css: `${CUSTOM_SCROLLBARS_CSS} ${css}` });
-  return { page, inset: page.win.innerWidth - page.html.clientWidth > 0 };
+const POSITIONED = ['static', 'absolute', 'absolute-end', 'absolute-in-ancestor', 'fixed'];
+
+// An element of each position, before the content of the page.
+function addPositionedElements({ body }: ScrollDocument) {
+  const box = 'width: 10px; height: 10px';
+  body.insertAdjacentHTML(
+    'afterbegin',
+    `<div id="static" style="height: 10px; margin-top: 300px"></div>
+    <div id="absolute" style="position: absolute; top: 700px; left: 60px; ${box}"></div>
+    <div id="absolute-end" style="position: absolute; right: 10px; bottom: 10px; ${box}"></div>
+    <div style="position: relative; height: 50px">
+      <div id="absolute-in-ancestor" style="position: absolute; top: 5px; left: 5px; ${box}"></div>
+    </div>
+    <div id="fixed" style="position: fixed; right: 10px; bottom: 10px; ${box}"></div>`,
+  );
+}
+
+function places({ doc }: ScrollDocument, ids: string[]) {
+  return ids.map((id) => [id, doc.getElementById(id)!.getBoundingClientRect().toJSON()]);
 }
 
 describe('useScrollLock', () => {
@@ -75,45 +90,40 @@ describe('useScrollLock', () => {
     },
   );
 
-  it('keeps the scrollbars of html and the place of the content when the scrollbars take room', async ({
-    skip,
-  }) => {
-    const { page, inset } = await createInsetDocument();
-    skip(!inset, 'The scrollbars of this browser take no room.');
-    page.win.scrollTo({ left: 30, top: 200, behavior: 'instant' });
-    const place = page.reference.getBoundingClientRect().toJSON();
-    const width = page.html.clientWidth;
-    const height = page.html.clientHeight;
-    const enabled = await lock(page);
-    expect(isPageLocked(page)).toBe(true);
-    expect(page.html.style.overflowY).toBe('scroll');
-    expect([page.html.clientWidth, page.html.clientHeight]).toEqual([width, height]);
-    expect(page.reference.getBoundingClientRect().toJSON()).toEqual(place);
-    enabled.value = false;
-    await nextTick();
-    expect([page.win.scrollX, page.win.scrollY]).toEqual([30, 200]);
-    expect(inline(page.html)).toEqual({});
-    expect(inline(page.body)).toEqual({});
-  });
+  // Firefox has overlay scrollbars here. The mocked width takes its lock to the path of scrollbars
+  // that take room.
+  it.each([
+    { name: '', css: '' },
+    { name: ' and `<body>` gives the view its overflow', css: 'body { overflow-x: hidden }' },
+  ])(
+    'keeps a stuck sticky element in place when the scrollbars take room$name',
+    async ({ css }) => {
+      const page = await createScrollDocument({
+        css: `${CUSTOM_SCROLLBARS_CSS} body { margin: 0 } ${css}`,
+        mockedScrollbarWidth: 12,
+      });
+      page.body.insertAdjacentHTML(
+        'afterbegin',
+        '<div style="height: 1400px"><div id="sticky" style="position: sticky; top: 0; height: 10px"></div></div>',
+      );
+      const sticky = page.doc.getElementById('sticky')!;
+      page.win.scrollTo({ top: 600, behavior: 'instant' });
+      expect(sticky.getBoundingClientRect().top).toBe(0);
+      await lock(page);
+      expect(isPageLocked(page)).toBe(true);
+      expect(sticky.getBoundingClientRect().top).toBe(0);
+    },
+  );
 
-  it('adds no horizontal scrollbar to a page with no horizontal overflow', async ({ skip }) => {
-    const { page, inset } = await createInsetDocument('#content { width: 10px }');
-    skip(!inset, 'The scrollbars of this browser take no room.');
-    const height = page.html.clientHeight;
+  it('adds no element to the page when the scrollbars take room', async () => {
+    const page = await createScrollDocument({
+      css: CUSTOM_SCROLLBARS_CSS,
+      mockedScrollbarWidth: 12,
+    });
+    const children = [...page.html.children];
     await lock(page);
-    expect(page.html.clientHeight).toBe(height);
-  });
-
-  it('puts the scroll position back at once on a page with a smooth `scroll-behavior`', async ({
-    skip,
-  }) => {
-    const { page, inset } = await createInsetDocument('html { scroll-behavior: smooth }');
-    skip(!inset, 'The scrollbars of this browser take no room.');
-    page.win.scrollTo({ top: 200, behavior: 'instant' });
-    const enabled = await lock(page);
-    enabled.value = false;
-    await nextTick();
-    expect(page.win.scrollY).toBe(200);
+    expect(isPageLocked(page)).toBe(true);
+    expect([...page.html.children]).toEqual(children);
   });
 
   it('unlocks the page after the last of two locks', async () => {
@@ -153,5 +163,69 @@ describe('useScrollLock', () => {
     expect(document.body.style.overflow).toBe('');
     enabled.value = false;
     await nextTick();
+  });
+
+  // A sticky element is in the case above: Firefox does not stick it in a fixed `<html>`.
+  describe.each([
+    {
+      name: 'fixRoot',
+      lockPage: fixRoot,
+      css: 'html { padding: 5px } body { border: 2px solid; padding: 3px }',
+    },
+    { name: 'moveScrollToBody', lockPage: moveScrollToBody, css: 'body { margin: 0 }' },
+  ])('$name', ({ lockPage, css }) => {
+    async function createPage(pageCss = '') {
+      const page = await createScrollDocument({
+        css: `${CUSTOM_SCROLLBARS_CSS} ${css} ${pageCss}`,
+      });
+      addPositionedElements(page);
+      page.win.scrollTo({ left: 30, top: 200, behavior: 'instant' });
+      return page;
+    }
+
+    it.each([
+      { name: '', pageCss: '' },
+      { name: ' whose `<html>` hides its wide content', pageCss: 'html { overflow-x: hidden }' },
+      { name: ' whose `<body>` hides its wide content', pageCss: 'body { overflow-x: hidden }' },
+      {
+        name: ' whose `<body>` gives the view its scrollbar',
+        pageCss: 'body { overflow-y: scroll }',
+      },
+    ])(
+      'keeps the size of the view and the place of each element of a page$name, stops the wheel, and restores the page',
+      async ({ pageCss }) => {
+        const page = await createPage(pageCss);
+        const size = [page.html.clientWidth, page.html.clientHeight];
+        const before = places(page, POSITIONED);
+        const unlock = lockPage(page.doc);
+        expect([page.html.clientWidth, page.html.clientHeight]).toEqual(size);
+        expect(places(page, POSITIONED)).toEqual(before);
+        await userEvent.wheel(page.win.frameElement!, { delta: { x: 300, y: 300 } });
+        await new Promise((resolve) => page.win.requestAnimationFrame(resolve));
+        expect(places(page, POSITIONED)).toEqual(before);
+        unlock();
+        expect([page.win.scrollX, page.win.scrollY]).toEqual([30, 200]);
+        expect(inline(page.html)).toEqual({});
+        expect(inline(page.body)).toEqual({});
+      },
+    );
+
+    it('adds no horizontal scrollbar to a page with no horizontal overflow', async () => {
+      const page = await createPage('#content { width: 10px }');
+      const height = page.html.clientHeight;
+      const unlock = lockPage(page.doc);
+      expect(page.html.clientHeight).toBe(height);
+      unlock();
+    });
+
+    it('keeps the place of each element, and puts the scroll offset back at once, on a page with a smooth `scroll-behavior`', async () => {
+      const page = await createPage('html, body { scroll-behavior: smooth }');
+      const before = places(page, POSITIONED);
+      const unlock = lockPage(page.doc);
+      await new Promise((resolve) => page.win.requestAnimationFrame(resolve));
+      expect(places(page, POSITIONED)).toEqual(before);
+      unlock();
+      expect([page.win.scrollX, page.win.scrollY]).toEqual([30, 200]);
+    });
   });
 });
