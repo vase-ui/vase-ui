@@ -351,7 +351,7 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menu/Menu.test.ts",
-      "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other."
+      "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other. `Menu.hover.test.ts` tests a hover on the trigger while the popup leaves."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",

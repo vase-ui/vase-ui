@@ -99,6 +99,11 @@ export interface MenuContext<Payload = unknown> {
   /** Gives a key that the menu did not use to its parent menu, or to its menubar. */
   passUp(event: KeyboardEvent): boolean;
   setOpenChild(child: MenuContext | null): void;
+  /**
+   * Gives the highlight to the item under a pointer that rests in the triangle of a submenu, as a
+   * move of the pointer on it does. The highlight of another item closes the submenu.
+   */
+  highlightUnder(target: Element): void;
 }
 
 export const menuKey: InjectionKey<MenuContext> = Symbol('menu');
@@ -546,6 +551,11 @@ export function useMenuRoot<Payload>(
     setOpenChild(child) {
       openChild.value = child;
       if (child) lastChild.value = child;
+    },
+    highlightUnder(target) {
+      if (!props.highlightItemOnHover) return;
+      const item = list.items().find((each) => each.element.contains(target));
+      if (item) list.highlight(item, 'pointer');
     },
   };
   contexts.set(root, context);
