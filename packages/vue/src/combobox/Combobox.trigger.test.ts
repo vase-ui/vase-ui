@@ -225,6 +225,20 @@ describe('the trigger that is the control', () => {
     expect(document.activeElement).toBe(input());
   });
 
+  test('a press closes the popup, and the element of `finalFocus` keeps the focus', async () => {
+    await mountParts({
+      inputInPopup: true,
+      popup: { finalFocus: () => document.getElementById('before') },
+    });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(input()));
+    await userEvent.click(trigger());
+    await closed();
+    await settle();
+    expect(document.activeElement?.id).toBe('before');
+  });
+
   test('a press of a screen reader opens the popup, as a key does', async () => {
     await mountParts({ inputInPopup: true });
     await pressWithScreenReader(trigger());

@@ -537,7 +537,7 @@ describe('press, drag, release', () => {
     expect(popup()).not.toBe(null);
   });
 
-  test('a press that closes a menu that a hover opened gives the trigger the focus as a button does', async () => {
+  test('a press that closes a menu that a hover opened moves the focus as a press on a button does', async () => {
     const { trigger } = await mountMenu({ trigger: { openOnHover: true, delay: 0 } });
     await userEvent.hover(trigger);
     await opened();
@@ -558,6 +558,19 @@ describe('press, drag, release', () => {
     await closed();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(active()).toBe(trigger);
+  });
+
+  test('a press closes the menu, and the element of `finalFocus` keeps the focus', async () => {
+    const { trigger } = await mountMenu({
+      popup: { finalFocus: () => document.getElementById('before') },
+    });
+    await userEvent.click(trigger);
+    const element = await opened();
+    await waitFor(() => expect(active()).toBe(element));
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await closed();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(active()?.id).toBe('before');
   });
 
   test('a press opens the menu that the parent holds, and the popup keeps the focus', async () => {

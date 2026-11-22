@@ -131,6 +131,7 @@ export function usePopupTrigger(
   let pressed = false;
   let keyed = false;
   let openAtPress = false;
+  let focusAtPress: Element | null = null;
   // The trigger of a press that acted at `pointerdown`, until the release. The `click` of the press
   // comes to the trigger only after a release on it. After a release at another place, the next
   // `click`, such as that of a native label, is no click of the press.
@@ -184,6 +185,7 @@ export function usePopupTrigger(
     pressed = false;
     press.value = null;
     openAtPress = open.value;
+    focusAtPress = activeElement(ownerDocument(event.currentTarget as Element));
     // The `click` of a press of a screen reader opens the popup, as for a key.
     if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) {
       return false;
@@ -198,15 +200,15 @@ export function usePopupTrigger(
   }
 
   /**
-   * A press that opens the popup at `pointerdown`, or that closes it and gives the focus back to the
-   * trigger, moves the focus before its `mousedown`. The `mousedown` would give the focus to the
-   * button, and in WebKit on macOS to `<body>` (test/measurements/select.test.ts). A change of `open`
-   * that the parent applies is in place at the `mousedown`.
+   * A press that opens or closes the popup at `pointerdown` can move the focus before its
+   * `mousedown`: into the popup, or to the trigger or `finalFocus`. The `mousedown` would then give
+   * the focus to the button, and in WebKit on macOS to `<body>` (test/measurements/select.test.ts).
+   * A change that the parent applies is in place at the `mousedown`. A press that moves no focus,
+   * or that keeps the popup open, keeps the `mousedown` of a button.
    */
   function onMousedown(event: MouseEvent) {
-    if (open.value === openAtPress) return;
-    const element = event.currentTarget as Element;
-    if (open.value || activeElement(ownerDocument(element)) === element) event.preventDefault();
+    const focused = activeElement(ownerDocument(event.currentTarget as Element));
+    if (open.value !== openAtPress && focused !== focusAtPress) event.preventDefault();
   }
 
   function onKeydown(event: KeyboardEvent) {
