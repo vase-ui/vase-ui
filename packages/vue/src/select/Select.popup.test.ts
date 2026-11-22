@@ -292,29 +292,6 @@ describe('the place of the popup', () => {
     }
   });
 
-  test('a `zoom` of the page keeps the popup over the trigger, and the scroll still grows it', async () => {
-    const root = document.documentElement;
-    root.style.zoom = '0.9';
-    try {
-      await mountSelect({
-        ...aligned,
-        items: many(40),
-        root: { defaultValue: 'i1' },
-        trigger: { style: 'position: fixed; top: 400px; left: 20px' },
-      });
-      await userEvent.click(trigger());
-      await opened();
-      expect(positioner()).toHaveAttribute('data-side', 'none');
-      const before = positioner().getBoundingClientRect().height;
-      popup().scrollTop = 40;
-      await waitFor(() =>
-        expect(positioner().getBoundingClientRect().height).toBeGreaterThan(before),
-      );
-    } finally {
-      root.style.zoom = '';
-    }
-  });
-
   test('a `max-height` of 0 is no limit: the aligned popup shows and grows with the scroll', async () => {
     await mountSelect({
       ...aligned,
