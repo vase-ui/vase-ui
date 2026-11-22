@@ -14,9 +14,10 @@ const trigger = () => byTestId('trigger');
 const shown = (element: HTMLElement | null) => !!element?.checkVisibility();
 
 async function mountField(props: Attrs = {}) {
-  const { root } = mount(SelectInField, props);
+  const { root, unmount } = mount(SelectInField, props);
   await nextTick();
   return {
+    unmount,
     form: root.querySelector('form')!,
     field: root.querySelector<HTMLElement>('fieldset > div')!,
     text: root.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!,
@@ -351,5 +352,439 @@ describe('Select.Label', () => {
     expect(document.activeElement).toBe(trigger());
     expect(byTestId('popup')).not.toBe(null);
     expect(shown(byTestId('popup'))).toBe(false);
+  });
+});
+
+describe('the fill of the browser', () => {
+  test('a multiple select changes no value', async () => {
+    const changes: unknown[] = [];
+    const { text } = await mountField({
+      noField: true,
+      root: {
+        multiple: true,
+        name: 'letter',
+        autocomplete: 'on',
+        onValueChange: (value: unknown) => changes.push(value),
+      },
+    });
+    fill(text, 'a');
+    await settle();
+    expect(changes).toEqual([]);
+  });
+
+  test.each([{ disabled: true }, { readonly: true }])(
+    'a select with $0 changes no value, in a field and with no field',
+    async (lock) => {
+      const changes: unknown[] = [];
+      const root = {
+        ...lock,
+        name: 'letter',
+        autocomplete: 'on',
+        onValueChange: (value: unknown) => changes.push(value),
+      };
+      for (const noField of [false, true]) {
+        const { text, unmount } = await mountField({ noField, root });
+        fill(text, 'a');
+        await settle();
+        expect(changes).toEqual([]);
+        expect(text.value).toBe('');
+        unmount();
+      }
+    },
+  );
+
+  test('the focus of the text input goes to the trigger; the text input has `autocomplete`', async () => {
+    const { text } = await mountField({
+      noField: true,
+      root: { name: 'country', autocomplete: 'country' },
+    });
+    expect(text).toHaveAttribute('autocomplete', 'country');
+    expect(text).not.toHaveAttribute('name');
+    text.focus();
+    await waitFor(() => expect(document.activeElement).toBe(trigger()));
+  });
+
+  test('an object value matches by its form text or by its label', async () => {
+    const countries = [
+      { value: { code: 'US', name: 'United States' }, text: 'United States' },
+      { value: { code: 'CA', name: 'Canada' }, text: 'Canada' },
+    ];
+    const { text } = await mountField({
+      noField: true,
+      items: countries,
+      root: {
+        name: 'country',
+        autocomplete: 'country',
+        itemToStringValue: (value: { code: string }) => value.code,
+        itemToStringLabel: (value: { name: string }) => value.name,
+      },
+    });
+    fill(text, 'CA');
+    await waitFor(() => expect(trigger()).toHaveTextContent('Canada'));
+    fill(text, 'United States');
+    await waitFor(() => expect(trigger()).toHaveTextContent('United States'));
+  });
+
+  test.each([
+    {
+      name: 'the text of an item, with no regard to case',
+      items: [
+        { value: 'us', text: 'United States' },
+        { value: 'ca', text: 'Canada' },
+      ],
+      filled: 'canada',
+      selected: 'item-1',
+    },
+    {
+      name: 'the form text before the text of an earlier item',
+      items: [
+        { value: 'CA', text: 'US' },
+        { value: 'US', text: 'United States' },
+      ],
+      filled: 'US',
+      selected: 'item-1',
+    },
+    {
+      name: 'the text of an item after an item with no text',
+      items: [
+        { value: 'US', text: '' },
+        { value: 'CA', text: 'Canada' },
+      ],
+      filled: 'Canada',
+      selected: 'item-1',
+    },
+  ])('matches $name', async ({ items, filled, selected }) => {
+    const { text } = await mountField({
+      noField: true,
+      items,
+      root: { name: 'country', autocomplete: 'country' },
+    });
+    fill(text, filled);
+    await settle();
+    await userEvent.click(trigger());
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    expect(byTestId(selected)).toHaveAttribute('aria-selected', 'true');
+    expect(byTestId('popup').querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
+  });
+
+  test('a fill makes the field dirty and validates in change mode', async () => {
+    const seen: unknown[] = [];
+    const { field, text } = await mountField({
+      field: { validationMode: 'change', validate: (value: unknown) => void seen.push(value) },
+      root: { autocomplete: 'on' },
+    });
+    expect(field).not.toHaveAttribute('data-dirty');
+    fill(text, 'a');
+    await waitFor(() => expect(seen.at(-1)).toBe('a'));
+    expect(field).toHaveAttribute('data-dirty');
+  });
+
+  test('a fill that a listener cancels leaves the field and the error of the form', async () => {
+    await mountField({
+      vaseForm: true,
+      form: { errors: { letter: 'Taken.' } },
+      field: { name: 'letter' },
+      root: { onValueChange: (_: unknown, details: { cancel(): void }) => details.cancel() },
+    });
+    const field = document.querySelector<HTMLElement>('fieldset > div')!;
+    const text = document.querySelector<HTMLInputElement>('input[aria-hidden="true"]')!;
+    fill(text, 'a');
+    await settle();
+    expect(trigger()).toHaveTextContent('');
+    expect(field).not.toHaveAttribute('data-dirty');
+    expect(document.getElementById('error')).toHaveTextContent('Taken.');
+  });
+});
+
+describe('dirty and filled', () => {
+  test('a multiple select is dirty until its values are the first values again, in their order', async () => {
+    const { field } = await mountField({
+      root: { multiple: true, defaultValue: ['a'], defaultOpen: true },
+    });
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    expect(field).not.toHaveAttribute('data-dirty');
+    await userEvent.click(byTestId('item-b'));
+    await waitFor(() => expect(field).toHaveAttribute('data-dirty'));
+    await userEvent.click(byTestId('item-b'));
+    await waitFor(() => expect(field).not.toHaveAttribute('data-dirty'));
+    await userEvent.click(byTestId('item-b'));
+    await userEvent.click(byTestId('item-a'));
+    await userEvent.click(byTestId('item-a'));
+    await waitFor(() => expect(trigger()).toHaveTextContent('b'));
+    expect(field).toHaveAttribute('data-dirty');
+  });
+
+  test('a multiple select compares with `isItemEqualToValue`, which never gets the array', async () => {
+    const calls: unknown[][] = [];
+    const { field } = await mountField({
+      items: [
+        { value: { id: 1 }, text: 'One' },
+        { value: { id: 2 }, text: 'Two' },
+      ],
+      root: {
+        multiple: true,
+        defaultValue: [{ id: 1 }],
+        defaultOpen: true,
+        isItemEqualToValue: (a: { id: number }, b: { id: number }) => {
+          calls.push([a, b]);
+          return a.id === b.id;
+        },
+      },
+    });
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    expect(byTestId('item-0')).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(byTestId('item-0'));
+    await waitFor(() => expect(field).toHaveAttribute('data-dirty'));
+    await userEvent.click(byTestId('item-0'));
+    await waitFor(() => expect(field).not.toHaveAttribute('data-dirty'));
+    expect(calls.flat().some((argument) => Array.isArray(argument))).toBe(false);
+  });
+
+  test('a default value is filled; a value whose form text is empty is not filled', async () => {
+    const root = reactive<Attrs>({ defaultValue: 'a' });
+    const first = await mountField({ root });
+    expect(first.field).toHaveAttribute('data-filled');
+    expect(trigger()).toHaveAttribute('data-filled');
+    first.unmount();
+    const second = await mountField({ root: { modelValue: '' } });
+    expect(second.field).not.toHaveAttribute('data-filled');
+    second.unmount();
+    const third = await mountField({
+      root: { defaultValue: { id: '' }, itemToStringValue: (value: { id: string }) => value.id },
+    });
+    expect(third.field).not.toHaveAttribute('data-filled');
+  });
+
+  test.each([{ defaultValue: undefined }, { defaultValue: [] }])(
+    'a multiple select with the default value $defaultValue is filled only while it has a value',
+    async ({ defaultValue }) => {
+      const { field } = await mountField({ root: { multiple: true, defaultValue } });
+      expect(field).not.toHaveAttribute('data-filled');
+      await userEvent.click(trigger());
+      await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+      await userEvent.click(byTestId('item-a'));
+      await waitFor(() => expect(field).toHaveAttribute('data-filled'));
+      await userEvent.click(byTestId('item-a'));
+      await waitFor(() => expect(field).not.toHaveAttribute('data-filled'));
+    },
+  );
+});
+
+describe('the form data and the ids', () => {
+  test('`itemToStringValue` gives the text of each value of a multiple select, never of the array', async () => {
+    const seen: unknown[] = [];
+    const { form } = await mountField({
+      noField: true,
+      root: {
+        name: 'country',
+        multiple: true,
+        defaultValue: [{ code: 'US' }, { code: 'CA' }],
+        itemToStringValue: (value: { code: string }) => {
+          seen.push(value);
+          return value.code;
+        },
+      },
+    });
+    expect([...new FormData(form)]).toEqual([
+      ['country', 'US'],
+      ['country', 'CA'],
+    ]);
+    expect(seen.some((value) => Array.isArray(value))).toBe(false);
+  });
+
+  test('a multiple select with no value gives no entry, and its text input is empty', async () => {
+    const { form, text } = await mountField({
+      noField: true,
+      root: { name: 'country', multiple: true },
+    });
+    expect([...new FormData(form)]).toEqual([]);
+    expect(text.value).toBe('');
+  });
+
+  test('the name of the field names the hidden inputs', async () => {
+    const { form } = await mountField({ field: { name: 'letter' }, root: { defaultValue: 'a' } });
+    expect([...new FormData(form)]).toEqual([['letter', 'a']]);
+  });
+
+  test('`form` gives the values to another form', async () => {
+    const outside = document.body.appendChild(document.createElement('form'));
+    outside.id = 'outside-form';
+    try {
+      const root = reactive<Attrs>({ name: 'country', form: 'outside-form', defaultValue: 'a' });
+      const { form, unmount } = await mountField({ noField: true, root });
+      expect([...new FormData(outside)]).toEqual([['country', 'a']]);
+      expect([...new FormData(form)]).toEqual([]);
+      unmount();
+      await mountField({
+        noField: true,
+        root: { ...root, multiple: true, defaultValue: ['a', 'b\nline'] },
+      });
+      expect([...new FormData(outside)]).toEqual([
+        ['country', 'a'],
+        ['country', 'b\nline'],
+      ]);
+    } finally {
+      outside.remove();
+    }
+  });
+
+  test('the `id` of the root is the id of the trigger; Field.Label names it, also for an `id` of the trigger', async () => {
+    const first = await mountField({ root: { id: 'test-id' } });
+    expect(trigger().id).toBe('test-id');
+    expect(first.label.htmlFor).toBe('test-id');
+    expect(first.text.id).toBe('test-id-hidden-input');
+    first.unmount();
+    const { label } = await mountField({ trigger: { id: 'x-id' } });
+    expect(trigger().id).toBe('x-id');
+    expect(label.htmlFor).toBe('x-id');
+    await userEvent.click(label);
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+  });
+
+  test('Select.Label follows a new `id` of the root; with no label, the trigger names none', async () => {
+    const root = reactive<Attrs>({ id: 'first' });
+    const { unmount } = mount(SelectParts, { root, label: {} });
+    await nextTick();
+    const label = byTestId('label');
+    expect(trigger().id).toBe('first');
+    expect(trigger()).toHaveAttribute('aria-labelledby', label.id);
+    root.id = 'second';
+    await nextTick();
+    expect(trigger().id).toBe('second');
+    expect(trigger()).toHaveAttribute('aria-labelledby', label.id);
+    unmount();
+    mount(SelectParts, { trigger: { 'aria-label': 'Font' } });
+    await nextTick();
+    expect(trigger()).not.toHaveAttribute('aria-labelledby');
+  });
+
+  test.each([
+    { name: 'a name', root: { name: 'letter' } },
+    { name: 'autocomplete', root: { autocomplete: 'country' } },
+    { name: 'required', root: { required: true } },
+  ])('the text input is a text input with $name', async ({ root }) => {
+    mount(SelectParts, { root });
+    await nextTick();
+    expect(byTestId('root').querySelector('input[aria-hidden="true"]')).toHaveAttribute(
+      'type',
+      'text',
+    );
+  });
+
+  test('the text input is a text input in a field, and has a box of 1 px for the message of the browser', async () => {
+    const { text } = await mountField({ root: { required: true } });
+    expect(text).toHaveAttribute('type', 'text');
+    const box = text.getBoundingClientRect();
+    expect([box.width, box.height]).toEqual([1, 1]);
+  });
+});
+
+describe('the validation of the field', () => {
+  test('a submit shows the error of the browser; a pick validates again at once', async () => {
+    const { field } = await mountField({ vaseForm: true, root: { required: true } });
+    await userEvent.click(document.getElementById('submit-button')!);
+    await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
+    expect(trigger()).toHaveAttribute('aria-invalid', 'true');
+    expect(document.getElementById('error')!.textContent).not.toBe('');
+    await pick('a');
+    await waitFor(() => expect(field).not.toHaveAttribute('data-invalid'));
+    expect(trigger()).not.toHaveAttribute('aria-invalid');
+  });
+
+  test('a pick removes an error of the form', async () => {
+    const form: Attrs = reactive({
+      errors: { letter: 'Taken.' },
+      'onUpdate:errors': (errors: unknown) => (form.errors = errors),
+    });
+    await mountField({ vaseForm: true, form, field: { name: 'letter' } });
+    expect(document.getElementById('error')).toHaveTextContent('Taken.');
+    expect(trigger()).toHaveAttribute('aria-invalid', 'true');
+    await pick('a');
+    await waitFor(() => expect(document.getElementById('error')).toBe(null));
+    expect(trigger()).not.toHaveAttribute('aria-invalid');
+  });
+
+  test('`validate` in blur mode runs at the leave and gets the value, not its form text', async () => {
+    const seen: unknown[] = [];
+    const { field } = await mountField({
+      items: [{ value: { code: 'US' }, text: 'United States' }],
+      field: {
+        validationMode: 'blur',
+        validate: (value: unknown) => {
+          seen.push(value);
+          return 'error';
+        },
+      },
+      root: {
+        defaultValue: { code: 'US' },
+        itemToStringValue: (value: { code: string }) => value.code,
+      },
+    });
+    trigger().focus();
+    await leave(trigger());
+    await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
+    expect(trigger()).toHaveAttribute('aria-invalid', 'true');
+    expect(seen).toEqual([{ code: 'US' }]);
+  });
+
+  test('a Tab out of the popup validates once in blur mode', async () => {
+    const seen: unknown[] = [];
+    await mountField({
+      field: {
+        validationMode: 'blur',
+        validate: (value: unknown) => {
+          seen.push(value);
+          return 'error';
+        },
+      },
+    });
+    await userEvent.click(trigger());
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('popup')));
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-invalid', 'true'));
+    expect(seen).toEqual([null]);
+  });
+
+  test('in submit mode, the field shows no error before a submit, and validates each pick after it', async () => {
+    const { field } = await mountField({
+      vaseForm: true,
+      field: { validate: (value: unknown) => (value === 'b\nline' ? 'error' : null) },
+      root: { required: true },
+    });
+    await userEvent.click(trigger());
+    await waitFor(() => expect(shown(byTestId('popup'))).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    expect(field).not.toHaveAttribute('data-invalid');
+    await userEvent.click(document.getElementById('submit-button')!);
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-invalid', 'true'));
+    await pick('a');
+    await waitFor(() => expect(trigger()).not.toHaveAttribute('aria-invalid'));
+    await pick('b');
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-invalid', 'true'));
+    await pick('a');
+    await waitFor(() => expect(trigger()).not.toHaveAttribute('aria-invalid'));
+  });
+
+  test('in change mode, a pick and a value of the parent validate', async () => {
+    const seen: unknown[] = [];
+    const root = reactive<Attrs>({ modelValue: 'a' });
+    await mountField({
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => {
+          seen.push(value);
+          return value === 'b\nline' ? 'error' : null;
+        },
+      },
+      root,
+    });
+    root.modelValue = 'b\nline';
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-invalid', 'true'));
+    expect(seen.at(-1)).toBe('b\nline');
+    root.modelValue = 'a';
+    root['onUpdate:modelValue'] = (value: unknown) => (root.modelValue = value);
+    await waitFor(() => expect(trigger()).not.toHaveAttribute('aria-invalid'));
+    await pick('b');
+    await waitFor(() => expect(trigger()).toHaveAttribute('aria-invalid', 'true'));
   });
 });

@@ -101,6 +101,8 @@ function onFocus(event: FocusEvent) {
 function onBlur(event: FocusEvent) {
   const next = event.relatedTarget as Element | null;
   if (next && isInPopup(context.layer, next)) return;
+  // A string of the typeahead ends when the focus leaves the select.
+  context.typeahead.reset();
   if (element.value) field?.onLeave(element.value);
 }
 

@@ -3,11 +3,12 @@ import { useTemplateRef, type PropType } from 'vue';
 import { Select } from '../../src/select';
 
 type Props = Record<string, unknown>;
-type Item = { value: unknown; text: string; label?: string; disabled?: boolean };
+type Item = { value: unknown; text: string; label?: string; disabled?: boolean; attrs?: Props };
 
 // A select with a label, a trigger with its value and icon, and a popup with one item for each
-// entry of `items`. Text inputs stand before and after the root, and a button at the bottom right
-// of the view is outside. The parts and the elements that their props name render too.
+// entry of `items`, with the attributes of its `attrs`. Text inputs stand before and after the
+// root, and a button at the bottom right of the view is outside. The parts and the elements that
+// their props name render too.
 defineProps({
   root: Object as PropType<Props>,
   label: Object as PropType<Props>,
@@ -46,6 +47,8 @@ defineProps({
   heading: Object as PropType<Props>,
   footer: Object as PropType<Props>,
   noPortal: Boolean,
+  /** The default slot of `Select.Value`: a text, or a function of the value that gives the text. */
+  valueSlot: [String, Function] as PropType<string | ((value: unknown) => string)>,
 });
 const rootPart = useTemplateRef('rootPart');
 const popupPart = useTemplateRef('popupPart');
@@ -57,7 +60,14 @@ defineExpose({ root: rootPart, popup: popupPart });
   <Select.Root ref="rootPart" data-testid="root" v-bind="root">
     <Select.Label v-if="label" data-testid="label" v-bind="label">Fruit</Select.Label>
     <Select.Trigger data-testid="trigger" v-bind="trigger">
-      <Select.Value v-if="show.value !== false" data-testid="value" v-bind="value" />
+      <Select.Value
+        v-if="show.value !== false && valueSlot !== undefined"
+        v-slot="{ value: current }"
+        data-testid="value"
+        v-bind="value"
+        >{{ typeof valueSlot === 'function' ? valueSlot(current) : valueSlot }}</Select.Value
+      >
+      <Select.Value v-else-if="show.value !== false" data-testid="value" v-bind="value" />
       <Select.Icon />
     </Select.Trigger>
     <Select.Label v-if="labelAfter" data-testid="label" v-bind="labelAfter">Fruit</Select.Label>
@@ -80,7 +90,8 @@ defineExpose({ root: rootPart, popup: popupPart });
           >
             <Select.Item
               v-for="item in items"
-              :key="String(item.value)"
+              :key="typeof item.value === 'object' && item.value ? item.text : String(item.value)"
+              v-bind="item.attrs"
               :value="item.value"
               :label="item.label"
               :disabled="item.disabled"

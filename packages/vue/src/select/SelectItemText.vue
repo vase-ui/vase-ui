@@ -14,13 +14,18 @@ defineSlots<{
 
 const context = injectSelectRoot('ItemText');
 const item = inject(selectItemKey, null);
+if (!item) {
+  throw new Error(
+    'Vase UI: <Select.ItemText> must be inside <Select.Item>. Without an item the text belongs to no option. Put the text inside <Select.Item>.',
+  );
+}
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const state: SelectItemTextState = {};
 
 // The popup that covers the trigger puts this text over the text of the value.
 watch(
-  [() => item?.value, element],
+  [() => item.value, element],
   ([itemElement, text], _, onCleanup) => {
     if (!itemElement || !text) return;
     context.itemTexts.set(itemElement, text);

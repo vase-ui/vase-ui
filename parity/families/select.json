@@ -255,32 +255,32 @@
     {
       "upstream": "packages/react/src/select/arrow/SelectArrow.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the arrow: its element and `aria-hidden`, and no arrow while the popup covers the trigger."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests each part: its element, `as`, the `element` slot, the attributes of the developer and the template ref. `Select.test.ts` tests the arrow: `aria-hidden`, and no arrow while the popup covers the trigger."
     },
     {
       "upstream": "packages/react/src/select/backdrop/SelectBackdrop.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the parts of the popup with their elements. The backdrop has the kept form of the popup."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests each part: its element, `as`, the `element` slot, the attributes of the developer and the template ref. The backdrop has the kept form of the popup."
     },
     {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the group and its label: the group has the `id` of its label in `aria-labelledby`, and the label has `aria-hidden`."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests the group and its label: the `id` of the label in `aria-labelledby` of the group, `aria-hidden` of the label and the attribute of the developer, an `id` that changes, the newest of two labels, a label that leaves, and the error of a label outside its group."
     },
     {
       "upstream": "packages/react/src/select/group/SelectGroup.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the group and its label: the group has `role=\"group\"` and the `id` of its label in `aria-labelledby`."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests the group: `role=\"group\"` and the `id` of its label in `aria-labelledby`. `Select.list.test.ts` tests the keys across the groups and the selected item of a group whose items change."
     },
     {
       "upstream": "packages/react/src/select/icon/SelectIcon.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the parts with their elements. The icon is a `<span>` with `aria-hidden` and the default content `▼`."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests each part with its element. The icon is a `<span>` with `aria-hidden`, the default content `▼` and `data-popup-open`."
     },
     {
       "upstream": "packages/react/src/select/item-indicator/SelectItemIndicator.test.tsx",
@@ -291,14 +291,14 @@
     {
       "upstream": "packages/react/src/select/item-text/SelectItemText.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the text of an item over the text of the value."
+      "test": "packages/vue/src/select/Select.parts.test.ts",
+      "reason": "`Select.parts.test.ts` tests the element of the text and the error of a text outside its item. `Select.test.ts` tests the text of an item over the text of the value."
     },
     {
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the items: the keys, a disabled item, the press, the drag and the release, Enter and Space, and the highlight and its attribute. A listener that calls `preventDefault()` stops the list, so the cases of `preventBaseUIHandler` do not apply."
+      "test": "packages/vue/src/select/Select.press.test.ts",
+      "reason": "`Select.press.test.ts` tests the press and the drag of an item: one `click` of the item, a disabled item, an item of a disabled root, `highlightItemOnHover` false, a multiple select and a cancel. `Select.test.ts` tests the keys, Enter and Space, and the highlight. `preventBaseUIHandler` does not exist: `details.cancel()` of `valueChange` and of `openChange` keeps the value and the popup."
     },
     {
       "upstream": "packages/react/src/select/label/SelectLabel.test.tsx",
@@ -315,8 +315,8 @@
     {
       "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the popup: its attributes with and with no list, the first focus, `finalFocus`, the alignment in the two directions, its fall back, its growth, a resize and a reopen. `alignment.test.ts` tests the geometry with the numbers of these cases."
+      "test": "packages/vue/src/select/Select.popup.test.ts",
+      "reason": "`Select.popup.test.ts` tests the place: the inline transforms after the measure, a padding of the popup, a right-to-left select with no value, `--anchor-width` of a custom anchor, a page `zoom`, `max-height: 0`, a pinch zoom, a scroll of the popup beside Select.List, the hover of the items at the edges and the keys that grow the popup. `Select.test.ts` tests the attributes, the first focus, `finalFocus` and the alignment, and `alignment.test.ts` the geometry with the numbers of these cases."
     },
     {
       "upstream": "packages/react/src/select/portal/SelectPortal.test.tsx",
@@ -327,20 +327,20 @@
     {
       "upstream": "packages/react/src/select/positioner/SelectPositioner.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the positioner: the side, the place in `<body>`, the scroll lock of a modal select, and items that leave."
+      "test": "packages/vue/src/select/Select.popup.test.ts",
+      "reason": "`Select.popup.test.ts` tests the positioner: `sideOffset` as a number and as a function, `alignOffset`, `collisionPadding` after a flip, and a popup that fits on no side. `Select.test.ts` tests the side, the place in `<body>` and the scroll lock. A closed positioner keeps its place for the leave of the popup, and takes no pointer."
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` and `Select.field.test.ts` test the root: the value with `v-model` and `cancel()`, `multiple`, `items` and the labels of `Select.Value`, the open state, the keys, the typeahead, the layer, the form inputs, the fill, the reset and the field. The unmount action and `openChangeComplete` are cut: the hooks of `<Transition>` give the same, and the case \"animation\" tests them."
+      "reason": "`Select.test.ts` tests the root: the value with `v-model` and `cancel()`, `multiple`, the open state, the keys, the layer and the alignment. `Select.value.test.ts` tests a controlled value, `items` and items that change; `Select.list.test.ts` the typeahead, a disabled or read-only root, `multiple` and groups; `Select.press.test.ts` the open state of the parent and `close()`; `Select.popup.test.ts` a select in a popover, the touch open and the renders; `Select.field.test.ts` the form inputs, the fill, the field and the reset. The unmount action and `openChangeComplete` are cut: the hooks of `<Transition>` give the same, and the case \"animation\" tests them."
     },
     {
       "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the scroll arrows: they show while the list can scroll, a pointer move scrolls, and a kept arrow has `hidden`."
+      "test": "packages/vue/src/select/Select.popup.test.ts",
+      "reason": "`Select.popup.test.ts` tests the scroll arrows: one step to the next item edge, a move with no change of place, a leave, a second move, a kept arrow of a closed popup and the 1 px edges. `Select.test.ts` tests the arrows in a `<Transition>`."
     },
     {
       "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.test.tsx",
@@ -364,13 +364,13 @@
       "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the trigger: its attributes, a disabled trigger, the placeholder, `data-popup-side`, `data-pressed`, `required`, the press at `pointerdown` and the release of the opening press."
+      "reason": "`Select.test.ts` tests the trigger: its attributes, a disabled trigger, `data-popup-side`, `data-pressed`, `required`, the press at `pointerdown` and the release of the opening press. `Select.value.test.ts` tests `data-placeholder`, and `Select.popup.test.ts` a popup that does not cover the trigger, a later release and a release in a shadow root."
     },
     {
       "upstream": "packages/react/src/select/value/SelectValue.test.tsx",
       "kind": "replaced",
-      "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests `Select.Value`: the labels of `items`, an object, `itemToStringLabel`, `multiple`, the placeholder and the label of `null`."
+      "test": "packages/vue/src/select/Select.value.test.ts",
+      "reason": "`Select.value.test.ts` tests `Select.Value`: the default slot with the value, also an empty array, content that wins over the label and the placeholder, the labels of `items` that follow the value and a new array, a label function (VUE-36), `multiple`, the placeholder and the label of `null`."
     },
     {
       "upstream": "packages/react/src/select/positioner/SelectPositioner.spec.tsx",

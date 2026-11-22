@@ -9,19 +9,19 @@
       "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
-      "reason": "`Autocomplete.test.ts` tests the items: a pick makes the text of the item the value, and an item has no `aria-selected`. The native `click` listener of an item replaces `onClick`."
+      "reason": "`Autocomplete.test.ts` tests the items: a pick makes the text of the item the value, a press and Enter call the `click` listener of the item once, and an item has no `aria-selected`."
     },
     {
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
-      "reason": "`Autocomplete.test.ts` tests the root through its parts: the text as the value, `autoHighlight`, `keepHighlight`, the modes and the inline completion, the form and `submitOnItemClick`. `Autocomplete.hydration.test.ts` tests the one name of the server HTML. The parts of Combobox, which Autocomplete exports, have their tests in the folder of Combobox. The parts have no transition status and no unmount action."
+      "reason": "`Autocomplete.test.ts` tests the root through its parts: the text as the value, a `null` model, `autoHighlight` with items that come later, a clear and a close that cancel their highlight, and an emptied text, `keepHighlight`, the modes and the inline text, a read-only root, the filter and the locale, the form, `submitOnItemClick`, `form` and the field. `Autocomplete.hydration.test.ts` tests the one name of the server HTML. The parts of Combobox, which Autocomplete exports, have their tests in the folder of Combobox. The parts have no transition status and no unmount action."
     },
     {
       "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/autocomplete/Autocomplete.test.ts",
-      "reason": "`Autocomplete.test.ts` tests that `Value` in the trigger shows the text."
+      "reason": "`Autocomplete.test.ts` tests that `Value` in the trigger shows the text, and that its slot gets the text, also the empty text."
     },
     {
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.spec.tsx",

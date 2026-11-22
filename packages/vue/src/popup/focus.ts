@@ -146,28 +146,40 @@ export function usePopupFocus(
     { flush: 'sync' },
   );
 
+  function takeFocus(popup: HTMLElement) {
+    // A popup that an item of another popup opens gets the focus after that popup closed and
+    // gave the focus back to its trigger.
+    const doc = ownerDocument(popup);
+    const active = activeElement(doc);
+    before = active === doc.body ? null : active;
+    befores.set(root, before);
+    took = true;
+    const target = resolve(options.initialFocus(), root.interaction);
+    if (target === false) return;
+    if (target !== true) {
+      focus(target);
+      return;
+    }
+    if (root.interaction === 'touch') {
+      focus(popup);
+      return;
+    }
+    focus(popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup);
+  }
+
   watch(
     () => root.open && options.takesFocus() && options.placed() && root.popup,
     (popup) => {
       if (!popup) return;
-      // A popup that an item of another popup opens gets the focus after that popup closed and
-      // gave the focus back to its trigger.
-      const doc = ownerDocument(popup);
-      const active = activeElement(doc);
-      before = active === doc.body ? null : active;
-      befores.set(root, before);
-      took = true;
-      const target = resolve(options.initialFocus(), root.interaction);
-      if (target === false) return;
-      if (target !== true) {
-        focus(target);
+      // `v-show` shows a popup that stays in the DOM in a hook of this flush, which can run after
+      // this watcher. A hidden element takes no focus, so the focus moves at the end of the flush.
+      if (popup.checkVisibility()) {
+        takeFocus(popup);
         return;
       }
-      if (root.interaction === 'touch') {
-        focus(popup);
-        return;
-      }
-      focus(popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup);
+      void nextTick(() => {
+        if (root.open && root.popup === popup) takeFocus(popup);
+      });
     },
     { flush: 'post' },
   );
