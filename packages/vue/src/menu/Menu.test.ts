@@ -472,6 +472,82 @@ describe('press, drag, release', () => {
     ]);
   });
 
+  test('with an `open` that the parent holds, the release on an item 200 ms after the press clicks the item; an open that the parent refuses clicks nothing', async () => {
+    const clicks: string[] = [];
+    const parent = { accepts: false };
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => {
+      if (parent.accepts) root.open = open;
+    };
+    const { trigger } = await mountMenu({
+      root,
+      items: [{ key: 'a' }, { key: 'b', attrs: { onClick: () => clicks.push('b') } }],
+    });
+    const refused = await holdPress(trigger);
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await refused.release({ x: refused.point.x, y: refused.point.y + 60 });
+    expect(popup()).toBe(null);
+    // The trigger takes the focus as a button does.
+    const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+    expect(active()).toBe(webkitOnMac ? document.body : trigger);
+    parent.accepts = true;
+    const press = await holdPress(trigger);
+    await opened();
+    await placed();
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await press.release(centerOf(item('b')));
+    await closed();
+    expect(clicks).toEqual(['b']);
+  });
+
+  test('a press on another trigger whose open a listener cancels starts no drag: its release on an item of the open menu clicks nothing', async () => {
+    const clicks: string[] = [];
+    const handle = Menu.createHandle();
+    const { trigger } = await mountMenu({
+      root: {
+        handle,
+        modal: false,
+        onOpenChange: (_: boolean, details: MenuRootChangeEventDetails) => {
+          if (details.trigger === byTestId('detached')) details.cancel();
+        },
+      },
+      trigger: { handle },
+      detached: { handle },
+      items: [{ key: 'a' }, { key: 'b', attrs: { onClick: () => clicks.push('b') } }],
+    });
+    await userEvent.click(trigger);
+    await opened();
+    await placed();
+    const press = await holdPress(byTestId('detached')!);
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await press.release(centerOf(item('b')));
+    expect(popup()).not.toBe(null);
+    expect(clicks).toEqual([]);
+  });
+
+  test('a press that keeps open a menu that a hover opened gives the trigger the focus and starts no drag: a release outside keeps the menu', async () => {
+    const { trigger } = await mountMenu({ trigger: { openOnHover: true, delay: 0 } });
+    await userEvent.hover(trigger);
+    await opened();
+    const press = await holdPress(trigger);
+    const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+    expect(active()).toBe(webkitOnMac ? document.body : trigger);
+    await press.release({ x: 2, y: window.innerHeight - 2 });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).not.toBe(null);
+  });
+
+  test('a press opens the menu that the parent holds, and the popup keeps the focus', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    const { trigger } = await mountMenu({ root });
+    await userEvent.click(trigger);
+    const element = await opened();
+    await waitFor(() => expect(active()).toBe(element));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(active()).toBe(element);
+  });
+
   test('the drag ends at its release: a later click on an item gives one click', async () => {
     const clicks: string[] = [];
     const { trigger } = await mountMenu({

@@ -229,6 +229,25 @@ describe('press, drag, release', () => {
     expect(log).toEqual(['true trigger-press contextmenu', 'false cancel-open pointerup']);
   });
 
+  test('with an `open` that the parent holds, the release on an item clicks it; an open that the parent refuses clicks nothing', async () => {
+    const clicks: string[] = [];
+    const parent = { accepts: false };
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => {
+      if (parent.accepts) root.open = open;
+    };
+    await mountContextMenu({ root, items: { b: { onClick: () => clicks.push('b') } } });
+    await rightPress(100, 80);
+    await rightRelease({ x: 120, y: 140 });
+    expect(popup()).toBe(null);
+    parent.accepts = true;
+    await rightPress(100, 80);
+    await placed();
+    const target = item('b').getBoundingClientRect();
+    await rightRelease({ x: target.left + 10, y: target.top + 5 });
+    expect(clicks).toEqual(server.platform === 'win32' ? [] : ['b']);
+  });
+
   test('a `contextmenu` with no button down starts no drag', async () => {
     const { trigger } = await mountContextMenu();
     trigger.dispatchEvent(

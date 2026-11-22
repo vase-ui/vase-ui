@@ -6,7 +6,7 @@ import ComboboxInForm from '../../test/fixtures/ComboboxInForm.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
 import ComboboxStatic from '../../test/fixtures/ComboboxStatic.vue';
 import { fireEvent } from '../../test/fireEvent';
-import { clientCenter } from '../../test/pointer';
+import { clientCenter, holdPress } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -300,6 +300,36 @@ describe('the drag from the trigger', () => {
     await closed();
     expect(changes).toEqual(['Apple']);
   });
+
+  test.each([
+    { name: 'the input in the popup', setup: { inputInPopup: true } },
+    { name: 'the input outside', setup: { trigger: true } },
+  ])(
+    'with $name and an `open` that the parent holds, a drag to an item selects it; an open that the parent refuses selects nothing',
+    async ({ setup }) => {
+      const changes: unknown[] = [];
+      const parent = { accepts: false };
+      const root = reactive<Props>({
+        open: false,
+        onValueChange: (value: unknown) => changes.push(value),
+      });
+      root['onUpdate:open'] = (open: boolean) => {
+        if (parent.accepts) root.open = open;
+      };
+      await mountParts({ ...setup, root });
+      const refused = await holdPress(trigger());
+      await refused.release({ x: refused.point.x, y: refused.point.y + 60 });
+      await settle();
+      expect(popup()).toBe(null);
+      parent.accepts = true;
+      const press = await holdPress(trigger());
+      await opened();
+      const target = clientCenter(item('Banana'));
+      await press.release({ x: target.clientX, y: target.clientY });
+      await closed();
+      expect(changes).toEqual(['Banana']);
+    },
+  );
 
   test('a release on an item with no move from the press point selects nothing', async () => {
     const changes: unknown[] = [];

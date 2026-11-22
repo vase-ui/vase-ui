@@ -154,9 +154,9 @@ export function usePopupTrigger(
 
   function toggle(event: MouseEvent, interaction?: InteractionType) {
     const current = root();
-    if (!current) return;
+    if (!current) return undefined;
     const close = open.value && (options.closesAtPress?.(event) ?? true);
-    current.request(!close, 'trigger-press', event, options.element.value, interaction);
+    return current.request(!close, 'trigger-press', event, options.element.value, interaction);
   }
 
   function onClick(event: MouseEvent) {
@@ -174,16 +174,24 @@ export function usePopupTrigger(
     toggle(event, wasKeyed ? 'keyboard' : interaction === 'keyboard' ? '' : interaction);
   }
 
+  /**
+   * Gives `true` when the press asked to open the closed popup of this trigger, and no listener
+   * cancelled the open. A parent that holds `open` applies the open after this event.
+   */
   function onPointerdown(event: PointerEvent) {
     pressed = false;
     press.value = null;
     // The `click` of a press of a screen reader opens the popup, as for a key.
-    if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) return;
-    if (isVirtualPress(event)) return;
-    if (button.disabled.value) return;
+    if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) {
+      return false;
+    }
+    if (isVirtualPress(event)) return false;
+    if (button.disabled.value) return false;
     pressed = true;
-    toggle(event);
+    const opens = !open.value;
+    const details = toggle(event);
     press.value = event.currentTarget as Element;
+    return opens && !!details && !details.isCanceled;
   }
 
   function onKeydown(event: KeyboardEvent) {

@@ -53,22 +53,19 @@ const state = computed<SelectTriggerState>(() => ({
   filled: field?.state.filled ?? false,
 }));
 
-let toggled = false;
+let openAtPress = false;
 
 function onPointerdown(event: PointerEvent) {
-  const wasOpen = root.open;
-  trigger.onPointerdown(event);
-  toggled = root.open !== wasOpen;
-  if (!wasOpen && root.open && element.value) {
+  openAtPress = root.open;
+  if (trigger.onPointerdown(event) && element.value) {
     context.press.start(event, element.value, { item: 400 });
   }
 }
 
 // The popup that a press opened takes the focus before the `mousedown` of the press. So the
-// button does not take it.
+// button does not take it. A change of `open` that the parent applies is in place then.
 function onMousedown(event: MouseEvent) {
-  if (toggled) event.preventDefault();
-  toggled = false;
+  if (root.open !== openAtPress) event.preventDefault();
 }
 
 function onKeydown(event: KeyboardEvent) {
