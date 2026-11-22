@@ -23,11 +23,17 @@ export interface Layer {
   readonly pressStart: boolean | 'each-button';
   /** The portal renders a fixed element that takes each pointer from the page. */
   readonly block: boolean;
-  /** The attribute that the layer writes on the rest of the page. Only a modal layer writes it. */
+  /**
+   * The attribute that the layer writes on the rest of the page. Only a layer of `useModalLayer`
+   * writes it.
+   */
   readonly hide: 'inert' | 'aria-hidden' | false;
   /** Tab keeps the focus in the popup. */
   readonly trap: boolean;
-  /** Only a modal layer stops the scroll of the page. */
+  /**
+   * The page does not scroll. `useModalLayer` applies this rule, or the root gives it to
+   * `useScrollLock`.
+   */
   readonly lockScroll: boolean;
   /**
    * The active trigger stays in use: the layer does not hide it, and the fixed element has a hole
@@ -115,8 +121,8 @@ export function isInPopup(layer: Layer, element: Element) {
 
 /**
  * Puts the root in the stack from its open to its close, and serves its rules. Call it in the
- * `setup` of a root. A root whose layer can hide the page or stop its scroll calls
- * `useModalLayer` (`modal.ts`). `onOpen` runs at each open, after the layer enters the stack.
+ * `setup` of a root. A root whose layer can hide the rest of the page calls `useModalLayer`
+ * (`modal.ts`) in its place. `onOpen` runs at each open, after the layer enters the stack.
  */
 export function useLayer(root: PopupRoot, rules: () => LayerRules, onOpen?: () => void) {
   const current = computed(rules);

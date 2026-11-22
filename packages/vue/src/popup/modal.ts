@@ -5,9 +5,9 @@ import type { PopupRoot } from './root';
 import { useScrollLock } from './useScrollLock';
 
 /**
- * The layer of a root that can be modal: it can write `inert` or `aria-hidden` on the rest of the
- * page and stop the scroll of the page. The families that are never modal do not import this
- * module, so their bundles do not have its code.
+ * The layer of a root that can write `inert` or `aria-hidden` on the rest of the page, such as a
+ * dialog. It also stops the scroll of the page. The families that never hide the page do not
+ * import this module, so their bundles do not have its code.
  */
 export function useModalLayer(root: PopupRoot, rules: () => LayerRules): Layer {
   const layer = useLayer(root, rules, startHide);
@@ -93,14 +93,15 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
     written.delete(element);
     rootsOfMarks.delete(element);
   }
+  const layers = openLayers();
   for (const [element, attribute] of wanted) {
     if (written.has(element) || element.hasAttribute(attribute)) continue;
     element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
     written.set(element, attribute);
-    const owner = openLayers().find((layer) => layerElements(layer).includes(element));
+    const owner = layers.find((layer) => layerElements(layer).includes(element));
     if (owner) rootsOfMarks.set(element, owner.root);
   }
-  if (openLayers().length === 0) {
+  if (layers.length === 0) {
     hideScope?.stop();
     hideScope = undefined;
   }

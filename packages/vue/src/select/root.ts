@@ -19,11 +19,11 @@ import { stringifyAsValue } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
 import { useTypeahead } from '../list/typeahead';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInPopup, type Layer } from '../popup/layer';
-import { useModalLayer } from '../popup/modal';
+import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import type { Align, Side, usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
+import { useScrollLock } from '../popup/useScrollLock';
 import type {
   SelectItems,
   SelectRootChangeEventDetails,
@@ -202,7 +202,7 @@ export function useSelectRoot(
         element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE
     );
   });
-  const layer = useModalLayer(root, () => ({
+  const layer = useLayer(root, () => ({
     escape: true,
     outsidePress: true,
     focusOut: true,
@@ -213,6 +213,10 @@ export function useSelectRoot(
     lockScroll: (props.modal || aligned.value) && (root.interaction !== 'touch' || fullWidth.value),
     triggerInUse: true,
   }));
+  useScrollLock(
+    () => root.open && layer.lockScroll,
+    () => root.activeTrigger,
+  );
 
   const list = useList({
     orientation: () => 'vertical',
