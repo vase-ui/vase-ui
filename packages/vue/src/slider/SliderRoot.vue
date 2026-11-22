@@ -137,6 +137,15 @@ if (process.env.NODE_ENV !== 'production') {
 
 watch(values, (next) => field?.setValue(asValue(next), true), { immediate: true });
 
+// A parent that adds or removes a value during a press makes its last change stale, so the end of
+// the press commits only a later change.
+watch(
+  () => values.value.length,
+  () => {
+    if (press) press.change = undefined;
+  },
+);
+
 // The input of the first thumb is the control of the field.
 watch(
   () => firstThumb.value?.input,

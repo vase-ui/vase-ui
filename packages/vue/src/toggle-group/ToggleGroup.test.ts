@@ -2,6 +2,7 @@ import { describe, expect, inject, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
+import ToggleGroupInSlot from '../../test/fixtures/ToggleGroupInSlot.vue';
 import ToggleGroupInToolbar from '../../test/fixtures/ToggleGroupInToolbar.vue';
 import ToggleGroupParts from '../../test/fixtures/ToggleGroupParts.vue';
 import TogglesInFieldset from '../../test/fixtures/TogglesInFieldset.vue';
@@ -87,6 +88,27 @@ describe('the element', () => {
   });
 });
 
+test('the element slot renders the element of the developer with the role, the attributes and the state; a toggle in its own element slot keeps the keys and the tab stop of the group', async () => {
+  const { root, exposed } = mount(ToggleGroupInSlot);
+  await nextTick();
+  const section = root.querySelector('section')!;
+  expect(section).toHaveAttribute('role', 'group');
+  expect(section).toHaveAttribute('aria-label', 'Alignment');
+  expect(section).toHaveClass('Group');
+  expect(section).toHaveAttribute('data-orientation', 'vertical');
+  expect(section).toHaveAttribute('data-state', 'vertical');
+  expect(exposed.group.element).toBe(section);
+  const slotted = root.querySelector<HTMLElement>('.Slotted')!;
+  expect(slotted).toHaveAttribute('tabindex', '-1');
+  expect(slotted).toHaveAttribute('aria-pressed', 'false');
+  root.querySelector<HTMLElement>('#a')!.focus();
+  await userEvent.keyboard('{ArrowDown}');
+  expect(slotted).toHaveFocus();
+  expect(slotted).toHaveAttribute('tabindex', '0');
+  await userEvent.keyboard('{Enter}');
+  expect(slotted).toHaveAttribute('aria-pressed', 'true');
+});
+
 describe('the value', () => {
   test('starts at defaultValue; a press gives [value], and a press on the pressed toggle gives []', async () => {
     const log: string[] = [];
@@ -169,6 +191,8 @@ describe('the value', () => {
       await userEvent.click(toggle('b'));
       expect(pressed()).toBe(multiple ? 'ab' : 'b');
       expect(log).toHaveLength(4);
+      await userEvent.click(toggle('a'));
+      expect(pressed()).toBe(multiple ? 'b' : 'a');
     },
   );
 
@@ -183,6 +207,28 @@ describe('the value', () => {
       ]);
     },
   );
+
+  test('after a change of multiple, a press follows the new rule, and the arrow keys still move the focus', async () => {
+    const group = reactive<Record<string, unknown>>({ defaultValue: ['a'] });
+    const { toggle, pressed } = await mountGroup(group, items('a', 'b'));
+    toggle('a').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('b');
+    await userEvent.click(toggle('b'));
+    expect(pressed()).toBe('b');
+    group.multiple = true;
+    await nextTick();
+    await userEvent.click(toggle('a'));
+    expect(pressed()).toBe('ab');
+    await userEvent.click(toggle('b'));
+    expect(pressed()).toBe('a');
+    group.multiple = false;
+    await nextTick();
+    await userEvent.click(toggle('b'));
+    expect(pressed()).toBe('b');
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(focused()).toBe('a');
+  });
 
   test('a change of multiple keeps the value and the focus, and emits nothing', async () => {
     const log: string[] = [];
@@ -261,11 +307,14 @@ describe('the keys', () => {
       const { toggle, pressed } = await mountGroup({ orientation });
       const steps: string[] = [];
       toggle('a').focus();
-      for (const key of [next, next, next, previous]) {
+      const other =
+        orientation === 'vertical' ? ['ArrowRight', 'ArrowLeft'] : ['ArrowDown', 'ArrowUp'];
+      for (const key of [next, next, next, previous, ...other]) {
         await userEvent.keyboard(`{${key}}`);
         steps.push(focused());
       }
-      expect(steps).toEqual(['b', 'c', 'a', 'c']);
+      // The keys of the other axis do nothing.
+      expect(steps).toEqual(['b', 'c', 'a', 'c', 'c', 'c']);
       expect(pressed()).toBe('');
     },
   );
@@ -481,6 +530,30 @@ describe('in a toolbar', () => {
     await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('after');
     expect(element('one')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('after a change of multiple, a press follows the new rule, and the keys of the toolbar still move the focus', async () => {
+    const scene = reactive({ multiple: false });
+    const { element } = await mountInToolbar(scene);
+    element('one').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('two');
+    await userEvent.click(element('two'));
+    const pressed = () =>
+      ['one', 'two'].filter((id) => element(id).getAttribute('aria-pressed') === 'true').join(' ');
+    expect(pressed()).toBe('two');
+    scene.multiple = true;
+    await nextTick();
+    await userEvent.click(element('one'));
+    expect(pressed()).toBe('one two');
+    await userEvent.click(element('two'));
+    expect(pressed()).toBe('one');
+    scene.multiple = false;
+    await nextTick();
+    await userEvent.click(element('two'));
+    expect(pressed()).toBe('two');
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(focused()).toBe('one');
   });
 
   test('the arrow keys of the toolbar skip a disabled toggle that is not a button', async () => {

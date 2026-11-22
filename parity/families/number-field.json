@@ -71,7 +71,7 @@
       "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.test.ts",
-      "reason": "`NumberField.test.ts` tests the buttons: a mouse press and its click, a click with no press, the hold and its repeat, the keys of the amount, a touch, a pointer cancel, the bound and the end of a hold."
+      "reason": "`NumberField.test.ts` tests the buttons: a mouse press and its click, a click with no press, the hold and its repeat, the keys of the amount, a touch, a pen, a pointer cancel, the bound and the end of a hold. The click of a press that the field disables during the press steps nothing."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",

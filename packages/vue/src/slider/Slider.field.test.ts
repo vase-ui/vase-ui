@@ -223,12 +223,20 @@ describe('a field', () => {
     expect(input()).toHaveAttribute('name', 'level');
   });
 
-  test('a range is dirty when it changes from [20, 30] to [20, 20]; a move between thumbs is no leave', async () => {
+  test('a range is dirty when it changes from [20, 30] to [20, 20], and not when it goes back; a move between thumbs is no leave', async () => {
     const { input, field } = await mountSlider({
       root: { defaultValue: [20, 30] },
       thumbs: [{}, {}],
       field: {},
     });
+    input(1).value = '50';
+    input(1).dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    expect(dataAttributes(field)).toEqual(['data-dirty', 'data-filled']);
+    input(1).value = '30';
+    input(1).dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    expect(dataAttributes(field)).toEqual(['data-filled']);
     await press(input(1), '{Home}');
     expect(dataAttributes(field)).toEqual(['data-dirty', 'data-filled']);
     input(0).focus();
@@ -284,6 +292,64 @@ describe('a field', () => {
     },
   );
 
+  test('validationMode submit: a blocked submit shows the error; then each change validates, and the root and each thumb show the state', async () => {
+    const thumbs = reactive<Attrs[]>([{}]);
+    const { form, input, group } = await mountSlider({
+      root: { defaultValue: 99 },
+      thumbs,
+      field: { validate: (value: unknown) => ((value as number) > 90 ? 'Too loud' : null) },
+      form: {},
+    });
+    const thumb = input().parentElement!;
+    await press(input(), '{ArrowLeft}');
+    await settle();
+    expect(input()).not.toHaveAttribute('aria-invalid');
+    form.requestSubmit();
+    await settle();
+    expect(input()).toHaveAttribute('aria-invalid', 'true');
+    expect(group).toHaveAttribute('data-invalid');
+    expect(thumb).toHaveAttribute('data-invalid');
+    await press(input(), '{Home}');
+    await settle();
+    expect(input()).not.toHaveAttribute('aria-invalid');
+    expect(group).toHaveAttribute('data-valid');
+    expect(thumb).toHaveAttribute('data-valid');
+    await press(input(), '{End}');
+    await settle();
+    expect(input()).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('validationMode change: a change of the value of the parent validates it', async () => {
+    const validated: unknown[] = [];
+    const root = reactive<Attrs>({ modelValue: 0 });
+    const { input } = await mountSlider({
+      root,
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => {
+          validated.push(value);
+          return value === 5 ? 'Not 5' : null;
+        },
+      },
+    });
+    expect(input()).not.toHaveAttribute('aria-invalid');
+    root.modelValue = 5;
+    await settle();
+    expect(validated.at(-1)).toBe(5);
+    expect(input()).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('validationMode blur: validate gets one value in an array as an array', async () => {
+    const validated: unknown[] = [];
+    const { input } = await mountSlider({
+      root: { defaultValue: [25] },
+      field: recordValidate(validated, { validationMode: 'blur' }),
+    });
+    input().focus();
+    await leave(input());
+    expect(validated).toEqual([[25]]);
+  });
+
   test('a blocked submit gives the first enabled input the focus', async () => {
     const thumbs = reactive<Attrs[]>([{}, {}]);
     const { form, input } = await mountSlider({
@@ -301,6 +367,26 @@ describe('a field', () => {
     await settle();
     expect(document.activeElement).toBe(input(1));
   });
+
+  test.each([
+    { name: 'a range', defaultValue: [19, 41], thumbs: [{}, {}], submitted: [20, 40] },
+    { name: 'one thumb', defaultValue: 5, thumbs: [{}], submitted: 20 },
+  ])(
+    'the values of a form at a submit have the value in the range: $name',
+    async ({ defaultValue, thumbs, submitted }) => {
+      const values: unknown[] = [];
+      const { form } = await mountSlider({
+        root: { defaultValue, min: 20, max: 40, name: 'volume' },
+        thumbs,
+        field: {},
+        form: { onSubmit: (_: Event, given: unknown) => values.push(given) },
+      });
+      form.requestSubmit();
+      await settle();
+      expect(values).toEqual([{ volume: submitted }]);
+      expect(new FormData(form).getAll('volume')).toEqual([submitted].flat().map(String));
+    },
+  );
 
   test('the values of a form at a submit have the value of the slider, under its name; a disabled slider has none', async () => {
     const submitted: unknown[] = [];
@@ -322,18 +408,23 @@ describe('a field', () => {
 
   test('an edit removes the error that the form has for the field', async () => {
     const updates: unknown[] = [];
-    const { input } = await mountSlider({
+    const form = reactive<Attrs>({ errors: { volume: 'Too loud' } });
+    form['onUpdate:errors'] = (errors: unknown) => {
+      updates.push(errors);
+      form.errors = errors;
+    };
+    const { input, field } = await mountSlider({
       root: { defaultValue: 20 },
       field: { name: 'volume' },
-      form: {
-        errors: { volume: 'Too loud' },
-        'onUpdate:errors': (errors: unknown) => updates.push(errors),
-      },
+      form,
     });
     expect(input()).toHaveAttribute('aria-invalid', 'true');
+    expect(field.querySelector('#error')).toHaveTextContent('Too loud');
     await press(input(), '{ArrowRight}');
     await settle();
     expect(updates).toEqual([{}]);
+    expect(input()).not.toHaveAttribute('aria-invalid');
+    expect(field.querySelector('#error')).toBeNull();
   });
 });
 

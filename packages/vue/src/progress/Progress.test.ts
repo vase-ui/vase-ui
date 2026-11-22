@@ -101,6 +101,14 @@ describe('the parts', () => {
       value: null,
       status: 'indeterminate',
     });
+    // The slots give NaN as the developer gave it.
+    scene.value = NaN;
+    await nextTick();
+    expect(section.querySelector('output')!.textContent!.trim()).toBe('NaN');
+    expect(JSON.parse(section.querySelector('.scope')!.textContent!)).toMatchObject({
+      formattedValue: null,
+      status: 'indeterminate',
+    });
   });
 
   test('the root renders its element as the root, for Transition', async () => {
@@ -129,6 +137,8 @@ describe('the status', () => {
     attrs.value = 50;
     await nextTick();
     expectStatus('progressing');
+    expect(root).toHaveAttribute('aria-valuemin', '0');
+    expect(root).toHaveAttribute('aria-valuemax', '100');
     expect(root).toHaveAttribute('aria-valuenow', '50');
     expect(root).toHaveAttribute('aria-valuetext', percent(0.5));
     expect(value).toHaveTextContent(percent(0.5));
@@ -152,10 +162,12 @@ describe('the status', () => {
   test.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
     'a value of %s is indeterminate',
     async (given) => {
-      const { root, value } = await mountParts({ root: { value: given } });
+      const { root, value, indicator } = await mountParts({ root: { value: given } });
       expect(root).toHaveAttribute('data-indeterminate');
       expect(root).not.toHaveAttribute('aria-valuenow');
+      expect(root).not.toHaveAttribute('aria-valuetext');
       expect(value).toBeEmptyDOMElement();
+      expect(indicator).not.toHaveAttribute('style');
     },
   );
 
@@ -404,11 +416,14 @@ describe('accessibility', () => {
 
 // The case throws in `setup`, so it is the last of the file.
 describe('a part outside the root', () => {
-  test('throws an error that names the part and the root', () => {
-    expect(String(mountError(ProgressPartOutsideRoot))).toContain(
-      'Vase UI Progress: <Progress.Value> must be inside <Progress.Root>.',
-    );
-    // After the error, Vapor renders the part with no setup, and warns about each binding.
-    takeReportedMessages();
-  });
+  test.each(['Label', 'Value', 'Track', 'Indicator'] as const)(
+    'Progress.%s throws an error that names the part and the root',
+    (part) => {
+      expect(String(mountError(ProgressPartOutsideRoot, { part }))).toContain(
+        `Vase UI Progress: <Progress.${part}> must be inside <Progress.Root>.`,
+      );
+      // After the error, Vapor renders the part with no setup, and warns about each binding.
+      takeReportedMessages();
+    },
+  );
 });
