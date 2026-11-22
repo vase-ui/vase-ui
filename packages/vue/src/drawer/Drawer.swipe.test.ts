@@ -775,6 +775,27 @@ describe('the swipe area', () => {
     return { log, root };
   }
 
+  test('an opening drawer with no height gives the backdrop and the indent no --drawer-height', async () => {
+    await mountArea({
+      root: { swipeDirection: 'right' },
+      popup: { style: 'height: 0; overflow: hidden' },
+    });
+    const release = await press(centerOf('swipe-area'), { x: -100, y: 0 }, 10);
+    try {
+      await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+      await waitFor(() =>
+        expect(
+          Number(get('backdrop').style.getPropertyValue('--drawer-swipe-progress')),
+        ).toBeGreaterThan(0),
+      );
+      expect(get('popup').offsetHeight).toBe(0);
+      expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('');
+      expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('');
+    } finally {
+      await release();
+    }
+  });
+
   test('opens the drawer at 1 px and moves the popup from its closed place with the finger', async () => {
     const { log } = await mountArea();
     const area = get('swipe-area');
@@ -794,6 +815,8 @@ describe('the swipe area', () => {
     expect(get('indent').style.getPropertyValue('--drawer-swipe-progress')).toBe(
       String(1 - 100 / 300),
     );
+    expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('300px');
+    expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('300px');
     expect(area.hasAttribute('data-swiping')).toBe(true);
     expect(get('popup').hasAttribute('data-swiping')).toBe(true);
     // A drag of more than half of the popup keeps it open at a release of any speed.

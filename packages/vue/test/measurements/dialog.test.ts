@@ -133,6 +133,29 @@ describe('the focused element gets `inert`', () => {
     await userEvent.keyboard('{Tab}');
     expect(activeId()).toBe('first');
   });
+
+  test('keeps the text caret in WebKit: typed text reaches the inert input; after `blur()`, or at a focus while inert, it does not', async () => {
+    html(`<div id="page"><input id="trigger" aria-label="Trigger"></div>`);
+    const input = element<HTMLInputElement>('trigger');
+    let focuses = 0;
+    input.addEventListener('focus', () => (focuses += 1));
+    input.focus();
+    element('page').inert = true;
+    await nextFrame();
+    await nextFrame();
+    expect(activeId()).toBe('body');
+    await userEvent.keyboard('ab');
+    expect(input.value).toBe(server.browser === 'webkit' ? 'ab' : '');
+    element('page').inert = false;
+    input.focus();
+    element('page').inert = true;
+    input.blur();
+    await userEvent.keyboard('cd');
+    input.focus();
+    await userEvent.keyboard('ef');
+    expect(input.value).toBe(server.browser === 'webkit' ? 'ab' : '');
+    expect(focuses).toBe(2);
+  });
 });
 
 describe('a focus in the task that removes `inert`', () => {

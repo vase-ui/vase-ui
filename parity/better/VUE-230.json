@@ -1,0 +1,13 @@
+{
+  "id": "VUE-230",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/test/popupFocusPropsTests.tsx#L131",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/test/popupFocusPropsTests.tsx#L283",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/drawer/popup/DrawerPopup.test.tsx#L124",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/dialog/popup/DialogPopup.test.tsx#L200",
+    "https://html.spec.whatwg.org/multipage/interaction.html#inert-subtrees"
+  ],
+  "behavior": "While a modal dialog or a modal drawer is open, each element outside it is inert, the trigger too, as with `showModal()` of a native `<dialog>`. An inert element cannot keep or take the focus. So with `initialFocus` of `false`, or a function that returns nothing, the dialog moves no focus into the popup, the trigger does not keep the focus, and Tab goes to the first tab stop of the dialog. An element outside a modal popup that `initialFocus` names takes no focus for the same reason. A dialog with `modal` of `'trap-focus'` or `false` keeps its trigger in use, and there the focus stays on the trigger. Base UI leaves the focus on the trigger of a modal dialog and gives it to an outside element that `initialFocus` names, while it hides those elements from assistive technology.",
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+  "families": ["dialog", "alert-dialog", "drawer"]
+}

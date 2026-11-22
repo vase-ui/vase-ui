@@ -121,9 +121,10 @@ export interface DialogPopupProps
   /** The trigger names the popup by this id in `aria-controls`. */
   id?: string | undefined;
   /**
-   * The element that gets the focus at the open, or `false` to keep the focus where it is. A
-   * function gets the type of the interaction and gives the element. By default: the element with
-   * `autofocus`, else the first tab stop, else the popup; after a touch, the popup.
+   * The element that gets the focus at the open, or `false` to move no focus. A function gets the
+   * type of the interaction and gives the element. By default: the element with `autofocus`, else
+   * the first tab stop, else the popup; after a touch, the popup. A modal dialog makes the page
+   * inert, so an element outside the popup cannot keep or get the focus.
    */
   initialFocus?: FocusTarget | undefined;
   /**

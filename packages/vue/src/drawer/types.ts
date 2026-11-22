@@ -158,8 +158,9 @@ export interface DrawerViewportState {
 
 export interface DrawerPopupProps extends Omit<DialogPopupProps, 'initialFocus'> {
   /**
-   * The element that gets the focus at the open, or `false` to keep the focus where it is. A
-   * function gets the type of the interaction and gives the element. By default the popup.
+   * The element that gets the focus at the open, or `false` to move no focus. A function gets the
+   * type of the interaction and gives the element. By default the popup. A modal drawer makes the
+   * page inert, so an element outside the popup cannot keep or get the focus.
    */
   initialFocus?: DialogPopupProps['initialFocus'];
 }

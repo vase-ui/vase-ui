@@ -1,0 +1,11 @@
+{
+  "id": "VUE-231",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/popupHandle.ts#L252",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/popupHandle.ts#L276",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx#L397"
+  ],
+  "behavior": "`close()` of a handle with no mounted root does nothing and gives no warning: the popup is closed, which is what the call asks for. When two mounted roots have one handle, the root that mounted last has the handle, and the other root gets it back when that root unmounts; the library gives no warning. Base UI warns in a development build in both cases.",
+  "dueWith": "packages/react/src/utils/popups/popupHandle.ts",
+  "families": ["dialog", "alert-dialog", "drawer", "popover", "menu", "tooltip", "preview-card"]
+}

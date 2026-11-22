@@ -15,7 +15,7 @@ import { firePointer, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { scaleOrigin } from '../../test/scaleOrigin';
-import { readWhen } from '../../test/wait';
+import { readWhen, waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -955,6 +955,26 @@ describe('modal', () => {
     await closed();
     expect(byId('before')).not.toHaveAttribute('inert');
   });
+
+  test.each([
+    { name: 'the trigger', selector: '[data-key="t"]', focused: true },
+    { name: 'an outside input', selector: '#before', focused: false },
+  ])(
+    '`true` with a Close gives the focus to an `initialFocus` element outside the popup that stays in use, and none to one that becomes inert: $name',
+    async ({ selector, focused }) => {
+      const element = () => document.querySelector<HTMLElement>(selector)!;
+      await mountPopover({
+        root: { defaultOpen: true, modal: true },
+        close: {},
+        popup: { initialFocus: element },
+      });
+      await opened();
+      await placed();
+      await waitFor(() => expect(byId('before')).toHaveAttribute('inert'));
+      await waitSingleFrame();
+      expect(document.activeElement).toBe(focused ? element() : document.body);
+    },
+  );
 
   test("`'trap-focus'` with a Close hides the rest of the page with aria-hidden; the page stays in use, and an outside press closes", async () => {
     const { trigger } = await mountPopover({ root: { modal: 'trap-focus' }, close: {} });

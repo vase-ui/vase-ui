@@ -155,6 +155,20 @@ export function usePopupFocus(
     befores.set(root, before);
     took = true;
     const target = resolve(options.initialFocus(), root.interaction);
+    if (
+      layer.hide === 'inert' &&
+      (target === false || (target !== true && !popup.contains(target)))
+    ) {
+      // The layer writes `inert` on the page in this update, and an inert element takes no focus.
+      // WebKit keeps the text caret in a focused element that becomes inert
+      // (test/measurements/dialog.test.ts), so that element loses the focus here.
+      void nextTick(() => {
+        if (target) focus(target);
+        const focused = activeElement(doc);
+        if (focused?.closest('[inert]')) (focused as HTMLElement).blur();
+      });
+      return;
+    }
     if (target === false) return;
     if (target !== true) {
       focus(target);
