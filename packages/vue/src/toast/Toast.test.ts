@@ -1166,7 +1166,7 @@ describe('the keys', () => {
     await pressF6();
     expect(document.activeElement).toBe(toastRoot('a'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toBe(viewport());
+    expect(document.activeElement).toBe(byId('toast-before'));
   });
 
   test('a focus listener of the viewport that closes each toast returns the focus to the origin of F6', async () => {
@@ -1208,7 +1208,7 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(byId('toast-after'));
     viewport().focus();
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toBe(viewport());
+    expect(document.activeElement).toBe(byId('toast-before'));
   });
 
   test('a return to <body> as the origin takes the focus out of the viewport', async () => {
@@ -1271,9 +1271,10 @@ describe('the keys', () => {
     });
     const root = toastRoot('a')!;
     const [action, close] = root.querySelectorAll('button');
+    expect(root).toHaveAttribute('aria-hidden', 'true');
     await userEvent.click(root, { position: { x: 5, y: 5 } });
     expect(document.activeElement).toBe(root);
-    expect(root).toHaveAttribute('aria-hidden', 'true');
+    expect(root).not.toHaveAttribute('aria-hidden');
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(action);
     await userEvent.keyboard('{Tab}');

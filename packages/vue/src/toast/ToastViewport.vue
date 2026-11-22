@@ -85,10 +85,10 @@ watch(
 );
 
 /**
- * A toast of high priority has `aria-hidden` and no tab stop until the keyboard focus comes into
- * the viewport, so the viewport takes the tab stop. `inert` would also stop a press on the toast
- * (test/measurements/popup.test.ts, "a press on inert content has the element under it that is
- * not inert as its target, and no listener of the content runs").
+ * A toast of high priority can have `aria-hidden` and no tab stop while the keyboard focus is
+ * outside the viewport, so the viewport takes the tab stop. `inert` would also stop a press on the
+ * toast (test/measurements/popup.test.ts, "a press on inert content has the element under it that
+ * is not inert as its target, and no listener of the content runs").
  */
 const tabStop = computed(
   () => !provider.focused && provider.toasts.some((toast) => toast.priority === 'high'),
