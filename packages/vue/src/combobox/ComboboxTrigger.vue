@@ -2,12 +2,12 @@
 import { computed, inject, mergeProps, onScopeDispose, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
-import { givenId } from '../common/id';
 import {
   controlAttributes,
   fieldKey,
   fieldStateAttributes,
   joinDescribedBy,
+  useControlId,
 } from '../field/control';
 import { nextTextMatch, TYPEAHEAD_RESET_MS } from '../list/typeahead';
 import { interactionOf } from '../popup/root';
@@ -32,8 +32,10 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const { root } = context;
 const isControl = useTriggerIsControl(context);
-const elementId = computed(
-  () => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId),
+const elementId = useControlId(
+  isControl.value ? field : null,
+  () => props.id,
+  () => (isControl.value ? context.controlId : generatedId),
 );
 
 const trigger = usePopupTrigger(() => (isControl.value ? root : null), {

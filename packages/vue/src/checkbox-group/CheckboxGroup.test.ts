@@ -190,6 +190,23 @@ describe('the group', () => {
     expect(checked()).toEqual([]);
   });
 
+  test('VUE-210: a checkbox with a name and no value is no item of the group: the value of the group does not change with it', async () => {
+    const log: string[] = [];
+    const group = groupModel(log, ['fuji']);
+    const { box, checked } = await mountGroup({
+      group,
+      items: [
+        { key: 'fuji', value: 'fuji' },
+        { key: 'other', attrs: { name: 'other' } },
+      ],
+    });
+    box('other').click();
+    await nextTick();
+    expect(checked()).toEqual(['fuji', 'other']);
+    expect(group.modelValue).toEqual(['fuji']);
+    expect(log).toEqual([]);
+  });
+
   test('VUE-42: a checkbox with no value keeps its own state, a value with no checkbox stays, and a checkbox emits only for its press', async () => {
     const log: string[] = [];
     const group = groupModel(log, ['fuji', 'pink']);

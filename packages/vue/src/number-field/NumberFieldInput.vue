@@ -2,10 +2,9 @@
 import { computed, mergeProps, onMounted, shallowRef, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { givenId } from '../common/id';
 import { submitAtEnter } from '../common/implicitSubmission';
 import { platform } from '../common/platform';
-import { controlAria, joinDescribedBy } from '../field/control';
+import { controlAria, joinDescribedBy, useControlId } from '../field/control';
 import { injectNumberFieldRoot, stateAttributes } from './root';
 import type { NumberFieldInputProps, NumberFieldInputState } from './types';
 
@@ -22,7 +21,11 @@ const attrs = useAttrs();
 useDeferredServerRender();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLInputElement>();
-const elementId = computed(() => givenId(props.id) ?? root.field?.controlId ?? generatedId);
+const elementId = useControlId(
+  root.field,
+  () => props.id,
+  () => generatedId,
+);
 // The numeric keyboard of iOS has no decimal key and no minus key. The server cannot know the
 // platform, so the input changes the mode after the mount.
 const ios = shallowRef(false);

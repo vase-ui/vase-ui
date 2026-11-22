@@ -4,8 +4,7 @@ import { checkboxGroupKey } from '../checkbox-group/checkbox';
 import { useChecked, type CheckedOwner } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { givenId } from '../common/id';
-import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
+import { fieldKey, joinDescribedBy, useControlId, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { CheckboxEmits, CheckboxProps, CheckboxState } from './types';
 
@@ -91,7 +90,11 @@ const { checked, attributes } = useChecked({
 const isDisabled = computed(
   () => !!field?.disabled || !!group?.disabled || props.disabled || inDisabledFieldset.value,
 );
-const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const elementId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 const state = computed<CheckboxState>(() => ({
   checked: checked.value,
   indeterminate: isIndeterminate.value,

@@ -3,8 +3,7 @@ import { computed, inject, mergeProps, useAttrs, useId } from 'vue';
 import { useChecked } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { givenId } from '../common/id';
-import { fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
+import { fieldKey, joinDescribedBy, useControlId, useFieldControl } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { SwitchEmits, SwitchProps, SwitchState } from './types';
 
@@ -39,7 +38,11 @@ const { checked, attributes } = useChecked({
   emitModel: (next) => emit('update:modelValue', next),
 });
 const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
-const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const elementId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 const state = computed<SwitchState>(() => ({
   checked: checked.value,
   disabled: isDisabled.value,

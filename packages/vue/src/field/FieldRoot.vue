@@ -8,6 +8,7 @@ import {
   ref,
   shallowReactive,
   shallowRef,
+  triggerRef,
   useAttrs,
   useId,
   watch,
@@ -80,6 +81,8 @@ const { element, setElement } = useElement<HTMLDivElement>();
 
 // A swap of controls removes the old one before the new one registers.
 const control = shallowRef<FieldControl>();
+// The `id` prop of a control that no label rendered before, until the control mounts.
+const givenControlId = shallowRef<() => string | undefined>();
 const describers = shallowReactive<{ readonly id: string; readonly shown: boolean }[]>([]);
 const labels = shallowReactive<FieldLabel[]>([]);
 
@@ -103,10 +106,9 @@ let messageInput: NativeControl | undefined;
 const fieldName = computed(() => props.name ?? control.value?.name);
 const inDisabledFieldset = useInDisabledFieldset(element);
 const isDisabled = computed(() => props.disabled || inDisabledFieldset.value);
+const fieldOrControlDisabled = computed(() => isDisabled.value || !!control.value?.disabled);
 // The browser bars a disabled or read-only element from constraint validation.
-const barred = computed(
-  () => isDisabled.value || !!control.value?.disabled || !!control.value?.readOnly,
-);
+const barred = computed(() => fieldOrControlDisabled.value || !!control.value?.readOnly);
 const mode = computed(() => props.validationMode ?? form?.validationMode ?? 'submit');
 const validatesOnChange = computed(
   () => mode.value === 'change' || (mode.value === 'submit' && !!form?.submitted),
@@ -124,8 +126,10 @@ const same = (a: unknown, b: unknown) =>
   control.value?.sameValue ? control.value.sameValue(a, b) : sameValue(a, b);
 const foundDirty = computed(() => !same(value.value, firstValue.value));
 const valid = computed(() => {
-  if (barred.value) return null;
+  if (fieldOrControlDisabled.value) return null;
+  // A form submits the value of a read-only control, so its error shows.
   if (props.invalid || formErrors.value.length > 0) return false;
+  if (barred.value) return null;
   return result.value && result.value.errors.length === 0;
 });
 const state = computed<FieldRootState>(() => ({
@@ -160,7 +164,7 @@ const formField: FormField = {
     return control.value?.formValue ? control.value.formValue(form) : value.value;
   },
   get disabled() {
-    return isDisabled.value || !!control.value?.disabled;
+    return fieldOrControlDisabled.value;
   },
   validate: validateAtOnce,
   get invalid() {
@@ -176,6 +180,16 @@ provide(fieldKey, {
     return fieldName.value;
   },
   controlId,
+  get hasLabel() {
+    return labels.some((label) => label.native);
+  },
+  setGivenId(id) {
+    givenControlId.value = id;
+  },
+  onIdChange() {
+    // `control.id` can read the `id` of the element, which Vue does not track.
+    triggerRef(control);
+  },
   get labelId() {
     return labels[0]?.id;
   },
@@ -190,6 +204,7 @@ provide(fieldKey, {
     return state.value;
   },
   setControl(added) {
+    givenControlId.value = undefined;
     control.value = added;
     return () => {
       control.value = undefined;
@@ -207,6 +222,13 @@ provide(fieldKey, {
     if (same(next, value.value)) return;
     value.value = next;
     if (validatesOnChange.value) validateAfterChange();
+    // A change of the parent takes back an error of a validation as an edit does, after the render
+    // that shows the value. A validation that waits after a leave validates the new value.
+    else if (result.value?.errors.length) {
+      void nextTick(() => {
+        if (!waiting) takeBackError();
+      });
+    }
   },
   onEdit,
   onLeave(left) {
@@ -254,7 +276,7 @@ provide(fieldPartsKey, {
     return state.value;
   },
   get controlId() {
-    if (!control.value) return controlId;
+    if (!control.value) return givenControlId.value?.() ?? controlId;
     return labelable.value ? control.value.id : undefined;
   },
   get validity() {
@@ -297,6 +319,7 @@ function elementProps() {
 function dropValidation() {
   validation++;
   clearTimeout(waiting);
+  waiting = undefined;
 }
 
 function validateAfterChange() {
@@ -411,7 +434,11 @@ function removeMessages() {
 
 function onEdit() {
   form?.onEdit(fieldName.value);
-  // An invalid field that does not validate at each change takes back only `valueMissing`.
+  takeBackError();
+}
+
+// An invalid field that does not validate at each change takes back only `valueMissing`.
+function takeBackError() {
   if (validatesOnChange.value || valid.value !== false) return;
   removeMessages();
   const el = validationInput();

@@ -16,12 +16,11 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
-import { givenId } from '../common/id';
 import { submitAtEnter } from '../common/implicitSubmission';
 import { useModel } from '../common/model';
 import { visuallyHiddenInput } from '../common/visuallyHidden';
 import { warn } from '../common/warn';
-import { fieldKey, fieldStateAttributes, joinDescribedBy } from '../field/control';
+import { fieldKey, fieldStateAttributes, joinDescribedBy, useControlId } from '../field/control';
 import { fieldsetKey, useInDisabledFieldset } from '../fieldset/part';
 import { inputmodeOf, patternOf, removeAt, toCode, writeAt } from './code';
 import { otpFieldKey } from './root';
@@ -90,7 +89,11 @@ const tabStop = computed(() => {
 let claimed = 0;
 let pending: Edit | undefined;
 
-const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const elementId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 const isDisabled = computed(() => props.disabled || !!field?.disabled || inDisabledFieldset.value);
 const locked = () => isDisabled.value || props.readonly;
 const state = computed<OTPFieldRootState>(() => ({

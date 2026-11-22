@@ -14,10 +14,9 @@ import {
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
-import { givenId } from '../common/id';
 import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
-import { controlAttributes, fieldKey, joinDescribedBy } from '../field/control';
+import { controlAttributes, fieldKey, joinDescribedBy, useControlId } from '../field/control';
 import { isComposing, isInPopup } from '../popup/layer';
 import {
   createComboboxDetails,
@@ -62,8 +61,10 @@ onUnmounted(removeInput);
 
 const isControl = computed(() => !inPopup || context.inline);
 const isDisabled = computed(() => context.disabled || props.disabled);
-const elementId = computed(
-  () => givenId(props.id) ?? (isControl.value ? context.controlId : generatedId),
+const elementId = useControlId(
+  isControl.value ? field : null,
+  () => props.id,
+  () => (isControl.value ? context.controlId : generatedId),
 );
 // A `<textarea>` in the slot has the role only while the list shows (VUE-97). The server HTML and
 // the first render have the attributes of an `<input>`.

@@ -74,7 +74,10 @@ export interface CheckboxProps extends /* @vue-ignore */ Omit<
 }
 
 export interface CheckboxEmits {
-  /** The user presses the checkbox. `details.cancel()` keeps the state as it was. */
+  /**
+   * The user presses the checkbox. `details.event` is the native `click` event of the press.
+   * `details.cancel()` keeps the state as it was.
+   */
   checkedChange: [checked: boolean, details: CheckboxChangeEventDetails];
   /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [checked: boolean];

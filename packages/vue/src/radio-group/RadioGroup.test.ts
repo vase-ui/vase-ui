@@ -74,6 +74,33 @@ describe('the group', () => {
 });
 
 describe('selection', () => {
+  test('VUE-214: an arrow key sends one click to the radio that it selects, which reaches the ancestors', async () => {
+    const clicks: string[] = [];
+    const { root, radio } = await mountGroup({ items: choices('ssd', 'hdd') });
+    root.addEventListener('click', (event) => clicks.push((event.target as Element).id));
+    radio('ssd').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(clicks).toEqual(['hdd']);
+  });
+
+  test('details.event is the click of the press, with its modifier keys; a change that a script sends is its own event', async () => {
+    const details: RadioGroupChangeEventDetails[] = [];
+    const group = {
+      onValueChange: (_: unknown, given: RadioGroupChangeEventDetails) => details.push(given),
+    };
+    const { radio } = await mountGroup({ group, items: choices('ssd', 'hdd') });
+    await userEvent.keyboard('{Shift>}');
+    await userEvent.click(radio('hdd'));
+    await userEvent.keyboard('{/Shift}');
+    expect(details[0]!.event.type).toBe('click');
+    expect((details[0]!.event as MouseEvent).shiftKey).toBe(true);
+    // A click on the checked radio gives no `change`, and a later `change` does not get it.
+    await userEvent.click(radio('hdd'));
+    const change = new Event('change', { bubbles: true });
+    radio('ssd').dispatchEvent(change);
+    expect(details[1]!.event).toBe(change);
+  });
+
   test('a click or a label selects a radio with one valueChange and one update:modelValue; a click on the checked radio emits nothing', async () => {
     const log: string[] = [];
     const details: RadioGroupChangeEventDetails[] = [];
@@ -87,7 +114,7 @@ describe('selection', () => {
     radio('hdd').click();
     expect(log).toEqual(['valueChange hdd', 'update hdd']);
     expect(details[0]!.reason).toBe('none');
-    expect(details[0]!.event.type).toBe('change');
+    expect(details[0]!.event.type).toBe('click');
     await userEvent.click(
       root.querySelectorAll('label')[1]!.parentElement!.querySelector('label')!,
     );
@@ -515,10 +542,29 @@ describe('in a field', () => {
       items: choices('a'),
       field: { invalid: true },
     });
-    expect(readonly.group).not.toHaveAttribute('aria-invalid');
+    expect(readonly.group).toHaveAttribute('aria-invalid', 'true');
     const disabled = await mountGroup({ items: choices('b'), field: { disabled: true } });
     expect(disabled.group).toHaveAttribute('aria-disabled', 'true');
     expect(disabled.radio('b').matches(':disabled')).toBe(true);
+  });
+
+  test('VUE-215: an arrow key that selects in the group is no leave: the field is not touched and does not validate in blur mode', async () => {
+    const validated: unknown[] = [];
+    const { root, radio } = await mountGroup({
+      items: choices('ssd', 'hdd'),
+      field: { validationMode: 'blur', validate: (value: unknown) => validated.push(value) },
+    });
+    const field = root.querySelector('form > div')!;
+    radio('ssd').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await settle();
+    expect(radio('hdd')).toHaveFocus();
+    expect(radio('hdd').checked).toBe(true);
+    expect(field).not.toHaveAttribute('data-touched');
+    expect(validated).toEqual([]);
+    await leave(radio('hdd'));
+    expect(field).toHaveAttribute('data-touched');
+    expect(validated).toEqual(['hdd']);
   });
 
   test('the field gets the value: filled, dirty and validate; it is touched when the focus leaves the group', async () => {

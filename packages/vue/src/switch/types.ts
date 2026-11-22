@@ -52,7 +52,10 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
 }
 
 export interface SwitchEmits {
-  /** The user presses the switch. `details.cancel()` keeps the state as it was. */
+  /**
+   * The user presses the switch. `details.event` is the native `click` event of the press.
+   * `details.cancel()` keeps the state as it was.
+   */
   checkedChange: [checked: boolean, details: SwitchChangeEventDetails];
   /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [checked: boolean];

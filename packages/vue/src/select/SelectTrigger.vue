@@ -3,7 +3,7 @@ import { computed, mergeProps, useAttrs } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
-import { controlAttributes, joinDescribedBy } from '../field/control';
+import { controlAttributes, joinDescribedBy, useControlId } from '../field/control';
 import { isInPopup } from '../popup/layer';
 import { usePopupTrigger } from '../popup/trigger';
 import { injectSelectRoot } from './root';
@@ -23,7 +23,12 @@ const { root, field } = context;
 useDeferredServerRender();
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-const triggerId = computed(() => givenId(props.id) ?? context.triggerId);
+// A trigger with its own `id` gives it to the field. Else the root gives its `id` to the field.
+const triggerId = useControlId(
+  givenId(props.id) ? field : null,
+  () => props.id,
+  () => context.triggerId,
+);
 const trigger = usePopupTrigger(() => root, {
   element,
   id: () => triggerId.value,

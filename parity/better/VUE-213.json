@@ -1,0 +1,17 @@
+{
+  "id": "VUE-213",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1361",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1385",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1655",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1809",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1846",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/radio-group/RadioGroup.test.tsx#L1914",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/radio-group/RadioGroup.test.tsx#L2156",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/radio-group/RadioGroup.test.tsx#L2187",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-owner"
+  ],
+  "behavior": "A field counts for a `Form` while the browser lists an input of its control in the elements of the `<form>` (`element.form`). A control that a `Teleport` moves out of the `<form>` counts when it has the `form` attribute with the `id` of the form, as in HTML. A group with no mounted input does not count. So the fields that the form validates and the values that the form submits (`FormData`) are the same set. Base UI counts each field below the `Form` in the React tree, also a control in a portal and a group with no input.",
+  "dueWith": "packages/react/src/form/Form.tsx",
+  "families": ["form", "field", "checkbox-group", "radio-group"]
+}

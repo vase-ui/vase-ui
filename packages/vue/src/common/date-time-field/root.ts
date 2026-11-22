@@ -10,7 +10,7 @@ import {
   watch,
   type Ref,
 } from 'vue';
-import { fieldKey, joinDescribedBy } from '../../field/control';
+import { fieldKey, joinDescribedBy, useControlId } from '../../field/control';
 import { useInDisabledFieldset } from '../../fieldset/part';
 import { displayCalendar } from '../date-time/displayCalendar';
 import { digits as localeDigits, formatter } from '../date-time/format';
@@ -35,7 +35,6 @@ import { createChangeEventDetails } from '../changeEventDetails';
 import { useDeferredServerRender } from '../deferredServerRender';
 import { byDocumentOrder } from '../element';
 import { useFormReset } from '../formEvents';
-import { givenId } from '../id';
 import { useModel } from '../model';
 import { visuallyHiddenInput } from '../visuallyHidden';
 import {
@@ -165,7 +164,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   const disabled = computed(
     () => !!field?.disabled || !!props.disabled || inDisabledFieldset.value,
   );
-  const id = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+  const id = useControlId(
+    field,
+    () => props.id,
+    () => generatedId,
+  );
 
   const model = useModel<Value | null>(
     () => props.modelValue as Value | null | undefined,

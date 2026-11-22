@@ -1,0 +1,10 @@
+{
+  "id": "VUE-214",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/radio/root/RadioRoot.test.tsx#L226",
+    "https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio)"
+  ],
+  "behavior": "An arrow key in a radio group selects the next radio, and the browser sends a `click` event to that radio, as Chromium, Firefox and WebKit do for native radios. The event reaches the listeners of the radio and of its ancestors. Base UI sends no click for an arrow key.",
+  "dueWith": "packages/react/src/radio/root/RadioRoot.tsx",
+  "families": ["radio-group"]
+}

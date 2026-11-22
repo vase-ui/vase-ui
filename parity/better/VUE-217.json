@@ -1,0 +1,10 @@
+{
+  "id": "VUE-217",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/control/FieldControl.test.tsx#L244",
+    "https://drafts.csswg.org/selectors/#user-pseudos"
+  ],
+  "behavior": "The required rule counts from the first edit of the user until a native reset, also when a listener puts the first value back. A field in `blur` mode validates the value that the control has after the blur listeners of the developer ran, so a required control that such a listener emptied shows `valueMissing`. `:user-invalid` of CSS matches in the same case. Base UI shows no error when a blur listener puts the first value back.",
+  "dueWith": "packages/react/src/field/control/FieldControl.tsx",
+  "families": ["field"]
+}

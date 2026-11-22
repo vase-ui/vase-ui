@@ -3,8 +3,7 @@
 // that check accepts a typed parameter and keeps `null` in the type.
 import { computed, inject, useAttrs, useId } from 'vue';
 import { useElement } from '../common/element';
-import { givenId } from '../common/id';
-import { fieldKey } from '../field/control';
+import { fieldKey, useControlId } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { isSelectedValueDirty } from '../common/itemEquality';
 import { useSelectForm } from './form';
@@ -35,7 +34,11 @@ const { element: input, setElement: setInput } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 const ownDisabled = computed(() => props.disabled || inDisabledFieldset.value);
 const isDisabled = computed(() => ownDisabled.value || !!field?.disabled);
-const triggerId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const triggerId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 
 const { context, value, setOwn, resetValue, close } = useSelectRoot(
   props,

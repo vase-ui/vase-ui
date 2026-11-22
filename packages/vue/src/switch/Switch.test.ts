@@ -80,6 +80,21 @@ describe('the element', () => {
 });
 
 describe('the state', () => {
+  test('details.event is the click of the press, with its modifier keys; a change that a script sends is its own event', async () => {
+    const details: SwitchChangeEventDetails[] = [];
+    const { inputs } = await mountSwitches([
+      { onCheckedChange: (_: boolean, given: SwitchChangeEventDetails) => details.push(given) },
+    ]);
+    await userEvent.keyboard('{Shift>}');
+    await userEvent.click(inputs[0]!);
+    await userEvent.keyboard('{/Shift}');
+    expect(details[0]!.event.type).toBe('click');
+    expect((details[0]!.event as MouseEvent).shiftKey).toBe(true);
+    const change = new Event('change', { bubbles: true });
+    inputs[0]!.dispatchEvent(change);
+    expect(details[1]!.event).toBe(change);
+  });
+
   test('a press emits checkedChange and then update:modelValue; a controlled switch shows its prop again', async () => {
     const log: string[] = [];
     const details: SwitchChangeEventDetails[] = [];
@@ -92,7 +107,7 @@ describe('the state', () => {
     const { inputs } = await mountSwitches([refused, bound]);
     inputs[0]!.click();
     expect(log).toEqual(['checkedChange true', 'update true']);
-    expect(details[0]!.event.type).toBe('change');
+    expect(details[0]!.event.type).toBe('click');
     await settle();
     expect(inputs[0]!.checked).toBe(false);
     inputs[0]!.click();
@@ -156,7 +171,7 @@ describe('clicks and the keyboard', () => {
     expect(log).toEqual(['checkedChange true', 'update true', 'checkedChange true', 'update true']);
   });
 
-  test('Space changes it; Enter does not change it and submits the form through its submit button', async () => {
+  test('VUE-212: Space changes it; Enter does not change it and submits the form through its submit button', async () => {
     const { form, inputs } = await mountSwitches([{}]);
     const submitters: (HTMLElement | null)[] = [];
     form.addEventListener('submit', (event) => submitters.push(event.submitter));
@@ -325,14 +340,14 @@ describe('in a field', () => {
     expect(dataAttributes(input)).toEqual(['data-touched']);
   });
 
-  test('a disabled field disables it; a read-only or disabled switch is not validated; a reset gives the field its first state', async () => {
+  test('a disabled field disables it; a read-only switch shows `invalid` and a disabled switch does not; a reset gives the field its first state', async () => {
     const field = reactive<Record<string, unknown>>({ invalid: true });
     const attrs = reactive<Record<string, unknown>>({ readonly: true });
     const { root } = mount(SwitchInField, { field, attrs });
     await nextTick();
     const input = root.querySelector('input')!;
     const fieldElement = root.querySelector('form > div')!;
-    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
     attrs.readonly = false;
     attrs.disabled = true;
     await nextTick();
