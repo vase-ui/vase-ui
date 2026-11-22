@@ -2,15 +2,28 @@
 import type { PropType } from 'vue';
 import { Menu } from '../../src/menu';
 import { Menubar } from '../../src/menubar';
+import MenubarMenu from './MenubarMenu.vue';
 
 type Props = Record<string, unknown>;
 
-// A bar of three menus with two items each, and an input before and after it. The bar shows its
-// slot state. With `submenus`, the first menu has a submenu `share`, and the last menu has a submenu
-// `layout` with a radio group. With `filter`, the first menu has a filter. `triggerless` adds a
-// menu with no trigger to the bar.
-defineProps({
+// A bar of three menus `file`, `edit` and `view` with two items each, and an input before and after
+// it. The bar shows its slot state. `form` gives the roots of the menus:
+// - `contained`: a root around each trigger, with the props `roots[key]`;
+// - `multiple`: one root in the bar with the three triggers, with the props `root`;
+// - `detached`: one root after the bar, and the three triggers in the bar have its handle;
+// - `mixed`: a root around the trigger `file`, and one root after the bar for the triggers `edit`
+//   and `view`, with the props `root`.
+// A trigger gives its key as the payload. With `submenus`, the first menu has a submenu `share`, and
+// the last menu has a submenu `layout` with a radio group. With `filter`, the first menu has a
+// filter. `triggerless` adds a menu with no trigger to the bar. With `help`, a trigger `help` after
+// the bar has the handle too.
+const props = defineProps({
+  form: {
+    type: String as PropType<'contained' | 'multiple' | 'detached' | 'mixed'>,
+    default: 'contained',
+  },
   bar: Object as PropType<Props>,
+  root: Object as PropType<Props>,
   roots: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
   triggers: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
   portals: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
@@ -18,7 +31,12 @@ defineProps({
   submenus: Boolean,
   filter: Boolean,
   triggerless: Object as PropType<Props>,
+  help: Boolean,
 });
+const handle = Menu.createHandle<string>();
+const keys = ['file', 'edit', 'view'];
+const withRoot = (key: string) =>
+  props.form === 'contained' || (props.form === 'mixed' && key === 'file');
 </script>
 
 <template>
@@ -55,42 +73,40 @@ defineProps({
         </Menu.Portal>
       </Menu.Root>
     </template>
+    <Menu.Root v-else-if="form === 'multiple'" v-slot="{ payload }" v-bind="root">
+      <Menu.Trigger
+        v-for="key in keys"
+        :key="key"
+        :payload="key"
+        :data-key="key"
+        v-bind="triggers[key]"
+        >{{ key }}</Menu.Trigger
+      >
+      <MenubarMenu
+        v-if="payload"
+        :menu="payload as string"
+        :submenus
+        :portal="portals[payload as string]"
+        :positioner="positioners[payload as string]"
+      />
+    </Menu.Root>
     <template v-else>
-      <Menu.Root v-for="key in ['file', 'edit', 'view']" :key="key" v-bind="roots[key]">
-        <Menu.Trigger :data-key="key" v-bind="triggers[key]">{{ key }}</Menu.Trigger>
-        <Menu.Portal v-bind="portals[key]">
-          <Menu.Positioner :data-testid="`${key}-positioner`" v-bind="positioners[key]">
-            <Menu.Popup :data-testid="`${key}-popup`">
-              <Menu.Item :data-key="`${key}-1`">{{ key }} 1</Menu.Item>
-              <Menu.Item :data-key="`${key}-2`">{{ key }} 2</Menu.Item>
-              <Menu.SubmenuRoot v-if="submenus && key === 'file'">
-                <Menu.SubmenuTrigger data-key="share" :delay="0">Share</Menu.SubmenuTrigger>
-                <Menu.Portal>
-                  <Menu.Positioner>
-                    <Menu.Popup data-testid="share-popup">
-                      <Menu.Item data-key="share-1">Email</Menu.Item>
-                      <Menu.Item data-key="share-2">Print</Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.SubmenuRoot>
-              <Menu.SubmenuRoot v-if="submenus && key === 'view'">
-                <Menu.SubmenuTrigger data-key="layout" :delay="0">Layout</Menu.SubmenuTrigger>
-                <Menu.Portal>
-                  <Menu.Positioner>
-                    <Menu.Popup data-testid="layout-popup">
-                      <Menu.RadioGroup default-value="single">
-                        <Menu.RadioItem data-key="layout-1" value="single">Single</Menu.RadioItem>
-                        <Menu.RadioItem data-key="layout-2" value="two">Two</Menu.RadioItem>
-                      </Menu.RadioGroup>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.SubmenuRoot>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
+      <template v-for="key in keys" :key="key">
+        <Menu.Root v-if="withRoot(key)" v-bind="roots[key]">
+          <Menu.Trigger :data-key="key" :payload="key" v-bind="triggers[key]">{{
+            key
+          }}</Menu.Trigger>
+          <MenubarMenu
+            :menu="key"
+            :submenus
+            :portal="portals[key]"
+            :positioner="positioners[key]"
+          />
+        </Menu.Root>
+        <Menu.Trigger v-else :handle :payload="key" :data-key="key" v-bind="triggers[key]">{{
+          key
+        }}</Menu.Trigger>
+      </template>
     </template>
     <Menu.Root v-if="triggerless" v-bind="triggerless">
       <Menu.Portal keep-mounted>
@@ -102,6 +118,21 @@ defineProps({
       </Menu.Portal>
     </Menu.Root>
   </Menubar>
+  <Menu.Trigger v-if="help" :handle payload="help" data-key="help">help</Menu.Trigger>
+  <Menu.Root
+    v-if="form === 'detached' || form === 'mixed'"
+    v-slot="{ payload }"
+    :handle
+    v-bind="root"
+  >
+    <MenubarMenu
+      v-if="payload"
+      :menu="payload as string"
+      :submenus
+      :portal="portals[payload as string]"
+      :positioner="positioners[payload as string]"
+    />
+  </Menu.Root>
   <input id="after" aria-label="After" />
   <button id="outside" style="position: fixed; right: 0; bottom: 0">Outside</button>
 </template>

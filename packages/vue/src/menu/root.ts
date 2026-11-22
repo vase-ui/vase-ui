@@ -170,7 +170,10 @@ export function useMenuRoot<Payload>(
   const provider = place === 'context' ? null : inject(filterProviderKey, null);
   provide(filterProviderKey, null);
 
-  // The open closes another menu of the menubar.
+  // The menubar of the trigger of the change. A root outside the bar knows the bar from the trigger
+  // of its open, before that trigger is active.
+  let changeBar: MenubarForMenu | null = null;
+  // The open closes another menu of the menubar, or moves the menu to another trigger of the bar.
   let replacesSibling = false;
   // The event of the last accepted open, for the close of the menu that it replaces.
   let openEvent: Event | undefined;
@@ -188,13 +191,15 @@ export function useMenuRoot<Payload>(
       }
       emit('openChange', open, details);
       if (details.isCanceled) return;
+      const trigger = open ? (details.trigger ?? null) : root.activeTrigger;
+      changeBar = place === 'root' ? (injectedBar ?? menubarOfTrigger(trigger) ?? null) : null;
       if (!open) {
         // A menu closes its submenu first, so that the focus goes back from the inside out.
         openChild.value?.root.request(false, details.reason, event);
         return;
       }
-      const sibling = parent ? parent.openChild : (menubar.value?.openMenu ?? null);
-      replacesSibling = !!sibling && sibling !== context;
+      const sibling = parent ? parent.openChild : (changeBar?.openMenu ?? null);
+      replacesSibling = !!sibling && (sibling !== context || root.activeTrigger !== trigger);
       openEvent = event;
     },
     emitOpen: (open) => emit('update:open', open),
@@ -202,7 +207,7 @@ export function useMenuRoot<Payload>(
       if (place === 'root') emit('update:triggerId', id);
     },
     instantOf(open, reason, event) {
-      if (kind.value === 'menubar') {
+      if (changeBar) {
         if (reason === 'sibling-open' || reason === 'list-navigation') return 'group';
         if (open && replacesSibling) return 'group';
       }
@@ -388,6 +393,17 @@ export function useMenuRoot<Payload>(
         else if (parent.openChild === context) parent.setOpenChild(null);
       }
       menubar.value?.setOpen(context, open);
+    },
+    { flush: 'sync' },
+  );
+  // A handle can have triggers in a bar and outside it. The open menu belongs to the bar of its
+  // active trigger.
+  watch(
+    menubar,
+    (bar, previous) => {
+      if (!root.open) return;
+      previous?.setOpen(context, false);
+      bar?.setOpen(context, true);
     },
     { flush: 'sync' },
   );
