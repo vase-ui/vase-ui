@@ -11,7 +11,7 @@ import SelectInTransition from '../../test/fixtures/SelectInTransition.vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
 import SelectPopupElement from '../../test/fixtures/SelectPopupElement.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { clientCenter, touchDrag } from '../../test/pointer';
+import { clientCenter, holdPress, touchDrag } from '../../test/pointer';
 import { mount, mountError, settle } from '../../test/render';
 import { scaleOrigin } from '../../test/scaleOrigin';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -641,6 +641,18 @@ describe('press, drag, release', () => {
     await mountSelect({ root: rootEvents(log) });
     const outside = centerOf(document.getElementById('outside')!);
     await pressAndRelease(centerOf(trigger()), outside);
+    await closed();
+    expect(log).toContain('openChange false cancel-open');
+  });
+
+  test('a release outside the view closes it with cancel-open', async () => {
+    const log: string[] = [];
+    await mountSelect({ root: rootEvents(log) });
+    const { release } = await holdPress(trigger());
+    await opened();
+    const away = { x: innerWidth + 50, y: innerHeight / 2 };
+    await userEvent.pointer({ coords: away });
+    await release(away);
     await closed();
     expect(log).toContain('openChange false cancel-open');
   });
