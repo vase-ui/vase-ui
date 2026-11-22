@@ -191,10 +191,12 @@ export function usePopupFocus(
     () => (options.lostFocus && root.open ? root.popup : null),
     (popup, _, onCleanup) => {
       if (!popup) return;
-      let focused: Element | null = null;
+      const doc = ownerDocument(popup);
+      // The first focus of the popup can come before this watcher.
+      const current = activeElement(doc);
+      let focused: Element | null = current && popup.contains(current) ? current : null;
       const restore = () => {
         if (!focused || (focused.isConnected && focused.checkVisibility())) return;
-        const doc = ownerDocument(popup);
         const active = activeElement(doc);
         if (active && active !== doc.body) return;
         focused = null;

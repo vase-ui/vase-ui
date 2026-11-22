@@ -63,17 +63,20 @@ watch(element, (viewport, _, onCleanup) => {
   onCleanup(() => observer.disconnect());
 });
 
-/** The popup has a selection: the handles of a touch selection take the drag. */
-function hasSelection(popup: HTMLElement) {
-  const doc = popup.ownerDocument;
-  const selection = doc.getSelection();
-  if (
-    selection &&
+/** The selection of the document, when it has text of the popup. */
+function selectionIn(popup: HTMLElement) {
+  const selection = popup.ownerDocument.getSelection();
+  return selection &&
     !selection.isCollapsed &&
     (popup.contains(selection.anchorNode) || popup.contains(selection.focusNode))
-  ) {
-    return true;
-  }
+    ? selection
+    : null;
+}
+
+/** The popup has a selection: the handles of a touch selection take the drag. */
+function hasSelection(popup: HTMLElement) {
+  if (selectionIn(popup)) return true;
+  const doc = popup.ownerDocument;
   const field = doc.activeElement as HTMLInputElement | null;
   return (
     !!field &&
@@ -175,6 +178,9 @@ const tracker = useSwipeTracker({
     }
     if (drawer.isContentPress(event) || !pressStartsSwipe(event, popup, axis.value)) return false;
     startedOutside = false;
+    // A press on text clears a selection. In Chromium and Firefox, the `user-select` below stops
+    // that, so the swipe clears a selection in the popup. A selection outside the popup stays.
+    selectionIn(popup)?.removeAllRanges();
     // Firefox and WebKit start a selection at the press, so a later write is too late
     // (test/measurements/drawer.test.ts).
     viewport.style.setProperty('user-select', 'none');

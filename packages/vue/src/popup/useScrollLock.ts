@@ -13,11 +13,18 @@ function getStyle(element: HTMLElement) {
   return ownerWindow(element).getComputedStyle(element);
 }
 
+// The `overflow` shorthand reads as empty when only one of its longhands is set, so a save of the
+// shorthand would remove an `overflow-y` of the page at the restore.
 function saveStyle(element: HTMLElement, names: string[]) {
   const saved = names.map((name) => [name, element.style.getPropertyValue(name)] as const);
   return () => {
     for (const [name, value] of saved) element.style.setProperty(name, value);
   };
+}
+
+/** The page or the lock of another library already stops the scroll of the view. */
+function isLocked(html: HTMLElement, body: HTMLElement) {
+  return /hidden|clip/.test(getStyle(viewportScroller(html, body)).overflowY);
 }
 
 function lock(doc: Document) {
@@ -28,7 +35,7 @@ function lock(doc: Document) {
   // An overlay scrollbar takes no room, so `overflow: hidden` alone stops the scroll.
   if (scrollbar <= 0) {
     const scroller = viewportScroller(html, body);
-    const restore = saveStyle(scroller, ['overflow']);
+    const restore = saveStyle(scroller, ['overflow-x', 'overflow-y']);
     scroller.style.overflow = 'hidden';
     return restore;
   }
@@ -44,7 +51,14 @@ function lock(doc: Document) {
     Number.parseFloat(bodyStyle.marginLeft) + Number.parseFloat(bodyStyle.marginRight);
   const scrollbarY = win.innerHeight - html.clientHeight;
   const restoreHtml = saveStyle(html, ['overflow-x', 'overflow-y', 'scroll-behavior']);
-  const restoreBody = saveStyle(body, ['position', 'width', 'height', 'box-sizing', 'overflow']);
+  const restoreBody = saveStyle(body, [
+    'position',
+    'width',
+    'height',
+    'box-sizing',
+    'overflow-x',
+    'overflow-y',
+  ]);
   // The view has a vertical scrollbar that takes room. A horizontal one stays where the page has it.
   const scrollsX = htmlStyle.overflowX === 'scroll' || html.scrollWidth > html.clientWidth;
   Object.assign(html.style, {
@@ -70,10 +84,34 @@ function lock(doc: Document) {
   };
 }
 
+/**
+ * Locks the page, or waits while the page is already locked. The lock of another overlay can end
+ * after this lock starts, at the end of the leave of that overlay. A save of its styles would put
+ * them back at the unlock, and its unlock would remove the styles of this lock.
+ */
+function lockWhenFree(doc: Document) {
+  const html = doc.documentElement;
+  const body = doc.body;
+  if (!isLocked(html, body)) return lock(doc);
+  const restores: (() => void)[] = [];
+  // Another lock writes an inline style, a class, or an attribute that a style sheet selects.
+  const observer = new (ownerWindow(html).MutationObserver)(() => {
+    if (isLocked(html, body)) return;
+    observer.disconnect();
+    restores.push(lock(doc));
+  });
+  observer.observe(html, { attributes: true });
+  observer.observe(body, { attributes: true });
+  return () => {
+    observer.disconnect();
+    for (const restore of restores) restore();
+  };
+}
+
 function acquire(doc: Document) {
   let entry = locks.get(doc);
   if (!entry) {
-    entry = { count: 0, restore: lock(doc) };
+    entry = { count: 0, restore: lockWhenFree(doc) };
     locks.set(doc, entry);
   }
   entry.count += 1;

@@ -125,6 +125,14 @@ const tracker = useSwipeTracker({
   },
 });
 
+// A swipe ends when the area becomes disabled. A drawer that it opened stays open.
+watch(
+  () => props.disabled,
+  (disabled) => {
+    if (disabled && tracker.pressing) tracker.cancel();
+  },
+);
+
 // The popup of an open by the swipe mounts after the open, and after the leave of an earlier popup.
 watch(
   () => root.popup,

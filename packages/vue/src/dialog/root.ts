@@ -131,6 +131,7 @@ export function useDialogRoot<Payload>(
     placed: () => true,
     initialFocus: () => popupFocus.value.initialFocus,
     finalFocus: () => popupFocus.value.finalFocus,
+    lostFocus: () => root.popup,
   });
 
   const context: DialogForParts<Payload> = {
