@@ -96,6 +96,9 @@ describe('a root that changes its handle', () => {
     await opened('popup-r');
     expect(byTestId('payload-r')).toHaveTextContent('');
     expectInactive(byId('a'));
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` found no trigger with the id "a". The popup opens with no trigger.',
+    ]);
   });
 
   test('a root that gets a handle while open opens from it, and one that loses it does not', async () => {
@@ -118,6 +121,9 @@ describe('a root that changes its handle', () => {
     handle.open('a');
     await nextTick();
     expect([handle.isOpen, byTestId('popup-r')]).toEqual([false, null]);
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
   });
 
   test('a new handle for the triggers and the root of an open dialog keeps aria-controls', async () => {

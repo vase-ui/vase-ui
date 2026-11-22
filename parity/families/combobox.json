@@ -382,7 +382,7 @@
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",
       "entry": "Portal",
       "kind": "not-applicable",
-      "reason": "A `<Teleport>` moves the content, and `to` names its target. The portal has no element of its own, so it takes no `as` and has no `element` slot. It takes `defer` and `disabled` of `<Teleport>`."
+      "reason": "A `<Teleport>` moves the content, and `to` names its target. The only element of the portal in place is the visually hidden element that owns a popup with the input, so the portal takes no `as` and has no `element` slot. It takes `defer` and `disabled` of `<Teleport>`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",

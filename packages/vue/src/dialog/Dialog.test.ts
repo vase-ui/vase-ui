@@ -318,26 +318,41 @@ describe('the handle', () => {
   });
 
   test.each([
-    { name: 'open(null)', open: (handle: Dialog.Handle<string>) => handle.open(null) },
-    { name: 'open() of an unknown id', open: (handle: Dialog.Handle<string>) => handle.open('x') },
-  ])('$name opens with no active trigger, also when the root has one trigger', async ({ open }) => {
-    const handle = Dialog.createHandle<string>();
-    const triggers: unknown[] = [];
-    const { root } = mount(DialogHandles, {
-      handle,
-      root: {
-        onOpenChange: (_: boolean, details: DialogRootChangeEventDetails) =>
-          triggers.push(details.trigger),
-      },
-    });
-    await nextTick();
-    open(handle);
-    await opened();
-    expect(triggers).toEqual([undefined]);
-    for (const trigger of root.querySelectorAll('button')) {
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    }
-  });
+    {
+      name: 'open(null)',
+      open: (handle: Dialog.Handle<string>) => handle.open(null),
+      warnings: [],
+    },
+    {
+      name: 'open() of an unknown id',
+      open: (handle: Dialog.Handle<string>) => handle.open('x'),
+      warnings: [
+        'console.warn: Vase UI: `open()` found no trigger with the id "x". The popup opens with no trigger.',
+      ],
+    },
+  ])(
+    '$name opens with no active trigger, also when the root has one trigger',
+    async ({ open, warnings }) => {
+      const handle = Dialog.createHandle<string>();
+      const triggers: unknown[] = [];
+      const { root } = mount(DialogHandles, {
+        handle,
+        root: {
+          onOpenChange: (_: boolean, details: DialogRootChangeEventDetails) =>
+            triggers.push(details.trigger),
+        },
+      });
+      await nextTick();
+      open(handle);
+      await opened();
+      expect(takeReportedMessages()).toEqual(warnings);
+      expect(triggers).toEqual([undefined]);
+      expect(root.querySelector('[data-testid="root-payload"]')).toHaveTextContent('');
+      for (const trigger of root.querySelectorAll('button')) {
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      }
+    },
+  );
 
   test('openWithPayload() opens with no trigger; its payload stays until the next open by a trigger, also after a refused close and a trigger that mounts', async () => {
     const handle = Dialog.createHandle<string>();
@@ -379,6 +394,10 @@ describe('the handle', () => {
     handle.open(null);
     handle.openWithPayload('given');
     handle.close();
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+      'console.warn: Vase UI: `openWithPayload()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
     await userEvent.click(root.querySelector<HTMLElement>('#first')!);
     await nextTick();
     expect(handle.isOpen).toBe(false);
@@ -436,6 +455,9 @@ describe('the handle', () => {
     handle.open(null);
     await nextTick();
     expect(popup()).toBe(null);
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
   });
 
   test('a root that unmounts leaves the handle to a root that took it later', async () => {

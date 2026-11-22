@@ -67,7 +67,7 @@ A part that renders its own element has one root node: that element. A rule of `
 
 <<< ../examples/styling/ScopedStyle.vue
 
-A `Portal` part renders no element. Write your own element in it, and give the rule to that element:
+A `Portal` part has no root element. Write your own element in it, and give the rule to that element:
 
 <<< ../examples/styling/ScopedPortal.vue
 

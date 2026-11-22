@@ -508,6 +508,9 @@ describe('the handle', () => {
     await nextTick();
     detached.open('first');
     detached.close();
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
     await userEvent.click(byId('first'));
     expect(detached.isOpen).toBe(false);
     expect(byId('first')).toHaveAttribute('aria-expanded', 'false');
@@ -522,6 +525,9 @@ describe('the handle', () => {
     await nextTick();
     handle.open('first');
     expect(handle.isOpen).toBe(false);
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
     mount(PopoverHandles, { handle });
     await nextTick();
     handle.open('second');
@@ -1399,6 +1405,34 @@ describe('the dismissal', () => {
     await closed();
     expect(document.activeElement).toBe(byId('after'));
     expect(log).toEqual(['openChange false outside-press', 'update false']);
+  });
+
+  test('VUE-221: an outside press closes the popover also when a capture listener of the document stops its click; details.cancel() keeps it open', async () => {
+    const log: string[] = [];
+    const root = rootEvents(log, { defaultOpen: true });
+    const { trigger } = await mountPopover({ root });
+    await opened();
+    await placed();
+    const stop = (event: Event) => event.stopPropagation();
+    document.addEventListener('click', stop, true);
+    onTestFinished(() => document.removeEventListener('click', stop, true));
+    await userEvent.click(byId('outside'));
+    await closed();
+    expect(log).toEqual(['openChange false outside-press', 'update false']);
+    root.onOpenChange = (open: boolean, details: PopoverRootChangeEventDetails) => {
+      log.push(`openChange ${open} ${details.reason}`);
+      if (!open) details.cancel();
+    };
+    document.removeEventListener('click', stop, true);
+    await userEvent.click(trigger());
+    await opened();
+    await placed();
+    document.addEventListener('click', stop, true);
+    log.length = 0;
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(log).toEqual(['openChange false outside-press']));
+    await nextTick();
+    expect(popup()).not.toBe(null);
   });
 
   test.skipIf(server.browser !== 'chromium')(

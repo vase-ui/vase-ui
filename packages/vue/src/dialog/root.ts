@@ -11,9 +11,10 @@ import {
 } from 'vue';
 import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
+import { warn } from '../common/warn';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { layersAbove, useLayer, type Layer } from '../popup/layer';
-import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
+import { PopupHandle, rootToOpen, usePopupRoot, type PopupRoot } from '../popup/root';
 import { useHandleRoot, usePopupTrigger } from '../popup/trigger';
 import type { DialogRootChangeEventDetails, DialogRootProps, DialogTriggerState } from './types';
 
@@ -21,21 +22,27 @@ import type { DialogRootChangeEventDetails, DialogRootProps, DialogTriggerState 
 export class DialogHandle<Payload = unknown> extends PopupHandle<Payload> {
   /**
    * Opens the popup for the trigger with this `id`. With `null`, or with an `id` that no trigger of
-   * the root has, the popup opens with no trigger.
+   * the root has, the popup opens with no trigger. A development build warns for such an `id`, and
+   * for a call with no mounted root.
    */
   override open(triggerId: string | null) {
-    const root = rootOfHandle<Payload>(this);
+    const root = rootToOpen<Payload>(this, 'open');
     if (!root) return;
     const trigger = root.triggers.find((each) => each.id === triggerId);
+    if (triggerId !== null && !trigger) {
+      warn(
+        `\`open()\` found no trigger with the id "${triggerId}". The popup opens with no trigger.`,
+      );
+    }
     root.request(true, 'imperative-action', new Event('vase-ui'), trigger?.element ?? null);
   }
 
   /**
    * Opens the popup with no trigger. The default slot of the root gets the payload until a trigger
-   * opens the popup.
+   * opens the popup. A development build warns for a call with no mounted root.
    */
   openWithPayload(payload: Payload) {
-    rootOfHandle<Payload>(this)?.openWithPayload(payload, new Event('vase-ui'));
+    rootToOpen<Payload>(this, 'openWithPayload')?.openWithPayload(payload, new Event('vase-ui'));
   }
 }
 

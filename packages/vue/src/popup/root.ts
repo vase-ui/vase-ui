@@ -14,6 +14,7 @@ import { addEventListener } from '../common/addEventListener';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
 import { useModel } from '../common/model';
 import { ownerDocument } from '../common/owner';
+import { warn } from '../common/warn';
 
 export type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';
 
@@ -223,6 +224,21 @@ export function rootOfHandle<Payload>(handle: PopupHandle<Payload>) {
 }
 
 /**
+ * The root for a method of a handle that opens the popup. With no mounted root, the call does
+ * nothing, and a development build warns: the cause is a mistake that gives no other signal, such
+ * as a root with no `handle` prop or a call before the mount.
+ */
+export function rootToOpen<Payload>(handle: PopupHandle<Payload>, method: string) {
+  const root = rootOfHandle(handle);
+  if (!root) {
+    warn(
+      `\`${method}()\` of a handle found no mounted root with this handle. The call does nothing.`,
+    );
+  }
+  return root;
+}
+
+/**
  * Opens and closes a popup from code, and connects triggers outside the root to it. Give it to the
  * `handle` prop of the root and of each such trigger. With no mounted root, a method does nothing.
  */
@@ -234,11 +250,11 @@ export class PopupHandle<Payload = unknown> {
   }
 
   /**
-   * Opens the popup for the trigger with this `id`. With no mounted root, it does nothing. Throws an
-   * error when the root has no trigger with this `id`.
+   * Opens the popup for the trigger with this `id`. With no mounted root, it does nothing, and a
+   * development build warns. Throws an error when the root has no trigger with this `id`.
    */
   open(triggerId: string) {
-    const root = rootOfHandle<Payload>(this);
+    const root = rootToOpen<Payload>(this, 'open');
     if (!root) return;
     const trigger = root.triggers.find((each) => each.id === triggerId);
     if (!trigger) {

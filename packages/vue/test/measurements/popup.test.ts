@@ -247,6 +247,27 @@ describe('the scroll of the page', () => {
   });
 });
 
+describe('a visually hidden element among the children of a box', () => {
+  test.each(['block', 'flex', 'grid', 'inline'])(
+    'with `position: fixed` and a size of 1 px changes no box of its siblings: display %s',
+    (display) => {
+      const box = html(
+        `<div style="display: ${display}; gap: 8px"><span>A</span><button>B</button><span>C</span></div>`,
+      ).firstElementChild!;
+      const boxes = () =>
+        [...box.children]
+          .filter((child) => child.localName !== 'i')
+          .map((child) => JSON.stringify(child.getBoundingClientRect()));
+      const before = boxes();
+      const hidden = document.createElement('i');
+      hidden.style.cssText =
+        'position: fixed; top: -1px; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; padding: 0; margin: 0';
+      box.querySelector('button')!.before(hidden);
+      expect(boxes()).toEqual(before);
+    },
+  );
+});
+
 describe('focus()', () => {
   test('with `preventScroll` scrolls nothing', () => {
     html(`<div style="height: 3000px"></div><input id="far" aria-label="Far">`);

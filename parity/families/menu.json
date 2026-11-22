@@ -351,7 +351,7 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menu/Menu.test.ts",
-      "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other. `Menu.hover.test.ts` tests a hover on the trigger while the popup leaves."
+      "reason": "`Menu.test.ts` tests the root through the parts: the open state with its reasons, `cancel()`, the template ref, `itemHighlighted`, the press and its drag, the keys and the typeahead, the focus, the items, the submenus, the modal state, the press of the right button outside, and a menu and a popover in each other. `Menu.hover.test.ts` tests a hover on the trigger while the popup leaves. `src/popup/owner.test.ts` tests the element that owns the popup of a menu and of a submenu."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
@@ -489,7 +489,7 @@
       "entry": "Portal",
       "prop": "render",
       "kind": "not-applicable",
-      "reason": "The portal is a `<Teleport>` and renders no element of its own, so it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
+      "reason": "The portal is a `<Teleport>`: its content goes to the target, and its only element in place is the visually hidden element that owns the popup. So it has no `render`, `as` and `element`. The developer writes an element in the portal when they need one."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",

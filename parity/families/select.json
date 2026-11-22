@@ -322,7 +322,7 @@
       "upstream": "packages/react/src/select/portal/SelectPortal.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the portal: the content renders at the first focus or open, and stays with the same elements. The portal renders no element of its own."
+      "reason": "`Select.test.ts` tests the portal: the content renders at the first focus or open, and stays with the same elements. The portal renders no element for `render` and `className`: its content goes to the target, and its only element in place is the visually hidden element that owns the popup."
     },
     {
       "upstream": "packages/react/src/select/positioner/SelectPositioner.test.tsx",
@@ -412,7 +412,7 @@
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Portal",
       "kind": "not-applicable",
-      "reason": "A `<Teleport>` moves the content, and `to` names its target. The portal has no element of its own, so it takes no `as` and has no `element` slot."
+      "reason": "A `<Teleport>` moves the content, and `to` names its target. The only element of the portal in place is the visually hidden element that owns the popup, so the portal takes no `as` and has no `element` slot."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePopupPortal } from '../popup/portal';
+import { usePopupPortal, usePortalOwner } from '../popup/portal';
 import { injectPopoverRoot, providePortal } from './root';
 import type { PopoverPortalProps } from './types';
 
@@ -13,10 +13,12 @@ defineSlots<{ default?(): unknown }>();
 
 const context = injectPopoverRoot('Portal');
 const portal = usePopupPortal(context.root, context.layer, props);
+const owner = usePortalOwner(context.root, context.layer, portal.sentinels);
 providePortal();
 </script>
 
 <template>
+  <span v-if="owner" :aria-owns="owner" :style="portal.sentinelStyle" />
   <Teleport
     v-if="portal.rendered.value"
     :to="portal.target.value"

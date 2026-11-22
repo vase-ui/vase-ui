@@ -68,7 +68,8 @@ export namespace Trigger {
 
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
- * Renders no element.
+ * Renders a visually hidden `<span>` in place while the moved popup is open and Tab can leave it.
+ * Its `aria-owns` names the popup, so a screen reader reads the popup after its trigger.
  */
 export const Portal: typeof PopoverPortal = PopoverPortal;
 export namespace Portal {
