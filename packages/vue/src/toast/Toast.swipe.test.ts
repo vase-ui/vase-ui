@@ -68,7 +68,9 @@ const down = (...ys: number[]): Point[] => ys.map((y) => ({ x: 0, y }));
 
 describe('the swipe', () => {
   test('a mouse drag of more than 40 px down closes the toast; it leaves with `data-swipe-direction` and the variables, and with no inline transform', async () => {
-    style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
+    // The leave lasts until a toast with the same id comes and ends it, so the case reads the toast
+    // that leaves.
+    style('.toast-leave-active { transition: opacity 100s } .toast-leave-to { opacity: 0 }');
     const { manager, root } = await mountToast();
     expect(root.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
     const release = await drag(root, down(20, 40, 60), false);

@@ -15,6 +15,7 @@ import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { holdPress, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
+import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -1460,13 +1461,26 @@ describe('more behaviors of the parts', () => {
     await waitFor(() => expect(active()).toBe(item('s1')));
     const sub = subPopup()!;
     const parent = popup()!;
+    // The parent stays until the submenu left, and then leaves. Each leave of 400 ms can end before
+    // the command ends, so the case reads the page when each popup starts to leave or goes.
+    const leaving = (element: Element) => element.classList.contains('menu-fade-leave-active');
+    const atSubmenuLeave = readWhen(
+      () => leaving(sub) || !sub.isConnected,
+      () => ({
+        submenu: leaving(sub),
+        parent: { connected: parent.isConnected, hidden: parent.hidden, leaving: leaving(parent) },
+      }),
+    );
+    const atParentLeave = readWhen(
+      () => leaving(parent) || !parent.isConnected,
+      () => ({ parent: leaving(parent), submenuConnected: sub.isConnected }),
+    );
     await userEvent.pointer([{ coords: { x: 2, y: 600 } }, '[MouseLeft]']);
-    await waitFor(() => expect(sub).toHaveClass('menu-fade-leave-active'));
-    // The parent stays until the submenu left, and then leaves.
-    expect(parent.isConnected).toBe(true);
-    expect(parent).not.toHaveAttribute('hidden');
-    await waitFor(() => expect(sub.isConnected).toBe(false));
-    await waitFor(() => expect(parent).toHaveClass('menu-fade-leave-active'));
+    expect(await atSubmenuLeave).toEqual({
+      submenu: true,
+      parent: { connected: true, hidden: false, leaving: false },
+    });
+    expect(await atParentLeave).toEqual({ parent: true, submenuConnected: false });
     await waitFor(() => expect(parent.isConnected).toBe(false));
   });
 });

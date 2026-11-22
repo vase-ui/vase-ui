@@ -8,6 +8,7 @@ import MeasureCapturedButton from '../fixtures/MeasureCapturedButton.vue';
 import MeasureIntlTexts from '../fixtures/MeasureIntlTexts.vue';
 import MeasureLeavingButton from '../fixtures/MeasureLeavingButton.vue';
 import MeasureRefusedSelect from '../fixtures/MeasureRefusedSelect.vue';
+import { finishAnimations } from '../animation';
 import { mount, renderOnServer } from '../render';
 
 let root: HTMLElement | undefined;
@@ -35,7 +36,8 @@ describe('a click on a button with tabindex="-1" in a table', () => {
   });
 });
 
-describe('a button that leaves in a <Transition> with a leave of 300 ms', () => {
+// The leave lasts until the case ends it, so the click and the Tab come during the leave.
+describe('a button that leaves in a <Transition>', () => {
   async function leave(inert: boolean) {
     const { root: container, exposed } = mount(MeasureLeavingButton);
     const leaving = container.querySelector<HTMLElement>('#leaving')!;
@@ -46,7 +48,9 @@ describe('a button that leaves in a <Transition> with a leave of 300 ms', () => 
     await userEvent.pointer({ coords: centerOf(leaving), keys: '[MouseLeft]' });
     container.querySelector<HTMLElement>('#before')!.focus();
     await userEvent.keyboard('{Tab}');
-    return { clicks: exposed.clicks as number, focused: document.activeElement?.id };
+    const result = { clicks: exposed.clicks as number, focused: document.activeElement?.id };
+    await finishAnimations(leaving);
+    return result;
   }
 
   test('takes a click and the focus of Tab while it leaves', async () => {

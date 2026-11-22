@@ -969,9 +969,14 @@ describe('the focus', () => {
       mount(DialogRadioReturn, { checked });
       const element = await opened();
       element.querySelector('input')!.focus();
+      // The leave of 300 ms can end before the command ends, so the case reads the popup at the
+      // focus.
+      const outside = document.querySelector<HTMLElement>('[aria-label="Outside"]')!;
+      let leavingAtFocus: boolean | undefined;
+      outside.addEventListener('focus', () => (leavingAtFocus = element.isConnected));
       await userEvent.keyboard('{Escape}');
-      await waitFor(() => expect(document.activeElement).toHaveAttribute('aria-label', 'Outside'));
-      expect(element.isConnected).toBe(true);
+      await waitFor(() => expect(outside).toHaveFocus());
+      expect(leavingAtFocus).toBe(true);
     },
   );
 

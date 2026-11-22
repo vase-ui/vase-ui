@@ -279,23 +279,40 @@ describe('the handle', () => {
 
 describe('in the DOM', () => {
   test('a popup and a backdrop in a <Transition> get the leave classes after a close, and the portal keeps them until each leave ends', async () => {
+    // The leaves of 100 ms and 250 ms can end before the command ends. So the case reads the page
+    // when the leave of the popup starts, and when it ends.
     const log: string[] = [];
+    const backdropsAtPopupEnd: (Element | null)[] = [];
     mount(PopoverInTransition, {
       root: { defaultOpen: true },
-      log: { add: (entry: string) => log.push(entry) },
+      log: {
+        add(entry: string) {
+          log.push(entry);
+          if (entry === 'after-leave') {
+            backdropsAtPopupEnd.push(document.querySelector('[data-testid="backdrop"]'));
+          }
+        },
+      },
     });
     const element = await opened();
+    const backdrop = byTestId('backdrop');
     await waitFor(() => expect(log).toEqual(['after-enter']));
+    const atLeave = readWhen(
+      () => element.classList.contains('pop-leave-active') || !element.isConnected,
+      () => ({
+        classes: [element.className, backdrop.className],
+        positioner: positioner(),
+      }),
+    );
     await userEvent.keyboard('{Escape}');
-    await nextTick();
-    expect(element.className).toContain('pop-leave-active');
-    expect(byTestId('backdrop').className).toContain('fade-leave-active');
-    expect(positioner()).not.toBe(null);
-    await waitFor(() => expect(log).toEqual(['after-enter', 'after-leave']));
-    expect(document.querySelector('[data-testid="backdrop"]')).not.toBe(null);
+    const { classes, positioner: positionerAtLeave } = await atLeave;
+    expect(classes[0]).toContain('pop-leave-active');
+    expect(classes[1]).toContain('fade-leave-active');
+    expect(positionerAtLeave).not.toBe(null);
     await waitFor(() =>
       expect(log).toEqual(['after-enter', 'after-leave', 'backdrop-after-leave']),
     );
+    expect(backdropsAtPopupEnd).toEqual([backdrop]);
     await waitFor(() => expect(positioner()).toBe(null));
   });
 

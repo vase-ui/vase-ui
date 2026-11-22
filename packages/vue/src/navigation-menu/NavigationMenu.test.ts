@@ -8,6 +8,7 @@ import NavigationMenuRouterLinks from '../../test/fixtures/NavigationMenuRouterL
 import NavigationMenuScoped from '../../test/fixtures/NavigationMenuScoped.vue';
 import NavigationMenuWithDialog from '../../test/fixtures/NavigationMenuWithDialog.vue';
 import TabsInNavigationMenu from '../../test/fixtures/TabsInNavigationMenu.vue';
+import { nextEvent } from '../../test/animation';
 import { movePointerThrough } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -1017,11 +1018,16 @@ describe('the size', () => {
     await mountMenu({ root: { defaultValue: 'one' }, popup: { class: 'sized' } });
     await shows('one');
     await placed();
-    await waitFor(() => expect(get('popup').getAnimations()).toEqual([]));
-    get('trigger-two').click();
-    await shows('two');
-    await frame();
-    expect(get('popup').getAnimations().length).toBeGreaterThan(0);
+    const popup = get('popup');
+    await waitFor(() => expect(popup.getAnimations()).toEqual([]));
+    // A stall of the page can end the transition of 80 ms before a later read. So the case waits
+    // for the events of the transition.
+    const end = (await nextEvent(popup, 'transitionend', {
+      after: 'transitionrun',
+      action: () => get('trigger-two').click(),
+    })) as TransitionEvent;
+    expect(end.target).toBe(popup);
+    expect(['width', 'height']).toContain(end.propertyName);
   });
 
   test('a close in the steps gives the kept popup no size at the next open', async () => {

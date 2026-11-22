@@ -8,6 +8,7 @@ import ToastElementSlots from '../../test/fixtures/ToastElementSlots.vue';
 import ToastLabelInTransition from '../../test/fixtures/ToastLabelInTransition.vue';
 import ToastPartAlone from '../../test/fixtures/ToastPartAlone.vue';
 import ToastParts from '../../test/fixtures/ToastParts.vue';
+import { finishAnimations } from '../../test/animation';
 import { expectNoAxeViolations } from '../../test/axe';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -512,7 +513,8 @@ describe('the stack', () => {
 
 describe('hover, focus and the window', () => {
   test('the stack stays expanded from a close under the pointer to the end of the leave', async () => {
-    style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
+    // The leave lasts until the case ends it, so the pointer leaves the stack during the leave.
+    style('.toast-leave-active { transition: opacity 100s } .toast-leave-to { opacity: 0 }');
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
     await userEvent.hover(toastRoot('b')!);
@@ -522,6 +524,7 @@ describe('hover, focus and the window', () => {
     await userEvent.pointer({ coords: { x: 0, y: 0 } });
     expect(leaving.isConnected).toBe(true);
     expect(viewport()).toHaveAttribute('data-expanded');
+    await finishAnimations(leaving);
     await waitFor(() => expect(leaving.isConnected).toBe(false));
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
   });

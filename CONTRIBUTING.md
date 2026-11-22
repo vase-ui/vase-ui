@@ -447,6 +447,7 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - `test/setup.ts` fails a test when Vue warns, or when a call to `console.warn` or `console.error` reaches the console. It moves the real pointer off the page after a test that put it there. It refuses a pointer lock, so a test that needs one mocks `requestPointerLock`. A test ends when `<body>` is empty: in a Vapor app, an element that leaves in a `<Transition>` stays after the unmount until its leave ends.
 - `takeReportedMessages()` of `test/reportedMessages.ts` takes the messages that a test expects. Assert the whole list that it returns.
 - `nextEvent` of `test/animation.ts` waits for an event of a transition or an animation. It gives up after 180 frames.
+- `finishAnimations` of `test/animation.ts` waits for an animation of an element, and ends each one with `finish()`.
 - `readAfter` of `test/wait.ts` reads a value some milliseconds after an event of an element. `readWhen` reads a value in the task of a change of the DOM, such as the start of a leave.
 - `expectNoAxeViolations` of `test/axe.ts` runs axe-core on an element.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. It imports `renderToString` from `vue/server-renderer`.
@@ -467,8 +468,8 @@ The helpers are in `packages/vue/test`. The types and the JSDoc of a helper are 
 - To assert that a timer did no work, call `await wait(0)` after the action. One frame is not a wait for a 0 ms timer.
 - Press Tab with `userEvent.keyboard('{Tab}')`. `userEvent.tab()` runs no script in the frame of the test before its key, so after a focus that a script moved into the frame, WebKit can send its `keydown` to the page of Vitest.
 - A command of `userEvent` can take some seconds on a busy machine. A check before the end of a delay starts at the event that starts the delay, with `readAfter`. An action that must come in a delay, a press window or a leave comes in the task where it starts, with `readWhen` or a listener of the event.
-- Do not poll a state that exists only while an animation runs. Record it in a `MutationObserver`. Then wait for a state that stays, such as `hidden` or the removal of the element.
-- Give a duration of 100 s to each animation that a case ends with its own call, such as `finish()`. A late frame can end a short animation before the part reads it.
+- Do not poll a state that exists only while an animation runs. Read the state of a short animation in the task where it starts: a slow command of `userEvent` or a stall of the page can end the animation before a later task. Record the state in a `MutationObserver`, for example with `readWhen`, or record the events of the animation. Then wait for a state that stays, such as `hidden` or the removal of the element.
+- Give a duration of 100 s to each animation that a case ends with its own call, such as `finish()`. A late frame can end a short animation before the part reads it. A command or a check that must come during an enter or a leave in a later task also needs this duration. End the animation with `finishAnimations`.
 - A case of a date part gives the part `today`, or a value and a time zone, so that it does not depend on the clock. Compute an expected text in a locale with the same locale and options as the part.
 - A server can have `Intl` data that give another layout than the browser. To test it, give the server render a `-u-hc-`, `-u-ca-`, `-u-fw-` or `-u-rg-` keyword in `locale`. Hydrate with the plain locale.
 - Do not write a generated id in a test. Read the id from the element or from the HTML.
