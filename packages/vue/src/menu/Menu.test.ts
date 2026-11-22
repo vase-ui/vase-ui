@@ -2604,7 +2604,7 @@ describe('more of the pointer', () => {
     await opened(subPopup);
     await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
     await new Promise((resolve) => setTimeout(resolve, 220));
-    await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))]);
+    await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))], 1);
     await userEvent.pointer([{ coords: centerOf(item('s1')) }, '[/MouseLeft]']);
     await closed();
     expect(clicks).toEqual(['s1']);

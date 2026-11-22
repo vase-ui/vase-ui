@@ -105,7 +105,8 @@ export interface ComboboxSharedRootProps<Item> {
   grid?: boolean | undefined;
   /**
    * The developer renders a window of the items. The arrow keys count on the filtered items, and
-   * the list sets no scroll position.
+   * the list sets no scroll position. In a `grid`, the mounted `Row` with the most items gives the
+   * number of columns.
    * @default false
    */
   virtualized?: boolean | undefined;

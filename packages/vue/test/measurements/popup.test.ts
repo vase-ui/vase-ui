@@ -302,6 +302,29 @@ describe('a press', () => {
     expect(log).toEqual(['pointerdown popup', 'pointerup outside', 'click div']);
   });
 
+  test('released outside the view gives the document `pointerup` in Chromium and WebKit; Firefox gives it a move with no button and no `pointerup`', async () => {
+    html(`<div id="box" style="width: 100px; height: 100px"></div>`);
+    const { release } = await holdPress(element('box'));
+    const log: string[] = [];
+    const listening = new AbortController();
+    onTestFinished(() => listening.abort());
+    for (const type of ['pointermove', 'pointerup']) {
+      document.addEventListener(
+        type,
+        (event) => {
+          if (type === 'pointerup' || (event as PointerEvent).buttons === 0) log.push(type);
+        },
+        { capture: true, signal: listening.signal },
+      );
+    }
+    const away = { x: innerWidth + 50, y: innerHeight / 2 };
+    await userEvent.pointer({ coords: away });
+    await release(away);
+    await nextFrame();
+    // Firefox gives one or two such moves.
+    expect([...new Set(log)]).toEqual([server.browser === 'firefox' ? 'pointermove' : 'pointerup']);
+  });
+
   test('of the right button gives no `click`', async () => {
     html(`<div id="box" style="width: 100px; height: 100px"></div>`);
     element('box').addEventListener('contextmenu', (event) => event.preventDefault());

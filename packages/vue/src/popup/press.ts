@@ -61,6 +61,16 @@ export function usePopupPress(
         mergeCleanups(
           addEventListener(doc, 'pointerup', listener, true),
           addEventListener(doc, 'pointercancel', listener, true),
+          // Firefox gives the page no `pointerup` for a release outside its view. It gives a move
+          // with no button down (test/measurements/popup.test.ts).
+          addEventListener(
+            doc,
+            'pointermove',
+            (event) => {
+              if (event.buttons === 0) listener(event);
+            },
+            true,
+          ),
         ),
       );
     },
@@ -78,7 +88,7 @@ export function usePopupPress(
   ) {
     // A trigger that left the DOM during the press ends the gesture.
     if (!trigger.isConnected) return;
-    if (event.type !== 'pointerup' || isReleaseAtPressPoint(press, event)) return;
+    if (event.type === 'pointercancel' || isReleaseAtPressPoint(press, event)) return;
     const elapsed = event.timeStamp - press.timeStamp;
     const path = event.composedPath().filter(isElement);
     const item = options.itemAt(path);
