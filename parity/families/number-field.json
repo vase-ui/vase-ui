@@ -268,7 +268,7 @@
       "title": "blocks submission when step mismatch occurs with default step",
       "kind": "replaced",
       "test": "packages/vue/src/number-field/NumberField.field.test.ts",
-      "reason": "With no `step`, the hidden input has `step=\"any\"`, so the form accepts each number. `:step=\"1\"` gives the constraint of Base UI. The case \"with min and step, the form refuses a number off the grid; with no step it accepts each number\" tests it."
+      "reason": "With no `step`, the hidden input has `step=\"any\"`, so the form accepts each number. `:step=\"1\"` gives the constraint of Base UI. The case \"VUE-202: with min and step, the form refuses a number off the grid; with no step it accepts each number\" tests it."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
