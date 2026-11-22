@@ -563,14 +563,29 @@ describe('highlight', () => {
     await waitFor(() => expect(highlighted()).toBe('Lemon'));
   });
 
-  test('typed text removes the highlight; with `autoHighlight` the first item has it', async () => {
+  test('typed text removes the highlight; with `autoHighlight` the first item has it, and an emptied text keeps it', async () => {
     await mountCombobox({ root: { autoHighlight: true } });
     await userEvent.click(input());
     await opened();
     await userEvent.keyboard('an');
     await waitFor(() => expect(highlighted()).toBe('Banana'));
-    await userEvent.keyboard('{Backspace}{Backspace}');
-    await waitFor(() => expect(highlighted()).toBe(undefined));
+    await userEvent.clear(input());
+    await waitFor(() => expect(itemNames().length).toBeGreaterThan(2));
+    expect(highlighted()).toBe('Banana');
+  });
+
+  test('with `autoHighlight`, an emptied text gives the highlight back to the selected item', async () => {
+    await mountCombobox({
+      inputInPopup: true,
+      root: { autoHighlight: true, defaultValue: 'Lemon' },
+    });
+    await userEvent.click(byTestId('trigger')!);
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(input()));
+    await userEvent.keyboard('a');
+    await waitFor(() => expect(highlighted()).toBe('Apple'));
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(highlighted()).toBe('Lemon'));
   });
 
   test('a move of the pointer highlights its item; a leave removes it', async () => {
@@ -1203,6 +1218,23 @@ describe('more rules', () => {
     input().focus();
     await waitFor(() => expect(highlighted()).toBe('Banana'));
   });
+
+  test.each([true, 'always'] as const)(
+    'with `autoHighlight` %s, items that come after the blur of an inline input get the highlight only with `always`',
+    async (autoHighlight) => {
+      const root = reactive<Props>({ items: [], autoHighlight, filter: null });
+      mount(ComboboxInline, { root });
+      await nextTick();
+      input().focus();
+      await userEvent.keyboard('32');
+      await nextTick();
+      document.getElementById('outside')!.focus();
+      root.items = ['32'];
+      await waitFor(() => expect(itemNames()).toEqual(['32']));
+      await nextTick();
+      expect(highlighted()).toBe(autoHighlight === 'always' ? '32' : undefined);
+    },
+  );
 
   test('a filter that makes the popup smaller keeps the side of its flip', async () => {
     await mountCombobox({ positioner: { sideOffset: 4 } });

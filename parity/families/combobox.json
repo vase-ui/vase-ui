@@ -21,13 +21,13 @@
       "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the chips: a press on `ChipRemove` removes its value, keeps the focus on the input and leaves `touched` false."
+      "reason": "`Combobox.test.ts` tests the chips: a press on `ChipRemove` removes its value, keeps the focus on the input and leaves `touched` false. `Combobox.states.test.ts` tests a remove button of a disabled or read-only root, and Space and Enter."
     },
     {
       "upstream": "packages/react/src/combobox/chip/ComboboxChip.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the keys of a chip: the arrow keys between the chips and to the input, and Backspace and Delete."
+      "reason": "`Combobox.test.ts` tests the keys of a chip: the arrow keys between the chips and to the input, and Backspace and Delete. `Combobox.states.test.ts` tests the chips of a disabled or read-only root: `data-disabled`, and no removal by a press or a key."
     },
     {
       "upstream": "packages/react/src/combobox/chips/ComboboxChips.test.tsx",
@@ -39,7 +39,7 @@
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the clear button: a press empties the text and the value and moves the focus to the input, and a kept button has `hidden` with no value."
+      "reason": "`Combobox.test.ts` tests the clear button: a press empties the text and the value and moves the focus to the input, and a kept button has `hidden` with no value. `Combobox.states.test.ts` tests the button of a disabled, a read-only and a multiple root."
     },
     {
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.test.tsx",
@@ -135,7 +135,7 @@
       "upstream": "packages/react/src/combobox/list/ComboboxList.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the list: its role, `aria-multiselectable`, `aria-readonly` and the `item` slot. The list takes no focus, so Enter is a key of the input."
+      "reason": "`Combobox.test.ts` tests the list: its role, `aria-multiselectable`, `aria-readonly` and the `item` slot. The list takes no focus, so Enter is a key of the input. `Combobox.states.test.ts` tests `aria-readonly` of the list of a read-only root."
     },
     {
       "upstream": "packages/react/src/combobox/popup/ComboboxPopup.test.tsx",
@@ -213,7 +213,7 @@
       "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/combobox/Combobox.test.ts",
-      "reason": "`Combobox.test.ts` tests the trigger: as the control and beside an input, the press, the keys and the typeahead. `items.test.ts` tests the typeahead of a collection, and `Combobox.form.test.ts` a required trigger in a field (BUG-1425)."
+      "reason": "`Combobox.test.ts` tests the trigger: as the control and beside an input, the press, the keys and the typeahead. `items.test.ts` tests the typeahead of a collection, and `Combobox.form.test.ts` a required trigger in a field (BUG-1425). `Combobox.states.test.ts` tests `data-placeholder` of the trigger and `data-list-empty`."
     },
     {
       "upstream": "packages/react/src/combobox/utils/handleInputPress.test.ts",

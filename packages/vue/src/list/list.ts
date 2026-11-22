@@ -37,8 +37,9 @@ export interface List {
   moved(event: PointerEvent): boolean;
   /**
    * Moves the highlight for a key. `true`: the list used the key and prevented its default. An
-   * arrow key moves from `from`, else from the highlighted item. With `from` `null`, it goes to the
-   * first or the last item.
+   * arrow key moves from `from`. With `from` `null`, it goes to the first or the last item. With no
+   * `from`, it moves from the highlighted item, or from the end of the list for a key on an element
+   * of the popup that is no item.
    */
   onKeydown(event: KeyboardEvent, from?: ListItem | null): boolean;
 }
@@ -193,6 +194,14 @@ export function useList(options: ListOptions): List {
     return undefined;
   }
 
+  // The element is an item or is in one. A walk up from the element reads no other item.
+  function inItem(element: Element, holder: Element) {
+    for (let node: Element | null = element; node && node !== holder; node = node.parentElement) {
+      if (added.has(node)) return true;
+    }
+    return false;
+  }
+
   function rtl() {
     const container = options.container();
     return !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
@@ -320,7 +329,22 @@ export function useList(options: ListOptions): List {
     onKeydown(event, from) {
       if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
       if (isComposing(event)) return false;
-      const start = from === undefined ? highlighted.value : from;
+      // A key on the list or on an element of the popup that is no item, such as a button beside
+      // the list, starts at the end of the list, also when that end has the highlight (Base UI). A
+      // key on the trigger of an open popup, or a key that a submenu gives to its parent, goes on
+      // from the highlight.
+      const holder = event.currentTarget as Element | null;
+      const container = options.container();
+      const active =
+        from === undefined && holder && container && holder.contains(container) && !virtual.value
+          ? activeElement(ownerDocument(holder))
+          : null;
+      const outsideItems =
+        !!active &&
+        !!holder?.contains(active) &&
+        (active !== holder || active === container) &&
+        !inItem(active, holder);
+      const start = outsideItems ? null : from === undefined ? highlighted.value : from;
       const current = start?.element.isConnected ? start : null;
       const target = (options.rows?.() ? rowTarget : lineTarget)(event.key, current);
       if (target === undefined) return false;

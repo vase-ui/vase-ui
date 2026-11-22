@@ -16,7 +16,8 @@ import { EMPTY_ARRAY } from '../common/empty';
 import { inDocumentOrder } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
-import { ownerWindow } from '../common/owner';
+import { ownerDocument, ownerWindow } from '../common/owner';
+import { activeElement } from '../common/shadowDom';
 import { fieldKey } from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { getFilter } from '../common/filter';
@@ -289,11 +290,13 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const valueModel = valueState.value;
   const value = computed(() => (source.mode === 'none' ? text.value : valueModel.value));
 
+  // Vue gives `null` to the prop of a `v-model` whose ref is `null`: a controlled empty text.
+  const givenText = () => ((source.text as string | null | undefined) === null ? '' : source.text);
   const followsLabel = () =>
-    source.mode === 'single' && source.text === undefined && source.defaultText === undefined;
+    source.mode === 'single' && givenText() === undefined && source.defaultText === undefined;
   const firstText =
-    source.text ?? source.defaultText ?? (source.mode === 'single' ? labelOf(firstValue) : '');
-  const textState = useModel(() => source.text, firstText);
+    givenText() ?? source.defaultText ?? (source.mode === 'single' ? labelOf(firstValue) : '');
+  const textState = useModel(givenText, firstText);
   const text = textState.value;
 
   const hasValue = computed(() => {
@@ -318,6 +321,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   });
   // The user typed text after the open.
   const typed = shallowRef(false);
+  // With `autoHighlight`, the first item that mounts after the text gets the highlight.
+  const highlightFirst = shallowRef(false);
   // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
   // the text of its input until the next open (test/measurements/combobox.test.ts, "a kept popup
   // that closes").
@@ -489,8 +494,10 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     keepOnLeave: () => source.keepHighlight,
     rows: () => source.grid,
     onHighlight(item, reason, event) {
-      // An inline completion shows the text of an item that a key highlights.
-      const completes = source.completion === 'both' || source.completion === 'inline';
+      // An inline completion shows the text of an item that a key highlights. A read-only root
+      // keeps its text.
+      const completes =
+        !source.readonly && (source.completion === 'both' || source.completion === 'inline');
       completion.value = completes && item && reason === 'keyboard' ? labelOf(valueOf(item)) : null;
       if (item) emitHighlight(valueOf(item), indexOf(item), reason, event);
       else if (!source.virtualized || reason !== 'none')
@@ -534,6 +541,14 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     return !!selected;
   }
 
+  // A root that turns read-only drops the inline text of the highlight.
+  watch(
+    () => source.readonly,
+    (readonly) => {
+      if (readonly) completion.value = null;
+    },
+  );
+
   // The key that opened the popup, for the highlight after the items mounted.
   let openKey: KeyboardEvent | undefined;
   watch(
@@ -541,6 +556,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     (open) => {
       typed.value = false;
       completion.value = null;
+      highlightFirst.value = false;
       const key = openKey;
       openKey = undefined;
       if (!open) {
@@ -610,6 +626,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (next === text.value) return true;
     emit.text(next, details);
     if (details.isCanceled) return false;
+    // A new text cancels the highlight of a later first item.
+    highlightFirst.value = false;
     textState.setOwn(next);
     emit.updateText(next);
     // The field reads the validity of the form input after its render.
@@ -683,21 +701,41 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   function onTyped(typedText: string, event: Event) {
     typed.value = true;
     completion.value = null;
-    list.highlight(null, 'none', event);
+    const hasText = typedText.trim() !== '';
+    // With `autoHighlight`, an emptied text gives the highlight to the selected item, else keeps
+    // the highlighted item (Base UI).
+    const previous = !hasText && source.autoHighlight === true ? list.highlighted : null;
+    if (!previous) list.highlight(null, 'none', event);
     // Each typed text shows the list from its top.
     const first = list.items()[0]?.element ?? listElement.value;
     if (!source.virtualized && first) resetScroll(first);
-    const hasText = typedText.trim() !== '';
     if (hasText && !disabled.value && !source.readonly) request(true, 'input-change', event);
     void nextTick(() => {
       if (!expanded.value) return;
       if (hasText ? !!source.autoHighlight : source.autoHighlight === 'always') {
-        list.highlight(list.items()[0] ?? null, 'none');
+        const item = list.items()[0];
+        if (item) list.highlight(item, 'none');
+        // Items that come later, such as the results of a request, get the highlight.
+        else highlightFirst.value = true;
       } else if (!hasText) {
         highlightSelected();
       }
     });
   }
+
+  watch(
+    () => (highlightFirst.value ? list.items()[0] : undefined),
+    (item) => {
+      if (!item) return;
+      highlightFirst.value = false;
+      // An inline list has a highlight only while its input has the focus, as in ComboboxInput.
+      const input = control.value;
+      const away = !!input && activeElement(ownerDocument(input)) !== input;
+      if (source.inline && source.autoHighlight !== 'always' && away) return;
+      list.highlight(item, 'none');
+    },
+    { flush: 'post' },
+  );
 
   function resetScroll(from: Element) {
     const popup = root.popup;

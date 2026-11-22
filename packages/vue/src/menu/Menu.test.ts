@@ -1427,6 +1427,24 @@ describe('more behaviors of the parts', () => {
     expect(active()).toBe(item('a'));
   });
 
+  test('an arrow key that the submenu passes to a horizontal parent goes on from the trigger of the submenu', async () => {
+    const { trigger } = await mountMenu({
+      root: { orientation: 'horizontal' },
+      submenu: { trigger: { delay: 0 } },
+      sibling: {},
+    });
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}');
+    expect(active()).toBe(item('sub'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{ArrowRight}');
+    await closed(subPopup);
+    expect(active()).toBe(item('sibling'));
+  });
+
   test('a pointer move to another item closes the open submenu with `sibling-open`, and a move back to its trigger keeps it', async () => {
     const sub: string[] = [];
     const { trigger } = await mountMenu({

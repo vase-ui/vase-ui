@@ -8,7 +8,7 @@ type Attrs = Record<string, unknown>;
 
 // A select in a `Field` in a native form, in a `<fieldset>`. With `vaseForm`, the form is
 // `Form`. With `noField`, the select is in the form with no field. `show.b: false` removes the item
-// `b` of the field.
+// `b` of the field. `items` replaces the items `a` and `b`.
 defineProps({
   form: Object as PropType<Attrs>,
   show: { type: Object as PropType<{ b?: boolean }>, default: () => ({}) },
@@ -18,6 +18,7 @@ defineProps({
   fieldset: Object as PropType<Attrs>,
   noField: Boolean,
   vaseForm: Boolean,
+  items: Array as PropType<{ value: unknown; text: string }[]>,
 });
 </script>
 
@@ -29,8 +30,19 @@ defineProps({
         <Select.Portal>
           <Select.Positioner :align-item-with-trigger="false">
             <Select.Popup data-testid="popup">
-              <Select.Item value="a" data-testid="item-a">A</Select.Item>
-              <Select.Item :value="'b\nline'" data-testid="item-b">B</Select.Item>
+              <template v-if="items">
+                <Select.Item
+                  v-for="(item, index) in items"
+                  :key="index"
+                  :value="item.value"
+                  :data-testid="`item-${index}`"
+                  >{{ item.text }}</Select.Item
+                >
+              </template>
+              <template v-else>
+                <Select.Item value="a" data-testid="item-a">A</Select.Item>
+                <Select.Item :value="'b\nline'" data-testid="item-b">B</Select.Item>
+              </template>
             </Select.Popup>
           </Select.Positioner>
         </Select.Portal>
@@ -42,10 +54,21 @@ defineProps({
           <Select.Portal>
             <Select.Positioner :align-item-with-trigger="false">
               <Select.Popup data-testid="popup">
-                <Select.Item value="a" data-testid="item-a">A</Select.Item>
-                <Select.Item v-if="show.b !== false" :value="'b\nline'" data-testid="item-b"
-                  >B</Select.Item
-                >
+                <template v-if="items">
+                  <Select.Item
+                    v-for="(item, index) in items"
+                    :key="index"
+                    :value="item.value"
+                    :data-testid="`item-${index}`"
+                    >{{ item.text }}</Select.Item
+                  >
+                </template>
+                <template v-else>
+                  <Select.Item value="a" data-testid="item-a">A</Select.Item>
+                  <Select.Item v-if="show.b !== false" :value="'b\nline'" data-testid="item-b"
+                    >B</Select.Item
+                  >
+                </template>
               </Select.Popup>
             </Select.Positioner>
           </Select.Portal>
