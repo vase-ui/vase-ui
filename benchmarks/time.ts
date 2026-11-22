@@ -150,8 +150,8 @@ async function runSteps(
 }
 
 /**
- * The text of a console message. For an error, Firefox gives only the text `Error`, so the text
- * comes from the error in the page. A page that is closed gives the text of Playwright.
+ * The text of a console message. For an `Error` object, Firefox gives only the text `Error`, so the
+ * text comes from the object in the page. A page that is closed gives the text of Playwright.
  */
 async function textOf(message: ConsoleMessage): Promise<string> {
   const error = await message
@@ -277,7 +277,8 @@ async function main(): Promise<void> {
     preview: {
       host: '127.0.0.1',
       port: 0,
-      // A page with cross-origin isolation reads `performance.now()` in steps of 5 microseconds.
+      // With cross-origin isolation, `performance.now()` has steps of 5 microseconds in Chromium and
+      // 20 in Firefox and WebKit. Without it, the steps are 100 and 1,000.
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin',
         'Cross-Origin-Embedder-Policy': 'require-corp',
