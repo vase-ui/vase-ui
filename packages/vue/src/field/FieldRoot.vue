@@ -89,8 +89,9 @@ const firstValue = shallowRef<unknown>();
 let hasValue = false;
 const ownTouched = ref(false);
 const result = shallowRef<Result | null>(null);
-// The required rule: `valueMissing` counts after the field was dirty, a submit, or `validate()`,
-// and for some controls after a leave in `blur` mode.
+// The required rule: `valueMissing` counts while the field is dirty, also by the `dirty` prop. It
+// also counts after the field was dirty, a submit or `validate()`, and for some controls after a
+// leave in `blur` mode.
 let valueMissingCounts = false;
 // The number of the last validation. The result of an earlier one changes nothing.
 let validation = 0;
@@ -155,8 +156,8 @@ const formField: FormField = {
   get element() {
     return control.value?.focusElement ?? validationInput();
   },
-  get value() {
-    return control.value?.formValue ? control.value.formValue() : value.value;
+  valueIn(form) {
+    return control.value?.formValue ? control.value.formValue(form) : value.value;
   },
   get disabled() {
     return isDisabled.value || !!control.value?.disabled;
@@ -349,7 +350,7 @@ function validateNow() {
 function nativeFailure(el: NativeControl): Result | null {
   if (el.validity.valid) return null;
   const failures = failuresOf(el);
-  if (onlyValueMissing(failures) && !valueMissingCounts) return null;
+  if (onlyValueMissing(failures) && !valueMissingCounts && !state.value.dirty) return null;
   return { failures, errors: [el.validationMessage], ofValidate: false };
 }
 
@@ -385,10 +386,14 @@ function applyResult(output: FieldValidateResult) {
 
 /**
  * The input whose constraint validation stands for the control: the first one in the document
- * that fails, or else the first one. A disabled input does not count.
+ * that fails, or else the first one. A disabled input and an input that another form owns do not
+ * count.
  */
 function validationInput() {
-  const inputs = (control.value?.inputs ?? []).filter((input) => input.willValidate);
+  const owner = form?.element;
+  const inputs = (control.value?.inputs ?? []).filter(
+    (input) => input.willValidate && (!owner || input.form === owner),
+  );
   inputs.sort(byDocumentOrder);
   return inputs.find((input) => !input.validity.valid) ?? inputs[0];
 }

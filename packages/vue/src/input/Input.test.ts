@@ -157,6 +157,23 @@ describe('value', () => {
     expect(log).toEqual(emitsFor('a', 'a'));
   });
 
+  test('keeps the bad input of a number input and a space at the end of an email input', async () => {
+    const number = vModel('');
+    const email = vModel('');
+    Object.assign(number, { type: 'number' });
+    Object.assign(email, { type: 'email' });
+    const [numberInput, emailInput] = mountInputs(number, email).inputs;
+    numberInput!.focus();
+    await userEvent.keyboard('e');
+    await nextTick();
+    expect(numberInput!.validity.badInput).toBe(true);
+    emailInput!.focus();
+    await userEvent.keyboard('a ');
+    await nextTick();
+    await userEvent.keyboard('b');
+    expect(email.modelValue).toBe('a b');
+  });
+
   test('an uncontrolled input starts at defaultValue, or empty, and keeps the text', async () => {
     const [withDefault, empty] = mountInputs({ defaultValue: 'first' }, {}).inputs;
     expect(withDefault).toHaveValue('first');

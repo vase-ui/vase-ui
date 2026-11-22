@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { RadioGroupChangeEventDetails } from '@vase-ui/vue/radio-group';
@@ -65,6 +65,11 @@ describe('the group', () => {
     expect(radio('ssd').matches(':disabled')).toBe(true);
     expect(radio('ssd')).toHaveAttribute('data-readonly');
     expect(radio('ssd')).not.toHaveAttribute('aria-readonly');
+  });
+
+  test('a role of the developer wins over the role of the group', async () => {
+    const { exposed } = await mountGroup({ group: { role: 'listbox' }, items: choices('ssd') });
+    expect(exposed.group.element).toHaveAttribute('role', 'listbox');
   });
 });
 
@@ -178,6 +183,14 @@ describe('the keyboard', () => {
       expect(log.filter((entry) => entry.startsWith('valueChange'))).toHaveLength(4);
     },
   );
+
+  test('with Shift, an arrow key moves the focus and selects, as with no modifier', async () => {
+    const { radio, checked, focused } = await mountGroup({ items: choices('ssd', 'hdd') });
+    radio('ssd').focus();
+    await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}');
+    expect(focused()).toBe('hdd');
+    expect(checked()).toBe('hdd');
+  });
 
   test('with Ctrl, Alt or Meta, an arrow key selects nothing and keeps the focus in each browser', async () => {
     const log: string[] = [];
@@ -610,6 +623,57 @@ describe('in a field', () => {
     radio('ssd').focus();
     await userEvent.keyboard('{ArrowDown}');
     expect(checked()).toBe('nvme');
+  });
+
+  test('a cancel at a click or at an arrow key gives the field no state', async () => {
+    const { root, radio, focused } = await mountGroup({
+      group: {
+        onValueChange: (_value: unknown, details: RadioGroupChangeEventDetails) => details.cancel(),
+      },
+      items: choices('ssd', 'hdd'),
+      field: {},
+    });
+    const field = root.querySelector('form > div')!;
+    radio('ssd').click();
+    await settle();
+    radio('ssd').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await settle();
+    expect(focused()).toBe('hdd');
+    expect(root.querySelector('input:checked')).toBeNull();
+    expect(dataAttributes(field)).toEqual([]);
+  });
+
+  test('in change mode, a change of modelValue by the parent validates', async () => {
+    const validated: unknown[] = [];
+    const group = reactive<Record<string, unknown>>({ modelValue: 'ssd' });
+    const { root } = await mountGroup({
+      group,
+      items: choices('ssd', 'hdd'),
+      field: {
+        validationMode: 'change',
+        validate: (value: unknown) => (validated.push(value), value === 'hdd' ? 'No.' : null),
+      },
+    });
+    group.modelValue = 'hdd';
+    await settle();
+    expect(validated).toEqual(['hdd']);
+    expect(root.querySelector('[role=radiogroup]')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('a checked radio that another form owns gives a Form no value', async () => {
+    const other = document.body.appendChild(document.createElement('form'));
+    other.id = 'other-form';
+    onTestFinished(() => other.remove());
+    const values: unknown[] = [];
+    const { submit } = await mountGroup({
+      group: { defaultValue: 'ssd' },
+      items: [{ key: 'ssd', attrs: { form: 'other-form' } }, { key: 'hdd' }],
+      field: { name: 'storage' },
+      form: { onSubmit: (_event: SubmitEvent, given: unknown) => values.push(given) },
+    });
+    submit();
+    expect(values).toEqual([{ storage: null }]);
   });
 });
 

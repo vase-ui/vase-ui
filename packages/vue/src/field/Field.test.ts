@@ -6,6 +6,7 @@ import { vModel } from '../../test/attrs';
 import { dataAttributes, recordValidate, leave } from '../../test/field';
 import ErrorInTransition from '../../test/fixtures/ErrorInTransition.vue';
 import FieldElementIds from '../../test/fixtures/FieldElementIds.vue';
+import FieldGroupOrInput from '../../test/fixtures/FieldGroupOrInput.vue';
 import FieldPartsReplaced from '../../test/fixtures/FieldPartsReplaced.vue';
 import FieldSlots from '../../test/fixtures/FieldSlots.vue';
 import FieldsInForm from '../../test/fixtures/FieldsInForm.vue';
@@ -88,6 +89,19 @@ describe('the parts', () => {
     await typeAtEnd(root.querySelector('input')!, 'ab');
     await nextTick();
     expect(values()).toEqual({ value: 'ab', initialValue: '' });
+  });
+
+  test('validate() of the template ref runs validate in a field with no control', async () => {
+    const validated: unknown[] = [];
+    const { exposed, field, error } = await mountField({
+      root: { validate: (value: unknown) => (validated.push(value), 'Pick a name.') },
+      shown: { input: false },
+    });
+    exposed.field.validate();
+    await nextTick();
+    expect(validated).toEqual([undefined]);
+    expect(field).toHaveAttribute('data-invalid');
+    expect(error()).toHaveTextContent('Pick a name.');
   });
 
   test('validate() of the template ref validates at once, and each part has element', async () => {
@@ -249,6 +263,17 @@ describe('the label', () => {
     expect(input).toHaveFocus();
   });
 
+  test('the control loses aria-labelledby when the label that is not a <label> unmounts', async () => {
+    const scene = reactive({ label: true });
+    const { root } = mount(FieldPartsReplaced, { scene });
+    await nextTick();
+    const input = root.querySelector('input')!;
+    expect(input).toHaveAttribute('aria-labelledby', root.querySelector('span')!.id);
+    scene.label = false;
+    await nextTick();
+    expect(input).not.toHaveAttribute('aria-labelledby');
+  });
+
   test('VUE-118: the element slot gives the ids, and the label, the control and the description follow them', async () => {
     const { root } = mount(FieldElementIds);
     await nextTick();
@@ -259,6 +284,18 @@ describe('the label', () => {
     expect(input).toHaveAttribute('aria-describedby', 'own-description');
     await userEvent.click(root.querySelector('span')!);
     expect(input).toHaveFocus();
+  });
+
+  test('has no for while a group is the control, and names the input that takes the place of the group', async () => {
+    const scene = reactive({ group: true });
+    const { root } = mount(FieldGroupOrInput, { scene });
+    await nextTick();
+    const label = root.querySelector('label')!;
+    expect(label).not.toHaveAttribute('for');
+    expect(root.querySelector('[role=group]')).toHaveAttribute('aria-labelledby', label.id);
+    scene.group = false;
+    await settle();
+    expect(label).toHaveAttribute('for', root.querySelector('input')!.id);
   });
 
   test('names a control that is inside it', async () => {
@@ -491,6 +528,17 @@ describe('the required rule', () => {
     expect(parts.error()).toHaveTextContent(parts.input.validationMessage);
   });
 
+  test('an empty required control fails while the dirty prop is true', async () => {
+    const parts = await mountField({
+      root: { dirty: true, validationMode: 'blur' },
+      input: { required: true },
+    });
+    parts.input.focus();
+    await leave(parts.input);
+    expect(parts.field).toHaveAttribute('data-invalid');
+    expect(parts.error()).toHaveTextContent(parts.input.validationMessage);
+  });
+
   test('each other native failure counts at once', async () => {
     const parts = await mountField({
       root: { validationMode: 'blur' },
@@ -523,6 +571,28 @@ describe('edits while the field is invalid', () => {
     expect(parts.field).toHaveAttribute('data-valid');
     expect(parts.error()).toBeNull();
     expect(validated).toEqual([]);
+  });
+
+  test('an edit that gives a number input badInput and valueMissing keeps the error of the last validation', async () => {
+    const parts = await mountField({
+      root: { validationMode: 'blur', validate: () => 'Taken.' },
+      input: { type: 'number', required: true },
+      errors: [{}, { match: 'valueMissing' }, { match: 'badInput' }],
+    });
+    const shown = () =>
+      [...parts.field.querySelectorAll(':scope > div')].map((error) => error.textContent);
+    parts.input.focus();
+    await userEvent.keyboard('1');
+    await leave(parts.input);
+    expect(shown()).toEqual(['Taken.']);
+    parts.input.focus();
+    parts.input.select();
+    await userEvent.keyboard('e');
+    await nextTick();
+    expect(parts.input.validity.badInput).toBe(true);
+    expect(parts.input.validity.valueMissing).toBe(true);
+    expect(parts.field).toHaveAttribute('data-invalid');
+    expect(shown()).toEqual(['Taken.']);
   });
 
   test('an edit takes back the message of validate from the element', async () => {
@@ -570,6 +640,36 @@ describe('debounce and async validation', () => {
     root.querySelector('form')!.reset();
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(validated).toEqual([]);
+  });
+
+  test('a promise that rejects keeps the earlier error; a result that arrives after the control unmounts changes nothing', async () => {
+    const answers: { resolve(value: string | null): void; reject(reason: unknown): void }[] = [];
+    const shown = reactive({ input: true });
+    const parts = await mountField({
+      root: {
+        validationMode: 'change',
+        validate: () =>
+          new Promise<string | null>((resolve, reject) => answers.push({ resolve, reject })),
+      },
+      shown,
+    });
+    await typeAtEnd(parts.input, 'a');
+    await nextTick();
+    answers[0]!.resolve('Taken.');
+    await settle();
+    await typeAtEnd(parts.input, 'b');
+    await nextTick();
+    answers[1]!.reject(new Error('The network failed.'));
+    await settle();
+    expect(parts.field).toHaveAttribute('data-invalid');
+    expect(parts.error()).toHaveTextContent('Taken.');
+    await typeAtEnd(parts.input, 'c');
+    await nextTick();
+    shown.input = false;
+    await nextTick();
+    answers[2]!.resolve(null);
+    await settle();
+    expect(parts.field).toHaveAttribute('data-invalid');
   });
 
   test('a pending promise makes the field neutral, or keeps an earlier error; only the last result counts', async () => {

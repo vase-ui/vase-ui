@@ -27,6 +27,9 @@ const submitted = ref(false);
 let focusAtAnswer = false;
 
 provide(formKey, {
+  get element() {
+    return element.value;
+  },
   get validationMode() {
     return props.validationMode;
   },
@@ -92,8 +95,10 @@ function fieldsOfForm() {
 /** The value of each named field that is not disabled. With two fields of one name, the last wins. */
 function values() {
   const result: FormValues = {};
+  const form = element.value;
+  if (!form) return result;
   for (const field of fieldsOfForm()) {
-    if (field.name !== undefined && !field.disabled) result[field.name] = field.value;
+    if (field.name !== undefined && !field.disabled) result[field.name] = field.valueIn(form);
   }
   return result;
 }

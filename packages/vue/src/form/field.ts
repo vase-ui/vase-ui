@@ -13,8 +13,8 @@ export interface FormField {
   readonly name: string | undefined;
   /** The element that gets the focus when the form finds the field invalid. */
   readonly element: HTMLElement | undefined;
-  /** The value of the field in the values of the form. */
-  readonly value: unknown;
+  /** The value of the field in the values of `form`. */
+  valueIn(form: HTMLFormElement): unknown;
   /** A disabled field has no entry in the values of the form. */
   readonly disabled: boolean;
   /** Validates the field at once. It does not wait for an async `validate`. */
@@ -24,6 +24,8 @@ export interface FormField {
 
 /** What a form gives to its fields. The properties are reactive. */
 export interface FormForField {
+  /** The `<form>` element. A field reads no input that another form owns. */
+  readonly element: HTMLFormElement | null;
   readonly validationMode: FormValidationMode;
   /** The form had a submit, also a blocked one, since its mount or its last native reset. */
   readonly submitted: boolean;

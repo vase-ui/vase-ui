@@ -59,6 +59,28 @@ describe('a native input with :value', () => {
     input.value = 'abcdef';
     expect(input.selectionStart).toBe(2);
   });
+
+  test('loses the text that its value does not hold when the same value is written again', async () => {
+    const [number, email, kept] = html(
+      '<input type="number"><input type="email"><input type="email">',
+    ).querySelectorAll('input');
+    number!.focus();
+    await userEvent.keyboard('e');
+    expect([number!.value, number!.validity.badInput]).toEqual(['', true]);
+    number!.value = '';
+    expect(number!.validity.badInput).toBe(false);
+    for (const input of [email!, kept!]) {
+      input.focus();
+      await userEvent.keyboard('a ');
+    }
+    expect([email!.value, kept!.value]).toEqual(['a', 'a']);
+    email!.value = 'a';
+    for (const input of [email!, kept!]) {
+      input.focus();
+      await userEvent.keyboard('b');
+    }
+    expect([email!.value, kept!.value]).toEqual(['ab', 'a b']);
+  });
 });
 
 describe('a native reset', () => {

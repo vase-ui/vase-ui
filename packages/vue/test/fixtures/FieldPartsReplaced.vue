@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import type { PropType } from 'vue';
 import { Field } from '../../src/field';
 import { Input } from '../../src/input';
 
-defineProps({ root: Object });
+// With `scene.label` of `false`, the field has no label.
+defineProps({
+  root: Object,
+  scene: { type: Object as PropType<{ label: boolean }>, default: () => ({ label: true }) },
+});
 </script>
 
 <template>
   <Field.Root v-bind="root">
     <template #element="{ props, elementRef }">
       <section v-bind="props" :ref="elementRef">
-        <Field.Label>
+        <Field.Label v-if="scene.label">
           <template #element="{ props: labelProps, elementRef: labelRef }">
             <span v-bind="labelProps" :ref="labelRef">Name</span>
           </template>

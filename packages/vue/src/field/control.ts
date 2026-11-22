@@ -30,8 +30,11 @@ export interface FieldControl {
    * first element of `inputs` that fails, or else the first one.
    */
   readonly focusElement?: HTMLElement | undefined;
-  /** The value in the values of a form, when it is not the value that `setValue` gave. */
-  formValue?(): unknown;
+  /**
+   * The value in the values of `form`, when it is not the value that `setValue` gave. A group
+   * gives only what its inputs give that form.
+   */
+  formValue?(form: HTMLFormElement): unknown;
   /** Two values of the control are the same, when the control compares its values in its own way. */
   sameValue?(a: unknown, b: unknown): boolean;
   /**

@@ -77,9 +77,12 @@ function elementProps() {
 }
 
 // The binding of `value` writes only a value that changed. When the parent refuses a value, or a
-// listener cancels an edit, the element must show the value again.
+// listener cancels an edit, the element must show the value again. A write of the same value
+// removes text that the value does not hold, such as the bad input of a number input
+// (test/measurements/input.test.ts).
 function showValue() {
-  if (element.value) element.value.value = value.value;
+  const el = element.value;
+  if (el && el.value !== value.value) el.value = value.value;
 }
 
 function changeValue(next: string) {

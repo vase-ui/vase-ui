@@ -53,9 +53,14 @@ const { field, labelledBy, onFocusout } = useFieldGroup({
   inputs: () => radios.map((radio) => radio.element),
   // The focus goes to the tab stop, as the Tab key gives it.
   focusElement: () => tabStop.value?.element,
-  // A form gets the value of the checked radio that is mounted and enabled.
-  formValue: () =>
-    radios.some((radio) => radio.value === value.value && !radio.disabled) ? value.value : null,
+  // A form gets the value of the checked radio that is mounted, enabled and in that form, as the
+  // form data has it.
+  formValue: (form) =>
+    radios.some(
+      (radio) => radio.value === value.value && !radio.disabled && radio.element.form === form,
+    )
+      ? value.value
+      : null,
   // The user picks a radio, so a group with no value is never dirty (BUG-1425).
   countsMissingAtLeave: true,
 });
