@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/menubar/Menubar.test.ts",
-      "reason": "`Menubar.test.ts` tests the bar: its role and its one tab stop, the keys of the bar, a disabled trigger, the open of a menu with the key across the bar, the move to another menu at a pointer move, at a tap and at an arrow key, the outside press, and the modal state."
+      "reason": "`Menubar.test.ts` tests the bar: its role and its one tab stop, the keys of the bar, a disabled trigger, the open of a menu with the key across the bar, the move to another menu at a pointer move, at a tap and at an arrow key, the outside press, and the modal state. The cases that Base UI runs in three forms of the bar run in the same three forms: a root around each trigger, one root around all the triggers, and one root outside the bar whose handle each trigger has."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menubar/types.md",

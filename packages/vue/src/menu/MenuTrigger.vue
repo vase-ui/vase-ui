@@ -31,7 +31,7 @@ const context = useTriggerMenu(() => props.handle as MenuHandle | undefined);
 const root = () => context.value?.root ?? null;
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 const bar = inject(menubarKey, null);
-const isDisabled = () => props.disabled || !!context.value?.disabled;
+const isDisabled = () => props.disabled || !!context.value?.disabled || !!bar?.disabled;
 
 const hover = usePopupHover(root, {
   trigger: element,
@@ -167,7 +167,9 @@ function relayToInput(menu: MenuContext, event: KeyboardEvent) {
 // While a menu of the bar is open, the pointer and the focus move it to another trigger.
 function otherMenuOpen() {
   const open = bar?.openMenu;
-  return !!open && open !== context.value && !trigger.button.disabled.value;
+  return (
+    !!open && (open !== context.value || !trigger.active.value) && !trigger.button.disabled.value
+  );
 }
 
 function onBarPointermove(event: PointerEvent) {
@@ -190,7 +192,7 @@ function elementProps() {
       ? menu.ids.popup
       : (menu?.ids.list ?? menu?.ids.popup)
     : undefined;
-  const own: Record<string, unknown> = {
+  let own: Record<string, unknown> = {
     id: elementId.value,
     'aria-haspopup': menu?.filter ? 'dialog' : 'menu',
     'aria-expanded': open ? 'true' : 'false',
@@ -203,14 +205,12 @@ function elementProps() {
   };
   if (bar && barItem) {
     const { tabindex: _, 'data-highlighted': __, ...listAttributes } = barItem.attributes.value;
-    Object.assign(
-      own,
-      mergeProps(listAttributes, { onPointermove: onBarPointermove, onFocus: onBarFocus }),
-      {
-        role: 'menuitem',
-        tabindex: bar.tabIndex(element.value),
-      },
-    );
+    own = mergeProps(own, listAttributes, {
+      role: 'menuitem',
+      tabindex: bar.tabIndex(element.value),
+      onPointermove: onBarPointermove,
+      onFocus: onBarFocus,
+    });
   }
   return trigger.button.mergeAttributes(
     mergeProps(props.openOnHover ? hover.listeners : {}, own),
