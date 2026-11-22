@@ -537,6 +537,29 @@ describe('press, drag, release', () => {
     expect(popup()).not.toBe(null);
   });
 
+  test('a press that closes a menu that a hover opened gives the trigger the focus as a button does', async () => {
+    const { trigger } = await mountMenu({ trigger: { openOnHover: true, delay: 0 } });
+    await userEvent.hover(trigger);
+    await opened();
+    // A press closes a menu that a hover opened 500 ms or more before it.
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await closed();
+    const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+    expect(active()).toBe(webkitOnMac ? document.body : trigger);
+  });
+
+  test('a press closes the menu, and the trigger keeps the focus', async () => {
+    const { trigger } = await mountMenu();
+    await userEvent.click(trigger);
+    const element = await opened();
+    await waitFor(() => expect(active()).toBe(element));
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await closed();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(active()).toBe(trigger);
+  });
+
   test('a press opens the menu that the parent holds, and the popup keeps the focus', async () => {
     const root = reactive<Props>({ open: false });
     root['onUpdate:open'] = (open: boolean) => (root.open = open);

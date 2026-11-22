@@ -79,15 +79,13 @@ function inputElement() {
 }
 
 // A press of the main mouse button acts at `pointerdown`, so the user can drag to an item.
-let closedAtPress = false;
 function onPointerdown(event: PointerEvent) {
-  closedAtPress = false;
+  const closedAtPress = !root.open;
+  if (isControl.value) trigger.onPointerdown(event);
   if (isDisabled.value || event.pointerType !== 'mouse' || event.button !== 0) return;
   // The `click` of a press of a screen reader acts, as for a key.
   if (isVirtualPress(event)) return;
-  closedAtPress = !root.open;
-  if (isControl.value) trigger.onPointerdown(event);
-  else pressBesideInput(event);
+  if (!isControl.value) pressBesideInput(event);
   if (closedAtPress && element.value) context.press.start(event, element.value, { item: 0 });
 }
 
@@ -104,11 +102,13 @@ function pressBesideInput(event: MouseEvent) {
 }
 
 function onMousedown(event: MouseEvent) {
+  if (isControl.value) {
+    trigger.onMousedown(event);
+    return;
+  }
   // The input keeps the focus (test/measurements/combobox.test.ts, "a press in a popup while a
-  // text input has the focus"). The popup that this press opened has the focus, which the button
-  // would take at `mousedown`. A controlled open that the parent applies is in place then.
-  if (!isControl.value || (closedAtPress && root.open)) event.preventDefault();
-  closedAtPress = false;
+  // text input has the focus").
+  event.preventDefault();
 }
 
 // The typeahead of a closed trigger: a typed character selects the next item whose label starts
