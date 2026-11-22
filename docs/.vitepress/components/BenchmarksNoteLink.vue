@@ -2,11 +2,13 @@
 import { data } from '../../benchmarks.data.ts';
 
 const props = defineProps<{
-  /** The id of a note of `benchmarks/notes.json`. */
+  /** The id of a note of `benchmarks/notes.json`, or the anchor of a section of the page. */
   note: string;
+  /** The title of the target. The default is the title of the note. */
+  title?: string;
 }>();
 
-const title = data.notes.find((note) => note.id === props.note)?.title ?? props.note;
+const title = props.title ?? data.notes.find((note) => note.id === props.note)?.title ?? props.note;
 </script>
 
 <template>
