@@ -176,7 +176,7 @@
         "Select.heap",
         "Tooltip.heap"
       ],
-      "reason": "Each popup makes the state of its first open at its mount, and each instance keeps that state in memory. That state holds the open model, the triggers, the portal, the stacking layer, the form state and the rules of the press, focus and hover.",
+      "reason": "At its mount, each popup makes the state of its first open: open model, triggers, portal, stacking layer, and press and focus rules. Popover, Menu and Tooltip add hover rules, Select and Combobox add the form value, and each instance keeps that state in memory.",
       "sources": [
         {
           "name": "#828",
@@ -188,7 +188,7 @@
       "id": "note-tabs-indicator",
       "title": "Tabs: the indicator",
       "measures": ["Tabs.mount", "Tabs.heap"],
-      "reason": "The Vase UI app mounts `Tabs.Indicator`, the Base UI part that follows the active tab, and the other apps have no indicator. At its mount, the indicator reads the size and the place of the active tab, which costs one more layout of the page.",
+      "reason": "The Vase UI app mounts `Tabs.Indicator`, the Base UI part that follows the active tab, and the Headless UI and Vuetify0 apps have no indicator. In Chromium, 100 indicators add 55 ms to the mount, mostly for one more layout of the page, and 1 MB of memory.",
       "sources": [
         {
           "name": "Tabs",
@@ -204,7 +204,7 @@
       "id": "note-checkbox-memory",
       "title": "Checkbox: memory",
       "measures": ["Checkbox.heap"],
-      "reason": "Each Checkbox joins its Field, its Fieldset and its form, and keeps the states that its data attributes show, such as checked and indeterminate.",
+      "reason": "Each Checkbox reads its checkbox group and its Field, and watches for a reset of its form and for a disabled fieldset around it. That takes 13 computed values and 7 watchers in each instance, also with no group and no Field.",
       "sources": [
         {
           "name": "#828",
@@ -216,7 +216,7 @@
       "id": "note-popup-open",
       "title": "Open a popup",
       "measures": ["Dialog.open", "Popover.open", "Menu.open", "Select.open", "Combobox.open"],
-      "reason": "An open mounts the content of the popup, moves the focus into it and adds it to the stacking layer. A closed popup has no content in the DOM, and a positioned popup gets its place before its first frame.",
+      "reason": "An open mounts the content of Dialog, Popover, Menu and Combobox, and Select keeps its content after its first open. It adds the popup to the stacking layer, places a positioned popup before its first frame, and moves the focus into it, except in Combobox.",
       "sources": [
         {
           "name": "#805",
@@ -228,7 +228,7 @@
       "id": "note-popup-close",
       "title": "Close a popup",
       "measures": ["Dialog.close", "Popover.close", "Menu.close", "Select.close", "Combobox.close"],
-      "reason": "A close returns the focus to the trigger, removes the popup from the stacking layer and stops the updates of its place. Then the content of the closed popup leaves the DOM.",
+      "reason": "A close removes the popup from the stacking layer and returns the focus from the popup to the trigger. It also stops the place updates of a positioned popup, and the content leaves the DOM, except in Select.",
       "sources": [
         {
           "name": "#828",
@@ -237,10 +237,26 @@
       ]
     },
     {
-      "id": "note-long-list-open",
-      "title": "Open a list of 1,000 options",
-      "measures": ["Select.openLong", "Combobox.openLong"],
-      "reason": "A closed popup has no options in the DOM, so each open mounts the 1,000 options and adds each one to the keyboard list. Vuetify0 keeps its options in the DOM after its first open, as `keepMounted` does in Vase UI.",
+      "id": "note-select-long-list",
+      "title": "Select: open a list of 1,000 options",
+      "measures": ["Select.openLong"],
+      "reason": "Select keeps its options in the DOM after its first open, as Vuetify0 does. To place the popup before its first frame, each open of Vase UI lays out the 1,000 options in the script.",
+      "sources": [
+        {
+          "name": "#805",
+          "url": "https://github.com/vase-ui/vase-ui/pull/805"
+        },
+        {
+          "name": "#828",
+          "url": "https://github.com/vase-ui/vase-ui/pull/828"
+        }
+      ]
+    },
+    {
+      "id": "note-combobox-long-list",
+      "title": "Combobox: open a list of 1,000 options",
+      "measures": ["Combobox.openLong"],
+      "reason": "A closed Combobox has no options in the DOM, so each open mounts the 1,000 options and adds each one to the keyboard list. Ark UI keeps its options in the DOM from the mount of the app, and Vuetify0 after its first open.",
       "sources": [
         {
           "name": "#806",

@@ -217,6 +217,17 @@ test('each cell where Vase UI loses in benchmarks/results.json has a note', () =
   assert.deepEqual(real.unknownMeasures, []);
 });
 
+test('each note and each feature row has an anchor of its own', () => {
+  const anchors = [
+    ...real.notes.map((each) => each.id),
+    ...real.features.groups.flatMap((group) => group.rows.map((row) => row.id)),
+  ];
+  assert.deepEqual(
+    anchors.filter((anchor, index) => anchors.indexOf(anchor) !== index),
+    [],
+  );
+});
+
 test('each link of the benchmarks page to a feature row finds the row', () => {
   const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
   const ids = new Set(real.features.groups.flatMap((group) => group.rows.map((row) => row.id)));

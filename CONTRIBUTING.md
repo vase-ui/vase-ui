@@ -639,13 +639,13 @@ The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.
 - A note that starts with "Our check" gives the result of our own check: of the example in the docs in Chromium, or of the apps of `benchmarks` in Chromium, Firefox and WebKit. Use such a check only where the docs do not give the fact, or for the result of a hydration or of an app.
 - `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Record a run in the pull request that moves a pin.
 
-The page compares Vase UI with each other Vue library. Base UI is a reference from React, with no ratio and no verdict. Where another Vue library adds fewer bytes, is faster or uses less memory, the cell gets a `*` that links to a note of `benchmarks/notes.json`:
+The page compares Vase UI with each other Vue library. Base UI is a reference from React, with no ratio and no verdict. Where another Vue library adds fewer bytes, is faster or uses less memory, the page shows a `*` that links to a note of `benchmarks/notes.json`:
 
 - A note has an `id`, which is its anchor on the page, a `title`, its `measures`, a `reason` and its `sources`.
 - A measure is a metric of `results.json`, such as `Dialog.open`, or the size of a scenario, such as `Dialog.size`. Each measure is in one note only.
 - The `reason` gives, in one or two sentences, the behavior that costs the bytes, the time or the memory. A source is the pull request or the measurement that shows it.
 - Before you write a note for a new loss, profile it. When the work pays for no behavior, fix the code. Do not write a note for it.
-- `pnpm test:docs` fails when a cell where Vase UI loses has no note, and when a note names a metric that no table has or that another note names.
+- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a note names a metric that no table has or that another note names, and when two notes have the same `id`.
 
 `benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
 
