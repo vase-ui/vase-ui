@@ -371,7 +371,7 @@ describe('the indicator', () => {
 describe('outside a root', () => {
   test.each(['Label', 'Value', 'Indicator'])('Meter.%s throws', (part) => {
     expect(String(mountError(MeterPartAlone, { part }))).toBe(
-      `Error: Vase UI Meter: <Meter.${part}> must be inside <Meter.Root>.`,
+      `Error: Vase UI: <Meter.${part}> must be inside <Meter.Root>. Without a root the part has no value to show. Put the part inside <Meter.Root>.`,
     );
     // After the error, Vapor renders the part with no setup, and warns about each binding.
     takeReportedMessages();

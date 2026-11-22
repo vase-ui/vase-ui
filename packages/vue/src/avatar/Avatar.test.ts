@@ -686,7 +686,7 @@ describe('lifetime', () => {
 // The last case, because the part throws in `setup`.
 test('a part outside a root throws', () => {
   expect(String(mountError(AvatarPartOutsideRoot))).toContain(
-    'Vase UI Avatar: <Avatar.Image> must be inside <Avatar.Root>.',
+    'Vase UI: <Avatar.Image> must be inside <Avatar.Root>. Without a root the part has no image status to read. Put the part inside <Avatar.Root>.',
   );
   // After the error, Vapor renders the part with no setup, and warns about each binding.
   takeReportedMessages();

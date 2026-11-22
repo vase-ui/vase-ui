@@ -1027,8 +1027,10 @@ describe('accessibility', () => {
 
 // The case throws in `setup`, so it is the last of the file.
 describe('the parts', () => {
-  test('a part outside Field.Root throws an error that names the family', () => {
-    expect(String(mountError(PartOutsideRoot))).toMatch(/Field\b.*Field\.Label.*Field\.Root/);
+  test('a part outside Field.Root throws an error that names the part and the root', () => {
+    expect(String(mountError(PartOutsideRoot))).toBe(
+      'Error: Vase UI: <Field.Label> must be inside <Field.Root>. Without a root the part has no control to label, describe or validate. Put the part inside <Field.Root>.',
+    );
     // After the error, Vapor renders the part with no setup, and warns about each binding.
     takeReportedMessages();
   });

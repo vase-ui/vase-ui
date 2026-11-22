@@ -1343,7 +1343,7 @@ describe('the scrub area', () => {
 // The case throws in `setup`, so it is the last of the file.
 test('a part outside the root throws an error that names the root', () => {
   expect(String(mountError(NumberFieldInputAlone))).toBe(
-    'Error: Vase UI NumberField: <NumberField.Input> must be inside <NumberField.Root>.',
+    'Error: Vase UI: <NumberField.Input> must be inside <NumberField.Root>. Without a root the part has no value to show or to change. Put the part inside <NumberField.Root>.',
   );
   // After the error, Vapor renders the part with no setup, and warns about each binding.
   takeReportedMessages();

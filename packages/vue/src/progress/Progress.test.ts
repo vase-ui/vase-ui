@@ -420,7 +420,7 @@ describe('a part outside the root', () => {
     'Progress.%s throws an error that names the part and the root',
     (part) => {
       expect(String(mountError(ProgressPartOutsideRoot, { part }))).toContain(
-        `Vase UI Progress: <Progress.${part}> must be inside <Progress.Root>.`,
+        `Vase UI: <Progress.${part}> must be inside <Progress.Root>. Without a root the part has no value to show. Put the part inside <Progress.Root>.`,
       );
       // After the error, Vapor renders the part with no setup, and warns about each binding.
       takeReportedMessages();

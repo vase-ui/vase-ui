@@ -838,11 +838,11 @@ test('a part outside its parent throws', () => {
   const { exposed } = mount(ScrollAreaPartsAlone);
   // A part that throws in `setup` also fails its render.
   expect((exposed.errors as string[]).filter((message) => message.startsWith('Vase UI'))).toEqual([
-    'Vase UI ScrollArea: <ScrollArea.Viewport> must be inside <ScrollArea.Root>.',
-    'Vase UI ScrollArea: <ScrollArea.Scrollbar> must be inside <ScrollArea.Root>.',
-    'Vase UI ScrollArea: <ScrollArea.Corner> must be inside <ScrollArea.Root>.',
-    'Vase UI ScrollArea: <ScrollArea.Thumb> must be inside <ScrollArea.Scrollbar>.',
-    'Vase UI ScrollArea: <ScrollArea.Content> must be inside <ScrollArea.Viewport>.',
+    'Vase UI: <ScrollArea.Viewport> must be inside <ScrollArea.Root>. Without a root the part has no scroll position to read. Put the part inside <ScrollArea.Root>.',
+    'Vase UI: <ScrollArea.Scrollbar> must be inside <ScrollArea.Root>. Without a root the part has no scroll position to read. Put the part inside <ScrollArea.Root>.',
+    'Vase UI: <ScrollArea.Corner> must be inside <ScrollArea.Root>. Without a root the part has no scroll position to read. Put the part inside <ScrollArea.Root>.',
+    'Vase UI: <ScrollArea.Thumb> must be inside <ScrollArea.Scrollbar>. Without a scrollbar the thumb has no axis to move on. Put the thumb inside <ScrollArea.Scrollbar>.',
+    'Vase UI: <ScrollArea.Content> must be inside <ScrollArea.Viewport>. Without a viewport the content has no area to scroll in. Put the content inside <ScrollArea.Viewport>.',
   ]);
   // After the error, Vapor renders the part with no setup, and warns about each binding.
   takeReportedMessages();

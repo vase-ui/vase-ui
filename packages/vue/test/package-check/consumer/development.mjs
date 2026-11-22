@@ -22,4 +22,6 @@ imageWithNoRoot.config.errorHandler = (error) => errors.push(error.message);
 // After the setup throws, Vue warns that the component has no render function.
 imageWithNoRoot.config.warnHandler = () => {};
 await renderToString(imageWithNoRoot);
-assert.deepEqual(errors, ['Vase UI Avatar: <Avatar.Image> must be inside <Avatar.Root>.']);
+assert.deepEqual(errors, [
+  'Vase UI: <Avatar.Image> must be inside <Avatar.Root>. Without a root the part has no image status to read. Put the part inside <Avatar.Root>.',
+]);
