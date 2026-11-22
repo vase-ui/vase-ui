@@ -238,7 +238,11 @@ export function usePopupFocus(
     // The focus stays where it went: after a move out of the popup, and after a press outside.
     // During `focusout`, the active element is `<body>`.
     if ((options.noReturn ?? ['focus-out']).includes(root.reason ?? '')) return;
-    if (active && active !== doc.body && !popup.contains(active)) return;
+    // In Chromium and Firefox, the `mousedown` of a press on the trigger gives it the focus before a
+    // close at `click` (test/measurements/menu.test.ts). That focus is no move out of the popup, so
+    // `finalFocus` applies in each browser.
+    const trigger = root.activeTrigger;
+    if (active && active !== doc.body && active !== trigger && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
     // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
