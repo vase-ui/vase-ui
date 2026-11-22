@@ -7,6 +7,7 @@ import ToastAnchored from '../../test/fixtures/ToastAnchored.vue';
 import ToastConformance from '../../test/fixtures/ToastConformance.vue';
 import ToastElementSlots from '../../test/fixtures/ToastElementSlots.vue';
 import ToastLabelInTransition from '../../test/fixtures/ToastLabelInTransition.vue';
+import ToastLabelSlots, { type LabelSlot } from '../../test/fixtures/ToastLabelSlots.vue';
 import ToastPartAlone from '../../test/fixtures/ToastPartAlone.vue';
 import ToastParts from '../../test/fixtures/ToastParts.vue';
 import ToastTwoProviders from '../../test/fixtures/ToastTwoProviders.vue';
@@ -1794,6 +1795,128 @@ describe('the names and the announcements', () => {
     expect(root.querySelector('p')).toHaveTextContent('Description');
     expect(root).toHaveAttribute('aria-labelledby', root.querySelector('h2')!.id);
     expect(root).toHaveAttribute('aria-describedby', root.querySelector('p')!.id);
+  });
+
+  describe('VUE-205: a label in the `element` slot', () => {
+    type Slots = { title: LabelSlot; description: LabelSlot };
+
+    async function mountLabels(shown: Slots, toast: Props, heading = { text: '' }) {
+      const slots = reactive({ ...shown });
+      const { exposed } = mount(ToastLabelSlots, { slots, heading });
+      await nextTick();
+      const manager = exposed.manager as Manager;
+      await added(manager, { id: 'a', ...toast });
+      await nextTick();
+      const root = toastRoot('a')!;
+      return {
+        root,
+        manager,
+        slots,
+        title: root.querySelector('h3'),
+        description: root.querySelector('p'),
+      };
+    }
+
+    test.each([
+      {
+        name: 'an empty title element names nothing, and the description names the toast',
+        slots: { title: 'label', description: 'label' },
+        toast: { description: 'Saved' },
+        labelledby: 'description',
+        describedby: undefined,
+      },
+      {
+        name: 'a title element with a text of the developer names a toast with no title',
+        slots: { title: 'text', description: 'label' },
+        toast: { description: 'Saved' },
+        labelledby: 'title',
+        describedby: 'description',
+      },
+      {
+        name: 'a title slot with no element names no id, and the description names the toast',
+        slots: { title: 'none', description: 'label' },
+        toast: { title: 'Title', description: 'Saved' },
+        labelledby: 'description',
+        describedby: undefined,
+      },
+      {
+        name: 'an empty description element describes nothing',
+        slots: { title: 'label', description: 'label' },
+        toast: { title: 'Title' },
+        labelledby: 'title',
+        describedby: undefined,
+      },
+      {
+        name: 'a description element with a text of the developer describes a toast with no description',
+        slots: { title: 'label', description: 'text' },
+        toast: { title: 'Title' },
+        labelledby: 'title',
+        describedby: 'description',
+      },
+      {
+        name: 'a description slot with no element describes nothing',
+        slots: { title: 'label', description: 'none' },
+        toast: { title: 'Title', description: 'Saved' },
+        labelledby: 'title',
+        describedby: undefined,
+      },
+    ] as const)('$name', async ({ slots, toast, labelledby, describedby }) => {
+      const labels = await mountLabels(slots, toast);
+      const id = (label: 'title' | 'description' | undefined) => label && labels[label]!.id;
+      expect(labels.root.getAttribute('aria-labelledby') ?? undefined).toBe(id(labelledby));
+      expect(labels.root.getAttribute('aria-describedby') ?? undefined).toBe(id(describedby));
+      // The slots render also when the toast has no such label.
+      if (slots.title !== 'none') expect(labels.title).not.toBe(null);
+      if (slots.description !== 'none') expect(labels.description).not.toBe(null);
+      expect(labels.root.querySelector('button')).toHaveTextContent('Undo');
+    });
+
+    test('the root follows a change of the content of the element', async () => {
+      const { root, manager, title, description } = await mountLabels(
+        { title: 'label', description: 'label' },
+        { description: 'Saved' },
+      );
+      expect(root).toHaveAttribute('aria-labelledby', description!.id);
+      manager.update('a', { title: 'Done' });
+      await waitFor(() => expect(root).toHaveAttribute('aria-labelledby', title!.id));
+      expect(root).toHaveAttribute('aria-describedby', description!.id);
+      manager.update('a', { title: '' });
+      await waitFor(() => expect(root).toHaveAttribute('aria-labelledby', description!.id));
+      expect(root).not.toHaveAttribute('aria-describedby');
+    });
+
+    test('the root follows a component in the slot that changes its own content', async () => {
+      const heading = reactive({ text: '' });
+      const { root, title, description } = await mountLabels(
+        { title: 'component', description: 'label' },
+        { description: 'Saved' },
+        heading,
+      );
+      expect(root).toHaveAttribute('aria-labelledby', description!.id);
+      heading.text = 'Done';
+      await waitFor(() => expect(root).toHaveAttribute('aria-labelledby', title!.id));
+      heading.text = '';
+      await waitFor(() => expect(root).toHaveAttribute('aria-labelledby', description!.id));
+    });
+
+    test('the root follows an element that the slot renders after the mount, and that goes', async () => {
+      const { root, slots, description } = await mountLabels(
+        { title: 'none', description: 'label' },
+        { title: 'Title', description: 'Saved' },
+      );
+      expect(root).toHaveAttribute('aria-labelledby', description!.id);
+      slots.title = 'label';
+      const title = await waitFor(() => {
+        const element = root.querySelector('h3')!;
+        expect(root).toHaveAttribute('aria-labelledby', element.id);
+        return element;
+      });
+      expect(title).toHaveTextContent('Title');
+      expect(root).toHaveAttribute('aria-describedby', description!.id);
+      slots.title = 'none';
+      await waitFor(() => expect(root).toHaveAttribute('aria-labelledby', description!.id));
+      expect(root).not.toHaveAttribute('aria-describedby');
+    });
   });
 
   test('VUE-99: a toast with no title takes the name of its description; a name of the developer wins', async () => {
