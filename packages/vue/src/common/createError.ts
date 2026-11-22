@@ -102,7 +102,8 @@ export function createError<C extends Code>(
   return new Error(
     process.env.NODE_ENV !== 'production'
       ? values.reduce<string>(
-          (text, value, index) => text.replaceAll(`{${index}}`, value),
+          // A replacement string reads `$&` and `$'` as patterns, so a function gives the value.
+          (text, value, index) => text.replaceAll(`{${index}}`, () => value),
           errorMessages[code],
         )
       : `Vase UI error #${code} ${JSON.stringify(values)}: https://vase-ui.com/errors#${code}`,
