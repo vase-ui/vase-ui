@@ -1246,7 +1246,7 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(viewport());
   });
 
-  test('a press on the viewport gives the focus to it and to no toast of high priority; Shift+Tab from a pressed toast stops on the viewport', async () => {
+  test('a press on the viewport gives the focus to it and to no toast of high priority; Shift+Tab from a pressed toast leaves the viewport', async () => {
     // A press on a child of the root would start Shift+Tab from the child in WebKit.
     style('[data-testid="viewport"], [data-id] { padding: 40px }');
     const { manager } = await mountToasts({ inPlace: true });
@@ -1257,7 +1257,40 @@ describe('the keys', () => {
     await userEvent.click(toastRoot('b')!, { position: { x: 5, y: 5 } });
     expect(document.activeElement).toBe(toastRoot('b'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(byId('toast-before'));
+  });
+
+  test('VUE-232: Tab after a press on a toast of high priority reaches its Action and its Close', async () => {
+    style('[data-id] { padding: 40px }');
+    const { manager } = await mountToasts({ inPlace: true });
+    await added(manager, {
+      id: 'a',
+      title: 'A',
+      priority: 'high',
+      actionProps: { children: 'Undo' },
+    });
+    const root = toastRoot('a')!;
+    const [action, close] = root.querySelectorAll('button');
+    await userEvent.click(root, { position: { x: 5, y: 5 } });
+    expect(document.activeElement).toBe(root);
+    expect(root).toHaveAttribute('aria-hidden', 'true');
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(action);
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(close);
+  });
+
+  test('VUE-232: after F6, a focus of the viewport that comes from no element, as at the return of the window focus, stays on the viewport', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A', priority: 'high' });
+    byId('toast-before').focus();
+    await pressF6();
     expect(document.activeElement).toBe(viewport());
+    viewport().blur();
+    await waitFor(() => expect(viewport()).toHaveAttribute('tabindex', '0'));
+    viewport().focus();
+    expect(document.activeElement).toBe(viewport());
+    expect(viewport().matches(':focus-visible')).toBe(true);
   });
 
   test('VUE-127: Escape in a toast closes it, and a popup under it gets no Escape', async () => {

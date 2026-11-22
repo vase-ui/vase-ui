@@ -58,6 +58,10 @@ function onKeydown(event: KeyboardEvent) {
   if (back && returnFocus()) {
     event.stopPropagation();
     event.preventDefault();
+  } else if (event.key === 'Tab') {
+    // After a press in the viewport, Tab gives the parts their tab stops. Vue renders them before
+    // the browser moves the focus (test/measurements/toast.test.ts).
+    provider.setInteraction({ focus: true });
   }
 }
 
@@ -103,13 +107,14 @@ function onFocusin(event: FocusEvent) {
   if (!target.matches(':focus-visible')) return;
   const viewport = element.value;
   const related = event.relatedTarget as Node | null;
-  const passOn = target === viewport && tabStop.value && !focusByF6 && !viewport.contains(related);
+  // A focus that comes from no element, such as the focus that the window gets back, stays.
+  const passOn =
+    target === viewport && tabStop.value && !focusByF6 && !!related && !viewport.contains(related);
   provider.setInteraction({ focus: true });
   if (!passOn) return;
   // Tab from before the viewport moves the focus to the first toast, and Shift+Tab from after it to
   // the last toast. The toast then matches `:focus-visible` (test/measurements/toast.test.ts).
-  const fromAfter =
-    related && viewport.compareDocumentPosition(related) & Node.DOCUMENT_POSITION_FOLLOWING;
+  const fromAfter = viewport.compareDocumentPosition(related) & Node.DOCUMENT_POSITION_FOLLOWING;
   focusToast(fromAfter ? 'last' : 'first');
 }
 

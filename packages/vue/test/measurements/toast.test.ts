@@ -421,6 +421,37 @@ describe('a container that has the tab stop of its content', () => {
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
     expect(log).toEqual(['from before', 't1 true', 'from after', 't2 true']);
   });
+
+  test('a render that a `keydown` listener of Tab starts comes before the move of the focus: Tab reaches a child that the render gives a tab stop, and Shift+Tab skips a container that the render takes out', async () => {
+    const keyboard = ref(false);
+    mountVue('', () =>
+      h('div', [
+        h('input', { id: 'before', 'aria-label': 'Before' }),
+        h(
+          'div',
+          {
+            id: 'vp',
+            tabindex: keyboard.value ? -1 : 0,
+            onKeydown: (event: KeyboardEvent) => {
+              if (event.key === 'Tab') keyboard.value = true;
+            },
+          },
+          h('div', { id: 't', tabindex: 0 }, [
+            h('button', { id: 'button', tabindex: keyboard.value ? undefined : -1 }, 'Button'),
+          ]),
+        ),
+        h('input', { id: 'after', 'aria-label': 'After' }),
+      ]),
+    );
+    element('t').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(activeId()).toBe('button');
+    keyboard.value = false;
+    await nextTick();
+    element('t').focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(activeId()).toBe('before');
+  });
 });
 
 describe('a touch', () => {

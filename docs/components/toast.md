@@ -406,7 +406,7 @@ The `title` and the `description` are a text, a number, or a function that retur
 
 For a toast with the priority `high`, a screen reader announces the `title` and the `description`. A screen reader does not announce other content of `<Toast.Root>`, the content of `<Toast.Title>` and `<Toast.Description>` included, unless the user moves to the toast viewport.
 
-Until the keyboard focus comes into the viewport, such a toast, its `<Toast.Action>` and its `<Toast.Close>` have no tab stop. The viewport has the tab stop. When <kbd>Tab</kbd> moves the focus to the viewport, the viewport moves it to the first toast. After <kbd>Shift</kbd>+<kbd>Tab</kbd>, it moves the focus to the last toast. Put each control of such a toast in `<Toast.Action>` or `<Toast.Close>`, because another control keeps its tab stop while a screen reader cannot read it.
+Until the keyboard focus comes into the viewport, such a toast, its `<Toast.Action>` and its `<Toast.Close>` have no tab stop. The viewport has the tab stop. When <kbd>Tab</kbd> moves the focus to the viewport, the viewport moves it to the first toast. When <kbd>Shift</kbd>+<kbd>Tab</kbd> moves the focus to the viewport, the viewport moves it to the last toast. Put each control of such a toast in `<Toast.Action>` or `<Toast.Close>`, because another control keeps its tab stop while a screen reader cannot read it.
 
 `<Toast.Title>` gives the toast its accessible name, and `<Toast.Description>` gives its description. A toast with no title gets its name from `<Toast.Description>`. To give such a toast another name, set `aria-label` on `<Toast.Root>`. A toast with no title and no description needs that `aria-label`.
 
