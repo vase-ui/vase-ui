@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, shallowRef, watch, type Ref } from 'vue';
+import { computed, shallowRef, watch, type Ref } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { useButton } from '../common/button';
 import { useIsHydrated } from '../common/hydration';
@@ -30,19 +30,17 @@ export function useHandleRoot<Payload>(handle: () => PopupHandle<Payload> | unde
 
 /** Adds the trigger to its root, from its `setup` to its unmount. */
 export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigger) {
-  // The server and the first render know the root of the setup. The trigger moves at once when
-  // the root changes, such as when a handle gives it at the mount, so that `open(id)` in the
-  // `onMounted` of a child of a root that takes the handle finds the trigger.
-  let remove = root()?.addTrigger(entry);
+  // The server and the first render know the root of the setup. A server stops a sync watcher
+  // only after the render, so the trigger stays in its root for the whole render. The trigger
+  // moves at once when the root changes, such as when a handle gives it at the mount, so that
+  // `open(id)` in the `onMounted` of a child of a root that takes the handle finds the trigger.
   watch(
     root,
-    (current) => {
-      remove?.();
-      remove = current?.addTrigger(entry);
+    (current, _, onCleanup) => {
+      if (current) onCleanup(current.addTrigger(entry));
     },
-    { flush: 'sync' },
+    { immediate: true, flush: 'sync' },
   );
-  onScopeDispose(() => remove?.());
 }
 
 /** The `click` of a press of a mouse, which a trigger with `pressStart` handled at `pointerdown`. */
