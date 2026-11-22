@@ -525,13 +525,12 @@ describe('press, drag, release', () => {
     expect(clicks).toEqual([]);
   });
 
-  test('a press that keeps open a menu that a hover opened gives the trigger the focus and starts no drag: a release outside keeps the menu', async () => {
+  test('a press that keeps open a menu that a hover opened gives the popup the focus and starts no drag: a release outside keeps the menu', async () => {
     const { trigger } = await mountMenu({ trigger: { openOnHover: true, delay: 0 } });
     await userEvent.hover(trigger);
-    await opened();
+    const element = await opened();
     const press = await holdPress(trigger);
-    const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
-    expect(active()).toBe(webkitOnMac ? document.body : trigger);
+    expect(active()).toBe(element);
     await press.release({ x: 2, y: window.innerHeight - 2 });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(popup()).not.toBe(null);
