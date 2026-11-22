@@ -30,6 +30,11 @@ export interface List {
    * `:disabled`. With `hidden`, also the items that are not shown, such as those of a closed popup.
    */
   items(options?: { hidden?: boolean }): ListItem[];
+  /**
+   * The first or the last item that is not disabled. A key that opens a popup highlights it, and
+   * an arrow key in the open list still reaches a disabled item.
+   */
+  edge(which: 'first' | 'last'): ListItem | undefined;
   /** The `label` of the item, else its text, with no space at the ends. */
   text(item: ListItem): string;
   highlight(item: ListItem | null, reason: HighlightReason, event?: Event): void;
@@ -168,7 +173,16 @@ export function useList(options: ListOptions): List {
   );
 
   const reachable = (element: Element, hidden?: boolean) =>
-    (hidden || element.checkVisibility()) && !element.matches(':disabled');
+    (hidden || shown(element)) && !element.matches(':disabled');
+
+  // An item with `visibility: hidden` takes no focus, and `checkVisibility()` counts it as shown
+  // with no option. A popup has `visibility: hidden` until it is placed, and its items count then.
+  // A shown item needs one check.
+  function shown(element: Element) {
+    if (element.checkVisibility({ visibilityProperty: true })) return true;
+    const container = options.container();
+    return !container?.checkVisibility({ visibilityProperty: true }) && element.checkVisibility();
+  }
 
   function items(itemOptions?: { hidden?: boolean }) {
     void addedVersion.value;
@@ -298,6 +312,10 @@ export function useList(options: ListOptions): List {
       return itemHighlights.get(item)?.value ?? false;
     },
     items,
+    edge(which) {
+      const enabled = items().filter((item) => !item.disabled);
+      return which === 'first' ? enabled[0] : enabled.at(-1);
+    },
     text(item) {
       return (item.label ?? item.element.textContent ?? '').trim();
     },
@@ -331,8 +349,9 @@ export function useList(options: ListOptions): List {
       if (isComposing(event)) return false;
       // A key on the list or on an element of the popup that is no item, such as a button beside
       // the list, starts at the end of the list, also when that end has the highlight (Base UI). A
-      // key on the trigger of an open popup, or a key that a submenu gives to its parent, goes on
-      // from the highlight.
+      // key that a submenu gives to its parent goes on from the highlight of the parent. In a list
+      // that is not virtual, a key on the trigger of an open popup also starts at the end: the focus
+      // of the trigger removes the highlight.
       const holder = event.currentTarget as Element | null;
       const container = options.container();
       const active =

@@ -23,11 +23,16 @@ defineProps({
   arrow: Object as PropType<Props>,
   list: Object as PropType<Props>,
   /**
-   * A part set to `false` leaves: `value` and `popup` unmount, and `list` replaces the
+   * A part set to `false` leaves: `trigger`, `value` and `popup` unmount, and `list` replaces the
    * `Select.List` of `list` with a `<div>`.
    */
   show: {
-    type: Object as PropType<{ value?: boolean; popup?: boolean; list?: boolean }>,
+    type: Object as PropType<{
+      trigger?: boolean;
+      value?: boolean;
+      popup?: boolean;
+      list?: boolean;
+    }>,
     default: () => ({}),
   },
   items: {
@@ -59,7 +64,7 @@ defineExpose({ root: rootPart, popup: popupPart });
   <input id="before" aria-label="Before" />
   <Select.Root ref="rootPart" data-testid="root" v-bind="root">
     <Select.Label v-if="label" data-testid="label" v-bind="label">Fruit</Select.Label>
-    <Select.Trigger data-testid="trigger" v-bind="trigger">
+    <Select.Trigger v-if="show.trigger !== false" data-testid="trigger" v-bind="trigger">
       <Select.Value
         v-if="show.value !== false && valueSlot !== undefined"
         v-slot="{ value: current }"

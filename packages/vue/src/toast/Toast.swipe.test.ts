@@ -66,6 +66,44 @@ function drag(root: HTMLElement, moves: Point[], release = true) {
 
 const down = (...ys: number[]): Point[] => ys.map((y) => ({ x: 0, y }));
 
+/** The id of the mouse of the browser: Firefox gives it 0, Chromium and WebKit 1. */
+async function mousePointerId(at: Point) {
+  let id = -1;
+  const read = (event: PointerEvent) => (id = event.pointerId);
+  document.addEventListener('pointermove', read, { once: true });
+  await userEvent.pointer({ coords: { x: at.x + 1, y: at.y + 1 } });
+  return id;
+}
+
+/**
+ * Dispatches a press of the mouse at `from` and its moves down by `ys`. A move to `noButton` with no
+ * button down follows, and no `pointerup`: Firefox does so for a release outside its view, and a
+ * fast flick on a trackpad does so before its `pointerup`.
+ */
+function dragWithNoRelease(
+  target: Element,
+  from: Point,
+  pointerId: number,
+  ys: number[],
+  noButton: number,
+) {
+  const send = (type: string, y: number, buttons: number) =>
+    target.dispatchEvent(
+      new PointerEvent(type, {
+        bubbles: true,
+        composed: true,
+        pointerId,
+        pointerType: 'mouse',
+        clientX: from.x,
+        clientY: from.y + y,
+        buttons,
+      }),
+    );
+  send('pointerdown', 0, 1);
+  for (const y of ys) send('pointermove', y, 1);
+  send('pointermove', noButton, 0);
+}
+
 describe('the swipe', () => {
   test('a mouse drag of more than 40 px down closes the toast; it leaves with `data-swipe-direction` and the variables, and with no inline transform', async () => {
     // The leave lasts until a toast with the same id comes and ends it, so the case reads the toast
@@ -374,4 +412,61 @@ describe('the swipe', () => {
       expect(cancels).toEqual([]);
     },
   );
+
+  test.each([
+    { name: 'ends a drag of 16 px with no close', ys: [12], noButton: 16, closes: false },
+    { name: 'closes the toast after a drag of 100 px', ys: [100], noButton: 100, closes: true },
+    {
+      name: 'takes its own place for the release, and 100 px close the toast',
+      ys: [35],
+      noButton: 100,
+      closes: true,
+    },
+  ])('a move with no button is the release: it $name', async ({ ys, noButton, closes }) => {
+    const { manager, root } = await mountToast({ swipeDirection: 'down' });
+    const start = startOf(root);
+    const id = await mousePointerId(start);
+    dragWithNoRelease(root.querySelector('h2')!, start, id, ys, noButton);
+    if (closes) {
+      await waitFor(() => expect(manager.toasts.value).toEqual([]));
+      expect(root).toHaveAttribute('data-swipe-direction', 'down');
+      return;
+    }
+    await nextTick();
+    expect(root).not.toHaveAttribute('data-swiping');
+    expect(root.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
+    // A later move with no button moves nothing.
+    root.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        pointerId: id,
+        pointerType: 'mouse',
+        clientX: start.x,
+        clientY: start.y + 60,
+        buttons: 0,
+      }),
+    );
+    await nextTick();
+    expect(root.style.getPropertyValue('--toast-swipe-movement-y')).toBe('0px');
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test('the inline `transform` and `transition` of the developer stay after a swipe that does not close', async () => {
+    const { root } = await mountToast({
+      style: 'transform: scale(0.9); transition: opacity 200ms ease',
+    });
+    const { transform, transition } = root.style;
+    expect(transform).toBe('scale(0.9)');
+    await drag(root, down(12, 16));
+    await nextTick();
+    expect(root.style.transform).toBe(transform);
+    expect(root.style.transition).toBe(transition);
+  });
+
+  test('VUE-228: a `pointerdown` listener of the developer that calls `preventDefault()` does not stop the swipe', async () => {
+    const { manager, root } = await mountToast({ swipeDirection: 'down' });
+    root.querySelector('h2')!.addEventListener('pointerdown', (event) => event.preventDefault());
+    await drag(root, down(20, 40, 60));
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
 });

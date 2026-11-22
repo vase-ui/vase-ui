@@ -32,7 +32,10 @@ export function usePopupPress(
     inside: (element: Element) => boolean;
     /** The release on this item acts before its delay when it moved on the vertical axis. */
     earlyRelease?: (item: HTMLElement) => boolean;
-    /** A release this many pixels off the edge of the trigger does not close the popup. */
+    /**
+     * A release this many pixels off the edge of the trigger, or on a pseudo-element of the
+     * trigger, does not close the popup.
+     */
     triggerMargin?: number;
     /** Each later mouse press in the popup that ends on another item gives that item a `click`. */
     laterPress?: boolean;
@@ -97,7 +100,13 @@ export function usePopupPress(
 
   function nearTrigger(trigger: Element, event: PointerEvent) {
     const margin = options.triggerMargin;
-    if (margin === undefined) return false;
+    // A trigger that left the document has no box and no root that hit-tests.
+    if (margin === undefined || !trigger.isConnected) return false;
+    // A pseudo-element of the trigger can reach past its box, also under the element that blocks
+    // the page of a modal popup. The hit test gives the trigger for a point on it.
+    const root = trigger.getRootNode() as Document | ShadowRoot;
+    const under = root.elementsFromPoint(event.clientX, event.clientY);
+    if (under.some((element) => trigger.contains(element))) return true;
     const rect = trigger.getBoundingClientRect();
     return (
       event.clientX >= rect.left - margin &&

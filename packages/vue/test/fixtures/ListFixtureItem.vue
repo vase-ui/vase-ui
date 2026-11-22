@@ -8,6 +8,8 @@ const props = defineProps<{
   disabled?: boolean;
   native?: boolean;
   hidden?: boolean;
+  /** The item has `visibility: hidden`. */
+  invisible?: boolean;
   link?: boolean;
   /** The item renders no element. */
   absent?: boolean;
@@ -50,7 +52,7 @@ const setElement = (el: unknown) => (element.value = el as HTMLElement | null);
     :ref="setElement"
     :hidden="hidden"
     :aria-disabled="disabled ? 'true' : undefined"
-    style="height: 30px"
+    :style="{ height: '30px', visibility: invisible ? 'hidden' : undefined }"
   >
     {{ text ?? itemKey }}
   </div>

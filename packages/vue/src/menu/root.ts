@@ -327,8 +327,7 @@ export function useMenuRoot<Payload>(
   });
 
   function highlightEdge(edge: 'first' | 'last') {
-    const items = list.items();
-    const item = edge === 'first' ? items[0] : items.at(-1);
+    const item = list.edge(edge);
     if (item) list.highlight(item, 'keyboard');
     return !!item;
   }

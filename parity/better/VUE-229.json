@@ -1,0 +1,10 @@
+{
+  "id": "VUE-229",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/interactions/useTypeahead.ts#L225-L237",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/"
+  ],
+  "behavior": "A close of the popup of a select ends the typed string, so a Space on the trigger right after the close opens the popup, as Space opens a closed combobox in the WAI-ARIA Authoring Practices. Base UI ends the string at the close only when the select has no value. With a value, a Space in the 750 ms after the close is a character of the string, and the popup stays closed.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
+  "families": ["select"]
+}

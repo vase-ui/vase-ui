@@ -112,7 +112,7 @@ describe('the parts', () => {
 });
 
 describe('the control', () => {
-  test('the separator has the role `presentation` and its orientation in `data-orientation`', async () => {
+  test('the separator has the role `presentation` and its orientation in `data-orientation`; `as` and the attributes of the developer reach its element', async () => {
     const separator = reactive<Props>({});
     await mountCombobox({ root: { defaultOpen: true }, separator });
     await opened();
@@ -122,6 +122,14 @@ describe('the control', () => {
     separator.orientation = 'vertical';
     await nextTick();
     expect(byTestId('separator')).toHaveAttribute('data-orientation', 'vertical');
+    Object.assign(separator, { as: 'li', class: 'line', style: 'margin: 4px', role: 'separator' });
+    await nextTick();
+    const element = byTestId('separator')!;
+    expect(element.localName).toBe('li');
+    expect(element).toHaveClass('line');
+    expect(element.style.margin).toBe('4px');
+    expect(element).toHaveAttribute('role', 'separator');
+    expect(element).toHaveAttribute('data-orientation', 'vertical');
   });
 
   test('a root with the input in the popup has the trigger as its control, and the popup is a dialog', async () => {
@@ -265,6 +273,24 @@ describe('open and close', () => {
     await userEvent.keyboard('{ArrowUp}');
     await opened();
     await waitFor(() => expect(highlighted()).toBe('Pear'));
+  });
+
+  test('a key open highlights the first or the last item that is not disabled; the arrow keys still reach a disabled item', async () => {
+    await mountCombobox({
+      root: { openOnInputClick: false },
+      itemProps: { Apple: { disabled: true }, Pear: { disabled: true } },
+    });
+    input().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await opened();
+    await waitFor(() => expect(highlighted()).toBe('Apricot'));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(highlighted()).toBe('Apple'));
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await userEvent.keyboard('{ArrowUp}');
+    await opened();
+    await waitFor(() => expect(highlighted()).toBe('Peach'));
   });
 
   test('the trigger beside the input toggles the popup and keeps the focus on the input', async () => {

@@ -10,6 +10,7 @@ type Item = {
   disabled?: boolean;
   native?: boolean;
   hidden?: boolean;
+  invisible?: boolean;
   link?: boolean;
   absent?: boolean;
 };
@@ -69,6 +70,7 @@ function onKeydown(event: KeyboardEvent) {
       :disabled="item.disabled"
       :native="item.native"
       :hidden="item.hidden"
+      :invisible="item.invisible"
       :link="item.link"
       :absent="item.absent"
     />

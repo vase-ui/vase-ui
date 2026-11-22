@@ -183,6 +183,13 @@ function onBarFocus(event: FocusEvent) {
   root()?.request(true, 'trigger-focus', event, element.value, pressType || undefined);
 }
 
+// In a menu that is not virtual, the highlight follows the focus, and a trigger has the focus. A
+// closed menu has no highlight.
+function onFocus() {
+  const list = context.value?.list;
+  if (list?.highlighted && !list.virtual) list.highlight(null, 'none');
+}
+
 function elementProps() {
   const menu = context.value;
   const open = trigger.open.value;
@@ -213,7 +220,7 @@ function elementProps() {
     });
   }
   return trigger.button.mergeAttributes(
-    mergeProps(props.openOnHover ? hover.listeners : {}, own),
+    mergeProps(props.openOnHover ? hover.listeners : {}, own, { onFocus }),
     attrs,
   );
 }

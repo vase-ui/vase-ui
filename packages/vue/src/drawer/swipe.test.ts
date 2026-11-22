@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
+import { effectScope } from 'vue';
 import {
   along,
   claimsTouch,
@@ -10,6 +11,8 @@ import {
   releaseStrength,
   resist,
   toward,
+  useSwipeTracker,
+  type SwipeRelease,
 } from './swipe';
 
 let container: HTMLElement | undefined;
@@ -206,5 +209,204 @@ describe('claimsTouch', () => {
     html(`<div id="viewport"><div style="overflow-x: auto; width: 50px">
       <p id="target" style="width: 200px">Wide</p></div></div>`);
     expect(claimsTouch(pathOf(byId('target'), byId('viewport')), 'down', 0, 6)).toBe(true);
+  });
+});
+
+describe('useSwipeTracker', () => {
+  /** A tracker of the axis `y` on a new element, and the release of each drag. */
+  function track() {
+    const element = html('<div></div>').firstElementChild!;
+    const releases: (SwipeRelease | null)[] = [];
+    const scope = effectScope();
+    const tracker = scope.run(() =>
+      useSwipeTracker({
+        axis: () => 'y',
+        press: () => true,
+        start() {},
+        move() {},
+        end: (release) => releases.push(release),
+      }),
+    )!;
+    onTestFinished(() => scope.stop());
+    for (const [name, listener] of Object.entries(tracker.listeners)) {
+      element.addEventListener(name.slice(2).toLowerCase(), listener as EventListener);
+    }
+    /** Sends a pointer event of the mouse at `y`, with `x` 0, at the time `time` in ms. */
+    const send = (type: string, y: number, time: number, pointerId = 1) => {
+      const event = new PointerEvent(type, {
+        pointerId,
+        pointerType: 'mouse',
+        clientY: y,
+        buttons: type === 'pointerup' ? 0 : 1,
+      });
+      Object.defineProperty(event, 'timeStamp', { value: time });
+      element.dispatchEvent(event);
+    };
+    return { releases, send };
+  }
+
+  /** The release of a press at 0 at the time 1000, the moves `[time, y]` and a release. */
+  function drag(moves: [time: number, y: number][], release: [time: number, y: number]) {
+    const { releases, send } = track();
+    send('pointerdown', 0, 1000);
+    for (const [time, y] of moves) send('pointermove', y, time);
+    send('pointerup', release[1], release[0]);
+    return releases[0]!;
+  }
+
+  it('gives the speed of the drag from the first move to the release', () => {
+    const release = drag(
+      [
+        [1100, 0],
+        [1200, 50],
+      ],
+      [1300, 50],
+    );
+    expect(release.velocityY).toBeCloseTo(0.25, 4);
+    expect(release.velocityX).toBe(0);
+  });
+
+  it('counts the speed of the drag over 50 ms at least', () => {
+    expect(
+      drag(
+        [
+          [1005, 0],
+          [1010, 30],
+        ],
+        [1015, 30],
+      ).velocityY,
+    ).toBeCloseTo(0.6, 4);
+  });
+
+  it.each([
+    {
+      name: 'the last sample',
+      moves: [
+        [1100, 0],
+        [1200, 50],
+        [1216, 70],
+      ],
+      release: [1224, 70],
+      speed: 1.25,
+    },
+    {
+      name: 'a 60 Hz input',
+      moves: [
+        [1016, 14.4],
+        [1032, 28.8],
+        [1048, 43.2],
+        [1064, 57.6],
+      ],
+      release: [1080, 57.6],
+      speed: 0.9,
+    },
+    {
+      name: 'a 120 Hz input',
+      moves: [
+        [1008, 7.2],
+        [1016, 14.4],
+        [1024, 21.6],
+        [1032, 28.8],
+      ],
+      release: [1040, 28.8],
+      speed: 0.9,
+    },
+    {
+      name: 'a slower last step',
+      moves: [
+        [1008, 10],
+        [1016, 20],
+        [1024, 30],
+        [1032, 31],
+      ],
+      release: [1040, 31],
+      speed: 0.125,
+    },
+    {
+      name: 'a flick after a rest',
+      moves: [
+        [1008, 10],
+        [1016, 20],
+        [1216, 30],
+        [1224, 40],
+      ],
+      release: [1232, 40],
+      speed: 1.25,
+    },
+    {
+      name: 'two samples 2 ms apart, counted over 4 ms',
+      moves: [
+        [1008, 10],
+        [1010, 18],
+      ],
+      release: [1018, 18],
+      speed: 2,
+    },
+    {
+      name: 'sparse moves and one still move',
+      moves: [
+        [1060, 20],
+        [1120, 200],
+        [1128, 200.5],
+      ],
+      release: [1136, 200.5],
+      speed: 3,
+    },
+    {
+      name: 'a first move long after the press',
+      moves: [
+        [1200, 5],
+        [1208, 15],
+      ],
+      release: [1216, 15],
+      speed: 1.25,
+    },
+    {
+      name: 'a pointer that rests for three moves',
+      moves: [
+        [1000, 0],
+        [1016, 20],
+        [1032, 20],
+        [1048, 20],
+        [1064, 20],
+      ],
+      release: [1072, 20],
+      speed: 0,
+    },
+  ] as { name: string; moves: [number, number][]; release: [number, number]; speed: number }[])(
+    'gives the speed of the last sample that moved: $name',
+    ({ moves, release, speed }) => {
+      expect(drag(moves, release).lastVelocityY).toBeCloseTo(speed, 4);
+    },
+  );
+
+  it.each([
+    { still: 1040, release: 1048, speed: 2.5 },
+    { still: 1040, release: 1113, speed: 0 },
+    { still: 1113, release: 1121, speed: 0 },
+  ])(
+    'keeps the last sample over one still move at $still ms, and not after 80 ms: release at $release ms',
+    ({ still, release, speed }) => {
+      const moves: [number, number][] = [
+        [1008, 20],
+        [1016, 40],
+        [1024, 60],
+        [1032, 80],
+        [still, 80.5],
+      ];
+      expect(drag(moves, [release, 80.5]).lastVelocityY).toBeCloseTo(speed, 4);
+    },
+  );
+
+  it('gives no release, and so no speed of an earlier drag, to a press with no move', () => {
+    const { releases, send } = track();
+    send('pointerdown', 0, 1000);
+    send('pointermove', 40, 1008);
+    send('pointermove', 120, 1016);
+    send('pointerup', 120, 1024);
+    expect(releases[0]?.lastVelocityY).toBeGreaterThan(1);
+    send('pointerdown', 0, 5000, 2);
+    send('pointerup', 0, 5016, 2);
+    expect(releases).toHaveLength(1);
   });
 });
