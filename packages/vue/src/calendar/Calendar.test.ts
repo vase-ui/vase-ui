@@ -313,6 +313,36 @@ describe('the navigation buttons', () => {
     expect(log).toEqual([]);
   });
 
+  test.each([
+    ['mouse', 'Calendar.Root'],
+    ['touch', 'Calendar.Root'],
+    ['mouse', 'Calendar.NextButton'],
+    ['touch', 'Calendar.NextButton'],
+  ])(
+    'a %s hold ends when %s becomes disabled; it moves nothing more, also when the part is enabled again before the release',
+    async (pointerType, part) => {
+      const log: string[] = [];
+      const root = logged(log);
+      const nextButton = reactive<Record<string, unknown>>({ disabled: false });
+      const disabled = part === 'Calendar.Root' ? root : nextButton;
+      const { next } = await mountCalendar({ root, parts: { NextButton: nextButton } });
+      const pointer = { pointerId: 7, pointerType, button: 0, bubbles: true };
+      next().dispatchEvent(new PointerEvent('pointerdown', pointer));
+      await nextTick();
+      const moves = [...log];
+      disabled.disabled = true;
+      await nextTick();
+      disabled.disabled = false;
+      await nextTick();
+      // Repeats would come in this time.
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      window.dispatchEvent(new PointerEvent('pointerup', pointer));
+      next().click();
+      await nextTick();
+      expect(log).toEqual(moves);
+    },
+  );
+
   test('VUE-143: a hold stops after one step when that step releases the press', async () => {
     const log: string[] = [];
     const pointer = { pointerId: 5, pointerType: 'mouse', button: 0, bubbles: true };

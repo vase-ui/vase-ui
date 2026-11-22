@@ -1,0 +1,9 @@
+{
+  "id": "VUE-202",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/number-field/root/NumberFieldRoot.test.tsx#L115",
+    "https://html.spec.whatwg.org/multipage/input.html#attr-input-step"
+  ],
+  "behavior": "With no `step` prop, the buttons and the keys change the value by 1, and the hidden input has `step=\"any\"`, so the form accepts each number. A `step` prop of the developer is also the constraint of the form: with `:min=\"0\"`, `:step=\"1\"` makes the form refuse `0.11`. Base UI checks a step of 1 when the developer gives no step, so with `min={0}` its form refuses `0.11`.",
+  "dueWith": "packages/react/src/number-field/root/NumberFieldRoot.tsx"
+}

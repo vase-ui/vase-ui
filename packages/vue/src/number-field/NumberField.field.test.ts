@@ -261,13 +261,14 @@ describe('the native form', () => {
     expect([selected.input.selectionStart, selected.input.selectionEnd]).toEqual([0, 3]);
   });
 
-  test('with min and step, the form refuses a number off the grid; with no step it accepts each number', async () => {
+  test('VUE-202: with min and step, the form refuses a number off the grid; with no step it accepts each number', async () => {
     const root = reactive<Attrs>({ min: 0, step: 1, defaultValue: 1.5 });
-    const { hidden } = await mountField({ root });
+    const { form, hidden } = await mountField({ root });
     expect(hidden.validity.stepMismatch).toBe(true);
+    expect(form.checkValidity()).toBe(false);
     root.step = undefined;
     await nextTick();
-    expect(hidden.validity.stepMismatch).toBe(false);
+    expect(form.checkValidity()).toBe(true);
   });
 });
 

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-201",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/slider/root/SliderRoot.test.tsx#L3854",
+    "https://html.spec.whatwg.org/multipage/forms.html#the-label-element"
+  ],
+  "behavior": "`Slider.Label` is a native `<label>` whose `for` is the `id` of the input of the first thumb. A click on the label gives that input the focus, also in a range slider, as a click on the label of each native control does. Base UI gives no thumb the focus at a click on the label of a range slider.",
+  "dueWith": "packages/react/src/slider/label/SliderLabel.tsx"
+}

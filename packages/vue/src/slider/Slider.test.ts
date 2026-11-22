@@ -613,7 +613,7 @@ describe('the names', () => {
     for (const input of inputs()) expect(input).toHaveAttribute('aria-labelledby', label().id);
   });
 
-  test('a click on Slider.Label gives the first input the focus and the focus ring; a listener of the developer can prevent it', async () => {
+  test('VUE-201: a click on Slider.Label gives the first input the focus and the focus ring; a listener of the developer can prevent it', async () => {
     const labelAttrs = reactive<Attrs>({});
     const { label, input, thumb, focused } = await mountSlider({
       root: { defaultValue: [20, 40] },

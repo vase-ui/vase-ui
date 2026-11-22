@@ -1,4 +1,4 @@
-import { computed, useAttrs } from 'vue';
+import { computed, useAttrs, watch } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement } from '../common/element';
 import { useHold } from '../common/hold';
@@ -28,6 +28,11 @@ export function useNavigationButton(props: CalendarPreviousButtonProps, directio
   const hold = useHold<PointerEvent>({
     start: (event) => (!ownDisabled() && calendar.canMove(direction) ? event : undefined),
     step,
+  });
+  // `step` refuses only while the button or the calendar is disabled. When it is enabled again
+  // before the release, the hold must not continue, and the click of its press must move nothing.
+  watch(ownDisabled, (disabled) => {
+    if (disabled) hold.cancel();
   });
   const state = computed<CalendarState>(() => ({
     ...calendar.state,
