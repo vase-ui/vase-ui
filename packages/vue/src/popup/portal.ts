@@ -97,7 +97,8 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
   const blocks = computed(() => mounted.value && root.open && layer.block);
 
   const blockElement = shallowRef<HTMLElement | null>(null);
-  const hole = shallowRef<DOMRect>();
+  // A string, so that a notice of the observers with the same place renders nothing.
+  const clipPath = shallowRef<string>();
   watch(
     [
       () =>
@@ -105,23 +106,23 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
       blockElement,
     ],
     ([trigger, block], _, onCleanup) => {
-      hole.value = undefined;
+      clipPath.value = undefined;
       if (!trigger || !block) return;
-      onCleanup(autoUpdate(trigger, block, () => (hole.value = trigger.getBoundingClientRect())));
+      onCleanup(
+        autoUpdate(trigger, block, () => {
+          const rect = trigger.getBoundingClientRect();
+          clipPath.value = `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rect.left}px ${rect.top}px,${rect.right}px ${rect.top}px,${rect.right}px ${rect.bottom}px,${rect.left}px ${rect.bottom}px,${rect.left}px ${rect.top}px)`;
+        }),
+      );
     },
     { flush: 'post' },
   );
-  const blockStyle = computed<CSSProperties>(() => {
-    const rect = hole.value;
-    return {
-      position: 'fixed',
-      inset: 0,
-      // The active trigger, or the hole of the layer, keeps its hover and its press.
-      clipPath: rect
-        ? `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rect.left}px ${rect.top}px,${rect.right}px ${rect.top}px,${rect.right}px ${rect.bottom}px,${rect.left}px ${rect.bottom}px,${rect.left}px ${rect.top}px)`
-        : undefined,
-    };
-  });
+  const blockStyle = computed<CSSProperties>(() => ({
+    position: 'fixed',
+    inset: 0,
+    // The active trigger, or the hole of the layer, keeps its hover and its press.
+    clipPath: clipPath.value,
+  }));
 
   const before = shallowRef<HTMLElement | null>(null);
   const after = shallowRef<HTMLElement | null>(null);

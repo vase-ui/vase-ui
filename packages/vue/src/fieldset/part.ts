@@ -45,6 +45,7 @@ export function useInDisabledFieldset(element: MaybeRefOrGetter<Element | null |
         if (!el) return;
         const update = () => (answerOfBrowser.value = inDisabledFieldset(el));
         update();
+        if (!fieldsetAround(el)) return;
         // The browser sends no event when `:disabled` changes, so the part watches the `disabled`
         // attribute of each fieldset around it, and the children that can make a first legend.
         const observer = new MutationObserver(update);
