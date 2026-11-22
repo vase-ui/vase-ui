@@ -29,6 +29,11 @@ describe('the locale of a part', () => {
     { name: 'Slider', locale: 'de-DE', rule: 'Slider has the provider locale' },
     { name: 'Meter with a locale', locale: 'ar-EG', rule: 'the locale prop of a part wins' },
     { name: 'Meter in the inner provider', locale: 'fr-FR', rule: 'the nearest provider wins' },
+    {
+      name: 'Meter with no provider',
+      locale: 'en-US',
+      rule: 'a part with no locale prop and no provider has `en-US`, and not the locale of the runtime',
+    },
   ])('$rule', async ({ name, locale }) => {
     mockRuntimeLocale('de-CH');
     const { root } = mount(RangesInLocaleProviders, {

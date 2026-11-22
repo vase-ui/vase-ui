@@ -86,13 +86,14 @@
     },
     {
       "upstream": "packages/react/src/utils/getPseudoElementBounds.test.ts",
-      "kind": "not-applicable",
-      "reason": "No part of Vase UI uses the file."
+      "kind": "replaced",
+      "test": "packages/vue/src/select/Select.test.ts",
+      "reason": "A release of the opening press of a Select keeps the popup open on a pseudo-element of the trigger and up to 5 px outside the trigger. `select/Select.test.ts` tests both."
     },
     {
       "upstream": "packages/react/src/utils/getPseudoElementBounds.ts",
       "kind": "not-applicable",
-      "reason": "No part of Vase UI uses the file."
+      "reason": "`popup/press.ts` hit-tests the point of a release, and the browser gives the trigger for a point on its pseudo-element. No part reads the styles of a pseudo-element."
     },
     {
       "upstream": "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",

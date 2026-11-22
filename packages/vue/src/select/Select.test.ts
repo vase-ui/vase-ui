@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
@@ -602,6 +602,40 @@ describe('press, drag, release', () => {
     expect(shown(popup())).toBe(true);
   });
 
+  test('a release on a pseudo-element of the trigger outside its box keeps the popup open, also under the element that blocks the page', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    // The pseudo-element goes 40 px past the right edge of the trigger.
+    style.textContent =
+      '[data-testid="trigger"]::after { content: ""; position: absolute; left: 100%; top: 0; width: 40px; height: 100% }';
+    onTestFinished(() => style.remove());
+    await mountSelect({ trigger: { style: 'position: relative' } });
+    const rect = trigger().getBoundingClientRect();
+    const on = { x: rect.right + 30, y: rect.top + rect.height / 2 };
+    expect(document.elementFromPoint(on.x, on.y)).toBe(trigger());
+    await pressAndRelease(centerOf(trigger()), on);
+    await opened();
+    await wait(50);
+    expect(shown(popup())).toBe(true);
+  });
+
+  test('a release after the trigger left the document gives no error', async () => {
+    const show = reactive({ trigger: true });
+    await mountSelect({ show });
+    await userEvent.pointer({ coords: centerOf(trigger()), keys: '[MouseLeft>]' });
+    await opened();
+    show.trigger = false;
+    await nextTick();
+    const errors: unknown[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.error);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+    const outside = centerOf(document.getElementById('outside')!);
+    await userEvent.pointer({ coords: outside });
+    await userEvent.pointer({ coords: outside, keys: '[/MouseLeft]' });
+    await wait(50);
+    expect(errors).toEqual([]);
+  });
+
   test('a release far from the trigger and the popup closes it with cancel-open', async () => {
     const log: string[] = [];
     await mountSelect({ root: rootEvents(log) });
@@ -668,6 +702,26 @@ describe('the open list', () => {
     expect(item('apple')).toHaveAttribute('tabindex', '-1');
   });
 
+  test.each([
+    { name: 'no value', defaultValue: undefined, first: 'apple', text: '' },
+    { name: 'a value', defaultValue: 'cherry', first: 'cherry', text: 'cherry' },
+  ])(
+    'VUE-229: a close ends the typed string, so a Space on the trigger opens the popup again, for a select with $name',
+    async ({ defaultValue, first, text }) => {
+      await mountSelect({ root: { defaultValue } });
+      trigger().focus();
+      await userEvent.keyboard('{ArrowDown}');
+      await focused(() => item(first));
+      await userEvent.keyboard('b');
+      await focused(() => item('banana'));
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      await userEvent.keyboard(' ');
+      await opened();
+      expect(valueText()).toBe(text);
+    },
+  );
+
   test('the typeahead highlights the item whose text starts with the typed text, and Space is a character while typing', async () => {
     await mountSelect({
       items: [
@@ -685,22 +739,40 @@ describe('the open list', () => {
     expect(valueText()).toBe('');
   });
 
-  test('Enter and Space select the highlighted item; a disabled item keeps the focus and selects nothing', async () => {
-    await mountSelect({
-      items: [
-        { value: 'a', text: 'A', disabled: true },
-        { value: 'b', text: 'B' },
-      ],
-    });
+  test.each(['{ArrowDown}', '{ArrowUp}'])(
+    '%s opens the popup and highlights the first or the last item that is not disabled; Enter and Space select the highlighted item, and a disabled item keeps the focus and selects nothing',
+    async (key) => {
+      await mountSelect({
+        items: [
+          { value: 'a', text: 'A', disabled: true },
+          { value: 'b', text: 'B' },
+          { value: 'c', text: 'C', disabled: true },
+        ],
+      });
+      trigger().focus();
+      await userEvent.keyboard(key);
+      await focused(() => item('b'));
+      await userEvent.keyboard(key === '{ArrowDown}' ? '{ArrowUp}' : '{ArrowDown}');
+      const disabled = key === '{ArrowDown}' ? 'a' : 'c';
+      await focused(() => item(disabled));
+      expect(item(disabled)).toHaveAttribute('aria-disabled', 'true');
+      await userEvent.keyboard('{Enter}');
+      expect(shown(popup())).toBe(true);
+      await userEvent.keyboard(key === '{ArrowDown}' ? '{ArrowDown} ' : '{ArrowUp} ');
+      await closed();
+      expect(valueText()).toBe('b');
+    },
+  );
+
+  test('an item loses the highlight when the trigger of the open popup takes the focus', async () => {
+    await mountSelect();
     trigger().focus();
     await userEvent.keyboard('{ArrowDown}');
-    await focused(() => item('a'));
-    expect(item('a')).toHaveAttribute('aria-disabled', 'true');
-    await userEvent.keyboard('{Enter}');
+    await focused(() => item('apple'));
+    trigger().focus();
+    await nextTick();
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
     expect(shown(popup())).toBe(true);
-    await userEvent.keyboard('{ArrowDown} ');
-    await closed();
-    expect(valueText()).toBe('b');
   });
 
   test('a pointer move highlights the item under it; with highlightItemOnHover false it highlights nothing', async () => {
@@ -737,6 +809,9 @@ describe('the open list', () => {
     await mountSelect();
     await userEvent.click(trigger());
     await opened();
+    trigger().focus();
+    await userEvent.keyboard('b');
+    await focused(() => item('banana'));
     trigger().focus();
     await userEvent.keyboard('{ArrowDown}');
     await focused(() => item('apple'));
@@ -802,6 +877,20 @@ describe('the first focus', () => {
     await mountSelect({ root: { multiple: true, defaultValue: ['cherry', 'apricot'] } });
     await userEvent.click(trigger());
     await focused(() => item('apricot'));
+  });
+
+  test('the item of the value scrolls into the view of the list at the open', async () => {
+    await mountSelect({
+      root: { defaultValue: 'cherry' },
+      popup: { style: 'max-height: 40px; overflow-y: auto; display: block' },
+    });
+    trigger().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await focused(() => item('cherry'));
+    const list = popup().getBoundingClientRect();
+    const rect = item('cherry').getBoundingClientRect();
+    expect(popup().scrollTop).toBeGreaterThan(0);
+    expect(rect.bottom).toBeLessThanOrEqual(list.bottom + 1);
   });
 
   test('after a pointer open with no value, no item, and the list element takes the focus', async () => {

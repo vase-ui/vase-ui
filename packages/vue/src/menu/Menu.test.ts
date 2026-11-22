@@ -311,6 +311,9 @@ describe('the root', () => {
       ['b', 'keyboard', 'keydown', 'b'],
       ['a', 'pointer', 'pointermove', 'Apple'],
     ]);
+    // A typed letter gives its `keydown`.
+    await userEvent.keyboard('b');
+    await waitFor(() => expect(events.at(-1)).toEqual(['b', 'keyboard', 'keydown', 'b']));
     await userEvent.keyboard('{Escape}');
     await closed();
     await waitFor(() => expect(events.at(-1)).toEqual([undefined, 'none', undefined, undefined]));
@@ -562,6 +565,50 @@ describe('the keys of the list', () => {
     await openWithKeyboard(trigger);
     await userEvent.keyboard('{ArrowUp}');
     expect(active()).toBe(item('a'));
+  });
+
+  test('a key open highlights the first or the last item that is not disabled; the arrow keys still reach a disabled item', async () => {
+    const { trigger } = await mountMenu({
+      items: [
+        { key: 'a', attrs: { disabled: true } },
+        { key: 'b' },
+        { key: 'c', attrs: { disabled: true } },
+      ],
+    });
+    trigger.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await opened();
+    await waitFor(() => expect(active()).toBe(item('b')));
+    await userEvent.keyboard('{ArrowUp}');
+    expect(active()).toBe(item('a'));
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    await userEvent.keyboard('{ArrowUp}');
+    await opened();
+    await waitFor(() => expect(active()).toBe(item('b')));
+  });
+
+  test('an item loses the highlight when the trigger of the open menu takes the focus', async () => {
+    const { trigger } = await mountMenu();
+    await openWithKeyboard(trigger);
+    trigger.focus();
+    await nextTick();
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+    expect(popup()).not.toBe(null);
+  });
+
+  test('an item loses the highlight when another trigger of the open menu takes the focus', async () => {
+    mount(MenuViewportParts);
+    await nextTick();
+    const [one, two] = [document.getElementById('one')!, document.getElementById('two')!];
+    one.focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(document.querySelector('[data-highlighted]')).not.toBe(null));
+    two.focus();
+    await nextTick();
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+    expect(one).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('a horizontal menu moves with the left and right keys, in the direction of its popup', async () => {
@@ -1650,7 +1697,12 @@ describe('the state of the items', () => {
         },
         radio,
       });
-      await openWithKeyboard(trigger, 'checkbox');
+      // A key open highlights no disabled item, and an arrow key reaches one.
+      trigger.focus();
+      await userEvent.keyboard('{Enter}');
+      await opened();
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(active()).toBe(item('checkbox')));
       expect(item('checkbox')).toHaveAttribute('aria-disabled', 'true');
       await userEvent.keyboard('{Enter} ');
       await userEvent.click(item('checkbox'), { force: true });

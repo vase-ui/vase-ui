@@ -94,8 +94,11 @@ function onKeydown(event: KeyboardEvent) {
 
 function onFocus(event: FocusEvent) {
   context.keep();
+  if (!root.open) return;
   // An aligned popup covers the trigger.
-  if (root.open && context.aligned.value) root.request(false, 'none', event);
+  if (context.aligned.value) root.request(false, 'none', event);
+  // The highlight follows the focus, and the trigger has the focus.
+  else if (context.list.highlighted) context.list.highlight(null, 'none');
 }
 
 function onBlur(event: FocusEvent) {

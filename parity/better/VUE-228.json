@@ -1,0 +1,11 @@
+{
+  "id": "VUE-228",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/useSwipeDismiss.ts#L548-L556",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/useSwipeDismiss.ts#L852-L858",
+    "https://www.w3.org/TR/pointerevents3/#preventing-compatibility-mouse-events"
+  ],
+  "behavior": "A `pointerdown` listener that calls `preventDefault()` does not stop the swipe of a drawer or a toast. The call keeps its native meaning only: the browser sends no compatibility mouse events. An element in the popup or the toast stops the swipe with `data-vase-ui-swipe-ignore`, and a listener that calls `stopPropagation()` keeps the press from the part. Base UI starts no swipe from a press that a listener prevented.",
+  "dueWith": "packages/react/src/utils/useSwipeDismiss.ts",
+  "families": ["drawer", "toast"]
+}

@@ -12,6 +12,7 @@ type Item = {
   disabled?: boolean;
   native?: boolean;
   hidden?: boolean;
+  invisible?: boolean;
   link?: boolean;
   absent?: boolean;
 };
@@ -43,6 +44,17 @@ describe('the order', () => {
     await nextTick();
     await userEvent.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(item('a'));
+  });
+
+  test('leaves out an item that `visibility: hidden` hides, as an item with `hidden`', async () => {
+    await mountList({ items: [{ key: 'a', invisible: true }, { key: 'b' }, { key: 'c' }] });
+    container().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(item('b'));
+    await userEvent.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(item('c'));
+    await userEvent.keyboard('{Home}');
+    expect(document.activeElement).toBe(item('b'));
   });
 
   test('an item that its part disabled keeps the highlight', async () => {
@@ -77,16 +89,26 @@ describe('the order', () => {
 });
 
 describe('the keys', () => {
-  test('a horizontal list moves with the left and right keys in the direction of its element', async () => {
-    await mountList({ items: keys('a', 'b', 'c'), orientation: 'horizontal', dir: 'rtl' });
-    container().focus();
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(document.activeElement).toBe(item('a'));
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(document.activeElement).toBe(item('b'));
-    await userEvent.keyboard('{ArrowDown}');
-    expect(document.activeElement).toBe(item('b'));
-  });
+  test.each([
+    { dir: 'ltr', forward: '{ArrowRight}', back: '{ArrowLeft}' },
+    { dir: 'rtl', forward: '{ArrowLeft}', back: '{ArrowRight}' },
+  ])(
+    'a horizontal list moves with the left and right keys in the direction of its element: $dir',
+    async ({ dir, forward, back }) => {
+      await mountList({ items: keys('a', 'b', 'c'), orientation: 'horizontal', dir, loop: false });
+      container().focus();
+      await userEvent.keyboard(back);
+      expect(document.activeElement).toBe(item('c'));
+      await userEvent.keyboard(`${back}${back}${back}`);
+      expect(document.activeElement).toBe(item('a'));
+      await userEvent.keyboard(forward);
+      expect(document.activeElement).toBe(item('b'));
+      await userEvent.keyboard(`${forward}${forward}`);
+      expect(document.activeElement).toBe(item('c'));
+      await userEvent.keyboard('{ArrowDown}');
+      expect(document.activeElement).toBe(item('c'));
+    },
+  );
 
   test('a key with a modifier moves nothing', async () => {
     await mountList({ items: keys('a', 'b') });
@@ -265,6 +287,16 @@ describe('the grid keys', () => {
     await mountGrid();
     await userEvent.keyboard('{ArrowDown}{ArrowRight}{ArrowRight}{ArrowDown}{ArrowDown}');
     await waitFor(() => expect(highlightedText()).toBe('c2'));
+  });
+
+  test('ArrowDown and ArrowUp go on from the other end in the same column, when the input does not take the highlight', async () => {
+    await mountGrid({ root: { autoHighlight: true } });
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlightedText()).toBe('a1'));
+    await userEvent.keyboard('{ArrowRight}{ArrowUp}');
+    await waitFor(() => expect(highlightedText()).toBe('c2'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlightedText()).toBe('a2'));
   });
 
   test('in a right-to-left list, ArrowLeft moves forward', async () => {

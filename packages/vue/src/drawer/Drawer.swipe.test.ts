@@ -573,6 +573,55 @@ describe('the swipe that closes', () => {
     expect(sample().y).toBe('0px');
     await release();
   });
+
+  test('measures the popup at the start of a drag, so a change of its size in the drag changes no release', async () => {
+    const popup = reactive<Props>({});
+    // A drawer at the left edge keeps each point of the drags far from the bottom of the view.
+    await mountDrawer({ root: { defaultOpen: true, swipeDirection: 'left' }, popup });
+    const at = (x: number) => ({ x: get('popup').getBoundingClientRect().left + x, y: 100 });
+    const release = await press(at(250), { x: -80, y: 0 });
+    // 80 px is less than half of the 300 px at the start, and more than half of 100 px.
+    popup.style = 'width: 100px';
+    await nextTick();
+    // A release after a rest is slow.
+    await wait(300);
+    await release();
+    await nextTick();
+    await nextTick();
+    expect(byTestId('popup')).not.toBe(null);
+    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-x')).toBe('0px');
+    // The CSS of the popup moves it back to its place.
+    await waitFor(() => expect(get('popup').getBoundingClientRect().left).toBe(0));
+    await drag(at(90), { x: -60, y: 0 });
+    await closed();
+  });
+
+  test('gives the progress 0 to a move back past the start, and follows each move there', async () => {
+    await mountDrawer({ backdrop: {} });
+    const from = textOf();
+    const release = await press(from, { x: 0, y: 60 });
+    await nextTick();
+    expect(sample().progress).toBe('0.2');
+    await userEvent.pointer({ coords: { x: from.x, y: from.y - 10 } });
+    await nextTick();
+    const back = sample();
+    expect(back.progress).toBe('0');
+    expect(Number.parseFloat(back.y)).toBeLessThan(0);
+    await userEvent.pointer({ coords: { x: from.x, y: from.y - 30 } });
+    await nextTick();
+    expect(sample().progress).toBe('0');
+    expect(Number.parseFloat(sample().y)).toBeLessThan(Number.parseFloat(back.y));
+    await release();
+  });
+
+  test('VUE-228: a `pointerdown` listener of the developer that calls `preventDefault()` does not stop a mouse swipe', async () => {
+    await mountDrawer();
+    get('text').addEventListener('pointerdown', (event) => event.preventDefault());
+    const release = await press(textOf('text'), { x: 0, y: 90 });
+    await nextTick();
+    expect(sample().y).toBe('90px');
+    await release();
+  });
 });
 
 describe('snap points', () => {
@@ -868,6 +917,33 @@ describe.skipIf(!chromium)('a touch (Chromium)', () => {
     expect(scroller.scrollTop).toBe(end);
     expect(sample().y).toBe('0px');
     expect(log).toEqual([]);
+  });
+
+  test('moves the popup and closes it while `body` scrolls the page', async () => {
+    const { body, documentElement: html } = document;
+    const styles = [html.style.cssText, body.style.cssText];
+    // `body` is a scroller of its own, and the overflow does not go to the view.
+    html.style.cssText = 'height: 100%; overflow-y: auto';
+    body.style.cssText = 'height: 100%; overflow-y: auto';
+    const tall = body.appendChild(document.createElement('div'));
+    tall.style.height = '5000px';
+    onTestFinished(() => {
+      tall.remove();
+      [html.style.cssText, body.style.cssText] = styles;
+    });
+    // A modal drawer locks the scroll of the page.
+    await mountDrawer({ root: { defaultOpen: true, modal: false } });
+    expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
+    const from = textOf();
+    await touchPath(
+      [from, { x: from.x, y: from.y - 20 }, { x: from.x, y: from.y - 40 }],
+      async () => {
+        await nextTick();
+        expect(Number.parseFloat(sample().y)).toBeLessThan(0);
+      },
+    );
+    await touchDrag(from, { x: from.x, y: from.y + 200 }, 10);
+    await closed();
   });
 
   test('gives the browser a drag across the axis', async () => {

@@ -155,7 +155,6 @@ export function useSelectRoot(
       emit('openChange', open, details as SelectRootOpenChangeEventDetails);
       if (details.isCanceled || open) return;
       if (details.reason === 'focus-out' || details.reason === 'outside-press') {
-        typeahead.reset();
         const trigger = root.activeTrigger;
         if (trigger) field?.onLeave(trigger);
       }
@@ -236,7 +235,7 @@ export function useSelectRoot(
       const reachable = list.items();
       let target = reachable.find((item) => isSelected(itemValues.get(item.element)));
       if (!target && root.interaction === 'keyboard') {
-        target = openKey === 'ArrowUp' ? reachable.at(-1) : reachable[0];
+        target = list.edge(openKey === 'ArrowUp' ? 'last' : 'first');
       } else if (!target && aligned.value && props.highlightItemOnHover) {
         target = reachable[0];
       }
@@ -262,6 +261,15 @@ export function useSelectRoot(
       return !root.open;
     },
   });
+
+  // A close ends the typed string, so a Space on the trigger opens the popup again.
+  watch(
+    () => root.open,
+    (open) => {
+      if (!open) typeahead.reset();
+    },
+    { flush: 'sync' },
+  );
 
   const press = usePopupPress(root, {
     itemAt(path) {

@@ -167,6 +167,10 @@ export function useToastSwipe(options: {
       x: gesture.transform.x + (gesture.axis !== 'vertical' && horizontal ? damped.x : 0),
       y: gesture.transform.y + (gesture.axis !== 'horizontal' && vertical ? damped.y : 0),
     };
+    // Firefox sends no `pointerup` for a release outside its view, and a fast flick on a trackpad
+    // sends a move with no button before its `pointerup`. That move is the release
+    // (test/measurements/pointer-press.test.ts).
+    if (event.pointerType === 'mouse' && event.buttons === 0) end(!gesture.cancelled);
   }
 
   function onPointerup(event: PointerEvent) {

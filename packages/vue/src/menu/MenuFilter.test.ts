@@ -332,6 +332,17 @@ describe('the query', () => {
 });
 
 describe('the focus', () => {
+  test('the item keeps the highlight that the input names when the trigger of the open menu takes the focus', async () => {
+    const { trigger } = await mountFilter();
+    await open(trigger);
+    expect(highlighted()).toBe('apple');
+    trigger.focus();
+    await nextTick();
+    expect(popup()).not.toBe(null);
+    expect(highlighted()).toBe('apple');
+    expect(input()).toHaveAttribute('aria-activedescendant', item('apple').id);
+  });
+
   test('the focus that comes back to the input from an item removes the highlight; a pointer move in the popup gives the focus back to the input', async () => {
     const { trigger } = await mountFilter();
     await open(trigger);

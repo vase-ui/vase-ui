@@ -633,7 +633,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           list.highlight(items[0] ?? null, 'none');
         } else if (key && (source.mode !== 'none' || source.autoHighlight)) {
           list.highlight(
-            (key.key === 'ArrowUp' ? items.at(-1) : items[0]) ?? null,
+            list.edge(key.key === 'ArrowUp' ? 'last' : 'first') ?? null,
             'keyboard',
             key,
           );

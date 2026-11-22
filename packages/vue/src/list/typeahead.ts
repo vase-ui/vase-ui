@@ -18,8 +18,10 @@ export function nextTextMatch(
   start: number,
   current: number,
 ): number {
-  const lower = typed.toLocaleLowerCase();
-  const fits = (text: string, prefix: string) => text.toLocaleLowerCase().startsWith(prefix);
+  // The match is the same in each runtime: `toLocaleLowerCase()` follows the locale of the
+  // visitor, and in Turkish it gives `ı` for `I`.
+  const lower = typed.toLowerCase();
+  const fits = (text: string, prefix: string) => text.toLowerCase().startsWith(prefix);
   let prefix = lower;
   let from = start;
   // One letter typed more than one time.
