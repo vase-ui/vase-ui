@@ -1062,6 +1062,41 @@ describe('modal', () => {
     },
   );
 
+  test('a wide popover that a touch opened stays at its trigger when the lock of the page moves the containing block of the positioner', async () => {
+    // A scrollbar that takes room makes `<body>` the containing block of the positioner during a
+    // lock (useScrollLock.ts), and the margin of `<body>` moves that block. The window reports a
+    // scrollbar of 12 px.
+    const ownInnerWidth = Object.getOwnPropertyDescriptor(window, 'innerWidth');
+    Object.defineProperty(window, 'innerWidth', {
+      value: document.documentElement.clientWidth + 12,
+      configurable: true,
+    });
+    document.body.style.margin = '8px';
+    onTestFinished(() => {
+      if (ownInnerWidth) Object.defineProperty(window, 'innerWidth', ownInnerWidth);
+      else delete (window as { innerWidth?: number }).innerWidth;
+      document.body.style.removeProperty('margin');
+    });
+    const { trigger } = await mountPopover({
+      root: { modal: true },
+      positioner: { style: 'width: 100vw' },
+    });
+    const { x, y } = centerOf(trigger());
+    trigger().dispatchEvent(
+      new PointerEvent('click', {
+        bubbles: true,
+        detail: 1,
+        pointerType: 'touch',
+        clientX: x,
+        clientY: y,
+      }),
+    );
+    await opened();
+    await waitFor(() => expect(isScrollLocked()).toBe(true));
+    const bottom = Math.round(trigger().getBoundingClientRect().bottom);
+    await waitFor(() => expect(Math.round(positioner()!.getBoundingClientRect().top)).toBe(bottom));
+  });
+
   test('a double click on the fixed element or the backdrop of a popover that stays open selects no text of the page', async () => {
     const words = document.body.appendChild(document.createElement('p'));
     words.textContent = 'Some words of the page';
@@ -1785,6 +1820,62 @@ describe('the placement', () => {
       expect(Math.round(first.bottom)).toBe(300);
     });
 
+    test('after the open, a resize of the popup, a resize of the anchor and a new `sideOffset` place the popup again', async () => {
+      placeAnchor('left: 100px; top: 300px; width: 50px; height: 20px');
+      const positionerProps = reactive<Props>({
+        anchor,
+        side: 'top',
+        collisionAvoidance: { side: 'none' },
+      });
+      const popupProps = reactive<Props>({ style: 'height: 50px' });
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: positionerProps,
+        popup: popupProps,
+      });
+      await opened();
+      await placed();
+      const bottom = () => Math.round(positioner()!.getBoundingClientRect().bottom);
+      // Each change runs in a task of its own, as a change of an app does. A change in the step of
+      // the resize observers of a frame gives a notice that the browser holds for the next frame.
+      const nextTask = () => new Promise((resolve) => setTimeout(resolve));
+      expect(bottom()).toBe(300);
+      await nextTask();
+      popupProps.style = 'height: 120px';
+      await waitFor(() => expect(positioner()!.getBoundingClientRect().height).toBe(120));
+      await waitFor(() => expect(bottom()).toBe(300));
+      await nextTask();
+      anchor.style.top = '';
+      anchor.style.bottom = `${innerHeight - 320}px`;
+      anchor.style.height = '40px';
+      await waitFor(() => expect(bottom()).toBe(280));
+      await nextTask();
+      positionerProps.sideOffset = 8;
+      await waitFor(() => expect(bottom()).toBe(272));
+    });
+
+    test('after the open, a new `alignOffset` and a new `arrowPadding` place the popup and its arrow again', async () => {
+      placeAnchor('left: 100px; top: 300px; width: 50px; height: 20px');
+      const positionerProps = reactive<Props>({ anchor, side: 'top' });
+      await mountPopover({
+        root: { defaultOpen: true },
+        positioner: positionerProps,
+        popup: { style: 'width: 100px; height: 50px' },
+        arrow: { style: 'width: 10px; height: 10px' },
+      });
+      await opened();
+      await placed();
+      const left = () => Math.round(positioner()!.getBoundingClientRect().left);
+      const arrowLeft = () => Math.round(byTestId('arrow').getBoundingClientRect().left) - left();
+      expect(left()).toBe(75);
+      positionerProps.alignOffset = 40;
+      await waitFor(() => expect(left()).toBe(115));
+      // The center of the anchor is 10 px from the start of the popup, so the padding holds the arrow.
+      expect(arrowLeft()).toBe(5);
+      positionerProps.arrowPadding = 30;
+      await waitFor(() => expect(arrowLeft()).toBe(30));
+    });
+
     test('`--anchor-width` covers the device pixels of an anchor at a fractional place', async () => {
       placeAnchor('left: 10.3px; top: 200px; width: 100.4px; height: 20px');
       await mountPopover({ root: { defaultOpen: true }, positioner: { anchor } });
@@ -2236,6 +2327,21 @@ describe('more behaviors of the parts', () => {
     await userEvent.click(button);
     await closed();
     expect(log).toEqual(['openChange false close-press', 'update false']);
+  });
+
+  test('the hole of the fixed element follows a move of the trigger', async () => {
+    const { trigger } = await mountPopover({ root: { modal: true } });
+    await userEvent.click(trigger());
+    await opened();
+    await placed();
+    const block = document.querySelector<HTMLElement>(BLOCK)!;
+    const corner = () => {
+      const { left, top } = trigger().getBoundingClientRect();
+      return `${left}px ${top}px`;
+    };
+    await waitFor(() => expect(block.style.clipPath).toContain(corner()));
+    trigger().style.marginLeft = '40px';
+    await waitFor(() => expect(block.style.clipPath).toContain(corner()));
   });
 
   test('a press on the backdrop of a child closes only the child', async () => {

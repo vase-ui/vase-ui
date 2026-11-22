@@ -14,9 +14,11 @@ import {
   flip,
   limitShift,
   offset,
+  platform,
   shift,
   size,
   useFloating,
+  type ElementRects,
   type Middleware,
   type MiddlewareState,
   type Padding,
@@ -26,6 +28,7 @@ import {
 } from '@floating-ui/vue';
 
 import { computed, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
+import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
 
@@ -232,6 +235,8 @@ export function usePlacement(
   );
   const sideMode = computed(() => props.collisionAvoidance?.side ?? 'flip');
   const alignMode = computed(() => props.collisionAvoidance?.align ?? 'flip');
+  // The rectangles that the last place read.
+  let placedRects = '';
   // The placement of the last place of an open, which a popup with `lazyFlip` keeps.
   const kept = shallowRef<Placement>();
   const placement = computed<Placement>(() => {
@@ -332,6 +337,13 @@ export function usePlacement(
       })),
       hide,
       ...(options.insets() ? [insets] : []),
+      {
+        name: 'placedRects',
+        fn({ rects }) {
+          placedRects = rectsKey(rects);
+          return {};
+        },
+      },
     ];
   });
 
@@ -346,20 +358,52 @@ export function usePlacement(
     placement,
     strategy: () => props.positionMethod,
     middleware,
-    // The popup stays at its place while its anchor is out of the document: after the trigger left
-    // the DOM, and before an app in a detached element joins the document.
-    whileElementsMounted: (anchor, element, update) =>
-      autoUpdate(
+    whileElementsMounted: (anchor, element, update) => {
+      // The popup stays at its place while its anchor is out of the document: after the trigger
+      // left the DOM, and before an app in a detached element joins the document.
+      const place = () => ('isConnected' in anchor && !anchor.isConnected ? undefined : update());
+      const tracks = !props.disableAnchorTracking;
+      const stopMoves = autoUpdate(anchor, element, place, {
+        ancestorScroll: tracks,
+        elementResize: false,
+        layoutShift: tracks,
+      });
+      if (!tracks) return stopMoves;
+      // The resize observer of Floating UI gives a first notice in the frame after the open, with
+      // the rectangles of the first place. A notice places the popup only when a rectangle that a
+      // place reads changed. A lock of the page after the first place can make `<body>` the
+      // containing block of the positioner, and the rectangle of the anchor in it then changes.
+      const placeIfChanged = async () => {
+        const rects = await platform.getElementRects({
+          reference: anchor,
+          floating: element,
+          strategy: props.positionMethod,
+        });
+        if (rectsKey(rects) !== placedRects) place();
+      };
+      // `autoUpdate` calls its function once at its start, and `stopMoves` placed the popup then.
+      let started = false;
+      const stopResizes = autoUpdate(
         anchor,
         element,
-        () => ('isConnected' in anchor && !anchor.isConnected ? undefined : update()),
-        {
-          ancestorScroll: !props.disableAnchorTracking,
-          elementResize: !props.disableAnchorTracking,
-          layoutShift: !props.disableAnchorTracking,
+        () => {
+          if (started) void placeIfChanged();
         },
-      ),
+        { ancestorScroll: false, ancestorResize: false, layoutShift: false },
+      );
+      started = true;
+      return mergeCleanups(stopMoves, stopResizes);
+    },
   });
+
+  // The middleware reads these values only when it places the popup, so a change places an open
+  // popup again.
+  watch(
+    [arrowElement, () => props.sideOffset, () => props.alignOffset, () => props.arrowPadding],
+    () => {
+      if (root.open) floating.update();
+    },
+  );
 
   // The first frame after an open shows the popup at its place (test/measurements/popup.test.ts),
   // so only the first placement hides the popup: the server HTML and the first render have no place.
@@ -449,6 +493,11 @@ export function usePlacement(
       },
     },
   };
+}
+
+/** The rectangle of the anchor in the offset parent and the size of the positioner, as one value. */
+function rectsKey({ reference, floating }: ElementRects) {
+  return `${reference.x} ${reference.y} ${reference.width} ${reference.height} ${floating.width} ${floating.height}`;
 }
 
 interface ArrowOptions {
