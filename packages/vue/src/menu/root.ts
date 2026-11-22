@@ -127,6 +127,13 @@ export function submenuOf(element: Element | null | undefined) {
   return element ? submenus.get(element) : undefined;
 }
 
+/** The submenu triggers of a menu. A press on one opens its submenu in place of the open one. */
+function submenuTriggersOf(menu: MenuContext | null) {
+  return (menu?.list.items({ hidden: true }) ?? [])
+    .map((item) => item.element)
+    .filter((element) => submenus.has(element));
+}
+
 // A popup that covers the view leaves no room for a swipe outside, so a touch open locks the page.
 const FULL_WIDTH_TOLERANCE = 20;
 
@@ -260,7 +267,12 @@ export function useMenuRoot<Payload>(
       triggerInUse: true,
       hole:
         current === 'context' ? null : current === 'menubar' ? menubar.value?.element : undefined,
-      inside: current === 'menubar' ? menubar.value?.triggers : undefined,
+      inside:
+        current === 'menubar'
+          ? menubar.value?.triggers
+          : current === 'submenu'
+            ? submenuTriggersOf(parent)
+            : undefined,
     };
   });
 
@@ -272,7 +284,15 @@ export function useMenuRoot<Payload>(
       const edge = pendingEdge;
       pendingEdge = null;
       if (filter?.input.value) {
-        if (edge || root.interaction === 'mouse' || root.interaction === 'keyboard') {
+        // A tap and a pen would raise the keyboard of the screen. A submenu takes the focus only
+        // from a key or a mouse, and a root also from code.
+        const interaction = root.interaction;
+        if (
+          edge ||
+          interaction === 'mouse' ||
+          interaction === 'keyboard' ||
+          (interaction === '' && kind.value !== 'submenu')
+        ) {
           filter.input.value.focus({ preventScroll: true });
         }
         if (edge) highlightEdge(edge);
@@ -291,6 +311,8 @@ export function useMenuRoot<Payload>(
     },
     lostFocus: () => root.popup,
     closeBefore: true,
+    // Shift+Tab out of a submenu of a filterable menu goes to its input, which has the focus there.
+    beforeTarget: () => parent?.filter?.input.value,
     exit: () => context.rootMenu.root,
   });
 
@@ -311,6 +333,7 @@ export function useMenuRoot<Payload>(
     hover: () => props.highlightItemOnHover && !openChild.value?.hover.value?.inTriangle,
     keepOnLeave: (item) => !!submenuOf(item.element)?.root.open || !!filter?.autoHighlight,
     onHighlight(item, reason, event) {
+      filter?.noteHighlight(reason);
       emit('itemHighlighted', item?.element, {
         reason,
         event,
@@ -397,8 +420,25 @@ export function useMenuRoot<Payload>(
       return true;
     }
     if (event.key === keys.start && parent) {
+      // The key of a horizontal parent also moves its highlight, as in a menubar. A filterable
+      // parent keeps the highlight on the trigger at its start.
+      const trigger = parent.list.highlighted;
+      if (parent.orientation === 'horizontal' && parent.list.onKeydown(event)) {
+        if (!parent.list.highlighted) parent.list.highlight(trigger, 'keyboard', event);
+      }
       event.preventDefault();
       root.request(false, 'list-navigation', event);
+      return true;
+    }
+    // The key toward the start on the trigger of the open submenu closes the submenu.
+    const child = openChild.value;
+    if (
+      event.key === keys.start &&
+      child &&
+      child.root.activeTrigger === list.highlighted?.element
+    ) {
+      event.preventDefault();
+      child.root.request(false, 'list-navigation', event);
       return true;
     }
     return passUp(event);
@@ -434,6 +474,10 @@ export function useMenuRoot<Payload>(
     },
     // A release on the positioner, such as on its padding, is a release in the menu.
     inside: (element) => isInPopup(layer, element) || !!positioner.value?.contains(element),
+    // The input of a filterable menu keeps the focus.
+    get virtual() {
+      return list.virtual;
+    },
   });
 
   const context: MenuContext<Payload> = {
@@ -483,9 +527,10 @@ export function useMenuRoot<Payload>(
       pendingEdge = edge;
       root.request(true, reason, event, trigger);
       if (!root.open) pendingEdge = null;
-      // An open menu that has the focus highlights the item at once.
+      // An open menu highlights the item at once, and its input takes the focus back.
       else if (placed.value && reason !== 'trigger-press') {
         pendingEdge = null;
+        filter?.input.value?.focus({ preventScroll: true });
         highlightEdge(edge);
       }
     },

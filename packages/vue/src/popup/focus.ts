@@ -113,6 +113,8 @@ export function usePopupFocus(
     lostFocus?: () => HTMLElement | null;
     /** The first sentinel also asks for a close when it gets the focus from the popup. */
     closeBefore?: boolean;
+    /** The element that the first sentinel gives the focus to, in place of the trigger. */
+    beforeTarget?: () => HTMLElement | null | undefined;
     /** The root that the last sentinel closes, and after whose trigger the focus goes. */
     exit?: () => PopupRoot;
     /**
@@ -198,23 +200,27 @@ export function usePopupFocus(
 
   function returnFocus() {
     const popup = root.popup;
-    if ((!took && !options.noReturn) || !popup) return;
+    if (!popup) return;
+    const doc = ownerDocument(popup);
+    const active = activeElement(doc);
+    // A popup that took no focus at its open, as after a hover, gives back a focus that went into
+    // it later.
+    if (!took && !options.noReturn && !popup.contains(active)) return;
     took = false;
     // The focus stays where it went: after a move out of the popup, and after a press outside.
     // During `focusout`, the active element is `<body>`.
     if ((options.noReturn ?? ['focus-out']).includes(root.reason ?? '')) return;
-    const doc = ownerDocument(popup);
-    const active = activeElement(doc);
     if (active && active !== doc.body && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
     if (target === false) return;
     // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
-    // that closes is no target, also while the popup leaves.
-    const element = [
-      target === true ? null : tabStopOf(target, popup),
-      focusableTrigger(),
-      before as HTMLElement | null,
-    ].find((each) => each?.isConnected && !popup.contains(each));
+    // that closes is no target, also while the popup leaves. After an open by code, the element
+    // that had the focus comes before the trigger (BUG-6037).
+    const fallbacks = [focusableTrigger(), before as HTMLElement | null];
+    if (root.interaction === '') fallbacks.reverse();
+    const element = [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
+      (each) => each?.isConnected && !popup.contains(each),
+    );
     const keyboard = root.closeInteraction === 'keyboard';
     if (!element?.closest('[inert]')) {
       focus(element, keyboard);
@@ -253,7 +259,7 @@ export function usePopupFocus(
         focus(place === 'before' ? last : first);
       } else if (place === 'before') {
         if (options.closeBefore) root.request(false, 'focus-out', event);
-        focus(focusableTrigger() ?? (before as HTMLElement | null));
+        focus(options.beforeTarget?.() ?? focusableTrigger() ?? (before as HTMLElement | null));
       } else {
         // The root that the last sentinel closes, such as the menu of a submenu. With no trigger,
         // a menu gives the focus back to the element that had it before the open, as a context

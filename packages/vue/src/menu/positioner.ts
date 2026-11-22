@@ -67,6 +67,7 @@ export function useMenuPositioner(
     positioner: element,
     insets: () => !!context.viewport.value,
     lazyFlip: () => (context.filter ? 'placement' : false),
+    shiftInLayoutViewport: kind() === 'context',
     shiftAcross: () => kind() === 'context' && props.collisionAvoidance?.side !== 'flip',
   });
   watch(

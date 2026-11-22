@@ -33,7 +33,13 @@ defineProps({
   /** The content of `one` holds this many more links. */
   moreLinks: { type: Number, default: 0 },
   /** A nested root in the content of `one`, in place unless `inline` is `false`. */
-  nested: Object as PropType<{ root?: Props; inline?: boolean; contents?: Record<string, Props> }>,
+  nested: Object as PropType<{
+    root?: Props;
+    inline?: boolean;
+    contents?: Record<string, Props>;
+    /** The value of the item `sub-a`, in place of `'sub-a'`. */
+    valueA?: unknown;
+  }>,
   /** `add` runs at each mount of a component in the content of `one`. */
   mounts: Object as PropType<{ add: () => void }>,
 });
@@ -71,7 +77,7 @@ defineExpose({ root: rootPart });
           </NavigationMenu.Link>
           <NavigationMenu.Root v-if="nested" data-testid="nested-root" v-bind="nested.root">
             <NavigationMenu.List data-testid="nested-list">
-              <NavigationMenu.Item value="sub-a">
+              <NavigationMenu.Item :value="nested.valueA === undefined ? 'sub-a' : nested.valueA">
                 <NavigationMenu.Trigger data-testid="trigger-sub-a">Sub A</NavigationMenu.Trigger>
                 <NavigationMenu.Content
                   data-testid="content-sub-a"
@@ -152,6 +158,23 @@ defineExpose({ root: rootPart });
 
 .animated {
   transition: opacity 80ms;
+}
+
+/* A kept popup that leaves with CSS on `[hidden]`. */
+.fades {
+  transition: opacity 400ms;
+}
+
+.sized.fades {
+  transition:
+    width 80ms,
+    height 80ms,
+    opacity 400ms;
+}
+
+.fades[hidden] {
+  display: block;
+  opacity: 0;
 }
 
 .slide-enter-from,

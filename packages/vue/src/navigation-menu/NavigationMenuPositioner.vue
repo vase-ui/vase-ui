@@ -45,7 +45,7 @@ const placementProps = reactive({
   ),
   // While the popup leaves, it stays at the trigger of its content.
   anchor: computed(() =>
-    popup.leaving
+    root.leaving
       ? popup.triggers.find((trigger) => trigger.payload === root.shown)?.element
       : props.anchor,
   ),
@@ -114,7 +114,7 @@ function elementProps() {
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,
       'data-instant': state.value.instant ? '' : undefined,
-      hidden: popup.open || popup.leaving ? undefined : true,
+      hidden: popup.open || root.leaving ? undefined : true,
     },
     attrs,
   );

@@ -28,7 +28,11 @@ watch(
   (input, _, onCleanup) => {
     filter.input.value = input;
     onCleanup(() => {
-      if (filter.input.value === input) filter.input.value = null;
+      if (filter.input.value !== input) return;
+      filter.input.value = null;
+      // Only Chromium sends `blur` when Vue removes the focused input
+      // (test/measurements/field.test.ts).
+      filter.onInputBlur();
     });
   },
   { flush: 'sync' },

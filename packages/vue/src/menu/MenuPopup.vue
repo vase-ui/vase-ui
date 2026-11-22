@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, onUnmounted, provide, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { sizeVariables } from '../popup/viewport';
+import { groupItemsKey } from './filter';
 import { injectMenu, injectPositioner } from './root';
 import type { MenuPopupProps, MenuPopupState } from './types';
 
@@ -16,6 +17,8 @@ defineSlots<{
 
 const menu = injectMenu('Popup');
 const placement = injectPositioner('Popup');
+// The items of a submenu in a group of the parent count for the query of the submenu only.
+provide(groupItemsKey, null);
 const { root } = menu;
 const attrs = useAttrs();
 const generatedId = useId();
@@ -102,7 +105,9 @@ function elementProps() {
       inert: closed ? true : undefined,
       style: sizeVariables('popup', menu.viewport.value?.popup),
       onKeydown,
-      onPointermove: menu.filter ? () => menu.filter?.takePointer() : undefined,
+      onPointermove: menu.filter
+        ? (event: PointerEvent) => menu.filter?.takePointer(event)
+        : undefined,
     },
     attrs,
   );

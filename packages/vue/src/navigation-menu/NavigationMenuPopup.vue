@@ -46,8 +46,9 @@ onBeforeUnmount(() => {
 const removeLeaving = popup.addLeaving(() => element.value);
 onUnmounted(removeLeaving);
 
-// The popup takes the size of its new content in steps: at a change of the item, and at a change
-// in the shown content, such as a nested menu that changes its item.
+// The popup takes the size of its new content in steps: at a change of the item, also at an open
+// while a kept popup leaves, and at a change in the shown content, such as a nested menu that
+// changes its item.
 const sizes = usePopupSizes(() => (popup.open ? element.value : null));
 const slot = inject(sizesKey, null);
 if (slot) {
@@ -57,7 +58,7 @@ if (slot) {
   });
 }
 watch(
-  () => root.value,
+  () => root.shown,
   (next, previous) => {
     if (next != null && previous != null) void sizes.resize();
   },

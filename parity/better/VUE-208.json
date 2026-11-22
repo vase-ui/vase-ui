@@ -1,0 +1,10 @@
+{
+  "id": "VUE-208",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/store.ts#L379-L383",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/menu/root/MenuRoot.test.tsx#L4247-L4289"
+  ],
+  "behavior": "`openChange` reports a close only for an open menu. When a controlled root does not apply an open by hover, the menu stays closed, and a pointer that leaves the trigger reports nothing. A listener thus gets no close of a menu that it did not open. `details.cancel()` declines an open in both libraries. Base UI reports a close with the reason `trigger-hover` then, because its store does not know if the parent applies the open later.",
+  "dueWith": "packages/react/src/utils/popups/store.ts",
+  "families": ["menu"]
+}

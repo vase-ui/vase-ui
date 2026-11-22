@@ -24,6 +24,8 @@ export function useMenuItem(options: {
   link?: boolean;
   /** The menu whose list has the item: the parent of a submenu trigger. */
   menu?: MenuContext;
+  /** The item shows while this is `true`, whatever the query. */
+  keep?: () => boolean;
 }) {
   const menu = options.menu ?? injectMenu(options.part);
   const generatedId = useId();
@@ -49,7 +51,7 @@ export function useMenuItem(options: {
     if (label !== undefined) return label.trim();
     return options.element.value?.textContent?.trim() ?? '';
   };
-  const filtered = useFilteredItem(menu, text);
+  const filtered = useFilteredItem(menu, text, options.keep);
   onUnmounted(filtered.remove);
   watch(
     options.element,
@@ -84,6 +86,7 @@ export function useMenuItem(options: {
     id,
     disabled,
     highlighted,
+    matches: filtered.matches,
     shown: filtered.shown,
     /** The attributes of the element. The values of the developer (`attrs`) win. */
     mergeAttributes(own: Record<string, unknown>, attrs: Record<string, unknown>) {

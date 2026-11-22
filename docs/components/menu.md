@@ -483,7 +483,7 @@ An item that does not match, and a group with no matching items, get the `hidden
 }
 ```
 
-`<Menu.Empty>` shows when no item matches.
+`<Menu.Empty>` shows when no item matches. Its element stays in the DOM with no content while an item shows. Hide its padding with `:empty`.
 
 By default, an item matches when its text contains the query. The match ignores case, accents and punctuation. Use `filter` to set your own rule. It gets the text of each item and the trimmed query, and it keeps the item when it returns `true`. `Menu.useFilter` gives the same locale-aware comparisons.
 
@@ -503,7 +503,7 @@ Set `autoHighlight` to highlight the first match while the query is not empty. S
 
 #### Focus and keyboard
 
-When a mouse press or a key opens the menu, the input gets the focus. A hover, a touch or a pen does not move the focus to the input, so the on-screen keyboard stays hidden. The arrow keys move the highlight while the input keeps the focus. <kbd>Tab</kbd> closes the menu, and <kbd>Shift</kbd>+<kbd>Tab</kbd> returns the focus to the trigger. The popup is a `dialog` that holds the `searchbox` input and the `menu` list.
+When a mouse press, a key, `defaultOpen` or the `open` prop opens the menu, the input gets the focus. A hover, a touch or a pen does not move the focus to the input, so the on-screen keyboard stays hidden. After a hover open, Up Arrow, Down Arrow or a typed character on the trigger moves the focus to the input. The arrow keys move the highlight while the input keeps the focus. <kbd>Tab</kbd> closes the menu, and <kbd>Shift</kbd>+<kbd>Tab</kbd> returns the focus to the trigger. The popup is a `dialog` that holds the `searchbox` input and the `menu` list.
 
 #### Submenus
 

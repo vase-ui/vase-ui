@@ -1,6 +1,7 @@
 import {
   computed,
   inject,
+  onScopeDispose,
   provide,
   shallowReactive,
   shallowRef,
@@ -15,6 +16,7 @@ import { isComposing } from '../popup/layer';
 import type { MenuContext } from './root';
 import { submenuOf } from './root';
 import type { MenuFilterProviderChangeEventReason } from './types';
+import type { HighlightReason } from '../list/list';
 
 /** What `Menu.FilterProvider` gives to the root directly in it. */
 export interface MenuFilterProviderOptions {
@@ -36,7 +38,7 @@ export interface MenuFilterRoot {
   readonly autoHighlight: boolean | 'always';
   /** The value of the input. */
   readonly query: string;
-  /** The input has the focus, and it got it after a key. */
+  /** The input has the focus after a key, and no key moved the highlight to an item. */
   readonly inputHighlighted: boolean;
   /** The input has the focus. */
   readonly inputFocused: boolean;
@@ -52,8 +54,12 @@ export interface MenuFilterRoot {
   onInputBlur(): void;
   /** A key on an item or on the list, which has the real focus, goes to the input. */
   takeKey(event: KeyboardEvent): void;
-  /** A move of the pointer in the popup gives the focus back to the input. */
-  takePointer(): void;
+  /** A move of the pointer in the popup gives the focus to the input. */
+  takePointer(event: PointerEvent): void;
+  /** The input got the focus from a pointer that moved into the popup from a parent menu. */
+  readonly pointerFocus: boolean;
+  /** The reason of the last change of the highlight. */
+  noteHighlight(reason: HighlightReason): void;
   connect(menu: MenuContext): void;
 }
 
@@ -63,6 +69,8 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
   const textVersion = shallowRef(0);
   const keyFocus = shallowRef(false);
   const focused = shallowRef(false);
+  const pointerHighlight = shallowRef(false);
+  let pointerFocus = false;
   const query = computed(() => provider.query.trim());
   let menu: MenuContext | undefined;
   let returning = false;
@@ -87,7 +95,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
       return provider.query;
     },
     get inputHighlighted() {
-      return keyFocus.value && !menu?.list.highlighted;
+      return keyFocus.value && (!menu?.list.highlighted || pointerHighlight.value);
     },
     get inputFocused() {
       return focused.value;
@@ -118,14 +126,15 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
       if (event.key === 'Enter') {
         if (!highlighted) return;
         event.preventDefault();
-        dispatchClickWithModifiers(highlighted.element, event);
+        press(highlighted.element, event);
         return;
       }
-      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      // Shift with an arrow key, Home or End selects text.
+      if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
       // Space in the empty input clicks the highlighted item, and types no space at the start.
-      if (event.key === ' ' && empty && !event.shiftKey) {
+      if (event.key === ' ' && empty) {
         event.preventDefault();
-        if (highlighted) dispatchClickWithModifiers(highlighted.element, event);
+        if (highlighted) press(highlighted.element, event);
         return;
       }
       if (event.key === 'Home' || event.key === 'End') {
@@ -159,6 +168,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
     },
     onInputFocus(event) {
       focused.value = true;
+      pointerFocus = false;
       keyFocus.value = (event.target as HTMLElement).matches(':focus-visible');
       if (!menu || returning || provider.autoHighlight === 'always') return;
       // The user moved the focus from an item back to the input.
@@ -170,17 +180,24 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
     onInputBlur() {
       focused.value = false;
       keyFocus.value = false;
+      pointerFocus = false;
     },
     takeKey(event) {
       if (!menu || event.target === input.value || !input.value) return;
       returnFocus();
       filter.onInputKeydown(event);
     },
-    takePointer() {
+    takePointer(event) {
       const element = input.value;
-      if (!menu) return;
+      // A tap gives `pointermove` too, and the focus of the input would raise the keyboard.
+      if (!menu || !element || event.pointerType !== 'mouse') return;
       const doc = ownerDocument(element);
       const active = activeElement(doc);
+      if (active === element) return;
+      const target = event.target as Element;
+      const child = menu.openChild;
+      // A submenu with no portal is in this popup, and it takes its own pointer.
+      if (child?.root.popup?.contains(target)) return;
       const popup = menu.root.popup;
       const own =
         !active ||
@@ -188,7 +205,31 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
         active === popup ||
         active === menu.listElement.value ||
         menu.list.items().some((item) => item.element === active);
-      if (own && active !== element) returnFocus();
+      if (own) {
+        returnFocus();
+        return;
+      }
+      // The pointer came from a parent menu, whose element has the focus.
+      if (inParent(menu, active)) {
+        returnFocus();
+        pointerFocus = true;
+        return;
+      }
+      // The focus that followed the pointer into a submenu follows it back. A focus that a key or
+      // a press gave to the submenu comes back when the pointer is on a submenu trigger.
+      if (!child?.inside(active)) return;
+      const onTrigger = menu.list
+        .items()
+        .some((item) => !!submenuOf(item.element) && item.element.contains(target));
+      if (onTrigger || (active === child.filter?.input.value && child.filter.pointerFocus)) {
+        returnFocus();
+      }
+    },
+    get pointerFocus() {
+      return pointerFocus;
+    },
+    noteHighlight(reason) {
+      pointerHighlight.value = reason === 'pointer';
     },
     connect(context) {
       menu = context;
@@ -221,18 +262,42 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
         },
         { flush: 'post' },
       );
-      // The query goes back when the popup left the DOM, or at the close of a kept popup.
+      // The query goes back when the popup left the DOM, at the close of a kept popup, and when
+      // the menu unmounts, as a submenu in the popup of its parent does.
+      const reset = () => {
+        if (provider.query !== '') provider.setQuery('', 'popup-close', new Event('vase-ui'));
+      };
       watch(
         () => !root.open && (root.keepMounted || !root.popup),
         (gone) => {
-          if (gone && provider.query !== '') {
-            provider.setQuery('', 'popup-close', new Event('vase-ui'));
-          }
+          if (gone) reset();
         },
       );
+      onScopeDispose(reset);
     },
   };
   return filter;
+}
+
+/** The element is in the popup of a menu around this one. */
+function inParent(menu: MenuContext, element: Element) {
+  for (let parent = menu.parent; parent; parent = parent.parent) {
+    if (parent.root.popup?.contains(element)) return true;
+  }
+  return false;
+}
+
+/**
+ * A key on the input clicks the highlighted item. On a submenu trigger, it opens the submenu with
+ * its first item highlighted, as a key on a trigger that has the focus does.
+ */
+function press(element: HTMLElement, event: KeyboardEvent) {
+  const submenu = submenuOf(element);
+  if (!submenu) {
+    dispatchClickWithModifiers(element, event);
+    return;
+  }
+  if (!submenu.disabled) submenu.openWithKey('first', 'trigger-press', event, element);
 }
 
 /** The menu around the part, with its filter. A part of the filter with no filter throws an error. */
@@ -252,13 +317,18 @@ export interface MenuGroupForItem {
 
 export const groupItemsKey: InjectionKey<MenuGroupForItem | null> = Symbol('menu group items');
 
-/** Adds the shown state of an item to the filter and to its group. */
-export function useFilteredItem(menu: MenuContext, text: () => string) {
+/**
+ * Adds the shown state of an item to the filter and to its group. An item shows while its text
+ * matches the query, or while `keep` is `true`.
+ */
+export function useFilteredItem(menu: MenuContext, text: () => string, keep?: () => boolean) {
   const filter = menu.filter;
   const group = inject(groupItemsKey, null);
-  const shown = computed(() => !filter || filter.shows(text));
+  const matches = computed(() => !filter || filter.shows(text));
+  const shown = computed(() => matches.value || !!keep?.());
   const removals = [filter?.addItem(() => shown.value), group?.addItem(() => shown.value)];
   return {
+    matches,
     shown,
     remove: () => {
       for (const remove of removals) remove?.();

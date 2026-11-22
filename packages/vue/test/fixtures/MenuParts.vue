@@ -44,7 +44,7 @@ defineProps({
     nested?: { root?: Props; trigger?: Props; items?: Item[] };
   }>,
   /** A second submenu after the first one. */
-  sibling: Object as PropType<{ trigger?: Props; items?: Item[] }>,
+  sibling: Object as PropType<{ trigger?: Props; portal?: Props; items?: Item[] }>,
   /** The root is in a disabled `<fieldset>`. */
   fieldset: Boolean,
   /** A second trigger after the root, for a `handle` of the root. */
@@ -167,7 +167,7 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
               <Menu.SubmenuTrigger data-key="sibling" v-bind="sibling.trigger">
                 Other
               </Menu.SubmenuTrigger>
-              <Menu.Portal>
+              <Menu.Portal v-bind="sibling.portal">
                 <Menu.Positioner>
                   <Menu.Popup data-testid="sibling-popup">
                     <Menu.Item

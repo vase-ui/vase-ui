@@ -179,6 +179,8 @@ While the popup changes its item, `--popup-width` and `--popup-height` give it i
 
 A popup in a `<Transition>` stays in the DOM until its leave ends. An open during the leave waits, and the new item shows in a new popup after the leave. To keep the popup until an animation of JavaScript ends, use the JavaScript hooks of `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. See [Animation](/handbook/animation).
 
+With `keepMounted` on `NavigationMenu.Portal`, the popup stays in the DOM. Animate its leave with CSS on `[hidden]`, as in [Content that stays in the DOM](/handbook/animation#content-that-stays-in-the-dom). The popup keeps its content and its place until its animations end. An open during the leave shows the new item in the same popup, and the popup changes its size in steps.
+
 ## API reference
 
 <ApiReference />
