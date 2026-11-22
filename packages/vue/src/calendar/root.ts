@@ -10,6 +10,7 @@ import {
   type Ref,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
+import { createError } from '../common/createError';
 import { useModel } from '../common/model';
 import { formatRangeText, formatText } from '../common/date-time/text';
 import { isTemporalCalendar } from '../common/date-time/format';
@@ -108,14 +109,14 @@ export interface CalendarForPart {
   addTarget(target: CalendarTarget): () => void;
 }
 
-export const calendarKey: InjectionKey<CalendarForPart> = Symbol('calendar');
+export const calendarKey: InjectionKey<CalendarForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'calendar' : undefined,
+);
 
 export function injectCalendar() {
   const calendar = inject(calendarKey, null);
   if (!calendar) {
-    throw new Error(
-      'Vase UI: A part of Calendar must be inside <Calendar.Root> or <RangeCalendar.Root>. Without a root the part has no days and no selection to show. Put the part inside a root.',
-    );
+    throw createError(8);
   }
   return calendar;
 }
@@ -216,11 +217,7 @@ export function useCalendar(
   if (process.env.NODE_ENV !== 'production') {
     watchEffect(() => {
       if (props.broadcastCalendar && calendar.value !== 'iso8601') {
-        throw new Error(
-          `Vase UI: <${part}> has \`broadcastCalendar\` and shows the calendar \`${calendar.value}\`. ` +
-            'The broadcast calendar is made of Gregorian months, so no other calendar can show it. ' +
-            'Remove `broadcastCalendar`, or set `calendar="gregory"`.',
-        );
+        throw createError(9, part, calendar.value);
       }
       assertModifierNames(part, Object.keys(props.modifiers ?? {}));
     });

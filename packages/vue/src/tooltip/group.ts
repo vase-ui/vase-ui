@@ -32,7 +32,9 @@ const noProvider: TooltipGroup = {
   timer: Timeout.create(),
 };
 
-const groupKey: InjectionKey<TooltipGroup> = Symbol('tooltip group');
+const groupKey: InjectionKey<TooltipGroup> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tooltip group' : undefined,
+);
 
 /** The group of each trigger element, from the place of the trigger in the tree. */
 const triggerGroups = new WeakMap<Element, TooltipGroup>();

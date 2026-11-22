@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import { fieldStateAttributes, type FieldForControl } from '../field/control';
 import type { NumberText } from './text';
 import type {
@@ -59,14 +60,14 @@ export interface NumberFieldContext {
   setScrubbing(scrubbing: boolean): void;
 }
 
-export const numberFieldKey: InjectionKey<NumberFieldContext> = Symbol('number field');
+export const numberFieldKey: InjectionKey<NumberFieldContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'number field' : undefined,
+);
 
 export function injectNumberFieldRoot(part: string) {
   const root = inject(numberFieldKey, null);
   if (!root) {
-    throw new Error(
-      `Vase UI NumberField: <NumberField.${part}> must be inside <NumberField.Root>.`,
-    );
+    throw createError(40, part);
   }
   return root;
 }

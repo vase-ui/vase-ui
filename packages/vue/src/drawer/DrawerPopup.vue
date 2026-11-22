@@ -9,6 +9,7 @@ import {
   useId,
   watch,
 } from 'vue';
+import { createError } from '../common/createError';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectDialogPortal } from '../dialog/root';
@@ -30,9 +31,7 @@ const drawer = injectDrawer('Popup');
 const { dialog } = drawer;
 injectDialogPortal('Popup', dialog, 'Drawer');
 if (!inject(viewportKey, false)) {
-  throw new Error(
-    'Vase UI: <Drawer.Popup> must be inside <Drawer.Viewport>. The viewport holds the swipe of the drawer. Put the popup inside <Drawer.Viewport>.',
-  );
+  throw createError(27);
 }
 const { root } = dialog;
 const attrs = useAttrs();

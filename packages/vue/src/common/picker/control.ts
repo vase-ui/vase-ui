@@ -10,7 +10,9 @@ export interface PickerForControl {
   onCancel(event: KeyboardEvent): void;
 }
 
-export const pickerControlKey: InjectionKey<PickerForControl | null> = Symbol('picker control');
+export const pickerControlKey: InjectionKey<PickerForControl | null> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'picker control' : undefined,
+);
 
 /**
  * The picker part around a calendar root or a clock root. The root provides `null`, so a calendar

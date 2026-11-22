@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, useAttrs, watch } from 'vue';
+import { createError } from '../common/createError';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { platform } from '../common/platform';
 import { usePopupHover } from '../popup/hover';
@@ -25,9 +26,7 @@ defineSlots<{
 const submenu = injectMenu('SubmenuTrigger');
 const parent = submenu.parent;
 if (!parent) {
-  throw new Error(
-    'Vase UI: <Menu.SubmenuTrigger> must be inside <Menu.SubmenuRoot>. Without a submenu root the trigger has no submenu to open. Put the trigger inside <Menu.SubmenuRoot>.',
-  );
+  throw createError(30);
 }
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();

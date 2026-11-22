@@ -6,4 +6,6 @@ export interface CSPForPart {
   readonly disableStyleElements: boolean;
 }
 
-export const cspKey: InjectionKey<CSPForPart> = Symbol('csp');
+export const cspKey: InjectionKey<CSPForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'csp' : undefined,
+);

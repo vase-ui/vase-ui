@@ -1,5 +1,6 @@
 import { inject, type InjectionKey } from 'vue';
 import type { CollapsiblePart } from '../collapsible/part';
+import { createError } from '../common/createError';
 import type { AccordionItemState } from './types';
 
 /** A trigger of an item, from its `setup` to its unmount. The properties are reactive. */
@@ -20,14 +21,14 @@ export interface AccordionItemForParts extends CollapsiblePart {
   addTrigger(trigger: AccordionTriggerEntry): () => void;
 }
 
-export const accordionItemKey: InjectionKey<AccordionItemForParts> = Symbol('accordion item');
+export const accordionItemKey: InjectionKey<AccordionItemForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'accordion item' : undefined,
+);
 
 export function injectAccordionItem() {
   const item = inject(accordionItemKey, null);
   if (!item) {
-    throw new Error(
-      'Vase UI: A part of Accordion must be inside <Accordion.Item>. Without an item the part has no open state to read. Put the part inside <Accordion.Item>.',
-    );
+    throw createError(2);
   }
   return item;
 }

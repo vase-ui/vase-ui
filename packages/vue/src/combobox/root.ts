@@ -12,6 +12,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { EMPTY_ARRAY } from '../common/empty';
 import { inDocumentOrder } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
@@ -234,11 +235,16 @@ export interface ComboboxRootContext {
   textInput: ShallowRef<HTMLInputElement | null>;
 }
 
-export const comboboxKey: InjectionKey<ComboboxRootContext> = Symbol('combobox root');
+export const comboboxKey: InjectionKey<ComboboxRootContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox root' : undefined,
+);
 /** The placement that a positioner gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('combobox positioner');
-const portalKey: InjectionKey<true> = Symbol('combobox portal');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox portal' : undefined,
+);
 
 export function createComboboxDetails(
   reason: ComboboxRootChangeEventReason,
@@ -1196,12 +1202,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 export function injectComboboxRoot(part: string, family?: 'Autocomplete') {
   const context = inject(comboboxKey, null);
   if (context) return context;
-  const families = family ? [family] : ['Combobox', 'Autocomplete'];
-  const parts = families.map((name) => `<${name}.${part}>`).join(' or ');
-  const roots = families.map((name) => `<${name}.Root>`).join(' or ');
-  throw new Error(
-    `Vase UI: ${parts} must be inside ${roots}. Without a root the part has no combobox. Put the part inside its root.`,
-  );
+  throw family ? createError(12, part) : createError(13, part);
 }
 
 /**
@@ -1222,9 +1223,7 @@ export function providePortal() {
 /** The positioner and the backdrop need a portal of their root. */
 export function injectPortal(context: ComboboxRootContext, part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <${context.family}.${part}> must be inside <${context.family}.Portal>. Put the part inside <${context.family}.Portal>.`,
-    );
+    throw createError(14, context.family, part);
   }
 }
 
@@ -1232,9 +1231,7 @@ export function injectPortal(context: ComboboxRootContext, part: string) {
 export function injectPositioner(context: ComboboxRootContext, part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <${context.family}.${part}> must be inside <${context.family}.Positioner>. Put the part inside <${context.family}.Positioner>.`,
-    );
+    throw createError(15, context.family, part);
   }
   return placement;
 }
@@ -1278,7 +1275,9 @@ export interface ChipsContext {
   indexOf(element: HTMLElement): number;
 }
 
-export const chipsKey: InjectionKey<ChipsContext> = Symbol('combobox chips');
+export const chipsKey: InjectionKey<ChipsContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox chips' : undefined,
+);
 
 /** What a `Chip` gives to its `ChipRemove`. */
 export interface ChipContext {
@@ -1286,7 +1285,9 @@ export interface ChipContext {
   readonly disabled: boolean;
 }
 
-export const chipKey: InjectionKey<ChipContext> = Symbol('combobox chip');
+export const chipKey: InjectionKey<ChipContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox chip' : undefined,
+);
 
 export function injectChips() {
   return inject(chipsKey, null);
@@ -1296,19 +1297,19 @@ export function injectChips() {
 export function injectChipsOf(part: string) {
   const chips = inject(chipsKey, null);
   if (!chips) {
-    throw new Error(
-      `Vase UI: <Combobox.${part}> must be inside <Combobox.Chips>. Without the chips the part has no value. Put the part inside <Combobox.Chips>.`,
-    );
+    throw createError(16, part);
   }
   return chips;
 }
 
 /** An item in a `Row` is a cell of a grid. */
-export const rowKey: InjectionKey<boolean> = Symbol('combobox row');
+export const rowKey: InjectionKey<boolean> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'combobox row' : undefined,
+);
 
 /** What a `Group` gives to its label. */
 export const groupKey: InjectionKey<{ addLabel(label: { readonly id: string }): () => void }> =
-  Symbol('combobox group');
+  Symbol(process.env.NODE_ENV !== 'production' ? 'combobox group' : undefined);
 
 /**
  * The items that the filter of the root keeps, in the form of `items`. Call it in the `setup` of a
@@ -1317,9 +1318,7 @@ export const groupKey: InjectionKey<{ addLabel(label: { readonly id: string }): 
 export function useFilteredItems<T>(): ComputedRef<T[]> {
   const context = inject(comboboxKey, null);
   if (!context) {
-    throw new Error(
-      'Vase UI: useFilteredItems() must be called in a component inside a root of Combobox or Autocomplete. Without a root there are no items. Call it in a component inside the root.',
-    );
+    throw createError(17);
   }
   return computed(() => context.filteredItems as T[]);
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, mergeProps, useAttrs, watch } from 'vue';
+import { createError } from '../common/createError';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { injectSelectRoot, selectItemKey } from './root';
 import type { SelectItemTextProps, SelectItemTextState } from './types';
@@ -15,9 +16,7 @@ defineSlots<{
 const context = injectSelectRoot('ItemText');
 const item = inject(selectItemKey, null);
 if (!item) {
-  throw new Error(
-    'Vase UI: <Select.ItemText> must be inside <Select.Item>. Without an item the text belongs to no option. Put the text inside <Select.Item>.',
-  );
+  throw createError(58);
 }
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, useAttrs } from 'vue';
 import { useButton } from '../common/button';
+import { createError } from '../common/createError';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { chipKey, createComboboxDetails, injectChipsOf, injectComboboxRoot } from './root';
 import type { ComboboxChipRemoveProps, ComboboxChipRemoveState } from './types';
@@ -18,9 +19,7 @@ const chips = injectChipsOf('ChipRemove');
 const chip = inject(chipKey, null) ?? missingChip();
 
 function missingChip(): never {
-  throw new Error(
-    'Vase UI: <Combobox.ChipRemove> must be inside <Combobox.Chip>. Without a chip the button has no value to remove. Put the button inside <Combobox.Chip>.',
-  );
+  throw createError(11);
 }
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();

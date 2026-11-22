@@ -1,4 +1,5 @@
 import { computed, inject, provide, shallowRef, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 
 /** What a group gives to its label. */
 export interface MenuGroupForLabel {
@@ -6,7 +7,9 @@ export interface MenuGroupForLabel {
   setLabel(id: string): () => void;
 }
 
-export const groupLabelKey: InjectionKey<MenuGroupForLabel> = Symbol('menu group label');
+export const groupLabelKey: InjectionKey<MenuGroupForLabel> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu group label' : undefined,
+);
 
 /** The `id` of the label of the group, while it is mounted. */
 export function useGroupLabel() {
@@ -27,9 +30,7 @@ export function useGroupLabel() {
 export function injectGroup() {
   const group = inject(groupLabelKey, null);
   if (!group) {
-    throw new Error(
-      'Vase UI: <Menu.GroupLabel> must be inside <Menu.Group> or <Menu.RadioGroup>. Without a group the label names nothing. Put the label inside a group.',
-    );
+    throw createError(32);
   }
   return group;
 }

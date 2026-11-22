@@ -12,6 +12,7 @@ import {
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import type { ChangeEventDetails } from '../common/changeEventDetails';
+import { createError } from '../common/createError';
 import { useModel } from '../common/model';
 import { ownerDocument } from '../common/owner';
 import { warn } from '../common/warn';
@@ -230,7 +231,7 @@ export function rootOfHandle<Payload>(handle: PopupHandle<Payload>) {
  */
 export function rootToOpen<Payload>(handle: PopupHandle<Payload>, method: string) {
   const root = rootOfHandle(handle);
-  if (!root) {
+  if (process.env.NODE_ENV !== 'production' && !root) {
     warn(
       `\`${method}()\` of a handle found no mounted root with this handle. The call does nothing.`,
     );
@@ -258,9 +259,7 @@ export class PopupHandle<Payload = unknown> {
     if (!root) return;
     const trigger = root.triggers.find((each) => each.id === triggerId);
     if (!trigger) {
-      throw new Error(
-        `Vase UI: The handle has no trigger with the id "${triggerId}". Give this id to a trigger of the root, or open the popup with the id of one of its triggers.`,
-      );
+      throw createError(46, triggerId);
     }
     root.request(true, 'imperative-action', new Event('vase-ui'), trigger.element);
   }

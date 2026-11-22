@@ -8,6 +8,7 @@ import {
   watch,
   type InjectionKey,
 } from 'vue';
+import { createError } from '../common/createError';
 import { useIsHydrated } from '../common/hydration';
 import { nextToastId } from './manager';
 import type {
@@ -68,7 +69,9 @@ interface Timer {
   handle: ReturnType<typeof setTimeout> | undefined;
 }
 
-const providerKey: InjectionKey<ToastProviderForParts> = Symbol('toast provider');
+const providerKey: InjectionKey<ToastProviderForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'toast provider' : undefined,
+);
 
 /** Holds the toasts of a provider and their timers. Call it in the `setup` of `Toast.Provider`. */
 export function useToastProvider(
@@ -381,9 +384,7 @@ function optionsOf<Value>(
 export function injectToastProvider(part: string) {
   const provider = inject(providerKey, null);
   if (!provider) {
-    throw new Error(
-      `Vase UI: ${part} must be inside <Toast.Provider>. Without a provider the part has no toasts. Put the part inside <Toast.Provider>.`,
-    );
+    throw createError(68, part);
   }
   return provider;
 }

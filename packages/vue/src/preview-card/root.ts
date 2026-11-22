@@ -7,6 +7,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import type { usePlacement } from '../popup/placement';
 import {
@@ -43,11 +44,16 @@ export interface PreviewCardRootContext<Payload = unknown> {
   viewport: ShallowRef<ViewportSizes | null>;
 }
 
-const previewCardRootKey: InjectionKey<PreviewCardRootContext> = Symbol('preview card root');
+const previewCardRootKey: InjectionKey<PreviewCardRootContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'preview card root' : undefined,
+);
 /** The placement that `PreviewCard.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('preview card positioner');
-const portalKey: InjectionKey<true> = Symbol('preview card portal');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'preview card positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'preview card portal' : undefined,
+);
 const contexts = new WeakMap<PopupRoot, PreviewCardRootContext>();
 
 /**
@@ -137,9 +143,7 @@ export function usePreviewCardRoot<Payload>(
 }
 
 function missingRoot(part: string): never {
-  throw new Error(
-    `Vase UI: <PreviewCard.${part}> must be inside <PreviewCard.Root>. Without a root the part has no preview card. Put the part inside <PreviewCard.Root>.`,
-  );
+  throw createError(47, part);
 }
 
 /** The root of the part. A part with no root throws an error that names it. */
@@ -154,9 +158,7 @@ export function injectPreviewCardRoot(part: string) {
 export function useTriggerRoot(handle: () => PreviewCardHandle | undefined) {
   const injected = inject(previewCardRootKey, null);
   if (!injected && !handle()) {
-    throw new Error(
-      'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',
-    );
+    throw createError(48);
   }
   return computed(() => {
     const given = handle();
@@ -175,9 +177,7 @@ export function providePortal() {
 export function injectPositioner(part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <PreviewCard.${part}> must be inside <PreviewCard.Positioner>. Put the part inside <PreviewCard.Positioner>.`,
-    );
+    throw createError(49, part);
   }
   return placement;
 }
@@ -185,8 +185,6 @@ export function injectPositioner(part: string) {
 /** `PreviewCard.Positioner` and `PreviewCard.Backdrop` need a portal of their root. */
 export function injectPortal(part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <PreviewCard.${part}> must be inside <PreviewCard.Portal>. Put the part inside <PreviewCard.Portal>.`,
-    );
+    throw createError(50, part);
   }
 }

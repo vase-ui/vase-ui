@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { CollapsibleRootChangeEventReason } from './types';
 
 /** A panel of a root or an item, from its `setup` to its unmount. The properties are reactive. */
@@ -22,14 +23,14 @@ export interface CollapsiblePart {
   addPanel(panel: CollapsiblePanelEntry): () => void;
 }
 
-export const collapsibleKey: InjectionKey<CollapsiblePart> = Symbol('collapsible');
+export const collapsibleKey: InjectionKey<CollapsiblePart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'collapsible' : undefined,
+);
 
 export function injectCollapsible() {
   const collapsible = inject(collapsibleKey, null);
   if (!collapsible) {
-    throw new Error(
-      'Vase UI: A part of Collapsible must be inside <Collapsible.Root>. Without a root the part has no open state to read. Put the part inside <Collapsible.Root>.',
-    );
+    throw createError(10);
   }
   return collapsible;
 }

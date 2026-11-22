@@ -19,7 +19,9 @@ export interface KeyboardTouch {
   onTouchcancel(): void;
 }
 
-export const keyboardKey: InjectionKey<KeyboardTouch> = Symbol('drawer keyboard');
+export const keyboardKey: InjectionKey<KeyboardTouch> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'drawer keyboard' : undefined,
+);
 
 /** The keyboard listeners of the provider around the viewport, if one is there. */
 export function injectKeyboard() {

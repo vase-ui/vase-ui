@@ -395,6 +395,8 @@ Run `pnpm lint:fix`, then `pnpm typecheck` and `pnpm lint`. The last two show th
 - Keep `protected` for a class member that a subclass uses.
 - A reactive proxy of an object breaks its `#` members: a method that reads one throws a `TypeError`. Do not put such an object in `ref()`, `reactive()` or `readonly()`. Give it to other code with `provide`, a `shallowRef` or a prop, or call `markRaw(this)` in its constructor.
 - Write a development check as `process.env.NODE_ENV !== 'production'`.
+- Put each call of `warn` and `error` of `src/common` behind a development check. A production build then has no text of it.
+- Write the description of a `Symbol` as `process.env.NODE_ENV !== 'production' ? 'description' : undefined`. Only Vue Devtools shows it.
 
 ## Error messages
 
@@ -409,6 +411,13 @@ Example:
 ```text
 Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>, or it must have a `handle`. Without a root the trigger has no dialog to open. Put the trigger inside <Dialog.Root>, or pass a `handle`.
 ```
+
+A production build has no error texts:
+
+- `errorMessages` in `src/common/createError.ts` holds the text of each error, by its code. Throw `createError(code, ...values)`. ESLint refuses `new Error` in the source.
+- A text writes each value as `{0}`, `{1}` and so on, in order. `createError` takes one value for each.
+- In a production build, the error gives the code, the values and the address of the text: `Vase UI error #3 ["Image"]: https://vase-ui.com/errors#3`. The page `docs/errors.md` shows `errorMessages`.
+- Give a new text the next code. Do not give a code to another text, because an error of an earlier release links to it.
 
 ## Comments
 

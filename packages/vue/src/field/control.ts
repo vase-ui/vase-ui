@@ -100,7 +100,9 @@ export interface FieldForControl {
 }
 
 /** A part that provides `null` cuts its content off from the field around it. */
-export const fieldKey: InjectionKey<FieldForControl | null> = Symbol('field');
+export const fieldKey: InjectionKey<FieldForControl | null> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'field' : undefined,
+);
 
 /**
  * The data attributes of the state of a field, with an empty value for each one that is on. A

@@ -73,6 +73,10 @@ const MESSAGES = {
     'No browser that the build supports has `Promise.withResolvers`, and the build adds no polyfill. Use `new Promise`.',
   resourceManagement:
     'No browser that the build supports has `Symbol.dispose`, and the build adds no polyfill. Call the cleanup in a `finally` block.',
+  errorText:
+    'A production build keeps the text of this error. Give the text a code in `errorMessages` of `common/createError`, and throw `createError(code)`. See "Error messages" in CONTRIBUTING.md.',
+  symbolDescription:
+    "A production build keeps this description, and only Vue Devtools shows it. Write `Symbol(process.env.NODE_ENV !== 'production' ? 'description' : undefined)`.",
   temporalInstanceof:
     'Another realm and a polyfill have other `Temporal` classes. Use `kindOf` or `isKind` of `common/date-time/temporal`.',
   toLocaleString:
@@ -335,6 +339,14 @@ const RESTRICTED_SYNTAX = [
     selector:
       "BinaryExpression[operator='instanceof']:matches([right.object.name='Temporal'], [right.object.property.name='Temporal'])",
     message: MESSAGES.temporalInstanceof,
+  },
+  {
+    selector: ":matches(NewExpression, CallExpression)[callee.name='Error']",
+    message: MESSAGES.errorText,
+  },
+  {
+    selector: "CallExpression[callee.name='Symbol'] > :matches(Literal, TemplateLiteral)",
+    message: MESSAGES.symbolDescription,
   },
   {
     selector:

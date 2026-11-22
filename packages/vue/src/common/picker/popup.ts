@@ -22,7 +22,9 @@ interface PopupForPart {
   element(): HTMLElement | null;
 }
 
-const popupKey: InjectionKey<PopupForPart> = Symbol('picker popup');
+const popupKey: InjectionKey<PopupForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'picker popup' : undefined,
+);
 
 /**
  * The first focus of a picker `Popup`: the first of its targets in the document. The value of

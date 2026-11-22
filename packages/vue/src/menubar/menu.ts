@@ -23,7 +23,9 @@ export interface MenubarForMenu {
   onMenuKey(event: KeyboardEvent, menu: MenuContext): boolean;
 }
 
-export const menubarKey: InjectionKey<MenubarForMenu> = Symbol('menubar');
+export const menubarKey: InjectionKey<MenubarForMenu> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menubar' : undefined,
+);
 
 const bars = new WeakMap<Element, MenubarForMenu>();
 

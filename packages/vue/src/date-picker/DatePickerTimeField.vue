@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, provide, shallowRef, useAttrs } from 'vue';
+import { createError } from '../common/createError';
 import type { DateTimeFieldChangeEventDetails } from '../common/date-time-field/field';
 import type { FieldRootExposed } from '../common/picker/field';
 import { fieldKey } from '../field/control';
@@ -23,9 +24,7 @@ function setField(value: unknown) {
 }
 
 if (process.env.NODE_ENV !== 'production' && !hasTime(picker.template)) {
-  throw new Error(
-    'Vase UI: <DatePicker.TimeField> needs a picker whose value has a time. Without a time the field has no segments to show. Set `granularity` to `hour`, `minute` or `second`, or give the picker a `Temporal.PlainDateTime` or a `Temporal.ZonedDateTime`.',
-  );
+  throw createError(21);
 }
 
 // A portal moves the popup out of a `Field` of the picker, and the field of the picker is its

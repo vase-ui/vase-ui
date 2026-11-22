@@ -9,6 +9,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import { addEventListener } from '../common/addEventListener';
+import { createError } from '../common/createError';
 import { useModel } from '../common/model';
 import { ownerDocument } from '../common/owner';
 import { nextTabStop, tabbables, usePopupFocus } from '../popup/focus';
@@ -79,16 +80,23 @@ export interface NavigationMenuItem {
   contentId: string | null;
 }
 
-const rootKey: InjectionKey<NavigationMenuRoot> = Symbol('navigation menu root');
-const itemKey: InjectionKey<NavigationMenuItem> = Symbol('navigation menu item');
+const rootKey: InjectionKey<NavigationMenuRoot> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'navigation menu root' : undefined,
+);
+const itemKey: InjectionKey<NavigationMenuItem> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'navigation menu item' : undefined,
+);
 /** The placement that `NavigationMenu.Positioner` gives to the popup and the arrow. */
 export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
-  'navigation menu positioner',
+  process.env.NODE_ENV !== 'production' ? 'navigation menu positioner' : undefined,
 );
 /** The sizes that `NavigationMenu.Popup` gives to the positioner around it. */
-export const sizesKey: InjectionKey<ShallowRef<ReturnType<typeof usePopupSizes> | null>> =
-  Symbol('navigation menu sizes');
-const portalKey: InjectionKey<true> = Symbol('navigation menu portal');
+export const sizesKey: InjectionKey<ShallowRef<ReturnType<typeof usePopupSizes> | null>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'navigation menu sizes' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'navigation menu portal' : undefined,
+);
 
 export function useNavigationMenuRoot(
   props: Required<
@@ -354,9 +362,7 @@ export function useNavigationMenuRoot(
 }
 
 function missingParent(part: string, parent: string): never {
-  throw new Error(
-    `Vase UI: <NavigationMenu.${part}> must be inside <NavigationMenu.${parent}>. Put the part inside <NavigationMenu.${parent}>.`,
-  );
+  throw createError(39, part, parent);
 }
 
 /** The root of the part. A part with no root throws an error that names it. */

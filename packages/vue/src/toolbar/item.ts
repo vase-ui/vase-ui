@@ -8,6 +8,7 @@ import {
   type InjectionKey,
   type Ref,
 } from 'vue';
+import { createError } from '../common/createError';
 import type { ToolbarOrientation } from './types';
 
 /** An element that the arrow keys of a toolbar reach, while it is mounted. The properties are reactive. */
@@ -32,14 +33,14 @@ export interface ToolbarForPart {
   addItem(item: ToolbarItem): () => void;
 }
 
-export const toolbarKey: InjectionKey<ToolbarForPart> = Symbol('toolbar');
+export const toolbarKey: InjectionKey<ToolbarForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'toolbar' : undefined,
+);
 
 export function injectToolbar() {
   const toolbar = inject(toolbarKey, null);
   if (!toolbar) {
-    throw new Error(
-      'Vase UI: A part of Toolbar must be inside <Toolbar.Root>. Without a root the part has no orientation and no disabled state. Put the part inside <Toolbar.Root>.',
-    );
+    throw createError(71);
   }
   return toolbar;
 }

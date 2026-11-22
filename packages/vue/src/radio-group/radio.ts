@@ -32,4 +32,6 @@ export interface RadioGroupForRadio {
   addRadio(radio: GroupRadio): () => void;
 }
 
-export const radioGroupKey: InjectionKey<RadioGroupForRadio> = Symbol('radio group');
+export const radioGroupKey: InjectionKey<RadioGroupForRadio> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'radio group' : undefined,
+);

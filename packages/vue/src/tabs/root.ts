@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { TabsRootState } from './types';
 
 /** A tab of a root, from its `setup` to its unmount. The properties are reactive. */
@@ -47,14 +48,14 @@ export interface TabsRootForParts {
   addPanel(panel: RootPanel): () => void;
 }
 
-export const tabsRootKey: InjectionKey<TabsRootForParts> = Symbol('tabs root');
+export const tabsRootKey: InjectionKey<TabsRootForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tabs root' : undefined,
+);
 
 export function injectTabsRoot() {
   const root = inject(tabsRootKey, null);
   if (!root) {
-    throw new Error(
-      'Vase UI: A part of Tabs must be inside <Tabs.Root>. Without a root the part has no value and no orientation. Put the part inside <Tabs.Root>.',
-    );
+    throw createError(64);
   }
   return root;
 }

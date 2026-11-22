@@ -25,7 +25,9 @@ export interface FieldsetForPart {
   readonly legendId: string | undefined;
 }
 
-export const fieldsetKey: InjectionKey<FieldsetForPart> = Symbol('fieldset');
+export const fieldsetKey: InjectionKey<FieldsetForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'fieldset' : undefined,
+);
 
 /**
  * Whether a disabled fieldset holds the element, by the rule of HTML: a disabled fieldset disables

@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { OTPFieldRootState } from './types';
 
 /** What `OTPField.Root` gives to its slots. The properties are reactive. */
@@ -35,14 +36,14 @@ export interface OTPFieldForInput {
   onEnter(event: KeyboardEvent): void;
 }
 
-export const otpFieldKey: InjectionKey<OTPFieldForInput> = Symbol('otp field');
+export const otpFieldKey: InjectionKey<OTPFieldForInput> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'otp field' : undefined,
+);
 
 export function injectOTPFieldRoot() {
   const root = inject(otpFieldKey, null);
   if (!root) {
-    throw new Error(
-      'Vase UI: A part of OTP Field must be inside <OTPField.Root>. Without a root the part has no value to show. Put the part inside <OTPField.Root>.',
-    );
+    throw createError(41);
   }
   return root;
 }
