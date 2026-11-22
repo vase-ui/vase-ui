@@ -180,6 +180,8 @@ export interface Speed {
   faster: number;
   /** The metrics where the two libraries have samples. */
   metrics: number;
+  /** `LOSSES_ANCHOR` when the library is faster: the ratio is below 1. */
+  losses: string | undefined;
 }
 
 export interface BenchmarksReport {
@@ -495,6 +497,9 @@ function timeLossesOf(tables: readonly TimeTable[]): TimeLoss[] {
   );
 }
 
+/** The anchor of the section "Where Vase UI is larger or slower" of the benchmarks page. */
+export const LOSSES_ANCHOR = 'where-vase-ui-is-larger-or-slower';
+
 /** The time metrics of each engine, as the ratio of each other Vue library to Vase UI. */
 function speedOf(tables: readonly TimeTable[]): BenchmarksReport['speed'] {
   return ENGINES.flatMap((engine) => {
@@ -518,16 +523,19 @@ function speedOf(tables: readonly TimeTable[]): BenchmarksReport['speed'] {
     }
     const libraries = LIBRARIES.flatMap((library): Speed[] => {
       const entry = ratios.get(library.id);
-      return entry === undefined
-        ? []
-        : [
-            {
-              library: library.id,
-              ratio: Math.exp(entry.logs.reduce((sum, log) => sum + log, 0) / entry.logs.length),
-              faster: entry.faster,
-              metrics: entry.logs.length,
-            },
-          ];
+      if (entry === undefined) {
+        return [];
+      }
+      const ratio = Math.exp(entry.logs.reduce((sum, log) => sum + log, 0) / entry.logs.length);
+      return [
+        {
+          library: library.id,
+          ratio,
+          faster: entry.faster,
+          metrics: entry.logs.length,
+          losses: ratio < 1 ? LOSSES_ANCHOR : undefined,
+        },
+      ];
     });
     return libraries.length === 0 ? [] : [{ engine, libraries }];
   });

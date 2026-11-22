@@ -645,7 +645,8 @@ The page compares Vase UI with each other Vue library. Base UI is a reference fr
 - A measure is a metric of `results.json`, such as `Dialog.open`, or the size of a scenario, such as `Dialog.size`. Each measure is in one note only.
 - The `reason` gives, in one or two sentences, the behavior that costs the bytes, the time or the memory. A source is the pull request or the measurement that shows it.
 - Before you write a note for a new loss, profile it. When the work pays for no behavior, fix the code. Do not write a note for it.
-- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a note names a metric that no table has or that another note names, and when two notes have the same `id`.
+- A cell of the summary below 1 has a `*` that links to the section "Where Vase UI is larger or slower".
+- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a cell of the summary below 1 has no `*`, when a note names a metric that no table has or that another note names, and when two notes have the same `id`.
 
 `benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
 

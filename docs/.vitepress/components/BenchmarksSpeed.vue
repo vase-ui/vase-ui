@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { data } from '../../benchmarks.data.ts';
 import { engineName, formatRatio, libraryName } from './benchmarksFormat.ts';
+import BenchmarksNoteLink from './BenchmarksNoteLink.vue';
 import ScrollBox from './ScrollBox.vue';
 
 const libraries = [
@@ -33,7 +34,11 @@ const rows = data.speed.map((engine) => ({
           <td v-for="{ library, speed } in row.cells" :key="library">
             <template v-if="speed">
               <strong>{{ formatRatio(speed.ratio) }}</strong
-              ><br />Vase UI faster in {{ speed.faster }} of {{ speed.metrics }}
+              ><BenchmarksNoteLink
+                v-if="speed.losses"
+                :note="speed.losses"
+                title="Where Vase UI is larger or slower"
+              /><br />Vase UI faster in {{ speed.faster }} of {{ speed.metrics }}
             </template>
             <template v-else>Not measured yet</template>
           </td>

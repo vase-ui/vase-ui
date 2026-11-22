@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
-import { benchmarksReportOf, loadBenchmarksReport } from './benchmarksReport.ts';
+import { benchmarksReportOf, loadBenchmarksReport, LOSSES_ANCHOR } from './benchmarksReport.ts';
 import type { Note, Results, Size } from './benchmarksReport.ts';
 
 function size(gzip: number): Size {
@@ -177,22 +177,23 @@ test('the speed of an engine is the geometric mean of the time ratios, with the 
   assert.deepEqual(
     timed.speed.map(({ engine, libraries }) => [
       engine,
-      libraries.map(({ library, ratio, faster, metrics }) => [
+      libraries.map(({ library, ratio, faster, metrics, losses }) => [
         library,
         Math.round(ratio * 1000) / 1000,
         faster,
         metrics,
+        losses,
       ]),
     ]),
     [
       [
         'chromium',
         [
-          ['reka-ui', 0.8, 0, 2],
-          ['headless-ui', 1.2, 1, 1],
+          ['reka-ui', 0.8, 0, 2, LOSSES_ANCHOR],
+          ['headless-ui', 1.2, 1, 1, undefined],
         ],
       ],
-      ['firefox', [['reka-ui', 1.2, 2, 2]]],
+      ['firefox', [['reka-ui', 1.2, 2, 2, undefined]]],
     ],
   );
 });
@@ -215,6 +216,20 @@ const real = loadBenchmarksReport();
 test('each cell where Vase UI loses in benchmarks/results.json has a note', () => {
   assert.deepEqual(real.missingNotes, [], 'Give each such metric a note in benchmarks/notes.json.');
   assert.deepEqual(real.unknownMeasures, []);
+});
+
+test('each cell of the summary below 1 has a * that links to the losses', () => {
+  const unmarked = real.speed.flatMap(({ engine, libraries }) =>
+    libraries
+      .filter((speed) => speed.ratio < 1 && speed.losses !== LOSSES_ANCHOR)
+      .map((speed) => `${engine} ${speed.library}`),
+  );
+  assert.deepEqual(unmarked, []);
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
+  const headings = [...page.matchAll(/^## (.+)$/gm)].map((match) =>
+    (match[1] ?? '').toLowerCase().replaceAll(' ', '-'),
+  );
+  assert.ok(headings.includes(LOSSES_ANCHOR));
 });
 
 test('each note and each feature row has an anchor of its own', () => {
