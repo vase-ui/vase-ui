@@ -238,6 +238,24 @@ describe('the root', () => {
     expect(ids).toEqual(['a', 'b']);
   });
 
+  test('cancel() of an open keeps the card closed and the link with no `data-popup-open`', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountCard({
+      root: {
+        onOpenChange: (open: boolean, details: PreviewCardRootChangeEventDetails) => {
+          log.push(`${open} ${details.reason}`);
+          details.cancel();
+        },
+      },
+      triggers: [{ key: 't', attrs: { delay: 0 } }],
+    });
+    await userEvent.hover(trigger());
+    await waitFor(() => expect(log).toEqual(['true trigger-hover']));
+    await wait(40);
+    expect(popup()).toBe(null);
+    expect(trigger()).not.toHaveAttribute('data-popup-open');
+  });
+
   test('a hover on the link of an open card emits nothing', async () => {
     const log: string[] = [];
     const { trigger } = await mountCard({
@@ -494,6 +512,29 @@ describe('the dismissal', () => {
     expect(log).toEqual([]);
   });
 
+  test('a press that starts in a nested card and ends outside keeps both cards open', async () => {
+    const log: string[] = [];
+    await mountCard({
+      root: rootEvents(log, { defaultOpen: true }),
+      nested: { root: { defaultOpen: true } },
+      positioner: { side: 'right' },
+    });
+    await opened();
+    await placed();
+    await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await userEvent.pointer([
+      { coords: centerOf(byTestId('nested-text')) },
+      '[MouseLeft>]',
+      { coords: centerOf(byId('outside')) },
+      '[/MouseLeft]',
+    ]);
+    await wait(20);
+    expect(byTestId('nested-popup')).toBeTruthy();
+    expect(popup()).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
   test('Escape closes only the top card; a press in a nested card keeps the parent open', async () => {
     const log: string[] = [];
     await mountCard({
@@ -574,6 +615,44 @@ describe('the hover', () => {
     await userEvent.hover(byId('outside'));
     await wait(100);
     expect(popup()).not.toBe(null);
+  });
+
+  test('a card that the default opened closes when the pointer goes from its link to the page, not into the card', async () => {
+    const log: string[] = [];
+    const { trigger } = await mountCard({
+      root: rootEvents(log, { defaultOpen: true }),
+      triggers: [{ key: 't', attrs: { delay: 0, closeDelay: 0 } }],
+    });
+    await opened();
+    await placed();
+    await userEvent.hover(trigger());
+    await userEvent.hover(byId('before'));
+    await closed();
+    expect(log).toEqual(['openChange false trigger-hover', 'update false']);
+  });
+
+  test('a nested card that closes while the pointer comes back to its parent leaves the parent open; a new hover on its link opens it again, and the pointer in it keeps both open', async () => {
+    const { trigger } = await mountCard({
+      root: { defaultOpen: true },
+      nested: { trigger: { delay: 0, closeDelay: 150 }, root: {} },
+      positioner: { side: 'right' },
+    });
+    await opened();
+    await placed();
+    const nested = () => document.querySelector<HTMLElement>('[data-key="nested"]')!;
+    await userEvent.hover(nested());
+    await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
+    await userEvent.hover(byId('outside'));
+    await userEvent.hover(byTestId('text'));
+    await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
+    expect(popup()).not.toBe(null);
+    await userEvent.hover(nested());
+    await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
+    await userEvent.hover(byTestId('nested-text'));
+    await wait(250);
+    expect(popup()).not.toBe(null);
+    expect(byTestId('nested-popup')).toBeTruthy();
+    expect(trigger()).toHaveAttribute('data-popup-open');
   });
 
   test('a card that the default opened stays open after the pointer goes from its link across the gap into the card and leaves the card', async () => {

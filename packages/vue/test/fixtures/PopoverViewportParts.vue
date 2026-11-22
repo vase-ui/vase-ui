@@ -9,7 +9,9 @@ type Props = Record<string, unknown>;
 // its content is taller. The popup animates its height from `--popup-height`.
 defineProps({
   root: Object as PropType<Props>,
+  portal: Object as PropType<Props>,
   positioner: Object as PropType<Props>,
+  popup: Object as PropType<Props>,
   log: { type: Object as PropType<{ add(entry: string): void }>, default: () => ({ add() {} }) },
 });
 </script>
@@ -20,9 +22,9 @@ defineProps({
       <template #default="{ payload }">
         <Popover.Trigger id="one" payload="One">One</Popover.Trigger>
         <Popover.Trigger id="two" payload="Two" style="margin-top: 3px">Two</Popover.Trigger>
-        <Popover.Portal>
+        <Popover.Portal v-bind="portal">
           <Popover.Positioner data-testid="positioner" v-bind="positioner">
-            <Popover.Popup data-testid="popup" class="sized">
+            <Popover.Popup data-testid="popup" class="sized" v-bind="popup">
               <Popover.Viewport data-testid="viewport">
                 <template #default="{ triggerId }">
                   <Transition name="slide" @leave="log.add('leave')" @enter="log.add('enter')">

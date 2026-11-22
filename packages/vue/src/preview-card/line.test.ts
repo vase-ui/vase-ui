@@ -187,6 +187,38 @@ describe('the line of a wrapped link', () => {
     expect(reads).toBeLessThan(10);
   });
 
+  test('an `anchor` that is the link takes the line of the hover', async () => {
+    const positionerProps = reactive<Props>({ side: 'top' });
+    mountLinks({ positioner: positionerProps });
+    positionerProps.anchor = link('overlap');
+    await hoverLine('overlap', 1);
+    const second = linesOf(link('overlap'))[1]!;
+    await placedAt((box) => expectNear(box.bottom, second.top));
+  });
+
+  test('a hover on another line while a kept card leaves places the card at that line', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent =
+      '[data-testid="popup"][hidden] { display: block; animation: line-leave 2s forwards } @keyframes line-leave { to { opacity: 0 } }';
+    onTestFinished(() => style.remove());
+    // The card is over the link, so that the card that leaves covers no line.
+    mountLinks({
+      trigger: { delay: 0, closeDelay: 0 },
+      portal: { keepMounted: true },
+      positioner: { side: 'top' },
+    });
+    const lines = linesOf(link('long'));
+    await hoverLine('long', 0);
+    await placedAt((box) => expectNear(box.bottom, lines[0]!.top));
+    await userEvent.pointer({ coords: { x: 5, y: 5 } });
+    const card = document.querySelector('[data-testid="popup"]')!;
+    await waitFor(() => expect(card).toHaveAttribute('hidden'));
+    expect(card.getAnimations().length).toBeGreaterThan(0);
+    await hoverLine('long', 1);
+    await waitFor(() => expect(link('long')).toHaveAttribute('data-popup-open'));
+    await placedAt((box) => expectNear(box.bottom, lines[1]!.top));
+  });
+
   test('the card stays at its line after a scroll of the page', async () => {
     document.documentElement.style.height = '4000px';
     onTestFinished(() => {

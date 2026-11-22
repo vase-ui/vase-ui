@@ -13,7 +13,7 @@ The components follow the [WAI-ARIA Authoring Practices Guide](https://www.w3.or
 
 ## Focus management
 
-The components move the focus after an interaction. For example, an open dialog moves the focus into its popup. When the dialog closes, it gives the focus back to its trigger, else to the element that had the focus before. The props `initialFocus` and `finalFocus` of a popup part, such as `Dialog.Popup`, change these targets.
+The components move the focus after an interaction. For example, an open dialog moves the focus into its popup. When the dialog closes, it gives the focus back to its trigger, else to the element that had the focus before. After an open by code, such as by the `open` prop, the element that had the focus before comes first. The props `initialFocus` and `finalFocus` of a popup part, such as `Dialog.Popup`, change these targets.
 
 Give each element that can get the focus a visible focus style, as [WCAG 2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) requires. Use the `:focus-visible` pseudo-class: it matches when the browser shows a focus indicator, such as after a key press.
 

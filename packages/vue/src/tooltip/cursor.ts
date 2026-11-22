@@ -9,7 +9,8 @@ type Axis = 'x' | 'y' | 'both';
 /**
  * The anchor at the mouse pointer for `trackCursorAxis`: a virtual element at the last point of a
  * mouse or a pen on a trigger, on the axis of the prop. The popup follows the pointer on the page
- * while it is open, and stops while the pointer is on the popup.
+ * while it is open, and while a kept popup is closed, so that an open by code comes at the last
+ * point. It stops while the pointer is on the popup.
  */
 export function useCursorAnchor(root: PopupRoot, axis: () => 'none' | Axis) {
   const point = shallowRef<{ x: number; y: number; axis: Axis } | null>(null);
@@ -34,7 +35,7 @@ export function useCursorAnchor(root: PopupRoot, axis: () => 'none' | Axis) {
   );
 
   watch(
-    () => (root.open ? root.popup : null),
+    () => (root.open || root.keepMounted ? root.popup : null),
     (popup, _, onCleanup) => {
       if (!popup) return;
       paused = false;

@@ -27,9 +27,15 @@ const context = useTriggerRoot(() => props.handle as PopoverHandle | undefined);
 const root = () => context.value?.root ?? null;
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 
+// A tap leaves the pointer where it was. A hover then moves nothing until another input opens the
+// popover.
+const tapOpen = () => {
+  const current = root();
+  return current?.reason === 'trigger-press' && current.interaction === 'touch';
+};
 const hover = usePopupHover(root, {
   trigger: element,
-  enabled: () => props.openOnHover,
+  enabled: () => props.openOnHover && !tapOpen(),
   delay: () => props.delay,
   closeDelay: () => props.closeDelay,
   inside: (target) => !!context.value?.inside(target),

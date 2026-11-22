@@ -323,6 +323,101 @@ describe('the root', () => {
     expect(byTestId('payload')).toHaveTextContent('out');
   });
 
+  test('a parent that opens the root again for another trigger with a handle shows the payload of that trigger at each render', async () => {
+    const handle = Tooltip.createHandle<string>();
+    const root = reactive<Props>({ handle, open: true, triggerId: 'first' });
+    await mountTooltips({
+      tooltips: [
+        { name: 'r', root, triggers: [] },
+        {
+          name: 'o',
+          triggers: [
+            { key: 'first', attrs: { handle, id: 'first', payload: 'First' } },
+            { key: 'second', attrs: { handle, id: 'second', payload: 'Second' } },
+          ],
+        },
+      ],
+    });
+    await opened('r');
+    await waitFor(() => expect(byTestId('payload')).toHaveTextContent('First'));
+    root.open = false;
+    root.triggerId = null;
+    await closed('r');
+    const shown: string[] = [];
+    const observer = new MutationObserver(() => {
+      const payload = popup('r')?.querySelector('[data-testid="payload"]');
+      if (payload) shown.push(payload.textContent ?? '');
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    onTestFinished(() => observer.disconnect());
+    root.open = true;
+    root.triggerId = 'second';
+    await opened('r');
+    await nextTick();
+    expect(byTestId('payload')).toHaveTextContent('Second');
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown.every((text) => text === 'Second')).toBe(true);
+  });
+
+  test('a root with `defaultOpen` for a trigger with a handle outside it stays open, and that trigger has `data-popup-open`', async () => {
+    const handle = Tooltip.createHandle();
+    const log: string[] = [];
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 'r',
+          root: rootEvents(log, { handle, defaultOpen: true, defaultTriggerId: 'out' }),
+          triggers: [],
+        },
+        { name: 'o', triggers: [{ key: 'out', attrs: { handle, id: 'out' } }] },
+      ],
+    });
+    await opened('r');
+    await waitFor(() => expect(trigger('out')).toHaveAttribute('data-popup-open'));
+    await sleep(40);
+    expect(popup('r')).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
+  test('cancel() of an open keeps the tooltip closed and the trigger with no `data-popup-open`', async () => {
+    const log: string[] = [];
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: {
+            onOpenChange: (open: boolean, details: TooltipRootChangeEventDetails) => {
+              log.push(`${open} ${details.reason}`);
+              details.cancel();
+            },
+          },
+          triggers: [{ key: 't', attrs: { delay: 0 } }],
+        },
+      ],
+    });
+    await userEvent.hover(trigger());
+    await waitFor(() => expect(log).toEqual(['true trigger-hover']));
+    await sleep(40);
+    expect(popup()).toBe(null);
+    expect(trigger()).not.toHaveAttribute('data-popup-open');
+  });
+
+  test('a hover that waits while no root has the handle of its trigger opens nothing when the root mounts; the next hover opens', async () => {
+    const handle = Tooltip.createHandle();
+    const tooltips = reactive<({ name: string } & Props)[]>([
+      { name: 'o', triggers: [{ key: 'out', attrs: { handle, delay: 50 } }] },
+    ]);
+    await mountTooltips({ tooltips });
+    await userEvent.hover(trigger('out'));
+    tooltips.push({ name: 'r', root: { handle }, triggers: [] });
+    await sleep(120);
+    expect(popup('r')).toBe(null);
+    await hoverAway();
+    await userEvent.hover(trigger('out'));
+    await opened('r');
+    expect(trigger('out')).toHaveAttribute('data-popup-open');
+  });
+
   test('a trigger with a handle stays closed when the parent of the root refuses the open', async () => {
     const handle = Tooltip.createHandle();
     const log: string[] = [];
@@ -360,6 +455,17 @@ describe('the dismissal', () => {
     await userEvent.keyboard('{Escape}');
     await closed();
     expect(triggers).toEqual([trigger(), trigger()]);
+  });
+
+  test('Escape gives a kept popup `data-instant="dismiss"`', async () => {
+    await mountTooltips({ tooltips: [{ name: 't', portal: { keepMounted: true } }] });
+    const element = popup()!;
+    byId('before').focus();
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    expect(element).toHaveAttribute('data-instant', 'dismiss');
   });
 
   test('allowPropagation() lets the Escape go on while the tooltip closes', async () => {
@@ -450,6 +556,84 @@ describe('the hover', () => {
     await hoverAway();
     await closed();
     expect(times.close).toBeGreaterThanOrEqual(atLeast(150));
+  });
+
+  test('a pointer that enters the trigger of an open tooltip again asks for nothing', async () => {
+    const log: string[] = [];
+    await mountTooltips({
+      tooltips: [
+        { name: 't', root: rootEvents(log), triggers: [{ key: 't', attrs: { delay: 0 } }] },
+      ],
+    });
+    await userEvent.hover(trigger());
+    await opened();
+    movePointer(trigger(), centerOf(trigger()));
+    await sleep(60);
+    expect(popup()).not.toBe(null);
+    expect(log).toEqual(['openChange true trigger-hover', 'update true']);
+  });
+
+  test('a tooltip that `defaultOpen` opened closes when the pointer leaves its trigger', async () => {
+    const log: string[] = [];
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: rootEvents(log, { defaultOpen: true }),
+          triggers: [{ key: 't', attrs: { delay: 0, closeDelay: 0 } }],
+        },
+      ],
+    });
+    await opened();
+    await userEvent.hover(trigger());
+    await hoverAway();
+    await closed();
+    expect(log).toEqual(['openChange false trigger-hover', 'update false']);
+  });
+
+  test('the trigger loses `data-popup-open` at the close, while the popup leaves', async () => {
+    await mountTooltips({
+      tooltips: [{ name: 't', transition: 'tip', triggers: [{ key: 't', attrs: { delay: 0 } }] }],
+    });
+    await userEvent.hover(trigger());
+    const element = await opened();
+    await hoverAway();
+    await waitFor(() => expect(element.className).toContain('tip-leave-active'));
+    expect(trigger()).not.toHaveAttribute('data-popup-open');
+  });
+
+  test('a hover opens on a disabled toolbar button with `aria-disabled` in the `element` slot', async () => {
+    mount(TooltipComposed, { kind: 'toolbar-button', trigger: { delay: 20 } });
+    await nextTick();
+    expect(byId('trigger')).toHaveAttribute('aria-disabled', 'true');
+    expect(byId('trigger')).not.toHaveAttribute('disabled');
+    await userEvent.hover(byId('trigger'), { force: true });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+  });
+
+  test('a trigger with a handle that unmounts in its delay opens nothing; the unmount of an active trigger with a handle closes the tooltip', async () => {
+    const handle = Tooltip.createHandle();
+    const log: string[] = [];
+    const tooltips = reactive([
+      { name: 'r', root: rootEvents(log, { handle }), triggers: [] as Props[] },
+      { name: 'o', triggers: [{ key: 'out', attrs: { handle, delay: 100 } }] },
+    ]);
+    await mountTooltips({ tooltips });
+    trigger('out').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    tooltips[1]!.triggers = [];
+    await sleep(200);
+    expect(log).toEqual([]);
+    tooltips[1]!.triggers = [
+      { key: 'a', attrs: { handle, delay: 0 } },
+      { key: 'b', attrs: { handle, delay: 0 } },
+    ];
+    await nextTick();
+    await userEvent.hover(trigger('a'));
+    await opened('r');
+    tooltips[1]!.triggers = [{ key: 'b', attrs: { handle, delay: 0 } }];
+    await closed('r');
+    expect(log.at(-2)).toBe('openChange false none');
+    expect(trigger('b')).not.toHaveAttribute('data-popup-open');
   });
 
   test('a trigger with no `delay` waits 600 ms', async () => {
@@ -962,6 +1146,57 @@ describe('the press', () => {
     expect(popup()).not.toBe(null);
   });
 
+  test('with `closeOnClick` false, a press in the delay keeps the open at the end of the delay', async () => {
+    await mountTooltips({
+      tooltips: [
+        { name: 't', triggers: [{ key: 't', attrs: { delay: 300, closeOnClick: false } }] },
+      ],
+    });
+    await userEvent.hover(trigger());
+    trigger().dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }),
+    );
+    trigger().click();
+    await opened();
+  });
+
+  test('after a press closed the tooltip, a pointer that leaves the trigger and comes back opens it again', async () => {
+    await mountTooltips({
+      tooltips: [{ name: 't', triggers: [{ key: 't', attrs: { delay: 100 } }] }],
+    });
+    await userEvent.hover(trigger());
+    await opened();
+    await userEvent.click(trigger());
+    await closed();
+    await hoverAway();
+    await userEvent.hover(trigger());
+    await opened();
+  });
+
+  test('a touch press on another trigger closes a tooltip that follows the pointer', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: { trackCursorAxis: 'both', defaultOpen: true, defaultTriggerId: 'a' },
+          triggers: [
+            { key: 'a', attrs: { id: 'a' } },
+            { key: 'b', attrs: { id: 'b' } },
+          ],
+        },
+      ],
+    });
+    await opened();
+    trigger('b').dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }),
+    );
+    trigger('b').dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }),
+    );
+    trigger('b').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    await closed();
+  });
+
   test('the `closeOnClick` of the pressed trigger decides, also when the trigger is not active', async () => {
     await mountTooltips({
       tooltips: [
@@ -1107,6 +1342,24 @@ describe('the group', () => {
       ]);
     },
   );
+
+  test('a tooltip that opened at once in an active group leaves with no `data-instant` after a hover close', async () => {
+    await mountTooltips({
+      provider: { delay: 0, timeout: 10_000 },
+      tooltips: [
+        { name: 'a', transition: 'tip', triggers: [{ key: 'a', attrs: { delay: 0 } }] },
+        { name: 'b', transition: 'tip', triggers: [{ key: 'b', attrs: { delay: 0 } }] },
+      ],
+    });
+    await userEvent.hover(trigger('a'));
+    await opened('a');
+    await userEvent.hover(trigger('b'));
+    const second = await opened('b');
+    expect(second).toHaveAttribute('data-instant', 'delay');
+    await hoverAway();
+    await waitFor(() => expect(second.className).toContain('tip-leave-active'));
+    expect(second).not.toHaveAttribute('data-instant');
+  });
 
   test('the group stays active for `timeout` after the last close; then a hover waits its delay; a tooltip reads `timeout` at its close', async () => {
     const provider = reactive({ delay: 10_000, timeout: 10_000 });
@@ -1269,9 +1522,79 @@ describe('the pointer anchor (`trackCursorAxis`)', () => {
       await userEvent.hover(trigger(), { position: { x: 200, y: 70 } });
       await atPointer();
       expect(byTestId('positioner-instant-t')).toHaveTextContent('tracking-cursor');
-      if (axis === 'both') expect(positioner()!.style.pointerEvents).toBe('none');
+      expect(positioner()!.style.pointerEvents).toBe(axis === 'both' ? 'none' : '');
     },
   );
+
+  test('the anchor is at the pointer after the delay of the first hover, at the new pointer after a close and a new hover, and at the trigger after `trackCursorAxis` turns to `none`', async () => {
+    const root = reactive<Props>({ trackCursorAxis: 'x' });
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root,
+          positioner: { side: 'bottom' },
+          popup: { style: 'width: 40px; height: 20px' },
+          triggers: [{ key: 't', attrs: { delay: 100, style: 'width: 300px; height: 40px' } }],
+        },
+      ],
+    });
+    const box = trigger().getBoundingClientRect();
+    const centerX = () => centerOf(popup()!).x;
+    await userEvent.hover(trigger(), { position: { x: 240, y: 20 } });
+    await opened();
+    await waitFor(() => expect(Math.abs(centerX() - (box.left + 240))).toBeLessThanOrEqual(2));
+    await hoverAway();
+    await closed();
+    await userEvent.hover(trigger(), { position: { x: 60, y: 20 } });
+    await opened();
+    await waitFor(() => expect(Math.abs(centerX() - (box.left + 60))).toBeLessThanOrEqual(2));
+    await hoverAway();
+    await closed();
+    root.trackCursorAxis = 'none';
+    await userEvent.hover(trigger(), { position: { x: 240, y: 20 } });
+    await opened();
+    await waitFor(() => expect(Math.abs(centerX() - (box.left + 150))).toBeLessThanOrEqual(2));
+  });
+
+  test('a kept tooltip follows the pointer on the page while it is closed, and an open by code is at the last point', async () => {
+    const root = reactive<Props>({ trackCursorAxis: 'x', open: false });
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root,
+          portal: { keepMounted: true },
+          positioner: { side: 'bottom' },
+          popup: { style: 'width: 40px; height: 20px' },
+          triggers: [{ key: 't', attrs: { delay: 0, style: 'width: 300px; height: 40px' } }],
+        },
+      ],
+    });
+    const element = popup()!;
+    const box = trigger().getBoundingClientRect();
+    movePointer(trigger(), { x: box.left + 240, y: box.top + 20 });
+    root.open = true;
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await waitFor(() =>
+      expect(Math.abs(centerOf(element).x - (box.left + 240))).toBeLessThanOrEqual(2),
+    );
+    root.open = false;
+    await waitFor(() => expect(element).toHaveAttribute('hidden'));
+    document.body.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        pointerType: 'mouse',
+        clientX: box.left + 60,
+        clientY: box.top + 20,
+      }),
+    );
+    root.open = true;
+    await waitFor(() => expect(element).not.toHaveAttribute('hidden'));
+    await waitFor(() =>
+      expect(Math.abs(centerOf(element).x - (box.left + 60))).toBeLessThanOrEqual(2),
+    );
+  });
 
   test('a tooltip that the focus opened stays at its trigger; a pen moves the anchor, and a touch does not', async () => {
     const root = reactive<Props>({ trackCursorAxis: 'x', open: false });
@@ -1465,6 +1788,170 @@ describe('a trigger in a trigger', () => {
     await userEvent.hover(byId('inner'));
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     expect(byTestId('inner-popup')).toBe(null);
+  });
+
+  /** The point of the outer trigger right of its inner triggers. */
+  const outerArea = () => {
+    const box = byId('trigger').getBoundingClientRect();
+    return { x: box.right - 20, y: box.top + 30 };
+  };
+
+  test('a move between two inner triggers opens their tooltips in turn, and a third level opens only its own; the outer tooltip stays closed', async () => {
+    const { unmount } = mount(TooltipComposed, {
+      kind: 'nested',
+      trigger: { delay: 50 },
+      inner: { delay: 0 },
+      second: { delay: 0 },
+    });
+    await nextTick();
+    await userEvent.hover(byId('inner'));
+    await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
+    await userEvent.hover(byId('second'));
+    await waitFor(() => expect(byTestId('second-popup')).not.toBe(null));
+    await waitFor(() => expect(byTestId('inner-popup')).toBe(null));
+    await sleep(120);
+    expect(byTestId('popup')).toBe(null);
+    unmount();
+    mount(TooltipComposed, {
+      kind: 'nested',
+      trigger: { delay: 0 },
+      inner: { delay: 0 },
+      third: { delay: 0 },
+    });
+    await nextTick();
+    await userEvent.hover(byId('third'));
+    await waitFor(() => expect(byTestId('third-popup')).not.toBe(null));
+    await sleep(60);
+    expect(byTestId('inner-popup')).toBe(null);
+    expect(byTestId('popup')).toBe(null);
+  });
+
+  test('a disabled outer trigger opens nothing when the pointer moves from an inner trigger to its own area', async () => {
+    mount(TooltipComposed, {
+      kind: 'nested',
+      trigger: { delay: 0, disabled: true },
+      inner: { delay: 0 },
+    });
+    await nextTick();
+    await userEvent.hover(byId('inner'));
+    await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
+    const area = outerArea();
+    const box = byId('trigger').getBoundingClientRect();
+    await userEvent.hover(byId('trigger'), { position: { x: area.x - box.left, y: 30 } });
+    await sleep(60);
+    expect(byTestId('popup')).toBe(null);
+  });
+
+  test('a pointer that goes back to an inner trigger, or leaves the outer trigger, in the delay of the outer tooltip opens nothing; so does a pointer that moves on to an inner trigger in that delay', async () => {
+    for (const after of [
+      'back to the inner trigger',
+      'out of the outer trigger',
+      'on to an inner trigger',
+    ]) {
+      const { unmount } = mount(TooltipComposed, {
+        kind: 'nested',
+        trigger: { delay: 100 },
+        inner: { delay: 10_000 },
+      });
+      await nextTick();
+      const inner = byId('inner');
+      const outer = byId('trigger');
+      if (after !== 'on to an inner trigger') movePointer(inner, centerOf(inner));
+      movePointer(outer, outerArea());
+      await sleep(50);
+      if (after === 'out of the outer trigger') {
+        outer.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+      } else {
+        movePointer(inner, centerOf(inner));
+        inner.dispatchEvent(
+          new PointerEvent('pointermove', {
+            bubbles: true,
+            pointerType: 'mouse',
+            ...centerOf(inner),
+          }),
+        );
+      }
+      await sleep(120);
+      expect(byTestId('popup')).toBe(null);
+      unmount();
+    }
+  });
+
+  test('the delayed open of the outer tooltip asks for nothing when code opened it in the delay', async () => {
+    const log: string[] = [];
+    const root = rootEvents(log, { open: false });
+    mount(TooltipComposed, {
+      kind: 'nested',
+      root,
+      trigger: { delay: 100 },
+      inner: { delay: 10_000 },
+    });
+    await nextTick();
+    movePointer(byId('inner'), centerOf(byId('inner')));
+    movePointer(byId('trigger'), outerArea());
+    root.open = true;
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await sleep(160);
+    expect(byTestId('popup')).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
+  test('the pointer on the popup of an inner tooltip opens no outer tooltip', async () => {
+    mount(TooltipComposed, { kind: 'nested', trigger: { delay: 100 }, inner: { delay: 0 } });
+    await nextTick();
+    await userEvent.hover(byId('inner'));
+    await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
+    await userEvent.hover(byTestId('inner-popup')!);
+    await sleep(200);
+    expect(byTestId('popup')).toBe(null);
+  });
+
+  test('an outer tooltip that the focus or the parent opened stays open while the pointer is on an inner trigger', async () => {
+    const { unmount } = mount(TooltipComposed, {
+      kind: 'nested',
+      trigger: { delay: 0 },
+      inner: { delay: 10_000 },
+    });
+    await nextTick();
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(byId('trigger'));
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.hover(byId('inner'));
+    await sleep(60);
+    expect(byTestId('popup')).not.toBe(null);
+    unmount();
+    const log: string[] = [];
+    mount(TooltipComposed, {
+      kind: 'nested',
+      root: rootEvents(log, { open: true }),
+      trigger: { delay: 0 },
+      inner: { delay: 10_000 },
+    });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.hover(byId('inner'));
+    await sleep(60);
+    expect(byTestId('popup')).not.toBe(null);
+    expect(log).toEqual([]);
+  });
+
+  test('a mouse opens the outer tooltip after a touch on it; the pointer that goes from the outer popup to an inner trigger closes the outer tooltip', async () => {
+    mount(TooltipComposed, { kind: 'nested', trigger: { delay: 0 }, inner: { delay: 10_000 } });
+    await nextTick();
+    const outer = byId('trigger');
+    movePointer(outer, outerArea(), 'touch');
+    await sleep(40);
+    expect(byTestId('popup')).toBe(null);
+    const box = outer.getBoundingClientRect();
+    await userEvent.hover(outer, { position: { x: outerArea().x - box.left, y: 30 } });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await userEvent.hover(byTestId('popup')!);
+    await sleep(40);
+    expect(byTestId('popup')).not.toBe(null);
+    await userEvent.hover(byId('inner'));
+    await waitFor(() => expect(byTestId('popup')).toBe(null));
+    await sleep(60);
+    expect(byTestId('popup')).toBe(null);
   });
 
   test('an inner trigger in an open shadow root marks its events for the outer trigger', async () => {
@@ -1728,6 +2215,43 @@ describe('the portal, the positioner and the popup', () => {
     await opened();
     await sleep(50);
     expect(started).toEqual([]);
+  });
+
+  test('the positioner has a transform with no viewport, and insets while a viewport is mounted', async () => {
+    const tooltip = reactive<{ name: string } & Props>({
+      name: 't',
+      root: { defaultOpen: true },
+      viewport: false,
+    });
+    await mountTooltips({ tooltips: [tooltip] });
+    await opened();
+    await waitFor(() => expect(positioner()!.style.transform).toMatch(/^translate\(/));
+    tooltip.viewport = true;
+    await waitFor(() => expect(positioner()!.style.transform).toBe(''));
+    expect(positioner()!.style.left).toMatch(/px$/);
+    tooltip.viewport = false;
+    await waitFor(() => expect(positioner()!.style.transform).toMatch(/^translate\(/));
+  });
+
+  test('a popup with a viewport on the left side has its place from the right edge', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          viewport: true,
+          positioner: { side: 'left' },
+          triggers: [
+            { key: 't', attrs: { delay: 0, style: 'position: fixed; top: 200px; left: 300px' } },
+          ],
+        },
+      ],
+    });
+    byId('before').focus();
+    await userEvent.keyboard('{Tab}');
+    await opened();
+    await waitFor(() => expect(positioner()).toHaveAttribute('data-side', 'left'));
+    await waitFor(() => expect(positioner()!.style.right).not.toBe(''));
+    expect(positioner()!.style.left).toBe('');
   });
 
   test('the arrow and the viewport: the side of the popup, the trigger id in the slot of the viewport, and the direction of a move', async () => {
