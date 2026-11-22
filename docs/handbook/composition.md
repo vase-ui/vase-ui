@@ -150,6 +150,7 @@ Vase UI parts are Vue components. An application in Vapor mode renders them with
 
 - In the `element` slot, bind `elementRef` with `:ref`. Vapor ignores a `ref` key in the object of `v-bind`.
 - A Vapor component that you give to `as`, or render in the `element` slot, must expose its element: `defineExpose({ element })`, with `element` a template ref of its root element. A Vapor component has no root element that the part can read. [useElement](/utils/use-element) gives such a component its `element`.
+- A label function of Select or Combobox that returns vnodes needs the virtual DOM runtime of Vue, which the `vaporInteropPlugin` gives. With no plugin, a label is text, and the slot of `Select.Value`, of `Combobox.Value` or of the item gives other content.
 
 ## Differences from Base UI
 

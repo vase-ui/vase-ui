@@ -415,15 +415,21 @@ describe('the highlight', () => {
 });
 
 describe('the keys of the popup', () => {
-  test('the arrow keys of a popup in a toolbar move the highlight, and not the focus of the toolbar', async () => {
-    mount(SelectInToolbar);
+  test('VUE-227: the arrow keys of a popup in a toolbar move the highlight, and not the focus of the toolbar; a key listener of the toolbar gets them', async () => {
+    const { root } = mount(SelectInToolbar);
     await nextTick();
+    const keys: string[] = [];
+    root.querySelector('[role=toolbar]')!.addEventListener('keydown', (event) => {
+      keys.push((event as KeyboardEvent).key);
+    });
     trigger().focus();
     await userEvent.keyboard('{Enter}');
     await focused(() => item('a'));
+    keys.length = 0;
     await userEvent.keyboard('{ArrowRight}{ArrowLeft}');
     await wait(20);
     expect(document.activeElement).toBe(item('a'));
+    expect(keys).toEqual(['ArrowRight', 'ArrowLeft']);
     await userEvent.keyboard('{ArrowDown}');
     await focused(() => item('b'));
     expect(document.activeElement).not.toBe(byTestId('next'));

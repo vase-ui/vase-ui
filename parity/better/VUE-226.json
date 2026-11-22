@@ -1,0 +1,8 @@
+{
+  "id": "VUE-226",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/trigger/SelectTrigger.test.tsx#L406"
+  ],
+  "behavior": "While the popup of a select aligns its selected item with the trigger, the popup covers the trigger and has no side. `data-popup-side` of the trigger is then `none`, the same value as `data-side` of the positioner, so one selector styles the two parts. Base UI gives the trigger the side of the fallback placement, such as `bottom`, while its positioner has `none`.",
+  "dueWith": "packages/react/src/select/trigger/SelectTrigger.tsx"
+}

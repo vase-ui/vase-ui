@@ -316,7 +316,7 @@
       "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.popup.test.ts",
-      "reason": "`Select.popup.test.ts` tests the place: the inline transforms after the measure, a padding of the popup, a right-to-left select with no value, `--anchor-width` of a custom anchor, a page `zoom`, `max-height: 0`, a pinch zoom, a scroll of the popup beside Select.List, the hover of the items at the edges and the keys that grow the popup. `Select.test.ts` tests the attributes, the first focus, `finalFocus` and the alignment, and `alignment.test.ts` the geometry with the numbers of these cases."
+      "reason": "`Select.popup.test.ts` tests the place: the inline transforms after the measure, a padding of the popup, a right-to-left select with no value, `--anchor-width` of a custom anchor, a page `zoom`, `max-height: 0`, a pinch zoom, a scroll of the popup beside Select.List, the hover of the items at the edges and the keys that grow the popup. `Select.test.ts` tests the attributes, the first focus, `finalFocus` and the alignment, `Select.list.test.ts` the arrow keys of a popup in a toolbar (VUE-227), and `alignment.test.ts` the geometry with the numbers of these cases."
     },
     {
       "upstream": "packages/react/src/select/portal/SelectPortal.test.tsx",
@@ -364,7 +364,7 @@
       "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/select/Select.test.ts",
-      "reason": "`Select.test.ts` tests the trigger: its attributes, a disabled trigger, `data-popup-side`, `data-pressed`, `required`, the press at `pointerdown` and the release of the opening press. `Select.value.test.ts` tests `data-placeholder`, and `Select.popup.test.ts` a popup that does not cover the trigger, a later release and a release in a shadow root."
+      "reason": "`Select.test.ts` tests the trigger: its attributes, a disabled trigger, `data-popup-side`, `data-pressed`, `required`, the press at `pointerdown` and the release of the opening press. `Select.value.test.ts` tests `data-placeholder`, and `Select.popup.test.ts` the side `none` of an aligned popup (VUE-226), a popup that does not cover the trigger, a later release and a release in a shadow root."
     },
     {
       "upstream": "packages/react/src/select/value/SelectValue.test.tsx",

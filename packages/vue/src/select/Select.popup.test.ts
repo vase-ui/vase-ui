@@ -226,6 +226,14 @@ describe('the place of the popup', () => {
     expect(positioner().getAttribute('data-side')).toMatch(/^(top|bottom)$/);
   });
 
+  test('VUE-226: while the popup is aligned, `data-popup-side` of the trigger and `data-side` of the positioner are both none', async () => {
+    await mountSelect({ ...aligned, root: { defaultValue: 'banana' } });
+    await userEvent.click(trigger());
+    await opened();
+    expect(positioner()).toHaveAttribute('data-side', 'none');
+    expect(trigger()).toHaveAttribute('data-popup-side', 'none');
+  });
+
   test('the measure of the alignment keeps the inline transforms of the popup', async () => {
     await mountSelect({
       ...aligned,
