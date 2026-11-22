@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import ComboboxRenders from '../../test/fixtures/ComboboxRenders.vue';
@@ -68,6 +68,44 @@ describe('the renders', () => {
     await nextTick();
     expect(spy.renders.item).toBe(undefined);
     expect(spy.renders.list).toBe(undefined);
+  });
+
+  // In Chromium, a comparison of two siblings walks their siblings. A sort of the items with this
+  // comparison then costs more than the square of the count of items.
+  test('a highlight step and a filter key compare the order of no two elements', async () => {
+    await openList();
+    const compare = vi.spyOn(Node.prototype, 'compareDocumentPosition');
+    try {
+      await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+      await waitFor(() =>
+        expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 1'),
+      );
+      await userEvent.keyboard('9');
+      await waitFor(() => expect(document.querySelectorAll('[role="option"]')).toHaveLength(57));
+      expect(compare).not.toHaveBeenCalled();
+    } finally {
+      compare.mockRestore();
+    }
+  });
+
+  test('a highlight step over 300 items checks the visibility of the next item, and of each item one time for the index of its event', async () => {
+    await openList();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 0'),
+    );
+    await nextTick();
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() =>
+        expect(document.querySelector('[data-highlighted]')).toHaveTextContent('Item 1'),
+      );
+      await nextTick();
+      expect(read).toHaveBeenCalledTimes(301);
+    } finally {
+      read.mockRestore();
+    }
   });
 
   test('a pick renders only the item whose selected state changed', async () => {

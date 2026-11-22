@@ -884,6 +884,19 @@ describe('items that leave', () => {
     await waitFor(() => expect(valueText()).toBe(''));
   });
 
+  test('an item that comes after the mount of an empty list and then leaves changes the value', async () => {
+    const items = reactive<{ value: string; text: string }[]>([]);
+    await mountSelect({ root: { defaultValue: 'cherry' }, items });
+    trigger().focus();
+    await wait(10);
+    items.push({ value: 'cherry', text: 'Cherry' });
+    await waitFor(() => expect(item('cherry')).not.toBe(null));
+    await wait(10);
+    expect(valueText()).toBe('cherry');
+    items.shift();
+    await waitFor(() => expect(valueText()).toBe(''));
+  });
+
   test('a list that mounts for the first time changes nothing', async () => {
     const log: string[] = [];
     await mountSelect({ root: rootEvents(log, { defaultValue: 'kiwi' }) });

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
@@ -433,6 +433,24 @@ describe('a kept popup', () => {
     await waitFor(() => expect(popup()).not.toHaveAttribute('hidden'));
     await waitFor(() => expect(itemNames()).toHaveLength(FRUITS.length));
     expect(input().value).toBe('');
+  });
+
+  test('the typeahead of a closed trigger reads the order of the kept items with no comparison of two elements', async () => {
+    const values: unknown[] = [];
+    await mountCombobox({
+      inputInPopup: true,
+      portal: { keepMounted: true },
+      root: { 'onUpdate:modelValue': (value: unknown) => values.push(value) },
+    });
+    trigger().focus();
+    const compare = vi.spyOn(Node.prototype, 'compareDocumentPosition');
+    try {
+      await userEvent.keyboard('b');
+      expect(values).toEqual(['Banana']);
+      expect(compare).not.toHaveBeenCalled();
+    } finally {
+      compare.mockRestore();
+    }
   });
 });
 

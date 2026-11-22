@@ -22,6 +22,8 @@ const props = defineProps({
   virtual: Boolean,
   canLeave: Boolean,
   dir: String,
+  /** Runs each time the highlight state of an item gets a notice of a change. */
+  onHighlightNotice: Function as PropType<() => void>,
 });
 const emit = defineEmits<{ highlight: [entry: string] }>();
 const container = shallowRef<HTMLElement | null>(null);
@@ -37,6 +39,7 @@ const list = useList({
 });
 const typeahead = useTypeahead(list);
 provide('list', list);
+provide('highlightNotice', props.onHighlightNotice);
 
 function onKeydown(event: KeyboardEvent) {
   if (!typeahead.onKeydown(event)) list.onKeydown(event);

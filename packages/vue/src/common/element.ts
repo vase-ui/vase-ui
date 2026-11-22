@@ -80,3 +80,25 @@ export function isElement(value: unknown): value is Element {
 export function byDocumentOrder(a: Node, b: Node) {
   return a.compareDocumentPosition(b) & a.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 }
+
+/**
+ * The entries in the order of the document of their elements. One walk of the elements in `root`
+ * gives the order. A sort with `byDocumentOrder` costs more for a long list: Chromium compares two
+ * siblings with a walk of their siblings. When an element is not in `root`, the sort gives the order.
+ */
+export function inDocumentOrder<T>(
+  entries: readonly T[],
+  elementOf: (entry: T) => Element,
+  root: Element | null,
+): T[] {
+  if (root && entries.length > 1) {
+    const byElement = new Map(entries.map((entry) => [elementOf(entry), entry]));
+    const ordered: T[] = [];
+    for (const element of root.getElementsByTagName('*')) {
+      const entry = byElement.get(element);
+      if (entry !== undefined) ordered.push(entry);
+    }
+    if (ordered.length === entries.length) return ordered;
+  }
+  return [...entries].sort((a, b) => byDocumentOrder(elementOf(a), elementOf(b)));
+}

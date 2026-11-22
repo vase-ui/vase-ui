@@ -1,7 +1,6 @@
-import { computed, shallowReactive, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
+import { computed, shallowRef, watch, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { addEventListener } from '../common/addEventListener';
-import { arrowKeyTarget } from '../common/arrowKeyTarget';
-import { byDocumentOrder } from '../common/element';
+import { inDocumentOrder } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
@@ -24,6 +23,8 @@ export interface List {
   /** One other element keeps the focus, and names the highlighted item. */
   readonly virtual: boolean;
   add(item: ListItem): () => void;
+  /** The item has the highlight. A change of the highlight updates the readers of two items only. */
+  isHighlighted(item: ListItem): boolean;
   /**
    * The items that a key can reach, in the order of the document: in the document, shown and not
    * `:disabled`. With `hidden`, also the items that are not shown, such as those of a closed popup.
@@ -69,8 +70,17 @@ const same = (a: Point | null, event: PointerEvent) =>
   !!a && a.x === event.clientX && a.y === event.clientY;
 
 export function useList(options: ListOptions): List {
-  const added = shallowReactive<ListItem[]>([]);
+  // The items by element. An item leaves in constant time, so a filter that removes many items of a
+  // long list stays linear. A walk of the container finds the item of each element here. A reader
+  // of the items reads `addedVersion`, which changes at each add and each removal.
+  const added = new Map<Element, ListItem>();
+  const addedVersion = shallowRef(0);
   const highlighted = shallowRef<ListItem | null>(null);
+  const itemHighlights = new WeakMap<ListItem, ShallowRef<boolean>>();
+  const setItemHighlight = (item: ListItem | null, on: boolean) => {
+    const itemHighlight = item && itemHighlights.get(item);
+    if (itemHighlight) itemHighlight.value = on;
+  };
   const virtual = computed(() => !!options.owner?.());
 
   // The place of the pointer, from the `pointermove` events of the document of the owner, else of
@@ -142,21 +152,41 @@ export function useList(options: ListOptions): List {
   // An item that leaves the list takes the highlight with it, also when another item takes its
   // place in the same update.
   watch(
-    () => !!highlighted.value && !added.includes(highlighted.value),
+    () => {
+      void addedVersion.value;
+      const item = highlighted.value;
+      return !!item && added.get(item.element) !== item;
+    },
     (gone) => {
       if (gone) list.highlight(null, 'none');
     },
   );
 
+  const reachable = (element: Element, hidden?: boolean) =>
+    (hidden || element.checkVisibility()) && !element.matches(':disabled');
+
   function items(itemOptions?: { hidden?: boolean }) {
-    return added
-      .filter(
-        ({ element }) =>
-          element.isConnected &&
-          (itemOptions?.hidden || element.checkVisibility()) &&
-          !element.matches(':disabled'),
-      )
-      .sort((a, b) => byDocumentOrder(a.element, b.element));
+    void addedVersion.value;
+    const connected = [...added.values()].filter(({ element }) => element.isConnected);
+    return inDocumentOrder(connected, (item) => item.element, options.container()).filter(
+      ({ element }) => reachable(element, itemOptions?.hidden),
+    );
+  }
+
+  // The item that a step from the element reaches, in the order of the document. A walk from the
+  // element finds it, so a step reads only the elements up to that item. `undefined`: the container
+  // has no such item.
+  function stepInContainer(from: HTMLElement, forward: boolean) {
+    const container = options.container();
+    if (!container?.contains(from)) return undefined;
+    const walker = ownerDocument(container).createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
+    walker.currentNode = from;
+    const next = () => (forward ? walker.nextNode() : walker.previousNode());
+    for (let node = next(); node; node = next()) {
+      const item = added.get(node as Element);
+      if (item && reachable(item.element)) return item;
+    }
+    return undefined;
   }
 
   function rtl() {
@@ -164,33 +194,42 @@ export function useList(options: ListOptions): List {
     return !!container && ownerWindow(container).getComputedStyle(container).direction === 'rtl';
   }
 
-  // The item of a key in a list of one line. `undefined`: the key is not a key of the list.
-  function lineTarget(key: string, all: ListItem[], current: ListItem | null, isRtl: boolean) {
+  // The item of a key in a list of one line. `undefined`: the key is not a key of the list, or the
+  // list has no item.
+  function lineTarget(key: string, current: ListItem | null) {
     const orientation = options.orientation();
+    const isRtl = orientation === 'horizontal' && rtl();
     const [forward, backward] =
       orientation === 'vertical'
         ? ['ArrowDown', 'ArrowUp']
         : isRtl
           ? ['ArrowLeft', 'ArrowRight']
           : ['ArrowRight', 'ArrowLeft'];
+    const isStep = key === forward || key === backward;
+    if (!isStep && key !== 'Home' && key !== 'End') return undefined;
+    const near = current && isStep ? stepInContainer(current.element, key === forward) : undefined;
+    if (near) return near;
+    const all = items();
+    if (all.length === 0) return undefined;
     if (key === 'Home') return all[0];
     if (key === 'End') return all.at(-1);
-    if (key !== forward && key !== backward) return undefined;
     if (!current) return key === forward ? all[0] : all.at(-1);
-    const next = arrowKeyTarget(
-      key,
-      current.element,
-      all.map((item) => item.element),
-      { orientation, rtl: isRtl, loop: false },
-    );
-    if (next && next !== current.element) return all.find((item) => item.element === next);
+    // A highlighted item that a key cannot reach, such as one that hides, keeps its place.
+    const sequence = all.includes(current)
+      ? all
+      : inDocumentOrder([...all, current], (item) => item.element, options.container());
+    const next = sequence[sequence.indexOf(current) + (key === forward ? 1 : -1)];
+    if (next) return next;
     if (options.canLeave?.()) return null;
     if (options.loop()) return key === forward ? all[0] : all.at(-1);
     return current;
   }
 
   // The item of a key in a list whose items are in rows.
-  function rowTarget(key: string, all: ListItem[], current: ListItem | null, isRtl: boolean) {
+  function rowTarget(key: string, current: ListItem | null) {
+    const all = items();
+    if (all.length === 0) return undefined;
+    const isRtl = rtl();
     const rows: ListItem[][] = [];
     let row: Element | null | undefined;
     for (const item of all) {
@@ -233,11 +272,17 @@ export function useList(options: ListOptions): List {
       return virtual.value;
     },
     add(item) {
-      added.push(item);
+      itemHighlights.set(item, shallowRef(false));
+      added.set(item.element, item);
+      addedVersion.value += 1;
       return () => {
-        const index = added.indexOf(item);
-        if (index !== -1) added.splice(index, 1);
+        if (added.get(item.element) !== item) return;
+        added.delete(item.element);
+        addedVersion.value += 1;
       };
+    },
+    isHighlighted(item) {
+      return itemHighlights.get(item)?.value ?? false;
     },
     items,
     text(item) {
@@ -245,7 +290,11 @@ export function useList(options: ListOptions): List {
     },
     highlight(item, reason, event) {
       const previous = highlighted.value;
-      if (item !== previous) last = { reason, event };
+      if (item !== previous) {
+        last = { reason, event };
+        setItemHighlight(previous, false);
+        setItemHighlight(item, true);
+      }
       highlighted.value = item;
       if (item) {
         if (!virtual.value) item.element.focus({ preventScroll: true });
@@ -267,10 +316,8 @@ export function useList(options: ListOptions): List {
     onKeydown(event) {
       if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
       if (isComposing(event)) return false;
-      const all = items();
-      if (all.length === 0) return false;
       const current = highlighted.value?.element.isConnected ? highlighted.value : null;
-      const target = (options.rows?.() ? rowTarget : lineTarget)(event.key, all, current, rtl());
+      const target = (options.rows?.() ? rowTarget : lineTarget)(event.key, current);
       if (target === undefined) return false;
       event.preventDefault();
       list.highlight(target, 'keyboard', event);
@@ -290,7 +337,7 @@ export function useListItem(
   element: Readonly<Ref<HTMLElement | null>>,
   item: { label?(): string | undefined; disabled(): boolean },
 ): { highlighted: ComputedRef<boolean>; attributes: ComputedRef<Record<string, unknown>> } {
-  let entry: ListItem | undefined;
+  const entry = shallowRef<ListItem>();
   watch(
     element,
     (el, _, onCleanup) => {
@@ -304,14 +351,12 @@ export function useListItem(
           return item.disabled();
         },
       };
-      entry = created;
       onCleanup(list.add(created));
+      entry.value = created;
     },
     { flush: 'post', immediate: true },
   );
-  const highlighted = computed(
-    () => !!element.value && list.highlighted?.element === element.value,
-  );
+  const highlighted = computed(() => !!entry.value && list.isHighlighted(entry.value));
   const options: Partial<ListOptions> = optionsOfLists.get(list) ?? {};
   const hovers = () => options.hover?.() ?? true;
 
@@ -319,19 +364,22 @@ export function useListItem(
     tabindex: highlighted.value && !list.virtual ? 0 : -1,
     'data-highlighted': highlighted.value ? '' : undefined,
     onPointermove(event: PointerEvent) {
-      if (!entry || event.pointerType === 'touch' || !hovers() || !list.moved(event)) return;
-      if (list.highlighted !== entry) list.highlight(entry, 'pointer', event);
+      const current = entry.value;
+      if (!current || event.pointerType === 'touch' || !hovers() || !list.moved(event)) return;
+      if (list.highlighted !== current) list.highlight(current, 'pointer', event);
     },
     onPointerleave(event: PointerEvent) {
-      if (!entry || list.highlighted !== entry || !hovers()) return;
-      if (options.keepOnLeave?.(entry)) return;
+      const current = entry.value;
+      if (!current || list.highlighted !== current || !hovers()) return;
+      if (options.keepOnLeave?.(current)) return;
       const related = event.relatedTarget as Element | null;
       if (related && list.items().some((other) => other.element.contains(related))) return;
       list.highlight(null, 'pointer', event);
     },
     // A screen reader and a touch can give an item the real focus.
     onFocus() {
-      if (entry && list.highlighted !== entry) list.highlight(entry, 'none');
+      const current = entry.value;
+      if (current && list.highlighted !== current) list.highlight(current, 'none');
     },
     // The owner keeps the focus at a press (test/measurements/menu.test.ts).
     onMousedown: list.virtual ? (event: MouseEvent) => event.preventDefault() : undefined,
