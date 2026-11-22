@@ -526,37 +526,37 @@
       "name": "Server render and Vapor mode",
       "rows": [
         {
-          "feature": "Hydration of the server HTML of the Dialog example, in a virtual DOM app",
+          "feature": "Hydration of the server HTML of each app, in a virtual DOM app",
           "kind": "support",
           "cells": {
             "vase-ui": {
               "value": "yes",
-              "note": "Our check: no mismatch.",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://vase-ui.com/handbook/server-rendering"
             },
             "reka-ui": {
               "value": "yes",
-              "note": "Our check: no mismatch.",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://reka-ui.com/docs/guides/server-side-rendering"
             },
             "ark-ui": {
-              "value": "partial",
-              "note": "Our check: Vue reports a hydration mismatch, and the dialog then opens. The example teleports to `body`.",
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://ark-ui.com/vue/docs/components/dialog"
             },
             "headless-ui": {
               "value": "yes",
-              "note": "Our check: no mismatch.",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://headlessui.com/v1/vue/dialog"
             },
             "vuetify0": {
-              "value": "yes",
-              "note": "Our check: no mismatch.",
+              "value": "partial",
+              "note": "Our check: the server render of Combobox, Menu and the app of all ten fails with `ReferenceError: HTMLElement is not defined`. The other apps hydrate with no message.",
               "source": "https://0.vuetifyjs.com/guide/integration/nuxt"
             },
             "base-ui": {
               "value": "yes",
-              "note": "Our check, in a React app: no mismatch.",
+              "note": "Our check, in a React app: each app hydrates with no message.",
               "source": "https://base-ui.com/react/components/dialog"
             }
           }
@@ -595,32 +595,68 @@
           }
         },
         {
-          "feature": "Hydration of the server HTML of the Dialog example, in a Vapor app",
+          "feature": "Hydration of the server HTML of each app, in a Vapor app",
           "kind": "support",
           "cells": {
             "vase-ui": {
               "value": "partial",
-              "note": "Our check: Vue reports a hydration mismatch, and the dialog then opens.",
+              "note": "Our check: Checkbox hydrates with no message. Dialog, Menu, Popover and Select show a hydration mismatch, and then work. Accordion, Combobox, Slider, Tabs, Tooltip and the app of all ten show a mismatch and stop with an error. With the fix of vuejs/core#16376 in the server render of Vue, each app hydrates with no message.",
               "source": "https://vase-ui.com/handbook/composition#vapor-mode"
             },
             "reka-ui": {
-              "value": "yes",
-              "note": "Our check: no mismatch.",
+              "value": "partial",
+              "note": "Our check: Select, Tooltip and the app of all ten show a hydration mismatch and stop with an error. The other apps hydrate with no message. With the fix of vuejs/core#16376 in the server render of Vue, each app hydrates with no message.",
               "source": "https://reka-ui.com/docs/guides/server-side-rendering"
             },
             "ark-ui": {
-              "value": "no",
-              "note": "Our check: Vue reports a hydration mismatch and an error. The dialog does not open.",
+              "value": "yes",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://ark-ui.com/vue/docs/components/dialog"
             },
             "headless-ui": {
               "value": "yes",
-              "note": "Our check: no mismatch.",
+              "note": "Our check: each app hydrates with no message.",
               "source": "https://headlessui.com/v1/vue/dialog"
             },
             "vuetify0": {
-              "value": "no",
-              "note": "Our check: Vue reports a hydration mismatch and an error. The dialog does not open.",
+              "value": "partial",
+              "note": "Our check: the server render of Combobox, Menu and the app of all ten fails with `ReferenceError: HTMLElement is not defined`. Accordion, Dialog, Slider and Tabs show a hydration mismatch and stop with an error. Popover, Select and Tooltip show a mismatch, and then work. Checkbox hydrates with no message. With the fix of vuejs/core#16376 in the server render of Vue, only the errors of the server render stay.",
+              "source": "https://0.vuetifyjs.com/guide/integration/vapor"
+            },
+            "base-ui": {
+              "value": "not-applicable",
+              "note": "A React library.",
+              "source": "https://base-ui.com/react/overview/quick-start"
+            }
+          }
+        },
+        {
+          "feature": "Each app works in a Vapor app",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://vase-ui.com/handbook/composition#vapor-mode"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://reka-ui.com/docs/overview/installation"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
+              "source": "https://ark-ui.com/vue/docs/overview/getting-started"
+            },
+            "headless-ui": {
+              "value": "partial",
+              "note": "Our check: the items of Menu get no `menuitem` role and no `id`, and Headless UI reports `Passing props on \"template\"!`. `MenuItem` gives its props to the element of its slot, and the slot of a Vapor component gives it no element. The other apps work.",
+              "source": "https://headlessui.com/v1/vue/menu"
+            },
+            "vuetify0": {
+              "value": "yes",
+              "note": "Our check: each app opens, moves its highlight and closes, or changes its state, in the three browsers.",
               "source": "https://0.vuetifyjs.com/guide/integration/vapor"
             },
             "base-ui": {

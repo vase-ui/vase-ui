@@ -2,9 +2,14 @@ import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import react from '@vitejs/plugin-react';
-import vue from '@vitejs/plugin-vue';
 import { build, type InlineConfig, type Plugin } from 'vite';
 import { LIBRARIES, SCENARIOS, SETUPS, type Library, type Setup } from './scenarios.ts';
+
+// The compiler of Vue loads its production build only when `NODE_ENV` is `production` at its first
+// `require`, and `@vitejs/plugin-vue` loads Vue when it loads. Vite sets `NODE_ENV` only inside
+// `build()`, and the development compiler keeps template comments.
+process.env.NODE_ENV = 'production';
+const { default: vue } = await import('@vitejs/plugin-vue');
 
 const require = createRequire(import.meta.url);
 const HARNESS = join(import.meta.dirname, 'harness');
