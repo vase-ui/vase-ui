@@ -31,6 +31,17 @@ const { element, setElement } = useElement<HTMLElement>();
 
 const isOpen = () => provider.toasts.some((toast) => toast.id === props.toast.id);
 const place = computed(() => provider.place(props.toast.id));
+/**
+ * The focus is in the root, from the keyboard or from a press. At Tab, Firefox moves the focus
+ * before Vue renders a change that a `keydown` listener makes (test/measurements/toast.test.ts).
+ * So the press ends the hidden state of the parts, before the Tab.
+ */
+const focusWithin = shallowRef(false);
+// An alert in the parent of the viewport announces a toast of high priority, so the polite viewport
+// does not announce it a second time.
+const ariaHidden = computed(
+  () => props.toast.priority === 'high' && !provider.focused && !focusWithin.value,
+);
 const swipe = useToastSwipe({
   directions: (): SwipeDirection[] =>
     props.toast.positionerProps?.anchor === undefined ? [props.swipeDirection].flat() : [],
@@ -66,6 +77,12 @@ const context: ToastRootForParts = {
   },
   get behind() {
     return place.value.index > 0;
+  },
+  get ariaHidden() {
+    return ariaHidden.value;
+  },
+  get focusWithin() {
+    return focusWithin.value;
   },
   addLabel(kind, label) {
     const entry = { kind, label };
@@ -113,6 +130,10 @@ onUnmounted(() => {
   observer.observe(root.ownerDocument, { childList: true, subtree: true });
 });
 
+function onFocusout(event: FocusEvent) {
+  if (!element.value?.contains(event.relatedTarget as Node | null)) focusWithin.value = false;
+}
+
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape' || event.defaultPrevented || isComposing(event) || !isOpen()) return;
   provider.close(props.toast.id);
@@ -143,11 +164,11 @@ function elementProps() {
   return mergeProps(
     {
       role: high ? 'alertdialog' : 'dialog',
-      tabindex: 0,
+      tabindex: ariaHidden.value ? -1 : 0,
       'aria-modal': 'false',
       'aria-labelledby': byDescription ? descriptionId : titleId,
       'aria-describedby': byDescription ? undefined : descriptionId,
-      'aria-hidden': high && !provider.focused ? 'true' : undefined,
+      'aria-hidden': ariaHidden.value ? 'true' : undefined,
       inert: props.toast.limited ? '' : undefined,
       'data-expanded': state.value.expanded ? '' : undefined,
       'data-type': state.value.type,
@@ -161,6 +182,8 @@ function elementProps() {
         },
         swipe.style.value,
       ],
+      onFocusin: () => (focusWithin.value = true),
+      onFocusout,
       onKeydown,
       ...swipe.listeners.value,
     },

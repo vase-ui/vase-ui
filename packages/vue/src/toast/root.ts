@@ -10,6 +10,10 @@ export interface ToastRootForParts {
   readonly expanded: boolean;
   /** A newer toast is in front of the toast. */
   readonly behind: boolean;
+  /** The root has `aria-hidden`, so each part in it leaves the tab order. */
+  readonly ariaHidden: boolean;
+  /** The focus is in the root, from the keyboard or from a press. */
+  readonly focusWithin: boolean;
   /** Adds a title or a description. The root names the last one that shows. */
   addLabel(
     kind: 'title' | 'description',

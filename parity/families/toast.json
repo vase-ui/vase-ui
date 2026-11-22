@@ -88,7 +88,7 @@
       "upstream": "packages/react/src/toast/close/ToastClose.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the close button: its `<button type=\"button\">`, the close at a press, and `aria-hidden` while the stack is collapsed."
+      "reason": "`Toast.test.ts` tests the close button: its `<button type=\"button\">`, the close at a press, and `aria-hidden` and no tab stop while the stack is collapsed and the focus is not in its toast (VUE-232)."
     },
     {
       "upstream": "packages/react/src/toast/content/ToastContent.test.tsx",
@@ -166,7 +166,7 @@
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/toast/Toast.test.ts",
-      "reason": "`Toast.test.ts` tests the viewport: the region, F6, Tab and Shift+Tab with the sentinels, Escape (VUE-130), the focus at a close, the hover, the window and the page (BUG-6174, VUE-76), and the alerts. The developer gives the viewport an `aria-label` in the language of the page, so the viewport has no default name."
+      "reason": "`Toast.test.ts` tests the viewport: the region, F6, Tab and Shift+Tab with the sentinels, the tab stop of the viewport while a toast of high priority has none (VUE-232), Escape (VUE-130), the focus at a close, the hover, the window and the page (BUG-6174, VUE-76), and the alerts. The developer gives the viewport an `aria-label` in the language of the page, so the viewport has no default name."
     },
     {
       "upstream": "packages/react/src/toast/createToastManager.spec.tsx",

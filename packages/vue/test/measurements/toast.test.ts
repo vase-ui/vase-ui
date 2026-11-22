@@ -402,6 +402,62 @@ describe('Tab and the sentinels', () => {
   );
 });
 
+describe('a container that has the tab stop of its content', () => {
+  test('Tab reaches it before its content, and Shift+Tab after; a `focus()` of a child in its `focusin` listener gives the child `:focus-visible`', async () => {
+    html(
+      '<input id="before" aria-label="Before"><div id="vp" tabindex="0"><div id="t1" tabindex="-1">1</div><div id="t2" tabindex="-1">2</div></div><input id="after" aria-label="After">',
+    );
+    const log: string[] = [];
+    element('vp').addEventListener('focusin', (event) => {
+      if (event.target !== element('vp')) return;
+      const from = (event.relatedTarget as Element | null)?.id;
+      log.push(`from ${from}`);
+      element(from === 'after' ? 't2' : 't1').focus();
+      log.push(`${activeId()} ${document.activeElement!.matches(':focus-visible')}`);
+    });
+    element('before').focus();
+    await userEvent.keyboard('{Tab}');
+    element('after').focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(log).toEqual(['from before', 't1 true', 'from after', 't2 true']);
+  });
+
+  test('a render that a `keydown` listener of Tab starts comes before the move of the focus in Chromium and WebKit, and after it in Firefox', async () => {
+    const keyboard = ref(false);
+    mountVue('', () =>
+      h('div', [
+        h('input', { id: 'before', 'aria-label': 'Before' }),
+        h(
+          'div',
+          {
+            id: 'vp',
+            tabindex: keyboard.value ? -1 : 0,
+            onKeydown: (event: KeyboardEvent) => {
+              if (event.key === 'Tab') keyboard.value = true;
+            },
+          },
+          h('div', { id: 't', tabindex: 0 }, [
+            h('button', { id: 'button', tabindex: keyboard.value ? undefined : -1 }, 'Button'),
+          ]),
+        ),
+        h('input', { id: 'after', 'aria-label': 'After' }),
+      ]),
+    );
+    const order: (string | undefined)[] = [];
+    element('t').focus();
+    await userEvent.keyboard('{Tab}');
+    order.push(activeId());
+    keyboard.value = false;
+    await nextTick();
+    element('t').focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    order.push(activeId());
+    // In Chromium and WebKit, Tab reaches the button that the render gives a tab stop, and Shift+Tab
+    // skips the container that the render takes out of the tab order.
+    expect(order).toEqual(engine === 'firefox' ? ['after', 'vp'] : ['button', 'before']);
+  });
+});
+
 describe('a touch', () => {
   // A page that scrolls on the two axes, with a fixed box.
   function touchBox(touchAction: string) {

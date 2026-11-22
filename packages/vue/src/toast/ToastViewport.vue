@@ -84,10 +84,34 @@ watch(
   },
 );
 
+/**
+ * A toast of high priority can have `aria-hidden` and no tab stop while the keyboard focus is
+ * outside the viewport, so the viewport takes the tab stop. `inert` would also stop a press on the
+ * toast (test/measurements/popup.test.ts, "a press on inert content has the element under it that
+ * is not inert as its target, and no listener of the content runs").
+ */
+const tabStop = computed(
+  () => !provider.focused && provider.toasts.some((toast) => toast.priority === 'high'),
+);
+/** F6 moves the focus to the viewport, and the focus stays there. */
+let focusByF6 = false;
+
 function onFocusin(event: FocusEvent) {
+  const target = event.target as Element;
   // A press gives no `:focus-visible` focus, so it does not keep the stack expanded
   // (test/measurements/toast.test.ts).
-  if ((event.target as Element).matches(':focus-visible')) provider.setInteraction({ focus: true });
+  if (!target.matches(':focus-visible')) return;
+  const viewport = element.value;
+  const related = event.relatedTarget as Node | null;
+  // A focus that comes from no element, such as the focus that the window gets back, stays.
+  const passOn =
+    target === viewport && tabStop.value && !focusByF6 && !!related && !viewport.contains(related);
+  provider.setInteraction({ focus: true });
+  if (!passOn) return;
+  // Tab from before the viewport moves the focus to the first toast, and Shift+Tab from after it to
+  // the last toast. The toast then matches `:focus-visible` (test/measurements/toast.test.ts).
+  const fromAfter = viewport.compareDocumentPosition(related) & Node.DOCUMENT_POSITION_FOLLOWING;
+  focusToast(fromAfter ? 'last' : 'first');
 }
 
 function onFocusout(event: FocusEvent) {
@@ -152,7 +176,9 @@ watch(
       // A focus listener of the developer can close the toasts.
       origin.value = doc.activeElement;
       // The viewport then matches `:focus-visible` (test/measurements/toast.test.ts).
+      focusByF6 = true;
       viewport.focus({ preventScroll: true });
+      focusByF6 = false;
       event.preventDefault();
     };
     // A touch device sends `mouseleave` only at the next tap on another element
@@ -190,23 +216,27 @@ watch(
 const sentinels = computed(() => mounted.value && !!origin.value && provider.toasts.length > 0);
 
 /**
+ * Moves the focus to the first or the last toast that is not inert. Gives `false` when no toast can
+ * take it.
+ */
+function focusToast(edge: 'first' | 'last') {
+  const roots = provider.toasts
+    .map((toast) => provider.rootElement(toast.id))
+    .filter((root) => root && !root.inert);
+  const root = edge === 'first' ? roots[0] : roots.at(-1);
+  root?.focus();
+  return !!root;
+}
+
+/**
  * A sentinel that gets the focus from a toast returns it to the origin. From another place, it
  * sends the focus to the first or the last toast that is not inert.
  */
 function onSentinelFocus(edge: 'first' | 'last', event: FocusEvent) {
   const viewport = element.value;
   const related = event.relatedTarget as Element | null;
-  if (!related || related === viewport || !viewport?.contains(related)) {
-    const roots = provider.toasts
-      .map((toast) => provider.rootElement(toast.id))
-      .filter((root) => root && !root.inert);
-    const root = edge === 'first' ? roots[0] : roots.at(-1);
-    if (root) {
-      root.focus();
-      return;
-    }
-  }
-  returnFocus();
+  const fromToast = !!related && related !== viewport && !!viewport?.contains(related);
+  if (fromToast || !focusToast(edge)) returnFocus();
 }
 
 const state = computed<ToastViewportState>(() => ({ expanded: provider.expanded }));
@@ -216,7 +246,7 @@ function elementProps() {
   return mergeProps(
     {
       role: 'region',
-      tabindex: -1,
+      tabindex: tabStop.value ? 0 : -1,
       'aria-live': 'polite',
       'aria-atomic': 'false',
       'aria-relevant': 'additions text',
