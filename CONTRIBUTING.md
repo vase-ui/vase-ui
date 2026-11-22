@@ -54,7 +54,7 @@ To run one test file, add a part of its name: `pnpm test:chromium Collapsible`.
 
 The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck`, `pnpm docs:build` or `pnpm docs:dev`.
 
-To run `pnpm test:vapor` or `pnpm test:vapor-parts` on your machine, install the Vue of their CI jobs: `pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@<version>`. After the run, restore `packages/vue/package.json` and `pnpm-lock.yaml` with git, and run `pnpm install`.
+Before `pnpm test:vapor`, `pnpm test:vapor-parts` or `pnpm --filter @vase-ui/vue test:vue-3.6`, run `pnpm install:vue-3.6`, which installs Vue 3.6 as CI does. To return to Vue 3.5 after the run, run `git restore pnpm-lock.yaml packages/vue/package.json fixtures/vite/package.json && pnpm install`.
 
 ### Tool versions
 

@@ -259,7 +259,7 @@ jobs:
       - run: pnpm docs:ios-backdrop
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.
-  # The version is the dist-tag `rc` of `vue` on npm.
+  # The root script `install:vue-3.6` gives the release candidate of Vue that the job installs.
   test-vue-rc:
     needs: select
     if: ${{ !cancelled() && needs.select.result != 'failure' && needs.select.outputs.tests != 'none' }}
@@ -314,7 +314,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
+      - run: pnpm install:vue-3.6
       - if: ${{ matrix.project == 'chromium' }}
         uses: ./.github/actions/vitest
         with:
@@ -358,7 +358,7 @@ jobs:
       - if: ${{ needs.select.outputs.fixtures != 'false' }}
         run: pnpm build
       - id: rc
-        run: pnpm --filter @vase-ui/vue --filter @vase-ui/vite-fixture update --save-exact vue@3.6.0-rc.15
+        run: pnpm install:vue-3.6
       - if: ${{ needs.select.outputs.fixtures != 'false' }}
         run: pnpm --filter @vase-ui/vite-fixture test:published:vapor
       - if: ${{ !cancelled() && steps.rc.outcome == 'success' && needs.select.outputs.tests != 'none' }}

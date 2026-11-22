@@ -634,14 +634,20 @@ describe('the hover', () => {
       await userEvent.hover(byId('b'));
       await userEvent.hover(byId('outside'));
       await waitFor(() => expect(byId('b')).not.toHaveAttribute('data-popup-open'));
-      // The leave ends: Vue removes the card, or the animation of `[hidden]` ends.
-      await waitFor(() =>
-        expect(
-          popup()
-            ?.getAnimations()
-            .some((animation) => animation.playState === 'running'),
-        ).not.toBe(true),
-      );
+      // The card leaves until Vue removes it, also in the two frames before its transition starts. A
+      // kept card leaves while its animation of `[hidden]` runs. The animation fills forwards, so it
+      // stays `finished`.
+      if (portal.keepMounted) {
+        await waitFor(() =>
+          expect(
+            popup()!
+              .getAnimations()
+              .map(({ playState }) => playState),
+          ).toEqual(['finished']),
+        );
+      } else {
+        await closed();
+      }
       const beforeOpen = readAfter(byId('a'), 'pointerenter', 100, () =>
         byId('a').hasAttribute('data-popup-open'),
       );
