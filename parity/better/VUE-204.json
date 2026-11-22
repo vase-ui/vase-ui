@@ -1,0 +1,8 @@
+{
+  "id": "VUE-204",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/toast/root/ToastRoot.test.tsx#L1075-L1163"
+  ],
+  "behavior": "A swipe that moves back after it went 10 px or more in its direction keeps the toast, whatever the size of each pointer move. A move of more than 40 px in the direction after the move back permits the close again. Base UI compares the move back with the displacement of the move that sets the direction. Real input moves a few pixels at a time, so in Base UI a move back often does not keep the toast.",
+  "dueWith": "packages/react/src/toast/root/ToastRoot.tsx"
+}

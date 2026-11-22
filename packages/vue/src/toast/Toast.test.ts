@@ -4,10 +4,12 @@ import { h, nextTick, reactive, watchEffect } from 'vue';
 import type { UseToastManagerReturnValue } from '@vase-ui/vue/toast';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import ToastAnchored from '../../test/fixtures/ToastAnchored.vue';
+import ToastConformance from '../../test/fixtures/ToastConformance.vue';
 import ToastElementSlots from '../../test/fixtures/ToastElementSlots.vue';
 import ToastLabelInTransition from '../../test/fixtures/ToastLabelInTransition.vue';
 import ToastPartAlone from '../../test/fixtures/ToastPartAlone.vue';
 import ToastParts from '../../test/fixtures/ToastParts.vue';
+import ToastTwoProviders from '../../test/fixtures/ToastTwoProviders.vue';
 import { finishAnimations } from '../../test/animation';
 import { expectNoAxeViolations } from '../../test/axe';
 import { mount, mountError } from '../../test/render';
@@ -48,6 +50,14 @@ function style(css: string) {
 
 async function pressF6() {
   await userEvent.keyboard('{F6}');
+}
+
+/**
+ * A keydown of F6 to dispatch. In Firefox, a real F6 that no listener prevents moves the focus out
+ * of the page.
+ */
+function f6Event() {
+  return new KeyboardEvent('keydown', { key: 'F6', bubbles: true, cancelable: true });
 }
 
 afterEach(() => {
@@ -126,6 +136,75 @@ describe('the parts', () => {
   });
 });
 
+describe('the API of each part', () => {
+  const TAGS: Record<string, string> = {
+    Viewport: 'div',
+    Root: 'div',
+    Content: 'div',
+    Title: 'h2',
+    Description: 'p',
+    Action: 'button',
+    Close: 'button',
+    Positioner: 'div',
+    Arrow: 'div',
+  };
+  const PARTS = Object.keys(TAGS);
+  const part = (name: string) => document.querySelector<HTMLElement>(`[data-part="${name}"]`)!;
+
+  test('each part renders its element and gives it to a template ref; the attributes, the class and the style of the developer reach it', async () => {
+    const attributes = Object.fromEntries(
+      PARTS.map((name) => [
+        name,
+        { 'data-testid': `${name}-test`, class: 'mine', style: { color: 'red' } },
+      ]),
+    );
+    const { exposed } = mount(ToastConformance, { attributes });
+    await nextTick();
+    for (const name of PARTS) {
+      const element = part(name);
+      expect(element.localName, name).toBe(TAGS[name]);
+      expect(element, name).toHaveAttribute('data-testid', `${name}-test`);
+      expect(element, name).toHaveClass('mine');
+      expect(element.style.color, name).toBe('red');
+      expect(exposed.parts[name].element, name).toBe(element);
+    }
+  });
+
+  test('with `as`, each part renders that tag with its content, and a template ref gives it', async () => {
+    const as = Object.fromEntries(PARTS.map((name) => [name, 'section']));
+    const { exposed } = mount(ToastConformance, { as });
+    await nextTick();
+    for (const name of PARTS) {
+      expect(part(name).localName, name).toBe('section');
+      expect(exposed.parts[name].element, name).toBe(part(name));
+    }
+    expect(part('Title')).toHaveTextContent('Title');
+    expect(part('Description')).toHaveTextContent('Description');
+    expect(part('Action')).toHaveTextContent('Undo');
+    expect(part('Close')).toHaveAttribute('role', 'button');
+    expect(part('Root')).toHaveAttribute('aria-labelledby', part('Title').id);
+  });
+
+  test('the `element` slot of each part renders the element of the developer with the props of the part, and a template ref gives it', async () => {
+    const { exposed } = mount(ToastConformance, { slots: true });
+    await nextTick();
+    for (const name of PARTS) {
+      expect(part(name).localName, name).toBe('section');
+      expect(exposed.parts[name].element, name).toBe(part(name));
+    }
+    expect(part('Viewport')).toHaveAttribute('role', 'region');
+    expect(part('Root')).toHaveAttribute('role', 'dialog');
+    expect(part('Root')).toHaveAttribute('aria-labelledby', part('Title').id);
+    expect(part('Root')).toHaveAttribute('aria-describedby', part('Description').id);
+    for (const name of ['Action', 'Close']) {
+      expect(part(name), name).toHaveAttribute('role', 'button');
+      expect(part(name), name).toHaveAttribute('tabindex', '0');
+    }
+    expect(part('Arrow')).toHaveAttribute('aria-hidden', 'true');
+    expect(part('Positioner')).toHaveAttribute('data-side', 'top');
+  });
+});
+
 describe('the list', () => {
   test('add gives the id; a new id has the prefix of the library; the newest toast is first', async () => {
     const { manager } = await mountToasts();
@@ -161,9 +240,187 @@ describe('the list', () => {
     manager.update('a', (toast) => ({ title: `${String(toast.title)}!` }));
     expect(manager.toasts.value[0]!.title).toBe('Two!');
     const updater = vi.fn(() => ({}));
+    const before = manager.toasts.value;
     manager.update('missing', updater);
     expect(updater).not.toHaveBeenCalled();
+    expect(manager.toasts.value).toBe(before);
+    manager.close('a');
+    manager.update('a', updater);
+    expect(updater).not.toHaveBeenCalled();
+    expect(manager.toasts.value).toEqual([]);
+  });
+
+  test('`data: undefined` clears the data, and an update with no `data` keeps it; a function gets a toast with no data as `undefined`; a function in `data` is the value', async () => {
+    const { manager } = await mountToasts();
+    const value = () => 'value';
+    manager.add({ id: 'a' });
+    const updater = vi.fn((toast: { data?: unknown }) => ({ data: toast.data ?? { note: 'new' } }));
+    manager.update('a', updater);
+    expect(updater.mock.calls[0]![0].data).toBe(undefined);
+    expect(manager.toasts.value[0]!.data).toEqual({ note: 'new' });
+    manager.update('a', { title: 'Saved' });
+    expect(manager.toasts.value[0]!.data).toEqual({ note: 'new' });
+    manager.update('a', { data: undefined });
+    expect(manager.toasts.value[0]!.data).toBe(undefined);
+    manager.update('a', { data: value as never });
+    expect(manager.toasts.value[0]!.data).toBe(value);
+  });
+
+  test('a toast that a function of `update` adds stays; a toast that the function closes stays closed', async () => {
+    const { manager } = await mountToasts();
+    manager.add({ id: 'a', data: { note: 'one' } });
+    manager.update('a', () => {
+      manager.add({ id: 'b' });
+      return { data: { note: 'two' } };
+    });
+    expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['b', 'a']);
+    expect(manager.toasts.value[1]!.data).toEqual({ note: 'two' });
+    manager.update('a', () => {
+      manager.close('a');
+      return { data: { note: 'three' } };
+    });
+    expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['b']);
+  });
+
+  test('an add with the id of an open toast replaces its `data`, and an add with no `data` keeps it; a function is the value', async () => {
+    const { manager } = await mountToasts();
+    const value = () => 'first';
+    const next = () => 'second';
+    manager.add({ id: 'a', data: value as never });
+    manager.add({ id: 'a', data: next as never });
+    expect(manager.toasts.value[0]!.data).toBe(next);
+    manager.add({ id: 'a', data: { note: 'ok' } });
+    expect(manager.toasts.value[0]!.data).toEqual({ note: 'ok' });
+    manager.add({ id: 'a', title: 'Still' });
+    expect(manager.toasts.value[0]!.data).toEqual({ note: 'ok' });
+  });
+
+  test('an `onClose` that closes each toast closes each other toast one time', async () => {
+    const { manager } = await mountToasts();
+    const second = vi.fn();
+    const first = vi.fn(() => manager.close());
+    manager.add({ id: 'a', onClose: first });
+    manager.add({ id: 'b', onClose: second });
+    manager.close('a');
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(manager.toasts.value).toEqual([]);
+  });
+
+  test('a close of a toast takes the next toast out of the limit; an add with the id of a limited toast keeps it in place and limited', async () => {
+    const { manager } = await mountToasts({ provider: { limit: 1 } });
+    await added(manager, { id: 'save', title: 'Saving' }, { id: 'other', title: 'Other' });
+    expect(toastRoot('save')).toHaveAttribute('inert');
+    manager.add({ id: 'save', title: 'Saved', timeout: 0 });
+    await nextTick();
+    expect(manager.toasts.value.map((toast) => [toast.id, toast.limited])).toEqual([
+      ['other', false],
+      ['save', true],
+    ]);
+    expect(toastRoot('save')).toHaveAttribute('inert');
+    expect(toastRoot('save')).toHaveTextContent('Saved');
+    manager.close('other');
+    await nextTick();
+    expect(toastRoot('save')).not.toHaveAttribute('inert');
+  });
+
+  test('a root that gets a copy of its toast object has its index and its offset, and its close button closes it', async () => {
+    const { manager } = await mountToasts({ list: { copies: true } });
+    await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' }, { id: 'c', title: 'C' });
+    expect(
+      ['c', 'b', 'a'].map((id) => toastRoot(id)!.style.getPropertyValue('--toast-index')),
+    ).toEqual(['0', '1', '2']);
+    await waitFor(() =>
+      expect(toastRoot('b')!.style.getPropertyValue('--toast-offset-y')).not.toBe('0px'),
+    );
+    await userEvent.click(toastRoot('c')!.querySelector('button')!, { force: true });
+    await waitFor(() => expect(toastRoot('c')).toBe(null));
+    expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['b', 'a']);
+  });
+
+  test('the type of a toast is `data-type` on each part', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, {
+      id: 'a',
+      type: 'success',
+      title: 'Title',
+      description: 'Description',
+      actionProps: { children: 'Undo' },
+    });
+    const root = toastRoot('a')!;
+    for (const element of [root, root.querySelector('h2'), root.querySelector('p')]) {
+      expect(element).toHaveAttribute('data-type', 'success');
+    }
+    for (const button of root.querySelectorAll('button')) {
+      expect(button).toHaveAttribute('data-type', 'success');
+    }
+  });
+
+  test('promise with the `id` of an open toast updates that toast; an update by the id holds until the result', async () => {
+    const { manager } = await mountToasts();
+    manager.add({ id: 'save', title: 'Before' });
+    let resolve!: (value: string) => void;
+    const result = manager.promise(new Promise<string>((done) => (resolve = done)), {
+      loading: { id: 'save', title: 'Saving' },
+      success: { title: 'Saved' },
+      error: 'Failed',
+    });
     expect(manager.toasts.value).toHaveLength(1);
+    expect(manager.toasts.value[0]).toMatchObject({ id: 'save', title: 'Saving', type: 'loading' });
+    manager.update('save', { title: 'Still saving' });
+    expect(manager.toasts.value[0]!.title).toBe('Still saving');
+    resolve('done');
+    await result;
+    expect(manager.toasts.value[0]).toMatchObject({ title: 'Saved', type: 'success' });
+  });
+
+  test('promise keeps a function in `data` as the value; the error state takes a text or a function of the reason; the loading state takes options', async () => {
+    const { manager } = await mountToasts();
+    const loading = () => 'loading';
+    const success = () => 'done';
+    await manager.promise(Promise.resolve('done'), {
+      loading: { id: 'a', title: 'Saving', description: 'Wait', data: loading as never },
+      success: { title: 'Saved', data: success as never },
+      error: 'Failed',
+    });
+    expect(manager.toasts.value[0]!.data).toBe(success);
+    await manager
+      .promise(Promise.reject(new Error('Disk full')), {
+        loading: { id: 'b', title: 'Saving', description: 'Wait' },
+        success: 'Saved',
+        error: (error: Error) => error.message,
+      })
+      .catch(() => {});
+    expect(manager.toasts.value[0]).toMatchObject({
+      id: 'b',
+      type: 'error',
+      title: 'Saving',
+      description: 'Disk full',
+    });
+    await manager
+      .promise(Promise.reject(new Error('reason')), {
+        loading: 'Saving',
+        success: 'Saved',
+        error: 'Failed',
+      })
+      .catch(() => {});
+    expect(manager.toasts.value[0]).toMatchObject({ type: 'error', description: 'Failed' });
+  });
+
+  test('a promise toast that the user closed does not open again when the promise settles', async () => {
+    const { manager } = await mountToasts();
+    let resolve!: (value: string) => void;
+    const result = manager.promise(new Promise<string>((done) => (resolve = done)), {
+      loading: { id: 'a', title: 'Saving' },
+      success: 'Saved',
+      error: 'Failed',
+    });
+    await waitFor(() => expect(toastRoot('a')).not.toBe(null));
+    await userEvent.click(toastRoot('a')!.querySelector('button')!, { force: true });
+    expect(manager.toasts.value).toEqual([]);
+    resolve('done');
+    await result;
+    expect(manager.toasts.value).toEqual([]);
   });
 
   test('a measure of an unchanged height gives no new list', async () => {
@@ -260,6 +517,16 @@ describe('the timers', () => {
     await nextTick();
   }
 
+  test('a toast with no timeout closes after 5 s with a provider that has no timeout', async () => {
+    const { manager } = await mountToasts();
+    fakeTimers();
+    manager.add({ id: 'a' });
+    await advance(4999);
+    expect(manager.toasts.value).toHaveLength(1);
+    await advance(2);
+    expect(manager.toasts.value).toEqual([]);
+  });
+
   test('a toast closes after its timeout, else the timeout of the provider; `0` and the type `loading` keep it open', async () => {
     const { manager } = await mountToasts({ provider: { timeout: 1000 } });
     fakeTimers();
@@ -272,6 +539,129 @@ describe('the timers', () => {
     await advance(500);
     expect(manager.toasts.value.map((toast) => toast.id)).toEqual(['loading', 'zero']);
   });
+
+  test('a toast that closes at the end of its time calls its `onClose`', async () => {
+    const { manager } = await mountToasts();
+    fakeTimers();
+    const onClose = vi.fn();
+    manager.add({ id: 'a', timeout: 1000, onClose });
+    await advance(999);
+    expect(onClose).not.toHaveBeenCalled();
+    await advance(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([
+    { name: 'with its timeout', again: { timeout: 1000 } },
+    { name: 'with no timeout', again: {} },
+  ])('an add $name with the id of an open toast starts its full time again', async ({ again }) => {
+    const { manager } = await mountToasts();
+    fakeTimers();
+    manager.add({ id: 'save', title: 'Saving', timeout: 1000 });
+    await advance(900);
+    expect(manager.add({ id: 'save', title: 'Saved', ...again })).toBe('save');
+    await advance(200);
+    expect(manager.toasts.value).toHaveLength(1);
+    expect(manager.toasts.value[0]!.title).toBe('Saved');
+    await advance(800);
+    expect(manager.toasts.value).toEqual([]);
+  });
+
+  test('an update of the timeout from 0 starts the timer, and a second update with the same timeout starts the full time again', async () => {
+    const { manager } = await mountToasts();
+    fakeTimers();
+    manager.add({ id: 'a', timeout: 0 });
+    await advance(5000);
+    manager.update('a', { timeout: 1000 });
+    await advance(900);
+    manager.update('a', { timeout: 1000 });
+    await advance(200);
+    expect(manager.toasts.value).toHaveLength(1);
+    await advance(800);
+    expect(manager.toasts.value).toEqual([]);
+  });
+
+  test('a loading toast that two updates change before a render closes after the timeout of the first update', async () => {
+    const { manager } = await mountToasts();
+    fakeTimers();
+    manager.add({ id: 'a', type: 'loading', title: 'Loading' });
+    manager.update('a', { type: 'success', timeout: 1000 });
+    manager.update('a', { title: 'New' });
+    await advance(999);
+    expect(manager.toasts.value[0]!.title).toBe('New');
+    await advance(2);
+    expect(manager.toasts.value).toEqual([]);
+  });
+
+  test.each([
+    { name: 'a success with no timeout', provider: {}, settle: 'resolve', state: {}, closes: 5000 },
+    { name: 'an error with no timeout', provider: {}, settle: 'reject', state: {}, closes: 5000 },
+    {
+      name: 'a success with its timeout',
+      provider: {},
+      settle: 'resolve',
+      state: { timeout: 2000 },
+      closes: 2000,
+    },
+    {
+      name: 'an error with its timeout',
+      provider: {},
+      settle: 'reject',
+      state: { timeout: 3000 },
+      closes: 3000,
+    },
+    {
+      name: 'the timeout of the provider',
+      provider: { timeout: 1000 },
+      settle: 'resolve',
+      state: {},
+      closes: 1000,
+    },
+    {
+      name: 'a loading state with the timeout 0',
+      provider: {},
+      settle: 'resolve',
+      state: {},
+      loading: { timeout: 0 },
+      closes: 5000,
+    },
+    {
+      name: 'a success with the timeout 0',
+      provider: {},
+      settle: 'resolve',
+      state: { timeout: 0 },
+      closes: null,
+    },
+  ])(
+    'promise: the toast of $name closes after the time of that state',
+    async ({ provider, settle, state, loading, closes }) => {
+      const { manager } = await mountToasts({ provider });
+      fakeTimers();
+      let resolve!: (value: string) => void;
+      let reject!: (reason: Error) => void;
+      const result = manager.promise(
+        new Promise<string>((done, fail) => {
+          resolve = done;
+          reject = fail;
+        }),
+        {
+          loading: { description: 'Loading', ...loading },
+          success: { description: 'Success', ...state },
+          error: { description: 'Error', ...state },
+        },
+      );
+      await advance(1000);
+      expect(manager.toasts.value[0]!.description).toBe('Loading');
+      if (settle === 'resolve') resolve('done');
+      else reject(new Error('reason'));
+      await result.catch(() => {});
+      expect(manager.toasts.value[0]!.description).toBe(settle === 'resolve' ? 'Success' : 'Error');
+      await advance((closes ?? 10000) - 1);
+      expect(manager.toasts.value).toHaveLength(1);
+      await advance(2);
+      expect(manager.toasts.value).toHaveLength(closes === null ? 1 : 0);
+    },
+  );
 
   test('the hover of the viewport stops the timers with the time that is left; a toast that comes in the hover waits', async () => {
     const { manager } = await mountToasts();
@@ -511,6 +901,59 @@ describe('the stack', () => {
   });
 });
 
+describe('the roots', () => {
+  test('a root that mounts again registers again: it measures its height, and Tab after F6 focuses it', async () => {
+    const list = reactive<Props>({ withoutRoots: false });
+    const { manager } = await mountToasts({ list });
+    await added(manager, { id: 'a', title: 'A' });
+    const first = toastRoot('a')!;
+    await waitFor(() => expect(first.style.getPropertyValue('--toast-height')).not.toBe(''));
+    const height = parseFloat(first.style.getPropertyValue('--toast-height'));
+    list.withoutRoots = true;
+    await waitFor(() => expect(toastRoot('a')).toBe(null));
+    list.withoutRoots = false;
+    list.titleText = 'A much longer title\nthat wraps on more lines '.repeat(10);
+    await waitFor(() => expect(toastRoot('a')).not.toBe(null));
+    const again = toastRoot('a')!;
+    expect(again).not.toBe(first);
+    await waitFor(() =>
+      expect(parseFloat(again.style.getPropertyValue('--toast-height'))).toBeGreaterThan(height),
+    );
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(again);
+  });
+
+  test('an add with the id of a toast in its leave puts the new toast in front, measured and not behind; the other toast stays behind it', async () => {
+    style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
+    const { manager } = await mountToasts();
+    await added(manager, { id: 't1', title: 'One' }, { id: 't2', title: 'Two' });
+    const leaving = toastRoot('t1')!;
+    manager.close('t1');
+    await nextTick();
+    manager.add({ id: 't1', title: 'One again', timeout: 0 });
+    await waitFor(() => expect(leaving.isConnected).toBe(false));
+    const again = toastRoot('t1')!;
+    await waitFor(() => expect(again.style.getPropertyValue('--toast-height')).not.toBe(''));
+    expect(again.style.getPropertyValue('--toast-index')).toBe('0');
+    expect(again.querySelector('[data-testid="content"]')).not.toHaveAttribute('data-behind');
+    expect(toastRoot('t2')!.style.getPropertyValue('--toast-index')).toBe('1');
+    expect(toastRoot('t2')!.querySelector('[data-testid="content"]')).toHaveAttribute(
+      'data-behind',
+    );
+  });
+
+  test('the content has `data-expanded` while the pointer is on the viewport', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    const content = toastRoot('a')!.querySelector('[data-testid="content"]')!;
+    expect(content).not.toHaveAttribute('data-expanded');
+    await userEvent.hover(toastRoot('a')!);
+    await waitFor(() => expect(content).toHaveAttribute('data-expanded'));
+  });
+});
+
 describe('hover, focus and the window', () => {
   test('the stack stays expanded from a close under the pointer to the end of the leave', async () => {
     // The leave lasts until the case ends it, so the pointer leaves the stack during the leave.
@@ -527,6 +970,22 @@ describe('hover, focus and the window', () => {
     await finishAnimations(leaving);
     await waitFor(() => expect(leaving.isConnected).toBe(false));
     await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
+  });
+
+  test('a blur of the window while the leave holds the end of the hover does not keep the stack expanded after the leave', async () => {
+    style('.toast-leave-active { transition: opacity 300ms } .toast-leave-to { opacity: 0 }');
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
+    await userEvent.hover(toastRoot('b')!);
+    await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    const leaving = toastRoot('b')!;
+    manager.close('b');
+    await userEvent.pointer({ coords: { x: 0, y: 0 } });
+    window.dispatchEvent(new FocusEvent('blur'));
+    expect(viewport()).toHaveAttribute('data-expanded');
+    await waitFor(() => expect(leaving.isConnected).toBe(false));
+    await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
+    window.dispatchEvent(new FocusEvent('focus'));
   });
 
   test('the hover ends when the toast under the pointer leaves the document', async () => {
@@ -594,14 +1053,15 @@ describe('the keys', () => {
     expect(viewport().matches(':focus-visible')).toBe(true);
     await pressF6();
     expect(document.activeElement).toBe(byId('toast-before'));
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('a'));
+    await pressF6();
+    expect(document.activeElement).toBe(byId('toast-before'));
   });
 
   test('F6 does nothing with no toast, or when a listener prevented it', async () => {
-    // A real F6 with no toast moves the focus out of the page in Firefox.
-    const f6 = () =>
-      byId('toast-before').dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'F6', bubbles: true, cancelable: true }),
-      );
+    const f6 = () => byId('toast-before').dispatchEvent(f6Event());
     const { manager } = await mountToasts();
     byId('toast-before').focus();
     f6();
@@ -623,11 +1083,94 @@ describe('the keys', () => {
     byId('toast-before').focus();
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(toastRoot('a'));
-    // A real F6 moves the focus out of the page in Firefox.
-    toastRoot('a')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'F6', bubbles: true, cancelable: true }),
-    );
+    expect(toastRoot('a')!.dispatchEvent(f6Event())).toBe(true);
     expect(document.activeElement).toBe(toastRoot('a'));
+  });
+
+  test('F6 in a toast that got the focus with no F6, after an earlier visit with F6, stays with the browser', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(byId('toast-before'));
+    toastRoot('a')!.focus();
+    expect(toastRoot('a')!.dispatchEvent(f6Event())).toBe(true);
+    expect(document.activeElement).toBe(toastRoot('a'));
+  });
+
+  test.each([
+    { name: 'removed', change: (element: HTMLInputElement) => element.remove() },
+    { name: 'hidden', change: (element: HTMLInputElement) => (element.hidden = true) },
+    { name: 'disabled', change: (element: HTMLInputElement) => (element.disabled = true) },
+    { name: 'inert', change: (element: HTMLInputElement) => (element.inert = true) },
+  ])('F6 in the viewport stays with the browser when its origin is $name', async ({ change }) => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    const origin = document.body.appendChild(document.createElement('input'));
+    origin.setAttribute('aria-label', 'Origin');
+    onTestFinished(() => origin.remove());
+    origin.focus();
+    await pressF6();
+    expect(document.activeElement).toBe(viewport());
+    change(origin);
+    expect(viewport().dispatchEvent(f6Event())).toBe(true);
+    expect(document.activeElement).toBe(viewport());
+  });
+
+  test.each([
+    {
+      name: 'prevents',
+      listener: (event: KeyboardEvent) => event.preventDefault(),
+      press: pressF6,
+    },
+    {
+      name: 'stops',
+      listener: (event: KeyboardEvent) => event.stopPropagation(),
+      press: () => viewport().dispatchEvent(f6Event()),
+    },
+  ])(
+    'a capture listener on the viewport that $name F6 keeps the focus in the viewport',
+    async ({ listener, press }) => {
+      const { manager } = await mountToasts({
+        list: { viewport: { onKeydownCapture: listener } },
+      });
+      await added(manager, { id: 'a', title: 'A' });
+      byId('toast-before').focus();
+      await pressF6();
+      expect(document.activeElement).toBe(viewport());
+      await press();
+      expect(document.activeElement).toBe(viewport());
+    },
+  );
+
+  test('a focus listener of the viewport that moves the focus to a toast keeps the origin: Shift+Tab on the toast returns the focus to it', async () => {
+    const { manager } = await mountToasts({
+      list: {
+        viewport: {
+          onFocus: (event: FocusEvent) => {
+            if (event.target === event.currentTarget) toastRoot('a')?.focus();
+          },
+        },
+      },
+    });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    expect(document.activeElement).toBe(toastRoot('a'));
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(byId('toast-before'));
+  });
+
+  test('a focus listener of the viewport that closes each toast returns the focus to the origin of F6', async () => {
+    const { manager } = await mountToasts({
+      list: { viewport: { onFocus: () => manager.close() } },
+    });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    expect(manager.toasts.value).toEqual([]);
+    expect(document.activeElement).toBe(byId('toast-before'));
   });
 
   test('Tab from the viewport goes to the first toast that is not inert; Shift+Tab on the first toast and Tab after the last return the focus to the origin', async () => {
@@ -667,6 +1210,8 @@ describe('the keys', () => {
     (document.activeElement as HTMLElement | null)?.blur();
     await pressF6();
     expect(document.activeElement).toBe(viewport());
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('a'));
     await pressF6();
     expect(document.activeElement).toBe(document.body);
   });
@@ -789,6 +1334,434 @@ describe('the keys', () => {
   });
 });
 
+describe('two providers', () => {
+  async function mountTwo() {
+    const { exposed } = mount(ToastTwoProviders);
+    await nextTick();
+    const first = exposed.first as Manager;
+    const second = exposed.second as Manager;
+    const viewports = () =>
+      ['first-viewport', 'second-viewport'].map((id) =>
+        document.querySelector<HTMLElement>(`[data-testid="${id}"]`)!,
+      );
+    return { first, second, viewports };
+  }
+
+  test('an update in one provider changes no toast of the other', async () => {
+    const { first, second } = await mountTwo();
+    const one = first.add({ title: 'First toast', timeout: 0 });
+    second.add({ title: 'Second toast', timeout: 0 });
+    await nextTick();
+    first.update(one, { title: 'First toast updated' });
+    await nextTick();
+    expect(document.body).toHaveTextContent('First toast updated');
+    expect(document.body).toHaveTextContent('Second toast');
+    expect(document.body).not.toHaveTextContent('Second toast updated');
+  });
+
+  test.each(['F6', 'Shift+Tab'])(
+    'F6 moves the focus to one viewport, and %s returns it to the page',
+    async (exit) => {
+      const { first, second, viewports } = await mountTwo();
+      await added(first, { id: 'a', title: 'First' });
+      await added(second, { id: 'b', title: 'Second' });
+      byId('toast-before').focus();
+      await pressF6();
+      expect(viewports()).toContain(document.activeElement);
+      if (exit === 'F6') await pressF6();
+      else await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+      expect(document.activeElement).toBe(byId('toast-before'));
+    },
+  );
+
+  test.each([
+    { name: 'after F6, returns the focus to its origin', withF6: true },
+    { name: 'with no F6, stays with the browser', withF6: false },
+  ])('F6 in the focused first viewport $name, before the other provider', async ({ withF6 }) => {
+    const { first, second, viewports } = await mountTwo();
+    await added(first, { id: 'a', title: 'First' });
+    await added(second, { id: 'b', title: 'Second' });
+    byId('toast-before').focus();
+    const [firstViewport] = viewports();
+    if (withF6) await pressF6();
+    else firstViewport!.focus();
+    expect(document.activeElement).toBe(firstViewport);
+    expect(firstViewport!.dispatchEvent(f6Event())).toBe(!withF6);
+    expect(document.activeElement).toBe(withF6 ? byId('toast-before') : firstViewport);
+  });
+
+  test('a focus listener of the viewport that closes its last toast returns the focus to the origin, and the other provider leaves it there', async () => {
+    const { exposed } = mount(ToastTwoProviders, {
+      first: { viewport: { onFocus: () => (exposed.first as Manager).close() } },
+    });
+    await nextTick();
+    await added(exposed.first as Manager, { id: 'a', title: 'First' });
+    await added(exposed.second as Manager, { id: 'b', title: 'Second' });
+    byId('toast-before').focus();
+    await pressF6();
+    expect(document.activeElement).toBe(byId('toast-before'));
+  });
+});
+
+describe('the focus and the timers', () => {
+  test('a focus listener of the viewport that moves the focus out keeps the stack collapsed, and the timers run', async () => {
+    const { manager } = await mountToasts({
+      list: { viewport: { onFocus: () => byId('toast-before').focus() } },
+    });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    expect(document.activeElement).toBe(byId('toast-before'));
+    expect(viewport()).not.toHaveAttribute('data-expanded');
+    manager.update('a', { timeout: 100 });
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('after a focus listener of the viewport closes the last toast, the stack is collapsed; a new toast waits only while the pointer is on the viewport', async () => {
+    let closeAll = true;
+    const { manager } = await mountToasts({
+      list: {
+        viewport: {
+          onFocus: () => {
+            if (closeAll) manager.close();
+          },
+        },
+      },
+    });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    closeAll = false;
+    expect(manager.toasts.value).toEqual([]);
+    expect(document.activeElement).toBe(byId('toast-before'));
+    await added(manager, { id: 'b', title: 'B' });
+    expect(viewport()).not.toHaveAttribute('data-expanded');
+    await userEvent.hover(toastRoot('b')!);
+    await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    manager.update('b', { timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+    await userEvent.pointer({ coords: { x: 0, y: 0 } });
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test.each(['the hover', 'the keyboard focus'])(
+    'the timers stay stopped while %s stays after the other ends',
+    async (stays) => {
+      const { manager } = await mountToasts();
+      await added(manager, { id: 'a', title: 'A', actionProps: { children: 'Undo' } });
+      byId('toast-before').focus();
+      await pressF6();
+      await userEvent.keyboard('{Tab}{Tab}');
+      expect(document.activeElement).toHaveTextContent('Undo');
+      await userEvent.hover(toastRoot('a')!);
+      if (stays === 'the hover') byId('toast-before').focus();
+      else await userEvent.pointer({ coords: { x: 0, y: 0 } });
+      manager.update('a', { timeout: 100 });
+      await wait(300);
+      expect(manager.toasts.value).toHaveLength(1);
+      if (stays === 'the hover') await userEvent.pointer({ coords: { x: 0, y: 0 } });
+      else byId('toast-before').focus();
+      await waitFor(() => expect(manager.toasts.value).toEqual([]));
+    },
+  );
+
+  test('Shift+Tab on the viewport after F6 returns the focus and starts the timers; Tab moves into the toasts and keeps them stopped', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    manager.update('a', { timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('a'));
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+    await pressF6();
+    await pressF6();
+    expect(document.activeElement).toBe(viewport());
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(byId('toast-before'));
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('the stack stays expanded when the pointer leaves while a keyboard focus is in the viewport', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    await userEvent.hover(toastRoot('a')!);
+    const content = toastRoot('a')!.querySelector('[data-testid="content"]')!;
+    await waitFor(() => expect(content).toHaveAttribute('data-expanded'));
+    await userEvent.pointer({ coords: { x: 0, y: 0 } });
+    await wait(50);
+    expect(viewport()).toHaveAttribute('data-expanded');
+    expect(content).toHaveAttribute('data-expanded');
+  });
+
+  test('after a focus that left the viewport with no key, F6 again stops the timers', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    byId('toast-before').focus();
+    await pressF6();
+    expect(document.activeElement).toBe(viewport());
+    expect(viewport()).toHaveAttribute('data-expanded');
+    manager.update('a', { timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test('a Tab past the last toast with an origin that cannot take the focus keeps the focus in the viewport; a focus outside it then starts the timers', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    const origin = byId('toast-before') as HTMLInputElement;
+    origin.focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('a'));
+    origin.disabled = true;
+    // The root, its close button, and the sentinel after the toasts.
+    await userEvent.keyboard('{Tab}{Tab}');
+    expect(viewport().contains(document.activeElement)).toBe(true);
+    byId('toast-after').focus();
+    await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
+    manager.update('a', { timeout: 100 });
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('a touch in the viewport keeps the stack expanded; a press of the mouse outside it does not end the hover', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    await userEvent.hover(toastRoot('a')!);
+    await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    viewport().dispatchEvent(
+      new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }),
+    );
+    document.body.dispatchEvent(
+      new PointerEvent('pointerdown', { pointerType: 'mouse', bubbles: true }),
+    );
+    expect(viewport()).toHaveAttribute('data-expanded');
+    manager.update('a', { timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test('a mouse click on a toast with no keyboard focus before it keeps the timers stopped while the pointer stays', async () => {
+    const { manager } = await mountToasts({ provider: { timeout: 300 } });
+    await added(manager, { id: 'a', title: 'A' });
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.click(toastRoot('a')!.querySelector('h2')!);
+    expect(document.activeElement).toBe(toastRoot('a'));
+    manager.update('a', { timeout: 300 });
+    await wait(600);
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+});
+
+describe('the window', () => {
+  const blur = () => window.dispatchEvent(new FocusEvent('blur'));
+  const focus = () => window.dispatchEvent(new FocusEvent('focus'));
+
+  test('a toast that comes while the window has no focus waits until the window has the focus', async () => {
+    const { manager } = await mountToasts();
+    blur();
+    manager.add({ id: 'a', timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+    focus();
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('a blur of the window again before its focus settles keeps the timers stopped', async () => {
+    const { manager } = await mountToasts();
+    manager.add({ id: 'a', timeout: 100 });
+    blur();
+    focus();
+    blur();
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+    focus();
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('a toast that comes after the window got the focus back while the list was empty runs its timer', async () => {
+    const { manager } = await mountToasts();
+    manager.add({ id: 'manual', timeout: 0 });
+    blur();
+    manager.close('manual');
+    focus();
+    manager.add({ id: 'a', timeout: 100 });
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('a toast that a focus listener of the window adds, after a blur with an empty list, runs its timer', async () => {
+    const { manager } = await mountToasts();
+    blur();
+    const add = () => manager.add({ id: 'a', timeout: 100 });
+    window.addEventListener('focus', add);
+    onTestFinished(() => window.removeEventListener('focus', add));
+    focus();
+    expect(manager.toasts.value).toHaveLength(1);
+    await waitFor(() => expect(manager.toasts.value).toEqual([]));
+  });
+
+  test('the timers stay stopped when the window gets the focus back while the pointer is on a toast', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    await userEvent.hover(toastRoot('a')!);
+    await waitFor(() => expect(viewport()).toHaveAttribute('data-expanded'));
+    blur();
+    focus();
+    manager.update('a', { timeout: 100 });
+    await wait(300);
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test('a viewport in a frame takes F6 of the frame, also after its list was empty', async () => {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    frame.title = 'Frame';
+    onTestFinished(() => frame.remove());
+    const target = frame.contentDocument!.body;
+    const { manager } = await mountToasts({ portal: { to: target } });
+    const frameF6 = () =>
+      frame.contentWindow!.dispatchEvent(
+        new (frame.contentWindow as unknown as typeof window).KeyboardEvent('keydown', {
+          key: 'F6',
+          cancelable: true,
+        }),
+      );
+    const frameViewport = () => target.querySelector('[data-testid="viewport"]');
+    for (const id of ['a', 'b']) {
+      manager.add({ id, title: id, timeout: 0 });
+      await waitFor(() => expect(target.querySelector(`[data-id="${id}"]`)).not.toBe(null));
+      frameF6();
+      expect(frame.contentDocument!.activeElement).toBe(frameViewport());
+      manager.close();
+      await waitFor(() => expect(target.querySelector('[data-id]')).toBe(null));
+    }
+  });
+});
+
+describe('the focus at a close', () => {
+  test('Tab from the viewport skips a toast in its leave', async () => {
+    style('.toast-leave-active { transition: opacity 2s } .toast-leave-to { opacity: 0 }');
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'old', title: 'Old' }, { id: 'new', title: 'New' });
+    const leaving = toastRoot('new')!;
+    manager.close('new');
+    await nextTick();
+    expect(leaving.isConnected).toBe(true);
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('old'));
+  });
+
+  test('Tab from the viewport with no toast that can take the focus returns the focus to the origin', async () => {
+    const { manager } = await mountToasts({ provider: { limit: 0 } });
+    await added(manager, { id: 'a', title: 'A' });
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(byId('toast-before'));
+  });
+
+  test('a close of the focused toast and of a toast in its leave moves the focus past the toast in its leave', async () => {
+    style('.toast-leave-active { transition: opacity 2s } .toast-leave-to { opacity: 0 }');
+    const { manager } = await mountToasts();
+    await added(
+      manager,
+      { id: 'oldest', title: 'Oldest' },
+      { id: 'middle', title: 'Middle' },
+      { id: 'newest', title: 'Newest' },
+    );
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(toastRoot('newest'));
+    manager.close('middle');
+    manager.close('newest');
+    expect(document.activeElement).toBe(toastRoot('oldest'));
+  });
+
+  test('a close with the focus outside the viewport leaves the focus', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' }, { id: 'b', title: 'B' });
+    byId('toast-before').focus();
+    manager.close();
+    expect(document.activeElement).toBe(byId('toast-before'));
+  });
+
+  test.each([
+    {
+      name: 'adds a toast that has no root yet',
+      setup: (manager: Manager) => [
+        { id: 'only', title: 'Only', onClose: () => manager.add({ id: 'later', title: 'Later' }) },
+      ],
+      focused: 'only',
+      next: () => byId('toast-before'),
+    },
+    {
+      name: 'closes another toast',
+      setup: (manager: Manager) => [
+        { id: 'oldest', title: 'Oldest' },
+        { id: 'middle', title: 'Middle', onClose: () => manager.close('oldest') },
+        { id: 'newest', title: 'Newest' },
+      ],
+      focused: 'middle',
+      next: () => toastRoot('newest'),
+    },
+    {
+      name: 'adds another toast',
+      setup: (manager: Manager) => [
+        { id: 'oldest', title: 'Oldest' },
+        {
+          id: 'middle',
+          title: 'Middle',
+          onClose: () => manager.add({ id: 'added', title: 'Added' }),
+        },
+        { id: 'newest', title: 'Newest' },
+      ],
+      focused: 'middle',
+      next: () => toastRoot('oldest'),
+    },
+  ])(
+    'a close of the focused toast whose `onClose` $name moves the focus to a toast that stays, else to the origin',
+    async ({ setup, focused, next }) => {
+      const { manager } = await mountToasts();
+      await added(manager, ...setup(manager));
+      byId('toast-before').focus();
+      await pressF6();
+      toastRoot(focused)!.focus();
+      await userEvent.keyboard('{Shift}');
+      expect(toastRoot(focused)!.matches(':focus-visible')).toBe(true);
+      await userEvent.keyboard('{Escape}');
+      expect(document.activeElement).toBe(next());
+    },
+  );
+
+  test('a close of the focused toast moves the focus to a newer toast when the next older one was over the limit', async () => {
+    const { manager } = await mountToasts({ provider: { limit: 2 } });
+    await added(
+      manager,
+      { id: 'oldest', title: 'Oldest' },
+      { id: 'middle', title: 'Middle' },
+      { id: 'newest', title: 'Newest' },
+    );
+    expect(toastRoot('oldest')).toHaveAttribute('inert');
+    byId('toast-before').focus();
+    await pressF6();
+    await userEvent.keyboard('{Tab}{Tab}{Tab}');
+    expect(document.activeElement).toBe(toastRoot('middle'));
+    await userEvent.keyboard('{Escape}');
+    expect(document.activeElement).toBe(toastRoot('newest'));
+  });
+});
+
 describe('the names and the announcements', () => {
   test('VUE-56: the root names its last title; when that title goes, the one that stays; a default slot is content', async () => {
     const list = reactive<Props>({ titleText: 'Slot title', secondTitle: true });
@@ -802,6 +1775,25 @@ describe('the names and the announcements', () => {
     list.secondTitle = false;
     await nextTick();
     expect(root).toHaveAttribute('aria-labelledby', first!.id);
+  });
+
+  test('the root loses its name and its description when the title and the description unmount, and gets them again when they mount', async () => {
+    const list = reactive<Props>({ withoutLabels: false });
+    const { manager } = await mountToasts({ list });
+    await added(manager, { id: 'a', title: 'Title', description: 'Description' });
+    const root = toastRoot('a')!;
+    expect(root).toHaveAttribute('aria-labelledby', root.querySelector('h2')!.id);
+    expect(root).toHaveAttribute('aria-describedby', root.querySelector('p')!.id);
+    list.withoutLabels = true;
+    await nextTick();
+    expect(root).not.toHaveAttribute('aria-labelledby');
+    expect(root).not.toHaveAttribute('aria-describedby');
+    list.withoutLabels = false;
+    await nextTick();
+    expect(root.querySelector('h2')).toHaveTextContent('Title');
+    expect(root.querySelector('p')).toHaveTextContent('Description');
+    expect(root).toHaveAttribute('aria-labelledby', root.querySelector('h2')!.id);
+    expect(root).toHaveAttribute('aria-describedby', root.querySelector('p')!.id);
   });
 
   test('VUE-99: a toast with no title takes the name of its description; a name of the developer wins', async () => {
@@ -828,6 +1820,9 @@ describe('the names and the announcements', () => {
     { name: 'an empty text', label: '', shown: false },
     { name: 'null', label: null, shown: false },
     { name: 'a Boolean', label: true, shown: false },
+    { name: '`false`', label: false, shown: false },
+    { name: '`undefined`', label: undefined, shown: false },
+    { name: 'NaN', label: Number.NaN, shown: true },
   ])(
     'a title, a description and an action with $name as the label render: $shown',
     async ({ label, shown }) => {
@@ -843,6 +1838,10 @@ describe('the names and the announcements', () => {
       expect(!!root.querySelector('p')).toBe(shown);
       expect(root.querySelectorAll('button')).toHaveLength(shown ? 2 : 1);
       if (shown) expect(root.querySelector('h2')).toHaveTextContent(String(label));
+      else {
+        expect(root).not.toHaveAttribute('aria-labelledby');
+        expect(root).not.toHaveAttribute('aria-describedby');
+      }
     },
   );
 
@@ -865,6 +1864,13 @@ describe('the names and the announcements', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  test('the action shows the content of `actionProps.children` over its slot, and its slot with no `actionProps`', async () => {
+    const { manager } = await mountToasts({ list: { actionText: 'From the slot' } });
+    await added(manager, { id: 'a', actionProps: { children: 'Undo' } }, { id: 'b' });
+    expect(toastRoot('a')!.querySelector('button')).toHaveTextContent('Undo');
+    expect(toastRoot('b')!.querySelector('button')).toHaveTextContent('From the slot');
+  });
+
   test('a slot that comes after the mount is content', async () => {
     const list = reactive<Props>({ titleText: '' });
     const { manager } = await mountToasts({ list });
@@ -875,6 +1881,11 @@ describe('the names and the announcements', () => {
     await nextTick();
     expect(root.querySelector('h2')).toHaveTextContent('Later');
     expect(root).toHaveAttribute('aria-labelledby', root.querySelector('h2')!.id);
+    list.titleText = '';
+    await nextTick();
+    expect(root.querySelector('h2')).toBe(null);
+    // VUE-99: the description names a toast with no title.
+    expect(root).toHaveAttribute('aria-labelledby', root.querySelector('p')!.id);
   });
 
   test('in a <Transition>, a description that shows during its leave renders one element at each moment; the new element enters after the old one goes, and the root names it', async () => {
@@ -928,6 +1939,15 @@ describe('the names and the announcements', () => {
     await userEvent.keyboard('{Tab}');
     await waitFor(() => expect(root).not.toHaveAttribute('aria-hidden'));
     expect(document.querySelector('[role="alert"]')).toBe(null);
+  });
+
+  test('a close of a toast of high priority removes its alert', async () => {
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'Alert', priority: 'high' });
+    await waitFor(() => expect(document.querySelector('[role="alert"]')).not.toBe(null));
+    expect(toastRoot('a')).toHaveAttribute('aria-modal', 'false');
+    manager.close('a');
+    await waitFor(() => expect(document.querySelector('[role="alert"]')).toBe(null));
   });
 
   test('Close has `aria-hidden` while the stack is collapsed and the button has no focus', async () => {
@@ -1006,6 +2026,50 @@ describe('anchored toasts', () => {
     expect(toastRoot('a')!.style.touchAction).toBe('');
   });
 
+  test('the arrow is hidden from a screen reader and follows the side of its positioner; a prop of the positioner wins over `positionerProps`, and a key that it does not set comes from them', async () => {
+    const { exposed } = mount(ToastAnchored, { positioner: { side: 'left' } });
+    await nextTick();
+    const manager = exposed.manager as Manager;
+    manager.add({
+      id: 'a',
+      description: 'Copied',
+      timeout: 0,
+      positionerProps: { anchor: byId('anchor'), side: 'bottom', align: 'end' },
+    });
+    const arrow = await waitFor(() => {
+      const found = document.querySelector('[data-testid="arrow"]');
+      expect(found).toHaveAttribute('data-side', 'left');
+      return found!;
+    });
+    expect(arrow).toHaveAttribute('aria-hidden', 'true');
+    const element = document.querySelector('[data-testid="positioner"]')!;
+    expect(element).toHaveAttribute('data-side', 'left');
+    expect(element).toHaveAttribute('data-align', 'end');
+  });
+
+  test('a positioner in its leave keeps its index, and the toast behind it gets the index 0', async () => {
+    style(
+      '.toast-leave-active [data-id] { transition: opacity 300ms } .toast-leave-to [data-id] { opacity: 0 }',
+    );
+    const { exposed } = mount(ToastAnchored, { group: { duration: 300 } });
+    await nextTick();
+    const manager = exposed.manager as Manager;
+    for (const id of ['oldest', 'newest']) {
+      manager.add({ id, description: id, timeout: 0, positionerProps: { anchor: byId('anchor') } });
+    }
+    await waitFor(() =>
+      expect(document.querySelectorAll('[data-testid="positioner"]')).toHaveLength(2),
+    );
+    const [newest, oldest] = document.querySelectorAll<HTMLElement>('[data-testid="positioner"]');
+    expect(newest!.style.getPropertyValue('--toast-index')).toBe('0');
+    expect(oldest!.style.getPropertyValue('--toast-index')).toBe('1');
+    manager.close('newest');
+    await nextTick();
+    expect(newest!.isConnected).toBe(true);
+    expect(newest!.style.getPropertyValue('--toast-index')).toBe('0');
+    expect(oldest!.style.getPropertyValue('--toast-index')).toBe('0');
+  });
+
   test('with no anchor, the positioner renders with its default side and alignment', async () => {
     const { exposed } = mount(ToastAnchored);
     await nextTick();
@@ -1069,6 +2133,17 @@ describe('a part outside its parent', () => {
     );
     expect(String(mountError(ToastPartAlone, { part: 'useToastManager' }))).toContain(
       'Toast.useToastManager() must be inside <Toast.Provider>',
+    );
+    for (const part of ['Viewport', 'Positioner']) {
+      expect(String(mountError(ToastPartAlone, { part }))).toContain(
+        `<Toast.${part}> must be inside <Toast.Provider>`,
+      );
+    }
+    expect(String(mountError(ToastPartAlone, { part: 'Description', inProvider: true }))).toContain(
+      '<Toast.Description> must be inside <Toast.Root>',
+    );
+    expect(String(mountError(ToastPartAlone, { part: 'Arrow', inProvider: true }))).toContain(
+      '<Toast.Arrow> must be inside <Toast.Positioner>',
     );
     // After the error, Vapor renders the part with no setup, and warns about each binding.
     takeReportedMessages();
