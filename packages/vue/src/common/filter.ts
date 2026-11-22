@@ -2,6 +2,8 @@ import { stringifyLocale } from './stringifyLocale';
 import { stringifyAsLabel } from './resolveValueLabel';
 
 const filterCache = new Map<string, Filter>();
+// The count of texts whose comparison with the query a filter keeps.
+const KEPT_COMPARISONS = 10_000;
 
 export function getFilter(options: GetFilterParameters = {}): Filter {
   const { locale, ...restOptions } = options;
@@ -20,6 +22,22 @@ export function getFilter(options: GetFilterParameters = {}): Filter {
   }
 
   const collator = new Intl.Collator(locale, collatorOptions);
+  // The comparisons with the last query, by text. The labels of a list share most windows of text,
+  // so a filter of a long list compares each different window one time.
+  let comparedQuery = '';
+  let comparisons = new Map<string, boolean>();
+  const equals = (text: string, query: string) => {
+    if (query !== comparedQuery) {
+      comparedQuery = query;
+      comparisons = new Map();
+    }
+    let equal = comparisons.get(text);
+    if (equal === undefined) {
+      equal = collator.compare(text, query) === 0;
+      if (comparisons.size < KEPT_COMPARISONS) comparisons.set(text, equal);
+    }
+    return equal;
+  };
 
   const filter: Filter = {
     contains<Item>(item: Item, query: string, itemToString?: (item: Item) => string) {
@@ -30,7 +48,7 @@ export function getFilter(options: GetFilterParameters = {}): Filter {
       const itemString = stringifyAsLabel(item, itemToString);
 
       for (let i = 0; i <= itemString.length - query.length; i += 1) {
-        if (collator.compare(itemString.slice(i, i + query.length), query) === 0) {
+        if (equals(itemString.slice(i, i + query.length), query)) {
           return true;
         }
       }
@@ -44,7 +62,7 @@ export function getFilter(options: GetFilterParameters = {}): Filter {
 
       const itemString = stringifyAsLabel(item, itemToString);
 
-      return collator.compare(itemString.slice(0, query.length), query) === 0;
+      return equals(itemString.slice(0, query.length), query);
     },
     endsWith<Item>(item: Item, query: string, itemToString?: (item: Item) => string) {
       if (!query) {
@@ -56,7 +74,7 @@ export function getFilter(options: GetFilterParameters = {}): Filter {
 
       return (
         itemString.length >= queryLength &&
-        collator.compare(itemString.slice(itemString.length - queryLength), query) === 0
+        equals(itemString.slice(itemString.length - queryLength), query)
       );
     },
   };

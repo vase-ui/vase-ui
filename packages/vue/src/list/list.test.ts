@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import ComboboxGrid from '../../test/fixtures/ComboboxGrid.vue';
@@ -107,6 +107,18 @@ describe('the keys', () => {
     expect(highlighted()).toBe('a');
     expect(document.activeElement).toBe(owner);
   });
+
+  test('with `canLeave`, an arrow key from a highlighted last item that hides removes the highlight', async () => {
+    const items = reactive<Item[]>(keys('a', 'b', 'c'));
+    await mountList({ items, virtual: true, canLeave: true });
+    document.querySelector<HTMLInputElement>('input')!.focus();
+    await userEvent.keyboard('{ArrowUp}');
+    expect(highlighted()).toBe('c');
+    items[2]!.hidden = true;
+    await nextTick();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(highlighted()).toBe(null);
+  });
 });
 
 describe('virtual mode', () => {
@@ -117,6 +129,37 @@ describe('virtual mode', () => {
     owner.focus();
     await userEvent.click(item('l'), { position: { x: 5, y: 5 } }).catch(() => undefined);
     expect(document.activeElement).toBe(owner);
+  });
+});
+
+describe('the work of a step', () => {
+  test('a highlight step in 100 items notifies the highlight state of the two items whose highlight changes', async () => {
+    let notices = 0;
+    const items = Array.from({ length: 100 }, (_, index) => ({ key: `i${index}` }));
+    await mountList({ items, onHighlightNotice: () => (notices += 1) });
+    container().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('i0'));
+    notices = 0;
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('i3'));
+    expect(notices).toBe(6);
+  });
+
+  test('a step from an item in 100 items reads the next item only', async () => {
+    const items = Array.from({ length: 100 }, (_, index) => ({ key: `i${index}` }));
+    await mountList({ items });
+    container().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('i0'));
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(highlighted()).toBe('i1'));
+      expect(read).toHaveBeenCalledTimes(1);
+    } finally {
+      read.mockRestore();
+    }
   });
 });
 

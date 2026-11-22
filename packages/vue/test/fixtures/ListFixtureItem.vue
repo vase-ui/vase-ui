@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, mergeProps, shallowRef } from 'vue';
+import { inject, mergeProps, shallowRef, watch } from 'vue';
 import { useListItem, type List } from '../../src/list/list';
 
 const props = defineProps<{
@@ -14,10 +14,12 @@ const props = defineProps<{
 }>();
 const list = inject<List>('list')!;
 const element = shallowRef<HTMLElement | null>(null);
-const { attributes } = useListItem(list, element, {
+const { highlighted, attributes } = useListItem(list, element, {
   label: () => undefined,
   disabled: () => !!props.disabled && !props.native,
 });
+const highlightNotice = inject<(() => void) | undefined>('highlightNotice');
+if (highlightNotice) watch(highlighted, () => {}, { onTrigger: highlightNotice });
 const setElement = (el: unknown) => (element.value = el as HTMLElement | null);
 </script>
 

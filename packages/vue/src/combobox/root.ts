@@ -13,7 +13,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import { EMPTY_ARRAY } from '../common/empty';
-import { byDocumentOrder } from '../common/element';
+import { inDocumentOrder } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
 import { useModel } from '../common/model';
 import { ownerWindow } from '../common/owner';
@@ -342,13 +342,12 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         query.value === '' ||
         source.completion === 'inline' ||
         source.completion === 'none';
-      const matches: ItemFilter =
-        filter ?? ((item, q, toString) => coreFilter.value.contains(item, q, toString));
+      const matches: ItemFilter = filter ?? coreFilter.value.contains;
+      const queryText = query.value;
+      const toLabel = itemToString.value;
       next = filterItems(
         data.value as unknown[] | Group[],
-        keepsEach
-          ? () => true
-          : (item) => item != null && matches(item, query.value, itemToString.value),
+        keepsEach ? () => true : (item) => item != null && matches(item, queryText, toLabel),
         source.limit,
       );
     }
@@ -498,12 +497,15 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         emitHighlight(undefined, -1, reason, event);
     },
   });
-  // An item that changes its value gives a new highlight event.
+  // An item that changes its value gives a new highlight event. A new highlight already gave its
+  // event in `onHighlight`, with this value.
   watch(
     () => (list.highlighted ? valueOf(list.highlighted) : undefined),
     (itemValue) => {
       const item = list.highlighted;
-      if (item) emitHighlight(itemValue, indexOf(item), 'none', undefined);
+      if (item && !Object.is(itemValue, lastHighlight.value)) {
+        emitHighlight(itemValue, indexOf(item), 'none', undefined);
+      }
     },
     { flush: 'post' },
   );
@@ -872,10 +874,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
     formTextOf,
     mountedItems: () =>
-      [...itemEntries]
-        .filter(([element]) => element.isConnected)
-        .sort(([a], [b]) => byDocumentOrder(a, b))
-        .map(([, entry]) => ({ value: entry.value(), disabled: entry.disabled() })),
+      inDocumentOrder(
+        [...itemEntries].filter(([element]) => element.isConnected),
+        ([element]) => element,
+        listElement.value,
+      ).map(([, entry]) => ({ value: entry.value(), disabled: entry.disabled() })),
     request,
     setText,
     setValue,
