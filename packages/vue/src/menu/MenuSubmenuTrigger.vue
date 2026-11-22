@@ -76,7 +76,13 @@ const hover = usePopupHover(() => root, {
     parent.list.moved(event) &&
     (parent.openChild === submenu ||
       !parent.openChild?.hover.value?.approaches({ x: event.clientX, y: event.clientY })),
-  passOn: (target) => !!parent.root.popup?.contains(target),
+  passOn(target) {
+    if (!parent.root.popup?.contains(target)) return false;
+    // A move out of the triangle highlights its item with its own event. A pointer that rests in
+    // the triangle makes no such move.
+    if (hover.inTriangle) parent.highlightUnder(target);
+    return true;
+  },
   stayAfterEnter: true,
 });
 submenu.hover.value = {
