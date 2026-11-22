@@ -15,6 +15,8 @@ defineProps({
       orientation?: 'horizontal' | 'vertical';
       /** The toggle `one` is a disabled `<span>`. */
       disabledSpan?: boolean;
+      /** The toggle `two` is disabled. */
+      disabledTwo?: boolean;
       /** The toolbar has no button before the group. */
       noFirst?: boolean;
     }>,
@@ -37,7 +39,7 @@ defineProps({
         >
           One
         </Toggle>
-        <Toggle id="two" value="two">Two</Toggle>
+        <Toggle id="two" value="two" :disabled="scene.disabledTwo">Two</Toggle>
         <span class="State">{{ state.disabled }}</span>
       </ToggleGroup>
     </Toolbar.Group>

@@ -33,7 +33,13 @@ defineExpose({
             <nav v-bind="listProps" :ref="listRef">
               <Tabs.Tab ref="linkPart" value="link" v-bind="link">
                 <template #element="{ props: tabProps, elementRef: tabRef, state }">
-                  <a v-bind="tabProps" :ref="tabRef" href="#link" :data-state="state.active">
+                  <a
+                    v-bind="tabProps"
+                    :ref="tabRef"
+                    href="#link"
+                    :data-state="state.active"
+                    :data-direction="state.tabActivationDirection"
+                  >
                     Link
                   </a>
                 </template>

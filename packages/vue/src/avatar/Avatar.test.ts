@@ -238,6 +238,9 @@ describe('without keepMounted', () => {
       'srcset',
       'src',
     ]);
+    expect(images[0]!.getAttribute('sizes')).toBe('2px');
+    expect(images[0]!.getAttribute('srcset')).toBe(`${picture} 2w`);
+    expect(images[0]!.getAttribute('src')).toBe(picture);
     expect(img()).toBeNull();
     image.referrerpolicy = 'origin';
     await nextTick();
@@ -320,7 +323,7 @@ describe('with keepMounted', () => {
 
   test('a picture that fails keeps the element with data-error and aria-hidden; the listener of the developer runs once', async () => {
     const onError = vi.fn();
-    const { img, fallback, next } = mountAvatar({
+    const { img, fallback, events, next } = mountAvatar({
       keepMounted: true,
       src: pictureThatFails(),
       onError,
@@ -329,6 +332,7 @@ describe('with keepMounted', () => {
     expect(fallback()).toHaveTextContent('JD error');
     expect(notLoadedAttributes(img()!)).toEqual(['data-error', 'aria-hidden']);
     expect(onError).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(['loading', 'error']);
   });
 
   test('an aria-hidden of the developer wins in each status', async () => {
@@ -435,6 +439,15 @@ describe('the element slot with keepMounted', () => {
     expect(element).toHaveAttribute('data-loading');
     await next('loaded');
     expect(events).toEqual(['loaded', 'loading', 'loaded']);
+  });
+
+  test('the props of the slot keep the sizes, srcset and src of the img in the slot', async () => {
+    const { scene, events, img } = await mountSlot('own-sources');
+    expect(img()).toHaveAttribute('sizes', '2px');
+    expect(img()).toHaveAttribute('srcset', `${scene.picture} 2w`);
+    expect(img()).toHaveAttribute('src', scene.picture);
+    await settle();
+    expect(events).toEqual(['loaded']);
   });
 
   test.each(['keyed', 'component'])(
@@ -583,6 +596,18 @@ test('Transition gives its enter classes to the image and its leave classes to t
   const fallback = avatar.querySelector('span')!;
   expect(fallback).toHaveClass('v-leave-from', 'v-leave-active');
   expect(getComputedStyle(fallback).position).toBe('absolute');
+});
+
+test('in a <Transition>, an image that leaves after a failed source has no status attribute', async () => {
+  const { onLoadingStatusChange, next } = recordStatus();
+  const image = reactive({ src: await pictureThatMustLoad(), onLoadingStatusChange });
+  const { root } = mount(AvatarInTransition, { image });
+  await next('loaded');
+  const element = root.querySelector('img')!;
+  image.src = pictureThatFails();
+  await next('error');
+  expect(element).toHaveClass('v-leave-active');
+  expect(notLoadedAttributes(element)).toEqual([]);
 });
 
 test('in a <Transition>, a fallback that shows during its leave renders one element at each moment; the new element enters after the old one goes', async () => {
