@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-21T11:28:56.924Z",
+  "commit": "7a10b21e679d2963057f9507907bf9e7c6e7e255",
+  "libraries": {
+    "vase-ui": {
+      "package": "@vase-ui/vue",
+      "version": "2026.11.1"
+    },
+    "reka-ui": {
+      "package": "reka-ui",
+      "version": "2.11.0"
+    },
+    "ark-ui": {
+      "package": "@ark-ui/vue",
+      "version": "5.40.0"
+    },
+    "headless-ui": {
+      "package": "@headlessui/vue",
+      "version": "1.7.23"
+    },
+    "vuetify0": {
+      "package": "@vuetify/v0",
+      "version": "1.4.0"
+    },
+    "base-ui": {
+      "package": "@base-ui/react",
+      "version": "1.9.0"
+    }
+  },
+  "setups": {
+    "vdom": {
+      "package": "vue",
+      "version": "3.5.46"
+    },
+    "vapor-interop": {
+      "package": "vue",
+      "version": "3.6.0-rc.16"
+    },
+    "react": {
+      "package": "react",
+      "version": "19.3.1"
+    }
+  },
+  "tools": {
+    "node": "26.13.1",
+    "zlib": "1.3.2.1-motley-456ae73",
+    "brotli": "1.2.1",
+    "vite": "8.3.7"
+  },
+  "size": {
+    "emptyApp": {
+      "vdom": {
+        "raw": 62822,
+        "gzip": 24466,
+        "brotli": 22369
+      },
+      "vapor-interop": {
+        "raw": 55156,
+        "gzip": 20702,
+        "brotli": 18914
+      },
+      "react": {
+        "raw": 219126,
+        "gzip": 67672,
+        "brotli": 58211
+      }
+    },
+    "apps": {
+      "Dialog": {
+        "vdom": {
+          "vase-ui": {
+            "raw": 105505,
+            "gzip": 38433,
+            "brotli": 35001
+          },
+          "reka-ui": {
+            "raw": 100002,
+            "gzip": 35834,
+            "brotli": 32470
+          },
+          "ark-ui": {
+            "raw": 132459,
+            "gzip": 46110,
+            "brotli": 41697
+          },
+          "headless-ui": {
+            "raw": 93060,
+            "gzip": 34677,
+            "brotli": 31479
+          },
+          "vuetify0": {
+            "raw": 94547,
+            "gzip": 35031,
+            "brotli": 31796
+          }
+        },
+        "vapor-interop": {
+          "vase-ui": {
+            "raw": 177317,
+            "gzip": 63757,
+            "brotli": 57132
+          },
+          "reka-ui": {
+            "raw": 171859,
+            "gzip": 61171,
+            "brotli": 54577
+          },
+          "ark-ui": {
+            "raw": 207038,
+            "gzip": 71950,
+            "brotli": 64288
+          },
+          "headless-ui": {
+            "raw": 165817,
+            "gzip": 60308,
+            "brotli": 53930
+          },
+          "vuetify0": {
+            "raw": 166586,
+            "gzip": 60420,
+            "brotli": 54041
+          }
+        },
+        "react": {
+          "base-ui": {
+            "raw": 281426,
+            "gzip": 87920,
+            "brotli": 76135
+          }
+        }
+      }
+    }
+  }
+}
