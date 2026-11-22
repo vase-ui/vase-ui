@@ -541,10 +541,10 @@ describe('more of the release and the native menu', () => {
     const first = await mountContextMenu({ root: rootEvents(log) });
     await rightPress(100, 80);
     await placed();
-    await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))]);
+    await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))], 2);
     await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
     await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
-    await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))]);
+    await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))], 2);
     await rightRelease(centerOf(item('s1')));
     await waitFor(() => expect(popup()).toBe(null));
     expect(byTestId('sub-popup')).toBe(null);
@@ -576,16 +576,17 @@ describe('more of the release and the native menu', () => {
       if (place === 'positioner') {
         const box = byTestId('positioner')!.getBoundingClientRect();
         point = { x: box.left + 5, y: box.bottom - 5 };
-        await movePointerThrough({ x: 100, y: 80 }, [point]);
+        await movePointerThrough({ x: 100, y: 80 }, [point], 2);
       } else {
-        await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))]);
+        await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))], 2);
         await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
         const box = byTestId('sub-popup')!.getBoundingClientRect();
         point = { x: box.left + 5, y: box.bottom - 5 };
-        await movePointerThrough(centerOf(item('sub')), [
-          { x: box.left + 5, y: centerOf(item('sub')).y },
-          point,
-        ]);
+        await movePointerThrough(
+          centerOf(item('sub')),
+          [{ x: box.left + 5, y: centerOf(item('sub')).y }, point],
+          2,
+        );
       }
       await new Promise((resolve) => setTimeout(resolve, 520));
       await rightRelease(point);

@@ -253,13 +253,14 @@ function pathOf(element: Element | null) {
 
 /**
  * Moves a mouse pointer from `from` through the points, as a browser does: the boundary events of
- * each element that the pointer leaves or enters, then `pointermove`.
+ * each element that the pointer leaves or enters, then `pointermove`. `buttons` is the mask of the
+ * buttons that a press holds down during the moves.
  */
-export async function movePointerThrough(from: ClientPoint, points: ClientPoint[]) {
+export async function movePointerThrough(from: ClientPoint, points: ClientPoint[], buttons = 0) {
   let under = document.elementFromPoint(from.x, from.y);
   for (const point of points) {
     const target = document.elementFromPoint(point.x, point.y) ?? document.documentElement;
-    const init = { pointerType: 'mouse', clientX: point.x, clientY: point.y };
+    const init = { pointerType: 'mouse', clientX: point.x, clientY: point.y, buttons };
     if (target !== under) {
       const left = pathOf(under);
       const entered = pathOf(target);
