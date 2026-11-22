@@ -620,6 +620,28 @@ describe('a real touch that starts outside a native popover', () => {
   );
 });
 
+describe('a mouse press on an element that leaves at `pointerdown`', () => {
+  test.each([false, true])(
+    'with preventDefault() at pointerdown=%s: the button that the listener focuses keeps the focus only with the call; without it, the `mousedown` goes to the parent in Chromium and Firefox, WebKit sends none, and the focus goes to <body>',
+    async (prevent) => {
+      html(`<button id="trigger" style="position: fixed; left: 100px; top: 100px">Trigger</button>
+        <div id="cover" style="position: fixed; inset: 0"></div>`);
+      const log = record(document, ['mousedown']);
+      const cover = element('cover');
+      // Vue removes the element of a closed popup in a microtask.
+      cover.addEventListener('pointerdown', (event) => {
+        queueMicrotask(() => cover.remove());
+        element('trigger').focus();
+        if (prevent) event.preventDefault();
+      });
+      await userEvent.pointer({ coords: { x: 50, y: 50 }, keys: '[MouseLeft]' });
+      expect(activeId()).toBe(prevent ? 'trigger' : 'body');
+      const sent = !prevent && server.browser !== 'webkit';
+      expect(log).toEqual(sent ? [`mousedown ${root!.localName}`] : []);
+    },
+  );
+});
+
 describe('a real tap on an element that leaves at its `pointerup`', () => {
   // A measurement by hand in Safari on iOS 26.5, in the iPhone 17 Simulator, and in Chrome 124 on
   // Android 15, in the Android Emulator, gives the same results for a button under the element.
