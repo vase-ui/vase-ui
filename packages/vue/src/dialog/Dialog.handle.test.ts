@@ -6,6 +6,7 @@ import DialogHandleScene from '../../test/fixtures/DialogHandleScene.vue';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
 import { mount } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Handle = InstanceType<typeof Dialog.Handle>;
@@ -128,6 +129,25 @@ describe('a root that changes its handle', () => {
     scene.triggerHandle = next;
     scene.rootHandle = next;
     await waitFor(() => expectActive(byId('a'), byTestId('popup-r')!));
+  });
+});
+
+describe('VUE-231: a handle with no root, or with two roots', () => {
+  test('close() with no mounted root does nothing and gives no warning', () => {
+    const handle = Dialog.createHandle();
+    handle.close();
+    expect(handle.isOpen).toBe(false);
+    expect(takeReportedMessages()).toEqual([]);
+  });
+
+  test('two mounted roots with one handle give no warning; the root that mounted last opens', async () => {
+    const scene = handleScene({ roots: ['older', 'newer'] });
+    mount(DialogHandleScene, { scene });
+    await nextTick();
+    scene.triggerHandle.open(null);
+    await opened('popup-newer');
+    expect(byTestId('popup-older')).toBe(null);
+    expect(takeReportedMessages()).toEqual([]);
   });
 });
 

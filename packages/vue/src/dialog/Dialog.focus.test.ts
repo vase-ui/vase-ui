@@ -24,9 +24,14 @@ async function closed() {
 }
 
 /** Mounts `DialogFocusTargets` with the reactive props of its popup. */
-async function mountTargets(modal: boolean | 'trap-focus', popup: Props = {}, portal: Props = {}) {
+async function mountTargets(
+  modal: boolean | 'trap-focus',
+  popup: Props = {},
+  portal: Props = {},
+  drawer = false,
+) {
   const popupProps = reactive<Props>(popup);
-  mount(DialogFocusTargets, { modal, popup: popupProps, portal });
+  mount(DialogFocusTargets, { modal, popup: popupProps, portal, drawer });
   await nextTick();
   return { trigger: get('trigger'), popupProps };
 }
@@ -44,8 +49,7 @@ describe.each([
   { name: "a `'trap-focus'` dialog", modal: 'trap-focus' },
   { name: 'a dialog that is not modal', modal: false },
 ] as const)('the focus props of $name', ({ modal }) => {
-  // A modal dialog makes its trigger inert, and the browser then moves the focus of the trigger to
-  // <body>.
+  // A modal dialog makes its trigger inert, and the focus of the trigger then goes to <body>.
   const triggerInUse = modal !== true;
 
   test('`initialFocus` goes to the first tab stop by default', async () => {
@@ -215,6 +219,54 @@ describe.each([
       }
     },
   );
+});
+
+describe.each([
+  { family: 'dialog', drawer: false },
+  { family: 'drawer', drawer: true },
+])('VUE-230: a modal $family', ({ drawer }) => {
+  test.each([
+    { name: '`initialFocus` false', initialFocus: () => false },
+    {
+      name: 'an `initialFocus` element outside the popup',
+      initialFocus: () => get('outside-target'),
+    },
+  ])(
+    'with $name gives the focus to <body> and none to an outside element; Tab goes to the first tab stop of the popup, and the close gives the focus to the trigger',
+    async ({ initialFocus }) => {
+      const { trigger, popupProps } = await mountTargets(true, {}, {}, drawer);
+      const outside = get('outside-target') as HTMLInputElement;
+      let focuses = 0;
+      outside.addEventListener('focus', () => (focuses += 1));
+      popupProps.initialFocus = initialFocus();
+      trigger.focus();
+      await userEvent.keyboard('{Enter}');
+      await opened();
+      await waitSingleFrame();
+      expect(trigger.closest('[inert]')).not.toBe(null);
+      expect(document.activeElement).toBe(document.body);
+      await userEvent.keyboard('ab');
+      expect(outside.value).toBe('');
+      expect(focuses).toBe(0);
+      await userEvent.keyboard('{Tab}');
+      await waitFor(() => expect(get('inside-1')).toHaveFocus());
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      await waitFor(() => expect(trigger).toHaveFocus());
+    },
+  );
+
+  test('with `initialFocus` false takes the focus from a text field outside, so typed text does not reach it', async () => {
+    const { trigger } = await mountTargets(true, { initialFocus: false }, {}, drawer);
+    const outside = get('outside-target') as HTMLInputElement;
+    outside.focus();
+    trigger.click();
+    await opened();
+    await waitSingleFrame();
+    expect(document.activeElement).toBe(document.body);
+    await userEvent.keyboard('ab');
+    expect(outside.value).toBe('');
+  });
 });
 
 describe('the focus of a dialog', () => {

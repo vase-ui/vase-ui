@@ -115,7 +115,7 @@ export namespace Portal {
  * @selector `[data-swipe-dismiss]` The backdrop leaves after a swipe on the popup closed the drawer.
  * @cssVariable `--drawer-swipe-progress` The progress of the popup toward its closed place: 0 at the open place, 1 at the closed place. A swipe or the active snap point sets it.
  * @cssVariable `--drawer-swipe-strength` A number from 0.1 to 1 that scales the duration of the leave after a swipe. A faster swipe gives a smaller number. It is 1 at other times.
- * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0.
+ * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0 and that drawer has a height.
  */
 export const Backdrop: typeof DrawerBackdrop = DrawerBackdrop;
 export namespace Backdrop {
@@ -229,7 +229,7 @@ export namespace Provider {
  * Renders a `<div>` element.
  * @selector `[data-active]` A drawer of the provider is open.
  * @cssVariable `--drawer-swipe-progress` The progress of the outer drawer toward its closed place: 0 at the open place, 1 at the closed place.
- * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0.
+ * @cssVariable `--drawer-height` The height of the frontmost drawer, in pixels, while `--drawer-swipe-progress` is above 0 and that drawer has a height.
  */
 export const Indent: typeof DrawerIndent = DrawerIndent;
 export namespace Indent {
