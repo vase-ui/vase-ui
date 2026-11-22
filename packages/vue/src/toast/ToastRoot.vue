@@ -31,9 +31,17 @@ const { element, setElement } = useElement<HTMLElement>();
 
 const isOpen = () => provider.toasts.some((toast) => toast.id === props.toast.id);
 const place = computed(() => provider.place(props.toast.id));
+/**
+ * The focus is in the root, from the keyboard or from a press. Firefox moves the focus at Tab
+ * before Vue renders a change of its `keydown` listener (test/measurements/toast.test.ts), so a
+ * press ends the hidden state of the parts before the Tab.
+ */
+const focusWithin = shallowRef(false);
 // An alert in the parent of the viewport announces a toast of high priority, so the polite viewport
 // does not announce it a second time.
-const ariaHidden = computed(() => props.toast.priority === 'high' && !provider.focused);
+const ariaHidden = computed(
+  () => props.toast.priority === 'high' && !provider.focused && !focusWithin.value,
+);
 const swipe = useToastSwipe({
   directions: (): SwipeDirection[] =>
     props.toast.positionerProps?.anchor === undefined ? [props.swipeDirection].flat() : [],
@@ -72,6 +80,9 @@ const context: ToastRootForParts = {
   },
   get ariaHidden() {
     return ariaHidden.value;
+  },
+  get focusWithin() {
+    return focusWithin.value;
   },
   addLabel(kind, label) {
     const entry = { kind, label };
@@ -118,6 +129,10 @@ onUnmounted(() => {
   });
   observer.observe(root.ownerDocument, { childList: true, subtree: true });
 });
+
+function onFocusout(event: FocusEvent) {
+  if (!element.value?.contains(event.relatedTarget as Node | null)) focusWithin.value = false;
+}
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape' || event.defaultPrevented || isComposing(event) || !isOpen()) return;
@@ -167,6 +182,8 @@ function elementProps() {
         },
         swipe.style.value,
       ],
+      onFocusin: () => (focusWithin.value = true),
+      onFocusout,
       onKeydown,
       ...swipe.listeners.value,
     },

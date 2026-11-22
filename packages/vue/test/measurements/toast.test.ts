@@ -422,7 +422,7 @@ describe('a container that has the tab stop of its content', () => {
     expect(log).toEqual(['from before', 't1 true', 'from after', 't2 true']);
   });
 
-  test('a render that a `keydown` listener of Tab starts comes before the move of the focus: Tab reaches a child that the render gives a tab stop, and Shift+Tab skips a container that the render takes out', async () => {
+  test('a render that a `keydown` listener of Tab starts comes before the move of the focus in Chromium and WebKit, and after it in Firefox', async () => {
     const keyboard = ref(false);
     mountVue('', () =>
       h('div', [
@@ -443,14 +443,18 @@ describe('a container that has the tab stop of its content', () => {
         h('input', { id: 'after', 'aria-label': 'After' }),
       ]),
     );
+    const order: (string | undefined)[] = [];
     element('t').focus();
     await userEvent.keyboard('{Tab}');
-    expect(activeId()).toBe('button');
+    order.push(activeId());
     keyboard.value = false;
     await nextTick();
     element('t').focus();
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(activeId()).toBe('before');
+    order.push(activeId());
+    // In Chromium and WebKit, Tab reaches the button that the render gives a tab stop, and Shift+Tab
+    // skips the container that the render takes out of the tab order.
+    expect(order).toEqual(engine === 'firefox' ? ['after', 'vp'] : ['button', 'before']);
   });
 });
 

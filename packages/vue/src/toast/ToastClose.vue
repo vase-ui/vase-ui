@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, shallowRef, useAttrs } from 'vue';
+import { computed, useAttrs } from 'vue';
 import { useButton } from '../common/button';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { injectToastProvider } from './provider';
@@ -24,21 +24,18 @@ const button = useButton({
   type: 'button',
   tag: useAsTag(() => props.as),
 });
-const focused = shallowRef(false);
 
 const state = computed<ToastCloseState>(() => ({ type: root.toast.type }));
 
 function elementProps() {
-  // A collapsed stack hides the button from a screen reader until it gets the focus.
-  const ariaHidden = !root.expanded && !focused.value;
+  // A collapsed stack hides the button from a screen reader until the focus comes into its toast.
+  const ariaHidden = !root.expanded && !root.focusWithin;
   return button.mergeAttributes(
     {
       'aria-hidden': ariaHidden ? 'true' : undefined,
       ...(ariaHidden || root.ariaHidden ? { tabindex: -1 } : {}),
       'data-type': state.value.type,
       onClick: () => provider.close(root.toast.id),
-      onFocus: () => (focused.value = true),
-      onBlur: () => (focused.value = false),
     },
     attrs,
   );

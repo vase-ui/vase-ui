@@ -58,10 +58,6 @@ function onKeydown(event: KeyboardEvent) {
   if (back && returnFocus()) {
     event.stopPropagation();
     event.preventDefault();
-  } else if (event.key === 'Tab') {
-    // After a press in the viewport, Tab gives the parts their tab stops. Vue renders them before
-    // the browser moves the focus (test/measurements/toast.test.ts).
-    provider.setInteraction({ focus: true });
   }
 }
 

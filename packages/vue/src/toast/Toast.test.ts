@@ -1166,7 +1166,7 @@ describe('the keys', () => {
     await pressF6();
     expect(document.activeElement).toBe(toastRoot('a'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toBe(byId('toast-before'));
+    expect(document.activeElement).toBe(viewport());
   });
 
   test('a focus listener of the viewport that closes each toast returns the focus to the origin of F6', async () => {
@@ -1208,7 +1208,7 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(byId('toast-after'));
     viewport().focus();
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toBe(byId('toast-before'));
+    expect(document.activeElement).toBe(viewport());
   });
 
   test('a return to <body> as the origin takes the focus out of the viewport', async () => {
@@ -1246,7 +1246,7 @@ describe('the keys', () => {
     expect(document.activeElement).toBe(viewport());
   });
 
-  test('a press on the viewport gives the focus to it and to no toast of high priority; Shift+Tab from a pressed toast leaves the viewport', async () => {
+  test('a press on the viewport gives the focus to it and to no toast of high priority; Shift+Tab from a pressed toast stops on the viewport', async () => {
     // A press on a child of the root would start Shift+Tab from the child in WebKit.
     style('[data-testid="viewport"], [data-id] { padding: 40px }');
     const { manager } = await mountToasts({ inPlace: true });
@@ -1257,7 +1257,7 @@ describe('the keys', () => {
     await userEvent.click(toastRoot('b')!, { position: { x: 5, y: 5 } });
     expect(document.activeElement).toBe(toastRoot('b'));
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-    expect(document.activeElement).toBe(byId('toast-before'));
+    expect(document.activeElement).toBe(viewport());
   });
 
   test('VUE-232: Tab after a press on a toast of high priority reaches its Action and its Close', async () => {
@@ -2160,7 +2160,7 @@ describe('the names and the announcements', () => {
     await waitFor(() => expect(document.querySelector('[role="alert"]')).toBe(null));
   });
 
-  test('Close has `aria-hidden` and no tab stop while the stack is collapsed and the button has no focus; Tab reaches it from its toast', async () => {
+  test('Close has `aria-hidden` and no tab stop while the stack is collapsed and the focus is not in its toast; Tab reaches it from its toast', async () => {
     const { manager } = await mountToasts();
     await added(manager, { id: 'a', title: 'A' });
     const close = toastRoot('a')!.querySelector('button')!;
@@ -2176,7 +2176,23 @@ describe('the names and the announcements', () => {
     expect(document.activeElement).toBe(close);
   });
 
-  test('VUE-232: axe-core finds no element under `aria-hidden` that takes the focus, in a collapsed stack and in an expanded stack with a toast of high priority', async () => {
+  test('VUE-232: a press in a toast of a collapsed stack gives its Close a tab stop, so Tab reaches it', async () => {
+    style('[data-id] { padding: 40px }');
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'A' });
+    const root = toastRoot('a')!;
+    const close = root.querySelector('button')!;
+    await userEvent.click(root, { position: { x: 5, y: 5 } });
+    expect(document.activeElement).toBe(root);
+    await userEvent.hover(byId('toast-before'));
+    await waitFor(() => expect(viewport()).not.toHaveAttribute('data-expanded'));
+    expect(close).not.toHaveAttribute('aria-hidden');
+    expect(close).not.toHaveAttribute('tabindex');
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(close);
+  });
+
+  test('VUE-232: axe-core finds no element under `aria-hidden` that has a tab stop, in a collapsed stack and in an expanded stack with a toast of high priority', async () => {
     const { manager } = await mountToasts();
     await added(
       manager,
