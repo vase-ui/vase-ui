@@ -155,18 +155,13 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
 
 /**
  * The `id` of the popup for `aria-owns` of an element at the place of the portal, so that a screen
- * reader reads the popup after its trigger. It has a value while the portal has its sentinels, Tab
- * can leave the popup, and `takesFocus` gives `true`.
+ * reader reads the popup after its trigger. It has a value while the portal has its sentinels and
+ * Tab can leave the popup.
  */
-export function usePortalOwner(
-  root: PopupRoot,
-  layer: Layer,
-  sentinels: Readonly<Ref<boolean>>,
-  takesFocus: () => boolean = () => true,
-) {
+export function usePortalOwner(root: PopupRoot, layer: Layer, sentinels: Readonly<Ref<boolean>>) {
   const id = shallowRef<string>();
   watch(
-    () => (sentinels.value && !layer.trap && takesFocus() ? root.popup : null),
+    () => (sentinels.value && !layer.trap ? root.popup : null),
     (popup, _, onCleanup) => {
       id.value = popup?.id || undefined;
       if (!popup) return;

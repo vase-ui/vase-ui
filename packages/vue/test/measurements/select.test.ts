@@ -195,6 +195,23 @@ describe('a click on a native label of a button', () => {
   });
 });
 
+describe('a press on a button that has the focus', () => {
+  test.each(['none', 'mousedown'])(
+    'with preventDefault() at %s: the button keeps the focus; in WebKit on macOS, `none` gives the focus to `<body>`',
+    async (prevented) => {
+      html('<button id="b" type="button">B</button>');
+      if (prevented === 'mousedown') {
+        element('b').addEventListener('mousedown', (event) => event.preventDefault());
+      }
+      element('b').focus();
+      await userEvent.pointer({ coords: centerOf(element('b')), keys: '[MouseLeft]' });
+      const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+      const lost = prevented === 'none' && webkitOnMac;
+      expect(document.activeElement).toBe(lost ? document.body : element('b'));
+    },
+  );
+});
+
 describe('a popup that a press shows under the pointer', () => {
   test('gets `pointerup`; the `click` of the press goes to the common ancestor of the trigger and the popup', async () => {
     html(

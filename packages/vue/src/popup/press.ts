@@ -43,7 +43,7 @@ export function usePopupPress(
     virtual?: boolean;
   },
 ) {
-  // The opening press, from the event that opened the popup to its release.
+  // The opening press, from the event that asked for the open to its release.
   const opening = shallowRef<{ press: MouseEvent; trigger: Element; delays: PressDelays } | null>(
     null,
   );
@@ -177,8 +177,9 @@ export function usePopupPress(
 
   return {
     /**
-     * Starts the gesture at the event that opened the popup: the `pointerdown` on the trigger, or
-     * the `contextmenu` of a press that is still down.
+     * Starts the gesture at the event that asked for the open: the `pointerdown` on the trigger, or
+     * the `contextmenu` of a press that is still down. A parent that holds `open` applies the open
+     * after that event, or later in the gesture.
      */
     start(press: MouseEvent, trigger: Element, delays: PressDelays) {
       opening.value = { press, trigger, delays };

@@ -78,25 +78,23 @@ let focusOpened = false;
 // of the bar for that input, so that a touch locks the scroll only for a menu as wide as the view.
 let pressType: InteractionType = '';
 
-let openedAtPress = false;
+let opensAtPress = false;
 function onPointerdown(event: PointerEvent) {
   // A key that a listener prevented gave no click, and the click of this press is no key click.
   keyClick = isVirtualPress(event);
   focusOpened = false;
   pressType = event.pointerType as InteractionType;
   const menu = context.value;
-  const wasOpen = trigger.open.value;
-  trigger.onPointerdown(event);
-  openedAtPress = !wasOpen && trigger.open.value && event.pointerType === 'mouse';
-  if (!menu || !openedAtPress || !element.value) return;
+  opensAtPress = trigger.onPointerdown(event);
+  if (!menu || !opensAtPress || !element.value) return;
   menu.press.start(event, element.value, { item: 200 });
 }
 
 // The `mousedown` of a press that opened the menu would give the focus back to a button, after the
-// popup took it. WebKit on macOS gives a button no focus at a press
-// (test/measurements/menu.test.ts).
+// popup took it. An open that the parent applies is in place then. WebKit on macOS gives a button
+// no focus at a press (test/measurements/menu.test.ts).
 function onMousedown(event: MouseEvent) {
-  if (openedAtPress) event.preventDefault();
+  if (opensAtPress && trigger.open.value) event.preventDefault();
 }
 
 function onClick(event: MouseEvent) {

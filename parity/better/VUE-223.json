@@ -6,7 +6,7 @@
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L1305-L1343",
     "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/"
   ],
-  "behavior": "While the popup of `Combobox` or `Autocomplete` is open, the rest of the page stays in the accessibility tree, also with `modal`. The combobox pattern of the WAI-ARIA Authoring Practices hides no content. A screen reader user can read the page and can reach the trigger and the clear button. Base UI gives `aria-hidden` to each element outside the input group and the popup. Its way out for a touch screen reader is a hidden button with the fixed name \"Dismiss\".",
+  "behavior": "While the popup of `Combobox` or `Autocomplete` is open, the rest of the page stays in the accessibility tree, also with `modal`. The combobox pattern of the WAI-ARIA Authoring Practices hides no content. A screen reader user can read the page and can reach the trigger and the clear button. An element with `aria-owns` at the place of the portal puts the popup after the input in the reading order. Base UI gives `aria-hidden` to each element outside the input group and the popup. Its way out for a touch screen reader is a hidden button with the fixed name \"Dismiss\".",
   "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
   "families": ["combobox", "autocomplete"]
 }

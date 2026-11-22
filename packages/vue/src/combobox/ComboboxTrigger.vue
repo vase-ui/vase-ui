@@ -88,9 +88,7 @@ function onPointerdown(event: PointerEvent) {
   closedAtPress = !root.open;
   if (isControl.value) trigger.onPointerdown(event);
   else pressBesideInput(event);
-  if (closedAtPress && root.open && element.value) {
-    context.press.start(event, element.value, { item: 0 });
-  }
+  if (closedAtPress && element.value) context.press.start(event, element.value, { item: 0 });
 }
 
 function onClick(event: MouseEvent) {

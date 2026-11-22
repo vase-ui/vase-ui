@@ -112,7 +112,7 @@ describe('the element that owns the popup', () => {
     expect(document.querySelector('[aria-owns="select-popup"]')).not.toHaveAttribute('role');
   });
 
-  test('an open combobox has one when its input is in the popup, and none when the input is outside', async () => {
+  test('an open combobox has one with its input in the popup, and one after the input outside the popup', async () => {
     const { unmount } = mount(ComboboxParts, {
       inputInPopup: true,
       root: { defaultOpen: true },
@@ -123,7 +123,9 @@ describe('the element that owns the popup', () => {
     unmount();
     mount(ComboboxParts, { root: { defaultOpen: true }, popup: { id: 'combobox-popup' } });
     await waitForPopup('combobox-popup');
-    expect(owners()).toEqual([]);
+    expect(owners().map((owner) => owner.getAttribute('aria-owns'))).toEqual(['combobox-popup']);
+    const order = byTestId('input').compareDocumentPosition(owners()[0]!);
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   test('takes no focus: Tab goes from the trigger into the popup, and out of it after the trigger', async () => {

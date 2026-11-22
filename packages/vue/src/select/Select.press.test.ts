@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type {
   SelectRootChangeEventDetails,
   SelectRootOpenChangeEventDetails,
 } from '@vase-ui/vue/select';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
-import { clientCenter } from '../../test/pointer';
-import { mount } from '../../test/render';
+import { clientCenter, holdPress } from '../../test/pointer';
+import { mount, settle } from '../../test/render';
 import { wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
@@ -192,6 +192,54 @@ describe('a drag from the trigger', () => {
 });
 
 describe('the controlled open state', () => {
+  test('a drag from the trigger to an item selects it while the parent holds `open`; an open that the parent refuses selects nothing', async () => {
+    const changes: unknown[] = [];
+    const parent = { accepts: false };
+    const root = reactive<Props>({
+      open: false,
+      onValueChange: (value: unknown) => changes.push(value),
+    });
+    root['onUpdate:open'] = (open: boolean) => {
+      if (parent.accepts) root.open = open;
+    };
+    await mountSelect({ root });
+    const refused = await holdPress(trigger());
+    await refused.release({ x: refused.point.x, y: refused.point.y + 60 });
+    await settle();
+    expect(shown(popup())).toBe(false);
+    // The trigger takes the focus as a button does.
+    const webkitOnMac = server.browser === 'webkit' && server.platform === 'darwin';
+    expect(document.activeElement).toBe(webkitOnMac ? document.body : trigger());
+    parent.accepts = true;
+    await dragFromTrigger(() => item('cherry'));
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    expect(changes).toEqual(['cherry']);
+  });
+
+  test('a press opens the popup that the parent holds, and the popup keeps the focus', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    await mountSelect({ root });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(popup()));
+    await settle();
+    expect(document.activeElement).toBe(popup());
+  });
+
+  test('a press closes the popup that the parent holds, and the trigger keeps the focus', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    await mountSelect({ root });
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(popup()));
+    await pressAt(trigger());
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    await settle();
+    expect(document.activeElement).toBe(trigger());
+  });
+
   test('the popup follows `open`; a close request with `open` true emits openChange and keeps the popup', async () => {
     const log: string[] = [];
     const root = reactive<Props>({

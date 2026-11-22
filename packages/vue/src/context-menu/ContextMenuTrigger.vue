@@ -48,7 +48,7 @@ function onContextmenu(event: MouseEvent) {
   root.request(true, 'trigger-press', event);
   // On macOS and Linux the press is down: its release acts by its place
   // (test/measurements/menu.test.ts).
-  if (root.open && event.buttons & 2 && element.value) {
+  if (event.buttons & 2 && element.value) {
     menu.press.start(event, element.value, { item: 0, outside: 500 });
   }
 }

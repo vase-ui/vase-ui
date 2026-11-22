@@ -398,7 +398,7 @@ export interface ComboboxPositionerState {
 
 export interface ComboboxPopupProps
   extends AsProps, /* @vue-ignore */ Omit<HTMLAttributes, 'as' | 'id'> {
-  /** The `id` of the popup. The default is a generated id while the trigger is the control. */
+  /** The `id` of the popup. The default is a generated id. */
   id?: string | undefined;
   /**
    * The element that gets the focus at the open, while the trigger is the control. By default: the

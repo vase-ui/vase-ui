@@ -53,9 +53,8 @@ function elementProps() {
   const closed = !root.open;
   return mergeProps(
     {
-      ...(isDialog.value
-        ? { role: 'dialog', id: givenId(props.id) ?? generatedId, tabindex: -1 }
-        : { role: 'presentation', id: givenId(props.id) }),
+      ...(isDialog.value ? { role: 'dialog', tabindex: -1 } : { role: 'presentation' }),
+      id: givenId(props.id) ?? generatedId,
       'data-side': state.value.side,
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,
