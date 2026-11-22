@@ -589,6 +589,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 The workspace project `benchmarks` measures the size of Vase UI and of other component libraries. Its `package.json` pins each library and each framework.
 
 - An app renders one scenario of one library, such as Dialog, in one setup. `benchmarks/scenarios.ts` lists the setups, the libraries and the scenarios.
+- The scenario `AllComponents` of a library renders each of its other fixtures one time.
 - The setup `vdom` is a Vue app of `createApp`. The setup `vapor-interop` is a Vapor app of Vue 3.6, and it renders the components of each library through `vaporInteropPlugin`. The setup `react` is for Base UI.
 - In `vapor-interop`, the build compiles the SFCs of the harness and of the fixtures in Vapor mode. The components of each library stay virtual DOM components.
 - Each setup has an empty app: the harness with one button. The empty app of `vapor-interop` has no interop plugin, so the app of each library in that setup also counts the runtime of the plugin.
@@ -603,10 +604,10 @@ The workspace project `benchmarks` measures the size of Vase UI and of other com
 A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base UI. Each fixture follows these rules, so that each library gets the same conditions:
 
 1. Use the parts and the import form of the anatomy, or of the first example, in the documentation of the library at the pinned version.
-2. Use the default props of the library.
-3. Give each fixture of a scenario the same text.
-4. Do not add CSS, icons, animations or virtualization.
-5. Put `data-bench="trigger"` on the trigger button and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
+2. Use the default props of the library. Set a prop only for the start state of the scenario, such as the value 50 of the Slider, or where the documentation tells you to set it. A Combobox uses the filter of the documentation, which is the built-in filter where the library has one.
+3. Give each fixture of a scenario the same text. Select and Combobox take the labels of their options from `benchmarks/harness/options.ts`: `Option 1` to `Option N`, where N is the URL parameter `options`, else 5.
+4. Do not add CSS, icons, animations or virtualization. Do not add a part that only holds an icon, such as `Checkbox.Indicator`, `Select.Icon` or the indicator of an item. A button that holds an icon in the example, such as the Clear button of a Combobox, stays, with a text in place of the icon.
+5. Put `data-bench="trigger"` on the trigger button, `data-bench="input"` on the input of a Combobox, and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
 6. Read the documentation of a library and install its npm package. Do not copy its source.
 
 ## Releases
