@@ -235,8 +235,6 @@ function onKeydown(event: KeyboardEvent) {
     }
     return;
   }
-  // In a grid, with no highlight, the arrow keys of the row move the caret.
-  if (context.grid && !list.highlighted && /^Arrow(Left|Right)$/.test(event.key)) return;
   context.onListKeydown(event);
 }
 

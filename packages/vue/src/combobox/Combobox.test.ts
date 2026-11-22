@@ -15,6 +15,7 @@ import ComboboxParts, { FRUITS } from '../../test/fixtures/ComboboxParts.vue';
 import ComboboxPartAlone from '../../test/fixtures/ComboboxPartAlone.vue';
 import TextareaCombobox from '../../test/fixtures/ComboboxTextarea.vue';
 import ComboboxVirtual from '../../test/fixtures/ComboboxVirtual.vue';
+import ComboboxVirtualGrid from '../../test/fixtures/ComboboxVirtualGrid.vue';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -721,6 +722,22 @@ describe('highlight', () => {
     expect(exposed.highlights.at(-1)).toBe('Item 0 0');
   });
 
+  test('typed text removes the highlight of a virtualized list; ArrowDown then gives the first value', async () => {
+    const { exposed } = mount(ComboboxVirtual);
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 2'));
+    await userEvent.keyboard('4');
+    await waitFor(() => expect(itemNames()[0]).toBe('Item 4'));
+    expect(highlighted()).toBe(undefined);
+    expect(exposed.highlights.at(-1)).toBe('undefined -1');
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 4'));
+    expect(exposed.highlights.at(-1)).toBe('Item 4 0');
+  });
+
   test('typed text sets no scroll position of a virtualized list', async () => {
     mount(ComboboxVirtual);
     await nextTick();
@@ -776,6 +793,121 @@ describe('highlight', () => {
     expect(item('Apple')).toHaveAttribute('aria-disabled', 'true');
     await userEvent.keyboard('{Enter}');
     expect(log.filter((entry) => entry.includes('valueChange'))).toEqual([]);
+  });
+});
+
+describe('grid navigation', () => {
+  /** Opens a virtualized grid of items in rows of 5. The window has 3 rows. */
+  async function openGrid(props: Props = {}) {
+    const { exposed } = mount(ComboboxVirtualGrid, { virtualized: true, ...props });
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    return exposed;
+  }
+
+  test('wraps ArrowUp to the last row in the full list for virtualized rows', async () => {
+    const exposed = await openGrid({ root: { autoHighlight: true } });
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 0'));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(highlighted()).toBe('Item 95'));
+    expect(exposed.highlights).toEqual(['Item 0', 'Item 95']);
+    expect(input()).toHaveAttribute('aria-activedescendant', byTestId('item-95')!.id);
+  });
+
+  test('clamps ArrowUp to the last item in a partial last row for virtualized rows', async () => {
+    await openGrid({ count: 98, root: { autoHighlight: true, defaultValue: 'Item 4' } });
+    await waitFor(() => expect(highlighted()).toBe('Item 4'));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(highlighted()).toBe('Item 97'));
+  });
+
+  test('clamps ArrowDown into a partial last row for virtualized rows', async () => {
+    await openGrid({ count: 98, root: { defaultValue: 'Item 93' } });
+    await waitFor(() => expect(highlighted()).toBe('Item 93'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 97'));
+  });
+
+  test('does not wrap ArrowUp when loopFocus is false for virtualized rows', async () => {
+    const exposed = await openGrid({
+      count: 98,
+      root: { loopFocus: false, defaultValue: 'Item 4' },
+    });
+    await waitFor(() => expect(highlighted()).toBe('Item 4'));
+    await userEvent.keyboard('{ArrowUp}');
+    expect(exposed.highlights).toEqual(['Item 4']);
+    expect(highlighted()).toBe('Item 4');
+  });
+
+  test('still clamps ArrowDown into a partial last row when loopFocus is false', async () => {
+    await openGrid({ count: 98, root: { loopFocus: false, defaultValue: 'Item 93' } });
+    await waitFor(() => expect(highlighted()).toBe('Item 93'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 97'));
+  });
+
+  test.each([
+    {
+      title: 'loopFocus: an end removes the highlight',
+      props: {},
+      moves: [22, 0, 5, 4, -1, 22, 17, 12, 7, 2, 1, 0, 22, -1, 0],
+    },
+    {
+      title: 'loopFocus with autoHighlight: it wraps',
+      props: { root: { autoHighlight: true } },
+      moves: [22, 0, 5, 4, 22, 17, 12, 7, 2, 22, 21, 20, 19, 22, 2],
+    },
+    {
+      title: 'loopFocus false: it stays',
+      props: { root: { loopFocus: false } },
+      moves: [22, 21, 16, 11, 6, 1, 0, 5, 10],
+    },
+    {
+      title: 'right to left',
+      props: { dir: 'rtl' },
+      moves: [22, 21, -1, 22, 17, 12, 7, 2, -1, 0, 5],
+    },
+  ])('a virtualized grid moves as a grid with each row: $title', async ({ props, moves }) => {
+    const keys =
+      '{ArrowRight}{ArrowUp}{ArrowRight}{ArrowDown}{ArrowLeft}' +
+      '{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}' +
+      '{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowDown}{ArrowDown}';
+    // Each change of the highlight. -1: no item has it.
+    const expected = moves.map((index) => (index === -1 ? 'undefined' : `Item ${index}`));
+    for (const virtualized of [true, false]) {
+      const { exposed, unmount } = mount(ComboboxVirtualGrid, { count: 23, virtualized, ...props });
+      await nextTick();
+      await userEvent.click(input());
+      await opened();
+      await userEvent.keyboard(keys);
+      await nextTick();
+      expect(exposed.highlights).toEqual(expected);
+      unmount();
+    }
+  });
+
+  test('ArrowRight moves on from a highlighted value whose item left the window', async () => {
+    const exposed = await openGrid();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 5'));
+    // A scroll of the list moves the window.
+    exposed.start = 10;
+    await waitFor(() => expect(byTestId('item-5')).toBe(null));
+    expect(highlighted()).toBe(undefined);
+    await userEvent.keyboard('{ArrowRight}');
+    expect(exposed.highlights.at(-1)).toBe('Item 6');
+  });
+
+  test('with no mounted row, ArrowDown moves by one value', async () => {
+    const exposed = await openGrid();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe('Item 5'));
+    exposed.start = 20;
+    await waitFor(() => expect(itemNames()).toEqual([]));
+    await userEvent.keyboard('{ArrowDown}');
+    expect(exposed.highlights.at(-1)).toBe('Item 6');
   });
 });
 

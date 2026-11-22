@@ -791,7 +791,12 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     // value, it keeps the highlighted item (Base UI).
     const previous =
       !hasText && source.autoHighlight === true && !hadValue ? list.highlighted : null;
-    if (!previous) list.highlight(null, 'none', event);
+    if (!previous) {
+      list.highlight(null, 'none', event);
+      // A virtual list keeps the highlight of a value whose item leaves the window. Typed text
+      // removes that highlight too.
+      if (source.virtualized) emitHighlight(undefined, -1, 'none', event);
+    }
     // Each typed text shows the list from its top.
     const first = list.items()[0]?.element ?? listElement.value;
     if (!source.virtualized && first) resetScroll(first);
@@ -856,27 +861,66 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     }
   }
 
+  // A virtual window has the items of only some values, so the keys count on the values. The keys
+  // give the moves of a list that is not virtual.
   function onListKeydown(event: KeyboardEvent) {
     if (!source.virtualized) return list.onKeydown(event);
     if (event.ctrlKey || event.altKey || event.metaKey || event.defaultPrevented) return false;
-    const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
-    if (step === 0) return false;
+    const current = lastHighlight.index;
+    const rowStep = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+    const cellStep = source.grid && current !== -1 ? stepInRow(event.key) : 0;
+    if (rowStep === 0 && cellStep === 0) return false;
     event.preventDefault();
-    // A virtual window has the items of only some values, so the keys count on the values.
     const count = filteredValues.value.length;
     if (count === 0) return true;
-    const current = lastHighlight.index;
-    let next = current === -1 ? (step === 1 ? 0 : count - 1) : current + step;
-    if (next < 0 || next >= count) {
-      if (source.loopFocus && !source.autoHighlight) next = -1;
-      else if (source.loopFocus) next = (next + count) % count;
-      else next = current;
-    }
+    const next =
+      cellStep === 0 ? nextRow(current, rowStep, count) : nextCell(current, cellStep, count);
     emitHighlight(next === -1 ? undefined : filteredValues.value[next], next, 'keyboard', event);
     // An item that is not mounted gets the highlight when it mounts.
     const target = next === -1 ? null : itemOfIndex(next);
     list.highlight(target, target || next === -1 ? 'keyboard' : 'none', event);
     return true;
+  }
+
+  // ArrowRight moves forward in a row, and ArrowLeft in a right-to-left list.
+  function stepInRow(key: string) {
+    if (key !== 'ArrowLeft' && key !== 'ArrowRight') return 0;
+    const element = listElement.value;
+    const rtl = !!element && ownerWindow(element).getComputedStyle(element).direction === 'rtl';
+    return (key === 'ArrowRight') !== rtl ? 1 : -1;
+  }
+
+  // The value of the same column in the next row. A shorter last row gives its last value. A list
+  // that is no grid has one column.
+  function nextRow(current: number, step: number, count: number) {
+    if (current === -1) return step === 1 ? 0 : count - 1;
+    const columns = source.grid ? columnCount() : 1;
+    const rows = Math.ceil(count / columns);
+    let row = Math.floor(current / columns) + step;
+    if (row < 0 || row >= rows) {
+      if (source.loopFocus && !source.autoHighlight) return -1;
+      if (!source.loopFocus) return current;
+      row = step === 1 ? 0 : rows - 1;
+    }
+    return Math.min(row * columns + (current % columns), count - 1);
+  }
+
+  function nextCell(current: number, step: number, count: number) {
+    const next = current + step;
+    if (next >= 0 && next < count) return next;
+    if (!source.loopFocus) return current;
+    return step === 1 ? 0 : count - 1;
+  }
+
+  // The rows of a virtual window have the columns of the full grid, and the last row can be
+  // shorter. With no mounted row, the grid has one column.
+  function columnCount() {
+    const counts = new Map<Element | null, number>();
+    for (const { element } of list.items()) {
+      const row = element.closest('[role="row"]');
+      counts.set(row, (counts.get(row) ?? 0) + 1);
+    }
+    return Math.max(1, ...counts.values());
   }
 
   function clickHighlighted(event: KeyboardEvent) {
