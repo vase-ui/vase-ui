@@ -11,6 +11,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
+import { createError } from '../common/createError';
 import { useModel } from '../common/model';
 import type { FieldForControl } from '../field/control';
 import { compareItemEquality, defaultItemEquality, removeItem } from '../common/itemEquality';
@@ -97,7 +98,9 @@ export interface SelectContext {
   selectedItem(): ListItem | undefined;
 }
 
-const selectKey: InjectionKey<SelectContext> = Symbol('select root');
+const selectKey: InjectionKey<SelectContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'select root' : undefined,
+);
 const NO_VALUES: readonly unknown[] = Object.freeze([]);
 
 // A touch open locks the page only when the popup covers the view (as Popover).
@@ -435,9 +438,7 @@ export function useSelectRoot(
 export function injectSelectRoot(part: string) {
   const context = inject(selectKey, null);
   if (!context) {
-    throw new Error(
-      `Vase UI: <Select.${part}> must be inside <Select.Root>. Without a root the part has no value and no popup. Put the part inside <Select.Root>.`,
-    );
+    throw createError(59, part);
   }
   return context;
 }
@@ -451,17 +452,18 @@ export interface SelectPositionerContext {
   onScroll(scroller: HTMLElement): void;
 }
 
-export const selectPositionerKey: InjectionKey<SelectPositionerContext> =
-  Symbol('select positioner');
-const portalKey: InjectionKey<true> = Symbol('select portal');
+export const selectPositionerKey: InjectionKey<SelectPositionerContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'select positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'select portal' : undefined,
+);
 
 /** The placement of the positioner around the part. A part with no positioner throws an error. */
 export function injectSelectPositioner(part: string) {
   const placement = inject(selectPositionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <Select.${part}> must be inside <Select.Positioner>. Put the part inside <Select.Positioner>.`,
-    );
+    throw createError(60, part);
   }
   return placement;
 }
@@ -474,16 +476,16 @@ export function providePortal() {
 /** `Select.Positioner` and `Select.Backdrop` need a portal of their root. */
 export function injectPortal(part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <Select.${part}> must be inside <Select.Portal>. Put the part inside <Select.Portal>.`,
-    );
+    throw createError(61, part);
   }
 }
 
 /** The element of the `Select.Item` around a part. */
-export const selectItemKey: InjectionKey<Readonly<Ref<HTMLElement | null>>> = Symbol('select item');
+export const selectItemKey: InjectionKey<Readonly<Ref<HTMLElement | null>>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'select item' : undefined,
+);
 
 /** What `Select.Group` gives to its label. */
 export const selectGroupKey: InjectionKey<{
   addLabel(label: { readonly id: string }): () => void;
-}> = Symbol('select group');
+}> = Symbol(process.env.NODE_ENV !== 'production' ? 'select group' : undefined);

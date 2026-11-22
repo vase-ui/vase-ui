@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { CalendarDayState, CalendarPage } from './types';
 
 /** What `Calendar.Month` gives to its parts. The properties are reactive. */
@@ -12,7 +13,9 @@ export interface MonthForPart {
   addCaption(caption: { readonly id: string }): () => void;
 }
 
-export const monthKey: InjectionKey<MonthForPart> = Symbol('calendar month');
+export const monthKey: InjectionKey<MonthForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'calendar month' : undefined,
+);
 
 /** The month of a part, or `null` outside a month. */
 export function injectMonth(): MonthForPart | null {
@@ -23,9 +26,7 @@ export function injectMonth(): MonthForPart | null {
 export function injectRequiredMonth() {
   const month = injectMonth();
   if (!month) {
-    throw new Error(
-      'Vase UI: A part of a month of Calendar must be inside <Calendar.Month>. Without a month the part has no weeks to show. Put the part inside <Calendar.Month>.',
-    );
+    throw createError(6);
   }
   return month;
 }
@@ -36,14 +37,14 @@ export interface DayForButton {
   readonly state: CalendarDayState;
 }
 
-export const dayKey: InjectionKey<DayForButton> = Symbol('calendar day');
+export const dayKey: InjectionKey<DayForButton> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'calendar day' : undefined,
+);
 
 export function injectDay() {
   const day = inject(dayKey, null);
   if (!day) {
-    throw new Error(
-      'Vase UI: <Calendar.DayButton> must be inside <Calendar.Day>. Without a day the button has no date to select. Put the button inside <Calendar.Day>.',
-    );
+    throw createError(7);
   }
   return day;
 }

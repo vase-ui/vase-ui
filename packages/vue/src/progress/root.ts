@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { ProgressRootState } from './types';
 
 /** What `Progress.Root` gives to its parts. The properties are reactive. */
@@ -14,12 +15,13 @@ export interface ProgressForParts {
   addLabel(label: { readonly id: string }): () => void;
 }
 
-export const progressKey: InjectionKey<ProgressForParts> = Symbol('progress');
+export const progressKey: InjectionKey<ProgressForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'progress' : undefined,
+);
 
 export function injectProgressRoot(part: string) {
   const root = inject(progressKey, null);
-  if (!root)
-    throw new Error(`Vase UI Progress: <Progress.${part}> must be inside <Progress.Root>.`);
+  if (!root) throw createError(51, part);
   return root;
 }
 

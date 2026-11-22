@@ -777,7 +777,7 @@ describe('a part outside a root', () => {
     (part) => {
       const error = mountError(SliderPartAlone, { part });
       expect((error as Error).message).toBe(
-        `Vase UI Slider: <Slider.${part}> must be inside <Slider.Root>.`,
+        `Vase UI: <Slider.${part}> must be inside <Slider.Root>. Without a root the part has no value to show or to change. Put the part inside <Slider.Root>.`,
       );
       takeReportedMessages();
     },

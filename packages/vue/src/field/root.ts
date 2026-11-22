@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { FieldRootState, FieldValidity } from './types';
 
 /**
@@ -31,11 +32,13 @@ export interface FieldLabel {
   readonly native: boolean;
 }
 
-export const fieldPartsKey: InjectionKey<FieldForParts> = Symbol('field parts');
+export const fieldPartsKey: InjectionKey<FieldForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'field parts' : undefined,
+);
 
 export function injectFieldRoot(part: string) {
   const field = inject(fieldPartsKey, null);
-  if (!field) throw new Error(`Vase UI Field: <Field.${part}> must be inside <Field.Root>.`);
+  if (!field) throw createError(29, part);
   return field;
 }
 

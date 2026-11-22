@@ -24,4 +24,6 @@ export interface ToggleGroupForToggle {
   addToggle(toggle: GroupToggle): () => void;
 }
 
-export const toggleGroupKey: InjectionKey<ToggleGroupForToggle> = Symbol('toggle group');
+export const toggleGroupKey: InjectionKey<ToggleGroupForToggle> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'toggle group' : undefined,
+);

@@ -1,4 +1,5 @@
 import { computed, inject, provide, shallowReactive, watch, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { DateValue } from '../common/date-time/temporal';
 import { sameTemporal } from '../common/date-time/temporal';
 import { byDocumentOrder } from '../common/element';
@@ -25,15 +26,15 @@ export interface DateRangePickerForPart extends PickerForPart<DateRangePickerRoo
   onFocusout(event: FocusEvent): void;
 }
 
-export const dateRangePickerKey: InjectionKey<DateRangePickerForPart> = Symbol('date range picker');
+export const dateRangePickerKey: InjectionKey<DateRangePickerForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'date range picker' : undefined,
+);
 
 /** The root of the part. A part with no root throws an error that names it. */
 export function injectDateRangePicker(part: string): DateRangePickerForPart {
   const picker = inject(dateRangePickerKey, null);
   if (!picker) {
-    throw new Error(
-      `Vase UI: <DateRangePicker.${part}> must be inside <DateRangePicker.Root>. Without a root the part has no range and no popup. Put the part inside <DateRangePicker.Root>.`,
-    );
+    throw createError(23, part);
   }
   return picker;
 }

@@ -973,7 +973,7 @@ describe('development warnings', () => {
 describe('a part outside the root', () => {
   test('throws an error that names the part and the root', () => {
     expect(String(mountError(ResizableOutsideRoot))).toContain(
-      'Vase UI Resizable: <Resizable.Panel> must be inside <Resizable.Root>.',
+      'Vase UI: <Resizable.Panel> must be inside <Resizable.Root>. Without a root the part has no size to read or to change. Put the part inside <Resizable.Root>.',
     );
     takeReportedMessages();
   });

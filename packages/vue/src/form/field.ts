@@ -41,4 +41,6 @@ export interface FormForField {
   values(): FormValues;
 }
 
-export const formKey: InjectionKey<FormForField> = Symbol('form');
+export const formKey: InjectionKey<FormForField> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'form' : undefined,
+);

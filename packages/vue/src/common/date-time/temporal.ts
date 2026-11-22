@@ -1,5 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 
+import { createError } from '../createError';
+
 // No helper of this folder reads `Temporal` when its module loads, so an engine that has no
 // `Temporal` can import it. The first read is in a function that a part calls.
 
@@ -30,11 +32,7 @@ const KIND_OF_TAG = new Map<string, TemporalKind>([
 /** Throws in a development build when the engine has no `Temporal`. A root calls it first in `setup`. */
 export function assertTemporal(part: string): void {
   if (process.env.NODE_ENV !== 'production' && typeof Temporal === 'undefined') {
-    throw new Error(
-      `Vase UI: <${part}> needs the global \`Temporal\`, and this JavaScript engine does not have it. ` +
-        'The part cannot make or compare a date without it. ' +
-        'Load a Temporal polyfill, such as `temporal-polyfill/global`, before the app mounts.',
-    );
+    throw createError(19, part);
   }
 }
 

@@ -10,6 +10,7 @@ import {
   type InjectionKey,
 } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
+import { createError } from '../common/createError';
 import { useModel } from '../common/model';
 import { ownerWindow } from '../common/owner';
 import { platform } from '../common/platform';
@@ -111,10 +112,16 @@ export interface DrawerProvider {
   write(progress: number, height: number): void;
 }
 
-const drawerKey: InjectionKey<DrawerRoot> = Symbol('drawer');
+const drawerKey: InjectionKey<DrawerRoot> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'drawer' : undefined,
+);
 /** Marks the parts in a `Drawer.Viewport`. */
-export const viewportKey: InjectionKey<true> = Symbol('drawer viewport');
-export const providerKey: InjectionKey<DrawerProvider> = Symbol('drawer provider');
+export const viewportKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'drawer viewport' : undefined,
+);
+export const providerKey: InjectionKey<DrawerProvider> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'drawer provider' : undefined,
+);
 
 export function createProvider(): DrawerProvider {
   const roots = shallowReactive(new Set<() => boolean>());
@@ -404,9 +411,7 @@ interface CloseWatcherLike extends EventTarget {
 export function injectDrawer(part: string) {
   const drawer = inject(drawerKey, null);
   if (!drawer) {
-    throw new Error(
-      `Vase UI: <Drawer.${part}> must be inside <Drawer.Root>. Without a root the part has no drawer. Put the part inside <Drawer.Root>.`,
-    );
+    throw createError(28, part);
   }
   return drawer;
 }

@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 
 /** What `Meter.Root` gives to its parts. The properties are reactive. */
 export interface MeterForParts {
@@ -14,10 +15,12 @@ export interface MeterForParts {
   addLabel(label: { readonly id: string }): () => void;
 }
 
-export const meterKey: InjectionKey<MeterForParts> = Symbol('meter');
+export const meterKey: InjectionKey<MeterForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'meter' : undefined,
+);
 
 export function injectMeterRoot(part: string) {
   const meter = inject(meterKey, null);
-  if (!meter) throw new Error(`Vase UI Meter: <Meter.${part}> must be inside <Meter.Root>.`);
+  if (!meter) throw createError(38, part);
   return meter;
 }

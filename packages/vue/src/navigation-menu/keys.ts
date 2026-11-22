@@ -7,7 +7,9 @@ interface KeyGroup {
   add(element: () => HTMLElement | null): () => void;
 }
 
-const keyGroupKey: InjectionKey<KeyGroup> = Symbol('navigation menu key group');
+const keyGroupKey: InjectionKey<KeyGroup> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'navigation menu key group' : undefined,
+);
 
 /**
  * Makes a key group for the triggers and the links below the part. A list moves on the axis of its

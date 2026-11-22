@@ -1,3 +1,4 @@
+import { createError } from '../common/createError';
 import { matches } from '../common/date-time/matchers';
 import { compareDates, isSameDay } from '../common/date-time/temporal';
 import type { DateValue } from '../common/date-time/temporal';
@@ -134,10 +135,7 @@ export function assertModifierNames(part: string, names: readonly string[]): voi
   for (const name of names) {
     const attribute = toKebabCase(name);
     if (DAY_ATTRIBUTES.includes(attribute)) {
-      throw new Error(
-        `Vase UI: The \`modifiers\` prop of <${part}> has the key \`${name}\`. ` +
-          `A day uses the attribute \`data-${attribute}\` for a meaning of its own, so the attribute would have two meanings. Rename the modifier.`,
-      );
+      throw createError(5, part, name, attribute);
     }
   }
 }

@@ -980,6 +980,18 @@ const reported = [
       'share a marker',
     ],
     ['an event name of Base UI', "export const event = new Event('base-ui');\n", 'share a marker'],
+    [
+      'an error with a text',
+      "export const fail = () => new Error('Vase UI: text.');\n",
+      'createError',
+    ],
+    ['an error with no new', "export const fail = () => Error('Vase UI: text.');\n", 'createError'],
+    ['a symbol with a description', "export const key = Symbol('root');\n", 'Vue Devtools'],
+    [
+      'a symbol with a template literal description',
+      'export const key = Symbol(`root`);\n',
+      'Vue Devtools',
+    ],
   ].map(([name, code, hint]) => ({
     name,
     file: `${SRC}/useRoot.ts`,
@@ -1510,6 +1522,11 @@ export default defineComponent({ [render]() { return null; }, render: () => h('s
     name: 'a method of Temporal and a constant that has the name using',
     file: `${SRC}/useRoot.ts`,
     code: 'export const order = (a: Temporal.PlainTime, b: Temporal.PlainTime) =>\n  Temporal.PlainTime.compare(a, b);\nexport const using = 1;\n',
+  },
+  {
+    name: 'an error of a code and a symbol with a description for development only',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { createError } from '../common/createError';\n\nexport const fail = () => createError(1);\nexport const key = Symbol(process.env.NODE_ENV !== 'production' ? 'root' : undefined);\n",
   },
   {
     name: 'a groupBy method of another object',

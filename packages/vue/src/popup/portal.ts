@@ -53,7 +53,9 @@ export interface PopupPortalProps {
 }
 
 // One key for each popup family, so that a popup in a popup has the target of its parent.
-const targetKey: InjectionKey<() => PortalTarget> = Symbol('portal target');
+const targetKey: InjectionKey<() => PortalTarget> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'portal target' : undefined,
+);
 
 /**
  * Gives the portals below the component the target that the function gives from the inherited

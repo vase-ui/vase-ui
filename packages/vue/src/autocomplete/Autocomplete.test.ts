@@ -3,7 +3,9 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomplete';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
-import { mount, settle } from '../../test/render';
+import AutocompleteValueAlone from '../../test/fixtures/AutocompleteValueAlone.vue';
+import { mount, mountError, settle } from '../../test/render';
+import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -684,4 +686,13 @@ describe('the field', () => {
     outside().focus();
     await waitFor(() => expect(field).toHaveAttribute('data-valid'));
   });
+});
+
+// The case throws in `setup`, so it is the last of the file.
+test('a part outside the root throws an error that names the root of Autocomplete', () => {
+  expect(String(mountError(AutocompleteValueAlone))).toBe(
+    'Error: Vase UI: <Autocomplete.Value> must be inside <Autocomplete.Root>. Without a root the part has no combobox. Put the part inside its root.',
+  );
+  // After the error, Vapor renders the part with no setup, and warns about each binding.
+  takeReportedMessages();
 });

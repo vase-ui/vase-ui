@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import { fieldStateAttributes } from '../field/control';
 import type { SliderRootState } from './types';
 
@@ -61,11 +62,13 @@ export interface SliderForParts {
   onReset(event: Event): void;
 }
 
-export const sliderKey: InjectionKey<SliderForParts> = Symbol('slider');
+export const sliderKey: InjectionKey<SliderForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'slider' : undefined,
+);
 
 export function injectSlider(part: string) {
   const slider = inject(sliderKey, null);
-  if (!slider) throw new Error(`Vase UI Slider: <Slider.${part}> must be inside <Slider.Root>.`);
+  if (!slider) throw createError(62, part);
   return slider;
 }
 

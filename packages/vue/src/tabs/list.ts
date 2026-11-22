@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { RootTab } from './root';
 
 /** What `Tabs.List` gives to a tab and an indicator. The properties are reactive. */
@@ -14,14 +15,14 @@ export interface TabsListForParts {
   onBlur(): void;
 }
 
-export const tabsListKey: InjectionKey<TabsListForParts> = Symbol('tabs list');
+export const tabsListKey: InjectionKey<TabsListForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tabs list' : undefined,
+);
 
 export function injectTabsList() {
   const list = inject(tabsListKey, null);
   if (!list) {
-    throw new Error(
-      'Vase UI: A tab or an indicator of Tabs must be inside <Tabs.List>. Without a list the part has no list element to read and no keyboard navigation. Put the part inside <Tabs.List>.',
-    );
+    throw createError(63);
   }
   return list;
 }

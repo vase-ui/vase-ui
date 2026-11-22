@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
+import { createError } from '../common/createError';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { selectGroupKey } from './root';
@@ -15,9 +16,7 @@ defineSlots<{
 
 const group = inject(selectGroupKey, null);
 if (!group) {
-  throw new Error(
-    'Vase UI: <Select.GroupLabel> must be inside <Select.Group>. Without a group the label names nothing. Put the label inside <Select.Group>.',
-  );
+  throw createError(57);
 }
 const attrs = useAttrs();
 const generatedId = useId();

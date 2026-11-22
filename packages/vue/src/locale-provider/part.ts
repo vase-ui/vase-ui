@@ -5,7 +5,9 @@ export interface LocaleForPart {
   readonly locale: string;
 }
 
-export const localeKey: InjectionKey<LocaleForPart> = Symbol('locale');
+export const localeKey: InjectionKey<LocaleForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'locale' : undefined,
+);
 
 /**
  * The locale of a part: its `locale` prop, else the nearest `LocaleProvider`, else `en-US`. It

@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { PickerForPart } from '../common/picker/root';
 import type { TimeClockHourCycle } from '../time-clock/views';
 import type { TimePickerRootProps, TimePickerRootValue } from './types';
@@ -13,15 +14,15 @@ export interface TimePickerForPart extends PickerForPart<TimePickerRootValue> {
   readonly time: Temporal.PlainTime;
 }
 
-export const timePickerKey: InjectionKey<TimePickerForPart> = Symbol('time picker');
+export const timePickerKey: InjectionKey<TimePickerForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'time picker' : undefined,
+);
 
 /** The root of the part. A part with no root throws an error that names it. */
 export function injectTimePicker(part: string): TimePickerForPart {
   const picker = inject(timePickerKey, null);
   if (!picker) {
-    throw new Error(
-      `Vase UI: <TimePicker.${part}> must be inside <TimePicker.Root>. Without a root the part has no value and no popup. Put the part inside <TimePicker.Root>.`,
-    );
+    throw createError(67, part);
   }
   return picker;
 }

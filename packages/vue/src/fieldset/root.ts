@@ -11,4 +11,6 @@ export interface FieldsetForLegend {
   addLegend(legend: { readonly id: string }): () => void;
 }
 
-export const legendKey: InjectionKey<FieldsetForLegend> = Symbol('fieldset legend');
+export const legendKey: InjectionKey<FieldsetForLegend> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'fieldset legend' : undefined,
+);

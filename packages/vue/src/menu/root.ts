@@ -8,6 +8,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { ownerWindow } from '../common/owner';
 import { useTimeout } from '../common/useTimeout';
 import { useList, type List, type ListItem } from '../list/list';
@@ -106,11 +107,16 @@ export interface MenuContext<Payload = unknown> {
   highlightUnder(target: Element): void;
 }
 
-export const menuKey: InjectionKey<MenuContext> = Symbol('menu');
+export const menuKey: InjectionKey<MenuContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu' : undefined,
+);
 /** The placement that `Menu.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('menu positioner');
-const portalKey: InjectionKey<true> = Symbol('menu portal');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu portal' : undefined,
+);
 const contexts = new WeakMap<PopupRoot, MenuContext>();
 
 /** The items of each menu, by element: the drag reads them. */
@@ -588,9 +594,7 @@ export function useMenuRoot<Payload>(
 }
 
 function missing(part: string): never {
-  throw new Error(
-    `Vase UI: <Menu.${part}> must be inside <Menu.Root>, <Menu.SubmenuRoot> or <ContextMenu.Root>. Without a root the part has no menu. Put the part inside a root of a menu.`,
-  );
+  throw createError(34, part);
 }
 
 /** The menu of the part. A part with no menu throws an error that names it. */
@@ -605,9 +609,7 @@ export function injectMenu(part: string) {
 export function useTriggerMenu(handle: () => MenuHandle | undefined) {
   const injected = inject(menuKey, null);
   if (!injected && !handle()) {
-    throw new Error(
-      'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
-    );
+    throw createError(35);
   }
   return computed(() => {
     const given = handle();
@@ -625,9 +627,7 @@ export function providePortal() {
 /** `Menu.Positioner` and `Menu.Backdrop` need a portal of their menu. */
 export function injectPortal(part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <Menu.${part}> must be inside <Menu.Portal>. Put the part inside <Menu.Portal>.`,
-    );
+    throw createError(36, part);
   }
 }
 
@@ -635,9 +635,7 @@ export function injectPortal(part: string) {
 export function injectPositioner(part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <Menu.${part}> must be inside <Menu.Positioner>. Put the part inside <Menu.Positioner>.`,
-    );
+    throw createError(37, part);
   }
   return placement;
 }

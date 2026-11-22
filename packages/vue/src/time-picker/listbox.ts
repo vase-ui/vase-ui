@@ -7,6 +7,7 @@ import {
   type Ref,
 } from 'vue';
 import { arrowKeyTarget } from '../common/arrowKeyTarget';
+import { createError } from '../common/createError';
 import { byDocumentOrder } from '../common/element';
 import { addPopupFocusTarget, injectPopupElement } from '../common/picker/popup';
 import type { TimePickerColumnUnit, TimePickerColumnValue } from './columns';
@@ -28,7 +29,9 @@ export interface ListboxForItem {
   addItem(item: ListboxItem): () => void;
 }
 
-export const listKey: InjectionKey<ListboxForItem> = Symbol('time picker list');
+export const listKey: InjectionKey<ListboxForItem> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'time picker list' : undefined,
+);
 
 /** What `TimePicker.Column` gives to its items. The properties are reactive. */
 export interface ColumnForItem extends ListboxForItem {
@@ -37,14 +40,14 @@ export interface ColumnForItem extends ListboxForItem {
   outOfLimits(value: TimePickerColumnValue): boolean;
 }
 
-export const columnKey: InjectionKey<ColumnForItem> = Symbol('time picker column');
+export const columnKey: InjectionKey<ColumnForItem> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'time picker column' : undefined,
+);
 
 export function injectListbox<Listbox>(key: InjectionKey<Listbox>, part: string, parent: string) {
   const listbox = inject(key, null);
   if (!listbox) {
-    throw new Error(
-      `Vase UI: <TimePicker.${part}> must be inside <TimePicker.${parent}>. Without it the item has no time to give. Put the item inside <TimePicker.${parent}>.`,
-    );
+    throw createError(66, part, parent);
   }
   return listbox;
 }

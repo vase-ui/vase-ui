@@ -1,6 +1,7 @@
 import { inject, type InjectionKey } from 'vue';
 import { fieldStateAttributes, type FieldState } from '../../field/control';
 import type { ChangeEventDetails } from '../changeEventDetails';
+import { createError } from '../createError';
 import type { DayPeriod, EditableSegmentType, NumericSegmentType } from './layout';
 
 export type DateTimeFieldGranularity = 'month' | 'day' | 'hour' | 'minute' | 'second';
@@ -94,14 +95,14 @@ export interface DateTimeFieldForPart {
   focusEmpty(): void;
 }
 
-export const dateTimeFieldKey: InjectionKey<DateTimeFieldForPart> = Symbol('date time field');
+export const dateTimeFieldKey: InjectionKey<DateTimeFieldForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'date time field' : undefined,
+);
 
 export function injectDateTimeField(): DateTimeFieldForPart {
   const field = inject(dateTimeFieldKey, null);
   if (!field) {
-    throw new Error(
-      'Vase UI: A part of a date or time field must be inside its root. Without a root the part has no value to show. Put the part inside <DateField.Root> or <TimeField.Root>.',
-    );
+    throw createError(18);
   }
   return field;
 }
@@ -112,4 +113,6 @@ export interface DateTimeFieldHost {
   groupId: string;
 }
 
-export const dateTimeFieldHostKey: InjectionKey<DateTimeFieldHost> = Symbol('date time field host');
+export const dateTimeFieldHostKey: InjectionKey<DateTimeFieldHost> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'date time field host' : undefined,
+);

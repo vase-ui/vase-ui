@@ -36,4 +36,6 @@ export interface CheckboxGroupForCheckbox {
   addCheckbox(checkbox: GroupCheckbox): () => void;
 }
 
-export const checkboxGroupKey: InjectionKey<CheckboxGroupForCheckbox> = Symbol('checkbox group');
+export const checkboxGroupKey: InjectionKey<CheckboxGroupForCheckbox> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'checkbox group' : undefined,
+);

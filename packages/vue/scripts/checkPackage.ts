@@ -204,6 +204,8 @@ async function main(): Promise<void> {
   const singlePart = await bundleConsumerFile('singlePart.ts');
   const multiPartRoot = await bundleConsumerFile('multiPartRoot.ts');
   const scriptedPart = await bundleConsumerFile('scriptedPart.ts');
+  const popupHandles = await bundleConsumerFile('popupHandles.ts');
+  const popupHandlesDevelopment = await bundleConsumerFile('popupHandles.ts', 'development');
   expectContent('singlePart.ts', singlePart, 'data-single-part', true);
   expectContent('singlePart.ts', singlePart, 'data-multi-part', false);
   expectContent('multiPartRoot.ts', multiPartRoot, 'data-multi-part-root', true);
@@ -219,6 +221,16 @@ async function main(): Promise<void> {
   expectContent('dist', builtCode, 'process.env.NODE_ENV', true);
   expectContent('singlePart.ts', singlePart, 'package-check development marker', false);
   expectContent('multiPartRoot.ts', multiPartRoot, 'package-check development marker', false);
+  // The text of an error, of a warning and of a symbol is for a development build only.
+  for (const text of [
+    'must be inside',
+    'found no mounted root',
+    'found no trigger',
+    'dialog portal',
+  ]) {
+    expectContent('popupHandles.ts', popupHandles, text, false);
+    expectContent('popupHandles.ts in development', popupHandlesDevelopment, text, true);
+  }
   execFileSync(process.execPath, [join(CONSUMER_DIRECTORY, 'node.mjs')], {
     stdio: 'inherit',
     env: { ...process.env, NODE_ENV: 'production' },

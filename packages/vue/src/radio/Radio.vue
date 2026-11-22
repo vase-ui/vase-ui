@@ -1,5 +1,6 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
+import { createError } from '../common/createError';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
@@ -124,9 +125,7 @@ function elementProps() {
 function injectGroup() {
   const group = inject(radioGroupKey, null);
   if (!group) {
-    throw new Error(
-      'Vase UI: <Radio> must be inside <RadioGroup>. A radio with no group cannot hold a choice. Put <Radio> inside <RadioGroup>.',
-    );
+    throw createError(52);
   }
   return group;
 }

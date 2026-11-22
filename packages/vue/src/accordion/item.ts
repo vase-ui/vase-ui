@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { AccordionRootChangeEventDetails } from './types';
 
 /** What `Accordion.Root` gives to its items. The properties are reactive. */
@@ -14,14 +15,14 @@ export interface AccordionRootForItem {
   change(value: unknown, open: boolean, details: AccordionRootChangeEventDetails): void;
 }
 
-export const accordionRootKey: InjectionKey<AccordionRootForItem> = Symbol('accordion root');
+export const accordionRootKey: InjectionKey<AccordionRootForItem> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'accordion root' : undefined,
+);
 
 export function injectAccordionRoot() {
   const root = inject(accordionRootKey, null);
   if (!root) {
-    throw new Error(
-      'Vase UI: <Accordion.Item> must be inside <Accordion.Root>. Without a root the item has no value to read. Put the item inside <Accordion.Root>.',
-    );
+    throw createError(1);
   }
   return root;
 }

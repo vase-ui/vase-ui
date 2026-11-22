@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { ScrollAreaRootState } from './types';
 
 export type Orientation = 'vertical' | 'horizontal';
@@ -57,17 +58,22 @@ export interface ScrollAreaForParts {
   addCorner(): () => void;
 }
 
-export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol('scroll area');
+export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'scroll area' : undefined,
+);
 /** What a scrollbar gives to its thumb. */
-export const scrollbarKey: InjectionKey<{ readonly orientation: Orientation }> =
-  Symbol('scroll area scrollbar');
+export const scrollbarKey: InjectionKey<{ readonly orientation: Orientation }> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'scroll area scrollbar' : undefined,
+);
 /** The mark that a viewport gives to its content. */
-export const viewportKey: InjectionKey<true> = Symbol('scroll area viewport');
+export const viewportKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'scroll area viewport' : undefined,
+);
 
 export function injectScrollArea(part: string) {
   const root = inject(scrollAreaKey, null);
   if (!root) {
-    throw new Error(`Vase UI ScrollArea: <ScrollArea.${part}> must be inside <ScrollArea.Root>.`);
+    throw createError(54, part);
   }
   return root;
 }
@@ -75,18 +81,14 @@ export function injectScrollArea(part: string) {
 export function injectScrollbar() {
   const scrollbar = inject(scrollbarKey, null);
   if (!scrollbar) {
-    throw new Error(
-      'Vase UI ScrollArea: <ScrollArea.Thumb> must be inside <ScrollArea.Scrollbar>.',
-    );
+    throw createError(55);
   }
   return scrollbar;
 }
 
 export function injectViewport() {
   if (!inject(viewportKey, false)) {
-    throw new Error(
-      'Vase UI ScrollArea: <ScrollArea.Content> must be inside <ScrollArea.Viewport>.',
-    );
+    throw createError(56);
   }
 }
 

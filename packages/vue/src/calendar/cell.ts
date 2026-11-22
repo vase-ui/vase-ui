@@ -1,5 +1,6 @@
 import { computed, inject, useAttrs, watch, type ComputedRef, type InjectionKey } from 'vue';
 import { useButton } from '../common/button';
+import { createError } from '../common/createError';
 import { useAsTag, useElement } from '../common/element';
 import { formatText } from '../common/date-time/text';
 import { isSameDay } from '../common/date-time/temporal';
@@ -12,7 +13,9 @@ export interface GridForCell {
   readonly columns: number;
 }
 
-export const gridKey: InjectionKey<GridForCell> = Symbol('calendar cell grid');
+export const gridKey: InjectionKey<GridForCell> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'calendar cell grid' : undefined,
+);
 
 /** `Calendar.MonthCell` and `Calendar.YearCell`. */
 export function useCell(
@@ -28,9 +31,7 @@ export function useCell(
   const calendar = injectCalendar();
   const grid = inject(gridKey, null);
   if (!grid) {
-    throw new Error(
-      'Vase UI: A month cell or a year cell of Calendar must be inside <Calendar.MonthGrid> or <Calendar.YearGrid>. Without the grid the cell has no row, so the keys cannot move the focus by a row. Put the cell inside its grid.',
-    );
+    throw createError(4);
   }
   const attrs = useAttrs();
   const { element, setElement } = useElement<HTMLElement>();

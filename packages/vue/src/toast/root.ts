@@ -1,4 +1,5 @@
 import { inject, provide, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { usePlacement } from '../popup/placement';
 import type { ToastObject } from './types';
 
@@ -18,7 +19,9 @@ export interface ToastRootForParts {
   measure(): void;
 }
 
-const rootKey: InjectionKey<ToastRootForParts> = Symbol('toast root');
+const rootKey: InjectionKey<ToastRootForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'toast root' : undefined,
+);
 
 export function provideToastRoot(root: ToastRootForParts) {
   provide(rootKey, root);
@@ -28,14 +31,14 @@ export function provideToastRoot(root: ToastRootForParts) {
 export function injectToastRoot(part: string) {
   const root = inject(rootKey, null);
   if (!root) {
-    throw new Error(
-      `Vase UI: <Toast.${part}> must be inside <Toast.Root>. Without a root the part has no toast. Put the part inside <Toast.Root>.`,
-    );
+    throw createError(69, part);
   }
   return root;
 }
 
-const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol('toast positioner');
+const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'toast positioner' : undefined,
+);
 
 export function providePositioner(placement: ReturnType<typeof usePlacement>) {
   provide(positionerKey, placement);
@@ -45,9 +48,7 @@ export function providePositioner(placement: ReturnType<typeof usePlacement>) {
 export function injectPositioner(part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <Toast.${part}> must be inside <Toast.Positioner>. Put the part inside <Toast.Positioner>.`,
-    );
+    throw createError(70, part);
   }
   return placement;
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, mergeProps, shallowRef, useAttrs, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
+import { createError } from '../common/createError';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -24,9 +25,7 @@ const LONG_PRESS_MOVE = 10;
 
 const injected = inject(menuKey, null);
 if (!injected || injected.kind !== 'context') {
-  throw new Error(
-    'Vase UI: <ContextMenu.Trigger> must be inside <ContextMenu.Root>. Without a root the trigger has no menu to open. Put the trigger inside <ContextMenu.Root>.',
-  );
+  throw createError(20);
 }
 const menu = injected;
 const { root } = menu;

@@ -9,6 +9,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { activeElement } from '../common/shadowDom';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
@@ -28,8 +29,9 @@ export interface MenuFilterProviderOptions {
   readonly autoHighlight: boolean | 'always';
 }
 
-export const filterProviderKey: InjectionKey<MenuFilterProviderOptions | null> =
-  Symbol('menu filter provider');
+export const filterProviderKey: InjectionKey<MenuFilterProviderOptions | null> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu filter provider' : undefined,
+);
 
 /** What a filterable menu gives to its parts. The properties are reactive. */
 export interface MenuFilterRoot {
@@ -303,9 +305,7 @@ function press(element: HTMLElement, event: KeyboardEvent) {
 /** The menu around the part, with its filter. A part of the filter with no filter throws an error. */
 export function injectFilter(menu: MenuContext, part: string) {
   if (!menu.filter) {
-    throw new Error(
-      `Vase UI: <Menu.${part}> must be in a menu inside <Menu.FilterProvider>. Without a provider the menu has no query. Put the root of the menu inside <Menu.FilterProvider>.`,
-    );
+    throw createError(31, part);
   }
   return menu.filter;
 }
@@ -315,7 +315,9 @@ export interface MenuGroupForItem {
   addItem(shown: () => boolean): () => void;
 }
 
-export const groupItemsKey: InjectionKey<MenuGroupForItem | null> = Symbol('menu group items');
+export const groupItemsKey: InjectionKey<MenuGroupForItem | null> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'menu group items' : undefined,
+);
 
 /**
  * Adds the shown state of an item to the filter and to its group. An item shows while its text

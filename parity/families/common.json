@@ -143,11 +143,6 @@
       "reason": "A re-export of `@floating-ui/utils/dom`. Base UI components import `isHTMLElement` from that package, and Vase UI does the same."
     },
     {
-      "upstream": "packages/utils/src/formatErrorMessage.ts",
-      "kind": "not-applicable",
-      "reason": "Only code that the Base UI build generates calls it: a Babel plugin replaces each error message with a code. The Vase UI build keeps the full messages."
-    },
-    {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
       "reason": "Vase UI has no store class. The root of a popup family holds its state as reactive state through `src/popup/root.ts`, and Vue tells each reader of a change. Each popup family tests that state in its own test file."
@@ -230,7 +225,7 @@
     {
       "upstream": "packages/utils/src/formatErrorMessage.test.ts",
       "kind": "not-applicable",
-      "reason": "Only code that the Base UI build generates calls `formatErrorMessage`. The Vase UI build keeps the full messages."
+      "reason": "A Vase UI error has one prefix and one address, and gives its values in the message. The cases test the message form of Base UI and a factory for another prefix and address."
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
@@ -338,6 +333,13 @@
       "destination": "packages/vue/src/popup/useScrollLock.ts",
       "member": "useScrollLock",
       "witness": "packages/vue/src/popup/useScrollLock.test.tsx"
+    },
+    {
+      "upstream": "packages/utils/src/formatErrorMessage.ts",
+      "relation": "merged-into",
+      "destination": "packages/vue/src/common/createError.ts",
+      "member": "createError",
+      "witness": "packages/vue/src/common/createError.node.test.ts"
     }
   ]
 }

@@ -9,6 +9,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { warn } from '../common/warn';
@@ -29,7 +30,7 @@ export class DialogHandle<Payload = unknown> extends PopupHandle<Payload> {
     const root = rootToOpen<Payload>(this, 'open');
     if (!root) return;
     const trigger = root.triggers.find((each) => each.id === triggerId);
-    if (triggerId !== null && !trigger) {
+    if (process.env.NODE_ENV !== 'production' && triggerId !== null && !trigger) {
       warn(
         `\`open()\` found no trigger with the id "${triggerId}". The popup opens with no trigger.`,
       );
@@ -74,8 +75,12 @@ export interface DialogForParts<Payload = unknown> {
   addBackdrop(): () => void;
 }
 
-export const dialogKey: InjectionKey<DialogForParts> = Symbol('dialog');
-const portalKey: InjectionKey<PopupRoot> = Symbol('dialog portal');
+export const dialogKey: InjectionKey<DialogForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'dialog' : undefined,
+);
+const portalKey: InjectionKey<PopupRoot> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'dialog portal' : undefined,
+);
 const contexts = new WeakMap<PopupRoot, DialogForParts>();
 
 /** The props of `Dialog.Root` and `AlertDialog.Root`, with their defaults. */
@@ -176,9 +181,7 @@ export function useDialogRoot<Payload>(
 export function injectDialog(part: string) {
   const context = inject(dialogKey, null);
   if (!context) {
-    throw new Error(
-      `Vase UI: <Dialog.${part}> must be inside <Dialog.Root>, <AlertDialog.Root> or <Drawer.Root>. Without a root the part has no dialog. Put the part inside one of these roots.`,
-    );
+    throw createError(24, part);
   }
   return context;
 }
@@ -200,9 +203,7 @@ export function useDialogTrigger(
 ) {
   const injected = inject(dialogKey, null);
   if (!injected && !props.handle) {
-    throw new Error(
-      `Vase UI: <${family}.Trigger> must be inside <${family}.Root>, or it must have a \`handle\`. Without a root the trigger has no dialog to open. Put the trigger inside <${family}.Root>, or pass a \`handle\`.`,
-    );
+    throw createError(25, family);
   }
   const handleRoot = useHandleRoot(() => props.handle);
   const context = computed(() => {
@@ -260,8 +261,6 @@ export function injectDialogPortal(
   family: 'Dialog' | 'Drawer' = 'Dialog',
 ) {
   if (inject(portalKey, null) !== context.root) {
-    throw new Error(
-      `Vase UI: <${family}.${part}> must be inside <${family}.Portal>. Without the portal the part is not above the page. Put the part inside <${family}.Portal>.`,
-    );
+    throw createError(26, family, part);
   }
 }

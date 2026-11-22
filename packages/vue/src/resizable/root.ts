@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type { Layout, PanelConstraints } from './layout';
 import type { RootMeasurement } from './measure';
 import type {
@@ -104,12 +105,14 @@ export interface ResizableRootForParts {
   resetPanel(id: string, move: HandleMove): boolean;
 }
 
-export const rootKey: InjectionKey<ResizableRootForParts> = Symbol('resizable root');
+export const rootKey: InjectionKey<ResizableRootForParts> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'resizable root' : undefined,
+);
 
 export function injectRoot(part: 'Panel' | 'Handle') {
   const root = inject(rootKey, null);
   if (!root) {
-    throw new Error(`Vase UI Resizable: <Resizable.${part}> must be inside <Resizable.Root>.`);
+    throw createError(53, part);
   }
   return root;
 }

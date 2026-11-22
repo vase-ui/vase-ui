@@ -7,6 +7,7 @@ import {
   type InjectionKey,
   type ShallowRef,
 } from 'vue';
+import { createError } from '../common/createError';
 import { useLayer, type Layer } from '../popup/layer';
 import type { usePlacement } from '../popup/placement';
 import {
@@ -47,11 +48,16 @@ export interface TooltipRootContext<Payload = unknown> {
   viewport: ShallowRef<ViewportSizes | null>;
 }
 
-const tooltipRootKey: InjectionKey<TooltipRootContext> = Symbol('tooltip root');
+const tooltipRootKey: InjectionKey<TooltipRootContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tooltip root' : undefined,
+);
 /** The placement that `Tooltip.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('tooltip positioner');
-const portalKey: InjectionKey<true> = Symbol('tooltip portal');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tooltip positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'tooltip portal' : undefined,
+);
 const contexts = new WeakMap<PopupRoot, TooltipRootContext>();
 
 /**
@@ -176,9 +182,7 @@ export function useTooltipRoot<Payload>(
 }
 
 function missingRoot(part: string): never {
-  throw new Error(
-    `Vase UI: <Tooltip.${part}> must be inside <Tooltip.Root>. Without a root the part has no tooltip. Put the part inside <Tooltip.Root>.`,
-  );
+  throw createError(72, part);
 }
 
 /** The root of the part. A part with no root throws an error that names it. */
@@ -193,9 +197,7 @@ export function injectTooltipRoot(part: string) {
 export function useTriggerRoot(handle: () => TooltipHandle | undefined) {
   const injected = inject(tooltipRootKey, null);
   if (!injected && !handle()) {
-    throw new Error(
-      'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`. Without a root the trigger has no tooltip to open. Put the trigger inside <Tooltip.Root>, or pass a `handle`.',
-    );
+    throw createError(73);
   }
   return computed(() => {
     const given = handle();
@@ -214,9 +216,7 @@ export function providePortal() {
 export function injectPositioner(part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <Tooltip.${part}> must be inside <Tooltip.Positioner>. Put the part inside <Tooltip.Positioner>.`,
-    );
+    throw createError(74, part);
   }
   return placement;
 }
@@ -224,8 +224,6 @@ export function injectPositioner(part: string) {
 /** `Tooltip.Positioner` needs a portal of its root. */
 export function injectPortal(part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <Tooltip.${part}> must be inside <Tooltip.Portal>. Put the part inside <Tooltip.Portal>.`,
-    );
+    throw createError(75, part);
   }
 }

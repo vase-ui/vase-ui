@@ -1,4 +1,5 @@
 import { computed, inject, provide, shallowRef, type InjectionKey, type ShallowRef } from 'vue';
+import { createError } from '../common/createError';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { PopupHandle, usePopupRoot, type PopupRoot } from '../popup/root';
@@ -40,11 +41,16 @@ export interface PopoverRootContext<Payload = unknown> {
   viewport: ShallowRef<ViewportSizes | null>;
 }
 
-const popoverRootKey: InjectionKey<PopoverRootContext> = Symbol('popover root');
+const popoverRootKey: InjectionKey<PopoverRootContext> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'popover root' : undefined,
+);
 /** The placement that `Popover.Positioner` gives to the popup and the arrow. */
-export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> =
-  Symbol('popover positioner');
-const portalKey: InjectionKey<true> = Symbol('popover portal');
+export const positionerKey: InjectionKey<ReturnType<typeof usePlacement>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'popover positioner' : undefined,
+);
+const portalKey: InjectionKey<true> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'popover portal' : undefined,
+);
 const contexts = new WeakMap<PopupRoot, PopoverRootContext>();
 
 export function usePopoverRoot<Payload>(
@@ -144,9 +150,7 @@ export function usePopoverRoot<Payload>(
 }
 
 function missingRoot(part: string): never {
-  throw new Error(
-    `Vase UI: <Popover.${part}> must be inside <Popover.Root>. Without a root the part has no popover. Put the part inside <Popover.Root>.`,
-  );
+  throw createError(42, part);
 }
 
 /** The root of the part. A part with no root throws an error that names it. */
@@ -161,9 +165,7 @@ export function injectPopoverRoot(part: string) {
 export function useTriggerRoot(handle: () => PopoverHandle | undefined) {
   const injected = inject(popoverRootKey, null);
   if (!injected && !handle()) {
-    throw new Error(
-      'Vase UI: <Popover.Trigger> must be inside <Popover.Root>, or it must have a `handle`. Without a root the trigger has no popover to open. Put the trigger inside <Popover.Root>, or pass a `handle`.',
-    );
+    throw createError(43);
   }
   const handleRoot = useHandleRoot(handle);
   return computed(() => {
@@ -182,9 +184,7 @@ export function providePortal() {
 export function injectPositioner(part: string) {
   const placement = inject(positionerKey, null);
   if (!placement) {
-    throw new Error(
-      `Vase UI: <Popover.${part}> must be inside <Popover.Positioner>. Put the part inside <Popover.Positioner>.`,
-    );
+    throw createError(44, part);
   }
   return placement;
 }
@@ -192,8 +192,6 @@ export function injectPositioner(part: string) {
 /** `Popover.Positioner` and `Popover.Backdrop` need a portal of their root. */
 export function injectPortal(part: string) {
   if (!inject(portalKey, false)) {
-    throw new Error(
-      `Vase UI: <Popover.${part}> must be inside <Popover.Portal>. Put the part inside <Popover.Portal>.`,
-    );
+    throw createError(45, part);
   }
 }

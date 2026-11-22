@@ -1,4 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
+import { createError } from '../common/createError';
 import type {
   TimeClockRootChangeEventDetails,
   TimeClockRootCommitEventDetails,
@@ -46,14 +47,14 @@ export interface ClockForPart {
   addNumber(element: Element, number: () => TimeClockFaceNumber): () => void;
 }
 
-export const clockKey: InjectionKey<ClockForPart> = Symbol('time clock');
+export const clockKey: InjectionKey<ClockForPart> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'time clock' : undefined,
+);
 
 export function injectClock(): ClockForPart {
   const clock = inject(clockKey, null);
   if (!clock) {
-    throw new Error(
-      'Vase UI: A part of TimeClock must be inside <TimeClock.Root>. Without a root the part has no time to show or to change. Put the part inside <TimeClock.Root>.',
-    );
+    throw createError(65);
   }
   return clock;
 }
