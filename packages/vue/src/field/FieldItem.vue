@@ -6,6 +6,7 @@ import {
   provide,
   shallowReactive,
   shallowRef,
+  triggerRef,
   useAttrs,
   useId,
 } from 'vue';
@@ -31,6 +32,8 @@ const controlId = useId();
 const { element, setElement } = useElement<HTMLDivElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 const control = shallowRef<FieldControl>();
+// The `id` prop of a control that no label rendered before, until the control mounts.
+const givenControlId = shallowRef<() => string | undefined>();
 const describers = shallowReactive<{ readonly id: string; readonly shown: boolean }[]>([]);
 const labels = shallowReactive<FieldLabel[]>([]);
 
@@ -46,6 +49,16 @@ provide(fieldKey, {
     return field?.name;
   },
   controlId,
+  get hasLabel() {
+    return labels.some((label) => label.native);
+  },
+  setGivenId(id) {
+    givenControlId.value = id;
+  },
+  onIdChange() {
+    // `control.id` can read the `id` of the element, which Vue does not track.
+    triggerRef(control);
+  },
   labelId: undefined,
   get labelledBy() {
     return joinIds(labels.filter((label) => !label.native));
@@ -57,6 +70,7 @@ provide(fieldKey, {
     return state.value;
   },
   setControl(added) {
+    givenControlId.value = undefined;
     control.value = added;
     return () => (control.value = undefined);
   },
@@ -71,7 +85,7 @@ provide(fieldPartsKey, {
     return state.value;
   },
   get controlId() {
-    return control.value?.id ?? controlId;
+    return control.value?.id ?? givenControlId.value?.() ?? controlId;
   },
   get validity() {
     return parts.validity;

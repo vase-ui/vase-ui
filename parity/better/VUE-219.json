@@ -1,0 +1,24 @@
+{
+  "id": "VUE-219",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/internals/labelable-provider/useLabelableId.ts",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox/root/CheckboxRoot.test.tsx#L122",
+    "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch"
+  ],
+  "behavior": "A control in a field keeps the `id` of the developer in the server HTML when no `Field.Label` of the field renders before it, and a label that renders after the control has that `id` in `for`. When a label renders before the control, the control has the generated id of the field until the hydration, because that label names the generated id. Then the control takes its `id`, and the label follows. In each order, the label names the control in the server HTML. Base UI gives each control in a field the generated id until the hydration, also where no label needs it.",
+  "dueWith": "packages/react/src/internals/labelable-provider/useLabelableId.ts",
+  "families": [
+    "field",
+    "radio-group",
+    "input",
+    "checkbox",
+    "switch",
+    "number-field",
+    "otp-field",
+    "select",
+    "combobox",
+    "autocomplete",
+    "date-field",
+    "time-field"
+  ]
+}

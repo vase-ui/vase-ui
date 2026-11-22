@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="Value = any">
 import { computed, mergeProps, nextTick, provide, shallowReactive, useAttrs, watch } from 'vue';
 import { createChangeEventDetails } from '../common/changeEventDetails';
+import { keepClickForChange } from '../common/checked';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { byDocumentOrder, useElement, type ElementSlotProps } from '../common/element';
 import { useModel } from '../common/model';
@@ -35,6 +36,7 @@ const { value, setOwn, resetValue } = useModel<Value | undefined>(
 const radios = shallowReactive<GroupRadio[]>([]);
 // The last reset that the group followed. Each radio of the group tells the group a reset.
 let lastReset: Event | undefined;
+const clicks = keepClickForChange();
 // The radio that had the focus at a key press of an arrow with Ctrl, Alt or Meta, until the next
 // task.
 let modifiedArrowFrom: HTMLInputElement | undefined;
@@ -142,6 +144,7 @@ function onClick(event: MouseEvent, readonly: boolean) {
     event.preventDefault();
     return;
   }
+  clicks.keep(event);
   // WebKit selects the next radio with a click at an arrow key with Ctrl, Alt or Meta, and
   // Chromium and Firefox do nothing. The focus goes back after the move of WebKit.
   const from = modifiedArrowFrom;
@@ -151,7 +154,7 @@ function onClick(event: MouseEvent, readonly: boolean) {
 }
 
 function select(next: Value, event: Event) {
-  const details = createChangeEventDetails('none', event);
+  const details = createChangeEventDetails('none', clicks.eventOf(event));
   emit('valueChange', next, details);
   if (!details.isCanceled) {
     setOwn(next);

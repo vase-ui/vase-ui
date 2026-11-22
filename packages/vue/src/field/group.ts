@@ -66,6 +66,9 @@ export function useFieldGroup(group: {
         return field.name;
       },
       controlId: undefined,
+      hasLabel: false,
+      setGivenId() {},
+      onIdChange() {},
       labelId: undefined,
       labelledBy: undefined,
       get describedBy() {

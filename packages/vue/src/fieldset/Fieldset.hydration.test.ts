@@ -15,22 +15,22 @@ describe('server render and hydration', () => {
     expect(root.querySelector('fieldset')).toHaveAttribute('disabled');
     const legendId = root.querySelector('fieldset > div')!.id;
     expect(legendId).not.toBe('');
-    expect(root.querySelector('#company')!.parentElement).toHaveAttribute('data-disabled');
-    expect(root.querySelector('#in-legend')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('[name=company]')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('[name=in-legend]')!.parentElement).toHaveAttribute('data-disabled');
     expect(root.querySelector('#alone')).toHaveAttribute('data-state-disabled');
     hydrate(PartsInFieldset, props, root);
     await settle();
     expect(root.querySelector('fieldset > div')!.id).toBe(legendId);
-    expect(root.querySelector('#company')!.parentElement).toHaveAttribute('data-disabled');
-    expect(root.querySelector('#in-legend')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('[name=company]')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('[name=in-legend]')!.parentElement).toHaveAttribute('data-disabled');
   });
 
   test('in a native disabled fieldset, data-disabled comes after the mount', async () => {
     const props = { scene: { disabled: true }, native: true };
     const root = await renderOnServer('PartsInFieldset', props);
-    const field = root.querySelector('#company')!.parentElement!;
+    const field = root.querySelector('[name=company]')!.parentElement!;
     expect(field).not.toHaveAttribute('data-disabled');
-    expect(root.querySelector('#company')).toBeDisabled();
+    expect(root.querySelector('[name=company]')).toBeDisabled();
     hydrate(PartsInFieldset, props, root);
     await settle();
     expect(field).toHaveAttribute('data-disabled');
@@ -47,12 +47,12 @@ describe('server render and hydration', () => {
   test('in a disabled root that renders a div, an input is disabled in the server HTML and after the mount, with a field and with none', async () => {
     const props = { scene: { disabled: true }, tag: 'div' };
     const root = await renderOnServer('FieldsetElementReplaced', props);
-    const inputs = ['#inside', '#in-field'].map((id) => root.querySelector(id)!);
+    const inputs = ['#inside', '[name=in-field]'].map((id) => root.querySelector(id)!);
     for (const input of inputs) expect(input).toBeDisabled();
     hydrate(FieldsetElementReplaced, props, root);
     await settle();
     for (const input of inputs) expect(input).toBeDisabled();
-    expect(root.querySelector('#in-field')!.parentElement).toHaveAttribute('data-disabled');
+    expect(root.querySelector('[name=in-field]')!.parentElement).toHaveAttribute('data-disabled');
   });
 });
 

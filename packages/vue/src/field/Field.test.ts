@@ -209,7 +209,7 @@ describe('the state', () => {
 });
 
 describe('a disabled field', () => {
-  test('disables the control, and has no validity', async () => {
+  test('VUE-211: disables the control, and has no validity', async () => {
     const root = reactive({ disabled: true, invalid: true, validationMode: 'change' as const });
     const parts = await mountField({ root, input: { disabled: false, required: true } });
     expect(parts.input.matches(':disabled')).toBe(true);
@@ -424,6 +424,37 @@ describe('one validation', () => {
     expect(validated).toEqual([]);
   });
 
+  test('a read-only control shows `invalid` and an error of a form, and `validate` does not run', async () => {
+    const validated: unknown[] = [];
+    const root = reactive({
+      ...recordValidate(validated, { validationMode: 'blur' }),
+      invalid: true,
+    });
+    const { exposed, field, input } = await mountField({
+      root,
+      input: { readonly: true, required: true },
+    });
+    expect(field).toHaveAttribute('data-invalid');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    root.invalid = false;
+    await nextTick();
+    input.focus();
+    await leave(input);
+    exposed.field.validate();
+    await settle();
+    expect(validated).toEqual([]);
+    expect(field).not.toHaveAttribute('data-invalid');
+
+    const inForm = mount(FieldsInForm, {
+      form: { errors: { name: 'Taken.' } },
+      fields: [{ root: { name: 'name' }, input: { readonly: true } }],
+    }).root;
+    await nextTick();
+    expect(inForm.querySelector('input')).toHaveAttribute('aria-invalid', 'true');
+    expect(inForm.querySelector('form > div')).toHaveAttribute('data-invalid');
+    expect(inForm.querySelector('form > div > div')).toHaveTextContent('Taken.');
+  });
+
   test('a message of validate goes on the element, with a line feed between two lines', async () => {
     const { exposed, input } = await mountField({
       root: { validate: (value: unknown) => (value === 'bad' ? 'One\r\ntwo' : null) },
@@ -439,6 +470,77 @@ describe('one validation', () => {
 });
 
 describe('when a field validates', () => {
+  test('VUE-216: Enter in a field with no form validates nothing; validate() validates', async () => {
+    const validated: unknown[] = [];
+    const { exposed, input } = await mountField({
+      root: recordValidate(validated),
+      input: { defaultValue: 'a' },
+    });
+    input.focus();
+    await userEvent.keyboard('{Enter}');
+    await settle();
+    expect(validated).toEqual([]);
+    exposed.field.validate();
+    expect(validated).toEqual(['a']);
+  });
+
+  test('VUE-217: blur mode: a blur listener that empties a required control shows valueMissing', async () => {
+    const input = vModel('');
+    input.required = true;
+    input.onBlur = () => (input.modelValue = '');
+    const { field, error } = await mountField({
+      root: { validationMode: 'blur' },
+      input,
+      errors: [{ match: 'valueMissing' }],
+    });
+    await typeAtEnd(field.querySelector('input')!, 'foo');
+    await leave(field.querySelector('input')!);
+    await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
+    expect(error()).not.toBeNull();
+  });
+
+  test('a write of the parent while the field is invalid in blur mode makes it valid at once', async () => {
+    const input = vModel('bad');
+    const { field, input: element } = await mountField({
+      root: {
+        validationMode: 'blur',
+        validate: (value: unknown) => (value === 'bad' ? 'Bad.' : null),
+      },
+      input,
+    });
+    element.focus();
+    await leave(element);
+    await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
+    input.modelValue = 'good';
+    await settle();
+    expect(field).toHaveAttribute('data-valid');
+    expect(element).not.toHaveAttribute('aria-invalid');
+  });
+
+  test('blur mode: a blur listener that writes a value while the field is invalid validates that value', async () => {
+    const input = vModel('bad');
+    let write = false;
+    input.onBlur = () => {
+      if (write) input.modelValue = 'worse';
+    };
+    const { field, input: element } = await mountField({
+      root: {
+        validationMode: 'blur',
+        validate: (value: unknown) => (value === 'good' ? null : `Not ${String(value)}.`),
+      },
+      input,
+    });
+    element.focus();
+    await leave(element);
+    await waitFor(() => expect(field).toHaveAttribute('data-invalid'));
+    write = true;
+    element.focus();
+    await leave(element);
+    expect(element.value).toBe('worse');
+    expect(field).toHaveAttribute('data-invalid');
+    expect(field).toHaveTextContent('Not worse.');
+  });
+
   test('submit: an edit or a blur starts no validation', async () => {
     const validated: unknown[] = [];
     const { input } = await mountField({ root: recordValidate(validated) });

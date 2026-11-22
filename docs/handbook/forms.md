@@ -121,6 +121,8 @@ Give `name` to `<Field.Root>` to include the value of the control that it wraps 
 
 <<< ../examples/forms/FieldName.vue{9}
 
+A control that a `Teleport` moves out of the form needs the `form` attribute with the `id` of the form.
+
 ## Submitting data
 
 `Form` emits `submit` only when each field is valid. The first argument is the native `SubmitEvent`. While `Form` has a `submit` listener, it prevents the native submit, so the page stays. Send the `FormData` of the form in the listener:

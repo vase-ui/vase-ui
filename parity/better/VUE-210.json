@@ -1,0 +1,11 @@
+{
+  "id": "VUE-210",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox/root/CheckboxRoot.tsx#L96",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/checkbox-group/CheckboxGroup.test.tsx#L1283",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set"
+  ],
+  "behavior": "A checkbox takes its place in the value of a `CheckboxGroup` from its `value` prop only. A checkbox with no `value` is not an item of the group: it keeps its own checked state, and the group value does not change with it. In a native form, the checkboxes of a group share one `name`, and `value` tells them apart, so a `name` cannot be the value of an item. Base UI uses the `name` of a checkbox with no `value` as its value in the group.",
+  "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
+  "families": ["checkbox", "checkbox-group"]
+}

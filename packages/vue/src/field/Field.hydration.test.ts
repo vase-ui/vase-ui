@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick } from 'vue';
+import FieldControlIds from '../../test/fixtures/FieldControlIds.vue';
 import FieldPartsReplaced from '../../test/fixtures/FieldPartsReplaced.vue';
 import FieldWithInput from '../../test/fixtures/FieldWithInput.vue';
 import PartsAfterControl from '../../test/fixtures/PartsAfterControl.vue';
 import PartsBeforeControl from '../../test/fixtures/PartsBeforeControl.vue';
-import { hydrate, renderOnServer } from '../../test/render';
+import { hydrate, renderOnServer, settle } from '../../test/render';
 
 describe('server render and hydration', () => {
   test('the server HTML has the first state on the parts, and the hydration gives the rest', async () => {
@@ -79,5 +80,56 @@ describe('server render and hydration', () => {
     hydrate(PartsAfterControl, props, root);
     await nextTick();
     expect(group).toHaveAttribute('aria-describedby', 'description error');
+  });
+});
+
+describe.each([
+  ['input', 'input:not([type=hidden])'],
+  ['input-element-slot', 'input'],
+  ['checkbox', 'input[type=checkbox]'],
+  ['switch', '[role=switch]'],
+  ['radio', 'input[type=radio]'],
+  ['number-field', 'input:not([type=hidden])'],
+  ['select', '[role=combobox]'],
+  ['select-trigger', '[role=combobox]'],
+  ['combobox', '[role=combobox]'],
+  ['date-field', '[role=spinbutton]'],
+  ['otp-field', 'input:not([type=hidden])'],
+])('VUE-219: the id prop of a control in a field: %s', (control, selector) => {
+  async function render(label: string) {
+    const props = { control, label };
+    const root = await renderOnServer('FieldControlIds', props);
+    const element = root.querySelector<HTMLElement>(selector)!;
+    const serverId = element.id;
+    const serverFor = root.querySelector('label')?.htmlFor;
+    hydrate(FieldControlIds, props, root);
+    await settle();
+    expect(root.querySelector(selector)).toBe(element);
+    return { root, element, serverId, serverFor };
+  }
+
+  test.each(['before', 'around'])(
+    'a label %s the control names the id of the field in the server HTML; after the hydration the control has its id, and the label follows',
+    async (label) => {
+      const { root, element, serverId, serverFor } = await render(label);
+      expect(serverId).not.toBe('own');
+      expect(serverFor).toBe(serverId);
+      expect(element.id).toBe('own');
+      expect(root.querySelector('label')).toHaveAttribute('for', 'own');
+    },
+  );
+
+  test('a label after the control names the id of the control in the server HTML', async () => {
+    const { root, element, serverId, serverFor } = await render('after');
+    expect(serverId).toBe('own');
+    expect(serverFor).toBe('own');
+    expect(element.id).toBe('own');
+    expect(root.querySelector('label')).toHaveAttribute('for', 'own');
+  });
+
+  test('with no label, the server HTML has the id of the control', async () => {
+    const { element, serverId } = await render('none');
+    expect(serverId).toBe('own');
+    expect(element.id).toBe('own');
   });
 });

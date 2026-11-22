@@ -4,9 +4,14 @@ import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
-import { givenId } from '../common/id';
 import { useModel } from '../common/model';
-import { controlAttributes, fieldKey, joinDescribedBy, useFieldControl } from '../field/control';
+import {
+  controlAttributes,
+  fieldKey,
+  joinDescribedBy,
+  useControlId,
+  useFieldControl,
+} from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import type { InputEmits, InputProps, InputState } from './types';
 
@@ -32,7 +37,11 @@ const { value, setOwn, resetValue } = useModel(
   String(props.modelValue ?? props.defaultValue ?? ''),
 );
 
-const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const elementId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 const inDisabledFieldset = useInDisabledFieldset(element);
 const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
 const state = computed<InputState>(() => ({

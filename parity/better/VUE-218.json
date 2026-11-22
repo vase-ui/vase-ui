@@ -1,0 +1,10 @@
+{
+  "id": "VUE-218",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/fieldset/legend/FieldsetLegend.test.tsx#L79",
+    "https://www.w3.org/TR/wai-aria-1.2/#aria-labelledby"
+  ],
+  "behavior": "`Fieldset.Legend` renders a `<div>` with an `id`, its own or a generated one, and `Fieldset.Root` names its group with that `id` in `aria-labelledby`. The legend needs nothing else from the root, so a legend with no root renders with its `id` and gives no error. A developer can then name their own group with it. Base UI throws an error.",
+  "dueWith": "packages/react/src/fieldset/legend/FieldsetLegend.tsx",
+  "families": ["fieldset"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "VUE-212",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/switch/root/SwitchRoot.test.tsx#L117",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/switch/",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission"
+  ],
+  "behavior": "Space changes a switch. Enter does not change it: the switch is a native checkbox, and Enter on it gives its form the implicit submission of the browser, as Enter on each native checkbox does. The WAI-ARIA Authoring Practices give Enter as optional for a switch. Base UI changes the switch at Enter.",
+  "dueWith": "packages/react/src/switch/root/SwitchRoot.tsx",
+  "families": ["switch"]
+}

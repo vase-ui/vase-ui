@@ -21,6 +21,31 @@ export interface CheckedOwner {
 }
 
 /**
+ * Keeps the `click` of a press for the `change` that follows it. The browser sends `click`, then
+ * `input`, then `change` in one task for each change of a checkbox or a radio by the user: a
+ * press, Space, a label or an arrow key. The `click` has the modifier keys, and the `change` does
+ * not. A `change` with no `click` before it in its task, such as one that a script sends, is the
+ * event of its details.
+ */
+export function keepClickForChange() {
+  let click: Event | undefined;
+  return {
+    keep(event: Event) {
+      click = event;
+      setTimeout(() => {
+        if (click === event) click = undefined;
+      });
+    },
+    /** The event for the details of `change`. */
+    eventOf(change: Event) {
+      const event = click ?? change;
+      click = undefined;
+      return event;
+    },
+  };
+}
+
+/**
  * The checked state of a native checkbox that a part renders: `Checkbox` and `Switch`. It gives
  * the model, a change that a listener can cancel, read-only, `required`, `uncheckedValue`, a
  * native reset and the value of the field.
@@ -71,13 +96,16 @@ export function useChecked(options: {
     event.formData.append(el.name, value);
   });
 
+  const clicks = keepClickForChange();
+
   function onClick(event: Event) {
     // The browser keeps the state and fires no `change`.
     if (options.readonly()) event.preventDefault();
+    else clicks.keep(event);
   }
 
   function onChange(event: Event) {
-    const details = createChangeEventDetails('none', event);
+    const details = createChangeEventDetails('none', clicks.eventOf(event));
     const group = owner();
     const pressed = (event.currentTarget as HTMLInputElement).checked;
     const press = group?.press(pressed);

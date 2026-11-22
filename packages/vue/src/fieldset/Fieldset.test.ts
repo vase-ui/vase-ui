@@ -40,7 +40,7 @@ describe('the parts', () => {
     expect(root.querySelector('input')).toBeDisabled();
   });
 
-  test('the legend is a div with its id or a generated one; a legend with no root gives no error', async () => {
+  test('VUE-218: the legend is a div with its id or a generated one; a legend with no root gives no error', async () => {
     const attrs = reactive<Record<string, unknown>>({});
     const { root, exposed } = mount(FieldsetParts, { legend: attrs });
     await nextTick();

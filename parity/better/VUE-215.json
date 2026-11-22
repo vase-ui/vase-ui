@@ -1,0 +1,9 @@
+{
+  "id": "VUE-215",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/radio-group/RadioGroup.test.tsx#L788"
+  ],
+  "behavior": "A radio group and a checkbox group are one control each. The field becomes touched when the focus leaves the group. A move of the focus from one radio to another in the group, also by an arrow key that selects, is not a leave, so a field in `blur` mode does not validate in the middle of a selection by keyboard. Base UI marks the field touched at a move in the group.",
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx",
+  "families": ["radio-group", "checkbox-group", "field"]
+}

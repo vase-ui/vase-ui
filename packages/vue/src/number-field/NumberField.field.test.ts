@@ -531,3 +531,30 @@ describe('VUE-112: a disabled fieldset', () => {
     expect(input.value).toBe('6');
   });
 });
+
+describe('a change of the parent', () => {
+  test('takes back the error of a blur that put the value of the parent back', async () => {
+    const root = reactive<Attrs>({
+      modelValue: 5,
+      max: 5,
+      'onUpdate:modelValue': (value: number | null) => (root.modelValue = value),
+    });
+    const { input } = await mountInField({
+      field: {
+        name: 'quantity',
+        validationMode: 'blur',
+        validate: (value: unknown) => (value === 5 ? 'error' : null),
+      },
+      root,
+    });
+    input.focus();
+    input.select();
+    await userEvent.keyboard('9');
+    await leave(input);
+    expect(input.value).toBe('5');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    root.modelValue = 3;
+    await settle();
+    expect(input).not.toHaveAttribute('aria-invalid');
+  });
+});

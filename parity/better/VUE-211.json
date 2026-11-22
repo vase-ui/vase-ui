@@ -1,0 +1,14 @@
+{
+  "id": "VUE-211",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/root/FieldRoot.tsx#L107-L110",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/error/FieldError.tsx#L49",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/root/FieldRoot.test.tsx#L530",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/root/FieldRoot.test.tsx#L553",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/root/SelectRoot.test.tsx#L1842",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#barred-from-constraint-validation"
+  ],
+  "behavior": "A disabled field has no validity from each source: `valid` is `null`, no part has `data-invalid`, the control has no `aria-invalid`, and no `Field.Error` shows. This holds for a disabled `Field.Root`, for a field in a disabled fieldset and for a control that its own `disabled` prop disables, also with the `invalid` prop and with an error of a `Form`. A disabled control gives its form no value, and `:invalid` of CSS never matches it, so one style rule covers the two states. The browser and `validate` do not validate a read-only control, because the HTML Standard bars it from constraint validation. A read-only control shows the `invalid` prop and an error of a form, because the form submits its value. Base UI keeps `data-invalid` on a disabled field for the `invalid` prop and for an error of a form, and it shows the error of a form in a field whose control is disabled.",
+  "dueWith": "packages/react/src/field/root/FieldRoot.tsx",
+  "families": ["field", "form"]
+}

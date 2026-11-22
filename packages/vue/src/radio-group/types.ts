@@ -41,7 +41,10 @@ export interface RadioGroupProps<Value = any>
 }
 
 export interface RadioGroupEmits<Value = any> {
-  /** The user selects a radio. `details.cancel()` keeps the value as it was. */
+  /**
+   * The user selects a radio. `details.event` is the native `click` event of the press.
+   * `details.cancel()` keeps the value as it was.
+   */
   valueChange: [value: Value, details: RadioGroupChangeEventDetails];
   /** Comes after the change event with the new value, unless a listener cancels the change. `v-model` uses it. */
   'update:modelValue': [value: Value | undefined];

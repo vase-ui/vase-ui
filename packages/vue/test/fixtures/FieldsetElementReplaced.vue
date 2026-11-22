@@ -25,7 +25,7 @@ defineProps({
         <Input id="inside" aria-label="Inside" />
         <Field.Root>
           <Field.Label>In a field</Field.Label>
-          <Input id="in-field" />
+          <Input id="in-field" name="in-field" />
         </Field.Root>
       </component>
     </template>

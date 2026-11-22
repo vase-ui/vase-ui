@@ -1,0 +1,13 @@
+{
+  "id": "VUE-216",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/control/FieldControl.test.tsx#L455",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/control/FieldControl.test.tsx#L478",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/control/FieldControl.test.tsx#L506",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/field/control/FieldControl.test.tsx#L534",
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#implicit-submission"
+  ],
+  "behavior": "Enter has no meaning of its own in a field. Enter in a text control submits its form as the browser does, and the submit validates the field one time. Where the browser does not submit (a field with no form, a form whose submit button is disabled), nothing validates. A developer validates at a key with `validate()` of `Field.Root`. Base UI validates the field at Enter also when no submit occurs.",
+  "dueWith": "packages/react/src/field/control/FieldControl.tsx",
+  "families": ["field", "input"]
+}

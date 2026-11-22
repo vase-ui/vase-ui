@@ -1,4 +1,6 @@
-import { watch, type InjectionKey, type Ref } from 'vue';
+import { computed, watch, type ComputedRef, type InjectionKey, type Ref } from 'vue';
+import { useIsHydrated } from '../common/hydration';
+import { givenId } from '../common/id';
 
 export interface FieldState {
   /** The focus left the control one time or more. */
@@ -66,6 +68,15 @@ export interface FieldForControl {
   readonly name: string | undefined;
   /** The id of a control that has no `id` prop. */
   readonly controlId: string | undefined;
+  /**
+   * A `Field.Label` that names the control by `for` rendered. In the `setup` of a control, that
+   * label comes before the control in the document.
+   */
+  readonly hasLabel: boolean;
+  /** Gives the `id` prop of the control, for a label that renders after the control. */
+  setGivenId(id: () => string | undefined): void;
+  /** The element of the control got a new `id`. A label reads the `id` again. */
+  onIdChange(): void;
   /** The id of the label, for a group that a `<label for>` cannot name. */
   readonly labelId: string | undefined;
   /** The ids of the labels that are not a `<label>`, which name the control with no `for`. */
@@ -146,6 +157,30 @@ export function joinDescribedBy(attrs: Record<string, unknown>, field: FieldForC
   );
   ids.delete('');
   return { ...attrs, 'aria-describedby': [...ids].join(' ') || undefined };
+}
+
+/**
+ * The id of the element of a control: its `id` prop, else the id of its field, else `fallback`. A
+ * label that rendered before the control names the id of the field in the server HTML. So then the
+ * control takes its `id` prop only after its mount, and the label follows.
+ */
+export function useControlId(
+  field: FieldForControl | null,
+  id: () => string | undefined,
+  fallback: () => string,
+): ComputedRef<string> {
+  if (!field?.hasLabel) {
+    field?.setGivenId(() => givenId(id()));
+    return computed(() => givenId(id()) ?? field?.controlId ?? fallback());
+  }
+  const mounted = useIsHydrated();
+  // Some controls give the field the `id` of their element, which Vue does not track. So the label
+  // reads it again after the render of the `id` prop.
+  watch(mounted, () => field.onIdChange(), { flush: 'post' });
+  return computed(() => {
+    const given = givenId(id());
+    return given && mounted.value ? given : (field.controlId ?? fallback());
+  });
 }
 
 /** Makes the element the control of its field while the element is mounted. */

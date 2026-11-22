@@ -111,8 +111,23 @@ describe('a press', () => {
     boxes[0]!.click();
     expect(log).toEqual(['checkedChange true', 'update true']);
     expect(details[0]!.reason).toBe('none');
-    expect(details[0]!.event.type).toBe('change');
+    expect(details[0]!.event.type).toBe('click');
     expect(details[0]!.isCanceled).toBe(false);
+  });
+
+  test('details.event is the click of the press, with its modifier keys; a change that a script sends is its own event', async () => {
+    const details: CheckboxChangeEventDetails[] = [];
+    const box = record([]);
+    box.onCheckedChange = (_: boolean, given: CheckboxChangeEventDetails) => details.push(given);
+    const { boxes } = await mountBoxes([box]);
+    await userEvent.keyboard('{Shift>}');
+    await userEvent.click(boxes[0]!);
+    await userEvent.keyboard('{/Shift}');
+    expect(details[0]!.event.type).toBe('click');
+    expect((details[0]!.event as MouseEvent).shiftKey).toBe(true);
+    const change = new Event('change', { bubbles: true });
+    boxes[0]!.dispatchEvent(change);
+    expect(details[1]!.event).toBe(change);
   });
 
   test('a controlled checkbox shows the prop again when the parent does not write it, and follows v-model', async () => {

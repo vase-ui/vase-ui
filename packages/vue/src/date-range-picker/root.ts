@@ -70,6 +70,9 @@ export function useRangeControl(
       },
       name: undefined,
       controlId: undefined,
+      hasLabel: false,
+      setGivenId() {},
+      onIdChange() {},
       labelId: undefined,
       labelledBy: undefined,
       get describedBy() {

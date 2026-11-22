@@ -255,6 +255,27 @@ describe('the fill', () => {
     expect(text.value).toBe('a');
   });
 
+  test('a fill does nothing in a read-only select in a field, and the error of the form stays', async () => {
+    const changes: unknown[] = [];
+    const { text } = await mountField({
+      vaseForm: true,
+      form: { errors: { letter: 'Taken.' } },
+      field: { name: 'letter' },
+      root: {
+        autocomplete: 'on',
+        readonly: true,
+        onValueChange: (value: unknown) => changes.push(value),
+      },
+    });
+    expect(document.getElementById('error')).toHaveTextContent('Taken.');
+    expect(trigger()).toHaveAttribute('aria-invalid', 'true');
+    fill(text, 'a');
+    await settle();
+    expect(changes).toEqual([]);
+    expect(text.value).toBe('');
+    expect(document.getElementById('error')).toHaveTextContent('Taken.');
+  });
+
   test('a fill does nothing in a read-only select', async () => {
     const { text } = await mountField({
       noField: true,

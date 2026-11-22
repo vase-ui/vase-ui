@@ -3,8 +3,13 @@ import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useFormReset } from '../common/formEvents';
-import { givenId } from '../common/id';
-import { fieldKey, fieldStateAttributes, joinDescribedBy, useFieldControl } from '../field/control';
+import {
+  fieldKey,
+  fieldStateAttributes,
+  joinDescribedBy,
+  useControlId,
+  useFieldControl,
+} from '../field/control';
 import { useInDisabledFieldset } from '../fieldset/part';
 import { radioGroupKey } from '../radio-group/radio';
 import type { RadioProps, RadioState } from './types';
@@ -26,7 +31,11 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
 
-const elementId = computed(() => givenId(props.id) ?? field?.controlId ?? generatedId);
+const elementId = useControlId(
+  field,
+  () => props.id,
+  () => generatedId,
+);
 const checked = computed(() => group.value === props.value);
 const isDisabled = computed(
   () => !!field?.disabled || group.disabled || props.disabled || inDisabledFieldset.value,
