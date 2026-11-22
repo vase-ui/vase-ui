@@ -326,6 +326,23 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
   const activeTrigger = computed(() =>
     activeTriggerId.value === null ? null : (activeEntry.value?.element ?? lastTrigger.value),
   );
+  // A new `id` of the active trigger of an open popup keeps that trigger active. A family with a
+  // state of its own, such as the value of a navigation menu, follows the id itself.
+  if (!('state' in options)) {
+    watch(
+      () =>
+        triggers.find((trigger) => !!trigger.element && trigger.element === lastTrigger.value)?.id,
+      (id) => {
+        const previous = activeTriggerId.value;
+        if (id === undefined || previous === null || id === previous || !state.open()) return;
+        // The old id names no trigger, so the active trigger has a new id.
+        if (triggers.some((trigger) => trigger.id === previous)) return;
+        const entry = triggers.find((trigger) => trigger.id === id);
+        if (entry) state.set(true, entry);
+      },
+      { flush: 'sync' },
+    );
+  }
   // The popup keeps its payload while its active trigger is out of the DOM.
   const lastPayload = shallowRef<{ id: string; payload: unknown }>();
   watch(

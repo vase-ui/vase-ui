@@ -19,6 +19,8 @@ const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const state = computed<MenuListState>(() => ({}));
 
+const elementId = computed(() => givenId(props.id) ?? generatedId);
+
 // The cleanup runs also at the unmount, where Vue stops the watcher before it clears the ref.
 watch(
   element,
@@ -30,15 +32,26 @@ watch(
   },
   { flush: 'sync' },
 );
+watch(
+  [element, elementId],
+  ([list, listId], _, onCleanup) => {
+    if (!list) return;
+    menu.ids.list = listId;
+    onCleanup(() => {
+      if (menu.ids.list === listId) menu.ids.list = undefined;
+    });
+  },
+  { flush: 'sync' },
+);
 
 function elementProps() {
   const named = 'aria-label' in attrs || 'aria-labelledby' in attrs;
   return mergeProps(
     {
-      id: givenId(props.id) ?? generatedId,
+      id: elementId.value,
       role: 'menu',
       tabindex: -1,
-      'aria-labelledby': named ? undefined : menu.root.activeTrigger?.id || undefined,
+      'aria-labelledby': named ? undefined : menu.root.activeTriggerId || undefined,
       'aria-orientation': menu.orientation === 'horizontal' ? 'horizontal' : undefined,
     },
     attrs,

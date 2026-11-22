@@ -6,7 +6,8 @@ import { ownerWindow } from '../common/owner';
 import { useListItem } from '../list/list';
 import { addBarTrigger, menubarKey } from '../menubar/menu';
 import { usePopupHover } from '../popup/hover';
-import { usePopupTrigger } from '../popup/trigger';
+import type { InteractionType } from '../popup/root';
+import { isVirtualPress, usePopupTrigger } from '../popup/trigger';
 import { useTriggerMenu, type MenuHandle } from './root';
 import type { MenuTriggerProps, MenuTriggerState } from './types';
 
@@ -68,16 +69,21 @@ const state = computed<MenuTriggerState>(() => ({
   disabled: trigger.button.disabled.value,
 }));
 
-// A key click knows itself by the key before it.
+// A key click knows itself by the key before it. The click of a press of a screen reader acts as a
+// key click: the menu opens with its first item highlighted.
 let keyClick = false;
 // The focus of a touch opened the menu of the bar, and the click of that touch comes next.
 let focusOpened = false;
+// The pointer of the press on the trigger, until its click. The focus of the press opens the menu
+// of the bar for that input, so that a touch locks the scroll only for a menu as wide as the view.
+let pressType: InteractionType = '';
 
 let openedAtPress = false;
 function onPointerdown(event: PointerEvent) {
   // A key that a listener prevented gave no click, and the click of this press is no key click.
-  keyClick = false;
+  keyClick = isVirtualPress(event);
   focusOpened = false;
+  pressType = event.pointerType as InteractionType;
   const menu = context.value;
   const wasOpen = trigger.open.value;
   trigger.onPointerdown(event);
@@ -94,6 +100,7 @@ function onMousedown(event: MouseEvent) {
 }
 
 function onClick(event: MouseEvent) {
+  pressType = '';
   if (focusOpened && event.detail !== 0) {
     focusOpened = false;
     return;
@@ -149,18 +156,18 @@ function onBarPointermove(event: PointerEvent) {
 function onBarFocus(event: FocusEvent) {
   if (!otherMenuOpen()) return;
   focusOpened = true;
-  root()?.request(true, 'trigger-focus', event, element.value);
+  root()?.request(true, 'trigger-focus', event, element.value, pressType || undefined);
 }
 
 function elementProps() {
   const menu = context.value;
   const open = trigger.open.value;
-  const controlled = open ? (menu?.listElement.value ?? menu?.root.popup) : null;
+  const controlled = open ? (menu?.ids.list ?? menu?.ids.popup) : undefined;
   const own: Record<string, unknown> = {
     id: elementId.value,
     'aria-haspopup': menu?.filter ? 'dialog' : 'menu',
     'aria-expanded': open ? 'true' : 'false',
-    'aria-controls': controlled?.id || undefined,
+    'aria-controls': controlled || undefined,
     'data-pressed': open && menu?.root.reason === 'trigger-press' ? '' : undefined,
     onPointerdown,
     onMousedown,

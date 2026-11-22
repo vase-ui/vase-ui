@@ -26,6 +26,8 @@ export function usePopupPress(
   options: {
     /** The enabled item in the path of a release, which can take a `click`. */
     itemAt: (path: readonly Element[]) => HTMLElement | null;
+    /** The disabled item in the path of a release, which takes the focus and no `click`. */
+    disabledItemAt?: (path: readonly Element[]) => HTMLElement | null;
     /** The element is in the popup or in a popup above it. */
     inside: (element: Element) => boolean;
     /** The release on this item acts before its delay when it moved on the vertical axis. */
@@ -79,6 +81,11 @@ export function usePopupPress(
       const early =
         !!options.earlyRelease?.(item) && Math.abs(event.clientY - press.clientY) >= DRAG_DISTANCE;
       if (early || elapsed >= delays.item) release(item, event);
+      return;
+    }
+    const disabled = options.disabledItemAt?.(path);
+    if (disabled) {
+      if (!options.virtual && elapsed >= delays.item) disabled.focus({ preventScroll: true });
       return;
     }
     if (path.some((element) => element === trigger || options.inside(element))) return;

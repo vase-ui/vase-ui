@@ -125,7 +125,7 @@ function onClick(event: MouseEvent) {
 
 function elementProps() {
   const isOpen = open.value;
-  const controlled = isOpen ? (submenu.listElement.value ?? root.popup) : null;
+  const controlled = isOpen ? (submenu.ids.list ?? submenu.ids.popup) : undefined;
   // A change of `aria-expanded` on the focused trigger makes VoiceOver read that change in place of
   // the first item of the submenu. `aria-haspopup` still says that the item opens a submenu.
   const silent = isOpen && platform.os.apple && root.interaction === 'keyboard';
@@ -133,7 +133,7 @@ function elementProps() {
     {
       'aria-haspopup': submenu.filter ? 'dialog' : 'menu',
       'aria-expanded': silent ? undefined : isOpen ? 'true' : 'false',
-      'aria-controls': controlled?.id || undefined,
+      'aria-controls': controlled || undefined,
       'data-popup-open': isOpen ? '' : undefined,
       onKeydown,
       onPointerdown,

@@ -14,6 +14,12 @@ defineProps({
   backdrop: Object as PropType<Props>,
   portal: Object as PropType<Props>,
   inner: Object as PropType<Props>,
+  /** The parts that a test removes: `trigger`. */
+  shown: { type: Object as PropType<{ trigger?: boolean }>, default: () => ({}) },
+  /** The props of the submenu trigger. */
+  submenu: Object as PropType<Props>,
+  /** The props of the popup of the submenu. */
+  subPopup: Object as PropType<Props>,
   items: { type: Object as PropType<Record<string, Props>>, default: () => ({}) },
 });
 
@@ -27,6 +33,7 @@ defineExpose({ root: rootPart, trigger: triggerPart, positioner: positionerPart 
   <input id="before" aria-label="Before" />
   <ContextMenu.Root ref="rootPart" v-bind="root">
     <ContextMenu.Trigger
+      v-if="shown.trigger !== false"
       ref="triggerPart"
       data-testid="trigger"
       style="display: block; width: 300px; height: 200px; background: #eee"
@@ -62,10 +69,12 @@ defineExpose({ root: rootPart, trigger: triggerPart, positioner: positionerPart 
             {{ key }}
           </ContextMenu.Item>
           <ContextMenu.SubmenuRoot>
-            <ContextMenu.SubmenuTrigger data-key="sub" :delay="0">More</ContextMenu.SubmenuTrigger>
+            <ContextMenu.SubmenuTrigger data-key="sub" :delay="0" v-bind="submenu"
+              >More</ContextMenu.SubmenuTrigger
+            >
             <ContextMenu.Portal>
               <ContextMenu.Positioner data-testid="sub-positioner">
-                <ContextMenu.Popup data-testid="sub-popup">
+                <ContextMenu.Popup data-testid="sub-popup" v-bind="subPopup">
                   <ContextMenu.Item data-key="s1">s1</ContextMenu.Item>
                 </ContextMenu.Popup>
               </ContextMenu.Positioner>

@@ -1,10 +1,10 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { ContextMenuRootChangeEventDetails } from '@vase-ui/vue/context-menu';
 import ContextMenuParts from '../../test/fixtures/ContextMenuParts.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { penDrag, sendTouch, touchDrag } from '../../test/pointer';
+import { movePointerThrough, penDrag, sendTouch, touchDrag } from '../../test/pointer';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -40,6 +40,11 @@ async function rightPress(x: number, y: number) {
 /** Releases the right button: at the point of the press with no point, else after a move. */
 async function rightRelease(point?: { x: number; y: number }) {
   await userEvent.pointer(point ? [{ coords: point }, '[/MouseRight]'] : '[/MouseRight]');
+}
+
+function centerOf(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
 const LONG_PRESS = 600;
@@ -165,6 +170,13 @@ describe('the open', () => {
     await waitFor(() => expect(byTestId('inner-popup')).not.toBe(null));
     await rightRelease();
     expect(outer).toEqual([]);
+    await userEvent.pointer([{ coords: { x: 380, y: 400 } }, '[MouseLeft]']);
+    await waitFor(() => expect(byTestId('inner-popup')).toBe(null));
+    await rightPress(250, 150);
+    await waitFor(() => expect(popup()).not.toBe(null));
+    await rightRelease();
+    expect(byTestId('inner-popup')).toBe(null);
+    expect(outer).toEqual(['true trigger-press contextmenu']);
   });
 });
 
@@ -437,6 +449,24 @@ describe('a long press', () => {
     },
   );
 
+  test.skipIf(server.browser !== 'chromium')(
+    'of a touch that moves less than 10 px opens the menu; a disabled root opens nothing',
+    async () => {
+      const first = await mountContextMenu();
+      fakeTimers();
+      await touchDrag(POINT, { x: 105, y: 85 }, 2, holdLongPress);
+      await waitFor(() => expect(popup()).not.toBe(null));
+      first.unmount();
+      vi.useRealTimers();
+      const log: string[] = [];
+      await mountContextMenu({ root: rootEvents(log, { disabled: true }) });
+      fakeTimers();
+      await touchDrag(POINT, POINT, 0, holdLongPress);
+      expect(popup()).toBe(null);
+      expect(log).toEqual([]);
+    },
+  );
+
   test.skipIf(server.browser !== 'chromium')('of a pen opens the menu (BUG-4854)', async () => {
     await mountContextMenu();
     await penDrag({ x: 100, y: 80 }, { x: 100, y: 80 }, 0, LONG_PRESS);
@@ -455,7 +485,7 @@ describe('a long press', () => {
 });
 
 describe('the focus', () => {
-  test.each(['{Escape}', '{Tab}'])(
+  test.each(['{Escape}', '{Tab}', '{Shift>}{Tab}{/Shift}'])(
     'the close by %s returns the focus to the element that had it before the open',
     async (key) => {
       const { trigger } = await mountContextMenu();
@@ -502,5 +532,132 @@ describe('the focus', () => {
     await userEvent.keyboard('{End}{ArrowRight}');
     await waitFor(() => expect(active()).toBe(item('s1')));
     expect(byTestId('sub-positioner')).toHaveAttribute('data-side', 'inline-end');
+  });
+});
+
+describe('more of the release and the native menu', () => {
+  test('a release on an item of a submenu closes each menu with `item-press`; a release on a submenu trigger that opens at a press opens nothing', async () => {
+    const log: string[] = [];
+    const first = await mountContextMenu({ root: rootEvents(log) });
+    await rightPress(100, 80);
+    await placed();
+    await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))]);
+    await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
+    await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+    await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))]);
+    await rightRelease(centerOf(item('s1')));
+    await waitFor(() => expect(popup()).toBe(null));
+    expect(byTestId('sub-popup')).toBe(null);
+    expect(log.map((entry) => entry.split(' ').slice(0, 2).join(' '))).toEqual([
+      'true trigger-press',
+      'false item-press',
+    ]);
+    first.unmount();
+    await mountContextMenu({ submenu: { openOnHover: false } });
+    await rightPress(100, 80);
+    await placed();
+    await rightRelease(centerOf(item('sub')));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(byTestId('sub-popup')).toBe(null);
+    expect(popup()).not.toBe(null);
+  });
+
+  test('a release after 500 ms on the positioner or in a submenu, on no item, keeps the menu open', async () => {
+    for (const place of ['positioner', 'submenu']) {
+      const log: string[] = [];
+      const { unmount } = await mountContextMenu({
+        root: rootEvents(log),
+        positioner: { style: 'padding: 20px' },
+        subPopup: { style: 'padding: 20px' },
+      });
+      await rightPress(100, 80);
+      await placed();
+      let point: { x: number; y: number };
+      if (place === 'positioner') {
+        const box = byTestId('positioner')!.getBoundingClientRect();
+        point = { x: box.left + 5, y: box.bottom - 5 };
+        await movePointerThrough({ x: 100, y: 80 }, [point]);
+      } else {
+        await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))]);
+        await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+        const box = byTestId('sub-popup')!.getBoundingClientRect();
+        point = { x: box.left + 5, y: box.bottom - 5 };
+        await movePointerThrough(centerOf(item('sub')), [
+          { x: box.left + 5, y: centerOf(item('sub')).y },
+          point,
+        ]);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 520));
+      await rightRelease(point);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(popup(), place).not.toBe(null);
+      expect(log).toEqual(['true trigger-press contextmenu']);
+      unmount();
+    }
+  });
+
+  test('a right press on the backdrop closes the menu, and no native menu opens; a `contextmenu` from a popup in the trigger opens no native menu', async () => {
+    await mountContextMenu({ backdrop: { style: 'position: fixed; inset: 0' } });
+    await rightPress(60, 60);
+    await placed();
+    await rightRelease();
+    let event: Event | undefined;
+    document.addEventListener('contextmenu', (each) => (event = each), {
+      capture: true,
+      once: true,
+    });
+    await rightPress(380, 400);
+    await rightRelease();
+    await waitFor(() => expect(popup()).toBe(null));
+    expect(event?.defaultPrevented).toBe(true);
+    const container = byTestId('trigger')!.appendChild(document.createElement('div'));
+    onTestFinished(() => container.remove());
+    const portal = reactive<Props>({ to: container });
+    await mountContextMenu({ portal, root: { defaultOpen: true } });
+    const inner = [...document.querySelectorAll('[data-testid="popup"]')].at(-1)!;
+    const fromPopup = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    inner.dispatchEvent(fromPopup);
+    expect(fromPopup.defaultPrevented).toBe(true);
+  });
+
+  test('`data-popup-open` leaves the trigger at the close', async () => {
+    const { trigger } = await mountContextMenu({ root: { defaultOpen: true } });
+    await placed();
+    expect(trigger).toHaveAttribute('data-popup-open');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+  });
+
+  test('with `collisionAvoidance` side `flip`, a menu with no room under the anchor opens above it; a side and offsets of the developer place it', async () => {
+    const at = (x: number, y: number) => ({
+      getBoundingClientRect: () => DOMRect.fromRect({ x, y, width: 0, height: 0 }),
+    });
+    const first = await mountContextMenu({
+      root: { defaultOpen: true },
+      positioner: {
+        collisionAvoidance: { side: 'flip' },
+        anchor: at(100, window.innerHeight - 20),
+      },
+      popup: { style: 'width: 150px; height: 100px' },
+    });
+    await placed();
+    await waitFor(() => expect(byTestId('positioner')).toHaveAttribute('data-side', 'top'));
+    first.unmount();
+    await mountContextMenu({
+      root: { defaultOpen: true },
+      positioner: {
+        side: 'right',
+        align: 'center',
+        sideOffset: 11,
+        alignOffset: 13,
+        anchor: at(100, 200),
+      },
+      popup: { style: 'width: 150px; height: 100px' },
+    });
+    await placed();
+    const box = popup()!.getBoundingClientRect();
+    expect(Math.round(box.left)).toBe(111);
+    expect(Math.round(box.top)).toBe(163);
   });
 });

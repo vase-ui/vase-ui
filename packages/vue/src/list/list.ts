@@ -35,8 +35,12 @@ export interface List {
   highlight(item: ListItem | null, reason: HighlightReason, event?: Event): void;
   /** The `pointermove` is a move of the pointer, and not content that moved under it. */
   moved(event: PointerEvent): boolean;
-  /** Moves the highlight for a key. `true`: the list used the key and prevented its default. */
-  onKeydown(event: KeyboardEvent): boolean;
+  /**
+   * Moves the highlight for a key. `true`: the list used the key and prevented its default. An
+   * arrow key moves from `from`, else from the highlighted item. With `from` `null`, it goes to the
+   * first or the last item.
+   */
+  onKeydown(event: KeyboardEvent, from?: ListItem | null): boolean;
 }
 
 export interface ListOptions {
@@ -313,10 +317,11 @@ export function useList(options: ListOptions): List {
     moved(event) {
       return moves.get(event) ?? true;
     },
-    onKeydown(event) {
+    onKeydown(event, from) {
       if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
       if (isComposing(event)) return false;
-      const current = highlighted.value?.element.isConnected ? highlighted.value : null;
+      const start = from === undefined ? highlighted.value : from;
+      const current = start?.element.isConnected ? start : null;
       const target = (options.rows?.() ? rowTarget : lineTarget)(event.key, current);
       if (target === undefined) return false;
       event.preventDefault();

@@ -45,15 +45,15 @@ function commit(event: Event) {
 
 function elementProps() {
   void revision.value;
-  const controlled = menu.listElement.value;
+  const controlled = menu.ids.list;
   return mergeProps(
     {
       id: givenId(props.id) ?? generatedId,
       type: 'text',
       role: 'searchbox',
       value: filter.query,
-      disabled: props.disabled ? '' : undefined,
-      'aria-controls': controlled?.id || undefined,
+      disabled: props.disabled || menu.disabled ? '' : undefined,
+      'aria-controls': controlled || undefined,
       'aria-activedescendant': menu.list.highlighted?.element.id || undefined,
       inputmode: 'search',
       autocomplete: 'off',

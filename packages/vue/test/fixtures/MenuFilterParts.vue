@@ -11,6 +11,7 @@ defineProps({
   provider: Object as PropType<Props>,
   root: Object as PropType<Props>,
   trigger: Object as PropType<Props>,
+  portal: Object as PropType<Props>,
   input: Object as PropType<Props>,
   list: Object as PropType<Props>,
   clear: Boolean,
@@ -30,7 +31,7 @@ defineProps({
   <Menu.FilterProvider v-bind="provider">
     <Menu.Root v-bind="root">
       <Menu.Trigger data-testid="trigger" v-bind="trigger">Menu</Menu.Trigger>
-      <Menu.Portal>
+      <Menu.Portal v-bind="portal">
         <Menu.Positioner data-testid="positioner">
           <Menu.Popup data-testid="popup">
             <Menu.Input

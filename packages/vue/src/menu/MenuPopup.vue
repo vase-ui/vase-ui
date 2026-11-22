@@ -31,6 +31,8 @@ const state = computed<MenuPopupState>(() => ({
   instant: root.instant,
 }));
 
+const elementId = computed(() => givenId(props.id) ?? generatedId);
+
 // The cleanup runs also at the unmount, where Vue stops the watcher before it clears the ref.
 watch(
   element,
@@ -38,6 +40,17 @@ watch(
     root.setPopup(popup);
     onCleanup(() => {
       if (root.popup === popup) root.setPopup(null);
+    });
+  },
+  { flush: 'sync' },
+);
+watch(
+  [element, elementId],
+  ([popup, popupId], _, onCleanup) => {
+    if (!popup) return;
+    menu.ids.popup = popupId;
+    onCleanup(() => {
+      if (menu.ids.popup === popupId) menu.ids.popup = undefined;
     });
   },
   { flush: 'sync' },
@@ -74,11 +87,11 @@ function elementProps() {
   const role = menu.filter ? 'dialog' : hasList ? 'presentation' : 'menu';
   return mergeProps(
     {
-      id: givenId(props.id) ?? generatedId,
+      id: elementId.value,
       role,
       tabindex: -1,
       'aria-labelledby':
-        role === 'presentation' || named ? undefined : root.activeTrigger?.id || undefined,
+        role === 'presentation' || named ? undefined : root.activeTriggerId || undefined,
       'aria-orientation':
         role === 'menu' && menu.orientation === 'horizontal' ? 'horizontal' : undefined,
       'data-side': state.value.side,
