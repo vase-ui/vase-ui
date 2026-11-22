@@ -26,13 +26,7 @@ const portal = usePopupPortal(context.root, context.layer, {
     return props.keepMounted || context.keepsPopup;
   },
 });
-// Only a popup that takes the focus has an owner: an input outside the popup keeps the focus.
-const owner = usePortalOwner(
-  context.root,
-  context.layer,
-  portal.sentinels,
-  () => !context.inputIsControl,
-);
+const owner = usePortalOwner(context.root, context.layer, portal.sentinels);
 providePortal();
 </script>
 

@@ -262,8 +262,8 @@ export namespace ChipRemove {
 
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
- * Renders a visually hidden `<span>` in place while the moved popup is open and has the input. Its
- * `aria-owns` names the popup, so a screen reader reads the popup after its trigger.
+ * Renders a visually hidden `<span>` in place while the moved popup is open. Its `aria-owns` names
+ * the popup, so a screen reader reads the popup after the input or the trigger.
  * With `keepMounted`, the closed popup keeps its list and the text of an input in it until the next
  * open. A root with no `items` keeps the popup in the DOM from the first fill of the browser.
  */
