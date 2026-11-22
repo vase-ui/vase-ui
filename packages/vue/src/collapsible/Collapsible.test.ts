@@ -346,8 +346,10 @@ describe('the panel', () => {
     expect(element.querySelector('input')!.value).toBe('kept');
   });
 
-  test('with hiddenUntilFound, a closed panel stays with hidden="until-found" and no inert', async () => {
-    const { panel, press } = await mountCollapsible({ panel: { hiddenUntilFound: true } });
+  test('VUE-197: with hiddenUntilFound, a closed panel stays with hidden="until-found" and no inert, also with keepMounted of false', async () => {
+    const { panel, press } = await mountCollapsible({
+      panel: { hiddenUntilFound: true, keepMounted: false },
+    });
     expect(panel()).toHaveAttribute('hidden', 'until-found');
     expect(panel()).not.toHaveAttribute('inert');
     await press();

@@ -1,0 +1,10 @@
+{
+  "id": "VUE-200",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/tabs/root/TabsRoot.test.tsx#L445",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/tabs/list/TabsList.test.tsx#L240",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+  ],
+  "behavior": "The tab stop is on the active tab, also when that tab is disabled. With no active tab, it is on the first tab. A disabled tab takes the focus and has `aria-disabled=\"true\"`, so Tab enters the list at the tab whose panel shows, as the WAI-ARIA Authoring Practices describe. Base UI gives a disabled tab that a script selected no tab stop. It moves the tab stop of a removed active tab to the next tab.",
+  "dueWith": "packages/react/src/tabs/list/TabsList.tsx"
+}
