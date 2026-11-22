@@ -2,9 +2,10 @@
   "id": "VUE-36",
   "evidence": [
     "https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveValueLabel.tsx#L72-L75"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveValueLabel.tsx#L72-L75",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/value/SelectValue.test.tsx#L143"
   ],
-  "behavior": "The label of an item can be a function that returns the content of the label, so one label can show in the value part and in its item at the same time. The text of such an item is the result of `itemToStringLabel`, or the text of its value. Base UI takes a React element as a label, and the text of that item is `[object Object]`.",
+  "behavior": "The label of an item can be a function that returns the content of the label, so one label can show in the value part and in its item at the same time. The text of such an item is the result of `itemToStringLabel`, or the text of its value. Base UI takes a React element as a label, and the text of that item is `[object Object]`. A label function that returns vnodes needs the virtual DOM runtime of Vue. An application in Vapor mode has it with the `vaporInteropPlugin`. With no plugin, a label is text, and the slot of the `Value` part and of the item gives other content.",
   "dueWith": "packages/react/src/internals/resolveValueLabel.tsx",
   "families": ["select", "combobox", "autocomplete"]
 }

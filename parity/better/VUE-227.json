@@ -1,0 +1,10 @@
+{
+  "id": "VUE-227",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/select/popup/SelectPopup.test.tsx#L43",
+    "https://dom.spec.whatwg.org/#dispatching-events"
+  ],
+  "behavior": "A key in the list of a popup, such as an arrow key, reaches the listeners of the elements around the popup, as each DOM event does. Only an Escape that the popup handles stops at the popup. A toolbar around the trigger moves no focus for a key that comes from the popup. Base UI stops the propagation of the arrow keys in the popup.",
+  "dueWith": "packages/react/src/select/popup/SelectPopup.tsx",
+  "families": ["toolbar"]
+}
