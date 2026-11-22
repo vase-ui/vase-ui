@@ -286,9 +286,9 @@ describe('the popup', () => {
     expect(document.activeElement).not.toBe(input());
   });
 
-  test('`initialFocus` false keeps the focus on the trigger', async () => {
+  test('`initialFocus` false: a press gives the focus to the trigger, as to a button', async () => {
     await mountCombobox({ inputInPopup: true, popup: { initialFocus: false } });
-    trigger().focus();
+    document.getElementById('before')!.focus();
     await userEvent.click(trigger());
     await waitFor(() => expect(popup()).not.toBe(null));
     await settle();

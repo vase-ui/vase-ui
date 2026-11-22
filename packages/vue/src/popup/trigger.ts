@@ -5,6 +5,7 @@ import { useIsHydrated } from '../common/hydration';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
 import { platform } from '../common/platform';
+import { activeElement } from '../common/shadowDom';
 import {
   interactionOf,
   rootOfHandle,
@@ -129,6 +130,8 @@ export function usePopupTrigger(
 
   let pressed = false;
   let keyed = false;
+  let openAtPress = false;
+  let focusAtPress: Element | null = null;
   // The trigger of a press that acted at `pointerdown`, until the release. The `click` of the press
   // comes to the trigger only after a release on it. After a release at another place, the next
   // `click`, such as that of a native label, is no click of the press.
@@ -181,6 +184,8 @@ export function usePopupTrigger(
   function onPointerdown(event: PointerEvent) {
     pressed = false;
     press.value = null;
+    openAtPress = open.value;
+    focusAtPress = activeElement(ownerDocument(event.currentTarget as Element));
     // The `click` of a press of a screen reader opens the popup, as for a key.
     if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) {
       return false;
@@ -194,10 +199,22 @@ export function usePopupTrigger(
     return opens && !!details && !details.isCanceled;
   }
 
+  /**
+   * A press that opens or closes the popup at `pointerdown` can move the focus before its
+   * `mousedown`: into the popup, or to the trigger or `finalFocus`. The `mousedown` would then give
+   * the focus to the button, and in WebKit on macOS to `<body>` (test/measurements/select.test.ts).
+   * A change that the parent applies is in place at the `mousedown`. A press that moves no focus,
+   * or that keeps the popup open, keeps the `mousedown` of a button.
+   */
+  function onMousedown(event: MouseEvent) {
+    const focused = activeElement(ownerDocument(event.currentTarget as Element));
+    if (open.value !== openAtPress && focused !== focusAtPress) event.preventDefault();
+  }
+
   function onKeydown(event: KeyboardEvent) {
     pressed = false;
     keyed = event.key === 'Enter' || event.key === ' ';
   }
 
-  return { button, active, open, onClick, onPointerdown, onKeydown };
+  return { button, active, open, onClick, onPointerdown, onMousedown, onKeydown };
 }

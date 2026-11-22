@@ -158,6 +158,15 @@ describe('the root', () => {
     ]);
   });
 
+  test('a press on the trigger closes the popover, and the element of `finalFocus` gets the focus', async () => {
+    const { trigger } = await mountPopover({ popup: { finalFocus: () => byId('before') } });
+    await userEvent.click(trigger());
+    await opened();
+    await userEvent.click(trigger());
+    await closed();
+    expect(document.activeElement).toBe(byId('before'));
+  });
+
   test('a controlled root shows only the value of its parent; cancel() keeps the state; a change by the parent and a mount open emit nothing', async () => {
     const log: string[] = [];
     const root = rootEvents(log, { open: true });

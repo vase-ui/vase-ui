@@ -53,21 +53,10 @@ const state = computed<SelectTriggerState>(() => ({
   filled: field?.state.filled ?? false,
 }));
 
-let openAtPress = false;
-
 function onPointerdown(event: PointerEvent) {
-  openAtPress = root.open;
   if (trigger.onPointerdown(event) && element.value) {
     context.press.start(event, element.value, { item: 400 });
   }
-}
-
-// A press that opens or closes the popup moves the focus before its `mousedown`: into the popup,
-// or back to the trigger. The `mousedown` would give the focus to the button, and in WebKit on
-// macOS to `<body>` (test/measurements/select.test.ts). A change of `open` that the parent applies
-// is in place at the `mousedown`.
-function onMousedown(event: MouseEvent) {
-  if (root.open !== openAtPress) event.preventDefault();
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -128,7 +117,7 @@ function elementProps() {
       'data-placeholder': state.value.placeholder ? '' : undefined,
       onClick: trigger.onClick,
       onPointerdown,
-      onMousedown,
+      onMousedown: trigger.onMousedown,
       onFocus,
       onBlur,
     },
