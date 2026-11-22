@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { SelectRootOpenChangeEventDetails } from '@vase-ui/vue/select';
@@ -387,6 +387,9 @@ describe('the highlight', () => {
   });
 
   test('the item keeps the highlight while the popup leaves in a <Transition>', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '[data-testid="popup"].pop-leave-active { transition: opacity 10s }';
+    onTestFinished(() => style.remove());
     mount(SelectInTransition);
     await nextTick();
     trigger().focus();
