@@ -15,7 +15,8 @@ import { useList, type List, type ListItem } from '../list/list';
 import { useTypeahead } from '../list/typeahead';
 import { menubarKey, menubarOfTrigger, type MenubarForMenu } from '../menubar/menu';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInPopup, useLayer, type Layer } from '../popup/layer';
+import { isInPopup, type Layer } from '../popup/layer';
+import { useModalLayer } from '../popup/modal';
 import type { usePlacement, VirtualElement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { PopupHandle, rootOfHandle, usePopupRoot, type PopupRoot } from '../popup/root';
@@ -265,7 +266,7 @@ export function useMenuRoot<Payload>(
   });
 
   const hoverOpen = computed(() => root.reason === 'trigger-hover' && root.instant !== 'group');
-  const layer = useLayer(root, () => {
+  const layer = useModalLayer(root, () => {
     const current = kind.value;
     const modal =
       current === 'context' ||

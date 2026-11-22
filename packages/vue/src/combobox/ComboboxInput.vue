@@ -268,7 +268,7 @@ function onChipsKey(event: KeyboardEvent, el: TextElement, around: ChipsContext)
 let leftHighlight: typeof list.highlighted = null;
 function onFocus() {
   if (!context.inline || !leftHighlight) return;
-  if (list.items().includes(leftHighlight)) list.highlight(leftHighlight, 'none');
+  if (list.indexOf(leftHighlight) !== -1) list.highlight(leftHighlight, 'none');
   leftHighlight = null;
 }
 

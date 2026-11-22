@@ -1,18 +1,9 @@
-import {
-  computed,
-  effectScope,
-  onMounted,
-  onUnmounted,
-  shallowReactive,
-  watch,
-  type EffectScope,
-} from 'vue';
+import { computed, onMounted, onUnmounted, shallowReactive, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { isShadowRoot } from '@floating-ui/utils/dom';
 import { activeElement, contains } from '../common/shadowDom';
-import { useScrollLock } from './useScrollLock';
 import { followRootNode } from '../common/observeRootNode';
 import type { PopupRoot } from './root';
 
@@ -32,10 +23,17 @@ export interface Layer {
   readonly pressStart: boolean | 'each-button';
   /** The portal renders a fixed element that takes each pointer from the page. */
   readonly block: boolean;
-  /** The attribute that the layer writes on the rest of the page. */
+  /**
+   * The attribute that the layer writes on the rest of the page. Only a layer of `useModalLayer`
+   * writes it.
+   */
   readonly hide: 'inert' | 'aria-hidden' | false;
   /** Tab keeps the focus in the popup. */
   readonly trap: boolean;
+  /**
+   * The page does not scroll. `useModalLayer` applies this rule, or the root gives it to
+   * `useScrollLock`.
+   */
   readonly lockScroll: boolean;
   /**
    * The active trigger stays in use: the layer does not hide it, and the fixed element has a hole
@@ -103,6 +101,11 @@ export function layerOf(root: PopupRoot) {
   return layersOfRoots.get(root);
 }
 
+/** The open layers, from the lowest one. */
+export function openLayers(): Layer[] {
+  return stack.map((entry) => entry.layer);
+}
+
 /** The open layers above the layer, from the lowest one. */
 export function layersAbove(layer: Layer): Layer[] {
   const index = stack.findIndex((entry) => entry.layer === layer);
@@ -112,15 +115,16 @@ export function layersAbove(layer: Layer): Layer[] {
 /** The element is in the popup of the layer, or in a layer above it. */
 export function isInPopup(layer: Layer, element: Element) {
   const index = stack.findIndex((each) => each.layer === layer);
-  const inside = [layer.root.popup, ...stack.slice(index + 1).flatMap(layerElements)];
+  const inside = [layer.root.popup, ...stack.slice(index + 1).flatMap(entryElements)];
   return index !== -1 && inside.some((each) => !!each?.contains(element));
 }
 
 /**
  * Puts the root in the stack from its open to its close, and serves its rules. Call it in the
- * `setup` of a root.
+ * `setup` of a root. A root whose layer can hide the rest of the page calls `useModalLayer`
+ * (`modal.ts`) in its place. `onOpen` runs at each open, after the layer enters the stack.
  */
-export function useLayer(root: PopupRoot, rules: () => LayerRules) {
+export function useLayer(root: PopupRoot, rules: () => LayerRules, onOpen?: () => void) {
   const current = computed(rules);
   const layer: Layer = {
     root,
@@ -172,7 +176,7 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
         if (!open) return;
         const doc = ownerDocument(root.activeTrigger);
         push({ layer, bodyChildren: new WeakSet(doc.body.children), task: currentTask(), order });
-        startHide();
+        onOpen?.();
         onCleanup(mergeCleanups(remove, listen(doc)));
       },
       { immediate: true, flush: 'sync' },
@@ -204,11 +208,6 @@ export function useLayer(root: PopupRoot, rules: () => LayerRules) {
     );
   });
   onUnmounted(remove);
-
-  useScrollLock(
-    () => root.open && layer.lockScroll,
-    () => root.activeTrigger,
-  );
 
   return layer;
 }
@@ -277,12 +276,13 @@ function fromTop() {
 }
 
 /** Each element of the layer: its popup, its backdrop, its sentinels and its fixed element. */
-function layerElements(entry: Entry): Element[] {
-  const { root } = entry.layer;
+export function layerElements({ root }: Layer): Element[] {
   return [root.popup, ...root.parts, ...root.portalElements].filter(
     (element): element is Element => !!element?.isConnected,
   );
 }
+
+const entryElements = (entry: Entry) => layerElements(entry.layer);
 
 /**
  * The elements inside the layer: its popup, its sentinels and its triggers, and each element of the
@@ -297,7 +297,7 @@ function insideElements(entry: Entry) {
     ...root.triggers.map((trigger) => trigger.element),
     ...(entry.layer.inside ?? []),
   ].filter((element): element is Element => !!element?.isConnected);
-  return [...own, ...stack.slice(index + 1).flatMap(layerElements)];
+  return [...own, ...stack.slice(index + 1).flatMap(entryElements)];
 }
 
 function isSentinel(element: Element) {
@@ -312,7 +312,7 @@ function isPathInside(entry: Entry, path: readonly EventTarget[]) {
 
 /** The event path has an element of one of the layers, such as its backdrop. */
 function isPathOnLayer(entries: readonly Entry[], path: readonly EventTarget[]) {
-  return entries.some((entry) => layerElements(entry).some((element) => path.includes(element)));
+  return entries.some((entry) => entryElements(entry).some((element) => path.includes(element)));
 }
 
 // A press on an element that a script added to `<body>` after the open, and that no layer owns,
@@ -321,7 +321,7 @@ function isAddedElement(entry: Entry, path: readonly EventTarget[]) {
   const body = ownerDocument(path[0] as Element).body;
   const child = path.find((node) => (node as Node).parentNode === body) as Element | undefined;
   if (!child || entry.bodyChildren.has(child)) return false;
-  return !stack.some((each) => layerElements(each).some((element) => child.contains(element)));
+  return !stack.some((each) => entryElements(each).some((element) => child.contains(element)));
 }
 
 // A press on a scrollbar sends `pointerdown` with an offset outside the client box of the element
@@ -566,91 +566,4 @@ export function onKeydown(event: KeyboardEvent) {
   if (details.isPropagationAllowed) return;
   event.stopPropagation();
   if (!details.isCanceled) event.preventDefault();
-}
-
-// The top layer that asks for it writes `inert` or `aria-hidden` on each sibling of the path from
-// each element inside it to `<body>`.
-// One watcher of the stack writes the attributes, from the first open to the close of the last
-// layer.
-let hideScope: EffectScope | undefined;
-const written = new Map<Element, 'inert' | 'aria-hidden'>();
-// The root of each marked element of a layer below. A part of a closed root writes `inert` itself
-// for its leave, so the layer leaves that attribute there.
-const rootsOfMarks = new WeakMap<Element, PopupRoot>();
-
-function startHide() {
-  if (hideScope) return;
-  hideScope = effectScope(true);
-  hideScope.run(() => {
-    watch(
-      // A new object for each change of the stack, so that the last close also stops the watcher.
-      () => {
-        const top = stack.findLast((entry) => entry.layer.hide);
-        if (!top) return { hide: false as const, inside: [] };
-        const { root } = top.layer;
-        const index = stack.indexOf(top);
-        return {
-          hide: top.layer.hide,
-          inside: [
-            root.popup,
-            ...root.parts,
-            ...root.portalElements,
-            top.layer.triggerInUse ? root.activeTrigger : null,
-            ...stack.slice(index + 1).flatMap(layerElements),
-          ],
-        };
-      },
-      (next) => writeHide(next),
-      { flush: 'post', immediate: true },
-    );
-  });
-}
-
-function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
-  const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
-  if (next.hide) {
-    const kept = new Set<Node>();
-    // A live region and an alert stay in use at each place of the document, so that the page
-    // announces its messages, such as toasts, under a modal popup.
-    const documents = new Set(next.inside.flatMap((each) => each?.ownerDocument ?? []));
-    const announcers = [...documents].flatMap((doc) => [
-      ...doc.querySelectorAll('[aria-live], [role="alert"]'),
-    ]);
-    for (const element of [...next.inside, ...announcers]) {
-      if (!element?.isConnected) continue;
-      const body = element.ownerDocument.body;
-      for (
-        let node: Node | null = element;
-        node && node !== body;
-        node =
-          node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
-      ) {
-        kept.add(node);
-      }
-    }
-    for (const node of kept) {
-      for (const sibling of node.parentNode?.children ?? []) {
-        if (!kept.has(sibling)) wanted.set(sibling, next.hide);
-      }
-    }
-  }
-  for (const [element, attribute] of written) {
-    if (wanted.get(element) === attribute) continue;
-    if (attribute !== 'inert' || rootsOfMarks.get(element)?.open !== false) {
-      element.removeAttribute(attribute);
-    }
-    written.delete(element);
-    rootsOfMarks.delete(element);
-  }
-  for (const [element, attribute] of wanted) {
-    if (written.has(element) || element.hasAttribute(attribute)) continue;
-    element.setAttribute(attribute, attribute === 'inert' ? '' : 'true');
-    written.set(element, attribute);
-    const owner = stack.find((entry) => layerElements(entry).includes(element));
-    if (owner) rootsOfMarks.set(element, owner.layer.root);
-  }
-  if (stack.length === 0) {
-    hideScope?.stop();
-    hideScope = undefined;
-  }
 }
