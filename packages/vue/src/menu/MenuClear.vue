@@ -14,12 +14,13 @@ defineSlots<{
   element?(scope: ElementSlotProps<MenuClearState>): unknown;
 }>();
 
-const filter = injectFilter(injectMenu('Clear'), 'Clear');
+const menu = injectMenu('Clear');
+const filter = injectFilter(menu, 'Clear');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const button = useButton({
   element,
-  disabled: () => props.disabled,
+  disabled: () => props.disabled || menu.disabled,
   type: 'button',
   tag: useAsTag(() => props.as),
 });

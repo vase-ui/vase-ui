@@ -9,7 +9,7 @@ import NavigationMenuScoped from '../../test/fixtures/NavigationMenuScoped.vue';
 import NavigationMenuWithDialog from '../../test/fixtures/NavigationMenuWithDialog.vue';
 import TabsInNavigationMenu from '../../test/fixtures/TabsInNavigationMenu.vue';
 import { nextEvent } from '../../test/animation';
-import { movePointerThrough } from '../../test/pointer';
+import { movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { readAfter, readWhen } from '../../test/wait';
@@ -532,6 +532,23 @@ describe('the hover', () => {
       expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'false');
       await movePointerThrough(to, [crossed!]);
       await waitFor(() => expect(get('trigger-two')).toHaveAttribute('aria-expanded', 'true'));
+    },
+  );
+
+  test.skipIf(server.browser !== 'chromium')(
+    'a touch opens no item by hover, and a tap opens it; after a tap open and a tap outside, a mouse hover opens an item again',
+    async () => {
+      const log: string[] = [];
+      await mountMenu({ root: rootEvents(log, { delay: 0 }) });
+      const point = centerOf(get('trigger-one'));
+      await touchDrag(point, point, 0, 600);
+      await shows('one');
+      expect(log[0]).toBe('valueChange one trigger-press');
+      const outside = centerOf(byId('outside'));
+      await touchDrag(outside, outside, 0);
+      await closed();
+      await userEvent.hover(get('trigger-two'));
+      await shows('two');
     },
   );
 });
@@ -1285,6 +1302,14 @@ describe('nested roots', () => {
     expect(get('icon-one')).toHaveAttribute('data-popup-open');
     await userEvent.click(get('trigger-two'));
     await waitFor(() => expect(get('icon-one')).not.toHaveAttribute('data-popup-open'));
+  });
+
+  test('neither the root nor a list has `aria-orientation`, also when nested', async () => {
+    await mountMenu({ nested: {}, root: { defaultValue: 'one' } });
+    await shows('one');
+    for (const id of ['root', 'list', 'nested-root', 'nested-list']) {
+      expect(get(id), id).not.toHaveAttribute('aria-orientation');
+    }
   });
 });
 

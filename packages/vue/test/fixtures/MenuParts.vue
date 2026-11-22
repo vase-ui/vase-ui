@@ -3,7 +3,8 @@ import { useTemplateRef, type PropType } from 'vue';
 import { Menu } from '../../src/menu';
 
 type Props = Record<string, unknown>;
-type Item = { key: string; text?: string; attrs?: Props };
+// With `nativeDisabled`, the item renders a disabled `<button>` in its `element` slot.
+type Item = { key: string; text?: string; attrs?: Props; nativeDisabled?: boolean };
 
 // Each item has the `data-key` of its key, and its text, else the key as text. Text inputs stand
 // before and after the root. The input after it and the outside button are at the bottom right of
@@ -30,6 +31,8 @@ defineProps({
   group: Object as PropType<{ label?: Props }>,
   /** The items are in a `Menu.List`, after a text. */
   list: Object as PropType<Props>,
+  /** A button and a link that are no items, before the items. */
+  custom: Boolean,
   /** A submenu after the items, with a submenu in it when `nested` is set. */
   submenu: Object as PropType<{
     root?: Props;
@@ -44,6 +47,8 @@ defineProps({
   sibling: Object as PropType<{ trigger?: Props; items?: Item[] }>,
   /** The root is in a disabled `<fieldset>`. */
   fieldset: Boolean,
+  /** A second trigger after the root, for a `handle` of the root. */
+  detached: Object as PropType<Props>,
   /** The parts that a test removes while the menu is open: `popup`, `list` and `label`. */
   shown: { type: Object as PropType<Record<string, boolean>>, default: () => ({}) },
 });
@@ -76,6 +81,10 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
             data-testid="list"
             v-bind="list"
           >
+            <template v-if="custom">
+              <button data-testid="custom">Custom</button>
+              <a href="#profile" data-testid="profile">Profile</a>
+            </template>
             <component :is="group ? Menu.Group : 'div'" data-testid="group">
               <Menu.GroupLabel
                 v-if="group && shown.label !== false"
@@ -90,6 +99,11 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
                 :data-key="item.key"
                 v-bind="item.attrs"
               >
+                <template v-if="item.nativeDisabled" #element="{ props, elementRef }">
+                  <button v-bind="props" :ref="elementRef" disabled>
+                    {{ item.text ?? item.key }}
+                  </button>
+                </template>
                 {{ item.text ?? item.key }}
               </Menu.Item>
             </component>
@@ -172,6 +186,7 @@ defineExpose({ root: rootPart, popup: popupPart, trigger: triggerPart });
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>
+  <Menu.Trigger v-if="detached" data-testid="detached" v-bind="detached">Other</Menu.Trigger>
   <input id="after" aria-label="After" style="position: fixed; right: 0; bottom: 30px" />
   <button id="outside" style="position: fixed; right: 0; bottom: 0">Outside</button>
 </template>

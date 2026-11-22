@@ -4,6 +4,7 @@ import { useButton } from '../common/button';
 import { useIsHydrated } from '../common/hydration';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
+import { platform } from '../common/platform';
 import {
   interactionOf,
   rootOfHandle,
@@ -47,6 +48,22 @@ export function useTriggerEntry(root: () => PopupRoot | null, entry: PopupTrigge
 /** The `click` of a press of a mouse, which a trigger with `pressStart` handled at `pointerdown`. */
 export function isMouseClick(event: MouseEvent) {
   return event.detail !== 0 && interactionOf(event) === 'mouse';
+}
+
+/**
+ * The `pointerdown` of a press that a screen reader gives. With a mouse pointer, it has no size, or
+ * it is 1 by 1 pixel with no pressure and no pressed button, as Chrome gives for TalkBack,
+ * VoiceOver and NVDA. On Android, TalkBack gives a pressed button, so only the pressure counts.
+ * VoiceOver on iOS gives a touch of less than 1 by 1 pixel with no pressure.
+ */
+export function isVirtualPress(event: PointerEvent) {
+  const { width, height, pressure } = event;
+  if (event.pointerType === 'touch') return width < 1 && height < 1 && pressure === 0;
+  if (event.pointerType !== 'mouse') return false;
+  if (width === 0 && height === 0) return true;
+  return (
+    width === 1 && height === 1 && pressure === 0 && (platform.os.android || event.buttons === 0)
+  );
 }
 
 /**
@@ -159,7 +176,9 @@ export function usePopupTrigger(
   function onPointerdown(event: PointerEvent) {
     pressed = false;
     press.value = null;
+    // The `click` of a press of a screen reader opens the popup, as for a key.
     if (!options.pressStart?.() || event.pointerType !== 'mouse' || event.button !== 0) return;
+    if (isVirtualPress(event)) return;
     if (button.disabled.value) return;
     pressed = true;
     toggle(event);

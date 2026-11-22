@@ -81,13 +81,14 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/event.test.ts",
-      "kind": "not-applicable",
-      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+      "kind": "replaced",
+      "test": "packages/vue/src/popup/trigger.test.ts",
+      "reason": "`trigger.test.ts` tests `isVirtualPress`: the mouse press of a screen reader with no size or of 1 by 1 pixel, a real mouse press, a press of TalkBack on Android, a touch of VoiceOver on iOS, and a pen. A trigger calls it only for a `pointerdown`, so it does not read the type of the event. `Menu.test.ts` opens a menu with each press of a screen reader."
     },
     {
       "upstream": "packages/react/src/utils/popups/event.ts",
       "kind": "not-applicable",
-      "reason": "Vase UI has no popup store. The root of a popup family holds its open state, its triggers and its popup as reactive state through `src/popup/root.ts`. Each popup family tests that state in its own test file."
+      "reason": "`isVirtualPress` in `src/popup/trigger.ts` replaces the file: it knows the press of a screen reader at its `pointerdown`. `src/popup/trigger.test.ts` tests it."
     },
     {
       "upstream": "packages/react/src/utils/popups/floating-root/FloatingRootStore.ts",

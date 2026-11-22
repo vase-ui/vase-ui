@@ -2,6 +2,7 @@ import {
   computed,
   inject,
   provide,
+  shallowReactive,
   shallowRef,
   watch,
   type InjectionKey,
@@ -71,6 +72,11 @@ export interface MenuContext<Payload = unknown> {
   placed: ShallowRef<boolean>;
   /** The element of `Menu.List`. */
   listElement: ShallowRef<HTMLElement | null>;
+  /**
+   * The ids of the mounted `Menu.List` and `Menu.Popup`. A trigger and an input name the list, else
+   * the popup, in `aria-controls`, and follow a new `id` of the part.
+   */
+  ids: { list: string | undefined; popup: string | undefined };
   /** The `finalFocus` of the popup. */
   finalFocus: ShallowRef<FocusTarget | undefined>;
   viewport: ShallowRef<ViewportSizes | null>;
@@ -343,6 +349,8 @@ export function useMenuRoot<Payload>(
         }
         openEvent = undefined;
       } else {
+        // A typed string ends at the close, so a Space of the next open is a press.
+        typeahead.reset();
         if (list.highlighted) list.highlight(null, 'none');
         // A parent that closes with no event of the user closes its submenu.
         openChild.value?.root.request(false, 'sibling-open', new Event('vase-ui'));
@@ -366,9 +374,20 @@ export function useMenuRoot<Payload>(
       : { end: 'ArrowRight', start: 'ArrowLeft' };
   };
 
+  // An arrow key on the trigger of the open menu, or on an element of the popup that is no item
+  // (such as a link of the developer), goes to the first or the last item, as at the open.
+  function keyStart(event: KeyboardEvent) {
+    const target = event.target as Element;
+    const container = listElement.value ?? root.popup;
+    if (list.virtual || target === container || target === root.popup) return undefined;
+    return list.items({ hidden: true }).some((item) => item.element.contains(target))
+      ? undefined
+      : null;
+  }
+
   function onKeydown(event: KeyboardEvent): boolean {
     if (disabled.value) return false;
-    if (typeahead.onKeydown(event) || list.onKeydown(event)) return true;
+    if (typeahead.onKeydown(event) || list.onKeydown(event, keyStart(event))) return true;
     if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return false;
     const keys = cross();
     const submenu = submenuOf(list.highlighted?.element);
@@ -407,7 +426,14 @@ export function useMenuRoot<Payload>(
         ? (item as HTMLElement)
         : null;
     },
-    inside: (element) => isInPopup(layer, element),
+    disabledItemAt(path) {
+      const item = path.find((element) => menuItems.has(element));
+      return item && isInPopup(layer, item) && menuItems.get(item)?.disabled()
+        ? (item as HTMLElement)
+        : null;
+    },
+    // A release on the positioner, such as on its padding, is a release in the menu.
+    inside: (element) => isInPopup(layer, element) || !!positioner.value?.contains(element),
   });
 
   const context: MenuContext<Payload> = {
@@ -449,6 +475,7 @@ export function useMenuRoot<Payload>(
     positioner,
     placed,
     listElement,
+    ids: shallowReactive({ list: undefined, popup: undefined }),
     finalFocus,
     viewport: shallowRef(null),
     inside: (element) => isInPopup(layer, element),

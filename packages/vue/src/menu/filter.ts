@@ -109,15 +109,23 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
     onInputKeydown(event) {
       const element = input.value;
       if (!menu || !element || event.defaultPrevented || isComposing(event)) return;
-      if (event.ctrlKey || event.altKey || event.metaKey) return;
       const { list } = menu;
       const empty = element.value === '';
       const highlighted = list.highlighted;
       const horizontal = menu.orientation === 'horizontal';
-      if (event.key === 'Enter' || (event.key === ' ' && empty)) {
+      // Enter clicks the highlighted item with its modifiers, as on an item that has the focus, so
+      // Ctrl+Enter on a link item opens a new tab.
+      if (event.key === 'Enter') {
         if (!highlighted) return;
         event.preventDefault();
         dispatchClickWithModifiers(highlighted.element, event);
+        return;
+      }
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      // Space in the empty input clicks the highlighted item, and types no space at the start.
+      if (event.key === ' ' && empty && !event.shiftKey) {
+        event.preventDefault();
+        if (highlighted) dispatchClickWithModifiers(highlighted.element, event);
         return;
       }
       if (event.key === 'Home' || event.key === 'End') {
