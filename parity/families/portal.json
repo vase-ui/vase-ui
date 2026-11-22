@@ -5,7 +5,7 @@
     {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
       "kind": "not-applicable",
-      "reason": "`src/popup/portal.ts` replaces the file. Each portal part teleports its popup with `<Teleport>` of Vue and tests it in the test file of its family."
+      "reason": "`src/popup/portal.ts` replaces the file. Each portal part teleports its popup with `<Teleport>` of Vue and tests it in the test file of its family. `src/popup/owner.test.ts` tests the element that owns the popup."
     },
     {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",

@@ -53,7 +53,7 @@ Use a transition where you can. A transition that stops midway goes back from wh
 
 :::
 
-Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. The `<Transition>` in it thus mounts at each open, so give it `appear` to run the enter. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal renders no element.
+Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. The `<Transition>` in it thus mounts at each open, so give it `appear` to run the enter. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal has no root element.
 
 While an element leaves, the element that takes its place can already be in the DOM. To remove the element that leaves from the flow, give the `leave-active` class `position: absolute`.
 

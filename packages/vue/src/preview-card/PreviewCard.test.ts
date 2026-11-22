@@ -326,6 +326,9 @@ describe('the handle', () => {
     mount(PreviewCardHandles, { handle: detached, noRoot: true, trigger: { delay: 0 } });
     await nextTick();
     detached.open('first');
+    expect(takeReportedMessages()).toEqual([
+      'console.warn: Vase UI: `open()` of a handle found no mounted root with this handle. The call does nothing.',
+    ]);
     await userEvent.hover(byId('first'));
     await wait(20);
     expect(detached.isOpen).toBe(false);

@@ -54,8 +54,9 @@ describe.runIf(inject('app') === 'vdom')('the work of an open', () => {
     // and for the hole of its fixed element at the trigger. Each item renders once, and the first
     // item once more for its highlight.
     expect(spy.renders).toEqual({ portal: 3, positioner: 4, item: 6 });
-    // The observer of the layer for a move to another root, and that of the focus. An item with
-    // no fieldset around it watches no fieldset.
-    expect(spy.observers()).toBe(2);
+    // The observer of the layer for a move to another root, that of the focus, and that of the `id`
+    // of the popup for the element that owns it. An item with no fieldset around it watches no
+    // fieldset.
+    expect(spy.observers()).toBe(3);
   });
 });

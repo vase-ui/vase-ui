@@ -2,9 +2,10 @@
   "id": "VUE-221",
   "evidence": [
     "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L426-L500",
-    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/popover/root/PopoverRoot.test.tsx#L1469-L1500"
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/popover/root/PopoverRoot.test.tsx#L1469-L1500",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/packages/react/src/utils/popups/interactions/useDismiss.test.tsx#L1345"
   ],
-  "behavior": "A press of the mouse on an element outside a popover that is not modal closes the popover at the release, with the reason `outside-press`, also when the press gives that element the focus. The press and the release decide, so a press that starts outside and ends in the popup closes nothing. In Base UI, a press that moves the focus out of the popup closes the popover at the press, with the reason `focus-out`. A pressed button takes the focus in Chromium, and not in Firefox and WebKit on macOS, so in Base UI the moment and the reason of the close depend on the browser.",
+  "behavior": "A press of the mouse on an element outside a popover that is not modal closes the popover at the release, with the reason `outside-press`, also when the press gives that element the focus. The press and the release decide, so a press that starts outside and ends in the popup closes nothing. In Base UI, a press that moves the focus out of the popup closes the popover at the press, with the reason `focus-out`. A pressed button takes the focus in Chromium, and not in Firefox and WebKit on macOS, so in Base UI the moment and the reason of the close depend on the browser. The layer reads the press, the release and the `click` of a mouse in the capture phase of the document, and it closes the popover at the `click` that follows the release. So a capture listener of the document that stops the `click`, such as one of a drag library, does not keep the popover open. A developer keeps the popover open with `details.cancel()` in `openChange`. In Base UI, a `click` that such a listener stops before it reaches its target closes nothing.",
   "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
   "families": ["popover"]
 }

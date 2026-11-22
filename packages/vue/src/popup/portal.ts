@@ -8,6 +8,7 @@ import {
   watch,
   type CSSProperties,
   type InjectionKey,
+  type Ref,
 } from 'vue';
 import { useIsHydrated } from '../common/hydration';
 import { visuallyHidden } from '../common/visuallyHidden';
@@ -150,4 +151,31 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     setBefore: (element: unknown) => (before.value = element as HTMLElement | null),
     setAfter: (element: unknown) => (after.value = element as HTMLElement | null),
   };
+}
+
+/**
+ * The `id` of the popup for `aria-owns` of an element at the place of the portal, so that a screen
+ * reader reads the popup after its trigger. It has a value while the portal has its sentinels, Tab
+ * can leave the popup, and `takesFocus` gives `true`.
+ */
+export function usePortalOwner(
+  root: PopupRoot,
+  layer: Layer,
+  sentinels: Readonly<Ref<boolean>>,
+  takesFocus: () => boolean = () => true,
+) {
+  const id = shallowRef<string>();
+  watch(
+    () => (sentinels.value && !layer.trap && takesFocus() ? root.popup : null),
+    (popup, _, onCleanup) => {
+      id.value = popup?.id || undefined;
+      if (!popup) return;
+      // The `id` attribute of an element is not reactive.
+      const observer = new MutationObserver(() => (id.value = popup.id || undefined));
+      observer.observe(popup, { attributeFilter: ['id'] });
+      onCleanup(() => observer.disconnect());
+    },
+    { immediate: true },
+  );
+  return id;
 }

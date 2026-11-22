@@ -300,3 +300,61 @@ test.skipIf(server.browser !== 'chromium').each(covered)(
     expect(clicks).toEqual([]);
   },
 );
+
+async function mountPopovers(...ids: string[]) {
+  for (const id of ids) {
+    mount(PopoverParts, { root: { defaultOpen: true }, popup: { id } });
+    await waitFor(() => expect(document.getElementById(id)).not.toBe(null));
+  }
+  return (id: string) => document.getElementById(id);
+}
+
+const touchAt = (element: Element) => {
+  const { x, y } = centerOf(element);
+  return { pointerType: 'touch', isPrimary: true, clientX: x, clientY: y };
+};
+
+test('a touch that started before the popover opened again closes nothing at its end; a new tap closes it', async () => {
+  const popup = await mountPopovers('popup');
+  const trigger = document.querySelector<HTMLElement>('[data-key="t"]')!;
+  const outside = document.getElementById('outside')!;
+  const touch = touchAt(outside);
+  await firePointer.down(outside, { ...touch, timeStamp: 1000 });
+  trigger.click();
+  await waitFor(() => expect(popup('popup')).toBe(null));
+  trigger.click();
+  await waitFor(() => expect(popup('popup')).not.toBe(null));
+  await firePointer.up(outside, { ...touch, clientX: touch.clientX + 6, timeStamp: 1100 });
+  await nextTick();
+  expect(popup('popup')).not.toBe(null);
+  await firePointer.down(outside, { ...touch, timeStamp: 2000 });
+  await firePointer.up(outside, { ...touch, timeStamp: 2100 });
+  await waitFor(() => expect(popup('popup')).toBe(null));
+});
+
+test('a touch that the browser cancels is no press: a click after it closes nothing', async () => {
+  const popup = await mountPopovers('popup');
+  const outside = document.getElementById('outside')!;
+  const touch = touchAt(outside);
+  await firePointer.down(outside, { ...touch, timeStamp: 1000 });
+  await firePointer.cancel(outside, { ...touch, timeStamp: 1050 });
+  outside.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+  await nextTick();
+  expect(popup('popup')).not.toBe(null);
+});
+
+test('a tap in a popover that opened later closes no popover that opened before it; a tap in the earlier one closes the later one', async () => {
+  const popup = await mountPopovers('earlier', 'later');
+  const tap = async (element: Element, time: number) => {
+    const touch = touchAt(element);
+    await firePointer.down(element, { ...touch, timeStamp: time });
+    await firePointer.up(element, { ...touch, timeStamp: time + 50 });
+  };
+  await tap(popup('later')!, 1000);
+  await nextTick();
+  expect(popup('earlier')).not.toBe(null);
+  expect(popup('later')).not.toBe(null);
+  await tap(popup('earlier')!, 2000);
+  await waitFor(() => expect(popup('later')).toBe(null));
+  expect(popup('earlier')).not.toBe(null);
+});

@@ -123,7 +123,7 @@ A wrapper of a Reka UI part, such as a shadcn-vue component, declares the props 
 
 ## Portals, Transition and KeepAlive
 
-A `Portal` part renders its content in a Vue [`<Teleport>`](https://vuejs.org/guide/built-ins/teleport.html), in another place of the document. It renders no element of its own, so an attribute on it reaches no element. Its props:
+A `Portal` part renders its content in a Vue [`<Teleport>`](https://vuejs.org/guide/built-ins/teleport.html), in another place of the document. While its popup is open, the portal of a popover, a menu, a select or a combobox can also render a visually hidden element in place. That element names the popup in `aria-owns`, so a screen reader reads the popup after its trigger. A `Portal` part has no root element, so an attribute on it reaches no element. Its props:
 
 - `to`: the target, a CSS selector, an element or a shadow root. With no `to`, the target of the nearest portal above, else `<body>`. While `to` is `null`, such as a template ref before its mount, the portal renders nothing. A change of `to` moves the content.
 - `disabled`: renders the content in its place, also on the server.

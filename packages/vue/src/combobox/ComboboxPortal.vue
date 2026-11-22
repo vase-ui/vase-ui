@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePopupPortal } from '../popup/portal';
+import { usePopupPortal, usePortalOwner } from '../popup/portal';
 import { injectComboboxRoot, providePortal } from './root';
 import type { ComboboxPortalProps } from './types';
 
@@ -26,10 +26,18 @@ const portal = usePopupPortal(context.root, context.layer, {
     return props.keepMounted || context.keepsPopup;
   },
 });
+// Only a popup that takes the focus has an owner: an input outside the popup keeps the focus.
+const owner = usePortalOwner(
+  context.root,
+  context.layer,
+  portal.sentinels,
+  () => !context.inputIsControl,
+);
 providePortal();
 </script>
 
 <template>
+  <span v-if="owner" :aria-owns="owner" :style="portal.sentinelStyle" />
   <Teleport
     v-if="portal.rendered.value"
     :to="portal.target.value"

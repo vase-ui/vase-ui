@@ -148,7 +148,8 @@ export namespace Icon {
 
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
- * Renders no element.
+ * Renders a visually hidden `<span>` in place while the moved popup is open. Its `aria-owns` names
+ * the popup, so a screen reader reads the popup after its trigger.
  * From the first focus of the trigger, the first open or the first fill of the browser, it keeps
  * its content in the DOM, so the closed select has its items.
  */

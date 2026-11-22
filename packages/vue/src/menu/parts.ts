@@ -123,7 +123,9 @@ export namespace Trigger {
 
 /**
  * Moves its content to another place of the DOM, `<body>` by default.
- * Renders no element.
+ * Renders a visually hidden `<span>` in place while the moved popup is open. Its `aria-owns` names
+ * the popup, so a screen reader reads the popup after its trigger. In a menu or a menubar, the
+ * `<span>` has the role `group`.
  */
 export const Portal: typeof MenuPortal = MenuPortal;
 export namespace Portal {
