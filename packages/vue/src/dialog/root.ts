@@ -14,7 +14,8 @@ import { useAsTag, useElement } from '../common/element';
 import { givenId } from '../common/id';
 import { warn } from '../common/warn';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { layersAbove, useLayer, type Layer } from '../popup/layer';
+import { layersAbove, type Layer } from '../popup/layer';
+import { useModalLayer } from '../popup/modal';
 import { PopupHandle, rootToOpen, usePopupRoot, type PopupRoot } from '../popup/root';
 import { useHandleRoot, usePopupTrigger } from '../popup/trigger';
 import type { DialogRootChangeEventDetails, DialogRootProps, DialogTriggerState } from './types';
@@ -123,7 +124,7 @@ export function useDialogRoot<Payload>(
   const dialogsAbove = computed(
     () => layersAbove(layer).filter((above) => contexts.has(above.root)).length,
   );
-  const layer = useLayer(root, () => ({
+  const layer = useModalLayer(root, () => ({
     escape: true,
     // One press closes one dialog: a dialog with a dialog above it waits for its own press.
     outsidePress: kind === 'dialog' && !props.disablePointerDismissal && dialogsAbove.value === 0,

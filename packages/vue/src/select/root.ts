@@ -19,7 +19,8 @@ import { stringifyAsValue } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
 import { useTypeahead } from '../list/typeahead';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInPopup, useLayer, type Layer } from '../popup/layer';
+import { isInPopup, type Layer } from '../popup/layer';
+import { useModalLayer } from '../popup/modal';
 import type { Align, Side, usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
@@ -201,7 +202,7 @@ export function useSelectRoot(
         element.ownerDocument.documentElement.clientWidth - FULL_WIDTH_TOLERANCE
     );
   });
-  const layer = useLayer(root, () => ({
+  const layer = useModalLayer(root, () => ({
     escape: true,
     outsidePress: true,
     focusOut: true,

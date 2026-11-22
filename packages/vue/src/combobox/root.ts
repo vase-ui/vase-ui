@@ -34,7 +34,8 @@ import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolv
 import { useList, type List, type ListItem } from '../list/list';
 import { useLocale } from '../locale-provider/part';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
-import { isInPopup, useLayer, type Layer } from '../popup/layer';
+import { isInPopup, type Layer } from '../popup/layer';
+import { useModalLayer } from '../popup/modal';
 import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
 import { usePopupRoot, type PopupRoot } from '../popup/root';
@@ -382,19 +383,20 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     else if (!data.value) next = EMPTY_ARRAY;
     else {
       const filter = source.filter;
+      const queryText = query.value;
       const keepsEach =
         filter === null ||
-        query.value === '' ||
+        queryText === '' ||
         source.completion === 'inline' ||
         source.completion === 'none';
-      const matches: ItemFilter = filter ?? coreFilter.value.contains;
-      const queryText = query.value;
-      const toLabel = itemToString.value;
-      next = filterItems(
-        data.value as unknown[] | Group[],
-        keepsEach ? () => true : (item) => item != null && matches(item, queryText, toLabel),
-        source.limit,
-      );
+      // A list that keeps each item needs no filter, so the first mount makes no collator.
+      let keeps: (item: unknown) => boolean = () => true;
+      if (!keepsEach) {
+        const matches: ItemFilter = filter ?? coreFilter.value.contains;
+        const toLabel = itemToString.value;
+        keeps = (item) => item != null && matches(item, queryText, toLabel);
+      }
+      next = filterItems(data.value as unknown[] | Group[], keeps, source.limit);
     }
     // The same items give the same list, so a key that keeps them renders no item.
     return previous && sameItems(previous, next) ? previous : next;
@@ -472,7 +474,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const placed = shallowRef(false);
   const side = shallowRef<Side | null>(null);
   const fullWidth = useFullWidth(positioner, placed);
-  const layer = useLayer(root, () => {
+  const layer = useModalLayer(root, () => {
     const modal = source.modal && !source.inline && !!positioner.value;
     return {
       escape: !source.inline,
@@ -524,7 +526,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (given !== undefined) return given;
     if (source.virtualized)
       return findItemIndex(filteredValues.value, entry?.value(), isEqual.value);
-    return list.items().indexOf(item);
+    return list.indexOf(item);
   }
 
   function emitHighlight(
@@ -581,13 +583,12 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   }
 
   function highlightSelected() {
-    const items = list.items();
     const pick = lastPick;
     const picked =
       pick && isSelected(pick.value)
-        ? items.find((item) => compareItemEquality(valueOf(item), pick.value, isEqual.value))
+        ? list.find((item) => compareItemEquality(valueOf(item), pick.value, isEqual.value))
         : undefined;
-    const selected = picked ?? items.find((item) => isSelected(valueOf(item)));
+    const selected = picked ?? list.find((item) => isSelected(valueOf(item)));
     if (selected) list.highlight(selected, 'none');
     else if (source.virtualized && hasValue.value && source.mode !== 'none') {
       const index = filteredValues.value.findIndex((each) => isSelected(each));
@@ -630,13 +631,12 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
         // A new popup waits while the old one leaves, so its items mount later.
-        if (list.items().length === 0 && hasValue.value && source.mode !== 'none') {
+        if (hasValue.value && source.mode !== 'none' && !list.find()) {
           highlightSelectedLater.value = true;
           return;
         }
-        const items = list.items();
         if (source.autoHighlight === 'always') {
-          list.highlight(items[0] ?? null, 'none');
+          list.highlight(list.find() ?? null, 'none');
         } else if (key && (source.mode !== 'none' || source.autoHighlight)) {
           list.highlight(
             list.edge(key.key === 'ArrowUp' ? 'last' : 'first') ?? null,

@@ -32,7 +32,7 @@ SOFTWARE.
 
 ## aria-hidden
 
-This notice covers the marks outside a modal popup in `packages/vue/src/popup/layer.ts`. They follow `markOthers`, which Base UI ported from [aria-hidden](https://github.com/theKashey/aria-hidden) with changes.
+This notice covers the marks outside a modal popup in `packages/vue/src/popup/modal.ts`. They follow `markOthers`, which Base UI ported from [aria-hidden](https://github.com/theKashey/aria-hidden) with changes.
 
 ```text
 MIT License
