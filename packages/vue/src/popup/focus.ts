@@ -159,23 +159,12 @@ export function usePopupFocus(
     befores.set(root, before);
     took = true;
     const target = resolve(options.initialFocus(), root.interaction);
-    if (
-      layer.hide === 'inert' &&
-      (target === false || (target !== true && !popup.contains(target)))
-    ) {
-      // The layer writes `inert` on the page in this update, and an inert element takes no focus.
-      // WebKit keeps the text caret in a focused element that becomes inert
-      // (test/measurements/dialog.test.ts), so that element loses the focus here.
-      void nextTick(() => {
-        if (target) focus(target);
-        const focused = activeElement(doc);
-        if (focused?.closest('[inert]')) (focused as HTMLElement).blur();
-      });
-      return;
-    }
-    if (target === false) return;
     if (target !== true) {
-      focus(target);
+      if (target) focus(target);
+      // WebKit keeps the text caret in a focused element that becomes inert
+      // (test/measurements/dialog.test.ts), so that element loses the focus.
+      const focused = activeElement(doc);
+      if (focused?.closest('[inert]')) (focused as HTMLElement).blur();
       return;
     }
     if (root.interaction === 'touch') {
@@ -189,12 +178,9 @@ export function usePopupFocus(
     [() => opens.value, () => root.open && options.takesFocus() && options.placed() && root.popup],
     ([, popup]) => {
       if (!popup) return;
-      // `v-show` shows a popup that stays in the DOM in a hook of this flush, which can run after
-      // this watcher. A hidden element takes no focus, so the focus moves at the end of the flush.
-      if (popup.checkVisibility()) {
-        takeFocus(popup);
-        return;
-      }
+      // A child of the popup can change its attributes in a later update of this flush, such as
+      // at its mount (test/measurements/dialog.test.ts), and `v-show` shows a popup in a hook of
+      // this flush. So the focus moves after the flush.
       void nextTick(() => {
         if (root.open && root.popup === popup) takeFocus(popup);
       });
@@ -210,7 +196,7 @@ export function usePopupFocus(
     (popup, _, onCleanup) => {
       if (!popup) return;
       const doc = ownerDocument(popup);
-      // The first focus of the popup can come before this watcher.
+      // A child of the popup can take the focus at its mount, before this watcher.
       const current = activeElement(doc);
       let focused: Element | null = current && popup.contains(current) ? current : null;
       const restore = () => {

@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import DialogFieldFocusedAtMount from '../../test/fixtures/DialogFieldFocusedAtMount.vue';
 import DialogFocusTargets from '../../test/fixtures/DialogFocusTargets.vue';
 import DialogFromItem from '../../test/fixtures/DialogFromItem.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
 import DialogRemovedChild from '../../test/fixtures/DialogRemovedChild.vue';
+import DialogTabStopAfterMount from '../../test/fixtures/DialogTabStopAfterMount.vue';
 import { mount } from '../../test/render';
 import { waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
@@ -276,6 +278,36 @@ describe('the focus of a dialog', () => {
     const popup = await opened();
     await waitFor(() => expect(popup).toHaveFocus());
     expect(get('inside-1')).not.toHaveFocus();
+  });
+
+  test('goes to a box that takes a tab stop in the update after its mount', async () => {
+    mount(DialogTabStopAfterMount);
+    await waitFor(() => expect(get('box')).toHaveFocus());
+  });
+
+  test('moves no focus when the dialog closes in the update of its open', async () => {
+    const { exposed } = mount(DialogParts, {
+      root: { modal: false },
+      popup: { initialFocus: () => document.getElementById('outside') },
+    });
+    await nextTick();
+    const trigger = document.querySelector<HTMLElement>('[data-key="t"]')!;
+    trigger.focus();
+    trigger.click();
+    // This callback runs after the update of the open, and before the first focus.
+    void nextTick(() => exposed.root.close());
+    await closed();
+    await waitSingleFrame();
+    expect(trigger).toHaveFocus();
+  });
+
+  test('goes to the popup when a field that took the focus at its own mount leaves', async () => {
+    const scene = reactive({ field: true });
+    mount(DialogFieldFocusedAtMount, { scene });
+    await waitFor(() => expect(get('field')).toHaveFocus());
+    await waitSingleFrame();
+    scene.field = false;
+    await waitFor(() => expect(get('popup')).toHaveFocus());
   });
 
   test('goes to the popup when the focused button unmounts at its `pointerdown`, and an outside press still closes', async () => {
