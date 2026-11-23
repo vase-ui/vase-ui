@@ -42,11 +42,11 @@ describe('server render and hydration', () => {
     },
   );
 
-  test('an element of the slot that is not a button has type="button" in the server HTML, and gets its own attributes at the mount', async () => {
+  test('VUE-233: an element of the slot that is not a button has the attributes of a button and of another element in the server HTML, and gets its own attributes at the mount', async () => {
     const props = { scene: { tag: 'span' }, attrs: {} };
     const root = await renderOnServer('ToggleInSlot', props);
     const span = root.querySelector('.Ancestor > span')!;
-    expect(span.getAttributeNames().sort()).toEqual(['aria-pressed', 'type']);
+    expect(span.getAttributeNames().sort()).toEqual(['aria-pressed', 'role', 'tabindex', 'type']);
     hydrate(ToggleInSlot, props, root);
     await nextTick();
     await nextTick();
@@ -59,7 +59,7 @@ describe('server render and hydration', () => {
     const root = await renderOnServer('ToggleInSlot', props);
     const button = root.querySelector('.Ancestor > *')!;
     expect(button.localName).toBe('button');
-    expect(button.getAttributeNames().sort()).toEqual(['aria-pressed', 'type']);
+    expect(button.getAttributeNames().sort()).toEqual(['aria-pressed', 'role', 'tabindex', 'type']);
     hydrate(ToggleInSlot, props, root);
     await nextTick();
     await nextTick();

@@ -222,7 +222,7 @@ export function useDialogTrigger(
     id: () => elementId.value,
     payload: () => props.payload,
     disabled: () => props.disabled ?? false,
-    tag: useAsTag(() => props.as),
+    tag: useAsTag(() => props.as, 'button'),
   });
 
   const state = computed<DialogTriggerState>(() => ({

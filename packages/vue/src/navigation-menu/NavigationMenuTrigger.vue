@@ -39,7 +39,7 @@ const trigger = usePopupTrigger(popup, {
   id: () => givenId(props.id) ?? generatedId,
   payload: () => item.value,
   disabled: () => props.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   // An inline root closes only by a link, by code or by its model.
   closesAtPress: (event) => !root.inline && hover.closesAtPress(event),
   focusableWhenDisabled: () => true,

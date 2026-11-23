@@ -28,7 +28,7 @@ const button = useButton({
   element,
   disabled: () => props.disabled || calendar.state.disabled || !calendar.hasViews,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const state = computed<CalendarViewTriggerState>(() => ({
   ...calendar.state,

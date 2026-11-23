@@ -25,7 +25,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => props.disabled || group.disabled,
-  tag: useAsTag(() => props.as ?? 'div'),
+  tag: useAsTag(() => props.as, 'div'),
   role: 'menuitemradio',
 });
 const checked = computed(() => Object.is(group.value, props.value));

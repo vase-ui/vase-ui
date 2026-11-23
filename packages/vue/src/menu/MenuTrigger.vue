@@ -45,7 +45,7 @@ const trigger = usePopupTrigger(root, {
   id: () => elementId.value,
   payload: () => props.payload,
   disabled: isDisabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   closesAtPress: (event) => !props.openOnHover || hover.closesAtPress(event),
   pressStart: () => true,
 });

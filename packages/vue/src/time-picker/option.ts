@@ -35,7 +35,7 @@ export function useOption(
     element,
     disabled: () => options.disabled() || picker.disabled,
     type: 'button',
-    tag: useAsTag(options.as),
+    tag: useAsTag(options.as, 'button'),
   });
 
   watch(

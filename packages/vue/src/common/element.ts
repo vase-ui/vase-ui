@@ -34,15 +34,16 @@ export interface ElementSlotProps<State> {
 }
 
 /**
- * The tag in `as` of the part, known at the render, so that the server writes the attributes of that
- * element. The element of a component in `as`, or of the `element` slot, which wins over `as`, is
- * known after the mount.
+ * The tag of the element of the part at the render: the tag in `as`, else `defaultTag`. The server
+ * then writes the attributes of that element. It is `undefined` for a component in `as` and for the
+ * `element` slot, which wins over `as`: the part knows that element after the mount.
  */
-export function useAsTag(as: () => unknown): () => string | undefined {
+export function useAsTag(as: () => unknown, defaultTag: string): () => string | undefined {
   const slots = useSlots();
   return () => {
-    const given = as();
-    return typeof given === 'string' && !slots.element ? given : undefined;
+    if (slots.element) return undefined;
+    const given = as() ?? defaultTag;
+    return typeof given === 'string' ? given : undefined;
   };
 }
 

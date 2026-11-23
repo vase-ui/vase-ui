@@ -52,7 +52,8 @@ describe('server render and hydration', () => {
     const root = await renderOnServer('ToggleGroupInToolbar');
     const ids = ['first', 'one', 'two', 'alone', 'last'];
     const read = () => ids.map((id) => root.querySelector(`#${id}`)!.getAttribute('tabindex'));
-    expect(read()).toEqual([null, null, null, null, null]);
+    // `alone` is in the `element` slot of a `Toolbar.Button`, which knows its element at the mount.
+    expect(read()).toEqual([null, null, null, '0', null]);
     hydrate(ToggleGroupInToolbar, {}, root);
     await settle();
     expect(read()).toEqual(['0', '-1', '-1', '-1', '-1']);

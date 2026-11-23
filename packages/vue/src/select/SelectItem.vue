@@ -22,7 +22,7 @@ const button = useButton({
   element,
   disabled: () => isDisabled.value,
   focusableWhenDisabled: () => true,
-  tag: useAsTag(() => props.as ?? 'div'),
+  tag: useAsTag(() => props.as, 'div'),
 });
 const item = useListItem(context.list, element, {
   label: () => props.label,

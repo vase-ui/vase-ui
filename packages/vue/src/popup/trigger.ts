@@ -75,7 +75,7 @@ export function usePopupTrigger(
     id: () => string;
     payload: () => unknown;
     disabled: () => boolean;
-    /** The tag of the element before the mount, where the part knows it (a tag in `as`). */
+    /** The tag of the element before the mount, from `useAsTag`. */
     tag: () => string | undefined;
     /** A press closes the open popup of this trigger. */
     closesAtPress?: (event: MouseEvent) => boolean;

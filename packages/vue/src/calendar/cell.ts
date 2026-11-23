@@ -43,7 +43,7 @@ export function useCell(
     element,
     disabled: () => state.value.disabled,
     type: 'button',
-    tag: useAsTag(() => props.as),
+    tag: useAsTag(() => props.as, 'button'),
   });
   const text = computed(() => formatText(options.cell(), options.format(), calendar.locale));
 

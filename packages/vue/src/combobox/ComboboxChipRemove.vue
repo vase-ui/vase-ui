@@ -27,7 +27,7 @@ const button = useButton({
   element,
   disabled: () => chip.disabled || props.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const state = computed<ComboboxChipRemoveState>(() => ({ disabled: button.disabled.value }));
 

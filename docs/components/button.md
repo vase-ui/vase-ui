@@ -66,7 +66,7 @@ Give `as` another tag, such as `div`. Button then gives the element `role="butto
 
 <<< ./button/CustomTagButton.vue{6}
 
-The server HTML has these attributes for a tag in `as`. A component in `as` or in the `element` slot gets them at the mount. Write `role` and `tabindex` on such an element when the server HTML must have them.
+The server HTML has these attributes for a tag in `as`. Button knows the element of a component in `as` or in the `element` slot only at the mount. Until then, the element has the attributes of a native button and of another element: `type="button"`, `role="button"`, a tab stop and the disabled state. At the mount, Button keeps the attributes of its element.
 
 ### Rendering links as buttons
 

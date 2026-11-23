@@ -17,7 +17,7 @@ defineSlots<{
 const root = injectTabsRoot();
 const list = injectTabsList();
 const attrs = useAttrs();
-const asTag = useAsTag(() => props.as);
+const asTag = useAsTag(() => props.as, 'button');
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 

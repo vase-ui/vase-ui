@@ -22,7 +22,7 @@ const button = useButton({
   element,
   disabled: () => props.disabled || menu.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const shown = computed(() => filter.query !== '');
 const state = computed<MenuClearState>(() => ({ disabled: button.disabled.value }));

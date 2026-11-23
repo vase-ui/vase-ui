@@ -25,7 +25,7 @@ const { element, setElement } = useElement<HTMLElement>();
 const { disabled, mergeAttributes } = useButton({
   element,
   disabled: () => clock.state.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   type: 'button',
 });
 const state = computed<TimeClockViewTriggerState>(() => ({

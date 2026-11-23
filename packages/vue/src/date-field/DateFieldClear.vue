@@ -20,7 +20,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () =>
     props.disabled || field.state.disabled || field.state.readonly || field.state.empty,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   type: 'button',
 });
 const state = computed<DateFieldClearState>(() => ({ ...field.state, disabled: isDisabled.value }));

@@ -1,0 +1,11 @@
+{
+  "id": "VUE-233",
+  "evidence": [
+    "https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type",
+    "https://vuejs.org/guide/components/async.html#hydrate-on-interaction",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/button/",
+    "https://github.com/mui/base-ui/blob/315eba7a3d8a0a53d47fe7b902cb75daa21f6814/docs/src/app/(docs)/react/components/button/types.md"
+  ],
+  "behavior": "A button part knows the element of a component in `as` or of the `element` slot only at the mount, and it needs no prop that says what the element is. Until the mount, the element has the attributes that suit a `<button>` and each other element: `type=\"button\"`, `role=\"button\"`, a tab stop, and the disabled state of both. So in the server HTML, Tab reaches a `<div>` before a lazy hydration, and a `<button>` does not submit its form. At the mount, the part keeps the attributes of its element. Base UI needs `nativeButton` set to `false` for an element that is not a `<button>`.",
+  "dueWith": "packages/react/src/button/Button.tsx"
+}

@@ -234,13 +234,15 @@ describe('prop: as', () => {
       { type: null, role: 'button', tabindex: '0' },
       // The input of the number field is its one tab stop.
       { type: null, role: 'button', tabindex: '-1' },
-      // The slot wins over `as`, and the part knows its element after the mount.
-      { type: 'button', role: null, tabindex: null },
     ];
-    expect([tab, button, toggle, ...triggers, stepper, slotButton].map(read)).toEqual(expected);
+    const elementsWithAs = [tab, button, toggle, ...triggers, stepper];
+    expect(elementsWithAs.map(read)).toEqual(expected);
+    // The slot wins over `as`, and the part knows its element after the mount.
+    expect(read(slotButton)).toEqual({ type: 'button', role: 'button', tabindex: '0' });
     const exposed = hydrate(AsParts, { as }, root);
     await nextTick();
     parts.forEach((part, index) => expect(elementOf(exposed, part), part).toBe(elements[index]));
-    expect([tab, button, toggle, ...triggers, stepper, slotButton].map(read)).toEqual(expected);
+    expect(elementsWithAs.map(read)).toEqual(expected);
+    expect(read(slotButton)).toEqual({ type: 'button', role: null, tabindex: null });
   });
 });

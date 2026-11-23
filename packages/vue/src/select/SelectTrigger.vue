@@ -34,7 +34,7 @@ const trigger = usePopupTrigger(() => root, {
   id: () => triggerId.value,
   payload: () => undefined,
   disabled: () => props.disabled || context.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   pressStart: () => true,
   keyClickByKeydown: true,
 });
