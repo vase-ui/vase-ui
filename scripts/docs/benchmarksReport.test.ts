@@ -416,17 +416,17 @@ test('a library with no fixture is not provided, and a check with no results is 
   assert.deepEqual(animations?.notes, { vuetify0: 'Note.' });
 });
 
-test('a Vase UI check that does not pass in each engine is a loss, with the Vue libraries that pass it there', () => {
+test('a Vase UI check that does not pass in one engine or more is a loss, with the Vue libraries that pass it there', () => {
   const vase = cellOf('exit', 'vase-ui');
   assert.ok(typeof vase === 'object');
   assert.equal(vase.loss, 'loss-popup-animations-exit');
   assert.deepEqual(
-    checked.behaviorLosses.map(({ id, row, engines, libraries }) => ({
+    checked.behaviorLosses.map(({ id, row, results: lost, libraries }) => ({
       id,
       row,
-      engines: engines.map(
-        (engine) =>
-          `${engine.engine} ${engine.verdict}: ${engine.cases.map((item) => `${item.verdict} ${item.reason ?? ''}`.trim()).join(', ')}`,
+      engines: lost.map(
+        ({ engines, verdict, cases }) =>
+          `${engines.join(' ')} ${verdict}: ${cases.map((item) => `${item.verdict} ${item.reason ?? ''}`.trim()).join(', ')}`,
       ),
       libraries,
     })),
@@ -488,6 +488,143 @@ test('the behavior summary counts the checks that pass in each engine, with no f
       ['firefox', 3],
     ],
   );
+});
+
+const swipe: Check = {
+  id: 'swipe',
+  title: 'Swipe.',
+  expectation: { text: 'Source', url: 'https://example.com/' },
+  scenario: 'NestedDrawers',
+  cases: ['mouse', 'touch'],
+  run,
+};
+
+const keys: Check = { ...swipe, id: 'keys', title: 'Keys.', cases: ['Home', 'End'] };
+
+const valueType: Check = {
+  id: 'value-type',
+  title: 'Value type.',
+  expectation: { text: 'Source', url: 'https://example.com/' },
+  scenario: 'DateField',
+  kind: 'fact',
+  run,
+};
+
+/** A part of an engine, with the measure of the fact row of Vase UI. */
+function drawersPart(swiped: BehaviorResults['checks'][string], fact: string): BehaviorResults {
+  return behaviorPart({
+    'drawers.swipe': swiped,
+    'drawers.value-type': { 'vase-ui': [{ ...behaviorCase(null, 3), measure: fact }] },
+  });
+}
+
+const [drawers] = benchmarksReportOf(
+  {
+    ...results,
+    behavior: {
+      chromium: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3), behaviorCase('touch', 3)],
+          'reka-ui': [behaviorCase('mouse', 3), behaviorCase('touch', 0, 3, 'No swipe.')],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In Chromium.'), behaviorCase('touch', 0)],
+        },
+        'PlainDate',
+      ),
+      firefox: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3)],
+          'reka-ui': [behaviorCase('mouse', 3)],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In Firefox.')],
+        },
+        'PlainDate',
+      ),
+      webkit: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3)],
+          'reka-ui': [behaviorCase('mouse', 3)],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In WebKit.')],
+        },
+        'Date',
+      ),
+    },
+  },
+  { groups: [] },
+  { notes: [] },
+  [{ id: 'drawers', title: 'Drawers', checks: [swipe, valueType] }],
+).behaviorTables;
+
+function groupsOf(check: string, library: string): string[] {
+  const cell = drawers?.rows.find((row) => row.key === `drawers.${check}`)?.cells[library];
+  return typeof cell === 'object'
+    ? cell.results.map(
+        ({ engines, verdict, cases }) =>
+          `${engines.join(' ')} ${verdict}: ${cases.map((item) => `${item.case ?? '-'} ${item.verdict} ${item.measure}`).join(', ')}`,
+      )
+    : [String(cell)];
+}
+
+test('the engines of a cell agree when they give one verdict for each case that they share', () => {
+  assert.deepEqual(groupsOf('swipe', 'vase-ui'), [
+    'chromium firefox webkit pass: mouse pass 3 pass., touch pass 3 pass.',
+  ]);
+  assert.deepEqual(groupsOf('swipe', 'reka-ui'), [
+    'chromium partly: mouse pass 3 pass., touch fail 0 pass.',
+    'firefox webkit pass: mouse pass 3 pass.',
+  ]);
+});
+
+test('the engines that agree give the case of the first engine, with its reason', () => {
+  const cell = drawers?.rows.find((row) => row.key === 'drawers.swipe')?.cells['ark-ui'];
+  assert.ok(typeof cell === 'object');
+  assert.deepEqual(
+    cell.results.map(({ engines, cases }) => ({
+      engines,
+      reasons: cases.map((item) => item.reason),
+    })),
+    [{ engines: ['chromium', 'firefox', 'webkit'], reasons: ['In Chromium.', undefined] }],
+  );
+});
+
+test('the engines of a cell or a loss with one verdict and a case of another verdict do not agree', () => {
+  const {
+    behaviorTables: [table],
+    behaviorLosses: [loss],
+  } = benchmarksReportOf(
+    {
+      ...results,
+      behavior: {
+        chromium: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 3), behaviorCase('End', 0)] },
+        }),
+        firefox: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 0), behaviorCase('End', 3)] },
+        }),
+        webkit: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 3), behaviorCase('End', 0)] },
+        }),
+      },
+    },
+    { groups: [] },
+    { notes: [] },
+    [{ id: 'drawers', title: 'Drawers', checks: [keys] }],
+  );
+  const cell = table?.rows[0]?.cells['vase-ui'];
+  assert.ok(typeof cell === 'object');
+  assert.deepEqual(
+    cell.results.map(({ engines, verdict }) => `${engines.join(' ')} ${verdict}`),
+    ['chromium webkit partly', 'firefox partly'],
+  );
+  assert.deepEqual(
+    loss?.results.map(({ engines, verdict }) => `${engines.join(' ')} ${verdict}`),
+    ['chromium webkit partly', 'firefox partly'],
+  );
+});
+
+test('the engines of a fact row agree when they give the same measures', () => {
+  assert.deepEqual(groupsOf('value-type', 'vase-ui'), [
+    'chromium firefox pass: - pass PlainDate',
+    'webkit pass: - pass Date',
+  ]);
 });
 
 // The root project has no DOM types, and the code of the checks uses them in the page. So the test

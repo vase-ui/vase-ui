@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import type { BehaviorEngineResult, BehaviorRow } from '../../../scripts/docs/benchmarksReport.ts';
 import { data } from '../../benchmarks.data.ts';
-import {
-  agree,
-  behaviorVerdictName,
-  columnName,
-  engineName,
-  failLines,
-  libraryName,
-  listOf,
-  sameResults,
-} from './benchmarksFormat.ts';
+import { behaviorVerdictName, failLines, listOf } from './benchmarksBehaviorText.ts';
+import { columnName, engineName, libraryName } from './benchmarksFormat.ts';
 import BenchmarksNoteLink from './BenchmarksNoteLink.vue';
 import { vaseUiFileAtCommitUrl } from './links.ts';
 import ScrollBox from './ScrollBox.vue';
@@ -49,18 +41,12 @@ function textOf(row: BehaviorRow, column: string): CellText | string {
     return 'Not provided';
   }
   const fact = row.kind === 'fact';
-  const measuresOf = (engine: BehaviorEngineResult) =>
-    engine.cases.map((item) => item.measure).join('\n');
-  const groups = sameResults(
-    cell.engines,
-    fact ? (first, second) => measuresOf(first) === measuresOf(second) : agree,
-  );
-  const results = groups.map(({ names, verdict, cases }) => {
+  const results = cell.results.map(({ engines, verdict, cases }) => {
     const first = fact
       ? listOf([...new Set(cases.map((item) => item.measure))])
       : behaviorVerdictName(verdict);
     return {
-      first: groups.length === 1 ? first : `${names}: ${first}`,
+      first: cell.results.length === 1 ? first : `${listOf(engines.map(engineName))}: ${first}`,
       lines: fact ? [] : failLines(cases),
     };
   });
@@ -149,7 +135,6 @@ const rows =
       </table>
     </ScrollBox>
   </template>
-  <p v-else>The group {{ group }} has no checks.</p>
 </template>
 
 <style scoped>

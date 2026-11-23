@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { data } from '../../benchmarks.data.ts';
+import { behaviorVerdictName, failLines, listOf } from './benchmarksBehaviorText.ts';
 import {
-  behaviorVerdictName,
   engineName,
-  failLines,
   formatBytes,
   formatInterval,
   formatMeasure,
   formatRatio,
   libraryName,
-  listOf,
-  sameResults,
   setupName,
 } from './benchmarksFormat.ts';
 import ScrollBox from './ScrollBox.vue';
@@ -38,8 +35,8 @@ const BEHAVIOR_LOSSES_TITLE = 'Behavior checks that Vase UI does not pass';
 
 const behaviorLosses = data.behaviorLosses.map((loss) => ({
   ...loss,
-  results: sameResults(loss.engines).map(({ names, verdict, cases }) => ({
-    first: `${names}: ${behaviorVerdictName(verdict)}`,
+  results: loss.results.map(({ engines, verdict, cases }) => ({
+    first: `${listOf(engines.map(engineName))}: ${behaviorVerdictName(verdict)}`,
     lines: failLines(cases),
   })),
   passes:

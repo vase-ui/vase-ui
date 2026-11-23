@@ -1,3 +1,4 @@
+import { fixtureFileOf, scenarioOf } from '../../benchmarks/behavior/fixtures.ts';
 import type { Check, Group } from '../../benchmarks/behavior/types.ts';
 import { LIBRARIES, metricOf, SCENARIOS, VISITS } from '../../benchmarks/scenarios.ts';
 import type { Library, Measure, Visit } from '../../benchmarks/scenarios.ts';
@@ -218,6 +219,15 @@ export interface BehaviorEngineResult {
   cases: BehaviorCaseResult[];
 }
 
+/** The engines that give one result, and that result. */
+export interface BehaviorEngineGroup {
+  /** The engines, in the sequence of the engines. */
+  engines: string[];
+  verdict: BehaviorVerdict;
+  /** The cases of these engines, each one once, from the first engine that ran it. */
+  cases: BehaviorCaseResult[];
+}
+
 /** A cell of a behavior table. `not-measured`: no engine has a result of the check. */
 export type BehaviorCell =
   | 'not-provided'
@@ -225,6 +235,11 @@ export type BehaviorCell =
   | {
       /** The result of each engine that ran the check, in the sequence of the engines. */
       engines: BehaviorEngineResult[];
+      /**
+       * One group when the engines agree, else one group for each set of engines that agree. The
+       * engines of a fact row agree when they give the same measures.
+       */
+      results: BehaviorEngineGroup[];
       /** Each case of the check that has no fixture of the library, such as `Tooltip`. */
       notProvided: string[];
       /**
@@ -232,7 +247,7 @@ export type BehaviorCell =
        * cases have fixtures of their own.
        */
       fixtures: { case: string | null; path: string }[];
-      /** The anchor of the loss of a Vase UI cell that does not pass in each engine. */
+      /** The anchor of the loss of a Vase UI cell that does not pass in one engine or more. */
       loss?: string;
     };
 
@@ -272,7 +287,7 @@ export interface BehaviorSummaryRow {
   cells: Record<string, BehaviorSummaryCell>;
 }
 
-/** A check that Vase UI does not pass in each engine. */
+/** A check that Vase UI does not pass in one engine or more. */
 export interface BehaviorLoss {
   /** The anchor of the loss. The `*` of the Vase UI cell links it. */
   id: string;
@@ -280,8 +295,8 @@ export interface BehaviorLoss {
   row: string;
   group: string;
   title: string;
-  /** The result of each engine in which the Vase UI cell does not pass. */
-  engines: BehaviorEngineResult[];
+  /** The results of the engines in which the Vase UI cell does not pass, grouped as in the cell. */
+  results: BehaviorEngineGroup[];
   /** The other Vue libraries that pass the check in each of these engines. */
   libraries: LibraryId[];
 }
@@ -710,21 +725,55 @@ function verdictOf(cases: readonly BehaviorCaseResult[]): BehaviorVerdict {
   return first === 'pass' && verdicts.size > 1 ? 'partly' : first;
 }
 
+/**
+ * Two engines agree when they give one verdict, and each case that both ran has one verdict. A touch
+ * case runs in Chromium only, so it does not stop an agreement.
+ */
+function agree(first: BehaviorEngineResult, second: BehaviorEngineResult): boolean {
+  return (
+    first.verdict === second.verdict &&
+    first.cases.every((one) =>
+      second.cases.every((other) => one.case !== other.case || one.verdict === other.verdict),
+    )
+  );
+}
+
+function sameMeasures(first: BehaviorEngineResult, second: BehaviorEngineResult): boolean {
+  const measures = (engine: BehaviorEngineResult) => engine.cases.map((item) => item.measure);
+  return measures(first).join('\n') === measures(second).join('\n');
+}
+
+function engineGroupsOf(
+  engines: readonly BehaviorEngineResult[],
+  same: (first: BehaviorEngineResult, second: BehaviorEngineResult) => boolean,
+): BehaviorEngineGroup[] {
+  const groups: BehaviorEngineResult[][] = [];
+  for (const engine of engines) {
+    const group = groups.find(([first]) => first !== undefined && same(first, engine));
+    if (group) {
+      group.push(engine);
+    } else {
+      groups.push([engine]);
+    }
+  }
+  return groups.map((group) => {
+    const cases = new Map<string | null, BehaviorCaseResult>();
+    for (const item of group.flatMap((engine) => engine.cases)) {
+      if (!cases.has(item.case)) {
+        cases.set(item.case, item);
+      }
+    }
+    return {
+      engines: group.map((engine) => engine.engine),
+      verdict: group[0]?.verdict ?? 'not-measured',
+      cases: [...cases.values()],
+    };
+  });
+}
+
 /** The file of a group, such as `benchmarks/behavior/nestedDialogs.ts` for `nested-dialogs`. */
 function groupFileOf(group: Group): string {
   return `benchmarks/behavior/${group.id.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())}.ts`;
-}
-
-function fixtureFileOf(library: Library, scenario: string): string {
-  return `benchmarks/libraries/${library.id}/behavior/${scenario}.${library.framework === 'react' ? 'tsx' : 'vue'}`;
-}
-
-function scenarioOfCase(check: Check, caseName: string | null): string | undefined {
-  return typeof check.scenario === 'string'
-    ? check.scenario
-    : caseName === null
-      ? undefined
-      : check.scenario[caseName];
 }
 
 /** The anchor of the row of a check, such as `behavior-nested-dialogs-focus-returns`. */
@@ -773,17 +822,18 @@ function behaviorCell(
     return 'not-provided';
   }
   const ranCases = new Set(engines.flatMap((engine) => engine.cases.map((item) => item.case)));
-  const scenarios = new Set([...ranCases].flatMap((name) => scenarioOfCase(check, name) ?? []));
+  const scenarios = new Set([...ranCases].flatMap((name) => scenarioOf(check, name) ?? []));
   return {
     engines,
+    results: engineGroupsOf(engines, check.kind === 'fact' ? sameMeasures : agree),
     notProvided: (check.cases ?? []).filter(
-      (name) => !scenarios.has(scenarioOfCase(check, name) ?? ''),
+      (name) => !scenarios.has(scenarioOf(check, name) ?? ''),
     ),
     fixtures:
       typeof check.scenario === 'string'
         ? [{ case: null, path: fixtureFileOf(library, check.scenario) }]
         : [...ranCases].flatMap((name) => {
-            const scenario = scenarioOfCase(check, name);
+            const scenario = scenarioOf(check, name);
             return name === null || scenario === undefined
               ? []
               : [{ case: name, path: fixtureFileOf(library, scenario) }];
@@ -850,7 +900,7 @@ function behaviorSummaryOf(tables: readonly BehaviorTable[]): BenchmarksReport['
   return { columns, rows };
 }
 
-/** Each check that Vase UI does not pass in each engine, with the Vue libraries that pass it. */
+/** Each check that Vase UI does not pass in one engine or more, with the Vue libraries that pass it. */
 function behaviorLossesOf(tables: readonly BehaviorTable[]): BehaviorLoss[] {
   return tables.flatMap((table) =>
     table.rows.flatMap((row): BehaviorLoss[] => {
@@ -872,7 +922,14 @@ function behaviorLossesOf(tables: readonly BehaviorTable[]): BehaviorLoss[] {
         );
       });
       return [
-        { id: vase.loss, row: row.id, group: table.title, title: row.title, engines, libraries },
+        {
+          id: vase.loss,
+          row: row.id,
+          group: table.title,
+          title: row.title,
+          results: engineGroupsOf(engines, agree),
+          libraries,
+        },
       ];
     }),
   );
