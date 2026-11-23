@@ -548,13 +548,23 @@ describe('modal', () => {
     await waitFor(() => expect(isScrollLocked()).toBe(true));
   });
 
-  test('a modal dialog leaves a live region of the page and its ancestors in use', async () => {
+  test('a modal dialog leaves a live region of the page and its ancestors in use, and makes an element with `aria-live="off"` inert', async () => {
     const region = append('div');
-    region.innerHTML = '<p id="text">Text</p><div><div id="live" aria-live="polite"></div></div>';
+    region.innerHTML =
+      '<p id="text">Text</p><div><div id="live" aria-live="polite"></div></div><output id="off" aria-live="off"></output>';
     await mountDialog({ root: { defaultOpen: true } });
     await opened();
     await waitFor(() => expect(inert(byId('text'))).toBe(true));
     expect(inert(byId('live'))).toBe(false);
+    expect(inert(byId('off'))).toBe(true);
+  });
+
+  test('a modal dialog makes an element of its viewport beside the popup inert', async () => {
+    mount(DialogWithLiveRegions);
+    await opened();
+    await waitFor(() => expect(inert(byTestId('text')!)).toBe(true));
+    expect(inert(byTestId('beside')!)).toBe(true);
+    expect(inert(byTestId('option')!)).toBe(false);
   });
 
   test.each([

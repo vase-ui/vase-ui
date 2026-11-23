@@ -38,17 +38,16 @@ function startHide() {
         const layers = openLayers();
         const index = layers.findLastIndex((layer) => layer.hide);
         const top = layers[index];
-        if (!top) return { hide: false as const, inside: [] };
+        if (!top) return { hide: false as const, whole: [], around: [] };
         const { root } = top;
         return {
           hide: top.hide,
-          inside: [
+          whole: [
             root.popup,
-            ...root.parts,
-            ...root.portalElements,
             top.triggerInUse ? root.activeTrigger : null,
             ...layers.slice(index + 1).flatMap(layerElements),
           ],
+          around: [...root.parts, ...root.portalElements],
         };
       },
       (next) => writeHide(next),
@@ -57,21 +56,32 @@ function startHide() {
   });
 }
 
-function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
+/**
+ * `whole` stays in use with all its content. `around` holds the backdrop, the viewport, the fixed
+ * element and the sentinels. They stay in use, but their other content is outside the popup and
+ * does not, as for a native modal `<dialog>`.
+ */
+function writeHide(next: {
+  hide: Layer['hide'];
+  whole: (Element | null)[];
+  around: (Element | null)[];
+}) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next.hide) {
-    // A live region and an alert stay in use at each place of the document, so that the page
-    // announces its messages, such as toasts, under a modal popup.
-    const documents = new Set(next.inside.flatMap((each) => each?.ownerDocument ?? []));
-    const announcers = [...documents].flatMap((doc) => [
-      ...doc.querySelectorAll('[aria-live], [role="alert"]'),
-    ]);
-    const keptWhole = new Set(
-      [...next.inside, ...announcers].filter(
-        (element): element is Element => !!element?.isConnected,
-      ),
+    const connected = (element: Element | null): element is Element => !!element?.isConnected;
+    const documents = new Set(
+      [...next.whole, ...next.around].flatMap((each) => each?.ownerDocument ?? []),
     );
-    const kept = new Set([...keptWhole].flatMap((element) => pathToBody(element, keptWhole)));
+    // A live region and an alert stay in use at each place of the document, so that the page
+    // announces its messages, such as toasts, under a modal popup. `aria-live="off"` announces
+    // nothing.
+    const announcers = [...documents].flatMap((doc) => [
+      ...doc.querySelectorAll('[aria-live]:not([aria-live="off"]), [role="alert"]'),
+    ]);
+    const whole = new Set([...next.whole, ...announcers].filter(connected));
+    const kept = new Set(
+      [...whole, ...next.around.filter(connected)].flatMap((element) => pathToBody(element, whole)),
+    );
     for (const node of kept) {
       for (const sibling of node.parentNode?.children ?? []) {
         if (!kept.has(sibling)) wanted.set(sibling, next.hide);
@@ -101,11 +111,10 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
 }
 
 /**
- * The element and its ancestors below `<body>`, across shadow roots. Each element of `keptWhole`
- * stays in use with its content, so the path of an element in another one is empty: else a live
- * region in a popup would hide the list beside it.
+ * The element and its ancestors below `<body>`, across shadow roots. The path of an element in an
+ * element of `whole` is empty: else a live region in a popup would hide the list beside it.
  */
-function pathToBody(element: Element, keptWhole: ReadonlySet<Node>): Node[] {
+function pathToBody(element: Element, whole: ReadonlySet<Node>): Node[] {
   const path: Node[] = [];
   const body = element.ownerDocument.body;
   for (
@@ -113,7 +122,7 @@ function pathToBody(element: Element, keptWhole: ReadonlySet<Node>): Node[] {
     node && node !== body;
     node = node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
   ) {
-    if (node !== element && keptWhole.has(node)) return [];
+    if (node !== element && whole.has(node)) return [];
     path.push(node);
   }
   return path;
