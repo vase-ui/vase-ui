@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue';
 import { playwright } from '@vitest/browser-playwright';
 import type { Plugin } from 'vite';
 import { configDefaults, defineConfig, type TestProjectInlineConfiguration } from 'vitest/config';
+import { BaseSequencer, type TestSpecification } from 'vitest/node';
 import { collectGarbage } from './test/server/collectGarbage.ts';
 import { contextOptions, engineInstances } from './test/server/engineInstances.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
@@ -26,6 +27,23 @@ function vaporMode(vapor: RegExp | undefined): Plugin {
         : undefined;
     },
   };
+}
+
+/**
+ * Gives each shard the projects of each test file in turn. Vitest puts all projects of a file in
+ * one shard by a hash of its path, and a shard of slow files takes two times as long as the mean.
+ */
+class SpreadProjectsSequencer extends BaseSequencer {
+  override shard(specs: TestSpecification[]) {
+    // Vitest calls `shard` only with the option `shard`.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { index, count } = this.ctx.config.shard!;
+    const files = [...new Set(specs.map((spec) => spec.moduleId))].sort();
+    const projects = [...new Set(specs.map((spec) => spec.project.name))].sort();
+    const slot = (spec: TestSpecification) =>
+      (files.indexOf(spec.moduleId) + projects.indexOf(spec.project.name)) % count;
+    return Promise.resolve(specs.filter((spec) => slot(spec) === index - 1));
+  }
 }
 
 function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineConfiguration {
@@ -62,6 +80,7 @@ export default defineConfig({
     // by their options. With the cache, the server render of one project can get a fixture that
     // another project compiled in the other mode, and the hydration cases fail.
     fsModuleCache: false,
+    sequence: { sequencer: SpreadProjectsSequencer },
     projects: [
       setup('vdom app, vdom parts', 'vdom'),
       setup('vapor app, vdom parts', 'vapor-interop', /\/test\/fixtures\/\w+\.vue$/),
