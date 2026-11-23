@@ -4,6 +4,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureControlledInput from '../fixtures/MeasureControlledInput.vue';
+import MeasureInputListeners from '../fixtures/MeasureInputListeners.vue';
 import { mount, settle, typeAtEnd } from '../render';
 
 let root: HTMLElement | undefined;
@@ -80,6 +81,17 @@ describe('a native input with :value', () => {
       await userEvent.keyboard('b');
     }
     expect([email!.value, kept!.value]).toEqual(['ab', 'a b']);
+  });
+});
+
+describe('an `input` listener that changes a model', () => {
+  test('`nextTick` that it called before the change runs before the render, and a post watcher that it started runs after it', async () => {
+    const entries: string[] = [];
+    const log = { add: (entry: string) => entries.push(entry) };
+    const { root } = mount(MeasureInputListeners, { log });
+    await typeAtEnd(root.querySelector('input')!, 'a');
+    await nextTick();
+    expect(entries).toEqual(['nextTick: a', 'post watcher: A']);
   });
 });
 

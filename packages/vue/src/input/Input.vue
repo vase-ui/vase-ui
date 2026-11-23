@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, nextTick, useAttrs, useId, watch } from 'vue';
+import { computed, inject, mergeProps, useAttrs, useId, watch } from 'vue';
+import { useAfterRender } from '../common/afterRender';
 import { createChangeEventDetails } from '../common/changeEventDetails';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
@@ -31,6 +32,7 @@ const field = inject(fieldKey, null);
 useDeferredServerRender();
 const generatedId = useId();
 const { element, setElement } = useElement<TextElement>();
+const afterRender = useAfterRender();
 
 const { value, setOwn, resetValue } = useModel(
   () => (props.modelValue === undefined ? undefined : String(props.modelValue)),
@@ -104,8 +106,9 @@ function onInput(event: Event) {
   const details = createChangeEventDetails('none', event);
   emit('valueChange', next, details);
   if (!details.isCanceled) changeValue(next);
-  // The parent can refuse or change a controlled value. Its answer arrives with its next render.
-  nextTick(() => {
+  // The parent can refuse or change a controlled value, also in its own `input` listener. Its
+  // answer arrives with its next render.
+  afterRender(() => {
     showValue();
     if (!details.isCanceled) field?.onEdit();
   });

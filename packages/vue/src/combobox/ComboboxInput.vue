@@ -3,7 +3,6 @@ import {
   computed,
   inject,
   mergeProps,
-  nextTick,
   onUnmounted,
   provide,
   shallowRef,
@@ -11,6 +10,7 @@ import {
   useId,
   watch,
 } from 'vue';
+import { useAfterRender } from '../common/afterRender';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { useIsHydrated } from '../common/hydration';
@@ -48,6 +48,7 @@ const attrs = useAttrs();
 const generatedId = useId();
 const mounted = useIsHydrated();
 const { element, setElement } = useElement<TextElement>();
+const afterRender = useAfterRender();
 const { root, list } = context;
 
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
@@ -122,8 +123,9 @@ function showText() {
 function write(text: string, event: Event) {
   const hadValue = context.mode !== 'none' && context.hasValue;
   const accepted = context.setText(text, createComboboxDetails('input-change', event));
-  // The parent can refuse or change a controlled text. Its answer arrives with its next render.
-  void nextTick(showText);
+  // The parent can refuse or change a controlled text, also in its own `input` listener. Its answer
+  // arrives with its next render.
+  afterRender(showText);
   if (!accepted) return;
   if (text === '' && isControl.value && !context.inline && context.mode === 'single') {
     const details = createComboboxDetails('input-clear', event);
