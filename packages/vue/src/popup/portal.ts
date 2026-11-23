@@ -172,8 +172,7 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
   const entered = shallowRef(!inject(portalMountedKey, null)?.value);
   onMounted(() => (entered.value = true));
-  const removeLeaving = root.addLeaving(() => element.value);
-  onUnmounted(removeLeaving);
+  onUnmounted(root.addLeaving(() => element.value));
   return computed(() => root.keepMounted || (root.open && entered.value));
 }
 

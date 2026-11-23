@@ -65,7 +65,7 @@ export interface PopupRoot<Payload = unknown> {
    * payload of the last render while the root was open.
    */
   readonly payload: Payload | undefined;
-  /** The popup element, while its part is mounted. */
+  /** The popup element, while its part renders it. */
   readonly popup: HTMLElement | null;
   /** The sentinels, the fixed element and the viewport, while they are in the document. */
   readonly portalElements: readonly Element[];
