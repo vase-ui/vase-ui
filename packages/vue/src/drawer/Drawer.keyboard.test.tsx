@@ -31,6 +31,13 @@ vi.mock('../common/platform', async () => {
   };
 });
 
+// A render of the popup writes each style object in it again, over the padding of the provider. So
+// a scroll body takes its padding from CSS, as the Drawer page says. A plain element can keep it in
+// a `style` text, because Vue writes no text that did not change.
+const paddingStyle = document.createElement('style');
+paddingStyle.textContent = '.padding-bottom-20 { padding-bottom: 20px; }';
+document.head.append(paddingStyle);
+
 type TouchPoint = { clientX: number; clientY: number };
 
 // The provider reads only `clientX` and `clientY` of a touch, and WebKit on a desktop cannot
@@ -269,7 +276,8 @@ const ScrollBodyDrawer = defineComponent({
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+          class="padding-bottom-20"
+          style={{ height: '420px', overflowY: 'auto' }}
         >
           <input data-testid="first" type="text" />
           <div style={{ height: '900px' }} />
@@ -291,11 +299,11 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
+          class="padding-bottom-20"
           style={{
             height: '420px',
             overflowY: 'auto',
             overflowAnchor: 'auto',
-            paddingBottom: '20px',
           }}
         >
           <div style={{ height: '900px' }} />
@@ -339,7 +347,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
@@ -355,10 +363,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer>
-        <Drawer.Content
-          data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '0px' }}
-        >
+        <Drawer.Content data-testid="scroll" style={{ height: '420px', overflowY: 'auto' }}>
           <div style={{ height: '900px' }} />
           <input data-testid="input" type="text" />
         </Drawer.Content>
@@ -384,7 +389,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(scroll.style.paddingBottom).toBe('0px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
   });
 
@@ -396,11 +401,11 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
+          class="padding-bottom-20"
           style={{
             height: '420px',
             overflowY: 'auto',
             overflowAnchor: 'auto',
-            paddingBottom: '20px',
           }}
         >
           <div style={{ height: '900px' }} />
@@ -449,10 +454,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer>
-        <div
-          data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
-        >
+        <div data-testid="scroll" style="height: 420px; overflow-y: auto; padding-bottom: 20px">
           <div style={{ height: '300px' }} />
           <textarea data-testid="textarea" />
         </div>
@@ -485,10 +487,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer>
-        <div
-          data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
-        >
+        <div data-testid="scroll" style="height: 420px; overflow-y: auto; padding-bottom: 20px">
           <div style={{ height: '300px' }} />
           <textarea data-testid="textarea" value={'line\n'.repeat(40)} />
         </div>
@@ -624,7 +623,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
             <Drawer.Popup>
               <Drawer.Content
                 data-testid="scroll"
-                style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+                class="padding-bottom-20"
+                style={{ height: '420px', overflowY: 'auto' }}
               >
                 <div style={{ height: '900px' }} />
                 <input data-testid="input" type="text" />
@@ -645,7 +645,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
@@ -663,11 +663,11 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer open={open.value}>
         <Drawer.Content
           data-testid="scroll"
+          class="padding-bottom-20"
           style={{
             height: '420px',
             overflowY: 'auto',
             overflowAnchor: 'auto',
-            paddingBottom: '20px',
           }}
         >
           <div style={{ height: '900px' }} />
@@ -698,7 +698,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
@@ -718,7 +718,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
         <KeyboardDrawer>
           <Drawer.Content
             data-testid="scroll"
-            style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+            class="padding-bottom-20"
+            style={{ height: '420px', overflowY: 'auto' }}
           >
             <input data-testid="input" type="text" />
             <div style={{ height: '900px' }} />
@@ -767,7 +768,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       await flushAnimationFrames(1);
       await flushMicrotasks();
 
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
     },
   );
@@ -842,7 +843,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+          class="padding-bottom-20"
+          style={{ height: '420px', overflowY: 'auto' }}
         >
           <div style={{ height: '900px' }} />
           <input data-testid="input" type="text" />
@@ -861,7 +863,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await flushMicrotasks();
 
     await waitFor(() => {
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
     await waitFor(() => {
       expect(scroll.style.scrollPaddingBottom).toBe('');
@@ -1605,11 +1607,11 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
+          class="padding-bottom-20"
           style={{
             height: '420px',
             overflowY: 'auto',
             overflowAnchor: 'auto',
-            paddingBottom: '20px',
           }}
         >
           <div style={{ height: '900px' }} />
@@ -1647,7 +1649,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     expect(input).not.toHaveFocus();
     expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
-    expect(scroll.style.paddingBottom).toBe('20px');
+    expect(scroll.style.paddingBottom).toBe('');
     expect(scroll.style.scrollPaddingBottom).toBe('');
   });
 
@@ -1892,7 +1894,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       <KeyboardDrawer>
         <Drawer.Content
           data-testid="scroll"
-          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+          class="padding-bottom-20"
+          style={{ height: '420px', overflowY: 'auto' }}
         >
           <div style={{ height: '900px' }} />
           <input data-testid="input" type="text" />
@@ -1915,7 +1918,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     await waitFor(() => {
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
     });
-    expect(scroll.style.paddingBottom).toBe('20px');
+    expect(scroll.style.paddingBottom).toBe('');
     expect(scroll.style.overflowAnchor).toBe('');
   });
 
@@ -2136,17 +2139,11 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer>
-        <div
-          data-testid="scroll1"
-          style={{ height: '200px', overflowY: 'auto', paddingBottom: '10px' }}
-        >
+        <div data-testid="scroll1" style="height: 200px; overflow-y: auto; padding-bottom: 10px">
           <div style={{ height: '600px' }} />
           <input data-testid="input1" type="text" />
         </div>
-        <div
-          data-testid="scroll2"
-          style={{ height: '200px', overflowY: 'auto', paddingBottom: '10px' }}
-        >
+        <div data-testid="scroll2" style="height: 200px; overflow-y: auto; padding-bottom: 10px">
           <div style={{ height: '600px' }} />
           <input data-testid="input2" type="text" />
         </div>
@@ -2243,7 +2240,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer initialFocus={false}>
-        <div data-testid="scroll1" style={{ overflowY: 'auto', paddingBottom: '10px' }}>
+        <div data-testid="scroll1" style="overflow-y: auto; padding-bottom: 10px">
           <input data-testid="input1" type="text" />
         </div>
         <div data-testid="scroll2" style={{ overflowY: 'auto' }}>
@@ -2289,7 +2286,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     await render(
       <KeyboardDrawer initialFocus={false}>
-        <div data-testid="scroll" style={{ overflowY: 'auto', paddingBottom: '10px' }}>
+        <div data-testid="scroll" style="overflow-y: auto; padding-bottom: 10px">
           <input data-testid="input" type="text" />
         </div>
       </KeyboardDrawer>,
@@ -2504,7 +2501,8 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
         <KeyboardDrawer>
           <Drawer.Content
             data-testid="scroll"
-            style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+            class="padding-bottom-20"
+            style={{ height: '420px', overflowY: 'auto' }}
           >
             <div style={{ height: '900px' }} />
             <input data-testid="input" type="text" />
@@ -2569,13 +2567,13 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       vi.advanceTimersToNextFrame();
       await flushMicrotasks();
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
 
       innerHeight.resize(650);
       vi.advanceTimersToNextFrame();
       await flushMicrotasks();
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
 
     it('aligns the focused field once the layout viewport has shrunk to the visual viewport', async () => {
@@ -2605,7 +2603,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       const inputRect = input.getBoundingClientRect();
       expect((inputRect.top + inputRect.bottom) / 2).toBeCloseTo((100 + 480) / 2, 0);
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
 
     it('scrolls the focused field once the layout viewport reaches the visual viewport', async () => {
@@ -2712,7 +2710,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
       expect(scrollToSpy).not.toHaveBeenCalled();
       expect(['', '0px']).toContain(viewport.style.getPropertyValue('--drawer-keyboard-inset'));
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
 
     it('clears the keyboard inset and slack once the layout viewport catches up with the visual viewport', async () => {
@@ -2744,7 +2742,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       vi.advanceTimersToNextFrame();
       await flushMicrotasks();
       expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('');
-      expect(scroll.style.paddingBottom).toBe('20px');
+      expect(scroll.style.paddingBottom).toBe('');
     });
 
     it('preserves native taps while the keyboard is open and refocuses once it closes', async () => {
