@@ -98,6 +98,29 @@ describe('the text', () => {
     await nextTick();
     expect(highlighted()).toBe('fix');
   });
+  test('a listener of `input` after the one of Autocomplete.Input can change a controlled text, and the caret stays where that listener put it', async () => {
+    const root: Props = reactive({ modelValue: '' });
+    await mountAutocomplete({
+      root,
+      input: {
+        onInput: (event: Event) => {
+          const element = event.target as HTMLInputElement;
+          const { selectionStart, selectionEnd } = element;
+          element.value = element.value.toUpperCase();
+          element.setSelectionRange(selectionStart, selectionEnd);
+          root.modelValue = element.value;
+        },
+      },
+    });
+    input().focus();
+    await userEvent.keyboard('ac');
+    await userEvent.keyboard('{ArrowLeft}b');
+    await userEvent.keyboard('d');
+    expect(input()).toHaveValue('ABDC');
+    expect(input().selectionStart).toBe(3);
+    expect(root.modelValue).toBe('ABDC');
+  });
+
   test('VUE-59: a cancel of the change keeps the text of an uncontrolled root', async () => {
     await mountAutocomplete({
       root: {

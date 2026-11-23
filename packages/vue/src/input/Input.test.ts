@@ -135,6 +135,24 @@ describe('value', () => {
     expect(attrs.modelValue).toBe('AB');
   });
 
+  test('a listener of `input` after the one of Input can change a controlled value, and the caret stays where that listener put it', async () => {
+    const attrs: Record<string, unknown> = reactive({ modelValue: '' });
+    attrs.onInput = (event: Event) => {
+      const input = event.target as HTMLInputElement;
+      const { selectionStart, selectionEnd } = input;
+      input.value = input.value.toUpperCase();
+      input.setSelectionRange(selectionStart, selectionEnd);
+      attrs.modelValue = input.value;
+    };
+    const [input] = mountInputs(attrs).inputs;
+    await typeAtEnd(input!, 'ac');
+    await userEvent.keyboard('{ArrowLeft}b');
+    await userEvent.keyboard('d');
+    expect(input).toHaveValue('ABDC');
+    expect(input!.selectionStart).toBe(3);
+    expect(attrs.modelValue).toBe('ABDC');
+  });
+
   test('the same text typed after the parent refused it is a new edit', async () => {
     const log: string[] = [];
     const [input] = mountInputs(recordEmits(log, { modelValue: 'a' })).inputs;

@@ -13,6 +13,7 @@ import DialogRadioReturn from '../../test/fixtures/DialogRadioReturn.vue';
 import DialogSiblings from '../../test/fixtures/DialogSiblings.vue';
 import DialogStack from '../../test/fixtures/DialogStack.vue';
 import DialogTitles from '../../test/fixtures/DialogTitles.vue';
+import DialogWithLiveRegions from '../../test/fixtures/DialogWithLiveRegions.vue';
 import DialogWithPopovers from '../../test/fixtures/DialogWithPopovers.vue';
 import DialogWithScrub from '../../test/fixtures/DialogWithScrub.vue';
 import DialogWithSelect from '../../test/fixtures/DialogWithSelect.vue';
@@ -547,14 +548,56 @@ describe('modal', () => {
     await waitFor(() => expect(isScrollLocked()).toBe(true));
   });
 
-  test('a modal dialog leaves a live region of the page and its ancestors in use', async () => {
+  test('a modal dialog leaves a live region of the page and its ancestors in use, and makes an element with `aria-live="off"` inert', async () => {
     const region = append('div');
-    region.innerHTML = '<p id="text">Text</p><div><div id="live" aria-live="polite"></div></div>';
+    region.innerHTML =
+      '<p id="text">Text</p><div><div id="live" aria-live="polite"></div></div><output id="off" aria-live="off"></output>';
     await mountDialog({ root: { defaultOpen: true } });
     await opened();
     await waitFor(() => expect(inert(byId('text'))).toBe(true));
     expect(inert(byId('live'))).toBe(false);
+    expect(inert(byId('off'))).toBe(true);
   });
+
+  test('a modal dialog makes an element of its viewport beside the popup inert', async () => {
+    mount(DialogWithLiveRegions);
+    await opened();
+    await waitFor(() => expect(inert(byTestId('text')!)).toBe(true));
+    expect(inert(byTestId('beside')!)).toBe(true);
+    expect(inert(byTestId('option')!)).toBe(false);
+  });
+
+  test.each([
+    { place: 'in a portal', inPlace: false },
+    { place: 'in place', inPlace: true },
+  ])(
+    'live regions in a modal dialog leave the elements beside them in use, with an autocomplete $place',
+    async ({ inPlace }) => {
+      mount(DialogWithLiveRegions, { inPlace });
+      await opened();
+      const input = byTestId('input') as HTMLInputElement;
+      await userEvent.click(input);
+      await userEvent.keyboard('b');
+      await waitFor(() => expect(byTestId('item-Banana')).not.toBe(null));
+      expect(inert(input)).toBe(false);
+      expect(input).toHaveFocus();
+      expect(inert(byTestId('item-Banana')!)).toBe(false);
+      await userEvent.click(byTestId('item-Banana')!);
+      await waitFor(() => expect(input).toHaveValue('Banana'));
+      // The close of the autocomplete writes the attributes of the dialog again.
+      expect(inert(byTestId('text')!)).toBe(true);
+      expect(inert(byTestId('page-live')!)).toBe(false);
+      expect(inert(byTestId('page-alert')!)).toBe(false);
+      const pressed: string[] = [];
+      for (const id of ['option', 'after-viewport']) {
+        const button = byTestId(id)!;
+        expect(inert(button)).toBe(false);
+        button.addEventListener('click', () => pressed.push(id));
+        await userEvent.click(button);
+      }
+      expect(pressed).toEqual(['option', 'after-viewport']);
+    },
+  );
 
   test("`'trap-focus'` hides the rest of the page and the trigger with aria-hidden; the page stays in use, with no lock; a press on the trigger closes", async () => {
     const log: string[] = [];
