@@ -78,7 +78,7 @@ export function installRecorder(): void {
     return opacity;
   };
 
-  const sample = (element: Element) => {
+  const sample = (element: Element, opacity: number) => {
     let id = ids.get(element);
     if (id === undefined) {
       id = nextId++;
@@ -88,7 +88,7 @@ export function installRecorder(): void {
     return {
       id,
       visible: element.isConnected && element.checkVisibility({ visibilityProperty: true }),
-      opacity: shownOpacity(element),
+      opacity,
       rect: { x, y, width, height },
     };
   };
@@ -107,9 +107,16 @@ export function installRecorder(): void {
       focusInLayer: {},
       active: describe(active),
     };
-    for (const marker of markers) {
-      const elements = elementsOf(marker);
-      frame.elements[marker] = elements.map(sample);
+    // In WebKit, in the frame where a transition ends, an opacity that is read after a layout can
+    // be near the start of the transition. `getBoundingClientRect` makes a layout, so the read takes
+    // each opacity of the frame first.
+    const marked = markers.map((marker) => ({
+      marker,
+      samples: elementsOf(marker).map((element) => ({ element, opacity: shownOpacity(element) })),
+    }));
+    for (const { marker, samples } of marked) {
+      const elements = samples.map(({ element }) => element);
+      frame.elements[marker] = samples.map(({ element, opacity }) => sample(element, opacity));
       frame.focus[marker] = active !== null && elements.some((element) => element.contains(active));
       frame.focusInLayer[marker] =
         active !== null &&

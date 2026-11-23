@@ -647,7 +647,7 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 A behavior fixture is `benchmarks/libraries/<library>/behavior/<Scenario>.vue`, or `.tsx` for Base UI. It runs in the setup `vdom`, or `react` for Base UI. Each behavior fixture follows these rules:
 
 1. Use the parts and the import form of the documentation of the library at the pinned version. Use the pattern that the documentation shows for the scenario, such as its nested dialog example.
-2. Import `benchmarks/behavior/style.css`. It gives the look of each library: the sizes, the colors, the duration `--bench-duration`, the hidden style `bench-hidden`, the transition `bench-motion`, and the keyframes `bench-enter` and `bench-exit`. The fixture only ties these to the animation hook of its library, such as the classes of a `<Transition>` or the attribute `data-starting-style`.
+2. Import `benchmarks/behavior/style.css`. It gives the look of each library: the sizes, the colors, the duration `--bench-duration`, the hidden style `bench-hidden`, the transition `bench-motion`, and the keyframes `bench-enter` and `bench-exit`. The fixture only ties these to the animation hook of its library, such as the classes of a `<Transition>` or the attribute `data-starting-style`. A group that needs more sizes has a CSS file of its own beside its group file, such as `drawers.css`, `toasts.css` or `resizablePanels.css`. The fixture imports it after `style.css`.
 3. For a drawer and a toast stack, use the CSS of the example in the documentation for the part that moves and stacks, with the shared sizes.
 4. Where the documentation shows a CSS transition for the enter and the exit, use it. Else use the CSS keyframes of the documentation. A transition that stops midway goes back from where it is, so each library gets its best result at an interruption. Use no animation library.
 5. Set a prop only for the start state, such as an open delay of 0, or where the documentation tells you to set it.
@@ -661,6 +661,9 @@ When a library does not have a part of a scenario:
 - The documentation shows no pattern for the step, such as a dialog in a dialog: put the component in the popup of the same component. Give the library a note in `notes` of the group.
 - The library cannot do the step, such as a swipe: the check fails, with the reason.
 - The documentation calls the component Alpha or Preview: measure it, and give the library a note in `notes` of the group.
+- The fixture leaves out a feature of the documentation because of these rules, such as a pointer listener: give the library a note in `notes` of the group.
+
+A note in `notes` can also name the animation form of a fixture, such as a `<Transition>` or CSS keyframes.
 
 The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
 
