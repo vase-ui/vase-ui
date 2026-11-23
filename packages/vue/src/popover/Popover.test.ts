@@ -512,20 +512,29 @@ describe('the handle', () => {
     expect(handle.isOpen).toBe(false);
   });
 
-  test('a close and an open in one task keep the popup, which takes the focus again', async () => {
-    const handle = Popover.createHandle<string>();
-    mount(PopoverHandles, { handle });
-    await nextTick();
-    await userEvent.click(byId('first'));
-    const element = await opened();
-    await waitFor(() => expect(element).toHaveFocus());
-    handle.close();
-    expect(element).not.toHaveFocus();
-    handle.open('second');
-    await waitFor(() => expect(element).toHaveFocus());
-    expect(popup()).toBe(element);
-    expect(element).toHaveTextContent('second');
-  });
+  test.each([
+    { finalFocus: undefined, name: 'the default' },
+    { finalFocus: false, name: 'false' },
+  ])(
+    'a close and an open in one task keep the popup, which takes the focus again, with `finalFocus` $name',
+    async ({ finalFocus }) => {
+      const handle = Popover.createHandle<string>();
+      mount(PopoverHandles, { handle, popup: { finalFocus } });
+      await nextTick();
+      await userEvent.click(byId('first'));
+      const element = await opened();
+      await waitFor(() => expect(element).toHaveFocus());
+      handle.close();
+      // A `finalFocus` of `false` moves no focus at the close.
+      expect(element.matches(':focus')).toBe(finalFocus === false);
+      handle.open('second');
+      await waitFor(() => expect(element).toHaveFocus());
+      expect(popup()).toBe(element);
+      expect(element).toHaveTextContent('second');
+      for (let frame = 0; frame < 2; frame += 1) await waitSingleFrame();
+      expect(element).toHaveFocus();
+    },
+  );
 
   test('`new Popover.Handle()` makes the same object; open() of an unknown id throws; with no root the methods do nothing', async () => {
     const handle = new Popover.Handle();

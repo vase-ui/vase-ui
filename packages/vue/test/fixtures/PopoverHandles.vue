@@ -8,6 +8,7 @@ import CallAtMount from './CallAtMount.vue';
 const props = defineProps({
   handle: { type: Object as PropType<InstanceType<typeof Popover.Handle>>, required: true },
   root: Object as PropType<Record<string, unknown>>,
+  popup: Object as PropType<Record<string, unknown>>,
   noRoot: Boolean,
   atMount: Function as PropType<() => void>,
 });
@@ -24,7 +25,7 @@ defineExpose({ root: rootPart, handle: props.handle });
       <CallAtMount v-if="atMount" :call="atMount" />
       <Popover.Portal>
         <Popover.Positioner>
-          <Popover.Popup data-testid="popup">{{ payload }}</Popover.Popup>
+          <Popover.Popup data-testid="popup" v-bind="popup">{{ payload }}</Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
     </template>

@@ -5,17 +5,20 @@ import UnmountLog from './UnmountLog.vue';
 
 type Props = Record<string, unknown>;
 
-// A backdrop and a popup in a `<Transition>`, the popup in a viewport. The backdrop covers the
+// A backdrop and a popup in a `<Transition>`, the popup in a viewport. With `trigger` false, the
+// root has no trigger. The backdrop covers the
 // view. The leaves have a duration, so a case can press the page while they run. A button of the
 // page is under the backdrop. `log` gets the classes of the backdrop and of the popup at the start
 // of each leave, and `after-enter` and `after-leave` at the end of each enter and leave of the
 // popup. A popup and a backdrop with the class `slow` enter and leave in 3 s with a linear
-// opacity. A child of the popup writes `child unmounted` at its unmount.
+// opacity. The popup has a button and a field. A child of the popup writes `child unmounted` at its
+// unmount.
 defineProps({
   root: Object as PropType<Props>,
   portal: Object as PropType<Props>,
   popup: Object as PropType<Props>,
   backdrop: Object as PropType<Props>,
+  trigger: { type: Boolean, default: true },
   log: { type: Object as PropType<{ add(entry: string): void }>, default: () => ({ add() {} }) },
 });
 </script>
@@ -25,7 +28,9 @@ defineProps({
     Page
   </button>
   <Dialog.Root v-bind="root">
-    <Dialog.Trigger style="position: fixed; right: 0; top: 0">Trigger</Dialog.Trigger>
+    <Dialog.Trigger v-if="trigger" style="position: fixed; right: 0; top: 0"
+      >Trigger</Dialog.Trigger
+    >
     <Dialog.Portal v-bind="portal">
       <Transition name="fade" @leave="(el: Element) => log.add(`backdrop ${el.className}`)">
         <Dialog.Backdrop
@@ -47,6 +52,7 @@ defineProps({
             v-bind="popup"
           >
             <button>Inside</button>
+            <input aria-label="Field" />
             <UnmountLog :log />
           </Dialog.Popup>
         </Transition>

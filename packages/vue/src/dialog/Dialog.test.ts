@@ -1124,6 +1124,32 @@ describe('the focus', () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
+  test.each([
+    { name: '`finalFocus` false', trigger: true, popup: { finalFocus: false } },
+    { name: 'no trigger', trigger: false, popup: {} },
+  ])(
+    'a close with $name while a field of the popup has the focus: the field loses the focus, and typed text does not reach it',
+    async ({ trigger, popup: popupProps }) => {
+      const scene = mount(DialogInTransition, {
+        root: { defaultOpen: !trigger },
+        trigger,
+        popup: { ...popupProps, class: 'slow' },
+      });
+      await nextTick();
+      if (trigger) {
+        await userEvent.click(scene.root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!);
+      }
+      const element = await opened();
+      const field = element.querySelector('input')!;
+      field.focus();
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+      await userEvent.keyboard('ab');
+      expect(field.value).toBe('');
+      expect(document.activeElement).toBe(document.body);
+    },
+  );
+
   test('a dialog that opens in the update that closes a modal dialog keeps the focus', async () => {
     const scene = siblings({ 0: false, 1: false });
     mount(DialogSiblings, { dialogs: [{}, { trigger: false, root: { modal: false } }], scene });

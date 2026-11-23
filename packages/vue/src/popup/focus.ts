@@ -248,17 +248,29 @@ export function usePopupFocus(
     const trigger = root.activeTrigger;
     if (active && active !== doc.body && active !== trigger && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
-    if (target === false) return;
     // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
     // that closes is no target, also while the popup leaves. After an open by code, the element
     // that had the focus comes before the trigger (BUG-6037).
     const fallbacks = [focusableTrigger(), before as HTMLElement | null];
     if (root.interaction === '') fallbacks.reverse();
-    const element = [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
-      (each) => each?.isConnected && !popup.contains(each),
-    );
+    const element =
+      target === false
+        ? undefined
+        : [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
+            (each) => each?.isConnected && !popup.contains(each),
+          );
+    if (!element) {
+      // The popup that leaves is inert. The browser moves the focus out of an inert element only
+      // when it updates the rendering, and WebKit keeps the text caret there
+      // (test/measurements/dialog.test.ts). So the focused element of the popup loses the focus.
+      void nextTick(() => {
+        const focused = activeElement(doc);
+        if (!root.open && focused && popup.contains(focused)) (focused as HTMLElement).blur();
+      });
+      return;
+    }
     const keyboard = root.closeInteraction === 'keyboard';
-    if (!element?.closest('[inert]')) {
+    if (!element.closest('[inert]')) {
       focus(element, keyboard);
       return;
     }
