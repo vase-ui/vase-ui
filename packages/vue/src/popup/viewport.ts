@@ -48,7 +48,8 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       observer.observe(current);
       onCleanup(() => observer.disconnect());
     },
-    { flush: 'post' },
+    // A viewport in the content of a popup part mounts after the popup element.
+    { flush: 'post', immediate: true },
   );
 
   let step = 0;

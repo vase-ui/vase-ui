@@ -167,13 +167,15 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
  * (test/measurements/popup.test.ts). The element shows one update after its mount, so the
  * `<Transition>` runs its enter with no `appear`. An element that renders before its portal is
  * mounted, as on the server and in a disabled portal at the first render, shows at its mount. The
- * root keeps the element until its leave ends.
+ * root keeps the element until its leave ends. The part renders its content while `entered`. So
+ * the update that shows the element is the first render of the content, and an item of a `v-for`
+ * in it does not render two times (`Menu.renders.test.ts`).
  */
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
   const entered = shallowRef(!inject(portalMountedKey, null)?.value);
   onMounted(() => (entered.value = true));
   onUnmounted(root.addLeaving(() => element.value));
-  return computed(() => root.keepMounted || (root.open && entered.value));
+  return { entered, shown: computed(() => root.keepMounted || (root.open && entered.value)) };
 }
 
 /**

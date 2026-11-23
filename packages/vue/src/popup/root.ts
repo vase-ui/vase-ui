@@ -489,7 +489,9 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
     { flush: 'sync' },
   );
-  onScopeDispose(() => observer?.disconnect());
+  // Vue removes the elements of a root that unmounts during the leave after this scope stops the
+  // observer. So the leave ends here, and a parent menu that waits for it can leave.
+  onScopeDispose(endLeaving);
 
   const root: PopupRoot<Payload> = {
     get open() {

@@ -336,7 +336,7 @@ export function usePlacement(
         shiftsCrossAxis: props.sticky || shiftsSide,
       })),
       hide,
-      ...(options.insets() ? [insets] : []),
+      insets(options.insets),
       {
         name: 'placedRects',
         fn({ rects }) {
@@ -411,6 +411,21 @@ export function usePlacement(
     const given = options.place?.();
     return given === undefined ? floating.isPositioned.value : given !== null;
   });
+  // Floating UI reads the layout before it gives the first place. So the browser has a style of
+  // the positioner at `0 0`, and of the popup on the first side. The first place then starts CSS
+  // transitions from these styles, such as of `left` and of an `enter-from` class of the side
+  // (test/measurements/popup.test.ts, "the first place of an open"). Nothing showed before the
+  // first place, so the positioner ends these transitions. `isPositioned` changes one time, and
+  // `placed` cannot be read here: the `place` of Select does not exist yet.
+  watch(
+    floating.isPositioned,
+    () => {
+      for (const animation of options.positioner.value?.getAnimations({ subtree: true }) ?? []) {
+        if (animation instanceof CSSTransition) animation.cancel();
+      }
+    },
+    { flush: 'post' },
+  );
   // Only a caller with `lazyFlip` reads `placed` in its setup: the `place` of Select reads the
   // item alignment, which it sets up after this call.
   const { lazyFlip } = options;
@@ -435,7 +450,7 @@ export function usePlacement(
     const data = floating.middlewareData.value.insets as Insets | undefined;
     let place: CSSProperties = floating.floatingStyles.value;
     if (given !== undefined) place = { position: 'fixed' };
-    else if (data) {
+    else if (data?.x) {
       place = {
         position: floating.strategy.value,
         [data.x]: `${floating.x.value}px`,
@@ -732,12 +747,15 @@ interface Insets {
 }
 
 /**
- * Gives the place as insets from the edges of the offset parent that face the anchor. A popup that
- * changes its size then grows away from its anchor.
+ * Gives the place as insets from the edges of the offset parent that face the anchor, while
+ * `enabled` gives `true`. A popup that changes its size then grows away from its anchor. The
+ * middleware reads `enabled` when it places, because a popup part mounts its content, such as a
+ * viewport, after the call that starts the first place.
  */
-const insets: Middleware = {
+const insets = (enabled: () => boolean): Middleware => ({
   name: 'insets',
   async fn({ x, y, rects, elements, platform, strategy, placement }) {
+    if (!enabled()) return {};
     const win = ownerWindow(elements.floating);
     const parent = await platform.getOffsetParent?.(elements.floating);
     let box = { width: 0, height: 0 };
@@ -772,4 +790,4 @@ const insets: Middleware = {
       data,
     };
   },
-};
+});

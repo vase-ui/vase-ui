@@ -1690,6 +1690,22 @@ describe('more behaviors of the parts', () => {
     await waitFor(() => expect(parent.isConnected).toBe(false));
   });
 
+  test('a menu leaves at its close after its submenu unmounted during its leave', async () => {
+    const scene = reactive({ open: true, submenu: true, submenuOpen: false });
+    mount(MenuControlledSubmenu, { scene });
+    await waitFor(() => expect(popup()).not.toBe(null));
+    scene.submenuOpen = true;
+    await waitFor(() => expect(subPopup()).not.toBe(null));
+    const sub = subPopup()!;
+    scene.submenuOpen = false;
+    await waitFor(() => expect(sub).toHaveClass('menu-slow-leave-active'));
+    scene.submenu = false;
+    await nextTick();
+    const parent = popup()!;
+    scene.open = false;
+    await waitFor(() => expect(parent.isConnected).toBe(false));
+  });
+
   test('a parent that renders its `element` slot stays until its submenu left its `<Transition>`', async () => {
     mount(MenuSlotWithSubmenu);
     await nextTick();

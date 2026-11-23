@@ -19,7 +19,7 @@ const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
-const shown = usePopupPart(root, element);
+const { entered, shown } = usePopupPart(root, element);
 // While another dialog is under it, the backdrop of a nested dialog would darken the page twice.
 const rendered = computed(() => props.forceRender || !context.nested);
 const state = computed<DialogBackdropState>(() => ({ open: root.open }));
@@ -63,9 +63,9 @@ defineExpose({ element });
     v-bind="elementProps()"
     :ref="setElement"
   >
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </component>
   <div v-else-if="rendered && !as" v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

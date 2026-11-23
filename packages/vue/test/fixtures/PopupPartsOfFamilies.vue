@@ -8,12 +8,15 @@ import PartTransition from './PartTransition.vue';
 
 // The backdrop and the popup of one family, open while `scene.open`. Each part is in a
 // `<PartTransition>`. With `inSlot`, each part renders a `<section>` in its `element` slot and has no
-// `<Transition>`. Tooltip has no backdrop.
+// `<Transition>`. Tooltip has no backdrop. Each part has `as` and calls `count` with its name in its
+// content.
 defineProps({
   family: { type: String as PropType<'dialog' | 'popover' | 'menu' | 'tooltip'>, required: true },
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
   inSlot: Boolean,
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
+  as: String as PropType<keyof HTMLElementTagNameMap>,
+  count: { type: Function as PropType<(part: string) => string>, default: () => '' },
 });
 </script>
 
@@ -21,17 +24,19 @@ defineProps({
   <Dialog.Root v-if="family === 'dialog'" :open="scene.open">
     <Dialog.Portal>
       <PartTransition :on="!inSlot" name="backdrop" :log>
-        <Dialog.Backdrop data-testid="backdrop">
+        <Dialog.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
             <section v-bind="props" :ref="elementRef" />
           </template>
+          {{ count('backdrop') }}
         </Dialog.Backdrop>
       </PartTransition>
       <PartTransition :on="!inSlot" name="popup" :log>
-        <Dialog.Popup data-testid="popup">
+        <Dialog.Popup data-testid="popup" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
             <section v-bind="props" :ref="elementRef" />
           </template>
+          {{ count('popup') }}
           Dialog
         </Dialog.Popup>
       </PartTransition>
@@ -40,18 +45,20 @@ defineProps({
   <Popover.Root v-else-if="family === 'popover'" :open="scene.open">
     <Popover.Portal>
       <PartTransition :on="!inSlot" name="backdrop" :log>
-        <Popover.Backdrop data-testid="backdrop">
+        <Popover.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
             <section v-bind="props" :ref="elementRef" />
           </template>
+          {{ count('backdrop') }}
         </Popover.Backdrop>
       </PartTransition>
       <Popover.Positioner>
         <PartTransition :on="!inSlot" name="popup" :log>
-          <Popover.Popup data-testid="popup">
+          <Popover.Popup data-testid="popup" :as>
             <template v-if="inSlot" #element="{ props, elementRef }">
               <section v-bind="props" :ref="elementRef" />
             </template>
+            {{ count('popup') }}
             Popover
           </Popover.Popup>
         </PartTransition>
@@ -61,18 +68,20 @@ defineProps({
   <Menu.Root v-else-if="family === 'menu'" :open="scene.open">
     <Menu.Portal>
       <PartTransition :on="!inSlot" name="backdrop" :log>
-        <Menu.Backdrop data-testid="backdrop">
+        <Menu.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
             <section v-bind="props" :ref="elementRef" />
           </template>
+          {{ count('backdrop') }}
         </Menu.Backdrop>
       </PartTransition>
       <Menu.Positioner>
         <PartTransition :on="!inSlot" name="popup" :log>
-          <Menu.Popup data-testid="popup">
+          <Menu.Popup data-testid="popup" :as>
             <template v-if="inSlot" #element="{ props, elementRef }">
               <section v-bind="props" :ref="elementRef" />
             </template>
+            {{ count('popup') }}
             <Menu.Item>Item</Menu.Item>
           </Menu.Popup>
         </PartTransition>
@@ -83,10 +92,11 @@ defineProps({
     <Tooltip.Portal>
       <Tooltip.Positioner>
         <PartTransition :on="!inSlot" name="popup" :log>
-          <Tooltip.Popup data-testid="popup">
+          <Tooltip.Popup data-testid="popup" :as>
             <template v-if="inSlot" #element="{ props, elementRef }">
               <section v-bind="props" :ref="elementRef" />
             </template>
+            {{ count('popup') }}
             Tooltip
           </Tooltip.Popup>
         </PartTransition>
