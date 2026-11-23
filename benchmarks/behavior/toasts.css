@@ -1,0 +1,44 @@
+/*
+ * The look of the fixture `Toasts` in each library: the place and the width of the stack, and the
+ * box of each toast. The CSS of each fixture gives the stack and the motion of its docs.
+ */
+.bench-toast-viewport {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 1;
+  width: 360px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bench-toast {
+  box-sizing: border-box;
+  border: 1px solid black;
+  background: white;
+  color: black;
+}
+
+.bench-toast-content {
+  box-sizing: border-box;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px;
+}
+
+.bench-toast-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bench-toast-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bench-toast-description {
+  margin: 0;
+}
