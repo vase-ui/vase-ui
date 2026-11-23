@@ -39,7 +39,7 @@ describe('server render and hydration', () => {
   });
 
   test.each([true, false])(
-    'VUE-128: a disabled portal of a dialog with modal=%s renders the popup in place with its role and id, with no fixed element and no sentinel; the popup gets its name after the mount',
+    'VUE-128: a disabled portal of a dialog with modal=%s renders the shown popup in place with its role and id, with no fixed element and no sentinel; the popup gets its name after the mount',
     async (modal) => {
       // Vue 3.6 reports a mismatch when it hydrates the in-place portal of an open Vapor part in
       // another one.
@@ -54,7 +54,8 @@ describe('server render and hydration', () => {
           : undefined,
       };
       const root = await renderOnServer('DialogParts', props);
-      const element = popupOf(root)!;
+      const element = popupOf(root) as HTMLElement;
+      expect(element.style.display).toBe('');
       expect(element).toHaveAttribute('role', 'dialog');
       expect(element.id).not.toBe('');
       expect(element).not.toHaveAttribute('aria-labelledby');
@@ -66,6 +67,7 @@ describe('server render and hydration', () => {
       hydrate(DialogParts, props, root);
       await nextTick();
       expect(popupOf(root)).toBe(element);
+      expect(element.style.display).toBe('');
       await waitFor(() =>
         expect(element).toHaveAttribute('aria-labelledby', element.querySelector('h2')!.id),
       );

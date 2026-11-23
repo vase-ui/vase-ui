@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect, onTestFinished } from 'vitest';
 import { waitFor } from './waitFor';
 
 const EVENT_FRAMES = 180;
@@ -116,4 +116,37 @@ export function nextEvent(
 export async function finishAnimations(element: Element) {
   await waitFor(() => expect(element.getAnimations().length).toBeGreaterThan(0));
   for (const animation of element.getAnimations()) animation.finish();
+}
+
+/** The opacity of an element as the page shows it, and 0 while it does not show. */
+export function shownOpacity(element: Element) {
+  return element.isConnected && element.checkVisibility()
+    ? Number(getComputedStyle(element).opacity)
+    : 0;
+}
+
+/**
+ * The shown opacity of each element in each frame, until each one shows at full opacity with no
+ * animation, at most for 180 frames.
+ */
+export async function opacityUntilRest(elements: readonly Element[]): Promise<number[][]> {
+  const frames: number[][] = elements.map(() => []);
+  for (let frame = 0; frame < EVENT_FRAMES; frame += 1) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    elements.forEach((element, index) => frames[index]!.push(shownOpacity(element)));
+    if (elements.every((element) => shownOpacity(element) === 1 && !element.getAnimations().length))
+      break;
+  }
+  return frames;
+}
+
+/** The highest count of the elements that match `selector`, after each change of the DOM. */
+export function mostMatches(selector: string) {
+  let most = document.querySelectorAll(selector).length;
+  const observer = new MutationObserver(() => {
+    most = Math.max(most, document.querySelectorAll(selector).length);
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  onTestFinished(() => observer.disconnect());
+  return () => most;
 }

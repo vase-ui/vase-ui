@@ -4,7 +4,9 @@ import { nextTick, reactive } from 'vue';
 import { Menu, type MenuRootChangeEventDetails } from '@vase-ui/vue/menu';
 import { platform } from '../common/platform';
 import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
+import MenuControlledSubmenu from '../../test/fixtures/MenuControlledSubmenu.vue';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
+import MenuSlotWithSubmenu from '../../test/fixtures/MenuSlotWithSubmenu.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
 import MenuEachPartSlot from '../../test/fixtures/MenuEachPartSlot.vue';
@@ -1668,6 +1670,44 @@ describe('more behaviors of the parts', () => {
       parent: { connected: true, hidden: false, leaving: false },
     });
     expect(await atParentLeave).toEqual({ parent: true, submenuConnected: false });
+    await waitFor(() => expect(parent.isConnected).toBe(false));
+  });
+
+  test('a menu leaves at its close after its submenu opened again during its leave and then unmounted', async () => {
+    const scene = reactive({ open: true, submenu: true, submenuOpen: true });
+    mount(MenuControlledSubmenu, { scene });
+    await waitFor(() => expect(subPopup()).not.toBe(null));
+    const sub = subPopup()!;
+    scene.submenuOpen = false;
+    await waitFor(() => expect(sub).toHaveClass('menu-slow-leave-active'));
+    scene.submenuOpen = true;
+    await nextTick();
+    expect(subPopup()).toBe(sub);
+    scene.submenu = false;
+    await nextTick();
+    const parent = popup()!;
+    scene.open = false;
+    await waitFor(() => expect(parent.isConnected).toBe(false));
+  });
+
+  test('a parent that renders its `element` slot stays until its submenu left its `<Transition>`', async () => {
+    mount(MenuSlotWithSubmenu);
+    await nextTick();
+    byTestId('trigger')!.focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(active()).toBe(item('a')));
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    const sub = subPopup()!;
+    const parent = popup()!;
+    const atSubmenuLeave = readWhen(
+      () => sub.classList.contains('slot-menu-fade-leave-active') || !sub.isConnected,
+      () => ({ submenuLeaves: sub.isConnected, parentConnected: parent.isConnected }),
+    );
+    await userEvent.pointer([{ coords: { x: 2, y: 600 } }, '[MouseLeft]']);
+    expect(await atSubmenuLeave).toEqual({ submenuLeaves: true, parentConnected: true });
+    await waitFor(() => expect(sub.isConnected).toBe(false));
     await waitFor(() => expect(parent.isConnected).toBe(false));
   });
 });

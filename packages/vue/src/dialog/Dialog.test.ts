@@ -20,7 +20,12 @@ import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { sendTouch, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
-import { readWhen } from '../../test/wait';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -1119,6 +1124,32 @@ describe('the focus', () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
+  test.each([
+    { name: '`finalFocus` false', trigger: true, popup: { finalFocus: false } },
+    { name: 'no trigger', trigger: false, popup: {} },
+  ])(
+    'a close with $name while a field of the popup has the focus: the field loses the focus, and typed text does not reach it',
+    async ({ trigger, popup: popupProps }) => {
+      const scene = mount(DialogInTransition, {
+        root: { defaultOpen: !trigger },
+        trigger,
+        popup: { ...popupProps, class: 'slow' },
+      });
+      await nextTick();
+      if (trigger) {
+        await userEvent.click(scene.root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!);
+      }
+      const element = await opened();
+      const field = element.querySelector('input')!;
+      field.focus();
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+      await userEvent.keyboard('ab');
+      expect(field.value).toBe('');
+      expect(document.activeElement).toBe(document.body);
+    },
+  );
+
   test('a dialog that opens in the update that closes a modal dialog keeps the focus', async () => {
     const scene = siblings({ 0: false, 1: false });
     mount(DialogSiblings, { dialogs: [{}, { trigger: false, root: { modal: false } }], scene });
@@ -1336,29 +1367,71 @@ describe('the viewport, the backdrop and the leave', () => {
     await waitFor(() => expect(viewport.isConnected).toBe(false));
   });
 
-  test('an open while the popup leaves waits for the end of the leave, so the page has one popup', async () => {
-    const { root } = mount(DialogInTransition);
+  test('an open while the popup leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+    const log = new Set<string>();
+    const { root } = mount(DialogInTransition, {
+      popup: { class: 'slow' },
+      backdrop: { class: 'slow' },
+      log,
+    });
     await nextTick();
     const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
     await userEvent.click(trigger);
     const first = await opened();
     const backdrop = byTestId('backdrop')!;
-    // The click comes in the task where the leave starts. The popup and the backdrop leave in
-    // 300 ms, but Firefox can end the leave of a popup that closes before the first frame of its
-    // enter at the next frame, and the backdrop then leaves alone. So the case reads the page when
-    // the new popup comes.
-    const reopened = readWhen(
-      () => first.classList.contains('pop-leave-active'),
-      () => trigger.click(),
-    );
-    const leaving = readWhen(
-      () => popups().some((element) => element !== first),
-      () => [first, backdrop].filter((element) => element.isConnected),
-    );
+    await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const counts = mostMatches('[data-testid="popup"]');
     await userEvent.keyboard('{Escape}');
-    await reopened;
-    expect(await leaving).toEqual([]);
-    await waitFor(() => expect(popup()!.className).toBe(''));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = [first, backdrop].map(shownOpacity);
+    trigger.click();
+    const frames = await opacityUntilRest([first, backdrop]);
+    expect(popups()).toEqual([first]);
+    expect(byTestId('backdrop')).toBe(backdrop);
+    expect(counts()).toBe(1);
+    expect(log.has('after-leave')).toBe(false);
+    frames.forEach((opacities, index) => {
+      expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+      expect(opacities.at(-1)).toBe(1);
+    });
+  });
+
+  test('the content of the popup stays mounted until the leave ends', async () => {
+    const log: string[] = [];
+    mount(DialogInTransition, {
+      root: { defaultOpen: true },
+      popup: { class: 'slow' },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const element = await opened();
+    await finishAnimations(element);
+    await waitFor(() => expect(log).toContain('after-enter'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+    await nextTick();
+    expect(log).not.toContain('child unmounted');
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log.slice(-2)).toEqual(['after-leave', 'child unmounted']);
+  });
+
+  test('an open while the popup leaves gives the focus to the popup again', async () => {
+    const { root } = mount(DialogInTransition, { popup: { class: 'slow' } });
+    await nextTick();
+    const trigger = root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!;
+    await userEvent.click(trigger);
+    const element = await opened();
+    const inside = element.querySelector('button')!;
+    await waitFor(() => expect(inside).toHaveFocus());
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('pop-enter-active'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+    await waitFor(() => expect(trigger).toHaveFocus());
+    trigger.click();
+    await waitFor(() => expect(inside).toHaveFocus());
+    expect(popups()).toEqual([element]);
   });
 
   test('a press in a popup in a viewport keeps its default action, so a field takes the focus', async () => {

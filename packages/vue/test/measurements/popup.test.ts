@@ -9,9 +9,11 @@ import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
 import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
 import MeasureTransitionReopen from '../fixtures/MeasureTransitionReopen.vue';
+import MeasureTransitionShow from '../fixtures/MeasureTransitionShow.vue';
 import { createScrollDocument } from '../fixtures/scrollDocument';
 import { holdPress, stopFling, touchDrag } from '../pointer';
 import { mount } from '../render';
+import { waitFor } from '../waitFor';
 import { tabbables } from '../../src/popup/focus';
 
 let root: HTMLElement | undefined;
@@ -431,6 +433,149 @@ describe('an open while the popup leaves', () => {
     await nextTick();
     const popups = [...app.querySelectorAll('.popup')].map((popup) => popup === leaving);
     expect(popups).toEqual(inject('app').startsWith('vapor') ? [false] : [true, false]);
+  });
+});
+
+// The opacity of the element in each frame until `stop` gives `true`, at most for 2 s.
+async function opacityFrames(target: Element, stop: () => boolean) {
+  const frames: { opacity: number; visible: boolean }[] = [];
+  const end = performance.now() + 2000;
+  while (!stop() && performance.now() < end) {
+    await nextFrame();
+    frames.push({
+      opacity: Number(getComputedStyle(target).opacity),
+      visible: target.checkVisibility(),
+    });
+  }
+  return frames;
+}
+
+// The scene of `MeasureTransitionShow`: a `<Transition>` of 500 ms with linear opacity.
+function mountShow(
+  scene: { open: boolean; rendered: boolean },
+  options: { appear?: boolean; css?: boolean; readsLayout?: boolean } = {},
+) {
+  const state = reactive(scene);
+  const log: string[] = [];
+  mount(MeasureTransitionShow, {
+    scene: state,
+    log: { add: (entry: string) => log.push(entry) },
+    ...options,
+  });
+  return { scene: state, log, popup: () => document.querySelector<HTMLElement>('.popup') };
+}
+
+async function openThenLeaveToHalf(options: { readsLayout?: boolean } = {}) {
+  const shown = mountShow({ open: false, rendered: true }, options);
+  shown.scene.open = true;
+  await waitFor(() => expect(shown.log).toContain('after-enter'));
+  const element = shown.popup()!;
+  shown.log.length = 0;
+  shown.scene.open = false;
+  await opacityFrames(element, () => Number(getComputedStyle(element).opacity) < 0.6);
+  return { ...shown, element, atOpen: Number(getComputedStyle(element).opacity) };
+}
+
+describe('a show during the leave of an element with `v-show` in a <Transition>', () => {
+  test('keeps the element and goes back from where it is: `leave-cancelled`, `before-enter` and `after-enter` come once, and the opacity goes on down by less than 0.15', async () => {
+    const { scene, log, element, atOpen } = await openThenLeaveToHalf();
+    scene.open = true;
+    const frames = await opacityFrames(element, () => log.includes('after-enter'));
+    expect(document.querySelectorAll('.popup')).toHaveLength(1);
+    expect(element.isConnected).toBe(true);
+    expect(log).toEqual([
+      'before-leave',
+      'leave',
+      'leave-cancelled',
+      'before-enter',
+      'enter',
+      'after-enter',
+    ]);
+    expect(frames.every((frame) => frame.visible)).toBe(true);
+    const lowest = Math.min(...frames.map((frame) => frame.opacity));
+    expect(atOpen - lowest).toBeLessThan(0.15);
+    expect(frames.at(-1)?.opacity).toBe(1);
+  });
+
+  test('a read of the layout in `leave-cancelled` and `before-enter` reads the element with `display: none`, and the enter starts from its `enter-from` class', async () => {
+    const { scene, log, element, atOpen } = await openThenLeaveToHalf({ readsLayout: true });
+    expect(atOpen).toBeGreaterThan(0.2);
+    scene.open = true;
+    const frames = await opacityFrames(element, () => log.includes('after-enter'));
+    expect(log.slice(2, 6)).toEqual(['leave-cancelled', 'width 0', 'before-enter', 'width 0']);
+    expect(Math.min(...frames.map((frame) => frame.opacity))).toBeLessThan(0.1);
+  });
+
+  test('a `v-if` on the <Teleport> after the leave removes the hidden element with no second leave', async () => {
+    const { scene, log, popup } = mountShow({ open: true, rendered: true });
+    await waitFor(() => expect(log).toContain('after-enter'));
+    const element = popup()!;
+    scene.open = false;
+    await waitFor(() => expect(log).toContain('after-leave'));
+    expect(element.style.display).toBe('none');
+    scene.rendered = false;
+    await nextTick();
+    expect(element.isConnected).toBe(false);
+    expect(log.filter((entry) => entry === 'before-leave')).toHaveLength(1);
+    expect(log.filter((entry) => entry === 'after-leave')).toHaveLength(1);
+  });
+
+  // The `<Transition>` of Vapor calls the enter hooks once.
+  test.each([
+    { appear: false, css: true, twice: [] },
+    { appear: true, css: true, twice: ['before-enter', 'enter'] },
+    { appear: true, css: false, twice: ['before-enter', 'enter', 'after-enter'] },
+  ])(
+    'that shows one update after its mount in an open, with appear=$appear and css=$css, calls $twice twice in a virtual DOM app; the first frame that shows it is hidden by `enter-from`',
+    async ({ appear, css, twice }) => {
+      const { log, popup } = mountShow({ open: true, rendered: true }, { appear, css });
+      await waitFor(() => expect(popup()).not.toBe(null));
+      const element = popup()!;
+      const frames = await opacityFrames(element, () => log.includes('after-enter'));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const counts = Object.fromEntries(
+        ['before-enter', 'enter', 'after-enter'].map((hook) => [
+          hook,
+          log.filter((entry) => entry === hook).length,
+        ]),
+      );
+      const calls = (hook: string) =>
+        twice.includes(hook) && !inject('app').startsWith('vapor') ? 2 : 1;
+      expect(counts).toEqual({
+        'before-enter': calls('before-enter'),
+        enter: calls('enter'),
+        'after-enter': calls('after-enter'),
+      });
+      if (css) expect(frames.find((frame) => frame.visible)?.opacity).toBeLessThan(0.2);
+    },
+  );
+});
+
+describe('a swap of the leave class for the enter class during a CSS animation', () => {
+  test('with one keyframes name and `reverse`, keeps the animation and its time, and the opacity jumps to the mirrored point; with two names, the enter starts from its first keyframe', async () => {
+    html(`<style>
+      @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+      @keyframes fade-out { from { opacity: 1 } to { opacity: 0 } }
+      .enter { animation: fade 1000ms linear }
+      .leave-same { animation: fade 1000ms linear reverse }
+      .leave { animation: fade-out 1000ms linear }
+      </style><div id="same" class="leave-same"></div><div id="two" class="leave"></div>`);
+    const opacity = (id: string) => Number(getComputedStyle(element(id)).opacity);
+    for (const id of ['same', 'two']) {
+      const [animation] = element(id).getAnimations();
+      animation!.pause();
+      animation!.currentTime = 200;
+    }
+    const before = { same: opacity('same'), two: opacity('two') };
+    const [same] = element('same').getAnimations();
+    element('same').className = 'enter';
+    element('two').className = 'enter';
+    await nextFrame();
+    expect(before).toEqual({ same: 0.8, two: 0.8 });
+    expect(element('same').getAnimations()).toEqual([same]);
+    expect(same!.currentTime).toBe(200);
+    expect(opacity('same')).toBeCloseTo(0.2, 1);
+    expect(opacity('two')).toBeLessThan(0.1);
   });
 });
 

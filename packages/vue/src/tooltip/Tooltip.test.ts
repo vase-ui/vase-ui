@@ -5,11 +5,16 @@ import { Tooltip, type TooltipRootChangeEventDetails } from '@vase-ui/vue/toolti
 import TooltipComposed from '../../test/fixtures/TooltipComposed.vue';
 import TooltipPartAlone from '../../test/fixtures/TooltipPartAlone.vue';
 import TooltipParts from '../../test/fixtures/TooltipParts.vue';
-import { finishAnimations } from '../../test/animation';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
-import { readAfter, readWhen } from '../../test/wait';
+import { readAfter } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 import { waitForPositioned } from '../../test/waitForPositioned';
 
@@ -754,44 +759,31 @@ describe('the hover', () => {
     expect(trigger()).not.toHaveAttribute('data-popup-open');
   });
 
-  test('a hover on the trigger while the popup leaves after a hover close opens the root at once; the element enters after the leave', async () => {
+  test('a hover on the trigger while the popup leaves after a hover close opens the root at once, and the same popup goes back from where it is', async () => {
     const log: string[] = [];
     const attrs = reactive<Props>({ delay: 0 });
     await mountTooltips({
       tooltips: [
-        { name: 't', root: rootEvents(log), transition: 'fade', triggers: [{ key: 't', attrs }] },
+        { name: 't', root: rootEvents(log), transition: 'slow', triggers: [{ key: 't', attrs }] },
       ],
     });
     await userEvent.hover(trigger());
     const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(first).not.toHaveClass('slow-enter-active'));
     attrs.delay = 10_000;
-    let most = 0;
-    const observer = new MutationObserver(() => {
-      most = Math.max(most, document.querySelectorAll('[data-testid="popup-t"]').length);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    onTestFinished(() => observer.disconnect());
-    // The hover and the checks come in the task where the leave starts. A close in the enter
-    // reverses its transition, so the leave can end in some milliseconds, before a command ends.
-    const atReopen = readWhen(
-      () => first.classList.contains('fade-leave-active'),
-      async () => {
-        movePointer(trigger(), centerOf(trigger()));
-        await nextTick();
-        const reason = log.at(-2);
-        await nextTick();
-        return { reason, isConnected: first.isConnected, className: first.className };
-      },
-    );
+    const popups = mostMatches('[data-testid="popup-t"]');
     await hoverAway();
-    const { reason, isConnected, className } = await atReopen;
-    expect(reason).toBe('openChange true trigger-hover');
-    // The old popup ends its leave before the new one enters.
-    expect(isConnected).toBe(true);
-    expect(className).toContain('fade-leave-active');
-    await waitFor(() => expect(popup() ?? first).not.toBe(first));
-    await sleep(20);
-    expect(most).toBe(1);
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    movePointer(trigger(), centerOf(trigger()));
+    await nextTick();
+    expect(log.at(-2)).toBe('openChange true trigger-hover');
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(popup()).toBe(first);
+    expect(popups()).toBe(1);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
   });
 
   test('after a close by Escape, a move on the trigger opens nothing; a pointer that leaves and comes back opens', async () => {

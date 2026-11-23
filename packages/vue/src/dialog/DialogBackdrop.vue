@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
+import { computed, mergeProps, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
-import { keepFocus } from '../popup/portal';
+import { keepFocus, usePopupPart } from '../popup/portal';
 import { injectDialog, injectDialogPortal } from './root';
 import type { DialogBackdropProps, DialogBackdropState } from './types';
 
@@ -19,34 +19,21 @@ const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
+const shown = usePopupPart(root, element);
 // While another dialog is under it, the backdrop of a nested dialog would darken the page twice.
-const shown = computed(
-  () =>
-    ((root.open && !root.leaving) || root.keepMounted) && (props.forceRender || !context.nested),
-);
+const rendered = computed(() => props.forceRender || !context.nested);
 const state = computed<DialogBackdropState>(() => ({ open: root.open }));
 
-const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
 watch(element, (backdrop, _, onCleanup) => {
   if (backdrop) onCleanup(context.addBackdrop());
 });
-// A backdrop that leaves in a `<Transition>` takes no press from the page. Vue does not patch an
-// element that leaves, so the close writes the attribute.
-watch(
-  () => root.open,
-  (open) => {
-    if (!open) element.value?.setAttribute('inert', '');
-  },
-  { flush: 'sync' },
-);
 
 function elementProps() {
   const closed = !root.open;
   return mergeProps(
     {
       role: 'presentation',
-      hidden: closed ? true : undefined,
+      hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       onMousedown: keepFocus,
     },
@@ -57,18 +44,28 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- The part hides its own element with `v-show`, and the portal removes it after the leave. The
+`element` slot renders while the popup is open: a fragment takes no `<Transition>`. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
+  <template v-if="$slots.element">
+    <slot
+      v-if="rendered && (root.open || root.keepMounted)"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component
+    :is="as"
+    v-else-if="rendered && as"
+    v-show="shown"
+    v-bind="elementProps()"
+    :ref="setElement"
+  >
     <slot :state="state" />
   </component>
-  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
+  <div v-else-if="rendered && !as" v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </div>
 </template>

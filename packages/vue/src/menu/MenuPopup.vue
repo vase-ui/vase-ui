@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, provide, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, provide, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
+import { usePopupPart } from '../popup/portal';
 import { sizeVariables } from '../popup/viewport';
 import { groupItemsKey } from './filter';
 import { injectMenu, injectPositioner } from './root';
@@ -24,8 +25,8 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
-// While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(() => (root.open && !root.leaving) || root.keepMounted || menu.childLeaving);
+const popupShown = usePopupPart(root, element);
+const shown = computed(() => popupShown.value || menu.childLeaving);
 const state = computed<MenuPopupState>(() => ({
   open: root.open,
   side: placement.side.value,
@@ -63,17 +64,6 @@ watch(
   (finalFocus) => (menu.finalFocus.value = finalFocus),
   { immediate: true },
 );
-// Vue does not patch an element that leaves in a `<Transition>`, so the close writes its instant.
-watch(
-  () => root.instant,
-  (instant) => {
-    if (instant) element.value?.setAttribute('data-instant', instant);
-    else element.value?.removeAttribute('data-instant');
-  },
-  { flush: 'sync' },
-);
-const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
 
 function onKeydown(event: KeyboardEvent) {
   // A submenu with no portal is in this popup, and it takes its own keys.
@@ -101,7 +91,7 @@ function elementProps() {
       'data-align': state.value.align,
       'data-instant': root.instant,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
-      hidden: closed && !menu.childLeaving ? true : undefined,
+      hidden: closed && root.keepMounted && !menu.childLeaving ? true : undefined,
       inert: closed ? true : undefined,
       style: sizeVariables('popup', menu.viewport.value?.popup),
       onKeydown,
@@ -116,18 +106,22 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open or a
+submenu in it leaves. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
+  <template v-if="$slots.element">
+    <slot
+      v-if="root.open || root.keepMounted || menu.childLeaving"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </component>
-  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
+  <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </div>
 </template>

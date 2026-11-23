@@ -1,4 +1,4 @@
-import { nextTick, watch } from 'vue';
+import { nextTick, shallowRef, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -126,6 +126,9 @@ export function usePopupFocus(
 ) {
   let before: Element | null = null;
   let took = false;
+  // A close and an open in one task keep the same popup element, so the popup takes the focus at
+  // each open.
+  const opens = shallowRef(0);
 
   // A trigger that takes no focus, such as the swipe area of a drawer, gives its place to the
   // element that had the focus before the open.
@@ -139,6 +142,7 @@ export function usePopupFocus(
     (open) => {
       if (open) {
         took = false;
+        opens.value += 1;
         return;
       }
       returnFocus();
@@ -182,8 +186,8 @@ export function usePopupFocus(
   }
 
   watch(
-    () => root.open && options.takesFocus() && options.placed() && root.popup,
-    (popup) => {
+    [() => opens.value, () => root.open && options.takesFocus() && options.placed() && root.popup],
+    ([, popup]) => {
       if (!popup) return;
       // `v-show` shows a popup that stays in the DOM in a hook of this flush, which can run after
       // this watcher. A hidden element takes no focus, so the focus moves at the end of the flush.
@@ -244,17 +248,29 @@ export function usePopupFocus(
     const trigger = root.activeTrigger;
     if (active && active !== doc.body && active !== trigger && !popup.contains(active)) return;
     const target = resolve(options.finalFocus(), root.closeInteraction);
-    if (target === false) return;
     // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
     // that closes is no target, also while the popup leaves. After an open by code, the element
     // that had the focus comes before the trigger (BUG-6037).
     const fallbacks = [focusableTrigger(), before as HTMLElement | null];
     if (root.interaction === '') fallbacks.reverse();
-    const element = [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
-      (each) => each?.isConnected && !popup.contains(each),
-    );
+    const element =
+      target === false
+        ? undefined
+        : [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
+            (each) => each?.isConnected && !popup.contains(each),
+          );
+    if (!element) {
+      // The popup that leaves is inert. The browser moves the focus out of an inert element only
+      // when it updates the rendering, and WebKit keeps the text caret there
+      // (test/measurements/dialog.test.ts). So the focused element of the popup loses the focus.
+      void nextTick(() => {
+        const focused = activeElement(doc);
+        if (!root.open && focused && popup.contains(focused)) (focused as HTMLElement).blur();
+      });
+      return;
+    }
     const keyboard = root.closeInteraction === 'keyboard';
-    if (!element?.closest('[inert]')) {
+    if (!element.closest('[inert]')) {
       focus(element, keyboard);
       return;
     }

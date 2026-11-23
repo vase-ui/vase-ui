@@ -351,6 +351,8 @@ describe.each(demos.map((demo) => [`${demo.name} (${demo.variant})`, demo] as co
                 0,
               );
             });
+            // A script animation that starts from the current style reads it in the next frame.
+            await new Promise((resolve) => requestAnimationFrame(resolve));
             await waitFor(() => {
               expect(runningAnimations()).toEqual([]);
             });

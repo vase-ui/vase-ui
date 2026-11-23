@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { MenuRootChangeEventDetails, MenuRootHighlightEventDetails } from '@vase-ui/vue/menu';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
+import { mostMatches } from '../../test/animation';
 import { movePointerThrough } from '../../test/pointer';
 import { mount } from '../../test/render';
 import { readAfter, readWhen } from '../../test/wait';
@@ -83,7 +84,7 @@ describe('a hover on the trigger while the popup leaves after a hover close', ()
     { opener: 'a hover', root: {} },
     { opener: '`defaultOpen`', root: { defaultOpen: true } },
   ])(
-    'opens the menu at once when $opener opened it; the popup enters after the leave',
+    'opens the menu at once when $opener opened it, and the same popup goes back',
     async ({ root }) => {
       const log: string[] = [];
       const attrs = reactive<Props>({ openOnHover: true, delay: 0 });
@@ -105,11 +106,14 @@ describe('a hover on the trigger while the popup leaves after a hover close', ()
         () => first.classList.contains('menu-fade-leave-active'),
         () => trigger().dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })),
       );
+      const popups = mostMatches('[data-testid="popup"]');
       await leave();
       await reopened;
       await nextTick();
       expect(log.at(-1)).toBe('openChange true trigger-hover');
-      await waitFor(() => expect(byTestId('popup') ?? first).not.toBe(first));
+      expect(byTestId('popup')).toBe(first);
+      expect(first).not.toHaveClass('menu-fade-leave-active');
+      expect(popups()).toBe(1);
     },
   );
 

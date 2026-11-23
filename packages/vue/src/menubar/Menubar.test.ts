@@ -486,7 +486,7 @@ describe('more of the bar', () => {
     element('edit').focus();
     await waitFor(() => expect(popupOf('edit')).not.toBe(null));
     expect(log).toContain('edit true trigger-focus');
-    expect(popupOf('file')).toBe(null);
+    await waitFor(() => expect(popupOf('file')).toBe(null));
   });
 
   test('a menu of the bar with no trigger leaves the focus on the outside input that a press closes it with', async () => {

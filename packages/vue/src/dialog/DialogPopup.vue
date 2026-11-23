@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, onBeforeUnmount, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
+import { usePopupPart } from '../popup/portal';
 import { injectDialog, injectDialogPortal } from './root';
 import type { DialogPopupProps, DialogPopupState } from './types';
 
@@ -23,8 +24,7 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
-// While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(() => (root.open && !root.leaving) || root.keepMounted);
+const shown = usePopupPart(root, element);
 const state = computed<DialogPopupState>(() => ({
   open: root.open,
   nested: context.nested,
@@ -42,9 +42,6 @@ watch(
   ([initialFocus, finalFocus]) => (context.popupFocus.value = { initialFocus, finalFocus }),
   { immediate: true },
 );
-const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
-
 function elementProps() {
   const closed = !root.open;
   return mergeProps(
@@ -58,7 +55,7 @@ function elementProps() {
       'data-nested': context.nested ? '' : undefined,
       'data-nested-dialog-open': state.value.nestedDialogOpen ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
-      hidden: closed ? true : undefined,
+      hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       style: { '--nested-dialogs': context.dialogsAbove },
     },
@@ -69,18 +66,21 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
+  <template v-if="$slots.element">
+    <slot
+      v-if="root.open || root.keepMounted"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </component>
-  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
+  <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </div>
 </template>

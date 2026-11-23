@@ -43,7 +43,10 @@ export interface PopupTrigger {
 /** What a root gives to its parts. The properties are reactive. */
 export interface PopupRoot<Payload = unknown> {
   readonly open: boolean;
-  /** From a close until Vue removed the popup and the backdrop from the document. */
+  /**
+   * From a close until the popup and the backdrop are hidden or out of the document. An open ends it
+   * for an element that its part shows again.
+   */
   readonly leaving: boolean;
   /** The `keepMounted` of the portal. */
   readonly keepMounted: boolean;
@@ -57,13 +60,16 @@ export interface PopupRoot<Payload = unknown> {
   readonly triggers: readonly PopupTrigger[];
   readonly activeTrigger: Element | null;
   readonly activeTriggerId: string | null;
-  /** The payload of the active trigger, or the payload of `openWithPayload`. */
+  /**
+   * The payload of the active trigger, or the payload of `openWithPayload`. After a close, the
+   * payload of the last render while the root was open.
+   */
   readonly payload: Payload | undefined;
-  /** The popup element, while it is in the document. */
+  /** The popup element, while its part renders it. */
   readonly popup: HTMLElement | null;
   /** The sentinels, the fixed element and the viewport, while they are in the document. */
   readonly portalElements: readonly Element[];
-  /** The elements of the popup and the backdrop, while they are in the document. */
+  /** The elements of the popup and the backdrop, while their parts render them. */
   readonly parts: readonly Element[];
   /** The `id` of the mounted title that mounted last. */
   readonly titleId: string | undefined;
@@ -375,6 +381,19 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     },
     { flush: 'sync' },
   );
+  const openPayload = computed(() => {
+    if (givenPayload.value) return givenPayload.value.value;
+    const entry = activeEntry.value ?? lastPayload.value;
+    return (entry?.id === activeTriggerId.value ? entry?.payload : undefined) as
+      Payload | undefined;
+  });
+  // Vue patches the popup that leaves, so the popup keeps the payload of its last render, also
+  // when the parent clears the trigger at the close. A watcher of the default flush runs before
+  // the render, after the parent wrote each prop.
+  const closedPayload = shallowRef<{ value: Payload | undefined }>();
+  watch([open, openPayload] as const, ([isOpen], [wasOpen, payload]) => {
+    if (wasOpen && !isOpen) closedPayload.value = { value: payload };
+  });
 
   /**
    * `entry` is the trigger of an open, `null` for an open with no trigger, and `undefined` for a
@@ -419,12 +438,18 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
     return details;
   }
 
-  // The popup and the backdrop leave in a `<Transition>` after Vue removes them from the render.
-  // Vue sets their refs to `null` at once, so the root keeps the elements of the close.
+  const parts = () =>
+    leavingElements.map((element) => element()).filter((element): element is Element => !!element);
+  // A part hides its element with `v-show`, and the `<Transition>` around it keeps the element
+  // until its leave ends. A part that renders its element with a `v-if` leaves it to the
+  // `<Transition>`, and Vue sets its ref to `null` at once, so the root keeps the elements of
+  // the close.
   let leavingNow: Element[] = [];
   let observer: MutationObserver | undefined;
   function settle() {
-    leavingNow = leavingNow.filter((element) => element.isConnected);
+    leavingNow = leavingNow.filter(
+      (element) => element.isConnected && (element as HTMLElement).style.display !== 'none',
+    );
     if (leavingNow.length > 0) return false;
     observer?.disconnect();
     observer = undefined;
@@ -441,10 +466,15 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       if (isOpen) interaction.value = requestedInput ?? '';
       requestedInput = undefined;
       if (instant.value === 'trigger-change') instant.value = undefined;
-      if (isOpen || keepMounted.value) return;
-      const elements = leavingElements
-        .map((element) => element())
-        .filter((element): element is Element => !!element);
+      if (isOpen) {
+        // A part that keeps its element shows it again. An element that Vue removes still leaves.
+        const kept = parts();
+        leavingNow = leavingNow.filter((element) => !kept.includes(element));
+        settle();
+        return;
+      }
+      if (keepMounted.value) return;
+      const elements = parts();
       if (elements.length === 0) return;
       leavingNow.push(...elements);
       leaving.value = true;
@@ -453,6 +483,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
         observer ??= new MutationObserver(settle);
         for (const element of leavingNow) {
           if (element.parentNode) observer.observe(element.parentNode, { childList: true });
+          observer.observe(element, { attributeFilter: ['style'] });
         }
       });
     },
@@ -492,10 +523,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       return activeTriggerId.value;
     },
     get payload() {
-      if (givenPayload.value) return givenPayload.value.value;
-      const entry = activeEntry.value ?? lastPayload.value;
-      return (entry?.id === activeTriggerId.value ? entry?.payload : undefined) as
-        Payload | undefined;
+      return !open.value && closedPayload.value ? closedPayload.value.value : openPayload.value;
     },
     get popup() {
       return popup.value;
@@ -506,9 +534,7 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
         .filter((element): element is Element => !!element);
     },
     get parts() {
-      return leavingElements
-        .map((element) => element())
-        .filter((element): element is Element => !!element);
+      return parts();
     },
     get titleId() {
       return labels.title.at(-1)?.id;

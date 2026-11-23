@@ -27,7 +27,7 @@ const CaretUpDownIcon: FunctionalComponent = (_, { attrs }) =>
 
 // The popup stays in the DOM, so the hooks of the `<Transition>` run at each open and close.
 function enter(element: Element, done: () => void) {
-  void animate(element, { opacity: [0, 1], scale: [0.8, 1] }, { duration: 0.15 }).then(done);
+  void animate(element, { opacity: 1, scale: 1 }, { duration: 0.15 }).then(done);
 }
 
 function leave(element: Element, done: () => void) {
