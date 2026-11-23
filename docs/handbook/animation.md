@@ -55,9 +55,9 @@ Use a transition where you can. A transition that stops midway goes back from wh
 
 Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal has no root element.
 
-The popup and the backdrop of Dialog, Alert Dialog, Popover, Menu, Context Menu, Menubar, Tooltip, Date Picker, Date Range Picker and Time Picker show their element one update after they mount. So their `<Transition>` runs the enter with no `appear`. Do not give it `appear`, because a virtual DOM app then calls the JavaScript hooks of the enter twice. In a `disabled` portal, a popup that is open at the first render shows at once, as in the server HTML, with no enter. The popup of Preview Card, Combobox, Autocomplete, Navigation Menu and Drawer mounts at each open, so give its `<Transition>` `appear`.
+The popup and the backdrop of Dialog, Alert Dialog, Popover, Menu, Context Menu, Menubar, Tooltip, Date Picker, Date Range Picker and Time Picker show their element one update after they mount. So their `<Transition>` runs the enter with no `appear`. Do not give it `appear`: in a virtual DOM app, Vue then calls the JavaScript hooks of the enter twice. In a `disabled` portal, a popup that is open at the first render shows at once, as in the server HTML, with no enter. The popup of Preview Card, Combobox, Autocomplete, Navigation Menu and Drawer mounts at each open, so give its `<Transition>` `appear`.
 
-When the popup of the first list opens again during its leave, it is the same element. Vue calls `leave-cancelled`, and a transition goes back from where it is. The backdrop does the same. Do not read the layout of the element, such as `offsetWidth`, in `leave-cancelled` or `before-enter`. During these hooks, the element has `display: none`, and a read of the layout ends its transition. The enter then starts from the `enter-from` class.
+When one of these popups opens again during its leave, it is the same element. Vue calls `leave-cancelled`, and a transition goes back from where it is. The backdrop does the same. Do not read the layout of the element, such as `offsetWidth`, in `leave-cancelled` or `before-enter`. During these hooks, the element has `display: none`, and a read of the layout ends its transition. The enter then starts from the `enter-from` class.
 
 While an element leaves, the element that takes its place can already be in the DOM. To remove the element that leaves from the flow, give the `leave-active` class `position: absolute`.
 
@@ -114,16 +114,16 @@ With `inert`, the user cannot reach the closed element with the pointer or the f
 
 ## JavaScript animations
 
-A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), runs in the JavaScript hooks of the `<Transition>`. With `:css="false"`, Vue removes the element when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
+A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs/vue) (the package `motion-v`), runs in the JavaScript hooks of the `<Transition>`. With `:css="false"`, the leave ends when the `leave` hook calls `done`. Use `@after-enter` and `@after-leave` for code that runs after an animation.
 
 ### Animate a popup that leaves the DOM
 
-The popup of [Popover](/components/popover) is in the DOM only while the popover is open.
+Without `keepMounted`, the popup of [Popover](/components/popover) is in the DOM only while the popover is open or leaves.
 
 1. Give the popup its closed style in the style sheet.
 2. Put `Popover.Popup` in a `<Transition>` with `:css="false"`.
 3. In the `enter` hook, animate to the open style with `animate` of `motion-v`. In the `leave` hook, animate to the closed style. Each animation starts from the current style, so an open during the leave goes back from where it is.
-4. Call `done` when the animation ends. Vue then removes the popup.
+4. Call `done` when the animation ends. The popup then leaves the DOM.
 
 <DemoFrame>
   <MotionPopup />
@@ -157,7 +157,7 @@ With `keepMounted` on `Popover.Portal`, the popup stays in the DOM. Render `moti
 
 ### Animate a Select popup
 
-The popup of [Select](/components/select) mounts at the first focus of the trigger, the first open or the first autofill. Then it stays in the DOM, and it shows and hides its own element. Put a `<Transition>` around `Select.Popup`, with no `appear`. The hooks of the `<Transition>` then run at each open and each close.
+The popup of [Select](/components/select) mounts at the first focus of the trigger, the first open or the first autofill. Then it stays in the DOM, and it shows and hides its own element. Put a `<Transition>` around `Select.Popup`, with no `appear`. The hooks of the `<Transition>` then run at each open and each close. As for Popover, give the popup its closed style in the style sheet, and animate from the current style.
 
 <DemoFrame>
   <MotionSelect />
