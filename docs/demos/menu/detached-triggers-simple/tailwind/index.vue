@@ -42,7 +42,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
   <Menu.Root :handle="demoMenu">
     <Menu.Portal>
       <Menu.Positioner :side-offset="8" align="start" class="outline-hidden">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="popupClass">
             <Menu.Item :class="itemClass">Rename</Menu.Item>
             <Menu.Item :class="itemClass">Duplicate</Menu.Item>

@@ -13,14 +13,10 @@ const demoDialog = Dialog.createHandle();
 
   <Dialog.Root :handle="demoDialog">
     <Dialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <Dialog.Backdrop :class="styles.Backdrop" />
       </Transition>
-      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
         <Dialog.Popup :class="styles.Popup">
           <div :class="styles.Intro">
             <Dialog.Title :class="styles.Title">Notifications</Dialog.Title>

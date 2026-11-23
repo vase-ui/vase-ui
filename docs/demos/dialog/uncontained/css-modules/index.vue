@@ -29,15 +29,11 @@ const XIcon: FunctionalComponent = () =>
   <Dialog.Root>
     <Dialog.Trigger :class="styles.Button">Open dialog</Dialog.Trigger>
     <Dialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <Dialog.Backdrop :class="styles.Backdrop" />
       </Transition>
       <Dialog.Viewport :class="styles.Viewport">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Dialog.Popup :class="styles.PopupRoot" aria-label="Uncontained dialog">
             <Dialog.Close :class="styles.Close" aria-label="Close">
               <XIcon />

@@ -10,14 +10,10 @@ const popupHiddenClass = styles.PopupHidden;
   <Dialog.Root>
     <Dialog.Trigger :class="styles.Button">View notifications</Dialog.Trigger>
     <Dialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <Dialog.Backdrop :class="styles.Backdrop" />
       </Transition>
-      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
         <Dialog.Popup :class="styles.Popup">
           <div :class="styles.Intro">
             <Dialog.Title :class="styles.Title">Notifications</Dialog.Title>
@@ -29,11 +25,7 @@ const popupHiddenClass = styles.PopupHidden;
             <Dialog.Root>
               <Dialog.Trigger :class="styles.Button">Customize</Dialog.Trigger>
               <Dialog.Portal>
-                <Transition
-                  :enter-from-class="popupHiddenClass"
-                  :leave-to-class="popupHiddenClass"
-                  appear
-                >
+                <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
                   <Dialog.Popup :class="styles.Popup">
                     <div :class="styles.Intro">
                       <Dialog.Title :class="styles.Title">Customize notifications</Dialog.Title>

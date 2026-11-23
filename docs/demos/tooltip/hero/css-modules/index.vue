@@ -45,11 +45,7 @@ const popupHiddenClass = styles.PopupHidden;
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner :side-offset="11">
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <Tooltip.Popup :class="styles.Popup">
                 <Tooltip.Arrow :class="styles.Arrow" />
                 Bold
@@ -65,11 +61,7 @@ const popupHiddenClass = styles.PopupHidden;
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner :side-offset="11">
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <Tooltip.Popup :class="styles.Popup">
                 <Tooltip.Arrow :class="styles.Arrow" />
                 Italic
@@ -85,11 +77,7 @@ const popupHiddenClass = styles.PopupHidden;
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Positioner :side-offset="11">
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <Tooltip.Popup :class="styles.Popup">
                 <Tooltip.Arrow :class="styles.Arrow" />
                 Underline

@@ -17,14 +17,10 @@ const feedbackId = useId();
     <Dialog.Root>
       <Dialog.Trigger :class="styles.Button">Open feedback</Dialog.Trigger>
       <Dialog.Portal>
-        <Transition
-          :enter-from-class="backdropHiddenClass"
-          :leave-to-class="backdropHiddenClass"
-          appear
-        >
+        <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
           <Dialog.Backdrop :class="styles.Backdrop" />
         </Transition>
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Dialog.Popup
             :class="styles.Popup"
             :initial-focus="initialFocusRef"

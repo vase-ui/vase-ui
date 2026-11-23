@@ -79,11 +79,7 @@ const contentLeaveToClass =
           align="start"
           class="outline-none h-[var(--positioner-height)] w-[var(--positioner-width)] max-w-[var(--available-width)] transition-[top,left,right,bottom,transform] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none"
         >
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup
               class="relative h-[var(--popup-height,auto)] w-[var(--popup-width,auto)] py-1 origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[width,height,opacity,scale] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >

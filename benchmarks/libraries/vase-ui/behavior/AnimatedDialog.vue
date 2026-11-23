@@ -10,7 +10,7 @@ import '../../../behavior/style.css';
       <Dialog.Portal>
         <Dialog.Backdrop />
         <Dialog.Viewport>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <Dialog.Popup data-bench="popup" class="bench-motion">
               <Dialog.Title>Title</Dialog.Title>
               <Dialog.Description>Description</Dialog.Description>

@@ -35,11 +35,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
       >
       <Menu.Portal>
         <Menu.Positioner class="outline-none" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup
               class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
@@ -71,7 +67,6 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
                     <Transition
                       :enter-from-class="popupHiddenClass"
                       :leave-to-class="popupHiddenClass"
-                      appear
                     >
                       <Menu.Popup
                         class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
@@ -116,11 +111,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
       >
       <Menu.Portal>
         <Menu.Positioner class="outline-none" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup
               class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
@@ -152,11 +143,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
       >
       <Menu.Portal>
         <Menu.Positioner class="outline-none" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup
               class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             >
@@ -183,7 +170,6 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
                     <Transition
                       :enter-from-class="popupHiddenClass"
                       :leave-to-class="popupHiddenClass"
-                      appear
                     >
                       <Menu.Popup
                         class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out data-instant:transition-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"

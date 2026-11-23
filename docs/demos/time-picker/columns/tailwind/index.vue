@@ -55,11 +55,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
       </div>
       <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <TimePicker.Popup
               aria-label="Choose a start time"
               class="box-border flex origin-[var(--transform-origin)] flex-col gap-3 border border-neutral-950 bg-white p-3 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"

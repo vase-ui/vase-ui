@@ -99,11 +99,7 @@ const CONTENT_SECTIONS = [
       >Open dialog</Dialog.Trigger
     >
     <Dialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <Dialog.Backdrop
           class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-150 supports-[-webkit-touch-callout:none]:absolute"
         />
@@ -111,7 +107,7 @@ const CONTENT_SECTIONS = [
       <Dialog.Viewport
         class="fixed inset-0 flex items-center justify-center overflow-hidden py-6 [@media(min-height:600px)]:pb-12 [@media(min-height:600px)]:pt-8"
       >
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Dialog.Popup
             class="relative flex w-[min(40rem,calc(100%-2rem))] max-h-full max-w-full min-h-0 flex-col bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out"
           >

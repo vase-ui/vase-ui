@@ -9,7 +9,7 @@ import '../../../behavior/style.css';
       <Menu.Trigger data-bench="trigger">Open</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <Menu.Popup data-bench="popup" class="bench-motion">
               <Menu.Item>Item 1</Menu.Item>
               <Menu.Item>Item 2</Menu.Item>

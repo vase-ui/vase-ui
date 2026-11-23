@@ -117,11 +117,7 @@ const contentLeaveToClass = styles.ContentLeaveTo;
     <Tooltip.Root v-slot="{ payload }" :handle="demoTooltip">
       <Tooltip.Portal>
         <Tooltip.Positioner :side-offset="11" :class="styles.Positioner">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Tooltip.Popup :class="styles.Popup">
               <Tooltip.Arrow :class="styles.Arrow" />
 

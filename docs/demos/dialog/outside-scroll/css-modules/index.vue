@@ -132,7 +132,6 @@ const RELATED_LINKS = [
         :enter-from-class="backdropHiddenClass"
         :leave-to-class="backdropHiddenClass"
         :leave-active-class="backdropLeaveActiveClass"
-        appear
       >
         <Dialog.Backdrop :class="styles.Backdrop" />
       </Transition>
@@ -142,7 +141,6 @@ const RELATED_LINKS = [
             :enter-from-class="popupEnterFromClass"
             :leave-to-class="popupLeaveToClass"
             :leave-active-class="popupLeaveActiveClass"
-            appear
           >
             <Dialog.Popup ref="popup" :class="styles.Popup" :initial-focus="popupRef?.element">
               <div :class="styles.PopupHeader">

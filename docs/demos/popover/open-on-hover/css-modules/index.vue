@@ -52,7 +52,7 @@ const popupHiddenClass = styles.PopupHidden;
     </Popover.Trigger>
     <Popover.Portal>
       <Popover.Positioner :side-offset="8">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Popover.Popup :class="styles.Popup">
             <Popover.Arrow :class="styles.Arrow" />
             <Popover.Title :class="styles.Title">Free shipping</Popover.Title>

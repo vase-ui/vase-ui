@@ -134,7 +134,6 @@ const RELATED_LINKS = [
         :enter-from-class="backdropHiddenClass"
         :leave-to-class="backdropHiddenClass"
         :leave-active-class="backdropLeaveActiveClass"
-        appear
       >
         <Dialog.Backdrop
           class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-[600ms] ease-[var(--ease-out-fast)] supports-[-webkit-touch-callout:none]:absolute"
@@ -146,7 +145,6 @@ const RELATED_LINKS = [
             :enter-from-class="popupEnterFromClass"
             :leave-to-class="popupLeaveToClass"
             :leave-active-class="popupLeaveActiveClass"
-            appear
           >
             <Dialog.Popup
               ref="popup"

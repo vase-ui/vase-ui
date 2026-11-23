@@ -77,11 +77,7 @@ const arrowClass =
           :side-offset="11"
           class="h-[var(--positioner-height)] w-[var(--positioner-width)] max-w-[var(--available-width)]"
         >
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Tooltip.Popup :class="popupClass">
               <Tooltip.Arrow :class="arrowClass" />
               Controlled tooltip

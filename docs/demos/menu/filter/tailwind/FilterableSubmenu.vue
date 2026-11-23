@@ -68,11 +68,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
           :side-offset="getSubmenuOffset"
           :align-offset="getSubmenuOffset"
         >
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="popupClass">
               <div :class="inputContainerClass">
                 <Menu.Input

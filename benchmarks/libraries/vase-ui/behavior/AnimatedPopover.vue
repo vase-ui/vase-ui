@@ -9,7 +9,7 @@ import '../../../behavior/style.css';
       <Popover.Trigger data-bench="trigger">Open</Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <Popover.Popup data-bench="popup" class="bench-motion">
               <Popover.Arrow />
               <Popover.Title>Title</Popover.Title>

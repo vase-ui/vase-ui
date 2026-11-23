@@ -19,16 +19,12 @@ const feedbackId = useId();
         >Open feedback</Dialog.Trigger
       >
       <Dialog.Portal>
-        <Transition
-          :enter-from-class="backdropHiddenClass"
-          :leave-to-class="backdropHiddenClass"
-          appear
-        >
+        <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
           <Dialog.Backdrop
             class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-150 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh"
           />
         </Transition>
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Dialog.Popup
             class="fixed top-1/2 left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[scale,opacity] duration-100 ease-out"
             :initial-focus="initialFocusRef"

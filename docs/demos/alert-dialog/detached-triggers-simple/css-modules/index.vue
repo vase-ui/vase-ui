@@ -15,14 +15,10 @@ const demoAlertDialog = AlertDialog.createHandle();
 
   <AlertDialog.Root :handle="demoAlertDialog">
     <AlertDialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <AlertDialog.Backdrop :class="styles.Backdrop" />
       </Transition>
-      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
         <AlertDialog.Popup :class="styles.Popup">
           <div :class="styles.Intro">
             <AlertDialog.Title :class="styles.Title">Discard draft?</AlertDialog.Title>

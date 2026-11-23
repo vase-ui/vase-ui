@@ -15,7 +15,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
     >
     <ContextMenu.Portal>
       <ContextMenu.Positioner class="outline-hidden">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <ContextMenu.Popup
             class="origin-[var(--transform-origin)] border border-neutral-950 bg-white py-1 text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-hidden transition-[scale,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
           >

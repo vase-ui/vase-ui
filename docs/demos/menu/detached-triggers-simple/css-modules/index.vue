@@ -34,7 +34,7 @@ const popupHiddenClass = styles.PopupHidden;
   <Menu.Root :handle="demoMenu">
     <Menu.Portal>
       <Menu.Positioner :side-offset="8" align="start" :class="styles.Positioner">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="styles.Popup">
             <Menu.Item :class="styles.Item">Rename</Menu.Item>
             <Menu.Item :class="styles.Item">Duplicate</Menu.Item>

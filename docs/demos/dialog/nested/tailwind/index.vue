@@ -13,16 +13,12 @@ const popupHiddenClass =
       >View notifications</Dialog.Trigger
     >
     <Dialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <Dialog.Backdrop
           class="fixed inset-0 bg-black/20 dark:bg-black/50 transition-opacity duration-150 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh"
         />
       </Transition>
-      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+      <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
         <Dialog.Popup
           class="fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 scale-[calc(1-0.1*var(--nested-dialogs))] bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[top,scale,opacity] duration-100 ease-out after:absolute after:inset-0 after:bg-black/5 after:opacity-0 after:transition-opacity after:duration-100 after:ease-out after:pointer-events-none data-nested-dialog-open:after:opacity-100"
         >
@@ -39,11 +35,7 @@ const popupHiddenClass =
                 >Customize</Dialog.Trigger
               >
               <Dialog.Portal>
-                <Transition
-                  :enter-from-class="popupHiddenClass"
-                  :leave-to-class="popupHiddenClass"
-                  appear
-                >
+                <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
                   <Dialog.Popup
                     class="fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 -mt-8 flex w-96 max-w-[calc(100%-3rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 scale-[calc(1-0.1*var(--nested-dialogs))] bg-white dark:bg-neutral-950 p-4 text-neutral-950 dark:text-white border border-neutral-950 dark:border-white shadow-[0.25rem_0.25rem_0] shadow-black/12 dark:shadow-none transition-[top,scale,opacity] duration-100 ease-out after:absolute after:inset-0 after:bg-black/5 after:opacity-0 after:transition-opacity after:duration-100 after:ease-out after:pointer-events-none data-nested-dialog-open:after:opacity-100"
                   >

@@ -10,7 +10,7 @@ const popupHiddenClass = styles.PopupHidden;
     <ContextMenu.Trigger :class="styles.Trigger">Right click here</ContextMenu.Trigger>
     <ContextMenu.Portal>
       <ContextMenu.Positioner :class="styles.Positioner">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <ContextMenu.Popup :class="styles.Popup">
             <ContextMenu.Item :class="styles.Item">Add to Library</ContextMenu.Item>
             <ContextMenu.Item :class="styles.Item">Add to Playlist</ContextMenu.Item>
