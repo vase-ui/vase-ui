@@ -418,10 +418,10 @@ export function usePlacement(
   // place of an open"). An open shows the popup at its place, so the positioner ends the
   // transitions that start from this place to the update that shows the popup. They include a
   // transition of `visibility`, which keeps the popup hidden and unfocusable
-  // (test/measurements/popup.test.ts, "a change of an inherited property"). A given place can show
-  // the popup some updates later, as the item alignment of Select does. A transition that started
-  // before the first place continues, such as the enter of a popup that loses `hidden`. A later
-  // place of the open, such as at another trigger, keeps its transitions.
+  // (test/measurements/popup.test.ts, "a change of an inherited property"). A place that the caller
+  // gives can show the popup some updates later, as the item alignment of Select does. A transition
+  // that started before the first place continues, such as the enter of a popup that loses
+  // `hidden`. A later place of the open, such as at another trigger, keeps its transitions.
   let nextPlaceIsFirst = true;
   // The animations at the first place of the open, until the update that shows the popup.
   const firstPlaceAnimations = shallowRef<Set<Animation> | null>(null);
@@ -443,20 +443,6 @@ export function usePlacement(
       firstPlaceAnimations.value = new Set(element.getAnimations({ subtree: true }));
     },
     { flush: 'sync' },
-  );
-  // Select sets up its `place` after this call, so the source reads it only after a first place.
-  watch(
-    () => {
-      const kept = firstPlaceAnimations.value;
-      return kept && placed.value && options.place?.()?.visibility !== 'hidden' ? kept : null;
-    },
-    (kept) => {
-      const element = options.positioner.value;
-      if (!kept || !element) return;
-      firstPlaceAnimations.value = null;
-      endTransitions(element, kept);
-    },
-    { flush: 'post' },
   );
   // Only a caller with `lazyFlip` reads `placed` in its setup: the `place` of Select reads the
   // item alignment, which it sets up after this call.
@@ -501,6 +487,21 @@ export function usePlacement(
       ...given,
     };
   });
+  // The style reads the `place` of Select, which Select sets up after this call. So the source
+  // reads the style only after a first place.
+  watch(
+    () => {
+      const animations = firstPlaceAnimations.value;
+      return animations && style.value.visibility !== 'hidden' ? animations : null;
+    },
+    (animations) => {
+      const element = options.positioner.value;
+      if (!animations || !element) return;
+      firstPlaceAnimations.value = null;
+      endTransitions(element, animations);
+    },
+    { flush: 'post' },
+  );
 
   const arrowStyle = computed<CSSProperties>(() => {
     const data = floating.middlewareData.value.arrow;
