@@ -1,8 +1,8 @@
 name: Benchmarks
 
-# A person starts the timing run by hand and records its artifact `results` in a pull request.
-# CONTRIBUTING.md, "Benchmarks", gives the steps. A pull request that changes the benchmarks runs the
-# job `smoke`. The check `required` of CI does not need this workflow.
+# A person starts the timing and behavior runs by hand and records their artifact `results` in a pull
+# request. CONTRIBUTING.md, "Benchmarks", gives the steps. A pull request that changes the benchmarks
+# runs the jobs `smoke` and `behavior-smoke`. The check `required` of CI does not need this workflow.
 on:
   workflow_dispatch:
     inputs:
@@ -91,8 +91,44 @@ jobs:
           name: results-time-${{ matrix.engine }}-${{ matrix.setup }}
           path: benchmarks/results.json
 
+  behavior:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm benchmarks:build
+      - name: Run the behavior checks
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          rm benchmarks/results.json
+          pnpm benchmarks:behavior --engine "$ENGINE"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: results-behavior-${{ matrix.engine }}
+          path: benchmarks/results.json
+
   results:
-    needs: [size, time]
+    needs: [size, time, behavior]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -167,3 +203,71 @@ jobs:
             fi
           done
           exit "$status"
+
+  # One run of each behavior check in Chromium. The job fails when the cases that hold an error
+  # differ from those of the recorded run, as the job `smoke` does for its failed cells. One run
+  # cannot give the verdict of three runs, so a verdict that differs goes only to the summary.
+  behavior-smoke:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --user 1001 --ipc=host
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cp benchmarks/results.json "$RUNNER_TEMP/recorded.json"
+      - run: pnpm benchmarks:build
+      - run: pnpm benchmarks:behavior --engine chromium --runs 1
+      - name: Compare the cases with the recorded run
+        shell: bash
+        run: |
+          recorded="$RUNNER_TEMP/recorded.json"
+          # Each case of each check that the recorded run has, with its error or its verdict. A
+          # verdict needs valid frames in 2 of 3 runs.
+          cases() {
+            jq -r --arg kind "$2" --slurpfile recorded "$recorded" '.behavior.chromium as $part
+              | $part.checks | to_entries[]
+              | select($recorded[0].behavior.chromium.checks[.key] != null) | .key as $check
+              | .value | to_entries[] | .key as $library | (.value // [])[]
+              | "\($check)\(if .case then " (\(.case))" else "" end), \($library): " as $row
+              | if $kind == "error" then select(.error != null) | $row + .error
+                elif .valid * 3 < $part.runs * 2 then $row + "not measured"
+                elif .passes == .valid then $row + "pass"
+                elif .passes == 0 then $row + "fail"
+                else $row + "not stable" end' "$1" | sort
+          }
+          if ! jq -e '.behavior.chromium' "$recorded" > /dev/null; then
+            echo "The recorded results have no behavior run." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if ! verdicts=$(diff <(cases "$recorded" verdict) <(cases benchmarks/results.json verdict)); then
+            {
+              echo "### Verdicts that differ from the recorded run"
+              echo
+              echo "~~~diff"
+              echo "$verdicts"
+              echo "~~~"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if ! errors=$(diff <(cases "$recorded" error) <(cases benchmarks/results.json error)); then
+            {
+              echo "### Errors that differ from the recorded run"
+              echo
+              echo "~~~diff"
+              echo "$errors"
+              echo "~~~"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

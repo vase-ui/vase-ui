@@ -17,5 +17,5 @@
     "strictTemplates": true,
     "dataAttributes": ["data-*"]
   },
-  "include": ["*.ts", "harness/*.ts", "harness/vue", "libraries/**/*.vue"]
+  "include": ["*.ts", "behavior/**/*.ts", "harness/*.ts", "harness/vue", "libraries/**/*.vue"]
 }

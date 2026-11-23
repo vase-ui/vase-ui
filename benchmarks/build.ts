@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { build, type InlineConfig, type Plugin } from 'vite';
+import { BEHAVIOR_SCENARIOS } from './behavior/groups.ts';
 import type { ServerRender } from './harness/serverRender.ts';
 import { LIBRARIES, SCENARIOS, SETUPS, type Library, type Setup } from './scenarios.ts';
 
@@ -58,6 +59,15 @@ export function libraryApp(setup: Setup, library: Library, scenario: string): Ap
     scenarioFile,
     outDir: join(DIST, setup.id, library.id, scenario),
   };
+}
+
+/**
+ * The app of a behavior fixture, or `undefined` when the library has no such fixture. A Vue library
+ * runs in the setup `vdom`, and Base UI in `react`.
+ */
+export function behaviorApp(library: Library, scenario: string): App | undefined {
+  const setup = SETUPS.find((item) => item.id === (library.framework === 'vue' ? 'vdom' : 'react'));
+  return setup && libraryApp(setup, library, `behavior/${scenario}`);
 }
 
 /**
@@ -156,12 +166,17 @@ function appConfig(app: App, plugins: Plugin[] = []): InlineConfig {
 }
 
 function allApps(): App[] {
-  return SETUPS.flatMap((setup) => [
-    emptyApp(setup),
-    ...SCENARIOS.flatMap((scenario) =>
-      librariesOf(setup).flatMap((library) => libraryApp(setup, library, scenario) ?? []),
+  return [
+    ...SETUPS.flatMap((setup) => [
+      emptyApp(setup),
+      ...SCENARIOS.flatMap((scenario) =>
+        librariesOf(setup).flatMap((library) => libraryApp(setup, library, scenario) ?? []),
+      ),
+    ]),
+    ...BEHAVIOR_SCENARIOS.flatMap((scenario) =>
+      LIBRARIES.flatMap((library) => behaviorApp(library, scenario) ?? []),
     ),
-  ]);
+  ];
 }
 
 export async function buildApp(app: App): Promise<void> {

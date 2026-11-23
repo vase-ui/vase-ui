@@ -596,7 +596,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 
 ## Benchmarks
 
-The workspace project `benchmarks` measures the size and the render time of Vase UI and of other component libraries. Its `package.json` pins each library and each framework.
+The workspace project `benchmarks` measures the size, the render time and the behavior of Vase UI and of other component libraries. Its `package.json` pins each library and each framework.
 
 - An app renders one scenario of one library, such as Dialog, in one setup. `benchmarks/scenarios.ts` lists the setups, the libraries and the scenarios.
 - The scenario `AllComponents` of a library renders each of its other fixtures one time.
@@ -607,10 +607,11 @@ The workspace project `benchmarks` measures the size and the render time of Vase
 
 | Command | Function |
 | --- | --- |
-| `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. It also renders `AllComponents` of each library on the server, and builds the page that hydrates that HTML into `benchmarks/dist/hydration/<setup>/<library>`. When the server render throws or reports an error, that folder holds only the reason, in `server-render-error.txt`. Run `pnpm build` first. |
+| `pnpm benchmarks:build` | Builds each app into `benchmarks/dist/<setup>/<library>/<scenario>`, and each empty app into `benchmarks/dist/<setup>/EmptyApp`. It builds each behavior fixture into `benchmarks/dist/<setup>/<library>/behavior/<Scenario>`. It also renders `AllComponents` of each library on the server, and builds the page that hydrates that HTML into `benchmarks/dist/hydration/<setup>/<library>`. When the server render throws or reports an error, that folder holds only the reason, in `server-render-error.txt`. Run `pnpm build` first. |
 | `pnpm benchmarks:size` | Builds each app. Then it writes all of `benchmarks/results.json` except the part `time`: the raw, gzip and Brotli bytes of the JavaScript and CSS files of each app, the date, the commit, and the version of each library, framework and tool. A library with no fixture for a scenario gets `null`. The compressed bytes depend on the zlib and the Brotli of Node.js, so the file also records their versions. Run `pnpm build` first. |
 | `pnpm benchmarks:time --engine <engine> --setup <setup> [--rounds <count>]` | Times the apps of `benchmarks/dist` in a Playwright browser: `chromium`, `firefox` or `webkit`. The setup is `vdom` or `vapor-interop`, and `vdom` also times Base UI. In each round, each visit opens the page of each library once, in a new browser context. The sequence of the libraries is random in each visit. The default is 30 rounds. After each round, it writes the samples to the part `time.<engine>.<setup>` of `benchmarks/results.json`. Run `pnpm benchmarks:build` first. |
-| `pnpm test:benchmarks` | Tests the statistics of the results. `pnpm lint` runs it. |
+| `pnpm benchmarks:behavior --engine <engine> [--runs <count>] [--group <group>]` | Runs the behavior checks on the behavior apps of `benchmarks/dist` in a Playwright browser: `chromium`, `firefox` or `webkit`. Each case of each check runs `--runs` times, 3 by default, each time in a new browser context. `--group` runs one group, such as `nested-dialogs`. After each group, it writes the part `behavior.<engine>` of `benchmarks/results.json`. Run `pnpm benchmarks:build` first. |
+| `pnpm test:benchmarks` | Tests the statistics of the results and the rules of the behavior samples. `pnpm lint` runs it. |
 | `pnpm benchmarks:typecheck` | Runs vue-tsc on the Vue files and tsc on the React files. The job `check` of CI runs it, so a pull request that changes the API of Vase UI also corrects the fixtures. Run `pnpm build` first. |
 
 `pnpm benchmarks:time` gives each library the same input:
@@ -631,6 +632,33 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 4. Do not add CSS, icons, animations or virtualization. Do not add a part that only holds an icon, such as `Checkbox.Indicator`, `Select.Icon` or the indicator of an item. A button that holds an icon in the example, such as the Clear button of a Combobox, stays, with a text in place of the icon.
 5. Put `data-bench="trigger"` on the trigger button, `data-bench="input"` on the input of a Combobox, and `data-bench="popup"` on the popup element. When the library gives no popup element, put `data-bench="popup"` on an element inside the popup.
 6. Read the documentation of a library and install its npm package. Do not copy its source.
+
+`pnpm benchmarks:behavior` checks behaviors that a standard or a platform gives, such as the WAI-ARIA Authoring Practices or the HTML Standard. A file of `benchmarks/behavior` holds one group, such as `nestedDialogs.ts`. Each check has its row text, the source of its expectation, its fixture, its cases and its code. A check with no code has no results.
+
+- Each run opens a new context of 1280 by 720 pixels, with the locale `en-US`, the time zone UTC and no reduced motion.
+- The input is real: the mouse and the keyboard of Playwright. Touch input goes through the Chrome DevTools Protocol, so a touch case runs in Chromium only. A script event is not used, because a library that calls `setPointerCapture` throws for it.
+- In WebKit on macOS, Tab moves the focus only to text fields by default, as in Safari. So a run on macOS gives other Tab results than the recorded run, which is on Linux.
+- A recorder in the page reads each marker in each animation frame: whether it shows, its opacity with the opacity of its ancestors, and its rectangle. `benchmarks/behavior/samples.ts` holds the rules and each limit. When a run of a check that reads frames has a gap of more than 100 ms between two frames, the run is not valid.
+- A run passes or fails, with its measure and the reason of a fail. A console error, an uncaught error or a step that throws fails the run, and the case keeps the first line as its `error`.
+- For each case, the results hold the runs that pass, the valid runs, the measures, the reason and the error. A library with no fixture for the check gets `null`.
+
+A behavior fixture is `benchmarks/libraries/<library>/behavior/<Scenario>.vue`, or `.tsx` for Base UI. It runs in the setup `vdom`, or `react` for Base UI. Each behavior fixture follows these rules:
+
+1. Use the parts and the import form of the documentation of the library at the pinned version. Use the pattern that the documentation shows for the scenario, such as its nested dialog example.
+2. Import `benchmarks/behavior/style.css`. It gives the look of each library: the sizes, the colors, the duration `--bench-duration`, the hidden style `bench-hidden`, the transition `bench-motion`, and the keyframes `bench-enter` and `bench-exit`. The fixture only ties these to the animation hook of its library, such as the classes of a `<Transition>` or the attribute `data-starting-style`.
+3. For a drawer and a toast stack, use the CSS of the example in the documentation for the part that moves and stacks, with the shared sizes.
+4. Where the documentation shows a CSS transition for the enter and the exit, use it. Else use the CSS keyframes of the documentation. A transition that stops midway goes back from where it is, so each library gets its best result at an interruption. Use no animation library.
+5. Set a prop only for the start state, such as an open delay of 0, or where the documentation tells you to set it.
+6. Do not add code that makes a check pass: no focus code, no key listener and no pointer listener.
+7. Give each fixture of a scenario the same text and the same `data-bench` markers. The file of the group names the markers.
+8. Read the documentation of a library and install its npm package. Do not copy its source.
+
+When a library does not have a part of a scenario:
+
+- The library has no such component: do not add a fixture. Its result is `null`.
+- The documentation shows no pattern for the step, such as a dialog in a dialog: put the component in the popup of the same component. Give the library a note in `notes` of the group.
+- The library cannot do the step, such as a swipe: the check fails, with the reason.
+- The documentation calls the component Alpha or Preview: measure it, and give the library a note in `notes` of the group.
 
 The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
 

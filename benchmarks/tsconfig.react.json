@@ -14,5 +14,5 @@
     "noPropertyAccessFromIndexSignature": false,
     "types": []
   },
-  "include": ["harness/*.ts", "harness/react", "libraries/**/*.tsx"]
+  "include": ["behavior/css.d.ts", "harness/*.ts", "harness/react", "libraries/**/*.tsx"]
 }
