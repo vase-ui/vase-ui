@@ -43,6 +43,42 @@
       "name": "Drawer",
       "rows": [
         {
+          "feature": "A style hook on a drawer while a drawer on top of it is open",
+          "kind": "support",
+          "cells": {
+            "vase-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
+              "source": "https://vase-ui.com/components/drawer#nested-drawers"
+            },
+            "reka-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]`. Alpha in the docs.",
+              "source": "https://reka-ui.com/docs/components/drawer#content"
+            },
+            "ark-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
+              "source": "https://ark-ui.com/vue/docs/components/drawer#props"
+            },
+            "headless-ui": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://headlessui.com/v1/vue"
+            },
+            "vuetify0": {
+              "value": "no",
+              "note": "No drawer component.",
+              "source": "https://0.vuetifyjs.com/llms.txt"
+            },
+            "base-ui": {
+              "value": "yes",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
+              "source": "https://base-ui.com/react/components/drawer#nested-drawers"
+            }
+          }
+        },
+        {
           "feature": "A swipe from the edge of the screen opens the drawer",
           "kind": "support",
           "cells": {
