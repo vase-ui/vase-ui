@@ -7,7 +7,7 @@ export interface CaseResult {
   verdict: 'pass' | 'fail' | 'not-valid';
   /** What the run measured, such as `Count 0. Open: dialog 1.` */
   measure: string;
-  /** Why the case failed, from the measure. */
+  /** Why the run failed. */
   reason?: string;
 }
 
@@ -37,7 +37,10 @@ export interface Check {
 export interface Group {
   id: string;
   title: string;
-  /** A note for each library whose fixture does not follow a pattern of its docs. */
+  /**
+   * A note for a library whose docs give no pattern for a step, or call the component Alpha or
+   * Preview.
+   */
   notes?: Partial<Record<Library['id'], string>>;
   checks: readonly Check[];
 }

@@ -149,7 +149,7 @@ function appConfig(app: App, plugins: Plugin[] = []): InlineConfig {
     configFile: false,
     root: HARNESS,
     logLevel: 'warn',
-    // A relative base lets `time.ts` open each app in a folder of `dist`.
+    // A relative base lets `time.ts` and `behavior.ts` open each app in a folder of `dist`.
     base: './',
     plugins: [...frameworkPlugins(setup), entryScript(app.entry), ...plugins],
     resolve: {

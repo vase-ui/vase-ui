@@ -40,7 +40,10 @@ export interface Recorder {
   read: (markers: readonly string[]) => Frame;
   /** Reads the markers in the next frame. */
   nextFrame: (markers: readonly string[]) => Promise<Frame>;
-  /** Reads the markers in each frame, and keeps the time of each key and pointer press. */
+  /**
+   * Reads the markers in each frame, and keeps the time of each key press, pointer press and
+   * pointer release.
+   */
   start: (markers: readonly string[]) => void;
   stop: () => Recording;
 }

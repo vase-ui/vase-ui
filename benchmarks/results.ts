@@ -25,7 +25,7 @@ export interface BehaviorCase {
   valid: number;
   /** The measures of the runs, each one once. */
   measure: string;
-  /** Why the case failed, from the measure of the first run that failed. */
+  /** Why the case failed: the reason of the first run that gives one. */
   reason?: string;
   /** The first line of the first error of a run: a thrown step, a page error or a console error. */
   error?: string;

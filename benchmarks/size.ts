@@ -56,9 +56,9 @@ for (const scenario of SCENARIOS) {
 }
 
 const RESULTS_FILE = join(import.meta.dirname, 'results.json');
-// `time.ts` writes the part `time` of the file.
-const { time } = existsSync(RESULTS_FILE)
-  ? (JSON.parse(readFileSync(RESULTS_FILE, 'utf8')) as { time?: unknown })
+// `time.ts` and `behavior.ts` write the parts `time` and `behavior` of the file.
+const { time, behavior } = existsSync(RESULTS_FILE)
+  ? (JSON.parse(readFileSync(RESULTS_FILE, 'utf8')) as { time?: unknown; behavior?: unknown })
   : {};
 const results = {
   date: new Date().toISOString(),
@@ -76,5 +76,6 @@ const results = {
   },
   size: { emptyApp: emptyApps, apps },
   time,
+  behavior,
 };
 writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);

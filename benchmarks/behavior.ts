@@ -36,8 +36,11 @@ interface RunResult extends CaseResult {
 
 /** The address of the page of a fixture, from the folder `dist`, or `undefined` with no fixture. */
 function pathOf(library: Library, scenario: string | undefined): string | undefined {
-  const app = scenario === undefined ? undefined : behaviorApp(library, scenario);
-  return app && `${app.setup.id}/${library.id}/behavior/${scenario ?? ''}/`;
+  if (scenario === undefined) {
+    return undefined;
+  }
+  const app = behaviorApp(library, scenario);
+  return app && `${app.setup.id}/${library.id}/behavior/${scenario}/`;
 }
 
 /** The cases of a check in an engine. Touch input goes through the protocol of Chromium only. */

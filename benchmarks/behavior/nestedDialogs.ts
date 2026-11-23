@@ -102,7 +102,11 @@ async function belowStaysModal(page: Page): Promise<CaseResult> {
   const first = `${PREFIX}-1`;
   await openBoth(page, PREFIX);
   await page.keyboard.press('Escape');
-  await waitUntilGone(page, `${PREFIX}-2`);
+  // Dialog 2 can be inside dialog 1 in the DOM. While it is open, Tab in it stays in dialog 1.
+  if (!(await waitUntilGone(page, `${PREFIX}-2`))) {
+    const measure = 'After one Escape, dialog 2 is open.';
+    return { verdict: 'fail', measure, reason: measure };
+  }
   for (let press = 1; press <= 6; press++) {
     await page.keyboard.press('Tab');
     const frame = await readAfterInput(page, [first]);
