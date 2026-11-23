@@ -1,0 +1,30 @@
+/*
+ * The look of the fixture `ResizablePanels` in each library: 800 px of panels and a handle of 8 px.
+ * In a library that sizes the panels in percent of the group and the handle, 50% is 404 px.
+ */
+
+/* Reka UI and Ark UI give the group an inline width and height of 100%, so a wrapper has the size. */
+.bench-panels {
+  width: 808px;
+  height: 300px;
+  margin: 40px;
+}
+
+[data-bench='group'] {
+  height: 100%;
+}
+
+/* The handle of Ark UI is a button. This rule removes the padding and the border of the button. */
+[data-bench='handle'] {
+  width: 8px;
+  padding: 0;
+  border: 0;
+  background: black;
+}
+
+[data-bench='frame'] {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
