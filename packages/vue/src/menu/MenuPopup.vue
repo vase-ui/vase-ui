@@ -106,11 +106,12 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
-<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open. -->
+<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open or a
+submenu in it leaves. -->
 <template>
   <template v-if="$slots.element">
     <slot
-      v-if="root.open || root.keepMounted"
+      v-if="root.open || root.keepMounted || menu.childLeaving"
       name="element"
       :props="elementProps()"
       :elementRef="setElement"
