@@ -1,0 +1,53 @@
+/*
+ * The sizes of each drawer fixture. A fixture adds the motion of the drawer example of the docs of
+ * its library.
+ */
+[data-bench='drawer-1'],
+[data-bench='drawer-2'],
+[data-bench='drawer'] {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 16px;
+  border-top: 1px solid black;
+  background: white;
+  color: black;
+}
+
+[data-bench='drawer-1'] {
+  height: 400px;
+}
+
+[data-bench='drawer-2'] {
+  height: 300px;
+}
+
+[data-bench='drawer'] {
+  height: 480px;
+}
+
+/*
+ * Each drag starts on the handle, so that a drag of 300 pixels ends in the viewport, and so that a
+ * mouse drag does not start on text.
+ */
+[data-bench='drawer-1-handle'],
+[data-bench='drawer-2-handle'],
+[data-bench='drawer-handle'] {
+  height: 24px;
+}
+
+/* Drawer 2 covers all of drawer 1 but its top 100 pixels, so this row stays in view. */
+.bench-drawer-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bench-drawer-title {
+  margin: 8px 0 0;
+  font-size: 16px;
+}
+
+.bench-drawer-description {
+  margin: 0;
+}
