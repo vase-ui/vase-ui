@@ -1,5 +1,4 @@
-// The rules that turn the frames of a recording into measures. The Method section of the page lists
-// each limit of this file.
+// The rules that turn the frames of a recording into measures, and the limits of the checks.
 import type { Frame, Recording } from './recorder.ts';
 
 /** The duration of each enter and each exit of the shared look, in milliseconds. */
