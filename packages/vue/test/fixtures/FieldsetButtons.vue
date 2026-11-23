@@ -35,4 +35,11 @@ defineProps({
       <span v-bind="props" :ref="elementRef" class="Custom">Custom {{ state.disabled }}</span>
     </template>
   </Button>
+  <Button>
+    <template #element="{ props, elementRef, state }">
+      <button v-bind="props" :ref="elementRef" class="SlotButton">
+        Slot button {{ state.disabled }}
+      </button>
+    </template>
+  </Button>
 </template>

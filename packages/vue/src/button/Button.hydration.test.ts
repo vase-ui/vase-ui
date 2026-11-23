@@ -129,7 +129,7 @@ describe('server render and hydration', () => {
     expect(input.getAttributeNames().sort()).toEqual(attributes);
   });
 
-  test('the server HTML has the state of a disabled Fieldset.Root, also in Fieldset.Legend, and no element of the slot is disabled; a native disabled fieldset and a native legend give theirs after the mount', async () => {
+  test('the server HTML has the state of a disabled Fieldset.Root, also in Fieldset.Legend, but not for an element of the slot, which the browser disables if it is a <button>; a native disabled fieldset and a native legend give theirs after the mount', async () => {
     const rootScene = reactive({ kind: 'root', disabled: true, ownDisabled: false });
     const root = await renderOnServer('ButtonsInFieldset', { scene: rootScene });
     expect(root.querySelector('.Native')).toHaveTextContent('Native true');
@@ -140,12 +140,19 @@ describe('server render and hydration', () => {
     const custom = root.querySelector('.Custom')!;
     expect(custom).toHaveTextContent('Custom false');
     expect(custom).toHaveAttribute('tabindex', '0');
+    const slotButton = root.querySelector('.SlotButton')!;
+    expect(slotButton).toHaveTextContent('Slot button false');
+    expect(slotButton).not.toHaveAttribute('disabled');
+    expect(slotButton.matches(':disabled')).toBe(true);
     hydrate(ButtonsInFieldset, { scene: rootScene }, root);
     await settle();
     expect(root.querySelector('.Native')).toHaveTextContent('Native true');
     expect(root.querySelector('.InLegend')).toHaveTextContent('Legend true');
     expect(custom).toHaveTextContent('Custom false');
     expect(custom).toHaveAttribute('tabindex', '0');
+    expect(root.querySelector('.SlotButton')).toBe(slotButton);
+    await waitFor(() => expect(slotButton).toHaveTextContent('Slot button true'));
+    expect(slotButton).toHaveAttribute('disabled');
     await waitFor(() =>
       expect(root.querySelector('.InNativeLegend')).toHaveTextContent('Native legend false'),
     );

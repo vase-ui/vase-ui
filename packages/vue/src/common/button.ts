@@ -93,8 +93,8 @@ export function useButton(options: {
       'aria-disabled': isDisabled ? 'true' : undefined,
     };
     // An element that the part does not know yet gets the attributes of both. So the server HTML
-    // gives each element the role, the tab stop and the disabled state of a button. The mount then
-    // keeps the attributes of the element.
+    // gives each element the role, the tab stop and the disabled state of a button
+    // (test/measurements/button.test.ts). The mount then keeps the attributes of the element.
     const attributes: Record<string, unknown> =
       isNative.value === undefined ? { ...other, ...native } : isNative.value ? native : other;
     if (options.type && writesType.value) {
