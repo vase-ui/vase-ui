@@ -27,7 +27,7 @@ import {
   type VirtualElement,
 } from '@floating-ui/vue';
 
-import { computed, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
+import { computed, nextTick, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
@@ -415,16 +415,23 @@ export function usePlacement(
   // the positioner at `0 0`, and of the popup on the first side. The first place then starts CSS
   // transitions from these styles, such as of `left` and of an `enter-from` class of the side
   // (test/measurements/popup.test.ts, "the first place of an open"). Nothing showed before the
-  // first place, so the positioner ends these transitions. `isPositioned` changes one time, and
-  // `placed` cannot be read here: the `place` of Select does not exist yet.
+  // first place, so the positioner ends the transitions that the place starts. A transition that
+  // started before it continues, such as the enter of a popup that loses `hidden`. `isPositioned`
+  // changes one time, and `placed` cannot be read here: the `place` of Select does not exist yet.
   watch(
     floating.isPositioned,
     () => {
-      for (const animation of options.positioner.value?.getAnimations({ subtree: true }) ?? []) {
-        if (animation instanceof CSSTransition) animation.cancel();
-      }
+      const element = options.positioner.value;
+      if (!element) return;
+      // Vue renders the place after this watcher.
+      const started = new Set(element.getAnimations({ subtree: true }));
+      void nextTick(() => {
+        for (const animation of element.getAnimations({ subtree: true })) {
+          if (animation instanceof CSSTransition && !started.has(animation)) animation.cancel();
+        }
+      });
     },
-    { flush: 'post' },
+    { flush: 'sync' },
   );
   // Only a caller with `lazyFlip` reads `placed` in its setup: the `place` of Select reads the
   // item alignment, which it sets up after this call.

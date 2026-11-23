@@ -128,4 +128,31 @@ describe('the first place of an open', () => {
       });
     },
   );
+
+  it('keeps a transition that started before the place, such as of a popup that loses `hidden`', async () => {
+    const handle = Popover.createHandle();
+    mount(PopupFirstPlace, { family: 'Popover', handle, keepMounted: true });
+    // The browser computes the style of the closed popup.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    handle.open('trigger');
+    const firstFrame = await new Promise((resolve) =>
+      requestAnimationFrame(() => {
+        const popup = byTestId('popup');
+        resolve({
+          positioner: byTestId('positioner').getAnimations().length,
+          popup: {
+            side: popup.dataset.side,
+            transitions: popup
+              .getAnimations()
+              .map((animation) => (animation as CSSTransition).transitionProperty),
+            opacity: Number(getComputedStyle(popup).opacity) < 0.5,
+          },
+        });
+      }),
+    );
+    expect(firstFrame).toEqual({
+      positioner: 0,
+      popup: { side: 'top', transitions: ['opacity'], opacity: true },
+    });
+  });
 });

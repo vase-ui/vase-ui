@@ -5,8 +5,8 @@ import MeasureSidePopup from './MeasureSidePopup.vue';
 
 // A reference at the bottom of the view, and a floating element that Floating UI places under it
 // while `open`, with `top` and `left`. The view has no room under the reference, so `flip()` places
-// it above. The floating element has a transition of `top`. In it, a part in a `<Transition>` shows its element one update
-// after its mount, and the `enter-from` of the element depends on its side.
+// it above. The floating element has a transition of `top`. In it, a part in a `<Transition>` shows
+// its element one update after its mount, and the `enter-from` of the element depends on its side.
 defineProps({
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
 });

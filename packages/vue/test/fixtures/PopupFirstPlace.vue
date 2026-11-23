@@ -10,13 +10,15 @@ import { Tooltip } from '../../src/tooltip';
 // With a viewport in the popup, the positioner has its place in `top`, `left`, `right` and `bottom`,
 // with a transition. The popup enters from the side that it is on, and fades in with a CSS
 // animation.
-// The popup of a preview card mounts at each open, so its `<Transition>` has `appear`.
+// The popup of a preview card mounts at each open, so its `<Transition>` has `appear`. With
+// `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`.
 defineProps({
   family: {
     type: String as PropType<'Popover' | 'Menu' | 'Tooltip' | 'PreviewCard'>,
     required: true,
   },
   handle: { type: Object as PropType<any>, required: true },
+  keepMounted: Boolean,
 });
 </script>
 
@@ -24,10 +26,14 @@ defineProps({
   <template v-if="family === 'Popover'">
     <Popover.Trigger id="trigger" :handle class="first-place-trigger">Trigger</Popover.Trigger>
     <Popover.Root :handle>
-      <Popover.Portal>
+      <Popover.Portal :keep-mounted>
         <Popover.Positioner data-testid="positioner" class="first-place-positioner">
           <Transition name="first-place">
-            <Popover.Popup data-testid="popup" class="first-place-popup">
+            <Popover.Popup
+              data-testid="popup"
+              class="first-place-popup"
+              :class="{ 'first-place-kept': keepMounted }"
+            >
               <Popover.Viewport>Popup</Popover.Viewport>
             </Popover.Popup>
           </Transition>
@@ -95,6 +101,13 @@ defineProps({
 .first-place-popup {
   width: 100px;
   height: 100px;
+}
+.first-place-kept {
+  transition: opacity 1s linear;
+}
+.first-place-kept[hidden] {
+  display: block;
+  opacity: 0;
 }
 .first-place-enter-active {
   transition: transform 1s linear;
