@@ -6,6 +6,7 @@ import type {
 } from '../../../scripts/docs/benchmarksReport.ts';
 import { data } from '../../benchmarks.data.ts';
 import {
+  agree,
   behaviorVerdictName,
   columnName,
   engineName,
@@ -13,7 +14,6 @@ import {
   libraryName,
   listOf,
   sameResults,
-  verdictKey,
 } from './benchmarksFormat.ts';
 import BenchmarksNoteLink from './BenchmarksNoteLink.vue';
 import { vaseUiFileAtCommitUrl } from './links.ts';
@@ -52,16 +52,19 @@ function textOf(row: BehaviorRow, cell: BehaviorCell | undefined): CellText | st
     return 'Not provided';
   }
   const fact = row.kind === 'fact';
-  const groups = sameResults(cell.engines, (engine) =>
-    fact ? engine.cases.map((item) => item.measure).join('\n') : verdictKey(engine),
+  const measuresOf = (engine: BehaviorEngineResult) =>
+    engine.cases.map((item) => item.measure).join('\n');
+  const groups = sameResults(
+    cell.engines,
+    fact ? (first, second) => measuresOf(first) === measuresOf(second) : agree,
   );
-  const results = groups.map(({ names, result }) => {
+  const results = groups.map(({ names, verdict, cases }) => {
     const first = fact
-      ? listOf([...new Set(result.cases.map((item) => item.measure))])
-      : behaviorVerdictName(result.verdict);
+      ? listOf([...new Set(cases.map((item) => item.measure))])
+      : behaviorVerdictName(verdict);
     return {
       first: groups.length === 1 ? first : `${names}: ${first}`,
-      lines: fact ? [] : failLines(result.cases),
+      lines: fact ? [] : failLines(cases),
     };
   });
   if (cell.notProvided.length > 0) {

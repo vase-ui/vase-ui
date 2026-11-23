@@ -12,7 +12,6 @@ import {
   listOf,
   sameResults,
   setupName,
-  verdictKey,
 } from './benchmarksFormat.ts';
 import ScrollBox from './ScrollBox.vue';
 import TextWithCode from './TextWithCode.vue';
@@ -39,9 +38,9 @@ const BEHAVIOR_LOSSES_TITLE = 'Behavior checks that Vase UI does not pass';
 
 const behaviorLosses = data.behaviorLosses.map((loss) => ({
   ...loss,
-  results: sameResults(loss.engines, verdictKey).map(({ names, result }) => ({
-    first: `${names}: ${behaviorVerdictName(result.verdict)}`,
-    lines: failLines(result.cases),
+  results: sameResults(loss.engines).map(({ names, verdict, cases }) => ({
+    first: `${names}: ${behaviorVerdictName(verdict)}`,
+    lines: failLines(cases),
   })),
   passes:
     loss.libraries.length === 0 ? 'None' : listOf(loss.libraries.map((id) => libraryName(id))),

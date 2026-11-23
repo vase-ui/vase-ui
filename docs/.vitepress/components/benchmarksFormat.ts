@@ -94,29 +94,49 @@ export function listOf(names: readonly string[]): string {
     : `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}`;
 }
 
-/** The engines that give the same result, by a key of the result, in the sequence of the engines. */
-export function sameResults(
-  engines: readonly BehaviorEngineResult[],
-  key: (engine: BehaviorEngineResult) => string,
-): { names: string; result: BehaviorEngineResult }[] {
-  const groups = new Map<string, BehaviorEngineResult[]>();
-  for (const engine of engines) {
-    groups.set(key(engine), [...(groups.get(key(engine)) ?? []), engine]);
-  }
-  return [...groups.values()].map((same) => ({
-    names: listOf(same.map((engine) => engineName(engine.engine))),
-    result: same[0],
-  }));
+/**
+ * Two engines agree when they give one verdict, and each case that both ran has one verdict. A touch
+ * case runs in Chromium only, so it does not stop an agreement.
+ */
+export function agree(first: BehaviorEngineResult, second: BehaviorEngineResult): boolean {
+  return (
+    first.verdict === second.verdict &&
+    first.cases.every((one) =>
+      second.cases.every((other) => one.case !== other.case || one.verdict === other.verdict),
+    )
+  );
 }
 
-/** The verdict and the cases that do not pass: the cell text is the same when this key is. */
-export function verdictKey(engine: BehaviorEngineResult): string {
-  return [
-    engine.verdict,
-    ...engine.cases
-      .filter((item) => item.verdict !== 'pass')
-      .map((item) => `${String(item.case)} ${item.verdict}`),
-  ].join('\n');
+/**
+ * The engines that agree, in the sequence of the engines, such as `Firefox and WebKit`. The cases
+ * are the cases of these engines, each one once.
+ */
+export function sameResults(
+  engines: readonly BehaviorEngineResult[],
+  same: (first: BehaviorEngineResult, second: BehaviorEngineResult) => boolean = agree,
+): { names: string; verdict: BehaviorEngineResult['verdict']; cases: BehaviorCaseResult[] }[] {
+  const groups: BehaviorEngineResult[][] = [];
+  for (const engine of engines) {
+    const group = groups.find(([first]) => first !== undefined && same(first, engine));
+    if (group) {
+      group.push(engine);
+    } else {
+      groups.push([engine]);
+    }
+  }
+  return groups.map((group) => {
+    const cases = new Map<string | null, BehaviorCaseResult>();
+    for (const item of group.flatMap((engine) => engine.cases)) {
+      if (!cases.has(item.case)) {
+        cases.set(item.case, item);
+      }
+    }
+    return {
+      names: listOf(group.map((engine) => engineName(engine.engine))),
+      verdict: group[0]?.verdict ?? 'not-measured',
+      cases: [...cases.values()],
+    };
+  });
 }
 
 const CASE_VERDICTS: Record<BehaviorCaseResult['verdict'], string> = {
