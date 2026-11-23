@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import type {
-  BehaviorCell,
-  BehaviorEngineResult,
-  BehaviorRow,
-} from '../../../scripts/docs/benchmarksReport.ts';
+import type { BehaviorEngineResult, BehaviorRow } from '../../../scripts/docs/benchmarksReport.ts';
 import { data } from '../../benchmarks.data.ts';
 import {
   agree,
@@ -40,11 +36,12 @@ interface CellText {
   results: { first: string; lines: string[] }[];
   measures: string[];
   /** The link text is the case, or `Fixture` for a check with one fixture. */
-  fixtures: { name: string; file: string; url: string }[];
+  fixtures: { name: string; label: string; url: string }[];
   loss?: string | undefined;
 }
 
-function textOf(row: BehaviorRow, cell: BehaviorCell | undefined): CellText | string {
+function textOf(row: BehaviorRow, column: string): CellText | string {
+  const cell = row.cells[column];
   if (cell === undefined || cell === 'not-measured') {
     return 'Not measured yet';
   }
@@ -75,7 +72,7 @@ function textOf(row: BehaviorRow, cell: BehaviorCell | undefined): CellText | st
     measures: fact ? [] : cell.engines.flatMap(measureLines),
     fixtures: cell.fixtures.map((fixture) => ({
       name: fixture.case ?? 'Fixture',
-      file: fixture.path.split('/').at(-1) ?? fixture.path,
+      label: `${fixture.case === null ? 'Fixture' : `${fixture.case} fixture`} of ${libraryName(column)}: ${row.title}`,
       url: vaseUiFileAtCommitUrl(data.commit, fixture.path),
     })),
     loss: cell.loss,
@@ -85,7 +82,7 @@ function textOf(row: BehaviorRow, cell: BehaviorCell | undefined): CellText | st
 const rows =
   table?.rows.map((row) => ({
     row,
-    texts: table.columns.map((column) => ({ column, text: textOf(row, row.cells[column]) })),
+    texts: table.columns.map((column) => ({ column, text: textOf(row, column) })),
   })) ?? [];
 </script>
 
@@ -140,11 +137,9 @@ const rows =
                   <template v-if="text.fixtures.length > 1">Fixtures: </template
                   ><template v-for="(fixture, index) in text.fixtures" :key="fixture.url"
                     ><template v-if="index > 0">, </template
-                    ><a
-                      :href="fixture.url"
-                      :aria-label="`Fixture of ${libraryName(column)}: ${fixture.file}`"
-                      >{{ fixture.name }}</a
-                    ></template
+                    ><a :href="fixture.url" :aria-label="fixture.label">{{
+                      fixture.name
+                    }}</a></template
                   >
                 </div>
               </template>
