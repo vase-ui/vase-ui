@@ -93,10 +93,11 @@ export interface FieldForControl {
   /** The focus left `element`, the element of the control or of an item of a group. */
   onLeave(element: Element): void;
   /**
-   * A native reset of the form of the control, which gave the control `value`. The value is then
-   * the first value of the field.
+   * A native reset of the form of the control. The control calls it after it emits the update of
+   * the reset. The value that the control gives until the parent answers, in its next render, is
+   * the first value of the field: the value of the reset, or the value that the parent keeps.
    */
-  onReset(value: unknown): void;
+  onReset(): void;
 }
 
 /** A part that provides `null` cuts its content off from the field around it. */

@@ -90,6 +90,8 @@ const value = shallowRef<unknown>();
 const filled = ref(false);
 const firstValue = shallowRef<unknown>();
 let hasValue = false;
+// From a native reset until the parent answers the update of the control, in its next render.
+let resetting = false;
 const ownTouched = ref(false);
 const result = shallowRef<Result | null>(null);
 // The required rule: `valueMissing` counts while the field is dirty, also by the `dirty` prop. It
@@ -213,7 +215,8 @@ provide(fieldKey, {
   },
   setValue(next, nextFilled) {
     filled.value = nextFilled;
-    if (!hasValue) {
+    // The value of the mount, or the value that holds after a native reset.
+    if (!hasValue || resetting) {
       hasValue = true;
       firstValue.value = next;
       value.value = next;
@@ -250,10 +253,12 @@ provide(fieldKey, {
       }
     });
   },
-  onReset(next) {
+  onReset() {
     dropValidation();
-    firstValue.value = next;
-    value.value = next;
+    // A parent that keeps its value gives no new value.
+    firstValue.value = value.value;
+    resetting = true;
+    void nextTick(() => (resetting = false));
     if (state.value.touched) emit('update:touched', false);
     ownTouched.value = false;
     result.value = null;
@@ -328,8 +333,7 @@ function validateAfterChange() {
   if (props.validationDebounceTime > 0) {
     waiting = setTimeout(validateNow, props.validationDebounceTime);
   } else {
-    // The element shows the new value after the next render. A control can give the value of a
-    // native reset before it tells the field the reset, and the reset drops the validation.
+    // The element shows the new value after the next render.
     nextTick(() => {
       if (current === validation) validateNow();
     });

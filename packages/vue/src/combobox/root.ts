@@ -1186,11 +1186,10 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           textState.setOwn(next);
           emit.updateText(next);
         }
-        return next;
       };
       if (!followsLabel() || !inputIsControl.value) {
-        const next = resetText();
-        return source.mode === 'none' ? next : resetValue;
+        resetText();
+        return;
       }
       // A parent that controls the value answers the update in its next render. The text then
       // shows the label of the value that holds.
@@ -1199,7 +1198,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         resetTextWaits = false;
         resetText();
       });
-      return resetValue;
     },
   });
 

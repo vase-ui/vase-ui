@@ -177,10 +177,11 @@ function onReset(event: Event) {
   if (event === lastReset) return;
   lastReset = event;
   const reset = resetValue(props.defaultValue);
-  field?.onReset(reset);
-  if (value.value === reset) return;
-  setOwn(reset);
-  emit('update:modelValue', reset);
+  if (value.value !== reset) {
+    setOwn(reset);
+    emit('update:modelValue', reset);
+  }
+  field?.onReset();
 }
 
 const steps: Record<string, 'next' | 'previous' | 'right' | 'left'> = {

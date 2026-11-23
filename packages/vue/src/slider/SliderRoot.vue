@@ -275,10 +275,11 @@ provide(sliderKey, {
     if (event === lastReset) return;
     lastReset = event;
     const reset = resetValue(props.defaultValue ?? props.min);
-    field?.onReset(asValue(shownValues(reset, grid.value), typeof reset === 'number'));
-    if (sameValues(value.value, reset)) return;
-    setOwn(reset);
-    emit('update:modelValue', reset as Emitted);
+    if (!sameValues(value.value, reset)) {
+      setOwn(reset);
+      emit('update:modelValue', reset as Emitted);
+    }
+    field?.onReset();
   },
 });
 
@@ -302,9 +303,9 @@ function readDirection(target: Element) {
 }
 
 /** The value of an event: a number for a single slider, an array for a range. */
-function asValue(next: readonly number[], single = typeof value.value === 'number') {
+function asValue(next: readonly number[]) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A single slider has one value.
-  return (single ? next[0]! : next) as Emitted;
+  return (typeof value.value === 'number' ? next[0]! : next) as Emitted;
 }
 
 /** Emits a change of the user. Returns the new value, or `undefined` when nothing changed. */

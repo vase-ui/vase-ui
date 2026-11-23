@@ -82,10 +82,11 @@ export function useChecked(options: {
       return;
     }
     const reset = own.resetValue(options.defaultChecked());
-    field?.onReset(reset);
-    if (checked.value === reset) return;
-    own.setOwn(reset);
-    options.emitModel(reset);
+    if (checked.value !== reset) {
+      own.setOwn(reset);
+      options.emitModel(reset);
+    }
+    field?.onReset();
   });
 
   // A native checkbox gives its form no entry while it is unchecked.

@@ -1,10 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick, reactive } from 'vue';
+import { nextTick, reactive, shallowReactive } from 'vue';
 import type { InputChangeEventDetails } from '@vase-ui/vue/input';
 import { vModel } from '../../test/attrs';
 import { dataAttributes, recordValidate, leave } from '../../test/field';
 import ErrorInTransition from '../../test/fixtures/ErrorInTransition.vue';
+import FieldControlReset, { type ResetControl } from '../../test/fixtures/FieldControlReset.vue';
 import FieldElementIds from '../../test/fixtures/FieldElementIds.vue';
 import FieldGroupOrInput from '../../test/fixtures/FieldGroupOrInput.vue';
 import FieldPartsReplaced from '../../test/fixtures/FieldPartsReplaced.vue';
@@ -1008,6 +1009,73 @@ describe('a native reset', () => {
     await leave(requiredInput!);
     expect(requiredField).toHaveAttribute('data-valid');
   });
+
+  const day = (text: string) => Temporal.PlainDate.from(text);
+  // The value of the mount, and the value that the parent gives before the reset.
+  const controls: { name: ResetControl; first: () => unknown; second: () => unknown }[] = [
+    { name: 'Input', first: () => 'first', second: () => 'second' },
+    { name: 'Checkbox', first: () => false, second: () => true },
+    { name: 'Switch', first: () => false, second: () => true },
+    { name: 'RadioGroup', first: () => 'a', second: () => 'b' },
+    { name: 'CheckboxGroup', first: () => ['a'], second: () => ['b'] },
+    { name: 'NumberField', first: () => 1, second: () => 2 },
+    { name: 'Slider', first: () => 10, second: () => 20 },
+    { name: 'OTPField', first: () => '12', second: () => '34' },
+    { name: 'Select', first: () => 'a', second: () => 'b' },
+    { name: 'Combobox', first: () => 'a', second: () => 'b' },
+    { name: 'DateField', first: () => day('2026-01-01'), second: () => day('2026-02-02') },
+    { name: 'DatePicker', first: () => day('2026-01-01'), second: () => day('2026-02-02') },
+  ];
+  // `toEqual` finds two `Temporal` values equal, because they have no own properties.
+  const json = (value: unknown) => JSON.stringify(value);
+
+  test.each(controls)(
+    '$name: a reset gives the field the value that the parent keeps, then the value that it accepts',
+    async ({ name, first, second }) => {
+      const firstValue = first();
+      const secondValue = second();
+      let keeps = false;
+      // A reactive proxy of a `Temporal` value throws at each method.
+      const control = shallowReactive<Record<string, unknown>>({ modelValue: firstValue });
+      control['onUpdate:modelValue'] = (next: unknown) => {
+        if (!keeps) control.modelValue = next;
+      };
+      const validated: unknown[] = [];
+      const { root, exposed } = mount(FieldControlReset, {
+        name,
+        control,
+        field: recordValidate(validated),
+      });
+      await nextTick();
+      const field = root.querySelector('[data-testid="field"]')!;
+      const form = root.querySelector('form')!;
+      async function give(value: unknown) {
+        control.modelValue = value;
+        await nextTick();
+      }
+      await give(secondValue);
+      expect(field).toHaveAttribute('data-dirty');
+
+      keeps = true;
+      form.reset();
+      await settle();
+      expect(json(control.modelValue)).toBe(json(secondValue));
+      expect(field).not.toHaveAttribute('data-dirty');
+      exposed.field.validate();
+      expect(json(validated)).toBe(json([secondValue]));
+
+      // The first value is the value of the control, so only the answer of the parent changes it.
+      keeps = false;
+      form.reset();
+      await settle();
+      expect(json(control.modelValue)).toBe(json(firstValue));
+      expect(field).not.toHaveAttribute('data-dirty');
+      exposed.field.validate();
+      expect(json(validated)).toBe(json([secondValue, firstValue]));
+      await give(secondValue);
+      expect(field).toHaveAttribute('data-dirty');
+    },
+  );
 });
 
 describe('accessibility', () => {
