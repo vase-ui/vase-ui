@@ -150,3 +150,14 @@ export function mostMatches(selector: string) {
   onTestFinished(() => observer.disconnect());
   return () => most;
 }
+
+/**
+ * Many apps apply this rule for `prefers-reduced-motion: reduce`. The default `transition-property`
+ * is `all`, so a change of a property starts a transition, `visibility` too.
+ */
+export function addReducedMotionRule() {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent =
+    '*, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }';
+  onTestFinished(() => style.remove());
+}
