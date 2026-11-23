@@ -19,7 +19,7 @@ const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   disabled: () => props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',

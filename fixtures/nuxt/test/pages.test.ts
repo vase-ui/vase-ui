@@ -50,10 +50,9 @@ async function expectButtonPage(page: Page, { hydrated = false } = {}) {
   expect(await read('disabled')).toEqual({ ...button, disabled: '' });
   expect(await read('focusable')).toEqual({ ...button, 'aria-disabled': 'true' });
   // The part knows the element of its `element` slot after the mount. Until then, it writes the
-  // attributes of a native button.
-  expect(await read('span')).toEqual(
-    hydrated ? { ...none, tabindex: '0', role: 'button' } : button,
-  );
+  // attributes of a native button and of another element.
+  const other = { ...none, tabindex: '0', role: 'button' };
+  expect(await read('span')).toEqual(hydrated ? other : { ...other, type: 'button' });
 }
 
 async function expectSeparatorPage(page: Page) {

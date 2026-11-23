@@ -18,7 +18,7 @@ export function useMenuItem(options: {
   label: () => string | undefined;
   /** Disabled by the part. */
   disabled: () => boolean;
-  /** The tag of the element before the mount: a tag in `as`, else the default tag of the part. */
+  /** The tag of the element before the mount, from `useAsTag`. */
   tag: () => string | undefined;
   role: 'menuitem' | 'menuitemcheckbox' | 'menuitemradio';
   link?: boolean;

@@ -3,6 +3,7 @@
 // browsers differ, the measurement states each one.
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
+import { byName, chromiumNodes, propertyOf } from '../accessibilityTree';
 import { nextEvent } from '../animation';
 import MeasureMergedClick from '../fixtures/MeasureMergedClick.vue';
 import { mount } from '../render';
@@ -284,6 +285,77 @@ describe('the focus of a native button', () => {
       'click tabindex="0"': 'button',
     });
   });
+});
+
+// The attributes that a button part writes before the mount on an element that it does not know
+// yet, such as the element of a component in `as`. The server HTML is in the page with no script.
+describe('the attributes of a button on a <button> and on a <div>', () => {
+  const ROWS = [
+    { name: 'enabled', attributes: 'role="button" tabindex="0"', tabStop: true },
+    {
+      name: 'disabled',
+      attributes: 'role="button" tabindex="-1" aria-disabled="true" disabled',
+      tabStop: false,
+    },
+    {
+      name: 'disabled with the focus',
+      attributes: 'role="button" tabindex="0" aria-disabled="true"',
+      tabStop: true,
+    },
+  ];
+  const CASES = ROWS.flatMap((row) => ['button', 'div'].map((tag) => ({ ...row, tag })));
+
+  function render(tag: string, attributes: string) {
+    html(
+      `<form id="form"><input id="field"><${tag} id="button" type="button" ${attributes}>B</${tag}><input id="after"></form>`,
+    );
+    return root!.querySelector<HTMLElement>('#button')!;
+  }
+
+  test.each(CASES)(
+    '$tag, $name: Tab reaches it only with tabindex="0", and a click or Enter in a text field does not submit its form',
+    async ({ tag, attributes, tabStop }) => {
+      const button = render(tag, attributes);
+      const field = root!.querySelector<HTMLInputElement>('#field')!;
+      const log: string[] = [];
+      root!.querySelector('form')!.addEventListener('submit', (event) => {
+        event.preventDefault();
+        log.push('submit');
+      });
+      button.addEventListener('click', () => log.push('click'));
+
+      field.focus();
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement?.id).toBe(tabStop ? 'button' : 'after');
+      // With no submit button, Enter in one of two text fields submits nothing.
+      field.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(log).toEqual([]);
+      await userEvent.click(button, { force: true });
+      expect(log).toEqual(tag === 'button' && !tabStop ? [] : ['click']);
+    },
+  );
+
+  test.runIf(server.browser === 'chromium')(
+    'each element has the role button, and the disabled rows are disabled in the accessibility tree of Chromium',
+    async () => {
+      const found: Record<string, unknown> = {};
+      for (const { name, attributes, tag } of CASES) {
+        render(tag, attributes).textContent = `${tag} ${name}`;
+        const node = byName(await chromiumNodes(), `${tag} ${name}`);
+        found[`${tag} ${name}`] = [node?.role?.value, propertyOf(node, 'disabled') ?? false];
+        root!.remove();
+      }
+      expect(found).toEqual({
+        'button enabled': ['button', false],
+        'div enabled': ['button', false],
+        'button disabled': ['button', true],
+        'div disabled': ['button', true],
+        'button disabled with the focus': ['button', true],
+        'div disabled with the focus': ['button', true],
+      });
+    },
+  );
 });
 
 describe('Vue', () => {

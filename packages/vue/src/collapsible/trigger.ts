@@ -16,7 +16,7 @@ export function useCollapsibleTrigger(
   const button = useButton({
     element: options.element,
     disabled: () => options.disabled() || part.disabled,
-    tag: useAsTag(options.as),
+    tag: useAsTag(options.as, 'button'),
     type: 'button',
   });
 

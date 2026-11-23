@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, mergeProps, useAttrs, useId, useSlots, watch } from 'vue';
+import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { useOpenOnFocus, usePopupHover } from '../popup/hover';
@@ -26,13 +26,12 @@ defineSlots<{
 const OPEN_DELAY = 600;
 
 const attrs = useAttrs();
-const slots = useSlots();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const context = useTriggerRoot(() => props.handle as TooltipHandle | undefined);
 const root = () => context.value?.root ?? null;
 const group = injectGroup();
-const asTag = useAsTag(() => props.as);
+const asTag = useAsTag(() => props.as, 'button');
 const elementId = computed(() => givenId(props.id) ?? generatedId);
 const triggerDisabled = computed(() => props.disabled || !!context.value?.disabled);
 // A press, a close by Escape or by a press on a trigger, and a window that gets the focus again:
@@ -123,7 +122,7 @@ const state = computed<TooltipTriggerState>(() => ({
 
 function elementProps() {
   // The `element` slot and a component in `as` render an element that gives its own `type`.
-  const ownButton = !slots.element && (props.as === undefined || asTag() === 'button');
+  const ownButton = asTag() === 'button';
   return mergeProps(
     {
       id: elementId.value,

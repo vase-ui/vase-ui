@@ -15,6 +15,8 @@ const { mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled,
   type: 'button',
+  // The element is in the slot.
+  tag: () => undefined,
 });
 </script>
 

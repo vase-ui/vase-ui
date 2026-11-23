@@ -20,7 +20,7 @@ const button = useButton({
   element,
   disabled: () => props.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const state = computed<DialogCloseState>(() => ({ disabled: button.disabled.value }));
 

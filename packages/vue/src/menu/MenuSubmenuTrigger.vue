@@ -36,7 +36,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => props.disabled || submenu.disabled,
-  tag: useAsTag(() => props.as ?? 'div'),
+  tag: useAsTag(() => props.as, 'div'),
   role: 'menuitem',
   menu: parent,
   keep: () => submenu.root.open,

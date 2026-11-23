@@ -20,7 +20,7 @@ export function useNavigationButton(props: CalendarPreviousButtonProps, directio
     disabled: () => ownDisabled() || !calendar.canMove(direction),
     focusableWhenDisabled: () => !ownDisabled(),
     type: 'button',
-    tag: useAsTag(() => props.as),
+    tag: useAsTag(() => props.as, 'button'),
   });
   // The hold reads the limit itself: `useButton` stops the click of a button at a limit, and not
   // its `pointerdown`.

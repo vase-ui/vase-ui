@@ -41,7 +41,7 @@ const button = useButton({
   disabled: () => day.state.disabled || day.state.unavailable,
   focusableWhenDisabled: () => !day.state.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const text = computed(() => formatText(day.day, { day: 'numeric' }, calendar.locale));
 

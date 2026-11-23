@@ -24,7 +24,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   disabled: () => toolbar.disabled || props.disabled,
   focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 const tabindex = useToolbarItem(toolbar, element, {
   disabled: () => isDisabled.value,

@@ -17,26 +17,33 @@ export function useButton(options: {
    */
   type?: 'button';
   /**
-   * The tag of the element before the mount, where the part knows it (a tag in `as`). The server
-   * then writes the attributes of that element. With none, the part counts a `<button>`.
+   * The tag of the element before the mount, from `useAsTag`. It is `undefined` for an element that
+   * the part does not know yet: a component in `as`, or the `element` slot.
    */
-  tag?: () => string | undefined;
+  tag: () => string | undefined;
   /**
    * Enter and Space click an element that is no native button. With `false`, the part gives its
    * keys to another element, such as the owner of a list in virtual mode.
    */
   keys?: () => boolean;
 }) {
-  const tag = () => options.tag?.() ?? 'button';
-  const isNative = computed(() =>
-    options.element.value ? isNativeButton(options.element.value) : isNativeTag(tag()),
-  );
+  /** `undefined` while the part does not know its element. */
+  const isNative = computed(() => {
+    if (options.element.value) return isNativeButton(options.element.value);
+    const tag = options.tag();
+    return tag === undefined ? undefined : isNativeTag(tag);
+  });
   const inDisabledFieldset = useInDisabledFieldset(options.element);
-  const disabledByFieldset = computed(() => isNative.value && inDisabledFieldset.value);
+  // A disabled `<fieldset>` disables a `<button>` and no other element, also before the mount. So
+  // the part does not count the fieldset for an element that it does not know yet.
+  const disabledByFieldset = computed(() => isNative.value === true && inDisabledFieldset.value);
   /** Disabled by the part, or by a disabled fieldset around a native button. */
   const disabled = computed(() => options.disabled() || disabledByFieldset.value);
   // A boolean: the mount of an element with the expected tag gives the part no second render.
-  const isButtonTag = computed(() => (options.element.value?.localName ?? tag()) === 'button');
+  const writesType = computed(() => {
+    const name = options.element.value?.localName ?? options.tag();
+    return name === undefined || name === 'button';
+  });
   let isSpaceDown = false;
 
   // A native disabled button gets no `mousedown`, `mouseup` or `click`, and no ancestor gets them
@@ -76,16 +83,21 @@ export function useButton(options: {
     // A disabled `<fieldset>` takes each button in it out of the tab order. A `Fieldset.Root` with
     // another element does the same.
     const focusable = !!options.focusableWhenDisabled?.() && !disabledByFieldset.value;
-    const attributes: Record<string, unknown> = isNative.value
-      ? isDisabled && focusable
+    const native =
+      isDisabled && focusable
         ? { 'aria-disabled': 'true' }
-        : { disabled: isDisabled ? '' : undefined }
-      : {
-          role: 'button',
-          tabindex: isDisabled && !focusable ? -1 : 0,
-          'aria-disabled': isDisabled ? 'true' : undefined,
-        };
-    if (options.type && isButtonTag.value) {
+        : { disabled: isDisabled ? '' : undefined };
+    const other = {
+      role: 'button',
+      tabindex: isDisabled && !focusable ? -1 : 0,
+      'aria-disabled': isDisabled ? 'true' : undefined,
+    };
+    // An element that the part does not know yet gets the attributes of both. So the server HTML
+    // gives each element the role, the tab stop and the disabled state of a button
+    // (test/measurements/button.test.ts). The mount then keeps the attributes of the element.
+    const attributes: Record<string, unknown> =
+      isNative.value === undefined ? { ...other, ...native } : isNative.value ? native : other;
+    if (options.type && writesType.value) {
       attributes.type = options.type;
     }
     return {

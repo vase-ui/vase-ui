@@ -22,7 +22,7 @@ const button = useButton({
   element,
   disabled: () => props.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 
 const state = computed<ToastCloseState>(() => ({ type: root.toast.type }));

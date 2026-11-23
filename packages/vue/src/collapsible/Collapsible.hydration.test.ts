@@ -55,17 +55,19 @@ describe('server render and hydration', () => {
     expect(root.querySelector('[aria-expanded]')).toBe(trigger);
   });
 
-  test('a button of the `element` slot has the attributes of a button in the server HTML, also beside a tag in `as`', async () => {
+  test('VUE-233: a button of the `element` slot, also beside a tag in `as`, has the attributes of a button and of another element in the server HTML, and the mount keeps those of a button', async () => {
     const props = { trigger: { as: 'span' }, triggerTag: 'button' };
     const root = await renderOnServer('CollapsibleElements', props);
     const trigger = root.querySelector('[aria-expanded]')!;
     expect(trigger.tagName).toBe('BUTTON');
     expect(trigger).toHaveAttribute('type', 'button');
-    expect(trigger).not.toHaveAttribute('role');
-    expect(trigger).not.toHaveAttribute('tabindex');
+    expect(trigger).toHaveAttribute('role', 'button');
+    expect(trigger).toHaveAttribute('tabindex', '0');
     hydrate(CollapsibleElements, props, root);
     await nextTick();
     expect(root.querySelector('[aria-expanded]')).toBe(trigger);
+    expect(trigger).toHaveAttribute('type', 'button');
     expect(trigger).not.toHaveAttribute('role');
+    expect(trigger).not.toHaveAttribute('tabindex');
   });
 });

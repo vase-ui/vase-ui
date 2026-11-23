@@ -27,7 +27,7 @@ const button = useButton({
   element,
   disabled: () => context.disabled || props.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 
 /** There is a value or a text to clear. */

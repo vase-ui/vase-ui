@@ -20,7 +20,7 @@ const item = useMenuItem({
   id: () => props.id,
   label: () => props.label,
   disabled: () => false,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'a'),
   role: 'menuitem',
   link: true,
 });

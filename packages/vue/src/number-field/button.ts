@@ -27,7 +27,7 @@ export function useStepButton(
     disabled: () =>
       props.disabled || root.state.disabled || root.state.readonly || root.atBound(direction),
     type: 'button',
-    tag: useAsTag(() => props.as),
+    tag: useAsTag(() => props.as, 'button'),
   });
   const { disabled } = button;
   const state = computed<NumberFieldRootState>(() => ({ ...root.state, disabled: disabled.value }));

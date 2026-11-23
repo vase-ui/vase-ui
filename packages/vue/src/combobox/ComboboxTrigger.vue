@@ -43,7 +43,7 @@ const trigger = usePopupTrigger(() => (isControl.value ? root : null), {
   id: () => elementId.value,
   payload: () => undefined,
   disabled: () => context.disabled || props.disabled,
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
   pressStart: () => true,
 });
 const isDisabled = trigger.button.disabled;

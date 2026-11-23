@@ -31,7 +31,7 @@ const { disabled: isDisabled, mergeAttributes } = useButton({
   element,
   disabled: () => props.disabled || !!group?.disabled,
   type: 'button',
-  tag: useAsTag(() => props.as),
+  tag: useAsTag(() => props.as, 'button'),
 });
 
 const { value: ownPressed, setOwn } = useModel(
