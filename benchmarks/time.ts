@@ -1,20 +1,21 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import os from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import {
-  chromium,
-  firefox,
-  webkit,
-  type CDPSession,
-  type ConsoleMessage,
-  type Page,
-} from 'playwright';
-import { preview } from 'vite';
+import type { CDPSession, Page } from 'playwright';
 import { hydrationApp, libraryApp, SERVER_RENDER_ERROR_FILE } from './build.ts';
 import { installDriver, type Action, type Condition } from './harness/driver.ts';
 import type { TimeResults } from './results.ts';
+import {
+  browserTypeOf,
+  machine,
+  PLAYWRIGHT_VERSION,
+  readResults,
+  reasonOf,
+  startPreview,
+  textOf,
+  timeout,
+  writeResults,
+} from './runner.ts';
 import {
   FILTER,
   LIBRARIES,
@@ -29,7 +30,6 @@ import {
   type Visit,
 } from './scenarios.ts';
 
-const ENGINES = { chromium, firefox, webkit };
 const CPU_THROTTLE = 4;
 /** The untimed open and close pairs before the timed ones. */
 const WARM_UP_PAIRS = 5;
@@ -38,9 +38,6 @@ const WARM_UP_PAIRS = 5;
  * the six opens of a list of 1,000 options take more than a minute on `ubuntu-latest`.
  */
 const VISIT_TIMEOUT = 180_000;
-const RESULTS_FILE = join(import.meta.dirname, 'results.json');
-
-const require = createRequire(import.meta.url);
 
 function measure(page: Page, action: Action, condition: Condition): Promise<number> {
   return page.evaluate(
@@ -152,51 +149,6 @@ async function runSteps(
   }
 }
 
-/**
- * The text of a console message. For an `Error` object, Firefox gives only the text `Error`, so the
- * text comes from the object in the page. A page that is closed gives the text of Playwright.
- */
-async function textOf(message: ConsoleMessage): Promise<string> {
-  const error = await message
-    .args()[0]
-    ?.evaluate((value) => (value instanceof Error ? String(value) : undefined))
-    .catch(() => undefined);
-  return error ?? message.text();
-}
-
-function timeout(milliseconds: number): { promise: Promise<never>; clear: () => void } {
-  let timer: NodeJS.Timeout | undefined;
-  const promise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`The visit took more than ${String(milliseconds / 1000)} s.`));
-    }, milliseconds);
-  });
-  return { promise, clear: () => clearTimeout(timer) };
-}
-
-/** The first line of the message of an error, with no prefix of Playwright. */
-function reasonOf(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return (message.split('\n')[0] ?? '').replace(/^page\.\w+: /, '').replace(/^Error: /, '');
-}
-
-function readResults(): Record<string, unknown> & {
-  time?: Record<string, Record<string, TimeResults>>;
-} {
-  return existsSync(RESULTS_FILE)
-    ? (JSON.parse(readFileSync(RESULTS_FILE, 'utf8')) as Record<string, unknown>)
-    : {};
-}
-
-function machine(): TimeResults['machine'] {
-  return {
-    os: `${os.type()} ${os.release()}`,
-    cpu: os.cpus()[0]?.model ?? '',
-    cores: os.availableParallelism(),
-    memory: os.totalmem(),
-  };
-}
-
 function shuffled<T>(items: readonly T[]): T[] {
   const result = [...items];
   for (let index = result.length - 1; index > 0; index--) {
@@ -215,10 +167,7 @@ async function main(): Promise<void> {
     },
   });
   const engine = values.engine;
-  if (!(engine in ENGINES)) {
-    throw new Error(`--engine is chromium, firefox or webkit, not ${engine}.`);
-  }
-  const browserType = ENGINES[engine as keyof typeof ENGINES];
+  const browserType = browserTypeOf(engine);
   const setup = SETUPS.find((item) => item.id === values.setup && item.framework === 'vue');
   if (setup === undefined) {
     throw new Error(`--setup is vdom or vapor-interop, not ${values.setup}.`);
@@ -271,31 +220,11 @@ async function main(): Promise<void> {
     }
   }
 
-  const server = await preview({
-    configFile: false,
-    root: import.meta.dirname,
-    logLevel: 'warn',
-    appType: 'mpa',
-    build: { outDir: 'dist' },
-    preview: {
-      host: '127.0.0.1',
-      port: 0,
-      // With cross-origin isolation, `performance.now()` has steps of 5 microseconds in Chromium and
-      // 20 in Firefox and WebKit. Without it, the steps are 100 and 1,000.
-      headers: {
-        'Cross-Origin-Opener-Policy': 'same-origin',
-        'Cross-Origin-Embedder-Policy': 'require-corp',
-      },
-    },
-  });
-  const origin = server.resolvedUrls?.local[0];
-  if (origin === undefined) {
-    throw new Error('The preview server has no address.');
-  }
+  const server = await startPreview();
   const browser = await browserType.launch();
   const part: TimeResults = {
     browserVersion: browser.version(),
-    playwright: (require('playwright/package.json') as { version: string }).version,
+    playwright: PLAYWRIGHT_VERSION,
     machine: machine(),
     cpuThrottle: hasCdp ? CPU_THROTTLE : null,
     rounds: 0,
@@ -317,7 +246,7 @@ async function main(): Promise<void> {
       });
       page.on('pageerror', (error) => messages.push(Promise.resolve(error.message)));
       const run = async () => {
-        await page.goto(new URL(path, origin).href);
+        await page.goto(new URL(path, server.origin).href);
         if (!(await page.evaluate(() => crossOriginIsolated))) {
           throw new Error('The page is not cross-origin isolated.');
         }
@@ -372,8 +301,11 @@ async function main(): Promise<void> {
       }
       part.rounds = round;
       const results = readResults();
-      results.time = { ...results.time, [engine]: { ...results.time?.[engine], [setup.id]: part } };
-      writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);
+      const time = results.time as Record<string, Record<string, TimeResults>> | undefined;
+      writeResults({
+        ...results,
+        time: { ...time, [engine]: { ...time?.[engine], [setup.id]: part } },
+      });
       console.log(
         `Round ${String(round)} of ${String(rounds)}: ${String(Math.round((performance.now() - roundStart) / 1000))} s`,
       );

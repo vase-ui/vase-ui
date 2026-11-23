@@ -6,6 +6,7 @@
     "build": "node build.ts",
     "size": "node size.ts",
     "time": "node time.ts",
+    "behavior": "node behavior.ts",
     "typecheck": "vue-tsc --noEmit -p tsconfig.vue.json && tsc --noEmit -p tsconfig.react.json"
   },
   "dependencies": {

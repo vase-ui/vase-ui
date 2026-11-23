@@ -1,0 +1,109 @@
+/*
+ * The look of each behavior fixture. A fixture ties the hidden style and the motion to the
+ * animation hook of its library, so that the CSS is the same in each library.
+ */
+:root {
+  --bench-duration: 500ms;
+  --bench-hidden-opacity: 0;
+  --bench-hidden-transform: scale(0.8);
+}
+
+body {
+  margin: 0;
+  font: 16px/1.5 sans-serif;
+}
+
+.bench-page {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.bench-backdrop,
+[data-bench='dialog-1']::backdrop,
+[data-bench='dialog-2']::backdrop {
+  background: rgb(0 0 0 / 20%);
+}
+
+.bench-backdrop {
+  position: fixed;
+  inset: 0;
+}
+
+/* A layer that covers the viewport and holds a popup, for a hook on a wrapper element. */
+.bench-layer {
+  position: fixed;
+  inset: 0;
+}
+
+[data-bench='dialog-1'],
+[data-bench='dialog-2'] {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 64px 16px 16px;
+  border: 1px solid black;
+  background: white;
+  color: black;
+}
+
+[data-bench='dialog-1'] {
+  width: 480px;
+  height: 320px;
+}
+
+[data-bench='dialog-2'] {
+  width: 320px;
+  height: 200px;
+}
+
+/* Dialog 2 is in the center of dialog 1, so it does not cover this corner. */
+.bench-corner {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bench-motion {
+  transition:
+    opacity var(--bench-duration) linear,
+    transform var(--bench-duration) linear;
+}
+
+.bench-hidden {
+  opacity: var(--bench-hidden-opacity);
+  transform: var(--bench-hidden-transform);
+}
+
+@keyframes bench-enter {
+  from {
+    opacity: var(--bench-hidden-opacity);
+    transform: var(--bench-hidden-transform);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bench-exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: var(--bench-hidden-opacity);
+    transform: var(--bench-hidden-transform);
+  }
+}
