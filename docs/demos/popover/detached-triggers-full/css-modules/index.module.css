@@ -10,7 +10,6 @@
   transition-timing-function: var(--easing);
   transition-duration: var(--animation-duration);
 
-  /* Disable transitions when data-instant is set (used for the initial positioning of the popup) */
   &[data-instant] {
     transition: none;
   }
