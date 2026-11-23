@@ -505,6 +505,24 @@ describe('the swipe that closes', () => {
     expect(popup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
   });
 
+  test('moves the frontmost drawer of a stack whose CSS reads `--drawer-frontmost-height`', async () => {
+    // The stack height of the Drawer page, in a transform as the nested demo has it. A variable
+    // that is not set gives `transform: none` (test/measurements/drawer.test.ts).
+    const stack = document.head.appendChild(document.createElement('style'));
+    stack.textContent = `.drawer-test-popup {
+      --stack-height: max(0px, calc(var(--drawer-frontmost-height, var(--drawer-height)) - 3rem));
+      transform: translateY(calc(var(--drawer-swipe-movement-y) - var(--nested-drawers) * 0.05 * var(--stack-height)));
+    }`;
+    onTestFinished(() => stack.remove());
+    await mountDrawer({ nested: { root: { defaultOpen: true } } });
+    await waitFor(() => expect(byTestId('nested-popup')).not.toBe(null));
+    const nested = get('nested-popup');
+    const release = await press(textOf('nested-popup'), { x: 0, y: 150 });
+    await nextTick();
+    expect(new DOMMatrixReadOnly(getComputedStyle(nested).transform).f).toBe(150);
+    await release();
+  });
+
   test('closes at a flick that ends with a move of no button', async () => {
     await mountDrawer();
     flick(
@@ -775,7 +793,7 @@ describe('the swipe area', () => {
     return { log, root };
   }
 
-  test('an opening drawer with no height gives the backdrop and the indent no --drawer-height', async () => {
+  test('an opening drawer with no height gives the popup no --drawer-frontmost-height, and the backdrop and the indent no --drawer-height', async () => {
     await mountArea({
       root: { swipeDirection: 'right' },
       popup: { style: 'height: 0; overflow: hidden' },
@@ -789,6 +807,7 @@ describe('the swipe area', () => {
         ).toBeGreaterThan(0),
       );
       expect(get('popup').offsetHeight).toBe(0);
+      expect(get('popup').style.getPropertyValue('--drawer-frontmost-height')).toBe('');
       expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('');
       expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('');
     } finally {

@@ -97,7 +97,8 @@ function elementProps() {
         transition: drawer.swiping ? 'none' : undefined,
         '--nested-drawers': drawer.nestedOpen,
         '--drawer-height': drawer.nestedPresent ? `${drawer.height}px` : undefined,
-        '--drawer-frontmost-height': drawer.nestedOpen ? `${drawer.frontmostHeight}px` : undefined,
+        '--drawer-frontmost-height':
+          drawer.frontmostHeight > 0 ? `${drawer.frontmostHeight}px` : undefined,
         '--drawer-snap-point-offset': `${drawer.swipeDirection === 'up' ? -offset : offset}px`,
         '--drawer-swipe-movement-x': `${sample.x}px`,
         '--drawer-swipe-movement-y': `${sample.y}px`,

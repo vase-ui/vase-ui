@@ -86,4 +86,29 @@ describe('a nested drawer', () => {
     const first = states.find((state) => state.nested);
     expect(first?.height).toBe('300px');
   });
+
+  test('keeps the height of the drawer below at a new open until the nested popup has a height', async () => {
+    // The stack formula of the Drawer page.
+    const stack = document.head.appendChild(document.createElement('style'));
+    stack.textContent = `.drawer-test-popup {
+      --stack-height: max(0px, calc(var(--drawer-frontmost-height, var(--drawer-height)) - 3rem));
+    }
+    .drawer-test-popup[data-nested-drawer-open] {
+      height: calc(var(--stack-height) + 3rem);
+    }`;
+    onTestFinished(() => stack.remove());
+    await mountDrawer({
+      root: { defaultOpen: true },
+      nested: { root: { defaultOpen: false }, popup: { style: 'height: 200px' } },
+    });
+    const parent = await opened();
+    const heights: number[] = [];
+    const observer = new MutationObserver(() => heights.push(parent.offsetHeight));
+    observer.observe(parent, { attributes: true, attributeFilter: ['style'] });
+    onTestFinished(() => observer.disconnect());
+    await userEvent.click(get('nested-trigger'));
+    await opened('nested-');
+    await waitFor(() => expect(parent.offsetHeight).toBe(200));
+    expect(Math.min(...heights)).toBe(200);
+  });
 });

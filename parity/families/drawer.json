@@ -33,7 +33,7 @@
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.test.ts",
-      "reason": "`Drawer.test.ts` tests the popup: its role and attributes, the first focus on the popup element and `initialFocus`, the negative snap point offset of a drawer that closes up, the count and the heights of nested drawers, a dialog in a drawer that is no nested drawer, and the error for a popup with no viewport. The popup throws in place of a warning. The cases about the order of React effects and the owner stack have no counterpart. `Drawer.nested.test.ts` tests the border in the frontmost height, and the nested state and the height of the drawer below while a nested drawer leaves."
+      "reason": "`Drawer.test.ts` tests the popup: its role and attributes, the first focus on the popup element and `initialFocus`, the negative snap point offset of a drawer that closes up, the count and the heights of nested drawers, a dialog in a drawer that is no nested drawer, and the error for a popup with no viewport. The popup throws in place of a warning. The cases about the order of React effects and the owner stack have no counterpart. `Drawer.nested.test.ts` tests the border in the frontmost height, the height of the drawer below at a new open, and its nested state and height while a nested drawer leaves."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.test.tsx",
@@ -69,7 +69,7 @@
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.keyboard.test.tsx",
-      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code."
+      "reason": "`Drawer.keyboard.test.tsx` has the cases of the keyboard provider. A popup that leaves is a closed popup with `keepMounted`, a tap gets its `click` as a `PointerEvent`, and the inset has no value while no keyboard covers the view. Vue writes a bound `padding-bottom` again at a render, so the docs say to bind none on the scroll body, and the cases take it from CSS. The provider keeps no observer of the style (`test/measurements/drawer.test.ts`). `KeepAlive` needs no code."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
