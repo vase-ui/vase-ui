@@ -11,7 +11,8 @@ import { Tooltip } from '../../src/tooltip';
 // with a transition. The popup enters from the side that it is on, and fades in with a CSS
 // animation.
 // The popup of a preview card mounts at each open, so its `<Transition>` has `appear`. With
-// `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`.
+// `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`. The
+// popover has a second trigger with the `id` "second", 150 pixels to the right of the first.
 defineProps({
   family: {
     type: String as PropType<'Popover' | 'Menu' | 'Tooltip' | 'PreviewCard'>,
@@ -25,6 +26,9 @@ defineProps({
 <template>
   <template v-if="family === 'Popover'">
     <Popover.Trigger id="trigger" :handle class="first-place-trigger">Trigger</Popover.Trigger>
+    <Popover.Trigger id="second" :handle class="first-place-trigger first-place-second">
+      Second
+    </Popover.Trigger>
     <Popover.Root :handle>
       <Popover.Portal :keep-mounted>
         <Popover.Positioner data-testid="positioner" class="first-place-positioner">
@@ -92,6 +96,9 @@ defineProps({
   position: fixed;
   left: 100px;
   bottom: 10px;
+}
+.first-place-second {
+  left: 250px;
 }
 .first-place-positioner {
   transition-property: top, left, right, bottom;

@@ -155,4 +155,54 @@ describe('the first place of an open', () => {
       popup: { side: 'top', transitions: ['opacity'], opacity: true },
     });
   });
+
+  const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  const centerX = (element: Element) => {
+    const rect = element.getBoundingClientRect();
+    return rect.left + rect.width / 2;
+  };
+  const placeTransitions = (element: Element) =>
+    element.getAnimations().map((animation) => (animation as CSSTransition).transitionProperty);
+
+  it('shows a kept popup at its trigger in the first frame of an open after a close at another trigger', async () => {
+    const handle = Popover.createHandle();
+    mount(PopupFirstPlace, { family: 'Popover', handle, keepMounted: true });
+    await nextFrame();
+    handle.open('trigger');
+    await nextFrame();
+    handle.close();
+    await nextFrame();
+    handle.open('second');
+    const firstFrame = await new Promise((resolve) =>
+      requestAnimationFrame(() => {
+        const positioner = byTestId('positioner');
+        const second = document.getElementById('second')!;
+        resolve({
+          transitions: placeTransitions(positioner),
+          atTrigger: Math.abs(centerX(positioner) - centerX(second)) < 1,
+        });
+      }),
+    );
+    expect(firstFrame).toEqual({ transitions: [], atTrigger: true });
+  });
+
+  it('moves an open popup to another trigger with the transition of its place', async () => {
+    const handle = Popover.createHandle();
+    mount(PopupFirstPlace, { family: 'Popover', handle });
+    await nextTick();
+    handle.open('trigger');
+    await nextFrame();
+    handle.open('second');
+    const firstFrame = await new Promise((resolve) =>
+      requestAnimationFrame(() => {
+        const positioner = byTestId('positioner');
+        const second = document.getElementById('second')!;
+        resolve({
+          transitions: placeTransitions(positioner),
+          atTrigger: Math.abs(centerX(positioner) - centerX(second)) < 1,
+        });
+      }),
+    );
+    expect(firstFrame).toEqual({ transitions: ['left'], atTrigger: false });
+  });
 });
