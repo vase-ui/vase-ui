@@ -111,7 +111,7 @@ export interface UpstreamFile {
   commit: string;
   describe: string;
   release: string;
-  /** The names of the folders of Base UI that hold the docs of one component each. */
+  /** The names of the Base UI components: the folders of the components docs of Base UI that have a page. */
   components: string[];
   commits: UpstreamCommit[];
 }

@@ -14,7 +14,7 @@ import ParitySummary from './.vitepress/components/ParitySummary.vue';
 
 # Parity
 
-This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports. A component is a family that has its own page in the components docs of Base UI, and the column Component shows which families are components. A family whose parts are on the page of another component is not a component. A component that Base UI does not have is not a family. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
+This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports. A component is a family that has its own page in the components docs of Base UI. The column Component shows which families are components. A family whose parts are on the page of another component is not a component. A component that Base UI does not have is not a family. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
 
 <ParitySummary />
 

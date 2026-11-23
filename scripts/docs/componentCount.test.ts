@@ -14,41 +14,57 @@ function countsIn(text: string): number[] {
   return [...text.matchAll(/(\d+) Base UI components/g)].map(([, value]) => Number(value));
 }
 
-test('the region home of README.md gives the count of parity/upstream.json, and no other count', () => {
+const features: Features = JSON.parse(
+  readRepositoryFile(REPOSITORY_ROOT, 'benchmarks/features.json'),
+);
+const rows = features.groups.flatMap((group) => group.rows);
+
+test('the region home of README.md gives the count of parity/upstream.json, and README.md gives no other count', () => {
   const readme = readRepositoryFile(REPOSITORY_ROOT, 'README.md');
   const home = readme.slice(
     readme.indexOf('<!-- #region home -->'),
     readme.indexOf('<!-- #endregion home -->'),
   );
   assert.ok(home.includes(claim), `The region home of README.md must say "${claim}".`);
-  assert.deepEqual(countsIn(readme), [count]);
+  assert.deepEqual(countsIn(readme), [count], `README.md must give only the count "${claim}".`);
 });
 
-test('the description of the package gives the count of parity/upstream.json', () => {
+test('the description of the package gives the count of parity/upstream.json, and no other count', () => {
   const { description }: { description: string } = JSON.parse(
     readRepositoryFile(REPOSITORY_ROOT, 'packages/vue/package.json'),
   );
   assert.ok(description.includes(claim), `The description must say "${claim}".`);
-  assert.deepEqual(countsIn(description), [count]);
+  assert.deepEqual(
+    countsIn(description),
+    [count],
+    `The description must give only the count "${claim}".`,
+  );
 });
 
 test('the parity page counts each component of parity/upstream.json as complete', () => {
   const { done, total } = countComponents(families, upstream.components);
-  assert.deepEqual({ done, total }, { done: count, total: count });
+  assert.deepEqual(
+    { done, total },
+    { done: count, total: count },
+    `Each component of parity/upstream.json needs a complete family, because README.md must say "${claim}".`,
+  );
 });
 
-test('the features table counts each library against the components of parity/upstream.json', () => {
-  const features: Features = JSON.parse(
-    readRepositoryFile(REPOSITORY_ROOT, 'benchmarks/features.json'),
-  );
-  const rows = features.groups.flatMap((group) => group.rows);
+test('each cell of the row "Components of Base UI" counts against the components of parity/upstream.json', () => {
   const row = rows.find(({ feature }) => feature === 'Components of Base UI');
   assert.ok(row, 'benchmarks/features.json has no row "Components of Base UI".');
   for (const [library, { value }] of Object.entries(row.cells)) {
-    assert.match(value, new RegExp(`^\\d+ of ${count}$`), library);
+    assert.match(
+      value,
+      new RegExp(`^\\d+ of ${count}$`),
+      `"Components of Base UI", ${library}: count against the ${count} components of parity/upstream.json.`,
+    );
   }
   assert.equal(row.cells['vase-ui'].value, `${count} of ${count}`);
   assert.equal(row.cells['base-ui'].value, `${count} of ${count}`);
-  const all = rows.find(({ feature }) => feature === 'Components in all');
-  assert.equal(all?.cells['base-ui'].value, String(count));
+});
+
+test('the Base UI cell of the row "Components in all" gives the count of parity/upstream.json', () => {
+  const row = rows.find(({ feature }) => feature === 'Components in all');
+  assert.equal(row?.cells['base-ui'].value, String(count));
 });
