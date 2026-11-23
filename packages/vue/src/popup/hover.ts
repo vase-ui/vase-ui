@@ -35,9 +35,9 @@ function crossingOf(root: PopupRoot) {
 
 /**
  * Opens a popup when a mouse rests on its trigger, and closes it when the pointer leaves the
- * trigger and the popup. The pointer can cross the space between them in the triangle from the
- * point where it left the trigger to the near edge of the popup. A popup that no hover and no press
- * opened closes only when the pointer leaves its trigger.
+ * trigger and the popup. The pointer can cross the space between them in the triangle from its
+ * last point on the trigger to the near edge of the popup. A popup that no hover and no press opened
+ * closes only when the pointer leaves its trigger.
  */
 export function usePopupHover(
   root: () => PopupRoot | null,
@@ -269,10 +269,10 @@ export function usePopupHover(
     { flush: 'post' },
   );
 
-  // The point of another trigger is in the triangle from the last point on this trigger, or from
-  // the point where the pointer left it, to the popup. This trigger then follows a crossing, as at a
-  // `pointermove` in the triangle: the next move or a rest of 40 ms ends it. A point equal to the
-  // apex, such as after a layout change under a still pointer, is in the triangle.
+  // The point of another trigger is in the triangle from the last point on this trigger to the
+  // popup. This trigger then follows a crossing, as at a `pointermove` in the triangle: the next move
+  // or a rest of 40 ms ends it. A point equal to the apex, such as after a layout change under a
+  // still pointer, is in the triangle.
   function approach(point: Point) {
     const trigger = options.trigger.value;
     const popup = root()?.popup;
@@ -320,7 +320,8 @@ export function usePopupHover(
       if (!byHover) from = null;
       return;
     }
-    if (over === 'trigger') from = point;
+    // The first point outside the trigger is always in a triangle from that point.
+    if (over === 'trigger') from = last;
     over = 'outside';
     if (!byHover && !from) return;
     if (enteredPopup && options.stayAfterEnter) return;
@@ -493,7 +494,7 @@ function opensAtOnce(root: PopupRoot) {
   );
 }
 
-// The triangle from the point where the pointer left the trigger to the near edge of the popup.
+// The triangle from the last point on the trigger to the near edge of the popup.
 function isInTriangle(point: Point, from: Point, trigger: Element, popup: Element) {
   const anchor = trigger.getBoundingClientRect();
   const box = popup.getBoundingClientRect();

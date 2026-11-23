@@ -17,7 +17,9 @@ const trigger = () => byTestId('trigger')!;
 const leave = () => userEvent.pointer({ coords: { x: innerWidth - 2, y: innerHeight - 2 } });
 
 async function openSubmenu(root: Props = {}) {
-  mount(MenuInTransition, { root });
+  // The submenu reaches below the item `b`, so a point on `b` can be in the triangle from the
+  // submenu trigger.
+  mount(MenuInTransition, { root, submenuPopup: { style: 'height: 60px' } });
   await nextTick();
   await userEvent.click(trigger());
   await waitFor(() => expect(byTestId('popup')?.checkVisibility()).toBe(true));
