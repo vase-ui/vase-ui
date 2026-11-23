@@ -329,6 +329,22 @@ describe('a press', () => {
     expect([...new Set(log)]).toEqual([server.browser === 'firefox' ? 'pointermove' : 'pointerup']);
   });
 
+  test('of the mouse runs each microtask that a `pointerdown` listener queues before `mousedown`, also a microtask of a microtask', async () => {
+    html('<button id="trigger">Trigger</button><div id="popup" tabindex="-1">Popup</div>');
+    element('trigger').addEventListener('pointerdown', () => {
+      void Promise.resolve()
+        .then(() => Promise.resolve())
+        .then(() => element('popup').focus());
+    });
+    let atMousedown: string | undefined;
+    element('trigger').addEventListener('mousedown', (event) => {
+      atMousedown = activeId();
+      event.preventDefault();
+    });
+    await userEvent.click(element('trigger'));
+    expect(atMousedown).toBe('popup');
+  });
+
   test('of the right button gives no `click`', async () => {
     html(`<div id="box" style="width: 100px; height: 100px"></div>`);
     element('box').addEventListener('contextmenu', (event) => event.preventDefault());
@@ -430,6 +446,39 @@ describe('the first place of an open', () => {
     });
     await nextEvent(popup(), 'transitionrun');
     expect(translateY(popup())).toBeGreaterThan(0);
+  });
+});
+
+describe('a change of an inherited property', () => {
+  test('to `visible` keeps the elements hidden and unfocusable while a transition of 0.01 ms starts; in Chromium and WebKit, the end of the transition starts one in each child', () => {
+    html(
+      '<div id="box" style="visibility: hidden; transition: all 0.01ms"><button id="child" style="transition: all 0.01ms">Child</button></div>',
+    );
+    // The browser computes the style before the change.
+    expect(getComputedStyle(element('child')).visibility).toBe('hidden');
+    element('box').style.visibility = '';
+    const read = () => ({
+      transitions: element('box')
+        .getAnimations({ subtree: true })
+        .map((animation) => (animation.effect as KeyframeEffect).target?.id),
+      child: getComputedStyle(element('child')).visibility,
+    });
+    const started = read();
+    element('child').focus();
+    const focused = activeId();
+    for (const animation of element('box').getAnimations({ subtree: true })) animation.cancel();
+    const afterCancel = read();
+    expect({ started, focused, afterCancel }).toEqual({
+      started: {
+        transitions: server.browser === 'firefox' ? ['box', 'child'] : ['box'],
+        child: 'hidden',
+      },
+      focused: 'body',
+      afterCancel:
+        server.browser === 'firefox'
+          ? { transitions: [], child: 'visible' }
+          : { transitions: ['child'], child: 'hidden' },
+    });
   });
 });
 

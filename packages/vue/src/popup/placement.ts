@@ -27,7 +27,7 @@ import {
   type VirtualElement,
 } from '@floating-ui/vue';
 
-import { computed, nextTick, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
+import { computed, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
@@ -416,10 +416,15 @@ export function usePlacement(
   // popup on the first side. The place then starts CSS transitions from these styles, such as of
   // `left` and of an `enter-from` class of the side (test/measurements/popup.test.ts, "the first
   // place of an open"). An open shows the popup at its place, so the positioner ends the
-  // transitions that this place starts. A transition that started before it continues, such as the
-  // enter of a popup that loses `hidden`. A later place of the open, such as at another trigger,
-  // keeps its transitions.
+  // transitions that start from this place to the update that shows the popup. They include a
+  // transition of `visibility`, which keeps the popup hidden and unfocusable
+  // (test/measurements/popup.test.ts, "a change of an inherited property"). A given place can show
+  // the popup some updates later, as the item alignment of Select does. A transition that started
+  // before the first place continues, such as the enter of a popup that loses `hidden`. A later
+  // place of the open, such as at another trigger, keeps its transitions.
   let nextPlaceIsFirst = true;
+  // The animations at the first place of the open, until the update that shows the popup.
+  const firstPlaceAnimations = shallowRef<Set<Animation> | null>(null);
   watch(
     () => root.open,
     (open) => {
@@ -435,14 +440,23 @@ export function usePlacement(
       if (!nextPlaceIsFirst || !element) return;
       nextPlaceIsFirst = false;
       // Vue renders the place after this watcher.
-      const started = new Set(element.getAnimations({ subtree: true }));
-      void nextTick(() => {
-        for (const animation of element.getAnimations({ subtree: true })) {
-          if (animation instanceof CSSTransition && !started.has(animation)) animation.cancel();
-        }
-      });
+      firstPlaceAnimations.value = new Set(element.getAnimations({ subtree: true }));
     },
     { flush: 'sync' },
+  );
+  // Select sets up its `place` after this call, so the source reads it only after a first place.
+  watch(
+    () => {
+      const kept = firstPlaceAnimations.value;
+      return kept && placed.value && options.place?.()?.visibility !== 'hidden' ? kept : null;
+    },
+    (kept) => {
+      const element = options.positioner.value;
+      if (!kept || !element) return;
+      firstPlaceAnimations.value = null;
+      endTransitions(element, kept);
+    },
+    { flush: 'post' },
   );
   // Only a caller with `lazyFlip` reads `placed` in its setup: the `place` of Select reads the
   // item alignment, which it sets up after this call.
@@ -529,6 +543,22 @@ export function usePlacement(
       },
     },
   };
+}
+
+/**
+ * Ends each CSS transition of the element and of its descendants that is not in `kept`. In
+ * Chromium and WebKit, a change of an inherited property, such as `visibility`, starts a transition
+ * only where the value changes, and the end of that transition starts the transitions of the
+ * descendants (test/measurements/popup.test.ts, "a change of an inherited property").
+ */
+function endTransitions(element: Element, kept: Set<Animation>) {
+  for (;;) {
+    const started = element
+      .getAnimations({ subtree: true })
+      .filter((animation) => animation instanceof CSSTransition && !kept.has(animation));
+    if (started.length === 0) return;
+    for (const animation of started) animation.cancel();
+  }
 }
 
 /** The rectangle of the anchor in the offset parent and the size of the positioner, as one value. */

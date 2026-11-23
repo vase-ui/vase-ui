@@ -1,4 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { hide as nativeHide } from '@floating-ui/vue';
 import type { MiddlewareState, Rect, SideObject } from '@floating-ui/vue';
 import { nextTick } from 'vue';
@@ -6,9 +7,14 @@ import { Menu } from '@vase-ui/vue/menu';
 import { Popover } from '@vase-ui/vue/popover';
 import { PreviewCard } from '@vase-ui/vue/preview-card';
 import { Tooltip } from '@vase-ui/vue/tooltip';
-import { nextEvent } from '../../test/animation';
+import { addReducedMotionRule, nextEvent } from '../../test/animation';
+import ComboboxStatic from '../../test/fixtures/ComboboxStatic.vue';
+import MenuParts from '../../test/fixtures/MenuParts.vue';
+import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import PopupFirstPlace from '../../test/fixtures/PopupFirstPlace.vue';
+import SelectParts from '../../test/fixtures/SelectParts.vue';
 import { mount } from '../../test/render';
+import { waitFor } from '../../test/waitFor';
 import { hide } from './placement';
 
 const floatingRect: Rect = { x: 0, y: 0, width: 5, height: 5 };
@@ -205,4 +211,39 @@ describe('the first place of an open', () => {
     );
     expect(firstFrame).toEqual({ transitions: ['left'], atTrigger: false });
   });
+
+  it.each([
+    {
+      family: 'Select, aligned with its trigger',
+      fixture: SelectParts,
+      props: {
+        root: { defaultValue: 'banana' },
+        positioner: {},
+        trigger: { style: 'margin-top: 200px' },
+      },
+      trigger: '[data-testid="trigger"]',
+    },
+    { family: 'Menu', fixture: MenuParts, props: {}, trigger: '[data-testid="trigger"]' },
+    {
+      family: 'Combobox, its trigger the control',
+      fixture: ComboboxStatic,
+      props: { inputInPopup: true },
+      trigger: '[data-testid="trigger"]',
+    },
+    { family: 'Popover', fixture: PopoverParts, props: {}, trigger: '[data-key="t"]' },
+  ])(
+    'with a transition of 0.01 ms on each element, a mouse press on the trigger opens $family, and the popup stays open with the focus',
+    async ({ fixture, props, trigger }) => {
+      addReducedMotionRule();
+      mount(fixture, props);
+      await nextTick();
+      const element = document.querySelector<HTMLElement>(trigger)!;
+      expect(document.activeElement).toBe(document.body);
+      await userEvent.click(element);
+      await waitFor(() =>
+        expect(byTestId('popup')).toContainElement(document.activeElement as HTMLElement),
+      );
+      expect(element).toHaveAttribute('aria-expanded', 'true');
+    },
+  );
 });

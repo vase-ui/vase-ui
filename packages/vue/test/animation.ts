@@ -150,3 +150,15 @@ export function mostMatches(selector: string) {
   onTestFinished(() => observer.disconnect());
   return () => most;
 }
+
+/**
+ * Adds the rule that many apps give to `prefers-reduced-motion: reduce` until the case ends: each
+ * element gets a transition and an animation of 0.01 ms. A change of each property of an element
+ * then starts a transition, `visibility` too.
+ */
+export function addReducedMotionRule() {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent =
+    '*, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }';
+  onTestFinished(() => style.remove());
+}

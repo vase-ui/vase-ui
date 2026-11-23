@@ -2,6 +2,7 @@ import { describe, expect, inject, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { SelectRootOpenChangeEventDetails } from '@vase-ui/vue/select';
+import { addReducedMotionRule } from '../../test/animation';
 import SelectInPopover from '../../test/fixtures/SelectInPopover.vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
 import SelectRenders from '../../test/fixtures/SelectRenders.vue';
@@ -246,6 +247,29 @@ describe('the place of the popup', () => {
     expect(popup().style.transform).toBe('translateX(10px)');
     expect(popup().style.scale).toBe('0.8');
     expect(popup().style.translate).toBe('1px 2px');
+  });
+
+  test('with a transition of 0.01 ms on each element, the aligned popup shows each item in the first frame of the open, and the selected item has the focus', async () => {
+    addReducedMotionRule();
+    const root = reactive<Props>({ defaultValue: 'banana', open: false });
+    await mountSelect({ ...aligned, root });
+    root.open = true;
+    const firstFrame = await new Promise((resolve) =>
+      requestAnimationFrame(() =>
+        resolve({
+          side: positioner().getAttribute('data-side'),
+          shown: ['apple', 'apricot', 'banana', 'cherry'].filter((value) =>
+            item(value).checkVisibility({ visibilityProperty: true }),
+          ),
+          focused: document.activeElement === item('banana'),
+        }),
+      ),
+    );
+    expect(firstFrame).toEqual({
+      side: 'none',
+      shown: ['apple', 'apricot', 'banana', 'cherry'],
+      focused: true,
+    });
   });
 
   test('puts the text over the value with a padding of the popup', async () => {
