@@ -1,10 +1,19 @@
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { pathToFileURL } from 'node:url';
+import { fixtureFileOf, scenarioOf } from '../../benchmarks/behavior/fixtures.ts';
+import type { Group } from '../../benchmarks/behavior/types.ts';
 import { LIBRARIES, SETUPS } from '../../benchmarks/scenarios.ts';
 import type { Features, Results } from '../docs/benchmarksReport.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
+
+// The root project has no DOM types, and the code of the checks uses them in the page. So the test
+// loads the groups at run time.
+const { GROUPS }: { GROUPS: readonly Group[] } = await import(
+  pathToFileURL(join(REPOSITORY_ROOT, 'benchmarks/behavior/groups.ts')).href
+);
 
 interface Manifest {
   dependencies?: Record<string, string>;
@@ -84,4 +93,52 @@ test('the count of Vase UI components is the count of component pages', () => {
     .flatMap((group) => group.rows)
     .find((item) => item.feature === 'Components in all');
   assert.equal(row?.cells['vase-ui'].value, String(pages.length));
+});
+
+test('each behavior check has a row text and an https source', () => {
+  for (const group of GROUPS) {
+    for (const check of group.checks) {
+      assert.ok(check.title, `${group.id}.${check.id}: the row text`);
+      assert.match(check.expectation.url, /^https:\/\//, `${group.id}.${check.id}: the source`);
+    }
+  }
+});
+
+// The page shows a check with no results as "Not measured", so a check with code needs a new run.
+test('results.json has each behavior check that has code, in each engine', () => {
+  const measured = GROUPS.flatMap((group) =>
+    group.checks.filter((check) => check.run).map((check) => `${group.id}.${check.id}`),
+  ).sort();
+  for (const engine of ['chromium', 'firefox', 'webkit']) {
+    assert.deepEqual(
+      Object.keys(results.behavior?.[engine]?.checks ?? {}).sort(),
+      measured,
+      `Record a run of the workflow Benchmarks with the behavior checks of ${engine}.`,
+    );
+  }
+});
+
+test('a behavior result is null only when the library has no fixture of the check', () => {
+  for (const [engine, part] of Object.entries(results.behavior ?? {})) {
+    for (const group of GROUPS) {
+      for (const check of group.checks) {
+        for (const library of LIBRARIES) {
+          const cases = part.checks[`${group.id}.${check.id}`]?.[library.id];
+          if (cases === undefined) {
+            continue;
+          }
+          const fixtures = (check.cases ?? [null])
+            .flatMap((caseName) => scenarioOf(check, caseName) ?? [])
+            .filter((scenario) =>
+              existsSync(join(REPOSITORY_ROOT, fixtureFileOf(library, scenario))),
+            );
+          assert.equal(
+            cases === null,
+            fixtures.length === 0,
+            `${engine} ${group.id}.${check.id}, ${library.id}`,
+          );
+        }
+      }
+    }
+  }
 });

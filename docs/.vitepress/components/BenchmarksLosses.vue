@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { data } from '../../benchmarks.data.ts';
+import { behaviorVerdictName, failLines, listOf } from './benchmarksBehaviorText.ts';
 import {
   engineName,
   formatBytes,
@@ -28,6 +29,19 @@ const groups = data.notes
     timeLosses: data.timeLosses.filter((loss) => loss.note === note.id),
   }))
   .filter((group) => sizeNotes.has(group.id) || group.timeLosses.length > 0);
+
+const BEHAVIOR_LOSSES = 'behavior-checks-that-vase-ui-does-not-pass';
+const BEHAVIOR_LOSSES_TITLE = 'Behavior checks that Vase UI does not pass';
+
+const behaviorLosses = data.behaviorLosses.map((loss) => ({
+  ...loss,
+  results: loss.results.map(({ engines, verdict, cases }) => ({
+    first: `${listOf(engines.map(engineName))}: ${behaviorVerdictName(verdict)}`,
+    lines: failLines(cases),
+  })),
+  passes:
+    loss.libraries.length === 0 ? 'None' : listOf(loss.libraries.map((id) => libraryName(id))),
+}));
 </script>
 
 <template>
@@ -102,6 +116,45 @@ const groups = data.notes
                 formatInterval(loss.comparison.interval)
               }})
             </td>
+          </tr>
+        </tbody>
+      </table>
+    </ScrollBox>
+  </template>
+  <template v-if="data.behaviorRuns.length > 0">
+    <h3 :id="BEHAVIOR_LOSSES" tabindex="-1">
+      {{ BEHAVIOR_LOSSES_TITLE }}
+      <a
+        class="header-anchor"
+        :href="`#${BEHAVIOR_LOSSES}`"
+        :aria-label="`Permalink to “${BEHAVIOR_LOSSES_TITLE}”`"
+        >&#8203;</a
+      >
+    </h3>
+    <p v-if="behaviorLosses.length === 0">Vase UI passes each behavior check in each engine.</p>
+    <ScrollBox v-else label="Behavior checks that Vase UI does not pass">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Check</th>
+            <th scope="col">Vase UI</th>
+            <th scope="col">Other Vue libraries that pass it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="loss in behaviorLosses" :id="loss.id" :key="loss.id">
+            <th scope="row">
+              <a :href="`#${loss.row}`">{{ loss.group }}: {{ loss.title }}</a>
+            </th>
+            <td>
+              <template v-for="(result, index) in loss.results" :key="result.first"
+                ><br v-if="index > 0" /><strong>{{ result.first }}</strong
+                ><template v-for="line in result.lines" :key="line"
+                  ><br />{{ line }}</template
+                ></template
+              >
+            </td>
+            <td>{{ loss.passes }}</td>
           </tr>
         </tbody>
       </table>

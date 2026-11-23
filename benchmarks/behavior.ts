@@ -1,6 +1,7 @@
 import { parseArgs } from 'node:util';
 import type { Browser } from 'playwright';
-import { GROUPS, scenarioOf } from './behavior/groups.ts';
+import { scenarioOf } from './behavior/fixtures.ts';
+import { GROUPS } from './behavior/groups.ts';
 import { installRecorder } from './behavior/recorder.ts';
 import type { CaseResult, Check } from './behavior/types.ts';
 import { behaviorApp } from './build.ts';

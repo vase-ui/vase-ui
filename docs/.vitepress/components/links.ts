@@ -9,3 +9,7 @@ export function vaseUiFileUrl(path: string): string {
 export function vaseUiCommitUrl(sha: string): string {
   return `https://github.com/vase-ui/vase-ui/commit/${sha}`;
 }
+
+export function vaseUiFileAtCommitUrl(sha: string, path: string): string {
+  return `https://github.com/vase-ui/vase-ui/blob/${sha}/${path}`;
+}

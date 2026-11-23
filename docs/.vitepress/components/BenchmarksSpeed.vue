@@ -37,7 +37,7 @@ const rows = data.speed.map((engine) => ({
               ><BenchmarksNoteLink
                 v-if="speed.losses"
                 :note="speed.losses"
-                title="Where Vase UI is larger or slower"
+                title="Where Vase UI is larger, slower or fails a check"
               /><br />Vase UI faster in {{ speed.faster }} of {{ speed.metrics }}
             </template>
             <template v-else>Not measured yet</template>

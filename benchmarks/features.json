@@ -4,135 +4,6 @@
       "name": "Dialog",
       "rows": [
         {
-          "feature": "Focus trap in a modal dialog",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "source": "https://vase-ui.com/components/dialog"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "source": "https://reka-ui.com/docs/components/dialog"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "note": "The `trapFocus` prop.",
-              "source": "https://ark-ui.com/vue/docs/components/dialog"
-            },
-            "headless-ui": {
-              "value": "yes",
-              "source": "https://headlessui.com/v1/vue/dialog"
-            },
-            "vuetify0": {
-              "value": "yes",
-              "note": "The native `showModal()` of the browser.",
-              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
-            },
-            "base-ui": {
-              "value": "yes",
-              "source": "https://base-ui.com/react/components/dialog"
-            }
-          }
-        },
-        {
-          "feature": "Focus goes back to the trigger when the dialog closes",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "note": "The `finalFocus` prop changes the element.",
-              "source": "https://vase-ui.com/components/dialog#custom-focus-management"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "source": "https://reka-ui.com/docs/components/dialog"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "note": "The `finalFocusEl` prop changes the element.",
-              "source": "https://ark-ui.com/vue/docs/components/dialog"
-            },
-            "headless-ui": {
-              "value": "yes",
-              "note": "Our check. The docs do not give it.",
-              "source": "https://headlessui.com/v1/vue/dialog"
-            },
-            "vuetify0": {
-              "value": "yes",
-              "note": "Our check. The docs do not give it.",
-              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
-            },
-            "base-ui": {
-              "value": "yes",
-              "note": "The `finalFocus` prop changes the element.",
-              "source": "https://base-ui.com/react/components/dialog"
-            }
-          }
-        },
-        {
-          "feature": "The title names the dialog and the description describes it",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "source": "https://vase-ui.com/components/dialog"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "source": "https://reka-ui.com/docs/components/dialog"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "source": "https://ark-ui.com/vue/docs/components/dialog"
-            },
-            "headless-ui": {
-              "value": "yes",
-              "source": "https://headlessui.com/v1/vue/dialog"
-            },
-            "vuetify0": {
-              "value": "yes",
-              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
-            },
-            "base-ui": {
-              "value": "yes",
-              "source": "https://base-ui.com/react/components/dialog"
-            }
-          }
-        },
-        {
-          "feature": "A dialog that opens from a dialog",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "source": "https://vase-ui.com/components/dialog#nested-dialogs"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "source": "https://reka-ui.com/docs/components/dialog#nested-dialog"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "source": "https://ark-ui.com/vue/docs/components/dialog#nested"
-            },
-            "headless-ui": {
-              "value": "yes",
-              "note": "Our check. The docs do not give it.",
-              "source": "https://headlessui.com/v1/vue/dialog"
-            },
-            "vuetify0": {
-              "value": "yes",
-              "note": "Our check. The docs do not give it.",
-              "source": "https://0.vuetifyjs.com/components/disclosure/dialog"
-            },
-            "base-ui": {
-              "value": "yes",
-              "source": "https://base-ui.com/react/components/dialog#nested-dialogs"
-            }
-          }
-        },
-        {
           "feature": "A style hook on a dialog while a dialog on top of it is open",
           "kind": "support",
           "cells": {
@@ -172,89 +43,22 @@
       "name": "Drawer",
       "rows": [
         {
-          "feature": "A swipe closes the drawer",
+          "feature": "A style hook on a drawer while a drawer on top of it is open",
           "kind": "support",
           "cells": {
             "vase-ui": {
               "value": "yes",
-              "source": "https://vase-ui.com/components/drawer"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "note": "Alpha in the docs.",
-              "source": "https://reka-ui.com/docs/components/drawer#features"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "note": "Preview in the docs.",
-              "source": "https://ark-ui.com/vue/docs/components/drawer#swipe-direction"
-            },
-            "headless-ui": {
-              "value": "no",
-              "note": "No drawer component.",
-              "source": "https://headlessui.com/v1/vue"
-            },
-            "vuetify0": {
-              "value": "no",
-              "note": "No drawer component.",
-              "source": "https://0.vuetifyjs.com/llms.txt"
-            },
-            "base-ui": {
-              "value": "yes",
-              "source": "https://base-ui.com/react/components/drawer#anatomy"
-            }
-          }
-        },
-        {
-          "feature": "Snap points",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "source": "https://vase-ui.com/components/drawer#snap-points"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "note": "Alpha in the docs.",
-              "source": "https://reka-ui.com/docs/components/drawer#snap-points"
-            },
-            "ark-ui": {
-              "value": "yes",
-              "source": "https://ark-ui.com/vue/docs/components/drawer#snap-points"
-            },
-            "headless-ui": {
-              "value": "no",
-              "note": "No drawer component.",
-              "source": "https://headlessui.com/v1/vue"
-            },
-            "vuetify0": {
-              "value": "no",
-              "note": "No drawer component.",
-              "source": "https://0.vuetifyjs.com/llms.txt"
-            },
-            "base-ui": {
-              "value": "yes",
-              "source": "https://base-ui.com/react/components/drawer#snap-points"
-            }
-          }
-        },
-        {
-          "feature": "A drawer that opens from a drawer",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
               "source": "https://vase-ui.com/components/drawer#nested-drawers"
             },
             "reka-ui": {
               "value": "yes",
-              "note": "`[data-nested-drawer-open]` styles the drawer below. Alpha in the docs.",
+              "note": "`[data-nested-drawer-open]`. Alpha in the docs.",
               "source": "https://reka-ui.com/docs/components/drawer#content"
             },
             "ark-ui": {
               "value": "yes",
-              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
               "source": "https://ark-ui.com/vue/docs/components/drawer#props"
             },
             "headless-ui": {
@@ -269,7 +73,7 @@
             },
             "base-ui": {
               "value": "yes",
-              "note": "`[data-nested-drawer-open]` and `--nested-drawers` style the drawer below.",
+              "note": "`[data-nested-drawer-open]` and `--nested-drawers`.",
               "source": "https://base-ui.com/react/components/drawer#nested-drawers"
             }
           }
@@ -417,74 +221,6 @@
               "value": "yes",
               "note": "The `limit` prop of `Toast.Provider`.",
               "source": "https://base-ui.com/react/components/toast#provider"
-            }
-          }
-        },
-        {
-          "feature": "A swipe closes a toast",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "source": "https://vase-ui.com/components/toast#general-usage"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "note": "The `swipe-direction` prop.",
-              "source": "https://reka-ui.com/docs/components/toast#animating-swipe-gesture"
-            },
-            "ark-ui": {
-              "value": "no",
-              "source": "https://ark-ui.com/vue/docs/components/toast"
-            },
-            "headless-ui": {
-              "value": "no",
-              "note": "No toast component.",
-              "source": "https://headlessui.com/v1/vue"
-            },
-            "vuetify0": {
-              "value": "no",
-              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
-            },
-            "base-ui": {
-              "value": "yes",
-              "note": "The `swipeDirection` prop.",
-              "source": "https://base-ui.com/react/components/toast#root"
-            }
-          }
-        },
-        {
-          "feature": "A screen reader announces an important toast at once",
-          "kind": "support",
-          "cells": {
-            "vase-ui": {
-              "value": "yes",
-              "note": "`priority: 'high'`.",
-              "source": "https://vase-ui.com/components/toast#add-method"
-            },
-            "reka-ui": {
-              "value": "yes",
-              "note": "No `priority` option. A toast of the `type` `foreground` is announced at once.",
-              "source": "https://reka-ui.com/docs/components/toast#sensitivity"
-            },
-            "ark-ui": {
-              "value": "no",
-              "source": "https://ark-ui.com/vue/docs/components/toast"
-            },
-            "headless-ui": {
-              "value": "no",
-              "note": "No toast component.",
-              "source": "https://headlessui.com/v1/vue"
-            },
-            "vuetify0": {
-              "value": "yes",
-              "note": "The `urgent` prop.",
-              "source": "https://0.vuetifyjs.com/components/semantic/snackbar"
-            },
-            "base-ui": {
-              "value": "yes",
-              "note": "`priority: 'high'`.",
-              "source": "https://base-ui.com/react/components/toast#add-method"
             }
           }
         },
@@ -1025,20 +761,20 @@
           }
         },
         {
-          "feature": "The type of a date or time value",
+          "feature": "A polyfill that the date components need",
           "kind": "fact",
           "cells": {
             "vase-ui": {
-              "value": "Temporal",
-              "note": "A browser with no `Temporal` needs a polyfill.",
-              "source": "https://vase-ui.com/handbook/dates-and-times#why-temporal"
+              "value": "temporal-polyfill, in a browser with no Temporal",
+              "note": "No release of Safari has `Temporal`.",
+              "source": "https://vase-ui.com/handbook/dates-and-times#browser-support"
             },
             "reka-ui": {
-              "value": "@internationalized/date",
+              "value": "None",
               "source": "https://reka-ui.com/docs/guides/dates"
             },
             "ark-ui": {
-              "value": "@internationalized/date",
+              "value": "None",
               "source": "https://ark-ui.com/vue/docs/components/date-picker"
             },
             "headless-ui": {
@@ -1046,8 +782,7 @@
               "source": "https://headlessui.com/v1/vue"
             },
             "vuetify0": {
-              "value": "A text, such as 09:30",
-              "note": "The value of Time Picker.",
+              "value": "None",
               "source": "https://0.vuetifyjs.com/components/forms/time-picker"
             },
             "base-ui": {

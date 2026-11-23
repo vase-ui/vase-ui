@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { pathToFileURL } from 'node:url';
+import type { Check, Group } from '../../benchmarks/behavior/types.ts';
+import type { BehaviorCase, BehaviorResults } from '../../benchmarks/results.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 import { benchmarksReportOf, loadBenchmarksReport, LOSSES_ANCHOR } from './benchmarksReport.ts';
-import type { Note, Results, Size } from './benchmarksReport.ts';
+import type { BehaviorCell, Note, Results, Size } from './benchmarksReport.ts';
 
 function size(gzip: number): Size {
   return { raw: gzip * 3, gzip, brotli: gzip - 1 };
@@ -38,6 +43,7 @@ const report = benchmarksReportOf(
   results,
   { groups: [] },
   { notes: [note('size', ['Dialog.size'])] },
+  [],
 );
 
 /** Samples of 30 rounds, and the same samples times a factor. */
@@ -87,6 +93,7 @@ const timed = benchmarksReportOf(
   },
   { groups: [] },
   { notes: [note('open', ['Dialog.open']), note('memory', ['Dialog.heap'])] },
+  [],
 );
 
 test('a time table compares each library with Vase UI and keeps the reason of a failure', () => {
@@ -205,11 +212,435 @@ test('a note names only metrics of the tables, each one time', () => {
     {
       notes: [note('a', ['Dialog.open', 'Dialog.opened']), note('b', ['Dialog.open'])],
     },
+    [],
   );
   assert.deepEqual(twice.unknownMeasures, ['Dialog.opened', 'Dialog.open']);
 });
 
-const real = loadBenchmarksReport();
+const run: Check['run'] = () => Promise.resolve({ verdict: 'pass', measure: '' });
+
+const groups: Group[] = [
+  {
+    id: 'popup-animations',
+    title: 'Popup animations',
+    notes: { vuetify0: 'Note.' },
+    checks: [
+      {
+        id: 'enter',
+        title: 'Enter.',
+        expectation: { text: 'Source', url: 'https://example.com/' },
+        scenario: { Dialog: 'AnimatedDialog', Tooltip: 'AnimatedTooltip' },
+        cases: ['Dialog', 'Tooltip'],
+        run,
+      },
+      {
+        id: 'exit',
+        title: 'Exit.',
+        expectation: { text: 'Source', url: 'https://example.com/' },
+        scenario: 'AnimatedDialog',
+        run,
+      },
+      {
+        id: 'type',
+        title: 'Type.',
+        expectation: { text: 'Source', url: 'https://example.com/' },
+        scenario: 'AnimatedDialog',
+        kind: 'fact',
+        run,
+      },
+      {
+        id: 'later',
+        title: 'Later.',
+        expectation: { text: 'Source', url: 'https://example.com/' },
+        scenario: 'AnimatedDialog',
+      },
+    ],
+  },
+  {
+    id: 'nested-dialogs',
+    title: 'Nested dialogs',
+    checks: [
+      {
+        id: 'focus',
+        title: 'Focus.',
+        expectation: { text: 'Source', url: 'https://example.com/' },
+        scenario: 'NestedDialogs',
+        run,
+      },
+    ],
+  },
+];
+
+/** One case over 3 runs. */
+function behaviorCase(
+  name: string | null,
+  passes: number,
+  valid = 3,
+  reason?: string,
+): BehaviorCase {
+  return {
+    case: name,
+    passes,
+    valid,
+    measure: `${String(passes)} pass.`,
+    ...(reason ? { reason } : {}),
+  };
+}
+
+function behaviorPart(checks: BehaviorResults['checks']): BehaviorResults {
+  return {
+    browserVersion: '1.0',
+    playwright: '1.0.0',
+    machine: { os: 'Linux', cpu: 'CPU', cores: 4, memory: 2 ** 34 },
+    runs: 3,
+    checks,
+  };
+}
+
+const checked = benchmarksReportOf(
+  {
+    ...results,
+    behavior: {
+      chromium: behaviorPart({
+        'popup-animations.enter': {
+          'vase-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 2)],
+          'reka-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 0, 3, 'A jump.')],
+          'ark-ui': [behaviorCase('Dialog', 2, 2), behaviorCase('Tooltip', 1, 1)],
+          'headless-ui': [behaviorCase('Dialog', 3)],
+          vuetify0: null,
+          'base-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+        },
+        'popup-animations.exit': {
+          'vase-ui': [behaviorCase(null, 3)],
+          'reka-ui': [behaviorCase(null, 3)],
+          'ark-ui': [behaviorCase(null, 2)],
+          'headless-ui': [{ ...behaviorCase(null, 0), error: 'TypeError: A step throws.' }],
+          vuetify0: null,
+          'base-ui': [behaviorCase(null, 3)],
+        },
+        'popup-animations.type': {
+          'vase-ui': [behaviorCase(null, 0)],
+          'reka-ui': [behaviorCase(null, 3)],
+          'ark-ui': [behaviorCase(null, 3)],
+          'headless-ui': [behaviorCase(null, 3)],
+          vuetify0: null,
+          'base-ui': [behaviorCase(null, 3)],
+        },
+      }),
+      firefox: behaviorPart({
+        'popup-animations.enter': {
+          'vase-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+          'reka-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+          'ark-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+          'headless-ui': [behaviorCase('Dialog', 3)],
+          vuetify0: null,
+          'base-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+        },
+        'popup-animations.exit': {
+          'vase-ui': [behaviorCase(null, 0, 3, 'The popup leaves at once.')],
+          'reka-ui': [behaviorCase(null, 3)],
+          'ark-ui': [behaviorCase(null, 0)],
+          'headless-ui': [behaviorCase(null, 3)],
+          vuetify0: null,
+          'base-ui': [behaviorCase(null, 3)],
+        },
+      }),
+    },
+  },
+  { groups: [] },
+  { notes: [] },
+  groups,
+);
+
+const [animations] = checked.behaviorTables;
+
+function cellOf(check: string, library: string): BehaviorCell | undefined {
+  return animations?.rows.find((row) => row.key === `popup-animations.${check}`)?.cells[library];
+}
+
+function verdicts(cell: BehaviorCell | undefined): string[] {
+  return typeof cell === 'object'
+    ? cell.engines.map(
+        ({ engine, verdict, cases }) =>
+          `${engine} ${verdict}: ${cases.map((item) => `${item.case ?? '-'} ${item.verdict}`).join(', ')}`,
+      )
+    : [String(cell)];
+}
+
+test('a case passes when each valid run passes, and needs 2 valid runs of 3', () => {
+  assert.deepEqual(verdicts(cellOf('enter', 'ark-ui')), [
+    'chromium partly: Dialog pass, Tooltip not-measured',
+    'firefox pass: Dialog pass, Tooltip pass',
+  ]);
+  assert.deepEqual(verdicts(cellOf('exit', 'ark-ui')), [
+    'chromium not-stable: - not-stable',
+    'firefox fail: - fail',
+  ]);
+});
+
+test('a behavior cell keeps the reason of a fail, and names each case with no fixture', () => {
+  const reka = cellOf('enter', 'reka-ui');
+  assert.ok(typeof reka === 'object');
+  assert.deepEqual(verdicts(reka), [
+    'chromium partly: Dialog pass, Tooltip fail',
+    'firefox pass: Dialog pass, Tooltip pass',
+  ]);
+  assert.equal(reka.engines[0]?.cases[1]?.reason, 'A jump.');
+  const headlessExit = cellOf('exit', 'headless-ui');
+  assert.ok(typeof headlessExit === 'object');
+  assert.equal(headlessExit.engines[0]?.cases[0]?.reason, 'TypeError: A step throws.');
+  const headless = cellOf('enter', 'headless-ui');
+  assert.ok(typeof headless === 'object');
+  assert.deepEqual(headless.notProvided, ['Tooltip']);
+  assert.deepEqual(headless.fixtures, [
+    { case: 'Dialog', path: 'benchmarks/libraries/headless-ui/behavior/AnimatedDialog.vue' },
+  ]);
+  const base = cellOf('enter', 'base-ui');
+  assert.ok(typeof base === 'object');
+  assert.deepEqual(base.fixtures, [
+    { case: 'Dialog', path: 'benchmarks/libraries/base-ui/behavior/AnimatedDialog.tsx' },
+    { case: 'Tooltip', path: 'benchmarks/libraries/base-ui/behavior/AnimatedTooltip.tsx' },
+  ]);
+  const exit = cellOf('exit', 'vase-ui');
+  assert.ok(typeof exit === 'object');
+  assert.deepEqual(exit.fixtures, [
+    { case: null, path: 'benchmarks/libraries/vase-ui/behavior/AnimatedDialog.vue' },
+  ]);
+});
+
+test('a library with no fixture is not provided, and a check with no results is not measured', () => {
+  assert.equal(cellOf('enter', 'vuetify0'), 'not-provided');
+  assert.equal(cellOf('later', 'vase-ui'), 'not-measured');
+  assert.equal(checked.behaviorTables[1]?.rows[0]?.cells['vase-ui'], 'not-measured');
+  assert.equal(animations?.code, 'benchmarks/behavior/popupAnimations.ts');
+  assert.deepEqual(animations?.notes, { vuetify0: 'Note.' });
+});
+
+test('a Vase UI check that does not pass in one engine or more is a loss, with the Vue libraries that pass it there', () => {
+  const vase = cellOf('exit', 'vase-ui');
+  assert.ok(typeof vase === 'object');
+  assert.equal(vase.loss, 'loss-popup-animations-exit');
+  assert.deepEqual(
+    checked.behaviorLosses.map(({ id, row, results: lost, libraries }) => ({
+      id,
+      row,
+      engines: lost.map(
+        ({ engines, verdict, cases }) =>
+          `${engines.join(' ')} ${verdict}: ${cases.map((item) => `${item.verdict} ${item.reason ?? ''}`.trim()).join(', ')}`,
+      ),
+      libraries,
+    })),
+    [
+      {
+        id: 'loss-popup-animations-enter',
+        row: 'behavior-popup-animations-enter',
+        engines: ['chromium partly: pass, not-stable'],
+        libraries: ['headless-ui'],
+      },
+      {
+        id: 'loss-popup-animations-exit',
+        row: 'behavior-popup-animations-exit',
+        engines: ['firefox fail: fail The popup leaves at once.'],
+        libraries: ['reka-ui', 'headless-ui'],
+      },
+    ],
+  );
+});
+
+test('a fact row and a cell of another library are no loss of Vase UI', () => {
+  const fact = cellOf('type', 'vase-ui');
+  assert.ok(typeof fact === 'object');
+  assert.equal(fact.loss, undefined);
+  const reka = cellOf('enter', 'reka-ui');
+  assert.ok(typeof reka === 'object');
+  assert.equal(reka.loss, undefined);
+});
+
+test('the behavior summary counts the checks that pass in each engine, with no fact row', () => {
+  assert.deepEqual(checked.behaviorSummary.rows, [
+    {
+      group: 'popup-animations',
+      title: 'Popup animations',
+      cells: {
+        'vase-ui': { passes: 0, checks: 2, loss: 'loss-popup-animations-enter' },
+        'reka-ui': { passes: 1, checks: 2 },
+        'ark-ui': { passes: 0, checks: 2 },
+        'headless-ui': { passes: 1, checks: 2 },
+        vuetify0: 'not-provided',
+        'base-ui': { passes: 2, checks: 2 },
+      },
+    },
+    {
+      group: 'nested-dialogs',
+      title: 'Nested dialogs',
+      cells: Object.fromEntries(
+        ['vase-ui', 'reka-ui', 'ark-ui', 'headless-ui', 'vuetify0', 'base-ui'].map((library) => [
+          library,
+          'not-measured',
+        ]),
+      ),
+    },
+  ]);
+  assert.deepEqual(
+    checked.behaviorRuns.map(({ engine, runs }) => [engine, runs]),
+    [
+      ['chromium', 3],
+      ['firefox', 3],
+    ],
+  );
+});
+
+const swipe: Check = {
+  id: 'swipe',
+  title: 'Swipe.',
+  expectation: { text: 'Source', url: 'https://example.com/' },
+  scenario: 'NestedDrawers',
+  cases: ['mouse', 'touch'],
+  run,
+};
+
+const keys: Check = { ...swipe, id: 'keys', title: 'Keys.', cases: ['Home', 'End'] };
+
+const valueType: Check = {
+  id: 'value-type',
+  title: 'Value type.',
+  expectation: { text: 'Source', url: 'https://example.com/' },
+  scenario: 'DateField',
+  kind: 'fact',
+  run,
+};
+
+/** A part of an engine, with the measure of the fact row of Vase UI. */
+function drawersPart(swiped: BehaviorResults['checks'][string], fact: string): BehaviorResults {
+  return behaviorPart({
+    'drawers.swipe': swiped,
+    'drawers.value-type': { 'vase-ui': [{ ...behaviorCase(null, 3), measure: fact }] },
+  });
+}
+
+const [drawers] = benchmarksReportOf(
+  {
+    ...results,
+    behavior: {
+      chromium: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3), behaviorCase('touch', 3)],
+          'reka-ui': [behaviorCase('mouse', 3), behaviorCase('touch', 0, 3, 'No swipe.')],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In Chromium.'), behaviorCase('touch', 0)],
+        },
+        'PlainDate',
+      ),
+      firefox: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3)],
+          'reka-ui': [behaviorCase('mouse', 3)],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In Firefox.')],
+        },
+        'PlainDate',
+      ),
+      webkit: drawersPart(
+        {
+          'vase-ui': [behaviorCase('mouse', 3)],
+          'reka-ui': [behaviorCase('mouse', 3)],
+          'ark-ui': [behaviorCase('mouse', 0, 3, 'In WebKit.')],
+        },
+        'Date',
+      ),
+    },
+  },
+  { groups: [] },
+  { notes: [] },
+  [{ id: 'drawers', title: 'Drawers', checks: [swipe, valueType] }],
+).behaviorTables;
+
+function groupsOf(check: string, library: string): string[] {
+  const cell = drawers?.rows.find((row) => row.key === `drawers.${check}`)?.cells[library];
+  return typeof cell === 'object'
+    ? cell.results.map(
+        ({ engines, verdict, cases }) =>
+          `${engines.join(' ')} ${verdict}: ${cases.map((item) => `${item.case ?? '-'} ${item.verdict} ${item.measure}`).join(', ')}`,
+      )
+    : [String(cell)];
+}
+
+test('the engines of a cell agree when they give one verdict for each case that they share', () => {
+  assert.deepEqual(groupsOf('swipe', 'vase-ui'), [
+    'chromium firefox webkit pass: mouse pass 3 pass., touch pass 3 pass.',
+  ]);
+  assert.deepEqual(groupsOf('swipe', 'reka-ui'), [
+    'chromium partly: mouse pass 3 pass., touch fail 0 pass.',
+    'firefox webkit pass: mouse pass 3 pass.',
+  ]);
+});
+
+test('the engines that agree give the case of the first engine, with its reason', () => {
+  const cell = drawers?.rows.find((row) => row.key === 'drawers.swipe')?.cells['ark-ui'];
+  assert.ok(typeof cell === 'object');
+  assert.deepEqual(
+    cell.results.map(({ engines, cases }) => ({
+      engines,
+      reasons: cases.map((item) => item.reason),
+    })),
+    [{ engines: ['chromium', 'firefox', 'webkit'], reasons: ['In Chromium.', undefined] }],
+  );
+});
+
+test('the engines of a cell or a loss with one verdict and a case of another verdict do not agree', () => {
+  const {
+    behaviorTables: [table],
+    behaviorLosses: [loss],
+  } = benchmarksReportOf(
+    {
+      ...results,
+      behavior: {
+        chromium: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 3), behaviorCase('End', 0)] },
+        }),
+        firefox: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 0), behaviorCase('End', 3)] },
+        }),
+        webkit: behaviorPart({
+          'drawers.keys': { 'vase-ui': [behaviorCase('Home', 3), behaviorCase('End', 0)] },
+        }),
+      },
+    },
+    { groups: [] },
+    { notes: [] },
+    [{ id: 'drawers', title: 'Drawers', checks: [keys] }],
+  );
+  const cell = table?.rows[0]?.cells['vase-ui'];
+  assert.ok(typeof cell === 'object');
+  assert.deepEqual(
+    cell.results.map(({ engines, verdict }) => `${engines.join(' ')} ${verdict}`),
+    ['chromium webkit partly', 'firefox partly'],
+  );
+  assert.deepEqual(
+    loss?.results.map(({ engines, verdict }) => `${engines.join(' ')} ${verdict}`),
+    ['chromium webkit partly', 'firefox partly'],
+  );
+});
+
+test('the engines of a fact row agree when they give the same measures', () => {
+  assert.deepEqual(groupsOf('value-type', 'vase-ui'), [
+    'chromium firefox pass: - pass PlainDate',
+    'webkit pass: - pass Date',
+  ]);
+});
+
+// The root project has no DOM types, and the code of the checks uses them in the page. So the test
+// loads the groups at run time.
+const { GROUPS }: { GROUPS: readonly Group[] } = await import(
+  pathToFileURL(join(REPOSITORY_ROOT, 'benchmarks/behavior/groups.ts')).href
+);
+const real = loadBenchmarksReport(GROUPS);
+
+/** The anchor that VitePress gives a heading of plain words. */
+function anchorOf(heading: string): string {
+  return heading
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
 // A new run can make Vase UI lose a cell. Then `benchmarks/notes.json` gives the behavior that
 // costs the bytes, the time or the memory.
@@ -226,16 +657,21 @@ test('each cell of the summary below 1 has a * that links to the losses', () => 
   );
   assert.deepEqual(unmarked, []);
   const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
-  const headings = [...page.matchAll(/^## (.+)$/gm)].map((match) =>
-    (match[1] ?? '').toLowerCase().replaceAll(' ', '-'),
-  );
+  const headings = [...page.matchAll(/^## (.+)$/gm)].map((match) => anchorOf(match[1] ?? ''));
   assert.ok(headings.includes(LOSSES_ANCHOR));
 });
 
-test('each note and each feature row has an anchor of its own', () => {
+/** The anchors of the rows of the features and behavior tables. */
+const rowAnchors = [
+  ...real.features.groups.flatMap((group) => group.rows.map((row) => row.id)),
+  ...real.behaviorTables.flatMap((table) => table.rows.map((row) => row.id)),
+];
+
+test('each note, each table row and each behavior loss has an anchor of its own', () => {
   const anchors = [
     ...real.notes.map((each) => each.id),
-    ...real.features.groups.flatMap((group) => group.rows.map((row) => row.id)),
+    ...rowAnchors,
+    ...real.behaviorLosses.map((loss) => loss.id),
   ];
   assert.deepEqual(
     anchors.filter((anchor, index) => anchors.indexOf(anchor) !== index),
@@ -243,13 +679,44 @@ test('each note and each feature row has an anchor of its own', () => {
   );
 });
 
-test('each link of the benchmarks page to a feature row finds the row', () => {
+test('each link of the benchmarks page to a feature row or a behavior row finds the row', () => {
   const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
-  const ids = new Set(real.features.groups.flatMap((group) => group.rows.map((row) => row.id)));
-  const links = [...page.matchAll(/\]\(#(feature-[a-z0-9-]+)\)/g)].map((match) => match[1]);
-  assert.ok(links.length > 0);
+  const ids = new Set(rowAnchors);
+  const links = [...page.matchAll(/\]\(#((?:feature|behavior)-[a-z0-9-]+)\)/g)].map(
+    (match) => match[1],
+  );
+  assert.ok(links.some((id) => id?.startsWith('feature-')));
+  assert.ok(links.some((id) => id?.startsWith('behavior-')));
   assert.deepEqual(
     links.filter((id) => !ids.has(id ?? '')),
+    [],
+  );
+});
+
+// The summary links each group by its id, so the heading of each group has the id as its anchor.
+test('the benchmarks page has a heading and a table for each behavior group', () => {
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
+  const sections = [
+    ...page.matchAll(/^### (.+)\n\n<BenchmarksBehavior group="([a-z-]+)" \/>$/gm),
+  ].map((match) => [anchorOf(match[1] ?? ''), match[2]]);
+  assert.deepEqual(
+    sections,
+    real.behaviorTables.map((table) => [table.group, table.group]),
+  );
+});
+
+test('each link of a behavior table to the code or to a fixture finds the file', () => {
+  const files = real.behaviorTables.flatMap((table) => [
+    table.code,
+    ...table.rows.flatMap((row) =>
+      Object.values(row.cells).flatMap((cell) =>
+        typeof cell === 'object' ? cell.fixtures.map((fixture) => fixture.path) : [],
+      ),
+    ),
+  ]);
+  assert.ok(files.length > real.behaviorTables.length);
+  assert.deepEqual(
+    files.filter((file) => !existsSync(join(REPOSITORY_ROOT, file))),
     [],
   );
 });

@@ -72,6 +72,29 @@ const TOOL_NAMES: Record<string, string> = {
       </tbody>
     </table>
   </ScrollBox>
+  <ScrollBox v-if="data.behaviorRuns.length > 0" label="Runs of the behavior checks">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Engine</th>
+          <th scope="col">Browser</th>
+          <th scope="col">Runs of each case</th>
+          <th scope="col">Machine</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="run in data.behaviorRuns" :key="run.engine">
+          <th scope="row">{{ engineName(run.engine) }}</th>
+          <td>{{ run.browserVersion }}</td>
+          <td>{{ run.runs }}</td>
+          <td>
+            {{ run.machine.cpu }}, {{ run.machine.cores }} logical CPUs,
+            {{ Math.round(run.machine.memory / 2 ** 30) }} GiB, {{ run.machine.os }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </ScrollBox>
   <ScrollBox label="Versions">
     <table>
       <thead>

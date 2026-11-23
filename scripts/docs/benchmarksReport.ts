@@ -1,8 +1,15 @@
+import { fixtureFileOf, scenarioOf } from '../../benchmarks/behavior/fixtures.ts';
+import type { Check, Group } from '../../benchmarks/behavior/types.ts';
 import { LIBRARIES, metricOf, SCENARIOS, VISITS } from '../../benchmarks/scenarios.ts';
 import type { Library, Measure, Visit } from '../../benchmarks/scenarios.ts';
 import { compare, median, quantile } from '../../benchmarks/statistics.ts';
 import type { Comparison } from '../../benchmarks/statistics.ts';
-import type { TimeCell, TimeResults } from '../../benchmarks/results.ts';
+import type {
+  BehaviorCase,
+  BehaviorResults,
+  TimeCell,
+  TimeResults,
+} from '../../benchmarks/results.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 
 type LibraryId = Library['id'];
@@ -36,6 +43,8 @@ export interface Results {
   };
   /** The timing job of each engine and setup. */
   time?: Record<string, Partial<Record<TableSetup, TimeResults>>>;
+  /** The behavior job of each engine. */
+  behavior?: Record<string, BehaviorResults>;
 }
 
 export interface FeatureCell {
@@ -184,6 +193,122 @@ export interface Speed {
   losses: string | undefined;
 }
 
+/**
+ * The verdict of one case over its runs. A case has a verdict when 2 of 3 runs, or the same part of
+ * another count of runs, are valid. Else it is `not-measured`.
+ */
+export type BehaviorCaseVerdict = 'pass' | 'fail' | 'not-stable' | 'not-measured';
+
+export interface BehaviorCaseResult {
+  /** The case, or `null` for a check with no cases. */
+  case: string | null;
+  verdict: BehaviorCaseVerdict;
+  passes: number;
+  valid: number;
+  measure: string;
+  /** The reason of a fail, else the first line of an error. */
+  reason?: string;
+}
+
+/** The verdict of a cell in one engine: `partly` when some cases pass and others do not. */
+export type BehaviorVerdict = BehaviorCaseVerdict | 'partly';
+
+export interface BehaviorEngineResult {
+  engine: string;
+  verdict: BehaviorVerdict;
+  cases: BehaviorCaseResult[];
+}
+
+/** The engines that give one result, and that result. */
+export interface BehaviorEngineGroup {
+  /** The engines, in the sequence of the engines. */
+  engines: string[];
+  verdict: BehaviorVerdict;
+  /** The cases of these engines, each one once, from the first engine that ran it. */
+  cases: BehaviorCaseResult[];
+}
+
+/** A cell of a behavior table. `not-measured`: no engine has a result of the check. */
+export type BehaviorCell =
+  | 'not-provided'
+  | 'not-measured'
+  | {
+      /** The result of each engine that ran the check, in the sequence of the engines. */
+      engines: BehaviorEngineResult[];
+      /**
+       * One group when the engines agree, else one group for each set of engines that agree. The
+       * engines of a fact row agree when they give the same measures.
+       */
+      results: BehaviorEngineGroup[];
+      /** Each case of the check that has no fixture of the library, such as `Tooltip`. */
+      notProvided: string[];
+      /**
+       * The fixture files of the cell in the repository. `case` names the case of a check whose
+       * cases have fixtures of their own.
+       */
+      fixtures: { case: string | null; path: string }[];
+      /** The anchor of the loss of a Vase UI cell that does not pass in one engine or more. */
+      loss?: string;
+    };
+
+export interface BehaviorRow {
+  /** The key of the check in `results.json`, such as `nested-dialogs.focus-returns`. */
+  key: string;
+  /** The anchor of the row, such as `behavior-nested-dialogs-focus-returns`. */
+  id: string;
+  title: string;
+  expectation: Check['expectation'];
+  /** A fact row gives a measure and no verdict. */
+  kind: 'check' | 'fact';
+  cells: Record<string, BehaviorCell>;
+}
+
+export interface BehaviorTable {
+  /** The id of the group, such as `nested-dialogs`. */
+  group: string;
+  title: string;
+  /** The path of the group file in the repository. It holds the code of each check. */
+  code: string;
+  notes: Partial<Record<LibraryId, string>>;
+  columns: LibraryId[];
+  rows: BehaviorRow[];
+}
+
+/**
+ * A cell of the behavior summary: the checks of a group that the library passes in each engine,
+ * of the checks that have its fixture.
+ */
+export type BehaviorSummaryCell =
+  'not-provided' | 'not-measured' | { passes: number; checks: number; loss?: string };
+
+export interface BehaviorSummaryRow {
+  group: string;
+  title: string;
+  cells: Record<string, BehaviorSummaryCell>;
+}
+
+/** A check that Vase UI does not pass in one engine or more. */
+export interface BehaviorLoss {
+  /** The anchor of the loss. The `*` of the Vase UI cell links it. */
+  id: string;
+  /** The anchor of the row of the check. */
+  row: string;
+  group: string;
+  title: string;
+  /** The results of the engines in which the Vase UI cell does not pass, grouped as in the cell. */
+  results: BehaviorEngineGroup[];
+  /** The other Vue libraries that pass the check in each of these engines. */
+  libraries: LibraryId[];
+}
+
+/** One behavior job, as the page names it. */
+export interface BehaviorRun {
+  engine: string;
+  browserVersion: string;
+  machine: BehaviorResults['machine'];
+  runs: number;
+}
+
 export interface BenchmarksReport {
   date: string;
   commit: string;
@@ -198,6 +323,10 @@ export interface BenchmarksReport {
   timeLosses: TimeLoss[];
   /** The time of each other Vue library against Vase UI, for each engine. */
   speed: { engine: string; libraries: Speed[] }[];
+  behaviorRuns: BehaviorRun[];
+  behaviorTables: BehaviorTable[];
+  behaviorSummary: { columns: LibraryId[]; rows: BehaviorSummaryRow[] };
+  behaviorLosses: BehaviorLoss[];
   /** The features, with the anchor of each row, such as `feature-nuxt-module`. */
   features: { groups: { name: string; rows: (FeatureRow & { id: string })[] }[] };
   notes: Note[];
@@ -497,8 +626,8 @@ function timeLossesOf(tables: readonly TimeTable[]): TimeLoss[] {
   );
 }
 
-/** The anchor of the section "Where Vase UI is larger or slower" of the benchmarks page. */
-export const LOSSES_ANCHOR = 'where-vase-ui-is-larger-or-slower';
+/** The anchor of the section "Where Vase UI is larger, slower or fails a check" of the benchmarks page. */
+export const LOSSES_ANCHOR = 'where-vase-ui-is-larger-slower-or-fails-a-check';
 
 /** The time metrics of each engine, as the ratio of each other Vue library to Vase UI. */
 function speedOf(tables: readonly TimeTable[]): BenchmarksReport['speed'] {
@@ -569,6 +698,243 @@ function missingNotesOf(sizeTables: readonly SizeTable[], timeLosses: readonly T
   return [...size, ...time];
 }
 
+function caseVerdictOf(result: BehaviorCase, runs: number): BehaviorCaseVerdict {
+  if (result.valid * 3 < runs * 2) {
+    return 'not-measured';
+  }
+  if (result.passes === result.valid) {
+    return 'pass';
+  }
+  return result.passes === 0 ? 'fail' : 'not-stable';
+}
+
+const CASE_VERDICTS: readonly BehaviorCaseVerdict[] = [
+  'pass',
+  'fail',
+  'not-stable',
+  'not-measured',
+];
+
+/**
+ * Cases with one verdict give that verdict. Cases with a pass and another verdict give `partly`.
+ * Other cases give the first verdict of `CASE_VERDICTS` that they have.
+ */
+function verdictOf(cases: readonly BehaviorCaseResult[]): BehaviorVerdict {
+  const verdicts = new Set(cases.map((item) => item.verdict));
+  const first = CASE_VERDICTS.find((verdict) => verdicts.has(verdict)) ?? 'not-measured';
+  return first === 'pass' && verdicts.size > 1 ? 'partly' : first;
+}
+
+/**
+ * Two engines agree when they give one verdict, and each case that both ran has one verdict. A touch
+ * case runs in Chromium only, so it does not stop an agreement.
+ */
+function agree(first: BehaviorEngineResult, second: BehaviorEngineResult): boolean {
+  return (
+    first.verdict === second.verdict &&
+    first.cases.every((one) =>
+      second.cases.every((other) => one.case !== other.case || one.verdict === other.verdict),
+    )
+  );
+}
+
+function sameMeasures(first: BehaviorEngineResult, second: BehaviorEngineResult): boolean {
+  const measures = (engine: BehaviorEngineResult) => engine.cases.map((item) => item.measure);
+  return measures(first).join('\n') === measures(second).join('\n');
+}
+
+function engineGroupsOf(
+  engines: readonly BehaviorEngineResult[],
+  same: (first: BehaviorEngineResult, second: BehaviorEngineResult) => boolean,
+): BehaviorEngineGroup[] {
+  const groups: BehaviorEngineResult[][] = [];
+  for (const engine of engines) {
+    const group = groups.find(([first]) => first !== undefined && same(first, engine));
+    if (group) {
+      group.push(engine);
+    } else {
+      groups.push([engine]);
+    }
+  }
+  return groups.map((group) => {
+    const cases = new Map<string | null, BehaviorCaseResult>();
+    for (const item of group.flatMap((engine) => engine.cases)) {
+      if (!cases.has(item.case)) {
+        cases.set(item.case, item);
+      }
+    }
+    return {
+      engines: group.map((engine) => engine.engine),
+      verdict: group[0]?.verdict ?? 'not-measured',
+      cases: [...cases.values()],
+    };
+  });
+}
+
+/** The file of a group, such as `benchmarks/behavior/nestedDialogs.ts` for `nested-dialogs`. */
+function groupFileOf(group: Group): string {
+  return `benchmarks/behavior/${group.id.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase())}.ts`;
+}
+
+/** The anchor of the row of a check, such as `behavior-nested-dialogs-focus-returns`. */
+function behaviorAnchor(group: Group, check: Check): string {
+  return `behavior-${group.id}-${check.id}`;
+}
+
+/** Each behavior job of `results.json`, in the sequence of the engines. */
+function behaviorParts(results: Results): { engine: string; part: BehaviorResults }[] {
+  return ENGINES.flatMap((engine) => {
+    const part = results.behavior?.[engine];
+    return part === undefined ? [] : [{ engine, part }];
+  });
+}
+
+function behaviorCell(
+  group: Group,
+  check: Check,
+  library: Library,
+  parts: readonly { engine: string; part: BehaviorResults }[],
+): BehaviorCell {
+  const key = `${group.id}.${check.id}`;
+  const ran = parts.filter(({ part }) => part.checks[key] !== undefined);
+  if (ran.length === 0) {
+    return 'not-measured';
+  }
+  const engines = ran.flatMap(({ engine, part }): BehaviorEngineResult[] => {
+    const cases = part.checks[key]?.[library.id];
+    if (cases === null || cases === undefined) {
+      return [];
+    }
+    const results = cases.map((item): BehaviorCaseResult => {
+      const reason = item.reason ?? item.error;
+      return {
+        case: item.case,
+        verdict: caseVerdictOf(item, part.runs),
+        passes: item.passes,
+        valid: item.valid,
+        measure: item.measure,
+        ...(reason === undefined ? {} : { reason }),
+      };
+    });
+    return [{ engine, verdict: verdictOf(results), cases: results }];
+  });
+  if (engines.length === 0) {
+    return 'not-provided';
+  }
+  const ranCases = new Set(engines.flatMap((engine) => engine.cases.map((item) => item.case)));
+  const scenarios = new Set([...ranCases].flatMap((name) => scenarioOf(check, name) ?? []));
+  return {
+    engines,
+    results: engineGroupsOf(engines, check.kind === 'fact' ? sameMeasures : agree),
+    notProvided: (check.cases ?? []).filter(
+      (name) => !scenarios.has(scenarioOf(check, name) ?? ''),
+    ),
+    fixtures:
+      typeof check.scenario === 'string'
+        ? [{ case: null, path: fixtureFileOf(library, check.scenario) }]
+        : [...ranCases].flatMap((name) => {
+            const scenario = scenarioOf(check, name);
+            return name === null || scenario === undefined
+              ? []
+              : [{ case: name, path: fixtureFileOf(library, scenario) }];
+          }),
+    ...(library.id === 'vase-ui' &&
+    check.kind !== 'fact' &&
+    engines.some((engine) => engine.verdict !== 'pass')
+      ? { loss: `loss-${group.id}-${check.id}` }
+      : {}),
+  };
+}
+
+function behaviorTablesOf(results: Results, groups: readonly Group[]): BehaviorTable[] {
+  const parts = behaviorParts(results);
+  return groups.map((group) => ({
+    group: group.id,
+    title: group.title,
+    code: groupFileOf(group),
+    notes: group.notes ?? {},
+    columns: LIBRARIES.map((library) => library.id),
+    rows: group.checks.map((check) => ({
+      key: `${group.id}.${check.id}`,
+      id: behaviorAnchor(group, check),
+      title: check.title,
+      expectation: check.expectation,
+      kind: check.kind ?? 'check',
+      cells: Object.fromEntries(
+        LIBRARIES.map((library) => [library.id, behaviorCell(group, check, library, parts)]),
+      ),
+    })),
+  }));
+}
+
+/** The checks of each group that each library passes in each engine. Fact rows do not count. */
+function behaviorSummaryOf(tables: readonly BehaviorTable[]): BenchmarksReport['behaviorSummary'] {
+  const columns = LIBRARIES.map((library) => library.id);
+  const rows = tables.map((table) => {
+    const checks = table.rows.filter((row) => row.kind === 'check');
+    const cells = Object.fromEntries(
+      columns.map((library): [string, BehaviorSummaryCell] => {
+        const measured = checks.flatMap((row) => {
+          const cell = row.cells[library];
+          return typeof cell === 'object' ? [cell] : [];
+        });
+        if (measured.length === 0) {
+          const missing = checks.some((row) => row.cells[library] === 'not-provided');
+          return [library, missing ? 'not-provided' : 'not-measured'];
+        }
+        const loss = measured.find((cell) => cell.loss !== undefined)?.loss;
+        return [
+          library,
+          {
+            passes: measured.filter((cell) =>
+              cell.engines.every((engine) => engine.verdict === 'pass'),
+            ).length,
+            checks: measured.length,
+            ...(loss === undefined ? {} : { loss }),
+          },
+        ];
+      }),
+    );
+    return { group: table.group, title: table.title, cells };
+  });
+  return { columns, rows };
+}
+
+/** Each check that Vase UI does not pass in one engine or more, with the Vue libraries that pass it. */
+function behaviorLossesOf(tables: readonly BehaviorTable[]): BehaviorLoss[] {
+  return tables.flatMap((table) =>
+    table.rows.flatMap((row): BehaviorLoss[] => {
+      const vase = row.cells['vase-ui'];
+      if (typeof vase !== 'object' || vase.loss === undefined) {
+        return [];
+      }
+      const engines = vase.engines.filter((engine) => engine.verdict !== 'pass');
+      const libraries = table.columns.filter((library) => {
+        const cell = row.cells[library];
+        return (
+          isCompared(library) &&
+          typeof cell === 'object' &&
+          engines.every((lost) =>
+            cell.engines.some(
+              (engine) => engine.engine === lost.engine && engine.verdict === 'pass',
+            ),
+          )
+        );
+      });
+      return [
+        {
+          id: vase.loss,
+          row: row.id,
+          group: table.title,
+          title: row.title,
+          results: engineGroupsOf(engines, agree),
+          libraries,
+        },
+      ];
+    }),
+  );
+}
+
 /** The anchor of a row of the features table, such as `feature-nuxt-module`. */
 function featureAnchor(feature: string): string {
   return `feature-${feature
@@ -581,12 +947,14 @@ export function benchmarksReportOf(
   results: Results,
   features: Features,
   { notes }: Notes,
+  groups: readonly Group[],
 ): BenchmarksReport {
   const noteOf: NoteOf = (metric) => notes.find((note) => note.measures.includes(metric))?.id;
   const sizeTables = TABLE_SETUPS.map((setup) => sizeTable(results, setup, noteOf));
   const parts = timeParts(results);
   const tables = timeTables(parts, noteOf);
   const timeLosses = timeLossesOf(tables);
+  const behaviorTables = behaviorTablesOf(results, groups);
   return {
     date: results.date,
     commit: results.commit,
@@ -604,6 +972,15 @@ export function benchmarksReportOf(
     timeTables: tables,
     timeLosses,
     speed: speedOf(tables),
+    behaviorRuns: behaviorParts(results).map(({ engine, part }) => ({
+      engine,
+      browserVersion: part.browserVersion,
+      machine: part.machine,
+      runs: part.runs,
+    })),
+    behaviorTables,
+    behaviorSummary: behaviorSummaryOf(behaviorTables),
+    behaviorLosses: behaviorLossesOf(behaviorTables),
     features: {
       groups: features.groups.map((group) => ({
         ...group,
@@ -616,13 +993,17 @@ export function benchmarksReportOf(
   };
 }
 
-/** Reads `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. */
-export function loadBenchmarksReport(): BenchmarksReport {
+/**
+ * Reads `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. The
+ * groups are `GROUPS` of `benchmarks/behavior/groups.ts`.
+ */
+export function loadBenchmarksReport(groups: readonly Group[]): BenchmarksReport {
   const read = (path: string): unknown =>
     JSON.parse(readRepositoryFile(REPOSITORY_ROOT, `benchmarks/${path}`));
   return benchmarksReportOf(
     read('results.json') as Results,
     read('features.json') as Features,
     read('notes.json') as Notes,
+    groups,
   );
 }
