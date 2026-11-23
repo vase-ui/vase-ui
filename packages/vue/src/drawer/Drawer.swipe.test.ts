@@ -57,9 +57,9 @@ async function endLeave(...elements: HTMLElement[]) {
 }
 
 /**
- * Waits until the enter of the popup ends at its open place. Vue can end the enter at a timer
- * before a busy page starts the transition, so the popup can be near its closed place when the
- * classes of the enter go.
+ * Waits until the popup is at its open place. Vue can end the enter at a timer before a busy page
+ * starts the transition, so the popup can be near its closed place when the classes of the enter
+ * go.
  */
 async function entered(popup: HTMLElement) {
   // The popup of the fixture is 300 px high at the bottom of the view.
@@ -77,6 +77,15 @@ function centerOf(id: string): Point {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+/** Holds a button of the mouse at the place of the pointer, and releases it when the case ends. */
+async function hold(button: 'MouseLeft' | 'MouseMiddle') {
+  // A case that fails before its release keeps the button down for the next case.
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: -1, y: -1 }, keys: `[/${button}]` });
+  });
+  await userEvent.pointer({ keys: `[${button}>]` });
+}
+
 /**
  * Presses the main button at `from` and moves it by `by` in `steps` moves of the same length. A
  * first move of 1 px starts the drag, as a mouse does, so the drag moves the popup by `by`.
@@ -84,12 +93,8 @@ function centerOf(id: string): Point {
 async function press(from: Point, by: Point, steps = 6) {
   const length = Math.hypot(by.x, by.y) || 1;
   const start = { x: from.x + by.x / length, y: from.y + by.y / length };
-  // A case that fails before its release keeps the button down for the next case.
-  onTestFinished(async () => {
-    await userEvent.pointer({ coords: { x: -1, y: -1 }, keys: '[/MouseLeft]' });
-  });
   await userEvent.pointer({ coords: from });
-  await userEvent.pointer({ keys: '[MouseLeft>]' });
+  await hold('MouseLeft');
   await userEvent.pointer({ coords: start });
   for (let step = 1; step <= steps; step += 1) {
     await userEvent.pointer({
@@ -313,7 +318,7 @@ describe('the swipe that closes', () => {
     await mountDrawer({ transition: true, backdrop: {} });
     const popup = get('popup');
     const backdrop = get('backdrop');
-    await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+    await entered(popup);
     // The last sample moves 100 px in 20 ms, and the 100 px that are left take the least time.
     flick(get('text'), textOf(), await mousePointerId(textOf()), [
       [10, 1010],
@@ -578,7 +583,7 @@ describe('the swipe that closes', () => {
     const log: string[] = [];
     await mountDrawer({ root: rootEvents(log) });
     await press(textOf(), { x: 0, y: 60 });
-    await userEvent.pointer({ keys: '[MouseMiddle>]' });
+    await hold('MouseMiddle');
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     await userEvent.pointer({ coords: { ...textOf(), y: textOf().y + 200 } });
     await nextTick();
@@ -1037,7 +1042,7 @@ describe('the swipe area', () => {
     const { log } = await mountArea();
     const { x, y } = centerOf('swipe-area');
     await userEvent.pointer({ coords: { x, y } });
-    await userEvent.pointer({ keys: '[MouseLeft>]' });
+    await hold('MouseLeft');
     // The drag from the first move is more than half of the popup, so the release keeps it open.
     for (const step of [150, 250, 330]) await userEvent.pointer({ coords: { x, y: y - step } });
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
