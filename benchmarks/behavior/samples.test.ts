@@ -81,6 +81,7 @@ test('a run is valid only with no gap between two frames above the limit', () =>
 test('the frame at a time is the last frame at or before it', () => {
   const recording = { frames: frames([element(0)], [element(0.5)], [element(1)]), inputs: [] };
   assert.equal(frameAt(recording, FRAME_TIME + 5)?.time, FRAME_TIME);
+  assert.equal(frameAt(recording, FRAME_TIME)?.time, FRAME_TIME);
   assert.equal(frameAt(recording, -1), undefined);
 });
 
