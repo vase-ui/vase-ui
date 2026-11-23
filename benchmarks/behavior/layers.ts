@@ -129,7 +129,7 @@ export async function focusMovesIn(page: Page, prefix: string): Promise<CaseResu
     [second],
     (sample) => sample.focusInLayer[second] === true,
   );
-  return result(done, `Focus: ${frame.active}.`, `The focus stays on ${frame.active}.`);
+  return result(done, `Focus: ${frame.active}.`, `The focus is on ${frame.active}.`);
 }
 
 /** Tab and Shift+Tab, four times each, keep the focus in the layer on top. */
@@ -141,15 +141,15 @@ export async function tabStaysIn(page: Page, prefix: string): Promise<CaseResult
     await page.keyboard.press(key);
     const frame = await readAfterInput(page, [second]);
     if (frame.focusInLayer[second] !== true) {
-      const press = `Press ${String(index + 1)} of 8, ${key}`;
+      const press = `Press ${String(index + 1)} of 8 (${key})`;
       return result(
         false,
         `${press}: ${frame.active}.`,
-        `${press}, moves the focus to ${frame.active}.`,
+        `${press} moves the focus to ${frame.active}.`,
       );
     }
   }
-  return result(true, 'Each of 8 presses keeps the focus in the layer on top.', '');
+  return result(true, `Each of 8 presses keeps the focus in ${prefix} 2.`, '');
 }
 
 /** A real press on a button of the layer below does not use the button. */
@@ -164,7 +164,7 @@ export async function belowIsInert(page: Page, prefix: string): Promise<CaseResu
   return result(
     count === '0',
     `Count ${count}. Open: ${shownLayers(frame, prefix)}.`,
-    'The press on the layer below uses its button.',
+    `The press on ${prefix} 1 uses its button.`,
   );
 }
 
