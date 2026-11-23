@@ -173,6 +173,38 @@ describe('the reset of a controlled root or of a changed default', () => {
     expect(byTestId('field')).not.toHaveAttribute('data-dirty');
   });
 
+  test.each([
+    { name: 'keeps', keeps: true, shown: 'Cherry' },
+    { name: 'resets', keeps: false, shown: 'Apple' },
+  ])(
+    'the text is the label of the value after the reset, with a controlled value that the parent $name',
+    async ({ keeps, shown }) => {
+      const log: string[] = [];
+      let keeping = false;
+      const root = reactive<Props>({
+        name: 'a',
+        modelValue: 'Apple',
+        onValueChange: () => log.push('valueChange'),
+        onInputValueChange: () => log.push('inputValueChange'),
+        'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+      });
+      root['onUpdate:modelValue'] = (value: string) => {
+        if (!keeping) root.modelValue = value;
+      };
+      await mountForm({ root });
+      await userEvent.click(byTestId('input'));
+      await userEvent.click(byTestId('item-Cherry'));
+      await waitFor(() => expect(entries()).toEqual([['a', 'Cherry']]));
+      log.length = 0;
+      keeping = keeps;
+      form().reset();
+      await settle();
+      expect((byTestId('input') as HTMLInputElement).value).toBe(shown);
+      expect(entries()).toEqual([['a', shown]]);
+      expect(log).toEqual(keeps ? [] : [`update:inputValue ${shown}`]);
+    },
+  );
+
   test('an uncontrolled root gets the defaultValue of the reset, after a change of it', async () => {
     const log: string[] = [];
     const root = reactive<Props>({

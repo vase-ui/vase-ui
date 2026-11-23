@@ -676,11 +676,14 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   // The text of a single combobox follows the label of its value at a new label and at new
   // `items` (Base UI). A typed text stays, and so does a text that the user emptied in the same
   // update. An open by a typed text ends `typed`, so new `items` keep each text that is a query.
-  // An inline list shows its value, so it keeps an emptied text at new `items`, as at a blur.
+  // An inline list shows its value, so it keeps an emptied text at new `items`, as at a blur. A
+  // form reset gives the text with no change event, after the parent answers the update of the
+  // value.
+  let resetTextWaits = false;
   watch(
     [() => labelOf(valueModel.value), () => source.items, text] as const,
     ([label, items, current], [oldLabel, oldItems, previous]) => {
-      if (!followsLabel() || !inputIsControl.value || current === label) return;
+      if (!followsLabel() || !inputIsControl.value || current === label || resetTextWaits) return;
       const newLabel = label !== oldLabel;
       if (!newLabel && (items === oldItems || source.inline)) return;
       const ofUser =
@@ -1174,15 +1177,29 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         valueState.setOwn(resetValue);
         emit.updateValue(resetValue);
       }
-      const resetText = textState.resetValue(
-        source.defaultText ??
-          (source.mode === 'single' && inputIsControl.value ? labelOf(resetValue) : ''),
-      );
-      if (text.value !== resetText) {
-        textState.setOwn(resetText);
-        emit.updateText(resetText);
+      const resetText = () => {
+        const next = textState.resetValue(
+          source.defaultText ??
+            (source.mode === 'single' && inputIsControl.value ? labelOf(valueModel.value) : ''),
+        );
+        if (text.value !== next) {
+          textState.setOwn(next);
+          emit.updateText(next);
+        }
+        return next;
+      };
+      if (!followsLabel() || !inputIsControl.value) {
+        const next = resetText();
+        return source.mode === 'none' ? next : resetValue;
       }
-      return source.mode === 'none' ? resetText : resetValue;
+      // A parent that controls the value answers the update in its next render. The text then
+      // shows the label of the value that holds.
+      resetTextWaits = true;
+      void nextTick(() => {
+        resetTextWaits = false;
+        resetText();
+      });
+      return resetValue;
     },
   });
 

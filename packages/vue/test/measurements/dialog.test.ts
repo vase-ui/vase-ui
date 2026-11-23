@@ -5,6 +5,7 @@
 import { afterEach, describe, expect, inject, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import MeasureAttributeAfterMount from '../fixtures/MeasureAttributeAfterMount.vue';
 import MeasureHydratedAttribute from '../fixtures/MeasureHydratedAttribute.vue';
 import MeasureDialogInComposite from '../fixtures/MeasureDialogInComposite.vue';
 import MeasureLeaveInElement from '../fixtures/MeasureLeaveInElement.vue';
@@ -13,6 +14,7 @@ import MeasurePageSwap from '../fixtures/MeasurePageSwap.vue';
 import MeasureWrappedDialog from '../fixtures/MeasureWrappedDialog.vue';
 import { hydrate, mount, renderOnServer } from '../render';
 import { takeReportedMessages } from '../reportedMessages';
+import { waitFor } from '../waitFor';
 
 let root: HTMLElement | undefined;
 
@@ -260,6 +262,27 @@ describe('the hooks of a component in a component', () => {
       vaporFixtures() ? ['beforeMount 0', 'beforeMount 1'] : ['beforeMount 1', 'beforeMount 0'],
     );
   });
+});
+
+describe('a child that changes an attribute at its mount', () => {
+  test.each([
+    { name: 'at the mount of the app', open: true },
+    { name: 'in a later update', open: false },
+  ])(
+    'renders $name: a `flush: "post"` watcher that a function ref starts sees the first attribute, and a `nextTick` from it sees the next one',
+    async ({ open }) => {
+      const log: string[] = [];
+      const scene = reactive({ open });
+      mount(MeasureAttributeAfterMount, {
+        scene,
+        log: { add: (entry: string) => log.push(entry) },
+      });
+      await nextTick();
+      scene.open = true;
+      await waitFor(() => expect(log).toHaveLength(2));
+      expect(log).toEqual(['watcher true', 'nextTick false']);
+    },
+  );
 });
 
 describe('a dialog in place in a composite', () => {

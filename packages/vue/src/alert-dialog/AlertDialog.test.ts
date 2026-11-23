@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { AlertDialog, type AlertDialogRootChangeEventDetails } from '@vase-ui/vue/alert-dialog';
+import AlertDialogBusy from '../../test/fixtures/AlertDialogBusy.vue';
 import DialogHandleScene from '../../test/fixtures/DialogHandleScene.vue';
 import DialogHandles from '../../test/fixtures/DialogHandles.vue';
 import DialogPartAlone from '../../test/fixtures/DialogPartAlone.vue';
@@ -84,6 +85,20 @@ describe('Alert Dialog', () => {
     await closed();
     expect(reasons).toEqual(['escape-key', 'escape-key']);
   });
+
+  test.each([
+    { opens: 'at a press', root: {}, portal: {} },
+    { opens: 'in place at the mount', root: { defaultOpen: true }, portal: { disabled: true } },
+  ])(
+    'a busy dialog that opens $opens gives the first focus to Cancel, which a component makes focusable while disabled after its mount',
+    async ({ root, portal }) => {
+      mount(AlertDialogBusy, { root, portal });
+      await nextTick();
+      if (!root.defaultOpen) await userEvent.click(byTestId('trigger')!);
+      await waitFor(() => expect(byTestId('cancel')).toHaveFocus());
+      expect(byTestId('cancel')).toHaveAttribute('aria-disabled', 'true');
+    },
+  );
 
   test('a handle connects triggers outside the root and opens with a payload', async () => {
     const handle = AlertDialog.createHandle<string>();
