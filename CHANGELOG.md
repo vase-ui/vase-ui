@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026.11.5
+
+Same Base UI release and commit as 2026.11.4.
+
+### Fixed
+
+- Field: after a native form reset, the field has the value that holds when the parent answers. That is the value of the reset, or the value that the parent controls and keeps. So the value of the field, its dirty state and the value that `validate` gets are the value that the control shows. This applies to Input, Checkbox, Switch, Radio Group, Checkbox Group, Number Field, Slider, OTP Field, Select, Combobox, Autocomplete, and the date and time fields and pickers. ([#854](https://github.com/vase-ui/vase-ui/pull/854))
+- A closed popup with `keepMounted` that opens at another trigger shows at that trigger in the first frame. A CSS transition of its place does not move it across the page. An open popup that moves to another trigger keeps the transition of its place. ([#854](https://github.com/vase-ui/vase-ui/pull/854))
+- A button part with a component in `as` or with the `element` slot has `type="button" role="button" tabindex="0"` in the server HTML. A disabled part has `tabindex="-1"`, `aria-disabled="true"` and `disabled`, or `tabindex="0"` and `aria-disabled="true"` with `focusableWhenDisabled`. At the mount, a `<button>` keeps its `type`, and another element keeps its `role` and `tabindex`. So Tab reaches the part before the hydration. ([#855](https://github.com/vase-ui/vase-ui/pull/855))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.4 (B) | 2026.11.5 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,226,075 |     2,229,831 |
+| gzip    |       733,686 |       734,699 |
+| Brotli  |       640,441 |       641,240 |
+
 ## 2026.11.4
 
 Same Base UI release and commit as 2026.11.3.
