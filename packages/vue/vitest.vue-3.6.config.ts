@@ -6,6 +6,7 @@ import vue from '@vitejs/plugin-vue';
 import { playwright } from '@vitest/browser-playwright';
 import type { Plugin } from 'vite';
 import { configDefaults, defineConfig, type TestProjectInlineConfiguration } from 'vitest/config';
+import { BaseSequencer, type TestSpecification } from 'vitest/node';
 import { collectGarbage } from './test/server/collectGarbage.ts';
 import { contextOptions, engineInstances } from './test/server/engineInstances.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
@@ -26,6 +27,23 @@ function vaporMode(vapor: RegExp | undefined): Plugin {
         : undefined;
     },
   };
+}
+
+/**
+ * Gives the specs of each browser to the shards in turn, in the order of their files. Vitest puts
+ * all projects of a file in one shard by a hash of its path, and a shard of slow files takes two
+ * times as long as the mean. Firefox runs one file at a time, so each browser needs an even share.
+ */
+class RoundRobinSequencer extends BaseSequencer {
+  override shard(specs: TestSpecification[]) {
+    // Vitest calls `shard` only with the option `shard`.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { index, count } = this.ctx.config.shard!;
+    const key = (spec: TestSpecification) =>
+      [spec.project.config.browser.name, spec.moduleId, spec.project.name].join('\n');
+    const sorted = specs.toSorted((a, b) => (key(a) < key(b) ? -1 : 1));
+    return Promise.resolve(sorted.filter((_, position) => position % count === index - 1));
+  }
 }
 
 function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineConfiguration {
@@ -62,6 +80,7 @@ export default defineConfig({
     // by their options. With the cache, the server render of one project can get a fixture that
     // another project compiled in the other mode, and the hydration cases fail.
     fsModuleCache: false,
+    sequence: { sequencer: RoundRobinSequencer },
     projects: [
       setup('vdom app, vdom parts', 'vdom'),
       setup('vapor app, vdom parts', 'vapor-interop', /\/test\/fixtures\/\w+\.vue$/),
