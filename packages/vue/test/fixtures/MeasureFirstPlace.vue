@@ -38,10 +38,10 @@ provide('side', placement);
 
 <style>
 .first-place {
-  transition: top 1s linear;
+  transition: top 100s linear;
 }
 .side-enter-active {
-  transition: transform 1s linear;
+  transition: transform 100s linear;
 }
 .side-enter-from[data-side='bottom'] {
   transform: translateY(-50px);

@@ -1,4 +1,4 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { createRenderer, firePointer, penDrag, screen, touchDrag, waitFor } from '#test-utils';
 import { platform } from '../src/common/platform';
@@ -129,6 +129,83 @@ describe('touchDrag and penDrag', () => {
     expect(seen[0]).toMatchObject({ type: 'pointerdown', clientX: from.x, clientY: from.y });
     expect(seen.at(-1)).toMatchObject({ clientX: from.x + 60, clientY: from.y + 20 });
   });
+
+  it.skipIf(!platform.engine.blink)(
+    'advances touch timestamps by fixed steps and numeric rest, also across a stall or under fake timers',
+    async () => {
+      const stamps: { type: string; timeStamp: number }[] = [];
+      let stall = true;
+      const record = (event: PointerEvent) => {
+        stamps.push({ type: event.type, timeStamp: event.timeStamp });
+        if (stall && event.type === 'pointerdown') {
+          stall = false;
+          const until = performance.now() + 1100;
+          while (performance.now() < until) {
+            // Block the page between protocol calls.
+          }
+        }
+      };
+      await render(
+        <div
+          data-testid="target"
+          style={{ width: '300px', height: '100px', touchAction: 'none' }}
+          onPointerdown={record}
+          onPointermove={record}
+          onPointerup={record}
+        />,
+      );
+      const rect = screen.getByTestId('target').getBoundingClientRect();
+      const point = { x: rect.left + 20, y: rect.top + 30 };
+
+      await touchDrag(point, point, 0);
+      await waitFor(() => {
+        expect(stamps.at(-1)?.type).toBe('pointerup');
+      });
+      const [tapDown, tapUp] = stamps;
+      expect(tapDown?.type).toBe('pointerdown');
+      expect(tapUp?.type).toBe('pointerup');
+      const tapDuration = (tapUp?.timeStamp ?? 0) - (tapDown?.timeStamp ?? 0);
+      expect(tapDuration).toBeGreaterThan(0);
+      expect(tapDuration).toBeLessThan(100);
+
+      stamps.length = 0;
+      await touchDrag(point, { x: point.x + 20, y: point.y }, 2);
+      await waitFor(() => {
+        expect(stamps.at(-1)?.type).toBe('pointerup');
+      });
+      expect(stamps.length).toBeGreaterThanOrEqual(4);
+      for (let index = 1; index < stamps.length; index += 1) {
+        expect(stamps[index]?.timeStamp).toBeGreaterThan(stamps[index - 1]?.timeStamp ?? Infinity);
+      }
+
+      stamps.length = 0;
+      await touchDrag(point, point, 0, 200);
+      await waitFor(() => {
+        expect(stamps.at(-1)?.type).toBe('pointerup');
+      });
+      const [restDown, restUp] = stamps;
+      expect(restDown?.type).toBe('pointerdown');
+      expect(restUp?.type).toBe('pointerup');
+      const restDuration = (restUp?.timeStamp ?? 0) - (restDown?.timeStamp ?? 0);
+      expect(restDuration).toBeGreaterThanOrEqual(190);
+      expect(restDuration).toBeLessThan(300);
+
+      stamps.length = 0;
+      try {
+        vi.useFakeTimers({ now: 0 });
+        await touchDrag(point, point, 0);
+      } finally {
+        vi.useRealTimers();
+      }
+      await waitFor(() => {
+        expect(stamps.at(-1)?.type).toBe('pointerup');
+      });
+      const [fakeDown, fakeUp] = stamps;
+      const fakeDuration = (fakeUp?.timeStamp ?? 0) - (fakeDown?.timeStamp ?? 0);
+      expect(fakeDuration).toBeGreaterThan(0);
+      expect(fakeDuration).toBeLessThan(100);
+    },
+  );
 
   it.skipIf(!platform.engine.blink)('drags a real pen between two client points', async () => {
     const { seen, from } = await renderTarget();

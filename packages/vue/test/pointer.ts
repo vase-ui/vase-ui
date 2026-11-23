@@ -159,29 +159,48 @@ async function holdFor(rest: Rest) {
   else if (rest > 0) await new Promise((resolve) => setTimeout(resolve, rest));
 }
 
+// Fake timers replace `Date`. This reference keeps the real wall clock for protocol timestamps.
+const browserDateNow = Date.now;
+// 16 ms per step matches 60 Hz, so a stall on a busy machine does not stretch a gesture.
+const TOUCH_STEP_SECONDS = 0.016;
+
 /**
  * Drags a real touch from one client point of the test page to another, in `steps` moves, and lifts
- * it at the last point after `rest`. With no moves, it taps. Only Chromium has the protocol that the
- * helper uses: guard a case that calls it with `it.skipIf(!platform.engine.blink)`.
+ * it at the last point after `rest`. With no moves, it taps. Each event advances the protocol
+ * timestamp by 16 ms, or by `rest` when `rest` is a number. A stall on a busy machine then does not
+ * stretch the gesture. Only Chromium has the protocol that the helper uses: guard a case that calls
+ * it with `it.skipIf(!platform.engine.blink)`.
  */
 export async function touchDrag(from: ClientPoint, to: ClientPoint, steps = 6, rest: Rest = 0) {
   // Each engine loads this file, and only Chromium has a session. The import is lazy, as in the
   // other cases that call `cdp()`.
   const { cdp } = await import('vitest/browser');
   const session = cdp() as CDPSession;
-  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', point?: ClientPoint) =>
-    session.send('Input.dispatchTouchEvent', {
+  let timestamp = browserDateNow() / 1000;
+  const send = (
+    type: 'touchStart' | 'touchMove' | 'touchEnd',
+    point?: ClientPoint,
+    advance = 0,
+  ) => {
+    timestamp += advance;
+    return session.send('Input.dispatchTouchEvent', {
       type,
       touchPoints: point ? [getProtocolPoint(point)] : [],
+      timestamp,
     });
+  };
   await send('touchStart', from);
   try {
     for (let step = 1; step <= steps; step += 1) {
-      await send('touchMove', getPointOnLine(from, to, step, steps));
+      await send('touchMove', getPointOnLine(from, to, step, steps), TOUCH_STEP_SECONDS);
     }
     await holdFor(rest);
   } finally {
-    await send('touchEnd');
+    await send(
+      'touchEnd',
+      undefined,
+      typeof rest === 'number' && rest > 0 ? rest / 1000 : TOUCH_STEP_SECONDS,
+    );
   }
 }
 

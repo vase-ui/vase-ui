@@ -422,10 +422,11 @@ describe('the first place of an open', () => {
     const popup = () => page.getByTestId('popup').element();
     const firstFrame = await new Promise((resolve) =>
       requestAnimationFrame(() => {
+        const targetTop = Number.parseFloat(floating().style.top);
         const before = {
           side: popup().getAttribute('data-side'),
-          // A loaded engine can show a transition some milliseconds after its start.
-          top: Number.parseFloat(getComputedStyle(floating()).top) < 10,
+          // A loaded engine can show a 100 s transition some seconds after its start.
+          top: Number.parseFloat(getComputedStyle(floating()).top) < targetTop * 0.1,
           translateY: translateY(popup()) < -40,
           transitions: transitions(floating()),
         };
