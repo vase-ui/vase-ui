@@ -84,8 +84,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
   };
 
   const highlightFirst = () => {
-    const first = menu?.list.items()[0];
-    menu?.list.highlight(first ?? null, 'none');
+    if (menu) menu.list.highlight(menu.list.find() ?? null, 'none');
   };
 
   const filter: MenuFilterRoot = {
@@ -145,8 +144,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
       }
       if (horizontal && !highlighted && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
         event.preventDefault();
-        const all = list.items();
-        const item = event.key === 'ArrowDown' ? all[0] : all.at(-1);
+        const item = event.key === 'ArrowDown' ? list.find() : list.findLast();
         if (item) list.highlight(item, 'keyboard', event);
         return;
       }
@@ -175,7 +173,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
       if (!menu || returning || provider.autoHighlight === 'always') return;
       // The user moved the focus from an item back to the input.
       const from = event.relatedTarget as Element | null;
-      if (from && menu.list.items().some((item) => item.element === from)) {
+      if (from && menu.list.find((item) => item.element === from)) {
         menu.list.highlight(null, 'none', event);
       }
     },
@@ -206,7 +204,7 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
         active === doc.body ||
         active === popup ||
         active === menu.listElement.value ||
-        menu.list.items().some((item) => item.element === active);
+        !!menu.list.find((item) => item.element === active);
       if (own) {
         returnFocus();
         return;
@@ -220,9 +218,9 @@ export function useMenuFilter(provider: MenuFilterProviderOptions): MenuFilterRo
       // The focus that followed the pointer into a submenu follows it back. A focus that a key or
       // a press gave to the submenu comes back when the pointer is on a submenu trigger.
       if (!child?.inside(active)) return;
-      const onTrigger = menu.list
-        .items()
-        .some((item) => !!submenuOf(item.element) && item.element.contains(target));
+      const onTrigger = !!menu.list.find(
+        (item) => !!submenuOf(item.element) && item.element.contains(target),
+      );
       if (onTrigger || (active === child.filter?.input.value && child.filter.pointerFocus)) {
         returnFocus();
       }
