@@ -152,9 +152,8 @@ export function mostMatches(selector: string) {
 }
 
 /**
- * Adds the rule that many apps give to `prefers-reduced-motion: reduce` until the case ends: each
- * transition and each animation lasts 0.01 ms. The default `transition-property` is `all`, so a
- * change of each property of an element then starts a transition, `visibility` too.
+ * Many apps apply this rule for `prefers-reduced-motion: reduce`. The default `transition-property`
+ * is `all`, so a change of a property starts a transition, `visibility` too.
  */
 export function addReducedMotionRule() {
   const style = document.head.appendChild(document.createElement('style'));

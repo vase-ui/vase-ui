@@ -423,7 +423,6 @@ export function usePlacement(
   // that started before the first place continues, such as the enter of a popup that loses
   // `hidden`. A later place of the open, such as at another trigger, keeps its transitions.
   let nextPlaceIsFirst = true;
-  // The animations at the first place of the open, until the update that shows the popup.
   const firstPlaceAnimations = shallowRef<Set<Animation> | null>(null);
   watch(
     () => root.open,
@@ -547,9 +546,8 @@ export function usePlacement(
 }
 
 /**
- * Ends each CSS transition of the element and of its descendants that is not in `kept`. In
- * Chromium and WebKit, a change of an inherited property, such as `visibility`, starts a transition
- * only where the value changes, and the end of that transition starts the transitions of the
+ * In Chromium and WebKit, a change of an inherited property, such as `visibility`, starts a
+ * transition only where the value changes. The end of that transition starts the transitions of the
  * descendants (test/measurements/popup.test.ts, "a change of an inherited property").
  */
 function endTransitions(element: Element, kept: Set<Animation>) {
