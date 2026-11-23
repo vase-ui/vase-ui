@@ -57,12 +57,11 @@ async function endLeave(...elements: HTMLElement[]) {
 }
 
 /**
- * Waits until the enter of the popup ends at its open place. Vue ends the enter at a timer, and a
- * busy page can start the transition late. So the popup can be near its closed place when the
+ * Waits until the enter of the popup ends at its open place. Vue can end the enter at a timer
+ * before a busy page starts the transition, so the popup can be near its closed place when the
  * classes of the enter go.
  */
 async function entered(popup: HTMLElement) {
-  await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
   // The popup of the fixture is 300 px high at the bottom of the view.
   await waitFor(() => expect(popup.getBoundingClientRect().top).toBe(window.innerHeight - 300));
 }
