@@ -2,6 +2,7 @@ import { computed, onUnmounted, type Ref } from 'vue';
 import { useEnterAfterLeave } from '../common/useEnterAfterLeave';
 import { useTimeout } from '../common/useTimeout';
 import { getMaxScrollOffset, normalizeScrollOffset } from '../common/scrollEdges';
+import type { ListItem } from '../list/list';
 import { injectSelectPositioner, injectSelectRoot, type SelectContext } from './root';
 import type { SelectScrollArrowState } from './types';
 
@@ -18,24 +19,29 @@ function nextScrollTop(
   direction: 'up' | 'down',
   arrowHeight: number,
 ) {
+  const { list } = context;
   const box = scroller.getBoundingClientRect();
   const offset = box.top + scroller.clientTop - scroller.scrollTop;
-  const rows = context.list.items().map((item) => {
-    const rect = item.element.getBoundingClientRect();
-    return { top: rect.top - offset, bottom: rect.bottom - offset };
-  });
+  const top = (item: ListItem) => item.element.getBoundingClientRect().top - offset;
+  const bottom = (item: ListItem) => item.element.getBoundingClientRect().bottom - offset;
   const max = getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight);
-  const top = scroller.scrollTop;
   if (direction === 'up') {
-    const edge = top + arrowHeight - 1;
-    const first = rows.findIndex((row) => row.top >= edge);
-    const row = rows[first - 1];
-    return row ? normalizeScrollOffset(row.top - arrowHeight, max) : 0;
+    const edge = scroller.scrollTop + arrowHeight - 1;
+    const first = list.find((item) => top(item) >= edge);
+    // The walk from the end matches each item after it passes `first`: it gives the item before it.
+    let passed = false;
+    const row =
+      first &&
+      list.findLast((item) => {
+        if (passed) return true;
+        passed = item === first;
+        return false;
+      });
+    return row ? normalizeScrollOffset(top(row) - arrowHeight, max) : 0;
   }
-  const edge = top + scroller.clientHeight - arrowHeight + 1;
-  const past = rows.findIndex((row) => row.bottom > edge);
-  const row = past === -1 ? undefined : rows[past];
-  return row ? normalizeScrollOffset(row.bottom - scroller.clientHeight + arrowHeight, max) : max;
+  const edge = scroller.scrollTop + scroller.clientHeight - arrowHeight + 1;
+  const row = list.find((item) => bottom(item) > edge);
+  return row ? normalizeScrollOffset(bottom(row) - scroller.clientHeight + arrowHeight, max) : max;
 }
 
 /** A scroll arrow: it shows while the list can scroll in its direction, and a hover scrolls. */

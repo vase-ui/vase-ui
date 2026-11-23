@@ -35,6 +35,8 @@ export interface List {
    * list costs less than with `items()`.
    */
   find(match?: (item: ListItem) => boolean): ListItem | undefined;
+  /** The last item of `items()` that matches. It checks only the items from the end to that item. */
+  findLast(match?: (item: ListItem) => boolean): ListItem | undefined;
   /** The place of the item in `items()`, or -1. It checks only the items up to that item. */
   indexOf(item: ListItem): number;
   /**
@@ -330,6 +332,7 @@ export function useList(options: ListOptions): List {
     },
     items,
     find: (match) => find(match),
+    findLast: (match) => find(match, true),
     indexOf(item) {
       let index = 0;
       for (const each of connected()) {
@@ -444,7 +447,7 @@ export function useListItem(
       if (!current || list.highlighted !== current || !hovers()) return;
       if (options.keepOnLeave?.(current)) return;
       const related = event.relatedTarget as Element | null;
-      if (related && list.items().some((other) => other.element.contains(related))) return;
+      if (related && list.find((other) => other.element.contains(related))) return;
       list.highlight(null, 'pointer', event);
     },
     // A screen reader and a touch can give an item the real focus.

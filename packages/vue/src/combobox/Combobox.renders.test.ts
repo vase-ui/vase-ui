@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import ComboboxRenders from '../../test/fixtures/ComboboxRenders.vue';
 import { mount } from '../../test/render';
@@ -50,12 +50,12 @@ describe('the renders', () => {
     expect(spy.renders).toEqual({ item: 39, input: 20 });
   });
 
-  test('a pointer that moves over 25 items renders at most two items for each move', async () => {
+  test('a pointer that moves to items in and out of the view renders at most two items for each move', async () => {
     const spy = await openList();
-    const options = [...document.querySelectorAll<HTMLElement>('[role="option"]')].slice(0, 25);
-    for (const option of [...options, ...options.toReversed()]) {
+    // The view shows items 0 to 9. A hover of an item out of the view scrolls the list to it.
+    for (const index of [0, 1, 9, 10, 11, 2, 1, 0]) {
       spy.reset();
-      await userEvent.hover(option);
+      await userEvent.hover(page.getByTestId(`Item ${index}`));
       await nextTick();
       expect(spy.renders.item ?? 0).toBeLessThanOrEqual(2);
     }
@@ -138,6 +138,29 @@ describe('the renders', () => {
       );
       await nextTick();
       expect(read).toHaveBeenCalledTimes(3);
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  test('a pointer move to the next item over 300 items checks the visibility of the items up to it only', async () => {
+    await openList();
+    const highlighted = () => document.querySelector('[data-highlighted]');
+    await userEvent.hover(page.getByTestId('Item 3'));
+    await waitFor(() => expect(highlighted()).toHaveTextContent('Item 3'));
+    await nextTick();
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.hover(page.getByTestId('Item 4'));
+      await waitFor(() => expect(highlighted()).toHaveTextContent('Item 4'));
+      await nextTick();
+      const items = read.mock.contexts.filter(
+        (context) => context instanceof Element && context.matches('[role="option"]'),
+      );
+      const upToNext = [0, 1, 2, 3, 4].map((index) =>
+        document.querySelector(`[data-testid="Item ${index}"]`),
+      );
+      expect(new Set(items)).toEqual(new Set(upToNext));
     } finally {
       read.mockRestore();
     }

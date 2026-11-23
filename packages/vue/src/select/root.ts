@@ -240,12 +240,11 @@ export function useSelectRoot(
     placed: () => placed.value,
     // The highlight is set again at each open, so a leave shows no change of it.
     initialFocus: () => {
-      const reachable = list.items();
-      let target = reachable.find((item) => isSelected(itemValues.get(item.element)));
+      let target = list.find((item) => isSelected(itemValues.get(item.element)));
       if (!target && root.interaction === 'keyboard') {
         target = list.edge(openKey === 'ArrowUp' ? 'last' : 'first');
       } else if (!target && aligned.value && props.highlightItemOnHover) {
-        target = reachable[0];
+        target = list.find();
       }
       openKey = undefined;
       list.highlight(target ?? null, 'none');
@@ -281,7 +280,7 @@ export function useSelectRoot(
 
   const press = usePopupPress(root, {
     itemAt(path) {
-      const item = list.items().find((each) => path.includes(each.element));
+      const item = list.find((each) => path.includes(each.element));
       return item && !item.disabled ? item.element : null;
     },
     inside: (target) => isInPopup(layer, target),

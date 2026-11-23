@@ -160,7 +160,8 @@ defineExpose({ root: rootPart });
   transition: opacity 80ms;
 }
 
-/* A kept popup that leaves with CSS on `[hidden]`. */
+/* A kept popup that leaves with CSS on `[hidden]`. The leave lasts 100 s, so a case can hover
+   another trigger during it. */
 .fades {
   transition: opacity 400ms;
 }
@@ -175,6 +176,11 @@ defineExpose({ root: rootPart });
 .fades[hidden] {
   display: block;
   opacity: 0;
+  transition-duration: 100s;
+}
+
+.sized.fades[hidden] {
+  transition-duration: 80ms, 80ms, 100s;
 }
 
 .slide-enter-from,

@@ -1,4 +1,4 @@
-import { describe, expect, inject, test } from 'vitest';
+import { describe, expect, inject, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { SelectRootOpenChangeEventDetails } from '@vase-ui/vue/select';
@@ -478,6 +478,27 @@ describe('the scroll arrows', () => {
     expect(bottoms.some((bottom) => Math.abs(bottom - edge) < 1)).toBe(true);
   });
 
+  test('a hover of the up arrow scrolls one step: the item before starts at the bottom of the arrow', async () => {
+    await scrollableList();
+    const list = byTestId('list');
+    list.scrollTop = list.scrollHeight;
+    await waitFor(() => expect(byTestId('up')).not.toBe(null));
+    const arrow = byTestId('up');
+    arrow.style.top = '0';
+    const end = list.scrollTop;
+    const { x, y } = centerOf(arrow);
+    hoverAt(arrow, 'pointerover', x, y - 1);
+    hoverAt(arrow, 'pointermove', x, y);
+    await waitFor(() => expect(list.scrollTop).toBeLessThan(end));
+    arrow.dispatchEvent(new PointerEvent('pointerleave'));
+    expect(list.scrollTop).toBeGreaterThan(0);
+    const edge = arrow.getBoundingClientRect().bottom;
+    const tops = [...popup().querySelectorAll('[role="option"]')].map(
+      (option) => option.getBoundingClientRect().top,
+    );
+    expect(tops.some((top) => Math.abs(top - edge) < 1)).toBe(true);
+  });
+
   test('a move with no change of place does not scroll; a leave stops the scroll; a second move does not delay the step', async () => {
     await scrollableList();
     const arrow = byTestId('down');
@@ -582,6 +603,24 @@ describe.runIf(inject('app') === 'vdom')('the renders', () => {
     await waitFor(() => expect(document.activeElement).toHaveTextContent('Item 2'));
     expect(renders.trigger ?? 0).toBe(0);
     expect(renders.value ?? 0).toBe(0);
+  });
+});
+
+describe('the work of an open', () => {
+  test('an open over 300 items checks the visibility of the selected item only', async () => {
+    await mountSelect({ items: many(300), root: { defaultValue: 'i150' } });
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.click(trigger());
+      await waitFor(() => expect(document.activeElement).toBe(item('i150')));
+      await nextTick();
+      const options = read.mock.contexts.filter(
+        (context) => context instanceof Element && context.matches('[role="option"]'),
+      );
+      expect(new Set(options)).toEqual(new Set([item('i150')]));
+    } finally {
+      read.mockRestore();
+    }
   });
 });
 

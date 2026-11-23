@@ -287,8 +287,7 @@ export function useItemAlignment(
         top: pixels(styles.marginTop, MARGIN),
         bottom: pixels(styles.marginBottom, MARGIN),
       };
-      const item =
-        context.selectedItem() ?? (context.hasValue ? undefined : context.list.items()[0]);
+      const item = context.selectedItem() ?? (context.hasValue ? undefined : context.list.find());
       const text = item && context.itemTexts.get(item.element);
       // Under a `zoom` of the page, the rectangles and the size of the view are in pixels of the
       // view, and the styles are in pixels of the positioner (test/measurements/select.test.ts).

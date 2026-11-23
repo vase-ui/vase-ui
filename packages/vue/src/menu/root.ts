@@ -576,7 +576,7 @@ export function useMenuRoot<Payload>(
     },
     highlightUnder(target) {
       if (!props.highlightItemOnHover) return;
-      const item = list.items().find((each) => each.element.contains(target));
+      const item = list.find((each) => each.element.contains(target));
       if (item) list.highlight(item, 'pointer');
     },
   };

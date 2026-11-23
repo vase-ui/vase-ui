@@ -1,7 +1,8 @@
-import { describe, expect, inject, onTestFinished, test } from 'vitest';
+import { describe, expect, inject, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import MenuRenders from '../../test/fixtures/MenuRenders.vue';
+import { highlighted, item, mountTree, openWithKey } from '../../test/menuFilter';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -58,5 +59,27 @@ describe.runIf(inject('app') === 'vdom')('the work of an open', () => {
     // of the popup for the element that owns it. An item with no fieldset around it watches no
     // fieldset.
     expect(spy.observers()).toBe(3);
+  });
+});
+
+describe('the work of a filter', () => {
+  test('a typed text over 300 items checks the visibility of the items up to the first item that shows', async () => {
+    const { trigger } = await mountTree({
+      provider: { autoHighlight: true },
+      entries: Array.from({ length: 300 }, (_, index) => ({ key: `Item ${index}` })),
+    });
+    await openWithKey(trigger);
+    const read = vi.spyOn(Element.prototype, 'checkVisibility');
+    try {
+      await userEvent.keyboard('2');
+      await waitFor(() => expect(highlighted()).toBe('Item 2'));
+      await nextTick();
+      const items = read.mock.contexts.filter(
+        (context) => context instanceof Element && context.matches('[role="menuitem"]'),
+      );
+      expect(new Set(items)).toEqual(new Set(['Item 0', 'Item 1', 'Item 2'].map(item)));
+    } finally {
+      read.mockRestore();
+    }
   });
 });
