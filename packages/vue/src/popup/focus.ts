@@ -1,4 +1,4 @@
-import { nextTick, watch } from 'vue';
+import { nextTick, shallowRef, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -126,6 +126,9 @@ export function usePopupFocus(
 ) {
   let before: Element | null = null;
   let took = false;
+  // A close and an open in one task keep the same popup element, so the popup takes the focus at
+  // each open.
+  const opens = shallowRef(0);
 
   // A trigger that takes no focus, such as the swipe area of a drawer, gives its place to the
   // element that had the focus before the open.
@@ -139,6 +142,7 @@ export function usePopupFocus(
     (open) => {
       if (open) {
         took = false;
+        opens.value += 1;
         return;
       }
       returnFocus();
@@ -182,8 +186,8 @@ export function usePopupFocus(
   }
 
   watch(
-    () => root.open && options.takesFocus() && options.placed() && root.popup,
-    (popup) => {
+    [() => opens.value, () => root.open && options.takesFocus() && options.placed() && root.popup],
+    ([, popup]) => {
       if (!popup) return;
       // `v-show` shows a popup that stays in the DOM in a hook of this flush, which can run after
       // this watcher. A hidden element takes no focus, so the focus moves at the end of the flush.

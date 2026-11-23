@@ -54,4 +54,12 @@ defineExpose({ parts });
 .fade-leave-to {
   opacity: 0;
 }
+.slow-enter-active,
+.slow-leave-active {
+  transition: opacity 3s linear;
+}
+.slow-enter-from,
+.slow-leave-to {
+  opacity: 0;
+}
 </style>

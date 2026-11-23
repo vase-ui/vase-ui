@@ -11,10 +11,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [open: boolean];
+  enter: [];
+  afterEnter: [];
   afterLeave: [];
 }>();
 
 function enter(element: Element, done: () => void) {
+  emit('enter');
   void animate(element, { opacity: [0, 1] }, { duration: props.duration }).then(done);
 }
 
@@ -28,9 +31,9 @@ function leave(element: Element, done: () => void) {
     <Dialog.Portal>
       <Transition
         :css="false"
-        appear
         @enter="enter"
         @leave="leave"
+        @after-enter="emit('afterEnter')"
         @after-leave="emit('afterLeave')"
       >
         <Dialog.Popup data-testid="popup">

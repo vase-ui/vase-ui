@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, mergeProps, onUnmounted, useAttrs, watch } from 'vue';
+import { computed, mergeProps, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
+import { usePopupPart } from '../popup/portal';
 import { injectMenu, injectPortal } from './root';
 import type { MenuBackdropProps, MenuBackdropState } from './types';
 
@@ -18,26 +19,15 @@ const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
-const shown = computed(() => (root.open && !root.leaving) || root.keepMounted);
+const shown = usePopupPart(root, element);
 const state = computed<MenuBackdropState>(() => ({ open: root.open }));
-// Vue does not patch an element that leaves in a `<Transition>`. A press in the leave reaches the
-// page, such as a second right press on the trigger of a context menu.
-watch(
-  () => root.open,
-  (open) => {
-    if (!open) element.value?.setAttribute('inert', '');
-  },
-  { flush: 'sync' },
-);
-const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
 
 function elementProps() {
   const closed = !root.open;
   return mergeProps(
     {
       role: 'presentation',
-      hidden: closed ? true : undefined,
+      hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       style: {
         // The page stays in use under a menu that a hover opened.
@@ -55,18 +45,21 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
+  <template v-if="$slots.element">
+    <slot
+      v-if="root.open || root.keepMounted"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </component>
-  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
+  <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
     <slot :state="state" />
   </div>
 </template>

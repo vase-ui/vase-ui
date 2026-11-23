@@ -2,6 +2,7 @@ import { autoUpdate } from '@floating-ui/vue';
 import {
   computed,
   inject,
+  onMounted,
   onUnmounted,
   provide,
   shallowRef,
@@ -82,8 +83,13 @@ export function usePortalTarget(props: Pick<PopupPortalProps, 'to' | 'disabled'>
   return { target, mounted, rendered };
 }
 
+const portalMountedKey: InjectionKey<Readonly<Ref<boolean>>> = Symbol(
+  process.env.NODE_ENV !== 'production' ? 'portal mounted' : undefined,
+);
+
 export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
   const { target, mounted, rendered: placed } = usePortalTarget(props);
+  provide(portalMountedKey, mounted);
 
   watch(
     () => !!props.keepMounted,
@@ -153,6 +159,22 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     setBefore: (element: unknown) => (before.value = element as HTMLElement | null),
     setAfter: (element: unknown) => (after.value = element as HTMLElement | null),
   };
+}
+
+/**
+ * Whether a popup or a backdrop in a portal shows its element, which the part hides with `v-show`.
+ * A `<Transition>` around the part then makes an open during the leave go back from where it is
+ * (test/measurements/popup.test.ts). The element shows one update after its mount, so the
+ * `<Transition>` runs its enter with no `appear`. An element that renders before its portal is
+ * mounted, as on the server and in a disabled portal at the first render, shows at its mount. The
+ * root keeps the element until its leave ends.
+ */
+export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
+  const entered = shallowRef(!inject(portalMountedKey, null)?.value);
+  onMounted(() => (entered.value = true));
+  const removeLeaving = root.addLeaving(() => element.value);
+  onUnmounted(removeLeaving);
+  return computed(() => root.keepMounted || (root.open && entered.value));
 }
 
 /**

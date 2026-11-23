@@ -14,7 +14,7 @@ import MotionSelect from '../demos/handbook-animation/animated-select-motion/css
 
 Animate a component with CSS transitions, CSS animations or a JavaScript animation library.
 
-A part that shows and hides, such as a popup, a backdrop or a panel, renders its element only while it is shown. Put the part in a Vue [`<Transition>`](https://vuejs.org/guide/built-ins/transition.html). Vue adds the classes of the `<Transition>` when the element enters and leaves, and it keeps the element in the DOM until its leave ends.
+A part that shows and hides, such as a popup, a backdrop or a panel, keeps its element in the DOM until its leave ends. Put the part in a Vue [`<Transition>`](https://vuejs.org/guide/built-ins/transition.html). Vue adds the classes of the `<Transition>` when the element enters and leaves.
 
 ## CSS transitions
 
@@ -28,7 +28,7 @@ Use a transition where you can. A transition that stops midway goes back from wh
 <template>
   <Popover.Portal>
     <Popover.Positioner>
-      <Transition name="popup" appear>
+      <Transition name="popup">
         <Popover.Popup class="Popup">…</Popover.Popup>
       </Transition>
     </Popover.Positioner>
@@ -53,7 +53,11 @@ Use a transition where you can. A transition that stops midway goes back from wh
 
 :::
 
-Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. The `<Transition>` in it thus mounts at each open, so give it `appear` to run the enter. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal has no root element.
+Without `keepMounted`, a `Portal` part renders its content only while the popup is open or leaves. Put the `<Transition>` in the portal, around the part. A `<Transition>` around a `Portal` part animates nothing, because the portal has no root element.
+
+The popup and the backdrop of Dialog, Alert Dialog, Popover, Menu, Context Menu, Menubar, Tooltip, Date Picker, Date Range Picker and Time Picker show their element one update after they mount. So their `<Transition>` runs the enter with no `appear`. Do not give it `appear`, because Vue then calls the JavaScript hooks of the enter twice. In a `disabled` portal, a popup that is open at the first render shows at once, as in the server HTML, with no enter. The popup of Preview Card, Combobox, Autocomplete, Navigation Menu and Drawer mounts at each open, so give its `<Transition>` `appear`.
+
+When the popup of the first list opens again during its leave, it is the same element. Vue calls `leave-cancelled`, and a transition goes back from where it is. The backdrop does the same. Do not read the layout of the element, such as `offsetWidth`, in `leave-cancelled` or `before-enter`. During these hooks, the element has `display: none`, and a read of the layout ends its transition. The enter then starts from the `enter-from` class.
 
 While an element leaves, the element that takes its place can already be in the DOM. To remove the element that leaves from the flow, give the `leave-active` class `position: absolute`.
 
@@ -63,7 +67,7 @@ Do not put a `<Transition>` around a part that renders the `element` slot. The r
 
 ## CSS animations
 
-Give the animations to the `enter-active` and `leave-active` classes.
+Give the animations to the `enter-active` and `leave-active` classes. Give the enter and the leave each their own keyframes.
 
 ```css
 @keyframes scaleIn {
@@ -71,9 +75,12 @@ Give the animations to the `enter-active` and `leave-active` classes.
     opacity: 0;
     transform: scale(0.9);
   }
+}
+
+@keyframes scaleOut {
   to {
-    opacity: 1;
-    transform: scale(1);
+    opacity: 0;
+    transform: scale(0.9);
   }
 }
 
@@ -82,9 +89,11 @@ Give the animations to the `enter-active` and `leave-active` classes.
 }
 
 .popup-leave-active {
-  animation: scaleIn 250ms ease-in reverse;
+  animation: scaleOut 250ms ease-in;
 }
 ```
+
+An animation cannot go back from where it is. When a popup opens again during its leave, the leave animation stops, and the enter animation starts from its first keyframe. With one keyframes name and `reverse`, the browser keeps the animation at its time and turns its direction, so the popup jumps to another point.
 
 ## Content that stays in the DOM
 
@@ -111,9 +120,10 @@ A JavaScript animation library, such as [Motion for Vue](https://motion.dev/docs
 
 The popup of [Popover](/components/popover) is in the DOM only while the popover is open.
 
-1. Put `Popover.Popup` in a `<Transition>` with `:css="false"` and `appear`.
-2. Run the enter animation in the `enter` hook, and the exit animation in the `leave` hook, with `animate` of `motion-v`.
-3. Call `done` when the animation ends. Vue then removes the popup.
+1. Give the popup its closed style in the style sheet.
+2. Put `Popover.Popup` in a `<Transition>` with `:css="false"`.
+3. In the `enter` hook, animate to the open style with `animate` of `motion-v`. In the `leave` hook, animate to the closed style. Each animation starts from the current style, so an open during the leave goes back from where it is.
+4. Call `done` when the animation ends. Vue then removes the popup.
 
 <DemoFrame>
   <MotionPopup />

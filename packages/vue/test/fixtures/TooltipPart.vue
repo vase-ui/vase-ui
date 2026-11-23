@@ -8,7 +8,7 @@ type Props = Record<string, unknown>;
 // One tooltip. Each trigger has the text and the `data-key` of its key. The positioner has the test
 // id `positioner-<name>`, and a hidden element with the test id `positioner-instant-<name>` and the
 // `instant` of its state. The popup has the test id `popup-<name>` and the payload. With
-// `transition`, the popup is in a `<Transition appear>` of that name.
+// `transition`, the popup is in a `<Transition>` of that name.
 const props = defineProps({
   name: { type: String, default: 't' },
   root: Object as PropType<Props>,
@@ -41,7 +41,7 @@ const triggerList = () => props.triggers ?? [{ key: props.name }];
         <Tooltip.Positioner :data-testid="`positioner-${name}`" v-bind="positioner">
           <template #default="{ state }">
             <span hidden :data-testid="`positioner-instant-${name}`">{{ state.instant }}</span>
-            <Transition v-if="transition" :name="transition" appear>
+            <Transition v-if="transition" :name="transition">
               <Tooltip.Popup ref="popupPart" :data-testid="`popup-${name}`" v-bind="popup">
                 <Tooltip.Arrow v-if="arrow" :data-testid="`arrow-${name}`" v-bind="arrow" />
                 Tip {{ name }} <span data-testid="payload">{{ payload }}</span>

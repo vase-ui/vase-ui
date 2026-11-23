@@ -17,6 +17,12 @@ import { firePointer, movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { scaleOrigin } from '../../test/scaleOrigin';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { readWhen, waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
@@ -506,6 +512,21 @@ describe('the handle', () => {
     expect(handle.isOpen).toBe(false);
   });
 
+  test('a close and an open in one task keep the popup, which takes the focus again', async () => {
+    const handle = Popover.createHandle<string>();
+    mount(PopoverHandles, { handle });
+    await nextTick();
+    await userEvent.click(byId('first'));
+    const element = await opened();
+    await waitFor(() => expect(element).toHaveFocus());
+    handle.close();
+    expect(element).not.toHaveFocus();
+    handle.open('second');
+    await waitFor(() => expect(element).toHaveFocus());
+    expect(popup()).toBe(element);
+    expect(element).toHaveTextContent('second');
+  });
+
   test('`new Popover.Handle()` makes the same object; open() of an unknown id throws; with no root the methods do nothing', async () => {
     const handle = new Popover.Handle();
     const { unmount } = mount(PopoverHandles, { handle });
@@ -632,19 +653,109 @@ describe('in the DOM', () => {
     await waitFor(() => expect(positioner()).toBe(null));
   });
 
-  test('an open while the popup leaves renders one popup and one backdrop, which enter after the leave', async () => {
+  test('an open while the popup leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+    const log = new Set<string>();
     const root = reactive<Props>({ open: true });
-    mount(PopoverInTransition, { root });
+    mount(PopoverInTransition, {
+      root,
+      popup: { class: 'slow' },
+      backdrop: { class: 'slow' },
+      log,
+    });
     const first = await opened();
+    const backdrop = byTestId('backdrop');
+    await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
     root.open = false;
-    await nextTick();
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = [first, backdrop].map(shownOpacity);
     root.open = true;
+    const frames = await opacityUntilRest([first, backdrop]);
+    expect(popup()).toBe(first);
+    expect(byTestId('backdrop')).toBe(backdrop);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave') || log.has('backdrop-after-leave')).toBe(false);
+    frames.forEach((opacities, index) => {
+      expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+      expect(opacities.at(-1)).toBe(1);
+    });
+  });
+
+  test('an open by another trigger while the popup leaves shows the same popup at that trigger, with its payload, in the first frame', async () => {
+    mount(PopoverInTransition, {
+      trigger: { payload: 'first' },
+      second: { payload: 'second' },
+      popup: { class: 'slow' },
+    });
     await nextTick();
-    expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([first]);
-    expect(document.querySelectorAll('[data-testid="backdrop"]')).toHaveLength(1);
-    await waitFor(() => expect(popup() ?? first).not.toBe(first));
-    expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
-    expect(popup()!.className).toContain('pop-enter');
+    const triggers = ['trigger', 'second-trigger'].map(byTestId);
+    await userEvent.click(triggers[0]!);
+    const element = await opened();
+    await placed();
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('pop-enter-active'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+    triggers[1]!.click();
+    await nextTick();
+    const firstFrame = await new Promise<{ payload: string; offset: number }>((resolve) =>
+      requestAnimationFrame(() => {
+        const box = positioner()!.getBoundingClientRect();
+        const anchor = triggers[1]!.getBoundingClientRect();
+        resolve({
+          payload: byTestId('payload').textContent,
+          offset: box.left + box.width / 2 - (anchor.left + anchor.width / 2),
+        });
+      }),
+    );
+    expect(popup()).toBe(element);
+    expect(firstFrame.payload).toBe('second');
+    expect(Math.abs(firstFrame.offset)).toBeLessThan(1);
+  });
+
+  test('the popup that leaves keeps the payload of its close when the parent clears the trigger', async () => {
+    const root = reactive<Props>({
+      triggerId: 'a',
+      'onUpdate:triggerId': (id: string | null) => (root.triggerId = id),
+      onOpenChange: (open: boolean) => {
+        if (!open) root.triggerId = null;
+      },
+    });
+    mount(PopoverInTransition, {
+      root,
+      trigger: { id: 'a', payload: 'first' },
+      second: { id: 'b', payload: 'second' },
+      popup: { class: 'slow' },
+    });
+    await nextTick();
+    await userEvent.click(byTestId('trigger'));
+    const element = await opened();
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('pop-enter-active'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+    expect(root.triggerId).toBe(null);
+    await nextTick();
+    expect(byTestId('payload')).toHaveTextContent('first');
+  });
+
+  test('an open while the popup leaves gives the focus to the popup again', async () => {
+    mount(PopoverInTransition, { popup: { class: 'slow' } });
+    await nextTick();
+    const trigger = byTestId('trigger');
+    await userEvent.click(trigger);
+    const element = await opened();
+    const inside = element.querySelector('button')!;
+    await waitFor(() => expect(inside).toHaveFocus());
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('pop-enter-active'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
+    expect(trigger).toHaveFocus();
+    await userEvent.click(trigger);
+    await waitFor(() => expect(inside).toHaveFocus());
+    expect(popup()).toBe(element);
   });
 
   test('with `keepMounted`, the closed popup and backdrop stay with `hidden` and `inert`', async () => {
@@ -2462,7 +2573,7 @@ describe('the hover', () => {
     expect(popup()).not.toBe(null);
   });
 
-  test('a hover on the trigger while the popup leaves after a hover close opens the popover at once; the popup enters after the leave', async () => {
+  test('a hover on the trigger while the popup leaves after a hover close opens the popover at once; the same popup goes back', async () => {
     const log: string[] = [];
     const trigger = reactive<Props>({ openOnHover: true, delay: 0 });
     mount(PopoverInTransition, { root: rootEvents(log), trigger });
@@ -2480,7 +2591,8 @@ describe('the hover', () => {
     await reopened;
     await nextTick();
     expect(log.at(-2)).toBe('openChange true trigger-hover');
-    await waitFor(() => expect(popup() ?? first).not.toBe(first));
+    expect(popup()).toBe(first);
+    expect(first).not.toHaveClass('pop-leave-active');
   });
 
   test('a hover asks for nothing while the popover is open with no active trigger', async () => {
@@ -3918,6 +4030,11 @@ describe('the viewport', () => {
     await placed();
     await waitFor(() => expect(element.getAnimations()).toEqual([]));
     const old = `${element.offsetHeight}px`;
+    // The popup shows one update after its mount, and the positioner gets its size at the next
+    // frame.
+    await waitFor(() =>
+      expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(old),
+    );
     const popupSizes: string[] = [];
     const positionerSizes: string[] = [];
     const record = (list: string[], value: string) => {

@@ -318,7 +318,7 @@ A part handles the events that the browser sends. It detects no value that an el
 - `usePlacement` of `placement.ts` places a positioner beside its anchor with `useFloating` of Floating UI.
 - `focus.ts` moves the focus into a popup at the open and returns it at the close. `hover.ts` opens a popup for a hover of its trigger. `press.ts` handles the press, the drag and the release of a popup that a press opens.
 - `portal.ts` renders the portal of a popup, and `viewport.ts` gives the sizes of a popup that moves to another trigger.
-- A popup part renders its element while the root is open, or while the portal has `keepMounted`. A developer animates the popup with `<Transition>`. The root is `leaving` until Vue removes the element of the closed popup.
+- A developer animates a popup with `<Transition>`. The popup and the backdrop of Dialog, Popover, Menu and Tooltip hide their own element with `v-show` through `usePopupPart` of `portal.ts`. The portal removes them after their leave. An open during the leave keeps the same element, so its `<Transition>` goes back from where it is. Another popup part renders its element while the root is open and not `leaving`, or while the portal has `keepMounted`. The root is `leaving` until each element of the closed popup is hidden or out of the document.
 - The JSDoc of each export of `src/popup` gives its contract.
 
 ### Dates and times

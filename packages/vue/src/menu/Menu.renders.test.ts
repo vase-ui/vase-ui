@@ -52,9 +52,10 @@ describe.runIf(inject('app') === 'vdom')('the work of an open', () => {
     for (let frame = 0; frame < 3; frame += 1) await nextFrame();
     // The positioner renders at its mount, for its element, for the size variables and for the
     // place. The first frames give no other place. The portal renders at the open, for the popup
-    // and for the hole of its fixed element at the trigger. Each item renders once, and the first
-    // item once more for its highlight.
-    expect(spy.renders).toEqual({ portal: 3, positioner: 4, item: 6 });
+    // and for the hole of its fixed element at the trigger. Each item renders at the mount of the
+    // popup and when the popup shows one update later, and the first item once more for its
+    // highlight.
+    expect(spy.renders).toEqual({ portal: 3, positioner: 4, item: 11 });
     // The observer of the layer for a move to another root, that of the focus, and that of the `id`
     // of the popup for the element that owns it. An item with no fieldset around it watches no
     // fieldset.
