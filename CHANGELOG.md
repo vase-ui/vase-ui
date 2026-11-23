@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026.11.6
+
+Same Base UI release and commit as 2026.11.5.
+
+### Fixed
+
+- Content inside an open modal popup stays interactive beside a live region, an alert or a popup in place. This includes `Autocomplete.Empty`, `Toast.Viewport` and a plain `aria-live` element. An element with `aria-live="off"` announces nothing, so the modal layer hides it with the page. ([#857](https://github.com/vase-ui/vase-ui/pull/857))
+- A controlled `Input`, `Combobox.Input` or `Autocomplete.Input` keeps its caret when the page changes the value in its own `input` listener. ([#857](https://github.com/vase-ui/vase-ui/pull/857))
+- With a reduced-motion rule such as `* { transition-duration: 0.01ms !important }`, a mouse press on an unfocused Select trigger opens the Select, and it stays open. An item-aligned Select shows its selected item in the first frame. In WebKit, Menu, Combobox and Popover take their first focus. ([#859](https://github.com/vase-ui/vase-ui/pull/859))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.5 (B) | 2026.11.6 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,229,831 |     2,234,874 |
+| gzip    |       734,699 |       736,334 |
+| Brotli  |       641,240 |       642,847 |
+
 ## 2026.11.5
 
 Same Base UI release and commit as 2026.11.4.
