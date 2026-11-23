@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026.11.3
+
+Same Base UI release and commit as 2026.11.2.
+
+### Changed
+
+- Menu, Select and Combobox check the visibility of the items only up to the item that they need: at an open, a filter, a key, a release, a pointer move and a scroll arrow. A long list does less work, and the result does not change. ([#834](https://github.com/vase-ui/vase-ui/pull/834))
+
+### Fixed
+
+- Drawer: each popup has `--drawer-frontmost-height` while the frontmost drawer has a height, and the frontmost drawer gives its own height. So with the CSS of the Drawer page, the frontmost drawer of a stack and a single drawer follow a swipe. A popup has `--drawer-height` only while it has a height, so a drawer below a nested drawer keeps its height at the open and the close of the nested drawer. ([#837](https://github.com/vase-ui/vase-ui/pull/837))
+- The README, the package description and the parity page give 37 Base UI components: one for each component page of the Base UI docs. Base UI shows the parts of Radio on its Radio Group page. ([#836](https://github.com/vase-ui/vase-ui/pull/836))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.2 (B) | 2026.11.3 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,215,691 |     2,215,642 |
+| gzip    |       729,703 |       729,700 |
+| Brotli  |       636,542 |       636,637 |
+
 ## 2026.11.2
 
 Same Base UI release and commit as 2026.11.0: Base UI 1.9.0, with later Base UI changes through `315eba7a` (2026-11-13).
