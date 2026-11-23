@@ -11,6 +11,7 @@ defineProps({
   root: Object as PropType<Props>,
   trigger: Object as PropType<Props>,
   portal: Object as PropType<Props>,
+  submenuPopup: Object as PropType<Props>,
 });
 </script>
 
@@ -27,7 +28,7 @@ defineProps({
               <Menu.Portal>
                 <Menu.Positioner>
                   <Transition name="menu-fade">
-                    <Menu.Popup data-testid="sub-popup">
+                    <Menu.Popup data-testid="sub-popup" v-bind="submenuPopup">
                       <Menu.Item data-key="s1">s1</Menu.Item>
                     </Menu.Popup>
                   </Transition>

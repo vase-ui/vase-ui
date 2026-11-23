@@ -51,9 +51,8 @@ describe('the hover', () => {
     await waitFor(() => expect(popup()).not.toBe(null));
     await userEvent.hover(item('sub'));
     await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
-    // The second point is out of the triangle toward the submenu, so the item takes the highlight.
+    // The pointer leaves the submenu trigger away from the submenu, so the item takes the highlight.
     await userEvent.hover(item('a'));
-    await userEvent.hover(item('a'), { position: { x: 2, y: 2 } });
     await waitFor(() => expect(highlightedAt).not.toBe(0));
     await wait(300 - (performance.now() - highlightedAt));
     expect(byTestId('sub-popup')).not.toBe(null);
