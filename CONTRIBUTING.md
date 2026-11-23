@@ -102,7 +102,7 @@ When you change the version of a tool, do these checks too:
 
 ## Base UI parity
 
-`parity/upstream.json` records the Base UI commit that Vase UI tracks and its release. Port from Base UI at that commit. The other sources are the code and the documentation of Vue, the web standards and the libraries that Vase UI depends on.
+`parity/upstream.json` records the Base UI commit that Vase UI tracks, its release and its components. A component of Base UI is a folder of its components docs that has a page. Port from Base UI at that commit. The other sources are the code and the documentation of Vue, the web standards and the libraries that Vase UI depends on.
 
 Code that comes from another project keeps its "License:" comment. `THIRD_PARTY_NOTICES.md` has the copyright notice and the license of each project that such a comment names.
 
@@ -110,7 +110,7 @@ Code that comes from another project keeps its "License:" comment. `THIRD_PARTY_
 
 ### To port a Base UI change
 
-1. Run `pnpm parity:track <sha> --upstream <path>` for the new Base UI commit.
+1. Run `pnpm parity:track <sha> --upstream <path>` for the new Base UI commit. A new Base UI component needs its complete family in the same pull request, because `pnpm test:docs` checks the count ([Pages and navigation](#pages-and-navigation)).
 2. The parity page then shows each family that a new commit changes as queued. Read each such commit.
 3. Port each change that a user or a developer can see, with a test that fails without it. Write it in the form of Vue, as [Parts](#parts) says.
 4. Give a commit that does not apply to Vue a row of `notApplicableCommits` in the family file, with the reason.
@@ -501,6 +501,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores it when a workflow publishes the site.
 - A page is a Markdown file in `docs`, with an `order` in its front matter. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
+- `README.md` and the description of `packages/vue/package.json` give the count of the components of `parity/upstream.json`. In `benchmarks/features.json`, the Base UI cell of the row "Components in all" gives it too. Each cell of the row "Components of Base UI" counts against it. `pnpm test:docs` fails when one of them gives another count, or when the parity page does not count each component as done.
 - Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
 - The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same commands. Change them together.
 - Text from `parity/` and from Base UI commits is data. A page shows it only through a component of `docs/.vitepress/components`, with text interpolation. ESLint cannot see a name that a value holds, so it cannot find each API that renders a string as HTML.
@@ -587,7 +588,7 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - A heading that a component of the site writes is one level below the page heading above the component.
 - `docs/public` holds the files that the site serves as they are. The words of the wordmark are `vase uı`, with the dotless i (U+0131). They are outlines of Inter Bold, with the `u` of the feature `cv06` and a letter-spacing of -0.02 em. An SVG file in an `<img>` cannot load a font, so do not write the words as text.
 - When you change the mark, change each SVG file and render the PNG and ICO icons again. `README.md` names the wordmark files by their address on `main`, so do not move or rename them.
-- `og-image.png` is the link preview. Change `og:image:alt` in `docs/.vitepress/config.ts` when you change the image.
+- `og-image.png` is the link preview. It shows the count of the components of `parity/upstream.json`, and no test reads it. Change `og:image:alt` in `docs/.vitepress/config.ts` when you change the image.
 
 ### Thanks page
 

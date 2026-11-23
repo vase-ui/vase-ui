@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 import type { UpstreamFile } from './parityFiles.ts';
 import { DOCS_FOLDER_PREFIX } from './paths.ts';
-import { buildUpstream, componentFolders } from './track.ts';
+import { buildUpstream, componentNames } from './track.ts';
 import { listFiles, readFileAt } from './upstreamClone.ts';
 
 const DATE = '2026-01-02T03:04:05+01:00';
@@ -85,7 +85,7 @@ test('buildUpstream gives the tag as describe on the tagged commit', () => {
   );
 });
 
-test('buildUpstream lists the component folders of the commit', () => {
+test('buildUpstream lists the components of the commit', () => {
   assert.deepEqual(buildUpstream(repository, change, current).components, ['button']);
 });
 
@@ -128,27 +128,26 @@ test('a file is read at the named commit when the working tree has other text', 
   ]);
 });
 
-test('componentFolders gives one sorted name for each folder, and none for a file that is directly in the components folder', () => {
+test('componentNames gives one sorted name for each folder that has a page, and none for a folder of types only', () => {
   const files = [
     `${COMPONENTS}page.mdx`,
     `${COMPONENTS}tabs/page.mdx`,
-    `${COMPONENTS}checkbox/types.md`,
-    `${COMPONENTS}checkbox/demos/hero/css-modules/index.tsx`,
-    `${COMPONENTS}checkbox-group/types.md`,
-    `${COMPONENTS}accordion/types.md`,
-    `${DOCS_FOLDER_PREFIX}utils/merge-props/types.md`,
-    'packages/react/src/button/Button.tsx',
+    `${COMPONENTS}tabs/types.md`,
+    `${COMPONENTS}radio-group/page.mdx`,
+    `${COMPONENTS}radio/types.md`,
+    `${COMPONENTS}accordion/page.mdx`,
+    `${COMPONENTS}checkbox/demos/hero/page.mdx`,
+    `${DOCS_FOLDER_PREFIX}utils/merge-props/page.mdx`,
+    'packages/react/src/button/page.mdx',
   ];
-  assert.deepEqual(componentFolders(files, change), [
-    'accordion',
-    'checkbox',
-    'checkbox-group',
-    'tabs',
-  ]);
+  assert.deepEqual(componentNames(files, change), ['accordion', 'radio-group', 'tabs']);
 });
 
-test('componentFolders throws when no folder is under the components folder', () => {
-  assert.throws(() => componentFolders([`${COMPONENTS}page.mdx`, 'docs/x.md'], change), {
-    message: `Commit ${change} has no folder under ${COMPONENTS}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
-  });
+test('componentNames throws when no folder under the components folder has a page', () => {
+  assert.throws(
+    () => componentNames([`${COMPONENTS}page.mdx`, `${COMPONENTS}radio/types.md`], change),
+    {
+      message: `Commit ${change} has no page in a folder under ${COMPONENTS}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
+    },
+  );
 });

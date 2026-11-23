@@ -32,8 +32,8 @@ function makeRow(upstream: string, rest: Partial<ExceptionRow> = {}): ExceptionR
   return { upstream, kind: 'waits-on', reason: 'A reason.', ...rest };
 }
 
-test('a family with a path under the components docs is a component', () => {
-  assert.equal(isComponentFamily(makeFamily(BUTTON_PATHS)), true);
+test('a family with the docs folder of a component is a component', () => {
+  assert.equal(isComponentFamily(makeFamily(BUTTON_PATHS), ['button']), true);
 });
 
 for (const { name, paths } of [
@@ -42,9 +42,13 @@ for (const { name, paths } of [
     name: 'a family with a utility docs path',
     paths: ['docs/src/app/(docs)/react/utils/csp-provider/**'],
   },
+  {
+    name: 'a family with a docs folder that is not a component',
+    paths: ['packages/react/src/radio/**', 'docs/src/app/(docs)/react/components/radio/**'],
+  },
 ]) {
   test(`${name} is not a component`, () => {
-    assert.equal(isComponentFamily(makeFamily(paths)), false);
+    assert.equal(isComponentFamily(makeFamily(paths), ['button', 'radio-group']), false);
   });
 }
 
@@ -110,6 +114,7 @@ test('the count holds the complete components, and the list gives the total and 
           makeFamily(['docs/src/app/(docs)/react/components/dialog/**'], [waiting]),
         ),
         makeFiles('merge-props', makeFamily(['packages/react/src/merge-props/**'])),
+        makeFiles('radio', makeFamily(['docs/src/app/(docs)/react/components/radio/**'])),
         makeFiles('broken'),
       ],
       ['accordion', 'button', 'dialog', 'tabs'],

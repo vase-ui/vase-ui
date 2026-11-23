@@ -248,7 +248,7 @@ function familyEntryOf(
   const matched = upstream.commits[matchedIndex];
   return {
     name,
-    isComponent: isComponentFamily(family),
+    isComponent: isComponentFamily(family, upstream.components),
     matchedCommit: { sha: matched.sha, date: utcDay(matched.date) },
     sources: summary.sources,
     typeTests: summary.typeTests,
