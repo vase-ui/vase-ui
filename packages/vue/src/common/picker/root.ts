@@ -168,9 +168,8 @@ export function usePicker<Value, Template = Value>(
       // next render, so a second call would emit again.
       if (event === lastReset) return;
       lastReset = event;
-      const reset = model.resetValue(props.defaultValue ?? null);
-      field?.onReset(reset);
-      set(reset);
+      set(model.resetValue(props.defaultValue ?? null));
+      field?.onReset();
     },
     addField: (element: HTMLElement) => add(fields, element),
     addTrigger: (element: HTMLElement) => add(triggers, element),

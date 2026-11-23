@@ -75,10 +75,11 @@ const inputs = useSelectForm(
   // A native reset is no change of the user: the value goes back, with `update:modelValue` only.
   () => {
     const reset = resetValue();
-    field?.onReset(reset);
-    if (!isSelectedValueDirty(value.value, reset, props.isItemEqualToValue ?? Object.is)) return;
-    setOwn(reset);
-    emit('update:modelValue', reset as SelectOutputValue<Value, Multiple>);
+    if (isSelectedValueDirty(value.value, reset, props.isItemEqualToValue ?? Object.is)) {
+      setOwn(reset);
+      emit('update:modelValue', reset as SelectOutputValue<Value, Multiple>);
+    }
+    field?.onReset();
   },
 );
 

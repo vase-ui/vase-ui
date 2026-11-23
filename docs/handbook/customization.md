@@ -79,7 +79,7 @@ For example, this dialog opens after a timeout, with no trigger:
 
 <<< ../examples/customization/Controlled.vue{20}
 
-A native reset of the form gives a form control the model of its mount. With no model at the mount, the control takes the `default*` prop that it has at the reset, as a native control does. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset. The field of the control is then not dirty.
+A native reset of the form gives a form control the model of its mount. With no model at the mount, the control takes the `default*` prop that it has at the reset, as a native control does. The part emits the update of its model, so `v-model` follows. It emits no change event, so `cancel()` cannot stop the reset. When you keep your model at that update, the field takes your value as its first value. The field of the control is then not dirty.
 
 ## Differences from Base UI
 

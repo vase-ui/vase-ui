@@ -175,10 +175,11 @@ watch(
 
 useFormReset(formInput, () => {
   const reset = toCode(resetValue(props.defaultValue), props).code;
-  field?.onReset(reset);
-  if (code.value === reset) return;
-  setOwn(reset);
-  emit('update:modelValue', reset);
+  if (code.value !== reset) {
+    setOwn(reset);
+    emit('update:modelValue', reset);
+  }
+  field?.onReset();
 });
 
 if (process.env.NODE_ENV !== 'production') {

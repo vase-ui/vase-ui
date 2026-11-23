@@ -67,8 +67,8 @@ watch(value, (next) => field?.setValue(next, next !== ''), { immediate: true });
 
 useFormReset(element, () => {
   const reset = resetValue(String(props.defaultValue ?? ''));
-  field?.onReset(reset);
   if (value.value !== reset) changeValue(reset);
+  field?.onReset();
 });
 
 useFieldControl(field, element, {

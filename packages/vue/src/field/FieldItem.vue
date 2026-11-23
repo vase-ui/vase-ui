@@ -77,7 +77,7 @@ provide(fieldKey, {
   setValue: (value, filled) => field?.setValue(value, filled),
   onEdit: () => field?.onEdit(),
   onLeave: (left) => field?.onLeave(left),
-  onReset: (value) => field?.onReset(value),
+  onReset: () => field?.onReset(),
 });
 
 provide(fieldPartsKey, {

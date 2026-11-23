@@ -130,13 +130,13 @@ watch(
 
 useFormReset(hiddenInput, () => {
   const reset = resetValue(asValue(props.defaultValue));
-  field?.onReset(reset);
   typed.value = null;
   edited = false;
   if (value.value !== reset) {
     setOwn(reset);
     emit('update:modelValue', reset);
   }
+  field?.onReset();
 });
 
 provide(numberFieldKey, {

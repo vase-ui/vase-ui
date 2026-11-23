@@ -622,10 +622,11 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(options: {
   useFormReset(inputElement, () => {
     const reset = model.resetValue((props.defaultValue ?? null) as Value | null);
     draft.value = null;
-    field?.onReset(reset);
-    if (sameTemporal(value.value, reset)) return;
-    model.setOwn(reset);
-    options.emitModel(reset);
+    if (!sameTemporal(value.value, reset)) {
+      model.setOwn(reset);
+      options.emitModel(reset);
+    }
+    field?.onReset();
   });
 
   const state = computed<DateTimeFieldState>(() => ({

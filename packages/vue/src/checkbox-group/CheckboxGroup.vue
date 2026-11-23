@@ -162,10 +162,11 @@ function onReset(event: Event) {
   lastReset = event;
   const reset = [...resetValue(props.defaultValue ?? [])];
   selection = reset;
-  field?.onReset([...reset]);
-  if (sameValue(value.value, reset)) return;
-  setOwn(reset);
-  emit('update:modelValue', [...reset]);
+  if (!sameValue(value.value, reset)) {
+    setOwn(reset);
+    emit('update:modelValue', [...reset]);
+  }
+  field?.onReset();
 }
 </script>
 
