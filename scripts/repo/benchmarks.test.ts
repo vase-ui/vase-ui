@@ -3,20 +3,17 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import type { Check, Group } from '../../benchmarks/behavior/types.ts';
+import { fixtureFileOf, scenarioOf } from '../../benchmarks/behavior/fixtures.ts';
+import type { Group } from '../../benchmarks/behavior/types.ts';
 import { LIBRARIES, SETUPS } from '../../benchmarks/scenarios.ts';
 import type { Features, Results } from '../docs/benchmarksReport.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 
 // The root project has no DOM types, and the code of the checks uses them in the page. So the test
 // loads the groups at run time.
-const {
-  GROUPS,
-  scenarioOf,
-}: {
-  GROUPS: readonly Group[];
-  scenarioOf: (check: Check, caseName: string | null) => string | undefined;
-} = await import(pathToFileURL(join(REPOSITORY_ROOT, 'benchmarks/behavior/groups.ts')).href);
+const { GROUPS }: { GROUPS: readonly Group[] } = await import(
+  pathToFileURL(join(REPOSITORY_ROOT, 'benchmarks/behavior/groups.ts')).href
+);
 
 interface Manifest {
   dependencies?: Record<string, string>;
@@ -130,16 +127,10 @@ test('a behavior result is null only when the library has no fixture of the chec
           if (cases === undefined) {
             continue;
           }
-          const extension = library.framework === 'react' ? 'tsx' : 'vue';
           const fixtures = (check.cases ?? [null])
-            .map((caseName) => scenarioOf(check, caseName))
+            .flatMap((caseName) => scenarioOf(check, caseName) ?? [])
             .filter((scenario) =>
-              existsSync(
-                join(
-                  REPOSITORY_ROOT,
-                  `benchmarks/libraries/${library.id}/behavior/${String(scenario)}.${extension}`,
-                ),
-              ),
+              existsSync(join(REPOSITORY_ROOT, fixtureFileOf(library, scenario))),
             );
           assert.equal(
             cases === null,
