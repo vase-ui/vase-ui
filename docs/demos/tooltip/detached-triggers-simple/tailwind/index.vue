@@ -22,11 +22,7 @@ const arrowClass =
     <Tooltip.Root :handle="demoTooltip">
       <Tooltip.Portal>
         <Tooltip.Positioner :side-offset="11">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Tooltip.Popup :class="popupClass">
               <Tooltip.Arrow :class="arrowClass" />
               Delete

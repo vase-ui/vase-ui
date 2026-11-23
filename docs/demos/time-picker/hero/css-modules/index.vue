@@ -45,11 +45,7 @@ const popupHiddenClass = styles.PopupHidden;
       </div>
       <Popover.Portal>
         <TimePicker.Positioner :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <TimePicker.Popup aria-label="Choose a meeting time" :class="styles.Popup">
               <TimePicker.List aria-label="Times" :class="styles.List">
                 <template #item="{ time }">

@@ -47,7 +47,7 @@ const popupHiddenClass = styles.PopupHidden;
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="styles.Popup">
             <Menu.RadioGroup v-model="value">
               <Menu.GroupLabel :class="styles.GroupLabel">Sort</Menu.GroupLabel>

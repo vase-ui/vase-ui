@@ -45,7 +45,7 @@ const popupHiddenClass = styles.PopupHidden;
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="styles.Popup">
             <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
 
@@ -63,7 +63,6 @@ const popupHiddenClass = styles.PopupHidden;
                   <Transition
                     :enter-from-class="popupHiddenClass"
                     :leave-to-class="popupHiddenClass"
-                    appear
                   >
                     <Menu.Popup :class="styles.Popup">
                       <Menu.Item :class="styles.Item">Get Up!</Menu.Item>

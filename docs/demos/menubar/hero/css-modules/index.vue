@@ -33,11 +33,7 @@ const popupHiddenClass = styles.PopupHidden;
       <Menu.Trigger :class="styles.MenuTrigger">File</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner :class="styles.MenuPositioner" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="styles.MenuPopup">
               <Menu.Item :class="styles.MenuItem" @click="handleClick">New</Menu.Item>
               <Menu.Item :class="styles.MenuItem" @click="handleClick">Open</Menu.Item>
@@ -57,7 +53,6 @@ const popupHiddenClass = styles.PopupHidden;
                     <Transition
                       :enter-from-class="popupHiddenClass"
                       :leave-to-class="popupHiddenClass"
-                      appear
                     >
                       <Menu.Popup :class="styles.MenuPopup">
                         <Menu.Item :class="styles.MenuItem" @click="handleClick">PDF</Menu.Item>
@@ -81,11 +76,7 @@ const popupHiddenClass = styles.PopupHidden;
       <Menu.Trigger :class="styles.MenuTrigger">Edit</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner :class="styles.MenuPositioner" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="styles.MenuPopup">
               <Menu.Item :class="styles.MenuItem" @click="handleClick">Cut</Menu.Item>
               <Menu.Item :class="styles.MenuItem" @click="handleClick">Copy</Menu.Item>
@@ -100,11 +91,7 @@ const popupHiddenClass = styles.PopupHidden;
       <Menu.Trigger :class="styles.MenuTrigger">View</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner :class="styles.MenuPositioner" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="styles.MenuPopup">
               <Menu.Item :class="styles.MenuItem" @click="handleClick">Zoom In</Menu.Item>
               <Menu.Item :class="styles.MenuItem" @click="handleClick">Zoom Out</Menu.Item>
@@ -123,7 +110,6 @@ const popupHiddenClass = styles.PopupHidden;
                     <Transition
                       :enter-from-class="popupHiddenClass"
                       :leave-to-class="popupHiddenClass"
-                      appear
                     >
                       <Menu.Popup :class="styles.MenuPopup">
                         <Menu.Item :class="styles.MenuItem" @click="handleClick"

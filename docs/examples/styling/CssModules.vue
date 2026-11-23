@@ -7,11 +7,7 @@ import { Menu } from '@vase-ui/vue/menu';
     <Menu.Trigger :class="$style.Button">Song</Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="$style.Positioner" :side-offset="8">
-        <Transition
-          :enter-from-class="$style.PopupHidden"
-          :leave-to-class="$style.PopupHidden"
-          appear
-        >
+        <Transition :enter-from-class="$style.PopupHidden" :leave-to-class="$style.PopupHidden">
           <Menu.Popup :class="$style.Popup">
             <Menu.Item :class="$style.Item">Add to Library</Menu.Item>
             <Menu.Item :class="$style.Item">Add to Playlist</Menu.Item>

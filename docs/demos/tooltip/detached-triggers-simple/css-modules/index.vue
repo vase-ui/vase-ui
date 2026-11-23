@@ -44,11 +44,7 @@ const popupHiddenClass = styles.PopupHidden;
     <Tooltip.Root :handle="demoTooltip">
       <Tooltip.Portal>
         <Tooltip.Positioner :side-offset="11">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Tooltip.Popup :class="styles.Popup">
               <Tooltip.Arrow :class="styles.Arrow" />
               Delete

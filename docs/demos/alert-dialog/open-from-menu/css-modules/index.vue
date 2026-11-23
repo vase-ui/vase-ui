@@ -32,11 +32,7 @@ const CaretDownIcon: FunctionalComponent = () =>
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Transition
-          :enter-from-class="menuPopupHiddenClass"
-          :leave-to-class="menuPopupHiddenClass"
-          appear
-        >
+        <Transition :enter-from-class="menuPopupHiddenClass" :leave-to-class="menuPopupHiddenClass">
           <Menu.Popup :class="styles.MenuPopup">
             <Menu.Item :class="styles.MenuItem">Play</Menu.Item>
             <Menu.Item :class="styles.MenuItem">Share</Menu.Item>
@@ -50,17 +46,12 @@ const CaretDownIcon: FunctionalComponent = () =>
 
   <AlertDialog.Root v-model:open="dialogOpen">
     <AlertDialog.Portal>
-      <Transition
-        :enter-from-class="backdropHiddenClass"
-        :leave-to-class="backdropHiddenClass"
-        appear
-      >
+      <Transition :enter-from-class="backdropHiddenClass" :leave-to-class="backdropHiddenClass">
         <AlertDialog.Backdrop :class="styles.Backdrop" />
       </Transition>
       <Transition
         :enter-from-class="dialogPopupHiddenClass"
         :leave-to-class="dialogPopupHiddenClass"
-        appear
       >
         <AlertDialog.Popup :class="styles.DialogPopup">
           <div :class="styles.Intro">

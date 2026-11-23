@@ -49,11 +49,7 @@ const contentLeaveToClass = styles.ContentLeaveTo;
     <Popover.Root v-slot="{ payload }" :handle="demoPopover">
       <Popover.Portal>
         <Popover.Positioner :side-offset="8" :class="styles.Positioner">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Popover.Popup :class="styles.Popup">
               <Popover.Arrow :class="styles.Arrow" />
 

@@ -126,11 +126,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner class="outline-hidden" :side-offset="8" align="start">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="popupClass">
               <div :class="inputContainerClass">
                 <Menu.Input
@@ -176,7 +172,6 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
                         <Transition
                           :enter-from-class="popupHiddenClass"
                           :leave-to-class="popupHiddenClass"
-                          appear
                         >
                           <Menu.Popup :class="popupClass">
                             <Menu.List :class="submenuListClass">

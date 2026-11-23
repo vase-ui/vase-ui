@@ -62,11 +62,7 @@ const popupHiddenClass = styles.PopupHidden;
       </div>
       <Popover.Portal>
         <DateRangePicker.Positioner :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <DateRangePicker.Popup aria-label="Choose trip dates" :class="styles.Popup">
               <DateRangePicker.Calendar :class="styles.Calendar">
                 <div :class="styles.Nav">

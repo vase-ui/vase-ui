@@ -68,7 +68,7 @@ const popupHiddenClass = styles.PopupHidden;
   >
     <Menu.Portal>
       <Menu.Positioner :class="styles.Positioner" :side-offset="8" align="start">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="styles.Popup">
             <template v-if="payload">
               <Menu.Item

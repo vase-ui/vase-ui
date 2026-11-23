@@ -57,11 +57,7 @@ const contentLeaveToClass = transitionStyles.ContentLeaveTo;
           align="start"
           :class="[styles.Positioner, transitionStyles.Positioner]"
         >
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Menu.Popup :class="[styles.Popup, transitionStyles.Popup]">
               <Menu.Viewport v-slot="{ triggerId }" :class="transitionStyles.Viewport">
                 <Transition

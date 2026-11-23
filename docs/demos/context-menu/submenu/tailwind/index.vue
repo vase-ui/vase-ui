@@ -34,7 +34,7 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
     >
     <ContextMenu.Portal>
       <ContextMenu.Positioner class="outline-hidden">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <ContextMenu.Popup :class="popupClass">
             <ContextMenu.Item :class="itemClass">Add to Library</ContextMenu.Item>
 
@@ -48,7 +48,6 @@ const popupHiddenClass = 'scale-[0.98] opacity-0';
                   <Transition
                     :enter-from-class="popupHiddenClass"
                     :leave-to-class="popupHiddenClass"
-                    appear
                   >
                     <ContextMenu.Popup :class="popupClass">
                       <ContextMenu.Item :class="itemClass">Get Up!</ContextMenu.Item>

@@ -11,11 +11,7 @@ import { Menu } from '@vase-ui/vue/menu';
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Positioner class="outline-hidden" :side-offset="8">
-        <Transition
-          enter-from-class="scale-95 opacity-0"
-          leave-to-class="scale-95 opacity-0"
-          appear
-        >
+        <Transition enter-from-class="scale-95 opacity-0" leave-to-class="scale-95 opacity-0">
           <Menu.Popup
             class="origin-(--transform-origin) border border-neutral-950 bg-white py-1 text-neutral-950 outline-hidden transition dark:border-white dark:bg-neutral-950 dark:text-white"
           >

@@ -31,7 +31,7 @@ const popupHiddenClass = styles.PopupHidden;
         :class="styles.Positioner"
         :side-offset="({ side }) => (side === 'top' ? 12 : 8)"
       >
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Menu.Popup :class="styles.Popup">
             <Menu.Arrow :class="styles.Arrow" />
             <Menu.Item :class="styles.Item">Add to Library</Menu.Item>
