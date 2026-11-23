@@ -60,25 +60,18 @@ function startHide() {
 function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
   const wanted = new Map<Element, 'inert' | 'aria-hidden'>();
   if (next.hide) {
-    const kept = new Set<Node>();
     // A live region and an alert stay in use at each place of the document, so that the page
     // announces its messages, such as toasts, under a modal popup.
     const documents = new Set(next.inside.flatMap((each) => each?.ownerDocument ?? []));
     const announcers = [...documents].flatMap((doc) => [
       ...doc.querySelectorAll('[aria-live], [role="alert"]'),
     ]);
-    for (const element of [...next.inside, ...announcers]) {
-      if (!element?.isConnected) continue;
-      const body = element.ownerDocument.body;
-      for (
-        let node: Node | null = element;
-        node && node !== body;
-        node =
-          node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
-      ) {
-        kept.add(node);
-      }
-    }
+    const keptWhole = new Set(
+      [...next.inside, ...announcers].filter(
+        (element): element is Element => !!element?.isConnected,
+      ),
+    );
+    const kept = new Set([...keptWhole].flatMap((element) => pathToBody(element, keptWhole)));
     for (const node of kept) {
       for (const sibling of node.parentNode?.children ?? []) {
         if (!kept.has(sibling)) wanted.set(sibling, next.hide);
@@ -105,4 +98,23 @@ function writeHide(next: { hide: Layer['hide']; inside: (Element | null)[] }) {
     hideScope?.stop();
     hideScope = undefined;
   }
+}
+
+/**
+ * The element and its ancestors below `<body>`, across shadow roots. Each element of `keptWhole`
+ * stays in use with its content, so the path of an element in another one is empty: else a live
+ * region in a popup would hide the list beside it.
+ */
+function pathToBody(element: Element, keptWhole: ReadonlySet<Node>): Node[] {
+  const path: Node[] = [];
+  const body = element.ownerDocument.body;
+  for (
+    let node: Node | null = element;
+    node && node !== body;
+    node = node.parentNode && isShadowRoot(node.parentNode) ? node.parentNode.host : node.parentNode
+  ) {
+    if (node !== element && keptWhole.has(node)) return [];
+    path.push(node);
+  }
+  return path;
 }
