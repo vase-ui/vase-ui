@@ -57,9 +57,8 @@ async function endLeave(...elements: HTMLElement[]) {
 }
 
 /**
- * Waits until the popup is at its open place. Vue can end the enter at a timer before a busy page
- * starts the transition, so the popup can be near its closed place when the classes of the enter
- * go.
+ * Vue can end the enter by timer before a busy page starts the transition. The enter classes then
+ * go before the popup reaches its open place.
  */
 async function entered(popup: HTMLElement) {
   // The popup of the fixture is 300 px high at the bottom of the view.
@@ -77,7 +76,6 @@ function centerOf(id: string): Point {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
-/** Holds a button of the mouse at the place of the pointer, and releases it when the case ends. */
 async function hold(button: 'MouseLeft' | 'MouseMiddle') {
   // A case that fails before its release keeps the button down for the next case.
   onTestFinished(async () => {

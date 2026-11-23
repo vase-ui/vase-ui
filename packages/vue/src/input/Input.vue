@@ -106,8 +106,7 @@ function onInput(event: Event) {
   const details = createChangeEventDetails('none', event);
   emit('valueChange', next, details);
   if (!details.isCanceled) changeValue(next);
-  // The parent can refuse or change a controlled value, also in its own `input` listener. Its
-  // answer arrives with its next render.
+  // The parent can refuse or change a controlled value, also in its own `input` listener.
   afterRender(() => {
     showValue();
     if (!details.isCanceled) field?.onEdit();

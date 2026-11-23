@@ -3,11 +3,7 @@ import { Autocomplete } from '../../src/autocomplete';
 import { Dialog } from '../../src/dialog';
 import { Toast } from '../../src/toast';
 
-// An open modal dialog. Its viewport holds a button before the popup. Its popup holds a live region
-// before a list of buttons, a toast viewport before a button, and an autocomplete whose popup has
-// `Autocomplete.Empty` before its list. With `inPlace`, the popup of the autocomplete renders in the
-// popup of the dialog. Outside the dialog, a text stands before a live region and an alert. The popup
-// is above the fixed element of the dialog.
+// `position: relative; z-index: 1` puts the popup above the fixed element of the dialog.
 defineProps({ inPlace: Boolean });
 </script>
 
