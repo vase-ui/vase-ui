@@ -665,10 +665,11 @@ When a library does not have a part of a scenario:
 
 A note in `notes` can also name the animation form of a fixture, such as a `<Transition>` or CSS keyframes.
 
-The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json` and `benchmarks/notes.json`. Its list of the rows where Vase UI is larger or slower comes from the results, so do not write that list by hand.
+The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json`, `benchmarks/notes.json` and the groups of `benchmarks/behavior/groups.ts`. Its list of the rows where Vase UI is larger, slower or fails a check comes from the results, so do not write that list by hand.
 
 - `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
 - The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
+- A feature that a behavior check measures has no row in `features.json`, so that each claim has one source.
 - In a row of the kind `support`, the value is `yes`, `no`, `partial` or `not-applicable`. Use `not-applicable` for a feature that the framework of the library does not have, such as a Nuxt module for a React library. In a row of the kind `fact`, the value is a text, such as a count or a date.
 - A note that starts with "Our check" gives the result of our own check: of the example in the docs in Chromium, or of the apps of `benchmarks` in Chromium, Firefox and WebKit. Use such a check only where the docs do not give the fact, or for the result of a hydration or of an app.
 - `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Record a run in the pull request that moves a pin.
@@ -679,12 +680,14 @@ The page compares Vase UI with each other Vue library. Base UI is a reference fr
 - A measure is a metric of `results.json`, such as `Dialog.open`, or the size of a scenario, such as `Dialog.size`. Each measure is in one note only.
 - The `reason` gives, in one or two sentences, the behavior that costs the bytes, the time or the memory. A source is the pull request or the measurement that shows it.
 - Before you write a note for a new loss, profile it. When the work pays for no behavior, fix the code. Do not write a note for it.
-- A cell of the summary below 1 has a `*` that links to the section "Where Vase UI is larger or slower".
-- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a cell of the summary below 1 has no `*`, when a note names a metric that no table has or that another note names, and when two notes have the same `id`.
+- A cell of the summary below 1 has a `*` that links to the section "Where Vase UI is larger, slower or fails a check".
+- A Vase UI cell of a behavior check that does not pass in each engine has a `*` that links to the check in the list of the losses. The list gives the reason of the run, so such a loss needs no note. Fix the fault of Vase UI before you record the run.
+- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a cell of the summary below 1 has no `*`, when a note names a metric that no table has or that another note names, and when two notes have the same `id`. It also fails when a link of the page to a row of the features or the behavior tables finds no row, and when a link of a behavior table to a fixture or to the code finds no file.
+- `pnpm test:repo` fails when `results.json` does not have each behavior check that has code, in each engine, and when a behavior result is `null` for a library that has a fixture of the check.
 
 `benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
 
-1. Start the workflow on `main`, or on the branch of the pull request that moves a pin: `gh workflow run benchmarks.yml --ref <branch>`.
+1. Start the workflow on `main`, or on the branch of the pull request that moves a pin or adds a behavior check: `gh workflow run benchmarks.yml --ref <branch>`.
 2. When the run is complete, delete `benchmarks/results.json`.
 3. Download the artifact `results` of the run: `gh run download <run> --name results --dir benchmarks`.
 4. Commit `benchmarks/results.json` as `docs(benchmarks): record the results of <date>`.

@@ -1,4 +1,9 @@
-import type { SizeCell } from '../../../scripts/docs/benchmarksReport.ts';
+import type {
+  BehaviorCaseResult,
+  BehaviorEngineResult,
+  BehaviorVerdict,
+  SizeCell,
+} from '../../../scripts/docs/benchmarksReport.ts';
 import { data } from '../../benchmarks.data.ts';
 
 const BYTES = new Intl.NumberFormat('en-US');
@@ -68,4 +73,88 @@ export function setupName(setup: string): string {
 export function setupHeading(setup: string): string {
   const found = data.setups.find((item) => item.id === setup);
   return found === undefined ? setup : `${found.name}, Vue ${found.version}`;
+}
+
+const BEHAVIOR_VERDICTS: Record<BehaviorVerdict, string> = {
+  pass: 'Pass',
+  fail: 'Fail',
+  partly: 'Partly',
+  'not-stable': 'Not stable',
+  'not-measured': 'Not measured: frame gaps',
+};
+
+export function behaviorVerdictName(verdict: BehaviorVerdict): string {
+  return BEHAVIOR_VERDICTS[verdict];
+}
+
+/** A list of names, such as `Chromium, Firefox and WebKit`. */
+export function listOf(names: readonly string[]): string {
+  return names.length < 2
+    ? (names[0] ?? '')
+    : `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}`;
+}
+
+/** The engines that give the same result, by a key of the result, in the sequence of the engines. */
+export function sameResults(
+  engines: readonly BehaviorEngineResult[],
+  key: (engine: BehaviorEngineResult) => string,
+): { names: string; result: BehaviorEngineResult }[] {
+  const groups = new Map<string, BehaviorEngineResult[]>();
+  for (const engine of engines) {
+    groups.set(key(engine), [...(groups.get(key(engine)) ?? []), engine]);
+  }
+  return [...groups.values()].map((same) => ({
+    names: listOf(same.map((engine) => engineName(engine.engine))),
+    result: same[0],
+  }));
+}
+
+/** The verdict and the cases that do not pass: the cell text is the same when this key is. */
+export function verdictKey(engine: BehaviorEngineResult): string {
+  return [
+    engine.verdict,
+    ...engine.cases
+      .filter((item) => item.verdict !== 'pass')
+      .map((item) => `${String(item.case)} ${item.verdict}`),
+  ].join('\n');
+}
+
+const CASE_VERDICTS: Record<BehaviorCaseResult['verdict'], string> = {
+  pass: 'Pass',
+  fail: 'Fail',
+  'not-stable': 'Not stable',
+  'not-measured': 'Not measured',
+};
+
+/**
+ * The lines below the verdict of a cell. When the cases do not all have one verdict, the first lines
+ * name the cases that do not pass, by verdict, such as `Fail: Menu and Select`. Then each reason
+ * follows, with the cases that give it.
+ */
+export function failLines(cases: readonly BehaviorCaseResult[]): string[] {
+  const failing = cases.filter((item) => item.verdict !== 'pass');
+  const verdicts = [...new Set(failing.map((item) => item.verdict))];
+  const named = failing.filter((item) => item.case !== null);
+  const reasons = new Map<string, string[]>();
+  for (const item of failing) {
+    const runs =
+      item.verdict === 'not-stable'
+        ? `${String(item.passes)} of ${String(item.valid)} runs pass. `
+        : '';
+    const text = `${runs}${item.reason ?? ''}`.trim();
+    if (text !== '') {
+      reasons.set(text, [...(reasons.get(text) ?? []), ...(item.case === null ? [] : [item.case])]);
+    }
+  }
+  return [
+    ...(failing.length < cases.length || verdicts.length > 1
+      ? verdicts.map(
+          (verdict) =>
+            `${CASE_VERDICTS[verdict]}: ${listOf(named.filter((item) => item.verdict === verdict).map((item) => item.case ?? ''))}`,
+        )
+      : []),
+    ...[...reasons].map(([text, names]) =>
+      names.length === 0 ? text : `${listOf(names)}: ${text}`,
+    ),
+  ];
 }
