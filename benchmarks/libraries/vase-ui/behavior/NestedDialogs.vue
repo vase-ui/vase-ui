@@ -15,7 +15,7 @@ const dialogCount = ref(0);
       <Dialog.Trigger data-bench="dialog-1-trigger">Open dialog 1</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop class="bench-backdrop" />
-        <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+        <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
           <Dialog.Popup data-bench="dialog-1" class="bench-motion">
             <div class="bench-corner">
               <button type="button" data-bench="dialog-1-action" @click="dialogCount++">
@@ -29,7 +29,7 @@ const dialogCount = ref(0);
               <Dialog.Trigger data-bench="dialog-2-trigger">Open dialog 2</Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Backdrop class="bench-backdrop" />
-                <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+                <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
                   <Dialog.Popup data-bench="dialog-2" class="bench-motion">
                     <Dialog.Title>Dialog 2</Dialog.Title>
                     <Dialog.Description>Description 2</Dialog.Description>
