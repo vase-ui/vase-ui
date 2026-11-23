@@ -39,7 +39,8 @@ export interface Group {
   title: string;
   /**
    * A note for a library whose docs give no pattern for a step, or call the component Alpha or
-   * Preview.
+   * Preview. A note also names the animation form of a fixture, and a feature of the docs that the
+   * fixture rules leave out.
    */
   notes?: Partial<Record<Library['id'], string>>;
   checks: readonly Check[];

@@ -4,7 +4,13 @@
 import type { Page } from 'playwright';
 import { centerOf, enterOn, pressAt } from './input.ts';
 import type { Frame } from './recorder.ts';
-import { FULL_OPACITY, INPUT_DURING_EXIT_DELAY, LAYER_WAIT, shownOpacity } from './samples.ts';
+import {
+  FULL_OPACITY,
+  INPUT_DURING_EXIT_DELAY,
+  LAYER_WAIT,
+  REST_TIME,
+  shownOpacity,
+} from './samples.ts';
 import type { CaseResult } from './types.ts';
 
 /** The markers of the two layers of a fixture. */
@@ -74,19 +80,61 @@ export async function countAfterInput(page: Page, marker: string): Promise<strin
   return (await page.locator(`[data-bench="${marker}"]`).textContent()) ?? 'none';
 }
 
-/** Waits until a layer shows at full opacity, so that its enter is over. */
-async function waitForRest(page: Page, marker: string): Promise<void> {
-  const { done } = await waitForFrame(
-    page,
-    [marker],
-    (frame) => shownOpacity(frame, marker) >= FULL_OPACITY,
-    // The enter of the shared look is 500 ms, so the wait has two times the usual limit.
-    2 * LAYER_WAIT,
-  );
-  if (!done) {
-    throw new Error(
-      `${marker.charAt(0).toUpperCase()}${marker.slice(1).replace('-', ' ')} does not open.`,
+/**
+ * Reads the markers in the next frame, and whether an animation or a transition runs in that frame
+ * on an element of `marker`, in it, or on an element that holds it. Some libraries animate the
+ * element that places the layer, and not the layer.
+ */
+function nextFrameOfLayer(
+  page: Page,
+  marker: string,
+): Promise<{ frame: Frame; animating: boolean }> {
+  return page.evaluate(async (pageMarker) => {
+    const frame = await window.behaviorRecorder.nextFrame([pageMarker]);
+    const animating = Array.from(document.querySelectorAll(`[data-bench="${pageMarker}"]`)).some(
+      (element) => {
+        const animations = element.getAnimations({ subtree: true });
+        for (let node = element.parentElement; node !== null; node = node.parentElement) {
+          animations.push(...node.getAnimations());
+        }
+        return animations.some((animation) => animation.playState === 'running');
+      },
     );
+    return { frame, animating };
+  }, marker);
+}
+
+/**
+ * Waits for the end of the enter of a layer, and returns the frame at rest. A layer is at rest when
+ * it shows at full opacity, no animation or transition runs on it, and its rectangle and opacity
+ * stay the same for `REST_TIME`. A drawer slides in at full opacity, so the opacity alone does not
+ * show the end. The time also covers the frames before a library starts its enter, such as the
+ * frame that a `<Transition>` waits for.
+ */
+export async function waitForRest(page: Page, marker: string): Promise<Frame> {
+  // The enter of the shared look is 500 ms, so the wait has two times the usual limit.
+  const limit = 2 * LAYER_WAIT;
+  const start = performance.now();
+  let state: string | undefined;
+  let since = 0;
+  for (;;) {
+    const { frame, animating } = await nextFrameOfLayer(page, marker);
+    const opacity = shownOpacity(frame, marker);
+    const shown = frame.elements[marker]?.find((element) => element.visible);
+    const next =
+      shown === undefined || animating ? undefined : JSON.stringify([shown.rect, opacity]);
+    if (next !== state) {
+      state = next;
+      since = frame.time;
+    }
+    if (state !== undefined && opacity >= FULL_OPACITY && frame.time - since >= REST_TIME) {
+      return frame;
+    }
+    if (performance.now() - start > limit) {
+      throw new Error(
+        `${marker.charAt(0).toUpperCase()}${marker.slice(1).replace('-', ' ')} does not open.`,
+      );
+    }
   }
 }
 

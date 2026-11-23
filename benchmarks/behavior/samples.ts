@@ -19,6 +19,8 @@ export const FRAME_GAP_LIMIT = 100;
 export const INPUT_DURING_EXIT_DELAY = 100;
 /** The longest wait for a layer to open or to go, in milliseconds. */
 export const LAYER_WAIT = 1000;
+/** A layer is at rest when its rectangle and its opacity stay the same for this time, in milliseconds. */
+export const REST_TIME = 100;
 /** How far a drawer can be from the pointer in a drag, in pixels. */
 export const DRAWER_TOLERANCE = 10;
 /** How far a handle can be from the pointer in a drag, in pixels. */
