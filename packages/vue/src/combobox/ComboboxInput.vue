@@ -123,8 +123,7 @@ function showText() {
 function write(text: string, event: Event) {
   const hadValue = context.mode !== 'none' && context.hasValue;
   const accepted = context.setText(text, createComboboxDetails('input-change', event));
-  // The parent can refuse or change a controlled text, also in its own `input` listener. Its answer
-  // arrives with its next render.
+  // The parent can refuse or change a controlled text, also in its own `input` listener.
   afterRender(showText);
   if (!accepted) return;
   if (text === '' && isControl.value && !context.inline && context.mode === 'single') {

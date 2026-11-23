@@ -57,9 +57,8 @@ function startHide() {
 }
 
 /**
- * `whole` stays in use with all its content. `around` holds the backdrop, the viewport, the fixed
- * element and the sentinels. They stay in use, but their other content is outside the popup and
- * does not, as for a native modal `<dialog>`.
+ * `whole` stays in use with all its content. `around` stays in use, but its other content is
+ * outside the popup and does not, as for a native modal `<dialog>`.
  */
 function writeHide(next: {
   hide: Layer['hide'];
@@ -73,8 +72,7 @@ function writeHide(next: {
       [...next.whole, ...next.around].flatMap((each) => each?.ownerDocument ?? []),
     );
     // A live region and an alert stay in use at each place of the document, so that the page
-    // announces its messages, such as toasts, under a modal popup. `aria-live="off"` announces
-    // nothing.
+    // announces its messages, such as toasts, under a modal popup.
     const announcers = [...documents].flatMap((doc) => [
       ...doc.querySelectorAll('[aria-live]:not([aria-live="off"]), [role="alert"]'),
     ]);
@@ -111,8 +109,8 @@ function writeHide(next: {
 }
 
 /**
- * The element and its ancestors below `<body>`, across shadow roots. The path of an element in an
- * element of `whole` is empty: else a live region in a popup would hide the list beside it.
+ * An element inside `whole` has an empty path, so that a live region in a popup does not hide its
+ * siblings.
  */
 function pathToBody(element: Element, whole: ReadonlySet<Node>): Node[] {
   const path: Node[] = [];

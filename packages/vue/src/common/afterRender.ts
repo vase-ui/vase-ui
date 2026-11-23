@@ -1,11 +1,9 @@
 import { shallowRef, watch } from 'vue';
 
 /**
- * Gives a function that runs its callback after the next render, also when no change waits for a
- * render yet. A listener of the parent can run after the listener of the part, in the same event,
- * and change a model there. The callback then runs after the render of that change. `nextTick` in
- * the listener of the part runs before that render (test/measurements/input.test.ts). Call it in
- * `setup`.
+ * When no change waits for a render yet, a parent listener later in the same event can change a
+ * model. `nextTick` runs before that render, and this post watcher runs after it
+ * (test/measurements/input.test.ts).
  */
 export function useAfterRender() {
   const requests = shallowRef(0);
