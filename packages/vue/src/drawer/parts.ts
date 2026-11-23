@@ -157,7 +157,7 @@ export namespace Viewport {
  * @selector `[data-swiping]` A swipe moves the popup.
  * @selector `[data-swipe-dismiss]` The popup leaves after a swipe on it closed the drawer.
  * @cssVariable `--nested-drawers` The number of open drawers in this drawer, at each depth. The frontmost drawer has 0.
- * @cssVariable `--drawer-height` The height of the popup, in pixels, while a drawer in this drawer is open or leaves.
+ * @cssVariable `--drawer-height` The height of the popup, in pixels, while a drawer in this drawer is open or leaves and the popup has a height.
  * @cssVariable `--drawer-frontmost-height` The height of the frontmost open drawer, in pixels, while that drawer has a height. On the frontmost drawer, it is the height of its own popup.
  * @cssVariable `--drawer-snap-point-offset` The distance from the open place to the active snap point, in pixels. It is negative for a drawer that closes up, and 0 with no snap point.
  * @cssVariable `--drawer-swipe-movement-x` The movement of the popup on the x axis during a swipe, in pixels.

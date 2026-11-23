@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import { mount } from '../../test/render';
+import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -41,23 +42,28 @@ describe('a nested drawer', () => {
   });
 
   test('ends the nested state of the drawer below at the start of its leave, and leaves its height there until the end of the leave', async () => {
-    // A leave of 1 s keeps the nested popup in the DOM while the case reads the drawer below.
-    const slowLeave = document.head.appendChild(document.createElement('style'));
-    slowLeave.textContent = '.drawer-test-leave-active { transition-duration: 1s; }';
-    onTestFinished(() => slowLeave.remove());
     await mountDrawer({
       root: { defaultOpen: true },
       nested: { root: { defaultOpen: true }, transition: true },
     });
     const parent = await opened();
     const child = await opened('nested-');
-    await waitFor(() => expect(parent.style.getPropertyValue('--nested-drawers')).toBe('1'));
+    await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px'));
+    expect(parent.style.getPropertyValue('--nested-drawers')).toBe('1');
     expect(parent).toHaveAttribute('data-nested-drawer-open');
+    // When a leave starts in the enter, CSS shortens the leave by the part of the enter that did not
+    // run (https://drafts.csswg.org/css-transitions-1/#reversing). The leave can then end before
+    // the command of the key, so the case reads the drawer below when the leave starts.
+    const atLeave = readWhen(
+      () => child.classList.contains('drawer-test-leave-active'),
+      () => ({
+        nestedDrawers: parent.style.getPropertyValue('--nested-drawers'),
+        nestedDrawerOpen: parent.hasAttribute('data-nested-drawer-open'),
+        height: parent.style.getPropertyValue('--drawer-height'),
+      }),
+    );
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(child.classList.contains('drawer-test-leave-active')).toBe(true));
-    expect(parent.style.getPropertyValue('--nested-drawers')).toBe('0');
-    expect(parent).not.toHaveAttribute('data-nested-drawer-open');
-    expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px');
+    expect(await atLeave).toEqual({ nestedDrawers: '0', nestedDrawerOpen: false, height: '300px' });
     await waitFor(() => expect(child.isConnected).toBe(false));
     await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe(''));
   });
@@ -110,5 +116,29 @@ describe('a nested drawer', () => {
     await opened('nested-');
     await waitFor(() => expect(parent.offsetHeight).toBe(200));
     expect(Math.min(...heights)).toBe(200);
+  });
+
+  test('keeps the own height of a drawer that opens with an open nested drawer', async () => {
+    // The stack formula of the Drawer page.
+    const stack = document.head.appendChild(document.createElement('style'));
+    stack.textContent = `.drawer-test-popup {
+      --stack-height: max(0px, calc(var(--drawer-frontmost-height, var(--drawer-height)) - 3rem));
+      height: var(--drawer-height, auto);
+    }
+    .drawer-test-popup[data-nested-drawer-open] {
+      height: calc(var(--stack-height) + 3rem);
+    }`;
+    onTestFinished(() => stack.remove());
+    await mountDrawer({
+      root: { defaultOpen: true },
+      nested: { root: { defaultOpen: true }, popup: { style: 'height: 200px' } },
+    });
+    const parent = await opened();
+    await opened('nested-');
+    await waitFor(() => expect(parent.offsetHeight).toBe(200));
+    const kept = parent.style.getPropertyValue('--drawer-height');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe(''));
+    expect(kept).toBe(`${parent.offsetHeight}px`);
   });
 });
