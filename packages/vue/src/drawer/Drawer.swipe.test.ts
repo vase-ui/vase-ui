@@ -56,6 +56,16 @@ async function endLeave(...elements: HTMLElement[]) {
   }
 }
 
+/**
+ * Waits until the popup is at its open place. Vue can end the enter at a timer before a busy page
+ * starts the transition, so the popup can be near its closed place when the classes of the enter
+ * go.
+ */
+async function entered(popup: HTMLElement) {
+  // The popup of the fixture is 300 px high at the bottom of the view.
+  await waitFor(() => expect(popup.getBoundingClientRect().top).toBe(window.innerHeight - 300));
+}
+
 /** A point at the text near the top of an element. */
 function textOf(id = 'popup'): Point {
   const rect = get(id).getBoundingClientRect();
@@ -67,6 +77,15 @@ function centerOf(id: string): Point {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+/** Holds a button of the mouse at the place of the pointer, and releases it when the case ends. */
+async function hold(button: 'MouseLeft' | 'MouseMiddle') {
+  // A case that fails before its release keeps the button down for the next case.
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: -1, y: -1 }, keys: `[/${button}]` });
+  });
+  await userEvent.pointer({ keys: `[${button}>]` });
+}
+
 /**
  * Presses the main button at `from` and moves it by `by` in `steps` moves of the same length. A
  * first move of 1 px starts the drag, as a mouse does, so the drag moves the popup by `by`.
@@ -75,7 +94,7 @@ async function press(from: Point, by: Point, steps = 6) {
   const length = Math.hypot(by.x, by.y) || 1;
   const start = { x: from.x + by.x / length, y: from.y + by.y / length };
   await userEvent.pointer({ coords: from });
-  await userEvent.pointer({ keys: '[MouseLeft>]' });
+  await hold('MouseLeft');
   await userEvent.pointer({ coords: start });
   for (let step = 1; step <= steps; step += 1) {
     await userEvent.pointer({
@@ -268,7 +287,7 @@ describe('the swipe that closes', () => {
     await mountDrawer({ transition: true, backdrop: {} });
     const popup = get('popup');
     const backdrop = get('backdrop');
-    await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+    await entered(popup);
     // By the speed of the release, the leave lasts from 20 ms to 200 ms. It can end before the
     // command of the release ends, so the case reads the popup and the backdrop when it starts.
     const atLeave = readWhen(
@@ -299,7 +318,7 @@ describe('the swipe that closes', () => {
     await mountDrawer({ transition: true, backdrop: {} });
     const popup = get('popup');
     const backdrop = get('backdrop');
-    await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+    await entered(popup);
     // The last sample moves 100 px in 20 ms, and the 100 px that are left take the least time.
     flick(get('text'), textOf(), await mousePointerId(textOf()), [
       [10, 1010],
@@ -348,7 +367,7 @@ describe('the swipe that closes', () => {
       );
       await waitFor(() => expect(byTestId(`${prefix}popup`)).not.toBe(null));
       const popup = get(`${prefix}popup`);
-      await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
+      await entered(popup);
       await drag(textOf(`${prefix}popup`), { x: 0, y: 200 });
       await waitFor(() => expect(popup.classList.contains('drawer-test-leave-active')).toBe(true));
       if (when === 'after') await endLeave(popup);
@@ -357,10 +376,8 @@ describe('the swipe that closes', () => {
       if (when === 'during') await endLeave(popup);
       await waitFor(() => expect([null, popup]).not.toContain(byTestId(`${prefix}popup`)));
       const next = get(`${prefix}popup`);
-      await waitFor(() => expect(next.className).toBe('drawer-test-popup'));
+      await entered(next);
       expect(next.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
-      // The popup of the fixture is 300 px high at the bottom of the view.
-      await waitFor(() => expect(next.getBoundingClientRect().top).toBe(window.innerHeight - 300));
     },
   );
 
@@ -517,6 +534,10 @@ describe('the swipe that closes', () => {
     await mountDrawer({ nested: { root: { defaultOpen: true } } });
     await waitFor(() => expect(byTestId('nested-popup')).not.toBe(null));
     const nested = get('nested-popup');
+    // A `ResizeObserver` measures the popup in a frame, and the commands of the press can end first.
+    await waitFor(() =>
+      expect(nested.style.getPropertyValue('--drawer-frontmost-height')).toBe('300px'),
+    );
     const release = await press(textOf('nested-popup'), { x: 0, y: 150 });
     await nextTick();
     expect(new DOMMatrixReadOnly(getComputedStyle(nested).transform).f).toBe(150);
@@ -562,7 +583,7 @@ describe('the swipe that closes', () => {
     const log: string[] = [];
     await mountDrawer({ root: rootEvents(log) });
     await press(textOf(), { x: 0, y: 60 });
-    await userEvent.pointer({ keys: '[MouseMiddle>]' });
+    await hold('MouseMiddle');
     await userEvent.pointer({ keys: '[/MouseLeft]' });
     await userEvent.pointer({ coords: { ...textOf(), y: textOf().y + 200 } });
     await nextTick();
@@ -799,20 +820,17 @@ describe('the swipe area', () => {
       popup: { style: 'height: 0; overflow: hidden' },
     });
     const release = await press(centerOf('swipe-area'), { x: -100, y: 0 }, 10);
-    try {
-      await waitFor(() => expect(byTestId('popup')).not.toBe(null));
-      await waitFor(() =>
-        expect(
-          Number(get('backdrop').style.getPropertyValue('--drawer-swipe-progress')),
-        ).toBeGreaterThan(0),
-      );
-      expect(get('popup').offsetHeight).toBe(0);
-      expect(get('popup').style.getPropertyValue('--drawer-frontmost-height')).toBe('');
-      expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('');
-      expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('');
-    } finally {
-      await release();
-    }
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    await waitFor(() =>
+      expect(
+        Number(get('backdrop').style.getPropertyValue('--drawer-swipe-progress')),
+      ).toBeGreaterThan(0),
+    );
+    expect(get('popup').offsetHeight).toBe(0);
+    expect(get('popup').style.getPropertyValue('--drawer-frontmost-height')).toBe('');
+    expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('');
+    expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('');
+    await release();
   });
 
   test('opens the drawer at 1 px and moves the popup from its closed place with the finger', async () => {
@@ -834,7 +852,10 @@ describe('the swipe area', () => {
     expect(get('indent').style.getPropertyValue('--drawer-swipe-progress')).toBe(
       String(1 - 100 / 300),
     );
-    expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('300px');
+    // A `ResizeObserver` measures the popup in a frame, and the commands of the press can end first.
+    await waitFor(() =>
+      expect(get('backdrop').style.getPropertyValue('--drawer-height')).toBe('300px'),
+    );
     expect(get('indent').style.getPropertyValue('--drawer-height')).toBe('300px');
     expect(area.hasAttribute('data-swiping')).toBe(true);
     expect(get('popup').hasAttribute('data-swiping')).toBe(true);
@@ -1021,7 +1042,7 @@ describe('the swipe area', () => {
     const { log } = await mountArea();
     const { x, y } = centerOf('swipe-area');
     await userEvent.pointer({ coords: { x, y } });
-    await userEvent.pointer({ keys: '[MouseLeft>]' });
+    await hold('MouseLeft');
     // The drag from the first move is more than half of the popup, so the release keeps it open.
     for (const step of [150, 250, 330]) await userEvent.pointer({ coords: { x, y: y - step } });
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
