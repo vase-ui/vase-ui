@@ -718,6 +718,42 @@ describe('the hover', () => {
     expect(popup()).toBe(null);
   });
 
+  test('a move from the trigger toward the popup keeps the tooltip open; a move away from the popup closes it with no rest delay', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          positioner: { side: 'top', sideOffset: 40 },
+          triggers: [{ key: 't', attrs: { delay: 0, closeDelay: 0, style: 'margin: 100px' } }],
+        },
+      ],
+    });
+    await userEvent.hover(trigger());
+    const element = await opened();
+    await waitFor(() => expect(positioner()!.style.visibility).toBe(''));
+    const center = centerOf(trigger());
+    const box = trigger().getBoundingClientRect();
+    const moveTo = (point: { x: number; y: number }) =>
+      document.elementFromPoint(point.x, point.y)!.dispatchEvent(
+        new PointerEvent('pointermove', {
+          bubbles: true,
+          composed: true,
+          pointerType: 'mouse',
+          clientX: point.x,
+          clientY: point.y,
+        }),
+      );
+    // A timer of 20 ms that starts after the move ends before the rest of 40 ms in the triangle.
+    moveTo({ x: center.x, y: box.top - 10 });
+    await sleep(20);
+    expect(trigger()).toHaveAttribute('data-popup-open');
+    moveTo(centerOf(element));
+    moveTo(center);
+    moveTo({ x: center.x, y: box.bottom + 10 });
+    await sleep(20);
+    expect(trigger()).not.toHaveAttribute('data-popup-open');
+  });
+
   test('a hover on the trigger while the popup leaves after a hover close opens the root at once; the element enters after the leave', async () => {
     const log: string[] = [];
     const attrs = reactive<Props>({ delay: 0 });
