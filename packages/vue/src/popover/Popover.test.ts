@@ -4071,6 +4071,27 @@ describe('the viewport', () => {
     expect(animated).toBe(true);
   });
 
+  test('in a positioner with the size of its variables, the popup has the size of its content at the first open', async () => {
+    mount(PopoverViewportParts, {
+      positioner: {
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
+    });
+    await nextTick();
+    await userEvent.click(byId('one'));
+    const element = await opened();
+    await placed();
+    await waitFor(() =>
+      expect(positioner()!.style.getPropertyValue('--positioner-width')).not.toBe(''),
+    );
+    for (let frame = 0; frame < 3; frame += 1) await waitSingleFrame();
+    expect(element.offsetWidth).toBeGreaterThan(0);
+    expect(element.offsetWidth).toBe(element.scrollWidth);
+    expect(positioner()!.style.getPropertyValue('--positioner-width')).toBe(
+      `${element.offsetWidth}px`,
+    );
+  });
+
   test.each(['top', 'left'] as const)(
     'a popup with a viewport on the %s side has insets from the edges that face the trigger',
     async (side) => {

@@ -37,7 +37,12 @@ export function usePopupSizes(element: () => HTMLElement | null) {
     () => (transitioning.value ? null : element()),
     (current, _, onCleanup) => {
       if (!current) return;
-      const measure = () => (positioner.value = sizeOf(current));
+      // A popup with `display: none`, such as one update after its mount, has no size. A
+      // positioner with that size would keep the popup at that size. The observer measures the
+      // popup when it shows.
+      const measure = () => {
+        if (current.checkVisibility()) positioner.value = sizeOf(current);
+      };
       measure();
       const observer = new ResizeObserver(measure);
       observer.observe(current);
