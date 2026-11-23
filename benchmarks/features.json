@@ -1160,6 +1160,7 @@
             },
             "base-ui": {
               "value": "37 of 37",
+              "note": "The component pages of the docs.",
               "source": "https://base-ui.com/llms.txt"
             }
           }

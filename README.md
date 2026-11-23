@@ -11,7 +11,7 @@
 
 Base UI, arranged for Vue.
 
-Unstyled Vue components from [Base UI](https://base-ui.com). Actively maintained. All 38 Base UI components, plus date, time and resizable panels. It ships no styles. A vase should not pick your flowers.
+Unstyled Vue components from [Base UI](https://base-ui.com). Actively maintained. All 37 Base UI components, plus date, time and resizable panels. It ships no styles. A vase should not pick your flowers.
 
 Vase UI is maintained independently: every Base UI release is ported within two weeks, and more than 6,500 tests run in each of Chromium, Firefox and WebKit before each merge.
 

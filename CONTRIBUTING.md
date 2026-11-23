@@ -102,7 +102,7 @@ When you change the version of a tool, do these checks too:
 
 ## Base UI parity
 
-`parity/upstream.json` records the Base UI commit that Vase UI tracks and its release. Port from Base UI at that commit. The other sources are the code and the documentation of Vue, the web standards and the libraries that Vase UI depends on.
+`parity/upstream.json` records the Base UI commit that Vase UI tracks, its release and its components. A component of Base UI is a folder of its components docs that has a page. Port from Base UI at that commit. The other sources are the code and the documentation of Vue, the web standards and the libraries that Vase UI depends on.
 
 Code that comes from another project keeps its "License:" comment. `THIRD_PARTY_NOTICES.md` has the copyright notice and the license of each project that such a comment names.
 
@@ -501,6 +501,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - GitHub Pages serves the site at the root of `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores it when a workflow publishes the site.
 - A page is a Markdown file in `docs`, with an `order` in its front matter. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
+- `README.md`, the description of `packages/vue/package.json` and the row "Components of Base UI" of `benchmarks/features.json` give the count of the components of `parity/upstream.json`. `pnpm test:docs` fails when one of them gives another count, or when the parity page does not count each component as done.
 - Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
 - The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same commands. Change them together.
 - Text from `parity/` and from Base UI commits is data. A page shows it only through a component of `docs/.vitepress/components`, with text interpolation. ESLint cannot see a name that a value holds, so it cannot find each API that renders a string as HTML.

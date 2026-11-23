@@ -14,22 +14,25 @@ import {
   resolveCommit,
 } from './upstreamClone.ts';
 
-/** The names of the folders that hold the docs of one component each, sorted. */
-export function componentFolders(files: readonly string[], commit: string): string[] {
+/**
+ * The names of the Base UI components, sorted: each folder of the components docs that has a page.
+ * A folder with no page, such as `radio`, holds the types of parts that the page of another
+ * component documents.
+ */
+export function componentNames(files: readonly string[], commit: string): string[] {
   const root = `${DOCS_FOLDER_PREFIX}components/`;
-  const names = new Set<string>();
-  for (const file of files) {
-    const end = file.indexOf('/', root.length);
-    if (file.startsWith(root) && end !== -1) {
-      names.add(file.slice(root.length, end));
-    }
-  }
-  if (names.size === 0) {
+  const names = files.flatMap((file) => {
+    const name = file.startsWith(root)
+      ? /^([^/]+)\/page\.mdx$/.exec(file.slice(root.length))?.[1]
+      : undefined;
+    return name === undefined ? [] : [name];
+  });
+  if (names.length === 0) {
     throw new Error(
-      `Commit ${commit} has no folder under ${root}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
+      `Commit ${commit} has no page in a folder under ${root}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
     );
   }
-  return [...names].sort();
+  return names.sort();
 }
 
 export function buildUpstream(
@@ -54,7 +57,7 @@ export function buildUpstream(
     commit,
     describe: count === 0 ? tag : `${tag}-${count}-g${commit.slice(0, 8)}`,
     release: tag.replace(/^v/, ''),
-    components: componentFolders(listFiles(clone, commit), commit),
+    components: componentNames(listFiles(clone, commit), commit),
     commits,
   };
 }
