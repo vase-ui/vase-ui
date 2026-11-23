@@ -3,7 +3,7 @@ import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 
 // A combobox of 300 items that counts the renders of each part with a call in its slot. Where the
-// part gives the slot a scope, the call reads it.
+// part gives the slot a scope, the call reads it. The test id of an item is its text.
 defineProps({
   count: { type: Function as PropType<(part: string, scope?: unknown) => string>, required: true },
   root: Object as PropType<Record<string, unknown>>,
@@ -32,7 +32,12 @@ const ITEMS = Array.from({ length: 300 }, (_, index) => `Item ${index}`);
           <Combobox.List>
             <template #default="{ state: listState }">{{ count('list', listState) }}</template>
             <template #item="{ item }">
-              <Combobox.Item v-slot="{ state: itemState }" :value="item" style="height: 20px">
+              <Combobox.Item
+                v-slot="{ state: itemState }"
+                :value="item"
+                :data-testid="item"
+                style="height: 20px"
+              >
                 {{ count('item', itemState) }}{{ item }}
               </Combobox.Item>
             </template>
