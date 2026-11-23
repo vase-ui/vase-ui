@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026.11.4
+
+Same Base UI release and commit as 2026.11.3.
+
+### Changes that you must make
+
+These rules hold for the popup and the backdrop of Dialog, Alert Dialog, Popover, Menu, Context Menu, Menubar, Tooltip, Date Picker, Date Range Picker and Time Picker:
+
+- Remove `appear` from a `<Transition>` around a popup or a backdrop. The element shows one update after its mount, so the enter runs with no `appear`. With `appear` and JavaScript hooks, a virtual DOM app calls `before-enter`, `enter` and `after-enter` two times. The demos of these families have no `appear`. ([#847](https://github.com/vase-ui/vase-ui/pull/847), [#848](https://github.com/vase-ui/vase-ui/pull/848))
+- The content of a popup unmounts at the end of its leave, not at the close. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- A JavaScript `enter` hook that starts from fixed keyframes, such as `opacity: [0, 1]`, jumps at an open during the leave. Give the closed style in the style sheet, and animate from the current style. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- After a close, the `payload` of the default slot of the root is the payload of the last render while the root was open. So the popup that leaves keeps its content when the parent clears the trigger. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- A popup or a backdrop that leaves has `inert` and no `hidden`. A closed part with `keepMounted` has `hidden` and `inert`. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+
+### Changed
+
+- The popup and the backdrop of the families above render their content from the update after their mount. So each item of a `v-for` in a popup renders one time at an open, not two times. ([#849](https://github.com/vase-ui/vase-ui/pull/849))
+
+### Fixed
+
+- In the families above, an open during the leave of a popup keeps the same popup and backdrop, and a CSS transition goes back from where it is. The popup does not fade out and fade in again. An open by another trigger moves the same popup to that trigger, with the payload of that trigger. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- A popup takes the focus at each open, also after a close and an open in one task. A close that moves no focus, such as with `finalFocus` false, takes the focus out of the popup that leaves. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- The viewport of Popover, Menu and Tooltip measures the popup when it shows. So a positioner that takes the size variables has the size of the popup at the first open. ([#847](https://github.com/vase-ui/vase-ui/pull/847))
+- Menu: the `element` slot of `Menu.Popup` renders while a submenu leaves. A parent menu leaves at its close after its submenu unmounted during its leave. ([#847](https://github.com/vase-ui/vase-ui/pull/847), [#849](https://github.com/vase-ui/vase-ui/pull/849))
+- Tooltip, Popover, Preview Card, Navigation Menu and Menu: a pointer that leaves the trigger away from the popup closes it after `closeDelay` only. The safe triangle to the popup starts at the last point of the pointer on the trigger. ([#844](https://github.com/vase-ui/vase-ui/pull/844))
+- At the first open, a positioner with a CSS transition of its place shows at its place. It does not move in from the top left of the page, and it needs no `[data-instant]` rule. A popup that flips at its first place enters from its final side. ([#849](https://github.com/vase-ui/vase-ui/pull/849))
+- A popup takes its first focus after the update of its open, when the attributes of its children are final. So a busy Alert Dialog gives the focus to a Cancel button that becomes focusable at its mount. ([#850](https://github.com/vase-ui/vase-ui/pull/850))
+- Combobox: a form reset gives the text the label of the value that holds after the reset. When the parent controls the value and keeps it, the text is the label of that value. For the text, the reset emits only `update:inputValue`, and no change event. ([#850](https://github.com/vase-ui/vase-ui/pull/850))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.3 (B) | 2026.11.4 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,215,642 |     2,226,075 |
+| gzip    |       729,700 |       733,686 |
+| Brotli  |       636,637 |       640,441 |
+
 ## 2026.11.3
 
 Same Base UI release and commit as 2026.11.2.
