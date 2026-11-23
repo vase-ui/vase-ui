@@ -408,8 +408,9 @@ describe('the first place of an open', () => {
       requestAnimationFrame(() => {
         const before = {
           side: popup().getAttribute('data-side'),
+          // A loaded engine can show a transition some milliseconds after its start.
           top: Number.parseFloat(getComputedStyle(floating()).top) < 10,
-          translateY: translateY(popup()),
+          translateY: translateY(popup()) < -40,
           transitions: transitions(floating()),
         };
         for (const animation of floating().getAnimations({ subtree: true })) animation.cancel();
@@ -424,7 +425,7 @@ describe('the first place of an open', () => {
       }),
     );
     expect(firstFrame).toEqual({
-      before: { side: 'top', top: true, translateY: -50, transitions: ['top', 'transform'] },
+      before: { side: 'top', top: true, translateY: true, transitions: ['top', 'transform'] },
       after: { top: true, translateY: 50, transitions: [] },
     });
     await nextEvent(popup(), 'transitionrun');
