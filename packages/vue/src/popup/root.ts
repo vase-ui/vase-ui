@@ -44,8 +44,8 @@ export interface PopupTrigger {
 export interface PopupRoot<Payload = unknown> {
   readonly open: boolean;
   /**
-   * From a close until the popup and the backdrop are hidden or out of the document. An open during
-   * the leave does not end it.
+   * From a close until the popup and the backdrop are hidden or out of the document. An open ends it
+   * for an element that its part shows again.
    */
   readonly leaving: boolean;
   /** The `keepMounted` of the portal. */
@@ -466,7 +466,14 @@ export function usePopupRoot<Payload>(options: PopupRootOptions): PopupRoot<Payl
       if (isOpen) interaction.value = requestedInput ?? '';
       requestedInput = undefined;
       if (instant.value === 'trigger-change') instant.value = undefined;
-      if (isOpen || keepMounted.value) return;
+      if (isOpen) {
+        // A part that keeps its element shows it again. An element that Vue removes still leaves.
+        const kept = parts();
+        leavingNow = leavingNow.filter((element) => !kept.includes(element));
+        settle();
+        return;
+      }
+      if (keepMounted.value) return;
       const elements = parts();
       if (elements.length === 0) return;
       leavingNow.push(...elements);

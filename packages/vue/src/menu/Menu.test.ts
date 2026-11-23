@@ -4,6 +4,7 @@ import { nextTick, reactive } from 'vue';
 import { Menu, type MenuRootChangeEventDetails } from '@vase-ui/vue/menu';
 import { platform } from '../common/platform';
 import MenuInPopover from '../../test/fixtures/MenuInPopover.vue';
+import MenuControlledSubmenu from '../../test/fixtures/MenuControlledSubmenu.vue';
 import MenuInTransition from '../../test/fixtures/MenuInTransition.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import MenuEachPart from '../../test/fixtures/MenuEachPart.vue';
@@ -1668,6 +1669,23 @@ describe('more behaviors of the parts', () => {
       parent: { connected: true, hidden: false, leaving: false },
     });
     expect(await atParentLeave).toEqual({ parent: true, submenuConnected: false });
+    await waitFor(() => expect(parent.isConnected).toBe(false));
+  });
+
+  test('a menu leaves at its close after its submenu opened again during its leave and then unmounted', async () => {
+    const scene = reactive({ open: true, submenu: true, submenuOpen: true });
+    mount(MenuControlledSubmenu, { scene });
+    await waitFor(() => expect(subPopup()).not.toBe(null));
+    const sub = subPopup()!;
+    scene.submenuOpen = false;
+    await waitFor(() => expect(sub).toHaveClass('menu-slow-leave-active'));
+    scene.submenuOpen = true;
+    await nextTick();
+    expect(subPopup()).toBe(sub);
+    scene.submenu = false;
+    await nextTick();
+    const parent = popup()!;
+    scene.open = false;
     await waitFor(() => expect(parent.isConnected).toBe(false));
   });
 });
