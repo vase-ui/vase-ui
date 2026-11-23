@@ -20,7 +20,7 @@ const { root } = context;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
-const shown = usePopupPart(root, element);
+const { entered, shown } = usePopupPart(root, element);
 const state = computed<TooltipPopupState>(() => ({
   open: root.open,
   side: placement.side.value,
@@ -69,9 +69,9 @@ defineExpose({ element });
     />
   </template>
   <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </component>
   <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

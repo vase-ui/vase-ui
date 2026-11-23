@@ -25,7 +25,7 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
-const popupShown = usePopupPart(root, element);
+const { entered, shown: popupShown } = usePopupPart(root, element);
 const shown = computed(() => popupShown.value || menu.childLeaving);
 const state = computed<MenuPopupState>(() => ({
   open: root.open,
@@ -119,9 +119,9 @@ submenu in it leaves. -->
     />
   </template>
   <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </component>
   <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

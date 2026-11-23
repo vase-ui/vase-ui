@@ -6,11 +6,13 @@ import { afterEach, describe, expect, inject, onTestFinished, test } from 'vites
 import { page, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
+import MeasureFirstPlace from '../fixtures/MeasureFirstPlace.vue';
 import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
 import MeasureTransitionReopen from '../fixtures/MeasureTransitionReopen.vue';
 import MeasureTransitionShow from '../fixtures/MeasureTransitionShow.vue';
 import { createScrollDocument } from '../fixtures/scrollDocument';
+import { nextEvent } from '../animation';
 import { holdPress, stopFling, touchDrag } from '../pointer';
 import { mount } from '../render';
 import { waitFor } from '../waitFor';
@@ -384,6 +386,50 @@ describe('the first frame after an open', () => {
     await nextFrame();
     expect(first.toJSON()).toEqual(floating.getBoundingClientRect().toJSON());
     expect(first.top).toBeGreaterThan(100);
+  });
+});
+
+describe('the first place of an open', () => {
+  const translateY = (target: Element) =>
+    Math.round(new DOMMatrix(getComputedStyle(target).transform).f);
+  const transitions = (target: Element) =>
+    target
+      .getAnimations({ subtree: true })
+      .map((animation) => (animation as CSSTransition).transitionProperty);
+
+  test('a change of the place and the side after the layout read of Floating UI starts transitions from the read; `cancel()` shows the new style, and the enter starts from it', async () => {
+    const scene = reactive({ open: false });
+    mount(MeasureFirstPlace, { scene });
+    await nextTick();
+    scene.open = true;
+    const floating = () => page.getByTestId('floating').element() as HTMLElement;
+    const popup = () => page.getByTestId('popup').element();
+    const firstFrame = await new Promise((resolve) =>
+      requestAnimationFrame(() => {
+        const before = {
+          side: popup().getAttribute('data-side'),
+          // A loaded engine can show a transition some milliseconds after its start.
+          top: Number.parseFloat(getComputedStyle(floating()).top) < 10,
+          translateY: translateY(popup()) < -40,
+          transitions: transitions(floating()),
+        };
+        for (const animation of floating().getAnimations({ subtree: true })) animation.cancel();
+        resolve({
+          before,
+          after: {
+            top: getComputedStyle(floating()).top === floating().style.top,
+            translateY: translateY(popup()),
+            transitions: transitions(floating()),
+          },
+        });
+      }),
+    );
+    expect(firstFrame).toEqual({
+      before: { side: 'top', top: true, translateY: true, transitions: ['top', 'transform'] },
+      after: { top: true, translateY: 50, transitions: [] },
+    });
+    await nextEvent(popup(), 'transitionrun');
+    expect(translateY(popup())).toBeGreaterThan(0);
   });
 });
 

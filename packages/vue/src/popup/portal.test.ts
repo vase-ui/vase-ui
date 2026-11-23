@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, inject, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import PopupPartsOfFamilies from '../../test/fixtures/PopupPartsOfFamilies.vue';
 import { finishAnimations } from '../../test/animation';
@@ -46,6 +46,30 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts }) => {
       parts.flatMap((part) => [`${part} after-enter`, `${part} after-leave`]).toSorted(),
     );
   });
+
+  // The counts are renders of the virtual DOM: a Vapor component updates each binding alone.
+  test.runIf(inject('app') === 'vdom').each([{ as: undefined }, { as: 'section' }])(
+    'renders the content of each part once at an open, with `as` $as',
+    async ({ as }) => {
+      const renders: Record<string, number> = {};
+      const count = (part: string) => {
+        renders[part] = (renders[part] ?? 0) + 1;
+        return '';
+      };
+      mount(PopupPartsOfFamilies, {
+        family,
+        scene: { open: true },
+        log: { add() {} },
+        as,
+        count,
+      });
+      await waitFor(() => expect(byTestId('popup')?.checkVisibility()).toBe(true));
+      for (let frame = 0; frame < 3; frame += 1) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      expect(renders).toEqual(Object.fromEntries(parts.map((part) => [part, 1])));
+    },
+  );
 
   test('in the `element` slot: the parts leave the DOM at the close', async () => {
     const { scene } = mountFamily(family, true);
