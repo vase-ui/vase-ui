@@ -172,7 +172,10 @@ export interface ComboboxRootContext {
   readonly controlId: string;
   /** The positioner element, while it is mounted. */
   positioner: ShallowRef<HTMLElement | null>;
-  /** The positioner has its first place for this open. */
+  /**
+   * The positioner has a place. A positioner that stays mounted after a close keeps it until its
+   * next place.
+   */
   placed: ShallowRef<boolean>;
   /** The side of the popup, while a positioner places it. */
   side: ShallowRef<Side | null>;

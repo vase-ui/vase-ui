@@ -419,11 +419,11 @@ export function usePlacement(
   // transitions that this place starts. A transition that started before it continues, such as the
   // enter of a popup that loses `hidden`. A later place of the open, such as at another trigger,
   // keeps its transitions.
-  let firstPlace = true;
+  let nextPlaceIsFirst = true;
   watch(
     () => root.open,
     (open) => {
-      if (open) firstPlace = true;
+      if (open) nextPlaceIsFirst = true;
     },
     { flush: 'sync' },
   );
@@ -432,8 +432,8 @@ export function usePlacement(
     floating.middlewareData,
     () => {
       const element = options.positioner.value;
-      if (!firstPlace || !element) return;
-      firstPlace = false;
+      if (!nextPlaceIsFirst || !element) return;
+      nextPlaceIsFirst = false;
       // Vue renders the place after this watcher.
       const started = new Set(element.getAnimations({ subtree: true }));
       void nextTick(() => {
@@ -509,7 +509,10 @@ export function usePlacement(
     align,
     anchorHidden,
     placed,
-    /** Floating UI has the first place of this open, with its variables. */
+    /**
+     * Floating UI gave a place, with its variables. A positioner that stays mounted after a close
+     * keeps them until its next place.
+     */
     anchored: floating.isPositioned,
     arrow: {
       style: arrowStyle,

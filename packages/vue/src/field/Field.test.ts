@@ -1064,7 +1064,8 @@ describe('a native reset', () => {
       exposed.field.validate();
       expect(json(validated)).toBe(json([secondValue]));
 
-      // The first value is the value of the control, so only the answer of the parent changes it.
+      // After the kept reset, the first value is the value of the control. So the next reset changes
+      // the first value only through the answer of the parent.
       keeps = false;
       form.reset();
       await settle();
