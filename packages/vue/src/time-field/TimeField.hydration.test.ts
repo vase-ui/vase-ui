@@ -1,6 +1,7 @@
 import { describe, expect, inject, test } from 'vitest';
 import { nextTick } from 'vue';
 import DateTimeFieldsOnServer from '../../test/fixtures/DateTimeFieldsOnServer.vue';
+import { hydrateInFrame } from '../../test/hydrateInFrame';
 import { hydrate, renderOnServer } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 
@@ -26,7 +27,8 @@ describe('server render and hydration', () => {
 
   // The server renders `de-DE` with a 24-hour cycle: hour, minute and zone name. The browser renders
   // `ja-JP` with a 12-hour cycle: day period, hour, minute, and a literal where the server had the
-  // zone name.
+  // zone name. Vue logs the message one time for each copy of its module, so each run hydrates in a
+  // frame of its own.
   test('a server with another count of segments: the segments and literals of the browser, with their attributes, and one message of a virtual DOM part', async () => {
     const value = '2026-11-14T15:04[America/New_York]';
     const root = await renderOnServer('DateTimeFieldsOnServer', {
@@ -36,17 +38,16 @@ describe('server render and hydration', () => {
       hourCycle: 24,
     });
     expect(segmentsOf(root)).toHaveLength(2);
-    hydrate(
-      DateTimeFieldsOnServer,
+    const hydrated = await hydrateInFrame(
+      'DateTimeFieldsOnServer',
       { family: 'time', value, locale: 'ja-JP', hourCycle: 12 },
       root,
     );
-    await nextTick();
-    const [period, hour, minute] = segmentsOf(root);
+    const [period, hour, minute] = segmentsOf(hydrated);
     expect([period!.value, hour!.value, minute!.value]).toEqual(['午後', '3', '04']);
     expect(hour).toHaveAttribute('aria-valuemax', '12');
     expect(hour).toHaveAttribute('aria-valuemin', '1');
-    const spans = [...root.querySelectorAll('[role="group"] span')];
+    const spans = [...hydrated.querySelectorAll('[role="group"] span')];
     expect(
       spans.map((span) => [
         span.textContent,

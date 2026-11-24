@@ -43,6 +43,9 @@ const RUN_EACH_TEST = [
   // the shell script.
   /^packages\/vue\/test\/server\//,
   /^packages\/vue\/test\/[^/]+\.sh$/,
+  // `hydrateInFrame` makes a frame load `test/hydrateComponent.ts` by its URL. The module graph of a
+  // test file does not hold it, and the test files that use it are in other folders.
+  /^packages\/vue\/test\/hydrateComponent\.ts$/,
   // `test/demos.ownVariants.test.tsx` reads the names of these records with `import.meta.glob`.
   // Vitest selects no test file for a record.
   /^parity\/own\//,

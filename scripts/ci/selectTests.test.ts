@@ -39,6 +39,7 @@ const RUN_EACH_TEST_PATHS = [
   'packages/vue/test/server/renderToHtml.ts',
   'packages/vue/test/server/printSegmentLayouts.ts',
   'packages/vue/test/webkitFullKeyboardAccess.sh',
+  'packages/vue/test/hydrateComponent.ts',
   'parity/own/resizable.json',
 ];
 

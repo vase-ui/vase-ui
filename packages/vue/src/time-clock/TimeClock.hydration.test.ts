@@ -1,6 +1,7 @@
 import { describe, expect, inject, test } from 'vitest';
 import { nextTick } from 'vue';
 import TimeClockOnServer from '../../test/fixtures/TimeClockOnServer.vue';
+import { hydrateInFrame } from '../../test/hydrateInFrame';
 import { hydrate, mount, renderOnServer, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 
@@ -18,7 +19,8 @@ const elementsOf = (root: Element) =>
       )
       .sort();
     const text = element.children.length === 0 ? element.textContent : '';
-    const value = element instanceof HTMLInputElement ? ` value ${element.value}` : '';
+    const value =
+      element.localName === 'input' ? ` value ${(element as HTMLInputElement).value}` : '';
     return `${element.localName} ${attributes.join(' ')} ${text}${value}`;
   });
 
@@ -61,16 +63,16 @@ describe('server render and hydration', () => {
   );
 
   // A locale that the browser lacks can give another hour cycle than on the server. Vue logs one
-  // message for the other count of numbers, as for the segments of a field.
+  // message for the other count of numbers, as for the segments of a field. It logs the message one
+  // time for each copy of its module, so each run hydrates in a frame of its own.
   test('a server with another hour cycle: the elements of a client render after the mount', async () => {
     const root = await renderOnServer('TimeClockOnServer', { value: '13:45', hourCycle: 24 });
     expect(root.querySelectorAll('[style*="--time-clock-number-angle"]')).toHaveLength(24);
     const client = { value: '13:45', hourCycle: 12 };
-    hydrate(TimeClockOnServer, client, root);
-    await settle();
+    const hydrated = await hydrateInFrame('TimeClockOnServer', client, root);
     const { root: clientRoot } = mount(TimeClockOnServer, client);
     await settle();
-    expect(elementsOf(root)).toEqual(elementsOf(clientRoot));
+    expect(elementsOf(hydrated)).toEqual(elementsOf(clientRoot));
     expect(takeReportedMessages()).toEqual(
       isVaporParts ? [] : ['console.error: Hydration completed but contains mismatches.'],
     );

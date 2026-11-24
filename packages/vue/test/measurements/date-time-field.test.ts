@@ -4,9 +4,9 @@
 import { afterEach, describe, expect, inject, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import MeasureHydratedList, { type MeasuredItem } from '../fixtures/MeasureHydratedList.vue';
+import { hydrateInFrame } from '../hydrateInFrame';
 import { hydrate, renderOnServer, settle } from '../render';
 import { takeReportedMessages } from '../reportedMessages';
-import type { hydrateMeasureList } from './hydrateMeasureList';
 
 let root: HTMLElement | undefined;
 
@@ -264,49 +264,15 @@ describe('Vue hydrates a list of inputs and spans that differs from the server H
       items: serverItems,
       ...props,
     });
-    const frame = document.createElement('iframe');
-    const loaded = new Promise<void>((resolve) =>
-      frame.addEventListener('load', () => resolve(), { once: true }),
-    );
-    frame.srcdoc = '<!doctype html><html><body><div></div></body></html>';
-    html('').appendChild(frame);
-    await loaded;
-    const frameWindow = frame.contentWindow as Window & {
-      onFrameReady?: (fn: typeof hydrateMeasureList) => void;
-      onFrameError?: (error: unknown) => void;
-    };
-    // Vite gives the flags to this page only. The Vue of the frame writes to the console of this
-    // page, so its messages reach `takeReportedMessages()`.
-    Object.assign(frameWindow, {
-      console,
-      __VUE_OPTIONS_API__: true,
-      __VUE_PROD_DEVTOOLS__: false,
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
-    });
-    const container = frame.contentDocument!.body.firstElementChild!;
-    container.innerHTML = serverRoot.innerHTML;
-    const moduleUrl = new URL('./hydrateMeasureList.ts', import.meta.url).href;
-    const hydrateInFrame = await new Promise<typeof hydrateMeasureList>((resolve, reject) => {
-      frameWindow.onFrameReady = resolve;
-      frameWindow.onFrameError = reject;
-      const script = frame.contentDocument!.createElement('script');
-      script.type = 'module';
-      script.textContent = `import(${JSON.stringify(moduleUrl)}).then((mod) => window.onFrameReady(mod.hydrateMeasureList), (err) => window.onFrameError(err));`;
-      frame.contentDocument!.head.appendChild(script);
-    });
-    const unmount = await hydrateInFrame(
-      inject('app'),
+    const container = await hydrateInFrame(
+      'MeasureHydratedList',
       { items: clientItems, ...props },
-      container,
+      serverRoot,
     );
-    try {
-      expect(shownItems(container)).toEqual(rightItems(clientItems));
-      expect(takeReportedMessages()).toEqual(
-        isVaporFixture ? [] : ['console.error: Hydration completed but contains mismatches.'],
-      );
-    } finally {
-      unmount();
-    }
+    expect(shownItems(container)).toEqual(rightItems(clientItems));
+    expect(takeReportedMessages()).toEqual(
+      isVaporFixture ? [] : ['console.error: Hydration completed but contains mismatches.'],
+    );
   });
 
   test('without `data-allow-mismatch`, Vue warns for a text', async () => {
