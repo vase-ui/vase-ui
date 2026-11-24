@@ -87,10 +87,6 @@ const portalMountedKey: InjectionKey<Readonly<Ref<boolean>>> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'portal mounted' : undefined,
 );
 
-/**
- * The portal of a popup. A family whose modal popup has a positioner gives it as `positioner`. The
- * fixed element of the modal popup then takes the `z-index` of the positioner.
- */
 export function usePopupPortal(
   root: PopupRoot,
   layer: Layer,

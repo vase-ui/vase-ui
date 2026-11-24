@@ -371,9 +371,6 @@ test.each(pressedCovers)(
   },
 );
 
-// A page with a z-index scale puts the positioner of a popup above the backdrop and the viewport
-// of a dialog. The fixed element of a modal popup takes the z-index of its positioner, so that it
-// covers what the popup covers, and a press outside reaches only that popup.
 const scaled = [
   { name: 'Select', inner: 'select' },
   { name: 'Menu', inner: 'menu' },
@@ -392,10 +389,6 @@ function addStyleSheet(css: string) {
   onTestFinished(() => style.remove());
 }
 
-/**
- * Mounts the dialog and opens the popup in it with a click on its trigger. The log has the changes
- * of an open state after that open.
- */
 async function openInDialog(
   inner: 'select' | 'menu' | 'popover' | 'combobox' | 'dialog',
   scale = true,
@@ -466,8 +459,8 @@ test.each(scaled)(
   },
 );
 
-// The positioner of a select stays in the DOM after a close, as a positioner with `keepMounted`
-// does. So only the new fixed element of the next open makes the portal read the z-index again.
+// The positioner of a select stays in the DOM after a close. So only the new fixed element of the
+// next open makes the portal read the z-index again.
 test('Select in a dialog on a z-index scale: the next open takes the z-index that the positioner has then', async () => {
   const { block, trigger } = await openInDialog('select');
   const positioner = document.querySelector('[data-testid="positioner"]');

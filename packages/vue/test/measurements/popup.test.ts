@@ -1095,7 +1095,6 @@ describe('the z-index of a positioner', () => {
           document.elementFromPoint(x, y)?.id,
         ]),
       );
-    // With no z-index, the fixed element is under each element that has one.
     expect(hits()).toEqual({
       corner: 'scrim',
       inside: 'inside',
