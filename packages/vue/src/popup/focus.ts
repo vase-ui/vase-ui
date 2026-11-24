@@ -291,7 +291,7 @@ export function usePopupFocus(
   }
 
   // After the update of the close, each element that the update renders is in the document, and the
-  // page of a modal popup has no `inert`.
+  // page of a modal popup has no `inert` (test/measurements/dialog.test.ts).
   function settleFocus({ popup, active }: { popup: HTMLElement; active: Element | null }) {
     // An open in the same task takes the focus itself.
     if (root.open) return;
