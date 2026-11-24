@@ -260,6 +260,8 @@ describe.runIf(server.browser === 'firefox')('validation popup of Firefox betwee
     afterAll(() => window.removeEventListener('invalid', recordInvalid, true));
 
     it('dispatches the event', async () => {
+      // A repeat of this case starts a new list.
+      events.length = 0;
       await render(<input data-testid="input" />);
       window.addEventListener('invalid', recordInvalid, true);
       screen.getByTestId('input').dispatchEvent(new Event('invalid'));
