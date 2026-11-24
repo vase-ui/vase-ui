@@ -19,6 +19,7 @@ const elementsOf = (root: Element) =>
       )
       .sort();
     const text = element.children.length === 0 ? element.textContent : '';
+    // An element of the frame is not an instance of the classes of this page.
     const value =
       element.localName === 'input' ? ` value ${(element as HTMLInputElement).value}` : '';
     return `${element.localName} ${attributes.join(' ')} ${text}${value}`;
