@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026.11.7
+
+Same Base UI release and commit as 2026.11.6.
+
+### Fixed
+
+- While a modal Select, Menu (Menubar, Context Menu), Popover or Combobox (Autocomplete) is open, its fixed element takes the computed `z-index` of its positioner. On a page with a `z-index` scale, a press outside closes only the frontmost popup, and a Dialog control under it takes no press. While the popup is open, an element with a lower `z-index` than its positioner gets no pointer, the same as the rest of the page. Give the `z-index` to the positioner. A page with no `z-index` does not change. ([#864](https://github.com/vase-ui/vase-ui/pull/864))
+- After a mouse, touch or pen press, a focus that a popup or a list gives by script does not match `:focus-visible`. This applies to the first focus, each item under the pointer and the trigger after the close, except fields that take text. After a key, the focus shows the ring in Select, Menu, Popover, Combobox, Dialog and the other families on the popup layer. ([#865](https://github.com/vase-ui/vase-ui/pull/865))
+- Dialog, Alert Dialog, Drawer, Popover, Menu, Select and Combobox read a `finalFocus` element or function after the update of the close. So `finalFocus` finds each element that the update renders, and each element that was `inert` while the popup was open. ([#865](https://github.com/vase-ui/vase-ui/pull/865))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.6 (B) | 2026.11.7 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,234,874 |     2,244,077 |
+| gzip    |       736,334 |       739,483 |
+| Brotli  |       642,847 |       645,658 |
+
 ## 2026.11.6
 
 Same Base UI release and commit as 2026.11.5.
