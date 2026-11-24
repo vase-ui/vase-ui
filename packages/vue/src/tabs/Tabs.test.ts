@@ -1068,6 +1068,161 @@ describe('the scroll at the mount', () => {
   });
 });
 
+describe('the scroll after a key', () => {
+  interface ScrollingList {
+    orientation?: string;
+    list?: string;
+    tab?: string;
+    dir?: string;
+    count?: number;
+  }
+
+  // A list of 300 px with tabs of 90 px: the end of the list cuts the fourth tab and hides the
+  // fifth one.
+  async function mountScrollingList({
+    orientation = 'horizontal',
+    list = '',
+    tab = '',
+    dir,
+    count = 10,
+  }: ScrollingList) {
+    const vertical = orientation === 'vertical';
+    const size = vertical ? 'height' : 'width';
+    const tabs = await mountTabs({
+      root: { defaultValue: 'a', orientation },
+      list: {
+        style: `display: flex; flex-direction: ${vertical ? 'column; width: 120px' : 'row'}; ${size}: 300px; overflow: auto; ${list}`,
+      },
+      tabs: 'abcdefghij'
+        .slice(0, count)
+        .split('')
+        .map((key) => ({
+          key,
+          attrs: { style: `flex: none; margin: 0; border: 0; padding: 0; ${size}: 90px; ${tab}` },
+        })),
+      dir,
+    });
+    const scroll = () => Math.round(vertical ? tabs.list.scrollTop : tabs.list.scrollLeft);
+    /** Scrolls the list to `start`, focuses `key` with no scroll, and presses `keys`. */
+    async function moveFrom(key: string, start: number, ...keys: string[]) {
+      if (vertical) tabs.list.scrollTop = start;
+      else tabs.list.scrollLeft = start;
+      tabs.tab(key).focus({ preventScroll: true });
+      const pageY = window.scrollY;
+      await press(...keys);
+      return { focused: tabs.focused(), scroll: scroll(), pageScrolled: window.scrollY !== pageY };
+    }
+    return { ...tabs, moveFrom };
+  }
+
+  const padding = 'scroll-padding-inline: 24px; scroll-padding-block: 24px';
+
+  test('VUE-234: an arrow key that moves the focus to a tab that the end of the list cuts scrolls the list by the least distance that shows the whole tab, inside the scroll-padding of the list; the page does not scroll', async () => {
+    const { moveFrom } = await mountScrollingList({ list: padding });
+    expect(await moveFrom('c', 0, '{ArrowRight}')).toEqual({
+      focused: 'd',
+      scroll: 84,
+      pageScrolled: false,
+    });
+  });
+
+  test('an arrow key that moves the focus to a tab that the start of the list cuts shows the whole tab', async () => {
+    const { moveFrom } = await mountScrollingList({ list: padding });
+    expect(await moveFrom('c', 120, '{ArrowLeft}')).toEqual({
+      focused: 'b',
+      scroll: 66,
+      pageScrolled: false,
+    });
+  });
+
+  test('an arrow key that moves the focus to a tab that the list hides scrolls the list by the least distance', async () => {
+    const { moveFrom } = await mountScrollingList({ list: padding });
+    expect(await moveFrom('d', 0, '{ArrowRight}')).toEqual({
+      focused: 'e',
+      scroll: 174,
+      pageScrolled: false,
+    });
+  });
+
+  test('the scroll-margin of the tab counts after a key', async () => {
+    const { moveFrom } = await mountScrollingList({
+      tab: 'scroll-margin-inline: 24px; scroll-margin-block: 24px',
+    });
+    expect(await moveFrom('c', 0, '{ArrowRight}')).toEqual({
+      focused: 'd',
+      scroll: 84,
+      pageScrolled: false,
+    });
+  });
+
+  test.each([
+    {
+      name: 'vertical',
+      orientation: 'vertical',
+      next: '{ArrowDown}',
+      previous: '{ArrowUp}',
+      sign: 1,
+    },
+    {
+      name: 'horizontal, right to left',
+      orientation: 'horizontal',
+      dir: 'rtl',
+      next: '{ArrowLeft}',
+      previous: '{ArrowRight}',
+      sign: -1,
+    },
+  ])(
+    'an arrow key shows the whole tab that the end or the start of the list cuts: $name',
+    async ({ orientation, dir, next, previous, sign }) => {
+      const { moveFrom } = await mountScrollingList({ orientation, dir, list: padding });
+      expect(await moveFrom('c', 0, next)).toEqual({
+        focused: 'd',
+        scroll: 84 * sign,
+        pageScrolled: false,
+      });
+      expect(await moveFrom('c', 120 * sign, previous)).toEqual({
+        focused: 'b',
+        scroll: 66 * sign,
+        pageScrolled: false,
+      });
+    },
+  );
+
+  test('End and Home show the whole last and first tab', async () => {
+    const { moveFrom } = await mountScrollingList({ list: padding, count: 4 });
+    expect(await moveFrom('a', 0, '{End}')).toEqual({
+      focused: 'd',
+      scroll: 60,
+      pageScrolled: false,
+    });
+    expect(await moveFrom('d', 60, '{Home}')).toEqual({
+      focused: 'a',
+      scroll: 0,
+      pageScrolled: false,
+    });
+  });
+
+  test('a key in a list that is out of the view scrolls the page so that the focused tab shows', async () => {
+    const { moveFrom, tab } = await mountScrollingList({ list: `margin-top: 200vh; ${padding}` });
+    expect(await moveFrom('c', 0, '{ArrowRight}')).toMatchObject({
+      focused: 'd',
+      pageScrolled: true,
+    });
+    const rect = tab('d').getBoundingClientRect();
+    expect(rect.top).toBeGreaterThanOrEqual(-1);
+    expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+  });
+
+  test('a key in a list that does not overflow scrolls nothing', async () => {
+    const { moveFrom } = await mountScrollingList({ list: padding, count: 3 });
+    expect(await moveFrom('a', 0, '{ArrowRight}', '{ArrowRight}')).toEqual({
+      focused: 'c',
+      scroll: 0,
+      pageScrolled: false,
+    });
+  });
+});
+
 describe('the names', () => {
   test('VUE-14: a tab names the panel of its value in aria-controls, also with an id of the developer; a panel names its tab in aria-labelledby', async () => {
     const { tab, panel } = await mountTabs({

@@ -188,3 +188,101 @@ describe('the computed translate', () => {
     expect(getComputedStyle(element('tab')).translate).toBe('50% 10%');
   });
 });
+
+describe('the scroll of a focus in a list that scrolls', () => {
+  // A list of 300 px with tabs of 90 px. The end of the list cuts tab 3 (270-360 px) and hides tab
+  // 5 (450-540 px). A scroll of 120 px cuts tab 1 (90-180 px) at the start.
+  function tabList({ list = '', tab = '', vertical = false, rtl = false } = {}) {
+    root?.remove();
+    const size = vertical ? 'height: 90px' : 'width: 90px; height: 32px';
+    const tabs = Array.from(
+      { length: 10 },
+      (_, index) =>
+        `<button id="tab-${index}" style="flex: none; margin: 0; border: 0; padding: 0; ${size}; ${tab}">Tab ${index}</button>`,
+    ).join('');
+    // Each length is a whole number of pixels, so that a scroll of the page is one too.
+    html(`<button id="before" style="display: block; height: 20px">Before</button>
+      <div id="list" role="tablist" ${rtl ? 'dir="rtl"' : ''}
+        style="display: flex; flex-direction: ${vertical ? 'column; width: 120px; height' : 'row; width'}: 300px; overflow: auto; ${list}">${tabs}</div>`);
+    /** Scrolls the list to `start`, moves the focus to the tab `index` with `move`, and reads the scroll. */
+    return async (index: number, start: number, move: (tab: HTMLElement) => void) => {
+      const listElement = element('list');
+      if (vertical) listElement.scrollTop = start;
+      else listElement.scrollLeft = start;
+      element('before').focus({ preventScroll: true });
+      move(element(`tab-${index}`));
+      await nextFrame();
+      return Math.round(vertical ? listElement.scrollTop : listElement.scrollLeft);
+    };
+  }
+
+  const focus = (tab: HTMLElement) => tab.focus();
+  const showNearest = (tab: HTMLElement) => {
+    tab.focus({ preventScroll: true });
+    tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+  const padding = { list: 'scroll-padding-inline: 24px; scroll-padding-block: 24px' };
+  const margin = { tab: 'scroll-margin-inline: 24px; scroll-margin-block: 24px' };
+
+  test('focus() in a horizontal list: Chromium leaves a cut tab cut, Firefox centers it with a scroll-padding or a scroll-margin, WebKit stops at the scroll-padding or at the edge; each centers a hidden tab and leaves a tab cut at the start cut', async () => {
+    const outcomes: Record<string, number[]> = {};
+    for (const [name, style] of Object.entries({ padding, margin, neither: {} })) {
+      const move = tabList(style);
+      outcomes[name] = [
+        await move(3, 0, focus),
+        await move(5, 0, focus),
+        await move(1, 120, focus),
+      ];
+    }
+    const cutAtTheEnd = {
+      chromium: { padding: 0, margin: 0, neither: 0 },
+      firefox: { padding: 165, margin: 165, neither: 0 },
+      webkit: { padding: 84, margin: 0, neither: 60 },
+    }[server.browser as 'chromium' | 'firefox' | 'webkit'];
+    expect(outcomes).toEqual({
+      padding: [cutAtTheEnd.padding, 345, 120],
+      margin: [cutAtTheEnd.margin, 345, 120],
+      neither: [cutAtTheEnd.neither, 345, 120],
+    });
+  });
+
+  test("focus({ preventScroll: true }) and then scrollIntoView() with 'nearest' scroll the list by the least distance that shows the whole tab inside the scroll-padding or the scroll-margin, in each browser; also in a vertical and a right-to-left list", async () => {
+    const outcomes: Record<string, number[]> = {};
+    const layouts = {
+      padding,
+      margin,
+      neither: {},
+      vertical: { ...padding, vertical: true },
+      'right to left': { ...padding, rtl: true },
+    };
+    for (const [name, layout] of Object.entries(layouts)) {
+      const move = tabList(layout);
+      const sign = 'rtl' in layout ? -1 : 1;
+      outcomes[name] = [
+        await move(3, 0, showNearest),
+        await move(5, 0, showNearest),
+        await move(1, 120 * sign, showNearest),
+      ];
+    }
+    expect(outcomes).toEqual({
+      padding: [84, 264, 66],
+      margin: [84, 264, 66],
+      neither: [60, 240, 90],
+      vertical: [84, 264, 66],
+      'right to left': [-84, -264, -66],
+    });
+  });
+
+  test("scrollIntoView() with 'nearest' scrolls the page by the least distance that shows a tab out of the view, and does not scroll the page for a tab in the view", async () => {
+    const move = tabList({ list: `margin-top: 200vh; ${padding.list}` });
+    const below = window.scrollY;
+    await move(5, 0, showNearest);
+    const rect = element('tab-5').getBoundingClientRect();
+    expect(window.scrollY).toBeGreaterThan(below);
+    // WebKit scrolls the page by whole pixels.
+    expect(Math.abs(rect.bottom - window.innerHeight)).toBeLessThanOrEqual(1);
+    const inView = window.scrollY;
+    await move(3, 0, showNearest);
+    expect(window.scrollY).toBe(inView);
+  });
+});
