@@ -10,13 +10,8 @@ import { Popover } from '../../src/popover';
 type Family =
   'dialog' | 'dialog-uncontrolled' | 'alert-dialog' | 'drawer' | 'popover' | 'menu' | 'combobox';
 
-// A popup that `opener` opens, and that the parent holds with `v-model:open`. The dialog of
-// `dialog-uncontrolled` holds its own open state, and its trigger is `opener`. The `decide` item of
-// each popup changes the page and closes the popup in one handler, so that Vue patches the page in
-// the update of the close. The page has the button `target`, which Vue replaces with a new element
-// in that update, the heading `fallback`, and the box `box` with two tab stops. `finalFocus` of the
-// popup is a function that gives what `give` names: `target`, the `box`, or `false` after a focus
-// of `fallback` by the function itself. A popover is modal only with `modal`.
+// The `decide` item of each popup changes the page and closes the popup in one handler, so that
+// Vue patches the page in the update of the close, and replaces `target` with a new element.
 const props = defineProps({
   family: { type: String as PropType<Family>, required: true },
   give: { type: String as PropType<'target' | 'box' | 'fallback'>, required: true },

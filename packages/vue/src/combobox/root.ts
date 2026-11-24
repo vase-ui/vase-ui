@@ -517,7 +517,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
       const doc = ownerDocument(controlInput.value);
       const active = activeElement(doc);
       void nextTick(() => {
-        // The focus is on another element, such as one that code focused after the close.
+        // Code can focus another element after the close.
         const now = activeElement(doc);
         if (now && now !== doc.body && now !== active) return;
         const element = typeof target === 'function' ? target(root.closeInteraction) : target;

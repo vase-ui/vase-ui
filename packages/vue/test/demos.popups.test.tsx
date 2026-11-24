@@ -138,7 +138,6 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
       element,
       // A preview card opens 600 ms after a focus with `:focus-visible`, which `focusVisible: true`
       // gives in each browser, also after a focus with `focusVisible: false` of an earlier demo.
-      // The case moves a fake clock by that time.
       open: () => {
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         element.focus({ focusVisible: true });

@@ -255,10 +255,8 @@ describe('the focus ring after a submit that the validation blocks', () => {
 
 describe('a focus by script after a key and a press', () => {
   /**
-   * In a new document, which has no focus that a mouse gave: Tab to `seat`, then a press on
-   * `trigger`. The press opens the popup at `pointerdown` and focuses `o2` in a microtask, as the
-   * trigger of Select does. A focus by script follows each `pointermove` over an option and each
-   * ArrowDown. With `preventDefault`, `mousedown` has its default prevented.
+   * A new document has no focus that a mouse gave. A press on `trigger` opens the popup at
+   * `pointerdown` and focuses `o2` in a microtask, as the trigger of Select does.
    */
   async function journey(options: { preventDefault: boolean; first?: boolean; hover?: boolean }) {
     const frame = document.body.appendChild(document.createElement('iframe'));

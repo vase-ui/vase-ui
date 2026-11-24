@@ -317,7 +317,6 @@ export function useList(options: ListOptions): List {
     return nextRow?.[column] ?? nextRow?.at(-1);
   }
 
-  // A hover is an input of the pointer, and an arrow key one of the keyboard.
   const inputOf = (reason: HighlightReason): InteractionType =>
     reason === 'pointer'
       ? 'mouse'

@@ -84,13 +84,11 @@ function resolve(
 }
 
 /**
- * Focuses the element with the focus ring that the input gives: `focusVisible` is `true` after a
- * key and `false` after a pointer. A focus by script takes the ring of the last key, also after a
- * press whose `mousedown` the code took over (`trigger.ts`), so a pointer needs `false`
- * (test/measurements/select.test.ts). Firefox shows the ring after a key only with `true`
- * (test/measurements/popup.test.ts). With no known input, the browser decides. A field that takes
- * text matches `:focus-visible` at each focus, and `false` would hide its ring, so a pointer gives
- * it nothing. A checkbox, a radio or a button input takes no text, so a pointer gives it `false`
+ * A focus by script takes the ring of the last key, also after a press whose `mousedown` the code
+ * took over (`trigger.ts`), so a pointer needs `focusVisible: false`
+ * (test/measurements/select.test.ts). Firefox shows the ring after a key only with
+ * `focusVisible: true` (test/measurements/popup.test.ts). A field that takes text matches
+ * `:focus-visible` at each focus, and `false` would hide its ring, so a pointer gives it nothing
  * (test/measurements/select.test.ts). A browser without the option ignores it.
  */
 export function focusAs(element: HTMLElement | null | undefined, input: InteractionType = '') {
@@ -268,17 +266,15 @@ export function usePopupFocus(
     }
     // The return to the trigger, or to the element that had the focus before the open, happens at
     // once, so that a popup that another popup opens in the same task takes that element as the one
-    // that had the focus before. A target of the developer can be an element that the update of the
-    // close renders, so it waits for that update.
+    // that had the focus before.
     const target = options.finalFocus();
     if (target === undefined || target === true || target === null) moveFocus(popup);
     return { popup, active };
   }
 
-  // Gives the element that the return focuses, or `null`. A focus of an element that left the DOM
-  // or is hidden does nothing. An element in the popup that closes is no target, also while the popup
-  // leaves. After an open by code, the element that had the focus before comes before the trigger
-  // (BUG-6037).
+  // A focus of an element that left the DOM or is hidden does nothing. An element in the popup that
+  // closes is no target, also while the popup leaves. After an open by code, the element that had
+  // the focus before comes before the trigger (BUG-6037).
   function moveFocus(popup: HTMLElement) {
     const target = resolve(options.finalFocus(), root.closeInteraction);
     const fallbacks = [focusableTrigger(), before as HTMLElement | null];
@@ -295,14 +291,13 @@ export function usePopupFocus(
   }
 
   // After the update of the close, each element that the update renders is in the document, and the
-  // page of a modal popup has no `inert`. The return resolves its target at that time.
+  // page of a modal popup has no `inert`.
   function settleFocus({ popup, active }: { popup: HTMLElement; active: Element | null }) {
     // An open in the same task takes the focus itself.
     if (root.open) return;
     const doc = ownerDocument(popup);
     const now = activeElement(doc);
-    // The focus is on another element, such as one that a listener of the developer focused, or the
-    // element that the return focused at the close.
+    // A listener of the developer, or the return at the close, focused another element.
     if (now && now !== doc.body && now !== active && !popup.contains(now)) return;
     if (moveFocus(popup)) return;
     // The popup that leaves is inert. The browser moves the focus out of an inert element only when
