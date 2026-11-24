@@ -4,12 +4,13 @@ import type { hydrateComponent } from './hydrateComponent';
 
 /**
  * Hydrates the HTML of `serverRoot`, which `renderOnServer` made from the same fixture, in a new
- * frame, and gives the element of the frame that holds the DOM. The frame loads its own copy of Vue
- * and of the library. Vue logs a hydration mismatch one time for each copy of its module
- * (`hasLoggedMismatchError`), so a case that expects that message hydrates in a frame of its own in
- * each run. The Vue of the frame writes to the console of this page, so its messages reach
- * `takeReportedMessages()`. The frame goes when the test ends. The props must hold no function,
- * because a Vapor app reads a function in a root prop as a getter of the value.
+ * frame, and gives the element of the frame that holds the hydrated DOM. The frame loads its own
+ * copy of Vue and of the library. Vue logs `Hydration completed but contains mismatches.` one time
+ * for each copy of its module (`hasLoggedMismatchError`), so a case that expects that message
+ * hydrates in a frame of its own in each run. The Vue of the frame writes to the console of this
+ * page, so its messages reach `takeReportedMessages()`. The helper removes the frame when the test
+ * ends. The props must hold no function, because a Vapor app reads a function in a root prop as a
+ * getter of the value.
  */
 export async function hydrateInFrame(
   fixture: string,
@@ -24,8 +25,8 @@ export async function hydrateInFrame(
   document.body.append(frame);
   onTestFinished(() => frame.remove());
   await loaded;
-  const { contentWindow, contentDocument } = frame;
-  if (!contentWindow || !contentDocument) throw new Error('The frame has no document.');
+  const contentWindow = frame.contentWindow!;
+  const contentDocument = frame.contentDocument!;
   // Vite gives the flags of Vue to this page only.
   Object.assign(contentWindow, {
     console,

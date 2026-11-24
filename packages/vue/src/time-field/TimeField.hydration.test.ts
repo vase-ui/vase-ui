@@ -27,8 +27,8 @@ describe('server render and hydration', () => {
 
   // The server renders `de-DE` with a 24-hour cycle: hour, minute and zone name. The browser renders
   // `ja-JP` with a 12-hour cycle: day period, hour, minute, and a literal where the server had the
-  // zone name. Vue logs the message one time for each copy of its module, so each run hydrates in a
-  // frame of its own.
+  // zone name. Vue logs the mismatch message one time for each copy of its module, so each run
+  // hydrates in a frame of its own.
   test('a server with another count of segments: the segments and literals of the browser, with their attributes, and one message of a virtual DOM part', async () => {
     const value = '2026-11-14T15:04[America/New_York]';
     const root = await renderOnServer('DateTimeFieldsOnServer', {
