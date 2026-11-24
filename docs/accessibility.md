@@ -31,9 +31,11 @@ A control with no visible label needs a name from `aria-label` or `aria-labelled
 
 ## Errors
 
-`Form` moves the focus to the first invalid control when it stops a submit. After a submit that passes, the first change of its `errors`, such as the answer of a server, does the same. The control names its `Field.Error` in `aria-describedby`, so a screen reader reads the error with the control.
+`Form` moves the focus to the first invalid control when it stops a submit. After a submit that passes, the first change of its `errors`, such as the answer of a server, does the same. An edit or a reset before that change cancels the move. The control names its `Field.Error` in `aria-describedby`, so a screen reader reads the error with the control.
 
-An error can also show with no move of the focus: in the `validationMode` `'blur'` or `'change'`, or when your app sets `invalid` on `Field.Root`. `Field.Error` is not a live region, so a screen reader does not read it then. A live region that shows with its text is not read in each browser. Keep one polite live region on the page, and write the error in it a moment after the error shows. Where only one error shows at a time, give `Field.Error` the attribute `role="alert"`. [WCAG 4.1.3 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html) gives the rule.
+At other times, an error shows with no move of the focus. Examples are the `validationMode` values `'blur'` and `'change'`, a change after a submit, `invalid` on `Field.Root` and a promise of `validate`. `Field.Error` is not a live region, so a screen reader does not read such an error. [WCAG 4.1.3 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html) gives the rule.
+
+Most screen readers read a live region only when its content changes, not when the region shows with its content. Keep one live region with `aria-live="polite"` on the page. A moment after an error shows, write the label of its field and the error in the region. When the focus moves, the delay lets the screen reader read the next control before the error. Where only one error shows at a time, you can give `Field.Error` the attribute `role="alert"`. A browser sends an alert event when such an element shows, so most screen readers read it at once.
 
 ## Testing
 

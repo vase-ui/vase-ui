@@ -837,6 +837,7 @@ describe('Field.Error', () => {
   test('an error with role="alert" of the developer enters the document with its message and its role, when the page sets invalid', async () => {
     const root = reactive({ invalid: false });
     const { error } = await mountField({ root, errors: [{ role: 'alert', message: 'Too long.' }] });
+    expect(error()).toBeNull();
     const inserted = readWhen(
       () => error() !== null,
       () => ({ role: error()!.getAttribute('role'), text: error()!.textContent }),
