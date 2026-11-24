@@ -9,7 +9,7 @@ export interface ScrollAreaPart {
   readonly element: HTMLElement | null;
 }
 
-/** A viewport. The root calls `measured` after each measurement. */
+/** The root calls `measured` after each measurement. */
 export interface ScrollAreaViewportPart extends ScrollAreaPart {
   measured(): void;
 }

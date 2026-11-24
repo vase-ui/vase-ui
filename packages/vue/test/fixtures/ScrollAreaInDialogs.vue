@@ -3,10 +3,6 @@ import type { PropType } from 'vue';
 import { Dialog } from '../../src/dialog';
 import { ScrollArea } from '../../src/scroll-area';
 
-// A scroll area of the page that holds a control, a dialog that stays mounted and whose body is a
-// scroll area that holds a field, and a modal dialog. `extra` adds a control to a scroll area.
-// `pageControl: false` and `fieldInDialog: false` remove the controls. `lateArea` mounts a second
-// scroll area of the page, with a control unless `lateControl` is false.
 defineProps({
   scene: {
     type: Object as PropType<{

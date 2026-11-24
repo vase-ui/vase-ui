@@ -9,7 +9,6 @@ function find(selector: string) {
   return document.querySelector<HTMLElement>(selector)!;
 }
 
-/** Mounts `ScrollAreaInDialogs`, and waits for the first measurement of the scroll area of the page. */
 async function mountScene(initial: Record<string, boolean> = {}) {
   const scene = reactive({
     pageControl: true,

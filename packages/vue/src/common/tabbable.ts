@@ -1,4 +1,3 @@
-/** The elements that can be a tab stop. `isTabbable` tells which of them are. */
 export const CANDIDATES =
   'a[href],area[href],button,input:not([type="hidden"]),select,textarea,iframe,summary,details,audio[controls],video[controls],[tabindex],[contenteditable]:not([contenteditable="false"])';
 
@@ -20,7 +19,6 @@ export function tabbables(container: Element, skipped?: Element): HTMLElement[] 
   });
 }
 
-/** The container holds a tab stop. The walk stops at the first one. */
 export function hasTabStop(container: Element): boolean {
   return !walk(container).next().done;
 }
@@ -42,7 +40,7 @@ function tabIndexOf(element: HTMLElement) {
   return reached ? 0 : element.tabIndex;
 }
 
-/** A candidate is a tab stop: its `tabIndex` is 0 or more, and it is not disabled, inert or hidden. */
+/** Use it only on an element that matches `CANDIDATES`. */
 export function isTabbable(element: HTMLElement) {
   return (
     tabIndexOf(element) >= 0 &&

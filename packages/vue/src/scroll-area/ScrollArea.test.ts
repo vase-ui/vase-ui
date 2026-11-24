@@ -788,7 +788,6 @@ describe('the platform', () => {
 });
 
 describe('the tab stop of the viewport', () => {
-  /** Mounts `ScrollAreaControls`, and waits for the first measurement. */
   async function mountControls(scene: Record<string, unknown>) {
     const { root } = mount(ScrollAreaControls, { scene });
     const viewport = root.querySelector<HTMLElement>('.viewport')!;

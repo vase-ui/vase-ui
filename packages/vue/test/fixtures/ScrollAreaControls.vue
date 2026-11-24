@@ -2,8 +2,6 @@
 import type { PropType } from 'vue';
 import { ScrollArea } from '../../src/scroll-area';
 
-// A button before a scroll area that overflows. In the viewport: a control, a button that is no
-// tab stop, and the markup of the case.
 defineProps({
   scene: {
     type: Object as PropType<{
@@ -13,9 +11,7 @@ defineProps({
       /** The class `gone`, which the case styles. */
       gone?: boolean;
       markup?: string;
-      /** The `hidden` attribute on the root. */
       hidden?: boolean;
-      /** Renders the tall filler so the viewport overflows. */
       tall?: boolean;
     }>,
     default: () => ({}),
