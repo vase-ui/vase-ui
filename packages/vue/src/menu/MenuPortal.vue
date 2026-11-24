@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<MenuPortalProps>(), {
 defineSlots<{ default?(): unknown }>();
 
 const context = injectMenu('Portal');
-const portal = usePopupPortal(context.root, context.layer, props);
+const portal = usePopupPortal(context.root, context.layer, props, context.positioner);
 const owner = usePortalOwner(context.root, context.layer, portal.sentinels);
 // In a menu or a menubar, WAI-ARIA allows a child of the role `group` and not a plain element.
 const inMenu = context.kind === 'submenu' || !!inject(menubarKey, null);

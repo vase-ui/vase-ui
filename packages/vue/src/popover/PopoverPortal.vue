@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<PopoverPortalProps>(), {
 defineSlots<{ default?(): unknown }>();
 
 const context = injectPopoverRoot('Portal');
-const portal = usePopupPortal(context.root, context.layer, props);
+const portal = usePopupPortal(context.root, context.layer, props, context.positioner);
 const owner = usePortalOwner(context.root, context.layer, portal.sentinels);
 providePortal();
 </script>

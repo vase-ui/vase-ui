@@ -87,7 +87,12 @@ const portalMountedKey: InjectionKey<Readonly<Ref<boolean>>> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'portal mounted' : undefined,
 );
 
-export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortalProps) {
+export function usePopupPortal(
+  root: PopupRoot,
+  layer: Layer,
+  props: PopupPortalProps,
+  positioner?: Readonly<Ref<HTMLElement | null>>,
+) {
   const { target, mounted, rendered: placed } = usePortalTarget(props);
   provide(portalMountedKey, mounted);
 
@@ -126,11 +131,22 @@ export function usePopupPortal(root: PopupRoot, layer: Layer, props: PopupPortal
     },
     { flush: 'post' },
   );
+  // A page with a z-index scale puts a backdrop above a fixed element with no z-index, and the
+  // backdrop then takes the presses that this element must take. This element comes before the
+  // positioner in the same stacking context. With the z-index of the positioner, it is under the
+  // positioner and above each element with a lower z-index (test/measurements/popup.test.ts, "the
+  // z-index of a positioner"). Each open has a new element, so each open reads the z-index again.
+  const zIndex = computed(() => {
+    const element = blockElement.value && positioner?.value;
+    const value = element && getComputedStyle(element).zIndex;
+    return value && value !== 'auto' ? value : undefined;
+  });
   const blockStyle = computed<CSSProperties>(() => ({
     position: 'fixed',
     inset: 0,
     // The active trigger, or the hole of the layer, keeps its hover and its press.
     clipPath: clipPath.value,
+    zIndex: zIndex.value,
   }));
 
   const before = shallowRef<HTMLElement | null>(null);

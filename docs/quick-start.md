@@ -68,6 +68,8 @@ Give the root element the style `isolation: isolate`. In a Vue app, the root ele
 
 The root element then has its own stacking context. A popup shows above the page, and a `z-index` inside the root element cannot put an element above the popup.
 
+Give the `z-index` of a popup that has a positioner, such as a [Select](/components/select) or a [Popover](/components/popover), to its positioner. While a modal popup of this kind is open, an element with a lower `z-index` gets no pointer, the same as the rest of the page.
+
 ## Assemble a component
 
 This sample imports the [Popover](/components/popover) component, assembles its parts and styles them. Vase UI ships no styles, so you can use plain CSS, CSS Modules, Tailwind CSS or another tool.
