@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.11.8
+
+Same Base UI release and commit as 2026.11.7.
+
+### Fixed
+
+- After an arrow key, Home or End in a `Tabs.List` that scrolls, the whole focused tab shows by the least scroll. This holds in Chromium, Firefox and WebKit, and reads the `scroll-padding` of the list and the `scroll-margin` of the tab. The page scrolls only when the tab is out of view, by the least distance. You can remove your own `scrollIntoView()` at the focus of a tab. ([#868](https://github.com/vase-ui/vase-ui/pull/868))
+- A `ScrollArea.Viewport` that can scroll has `tabindex="0"` only while its content holds no tab stop. Else it has `tabindex="-1"`. A disabled, hidden or inert control, or a control with a negative `tabindex`, is not a tab stop. So Tab goes straight to a control inside it, and a dialog gives its first focus to that control. Your own `tabindex` on the viewport wins. In Firefox, no key scrolls from a text field, so give the viewport `tabindex="0"` when its content holds only text fields. ([#869](https://github.com/vase-ui/vase-ui/pull/869))
+- After a form reset with no edit, a `<textarea>` in the `element` slot of `Input`, `Combobox.Input` or `Autocomplete.Input` shows the value that holds. The same holds after a reset whose value the parent refuses, and for a `<textarea>` in a Combobox popup. Before 2026.11.8, the native reset left the `<textarea>` empty. ([#870](https://github.com/vase-ui/vase-ui/pull/870))
+- `Select.List`, `Select.Popup` when it is the listbox, `Combobox.List` and `Autocomplete.List` take the accessible name of their control. This holds for both `listbox` and `grid` roles. The control is `Select.Trigger`, the input of Combobox or Autocomplete, or `Combobox.Trigger` when the input is in the popup. The list takes `aria-labelledby` of the control (or its label parts), else its `aria-label`, else a native `Field.Label`. Your own `aria-label` or `aria-labelledby` on the list, also a blank one, wins. If your code copies the name of the control onto the list, you can remove it. ([#876](https://github.com/vase-ui/vase-ui/pull/876))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.7 (B) | 2026.11.8 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,244,077 |     2,254,190 |
+| gzip    |       739,483 |       741,607 |
+| Brotli  |       645,658 |       647,384 |
+
 ## 2026.11.7
 
 Same Base UI release and commit as 2026.11.6.
