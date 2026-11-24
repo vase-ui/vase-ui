@@ -33,8 +33,10 @@ export function useFormListener<Type extends keyof HTMLElementEventMap>(
 
 /**
  * Calls `onReset` after each native reset of the form that owns the element, when no listener
- * prevented the reset. Vue writes the `value` and `checked` attributes at each value, so the form
- * resets a control to its last value, and the part gives the value of the reset itself.
+ * prevented the reset. Vue writes the `value` attribute of an `<input>` and the `checked`
+ * attribute at each value, so the form resets such a control to its last value, and the part gives
+ * the value of the reset itself. The default value of a `<textarea>` is its text, so the reset
+ * empties it, and a part that allows one writes its value after the reset.
  */
 export function useFormReset(
   element: Readonly<Ref<FormControl | null>>,

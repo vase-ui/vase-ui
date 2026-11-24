@@ -4,7 +4,7 @@ import { Input } from '../../src/input';
 import TestField from './TestField.vue';
 
 defineProps({
-  field: { type: Object as PropType<Record<string, unknown>>, required: true },
+  field: Object as PropType<Record<string, unknown>>,
   attrs: Object as PropType<Record<string, unknown>>,
 });
 const input = useTemplateRef('input');
