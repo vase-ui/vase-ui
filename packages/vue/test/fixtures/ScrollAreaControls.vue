@@ -15,6 +15,8 @@ defineProps({
       markup?: string;
       /** The `hidden` attribute on the root. */
       hidden?: boolean;
+      /** Renders the tall filler so the viewport overflows. */
+      tall?: boolean;
     }>,
     default: () => ({}),
   },
@@ -37,7 +39,7 @@ defineProps({
       </button>
       <button type="button" tabindex="-1">Not a tab stop</button>
       <div v-if="scene.markup" class="markup" v-html="scene.markup" />
-      <div style="height: 1000px" />
+      <div v-if="scene.tall !== false" style="height: 1000px" />
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 </template>

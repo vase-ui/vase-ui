@@ -332,14 +332,34 @@ describe('the Tab key and scroll containers', () => {
     );
   });
 
-  test('a focused scroll container keeps the focus when its tabindex goes from 0 to -1', async () => {
+  test('a focused scroll container keeps the focus when its tabindex goes from 0 to -1, and loses it in WebKit when tabindex is removed', async () => {
     html(SCROLLERS);
     const scroller = find('withButton');
     scroller.tabIndex = 0;
     scroller.focus();
+    expect(scroller).toHaveFocus();
     scroller.tabIndex = -1;
     await new Promise(requestAnimationFrame);
     expect(scroller).toHaveFocus();
+
+    scroller.tabIndex = 0;
+    scroller.focus();
+    expect(scroller).toHaveFocus();
+    scroller.removeAttribute('tabindex');
+    await new Promise(requestAnimationFrame);
+    expect(document.activeElement).toBe(server.browser === 'webkit' ? document.body : scroller);
+  });
+});
+
+describe('an inert ancestor and contenteditable', () => {
+  test('gives isContentEditable false in WebKit after style resolves, and true in Chromium and Firefox', async () => {
+    html('<div id="wrap" inert><div id="editable" contenteditable="true">Edit</div></div>');
+    const editable = find('editable');
+    await new Promise(requestAnimationFrame);
+    expect(editable.isContentEditable).toBe(server.browser !== 'webkit');
+    find('wrap').removeAttribute('inert');
+    await new Promise(requestAnimationFrame);
+    expect(editable.isContentEditable).toBe(true);
   });
 });
 

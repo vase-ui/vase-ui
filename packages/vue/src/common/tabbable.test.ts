@@ -83,7 +83,12 @@ describe('hasTabStop', () => {
     ids('<div id="host"></div><button tabindex="-1">A</button><button disabled>B</button>');
     const container = root!;
     expect(hasTabStop(container)).toBe(false);
-    container.querySelector('#host')!.attachShadow({ mode: 'open' }).innerHTML = '<input>';
+    const shadow = container.querySelector('#host')!.attachShadow({ mode: 'open' });
+    shadow.innerHTML = '<input>';
+    expect(hasTabStop(container)).toBe(true);
+    shadow.innerHTML = '';
+    expect(hasTabStop(container)).toBe(false);
+    container.appendChild(document.createElement('button'));
     expect(hasTabStop(container)).toBe(true);
   });
 });

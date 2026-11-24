@@ -43,7 +43,7 @@ export namespace Root {
  * The actual scrollable container of the scroll area. It is a native scroll container on the two
  * axes, so the wheel, a touch, the keyboard and scroll snap work as in each browser. It is a tab
  * stop while it can scroll and its content holds no tab stop. A control in the content scrolls it
- * with the keyboard, so Tab goes to that control. Firefox scrolls with no key from a text field:
+ * with the keyboard, so Tab goes to that control. In Firefox, no key scrolls from a text field:
  * for content with only text fields, give the viewport `tabindex="0"`. When it is a landmark of the
  * page, give it `role="region"` and a name, such as `aria-label`.
  * Renders a `<div>` element.

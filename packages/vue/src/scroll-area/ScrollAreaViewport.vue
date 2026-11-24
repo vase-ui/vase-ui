@@ -21,17 +21,44 @@ provide(viewportKey, true);
 
 // Chromium makes a scroll container a tab stop only while it holds no tab stop, Firefox makes each
 // one a tab stop, and WebKit none (test/measurements/scroll-area.test.ts). The viewport follows
-// Chromium: the arrow keys scroll it from a control in its content.
+// Chromium: the keyboard scrolls it from a control in its content.
 const holdsTabStop = shallowRef(true);
 let readLater = false;
+let inertObserver: MutationObserver | undefined;
+let frame = 0;
 
-// The tab stops of content with no box, or under an inert ancestor, do not count. The viewport
-// keeps its answer, and reads its content again at the next measurement of the root.
-function readContent() {
+function stopPending() {
+  inertObserver?.disconnect();
+  inertObserver = undefined;
+  if (frame) cancelAnimationFrame(frame);
+  frame = 0;
+}
+
+// The tab stops of content with no box, or under an inert ancestor, do not count. Under `inert`,
+// WebKit also gives `isContentEditable` false (test/measurements/scroll-area.test.ts). The
+// viewport waits until it has a box again (at the next measurement) and no inert ancestor.
+function readContent(fromFrame = false) {
   const target = element.value;
   if (!target) return;
-  readLater = target.getClientRects().length === 0 || !!target.closest('[inert]');
-  if (!readLater) holdsTabStop.value = hasTabStop(target);
+  stopPending();
+  const noBox = target.getClientRects().length === 0;
+  const inert = target.closest('[inert]');
+  readLater = noBox || !!inert;
+  if (!readLater) {
+    holdsTabStop.value = hasTabStop(target);
+    return;
+  }
+  // Content that changed with no box can hold a new control, so the viewport stays out of the Tab
+  // order until it shows again and takes no first focus ahead of that control.
+  if (noBox) {
+    holdsTabStop.value = true;
+    // A hide and show in one frame skips `ResizeObserver`, so one frame callback checks once.
+    if (!fromFrame) frame = requestAnimationFrame(() => readContent(true));
+  }
+  if (inert) {
+    inertObserver = new MutationObserver(() => readContent());
+    inertObserver.observe(inert, { attributeFilter: ['inert'] });
+  }
 }
 
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part
@@ -55,7 +82,7 @@ watch(
 );
 
 // The watcher runs before the render that writes the overflow, so that render writes the final
-// `tabindex`. A control can stop being a tab stop through `style` (`v-show`), `class` or `type`
+// `tabindex`. A control can lose its tab stop through `style` (`v-show`), `class` or `type`
 // with no change of nodes (test/measurements/scroll-area.test.ts).
 watch(
   () => (root.state.hasOverflowX || root.state.hasOverflowY ? element.value : null),
@@ -85,7 +112,11 @@ watch(
         'controls',
       ],
     });
-    onCleanup(() => observer.disconnect());
+    onCleanup(() => {
+      observer.disconnect();
+      stopPending();
+      readLater = false;
+    });
   },
 );
 

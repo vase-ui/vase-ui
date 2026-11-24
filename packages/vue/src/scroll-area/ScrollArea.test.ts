@@ -864,13 +864,42 @@ describe('the tab stop of the viewport', () => {
     before.focus();
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).toBe(root.querySelector('.control'));
+
+    // Hide and show across frames: `ResizeObserver` reports the box again.
+    scene.hidden = true;
+    await new Promise(requestAnimationFrame);
+    scene.control = false;
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.hidden = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+
+    // Hide, change and show in one frame: no resize occurs, and one frame callback reads again.
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.hidden = true;
+    await nextTick();
+    scene.control = false;
+    await nextTick();
+    scene.hidden = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
   });
 
-  test('a scroll reads no element of the content', async () => {
-    const { viewport } = await mountControls({ control: true });
+  test('a scroll reads no element of the content, and a viewport with no overflow observes nothing', async () => {
+    const scene = reactive({ control: true, tall: true, markup: '' });
+    const { viewport } = await mountControls(scene);
     const read = vi.spyOn(Element.prototype, 'querySelectorAll');
     onTestFinished(() => read.mockRestore());
     await scrollViewport(viewport, 0, 300);
+    await settle();
+    expect(read.mock.contexts).not.toContain(viewport);
+
+    scene.tall = false;
+    await waitFor(() => expect(viewport).not.toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    read.mockClear();
+    scene.markup = '<p>Idle</p>';
     await settle();
     expect(read.mock.contexts).not.toContain(viewport);
   });
@@ -925,8 +954,33 @@ describe('lifetime', () => {
   test('a scroll area that unmounts leaves no observer and no timer', async () => {
     const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
     const disconnect = vi.spyOn(ResizeObserver.prototype, 'disconnect');
+    onTestFinished(() => {
+      unobserve.mockRestore();
+      disconnect.mockRestore();
+    });
+    const observed = new Set<MutationObserver>();
+    const BrowserObserver = MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends BrowserObserver {
+        override observe(target: Node, options?: MutationObserverInit) {
+          if (target instanceof HTMLElement && target.classList.contains('viewport')) {
+            observed.add(this);
+          }
+          super.observe(target, options);
+        }
+        override disconnect() {
+          observed.delete(this);
+          super.disconnect();
+        }
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
     const scene = reactive({ content: true });
     const mounted = await mountArea({ scene });
+    expect(observed.size).toBe(1);
     scene.content = false;
     await nextTick();
     expect(unobserve).toHaveBeenCalledWith(
@@ -939,6 +993,7 @@ describe('lifetime', () => {
     mounted.unmount();
     expect(vi.getTimerCount()).toBe(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(observed.size).toBe(0);
   });
 
   test('a viewport that unmounts before it reads its animations leaves no timer', () => {
