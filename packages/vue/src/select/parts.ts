@@ -190,6 +190,8 @@ export namespace Positioner {
 /**
  * The container of the items.
  * Renders a `<div>` element.
+ * Without `Select.List`, it is the listbox and takes its name from the trigger, `Select.Label` or
+ * `Field.Label`. Give it `aria-label` when a plain `<label for>` names the trigger.
  * @selector `[data-side]` The side of the trigger that the popup is on, or `none` while the popup covers the trigger.
  * @selector `[data-align]` The alignment of the popup on its side: `start`, `center` or `end`.
  */
@@ -217,6 +219,8 @@ export namespace Arrow {
 /**
  * The element that holds the items and scrolls.
  * Renders a `<div>` element.
+ * Takes its name from the trigger, `Select.Label` or `Field.Label`. Give it `aria-label` when a
+ * plain `<label for>` names the trigger.
  */
 export const List: typeof SelectList = SelectList;
 export namespace List {

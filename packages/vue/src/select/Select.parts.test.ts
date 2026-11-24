@@ -2,7 +2,10 @@ import { describe, expect, test } from 'vitest';
 import { nextTick, reactive } from 'vue';
 import SelectAllParts from '../../test/fixtures/SelectAllParts.vue';
 import SelectGroups from '../../test/fixtures/SelectGroups.vue';
+import SelectInField from '../../test/fixtures/SelectInField.vue';
 import SelectPartAlone from '../../test/fixtures/SelectPartAlone.vue';
+import SelectParts from '../../test/fixtures/SelectParts.vue';
+import { screen } from '../../test/queries';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -166,5 +169,127 @@ describe('groups', () => {
     await nextTick();
     expect(byTestId('label-new')).toBe(null);
     expect(group).not.toHaveAttribute('aria-labelledby');
+  });
+});
+
+describe('listbox name', () => {
+  const shown = () => byTestId('popup')?.checkVisibility({ visibilityProperty: true });
+
+  test('VUE-235: the listbox has the name of the trigger: Select.Label, Field.Label, or the aria-label of the trigger; Select.Popup has it when it is the listbox', async () => {
+    const first = mount(SelectParts, { label: {}, list: {}, root: { defaultOpen: true } });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    expect(byTestId('popup')).toHaveAttribute('role', 'presentation');
+    expect(byTestId('popup')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('popup')).not.toHaveAttribute('aria-label');
+    first.unmount();
+
+    const popupListbox = mount(SelectParts, { label: {}, root: { defaultOpen: true } });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('popup'));
+    popupListbox.unmount();
+
+    const inFieldTrigger = reactive<Record<string, unknown>>({});
+    const inField = mount(SelectInField, {
+      root: { defaultOpen: true },
+      trigger: inFieldTrigger,
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Letter' })).toBe(byTestId('popup'));
+    inFieldTrigger['aria-labelledby'] = '';
+    inFieldTrigger['aria-label'] = 'Region';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Region' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Region' })).toBe(byTestId('popup'));
+    delete inFieldTrigger['aria-label'];
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Letter' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Letter' })).toBe(byTestId('popup'));
+    inField.unmount();
+
+    const labeledTrigger = reactive<Record<string, unknown>>({ 'aria-label': 'Region' });
+    const withLabelAndTrigger = mount(SelectParts, {
+      label: {},
+      list: {},
+      trigger: labeledTrigger,
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    labeledTrigger['aria-labelledby'] = '';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Region' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Region' })).toBe(byTestId('list'));
+    delete labeledTrigger['aria-label'];
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withLabelAndTrigger.unmount();
+
+    const show = reactive({ trigger: true });
+    const triggerProps = reactive<Record<string, unknown>>({
+      'aria-labelledby': '   ',
+      'aria-label': 'Region',
+    });
+    const byTrigger = mount(SelectParts, {
+      list: {},
+      show,
+      trigger: triggerProps,
+      heading: { id: 'custom-heading' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Region' })).toBe(byTestId('list'));
+    triggerProps['aria-labelledby'] = 'custom-heading';
+    await nextTick();
+    expect(screen.getByRole('listbox', { name: 'Fruits' })).toBe(byTestId('list'));
+    show.trigger = false;
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    byTrigger.unmount();
+  });
+
+  test('an aria-label or an aria-labelledby on the list wins, and the part then writes neither attribute: an aria-labelledby on the list leaves no aria-label from the trigger', async () => {
+    const withLabel = mount(SelectParts, {
+      label: {},
+      list: { 'aria-label': 'Custom list' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Custom list' })).toBe(byTestId('list'));
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    withLabel.unmount();
+
+    const withLabelledBy = mount(SelectParts, {
+      list: { 'aria-labelledby': 'custom-heading' },
+      heading: { id: 'custom-heading' },
+      trigger: { 'aria-label': 'Region' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruits' })).toBe(byTestId('list'));
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withLabelledBy.unmount();
+
+    const blankLabel = mount(SelectParts, {
+      label: {},
+      list: { 'aria-label': '' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).toHaveAttribute('aria-label', '');
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    blankLabel.unmount();
+
+    const blankOnPopup = mount(SelectParts, {
+      popup: { 'aria-labelledby': '' },
+      trigger: { 'aria-label': 'Region' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('popup')).toHaveAttribute('aria-labelledby', '');
+    expect(byTestId('popup')).not.toHaveAttribute('aria-label');
+    blankOnPopup.unmount();
   });
 });

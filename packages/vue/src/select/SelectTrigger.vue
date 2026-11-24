@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, mergeProps, useAttrs } from 'vue';
+import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
@@ -22,6 +22,9 @@ const { root, field } = context;
 // The trigger names a label and the messages of a field, which can come after it.
 useDeferredServerRender();
 const attrs = useAttrs();
+// Nuxt removes `onUnmounted` from its server build, with its arguments.
+const removeTriggerName = context.addTriggerName(attrs);
+onUnmounted(removeTriggerName);
 const { element, setElement } = useElement<HTMLElement>();
 // A trigger with its own `id` gives it to the field. Else the root gives its `id` to the field.
 const triggerId = useControlId(

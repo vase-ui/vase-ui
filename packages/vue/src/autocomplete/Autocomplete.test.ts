@@ -5,6 +5,7 @@ import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomple
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import AutocompleteTextarea from '../../test/fixtures/AutocompleteTextarea.vue';
 import AutocompleteValueAlone from '../../test/fixtures/AutocompleteValueAlone.vue';
+import { screen } from '../../test/queries';
 import { mount, mountError, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -732,6 +733,20 @@ describe('the field', () => {
     await userEvent.keyboard('{Backspace}');
     outside().focus();
     await waitFor(() => expect(field).toHaveAttribute('data-valid'));
+  });
+
+  test('the list has the aria-label of the input', async () => {
+    const first = await mountAutocomplete({
+      root: { defaultOpen: true },
+      input: { 'aria-label': 'Tags' },
+    });
+    await waitFor(() => expect(popup()?.checkVisibility({ visibilityProperty: true })).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Tags' })).toBe(byTestId('list'));
+    first.unmount();
+
+    await mountAutocomplete({ root: { defaultOpen: true }, field: { name: 'tag' } });
+    await waitFor(() => expect(popup()?.checkVisibility({ visibilityProperty: true })).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Tag' })).toBe(byTestId('list'));
   });
 });
 

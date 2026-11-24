@@ -57,6 +57,7 @@ const removeInput = context.addInput({
   get element() {
     return element.value;
   },
+  attrs,
   showText,
 });
 onUnmounted(removeInput);

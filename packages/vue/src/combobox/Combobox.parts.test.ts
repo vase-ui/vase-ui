@@ -4,10 +4,12 @@ import { nextTick, reactive } from 'vue';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import ComboboxAllParts from '../../test/fixtures/ComboboxAllParts.vue';
 import ComboboxGrid from '../../test/fixtures/ComboboxGrid.vue';
+import ComboboxInField from '../../test/fixtures/ComboboxInField.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
 import ComboboxPieces from '../../test/fixtures/ComboboxPieces.vue';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
 import { fireEvent } from '../../test/fireEvent';
+import { screen } from '../../test/queries';
 import { mount, mountError, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -263,6 +265,154 @@ describe('the list', () => {
       expect(changes).toEqual([]);
     },
   );
+
+  test('the listbox has the name of its control: Combobox.Label, Field.Label, or the aria-label or aria-labelledby of the input, and for the grid role', async () => {
+    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+
+    const labelInput = reactive<Props>({ 'aria-label': 'Search fruit' });
+    const byLabel = await mountCombobox({
+      label: true,
+      input: labelInput,
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    labelInput['aria-labelledby'] = '';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Search fruit' })).toBe(byTestId('input'));
+    expect(screen.getByRole('listbox', { name: 'Search fruit' })).toBe(byTestId('list'));
+    byLabel.unmount();
+
+    const byNativeField = mount(ComboboxInField, { root: { defaultOpen: true } });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    byNativeField.unmount();
+
+    const fieldInput = reactive<Props>({ 'aria-label': 'Search fruit' });
+    const byFieldAndAriaLabel = mount(ComboboxInField, {
+      root: { defaultOpen: true },
+      input: fieldInput,
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Search fruit' })).toBe(byTestId('list'));
+    fieldInput['aria-label'] = '   ';
+    await nextTick();
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    byFieldAndAriaLabel.unmount();
+
+    const nonNativeInput = reactive<Props>({ 'aria-label': 'Search fruit' });
+    const byNonNativeField = mount(ComboboxInField, {
+      root: { defaultOpen: true },
+      comboboxLabel: true,
+      nonNativeFieldLabel: true,
+      input: nonNativeInput,
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).toHaveAttribute(
+      'aria-labelledby',
+      `${byTestId('combobox-label')!.id} ${byTestId('field-label')!.id}`,
+    );
+    nonNativeInput['aria-labelledby'] = '';
+    delete nonNativeInput['aria-label'];
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    byNonNativeField.unmount();
+
+    const inputProps = reactive<Props>({ 'aria-label': 'Search fruit' });
+    const byInput = await mountCombobox({ root: { defaultOpen: true }, input: inputProps });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Search fruit' })).toBe(byTestId('list'));
+    inputProps['aria-labelledby'] = 'outside';
+    await nextTick();
+    expect(screen.getByRole('listbox', { name: 'Outside' })).toBe(byTestId('list'));
+    byInput.unmount();
+
+    const grid = mount(ComboboxGrid, { input: { 'aria-label': 'Cells' } });
+    await nextTick();
+    expect(screen.getByRole('grid', { name: 'Cells' })).toBe(
+      document.querySelector('[role="grid"]'),
+    );
+    grid.unmount();
+  });
+
+  test('an aria-label or an aria-labelledby on the list wins, and the part then writes neither attribute', async () => {
+    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+
+    const withLabel = await mountCombobox({
+      label: true,
+      list: { 'aria-label': 'Choices' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Choices' })).toBe(byTestId('list'));
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    withLabel.unmount();
+
+    const withLabelledBy = await mountCombobox({
+      input: { 'aria-label': 'Search fruit' },
+      list: { 'aria-labelledby': 'outside' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Outside' })).toBe(byTestId('list'));
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withLabelledBy.unmount();
+
+    const withBlank = await mountCombobox({
+      label: true,
+      list: { 'aria-label': '' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).toHaveAttribute('aria-label', '');
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    withBlank.unmount();
+
+    const withBlankLabelledBy = await mountCombobox({
+      input: { 'aria-label': 'Search fruit' },
+      list: { 'aria-labelledby': '' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).toHaveAttribute('aria-labelledby', '');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withBlankLabelledBy.unmount();
+  });
+
+  test('a trigger beside the input with an aria-label of its own does not name the list; with the input in the popup, the list has the name of the trigger', async () => {
+    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+
+    const beside = await mountCombobox({
+      root: { defaultOpen: true },
+      trigger: true,
+      triggerAttrs: { 'aria-label': 'Open popup' },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    beside.unmount();
+
+    const scene = reactive({ trigger: true });
+    const triggerAttrs = reactive<Props>({ 'aria-label': 'Choose fruit' });
+    const inPopup = await mountCombobox({
+      root: { defaultOpen: true },
+      inputInPopup: true,
+      scene,
+      triggerAttrs,
+      input: { 'aria-label': 'Filter fruit' },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Choose fruit' })).toBe(byTestId('list'));
+    triggerAttrs['aria-labelledby'] = 'outside';
+    await nextTick();
+    expect(screen.getByRole('listbox', { name: 'Outside' })).toBe(byTestId('list'));
+    scene.trigger = false;
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    inPopup.unmount();
+  });
 });
 
 describe('the popup', () => {

@@ -17,6 +17,7 @@ import type { FieldForControl } from '../field/control';
 import { compareItemEquality, defaultItemEquality, removeItem } from '../common/itemEquality';
 import { stringifyAsValue } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
+import { listNameFromControl } from '../list/name';
 import { useTypeahead } from '../list/typeahead';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
@@ -95,6 +96,8 @@ export interface SelectContext {
   /** The content stays in the DOM from now on. */
   keep(): void;
   addLabel(label: { readonly id: string }): () => void;
+  addTriggerName(attrs: Record<string, unknown>): () => void;
+  listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   /** The first item of the value, in the order of the document, shown or not. */
   selectedItem(): ListItem | undefined;
 }
@@ -191,6 +194,7 @@ export function useSelectRoot(
   const itemValues = shallowReactive(new Map<Element, unknown>());
   const itemTexts = shallowReactive(new Map<Element, HTMLElement>());
   const labels = shallowReactive<{ readonly id: string }[]>([]);
+  const triggerNames = shallowReactive<Record<string, unknown>[]>([]);
   const container = () => listElement.value ?? root.popup;
 
   const fullWidth = computed(() => {
@@ -420,6 +424,21 @@ export function useSelectRoot(
     addLabel(label) {
       labels.push(label);
       return () => labels.splice(labels.indexOf(label), 1);
+    },
+    addTriggerName(attrs) {
+      triggerNames.push(attrs);
+      return () => {
+        const index = triggerNames.indexOf(attrs);
+        if (index !== -1) triggerNames.splice(index, 1);
+      };
+    },
+    listName(attrs) {
+      return listNameFromControl(
+        attrs,
+        triggerNames.at(-1),
+        field?.labelId ?? labels[0]?.id,
+        field?.hasLabel ? field.labelId : undefined,
+      );
     },
     selectedItem,
   };

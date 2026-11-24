@@ -14,6 +14,7 @@ defineProps({
   inputInPopup: Boolean,
   /** A trigger beside the input. */
   trigger: Boolean,
+  triggerAttrs: Object as PropType<Props>,
   /** A trigger before the group of the input. */
   triggerFirst: Boolean,
   /** A clear button with these props: in the group of the input, else after the trigger. */
@@ -64,14 +65,24 @@ export const FRUITS = [
   <input id="before" aria-label="Before" />
   <Combobox.Root ref="rootPart" :items="items" v-bind="root">
     <Combobox.Label v-if="label" data-testid="label">Fruit</Combobox.Label>
-    <Combobox.Trigger v-if="triggerFirst" data-testid="trigger">Open</Combobox.Trigger>
-    <Combobox.Trigger v-if="inputInPopup" data-testid="trigger">
+    <Combobox.Trigger v-if="triggerFirst" data-testid="trigger" v-bind="triggerAttrs"
+      >Open</Combobox.Trigger
+    >
+    <Combobox.Trigger
+      v-if="inputInPopup && scene.trigger !== false"
+      data-testid="trigger"
+      v-bind="triggerAttrs"
+    >
       <Combobox.Value placeholder="Pick a fruit" />
     </Combobox.Trigger>
-    <Combobox.InputGroup v-else data-testid="group">
+    <Combobox.InputGroup v-else-if="!inputInPopup" data-testid="group">
       <Combobox.Input data-testid="input" v-bind="input" />
       <Combobox.Clear v-if="clear" data-testid="clear" v-bind="clear" />
-      <Combobox.Trigger v-if="trigger && scene.trigger !== false" data-testid="trigger">
+      <Combobox.Trigger
+        v-if="trigger && scene.trigger !== false"
+        data-testid="trigger"
+        v-bind="triggerAttrs"
+      >
         Open
       </Combobox.Trigger>
     </Combobox.InputGroup>

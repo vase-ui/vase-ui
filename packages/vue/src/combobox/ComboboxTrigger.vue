@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { computed, inject, mergeProps, onScopeDispose, useAttrs, useId, watch } from 'vue';
+import {
+  computed,
+  inject,
+  mergeProps,
+  onScopeDispose,
+  onUnmounted,
+  useAttrs,
+  useId,
+  watch,
+} from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useAsTag, useElement, type ElementSlotProps } from '../common/element';
 import {
@@ -28,6 +37,9 @@ const field = inject(fieldKey, null);
 // The label and the messages of the field can come after the trigger.
 useDeferredServerRender();
 const attrs = useAttrs();
+// Nuxt removes `onUnmounted` from its server build, with its arguments.
+const removeTriggerName = context.addTriggerName(attrs);
+onUnmounted(removeTriggerName);
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 const { root } = context;

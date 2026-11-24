@@ -32,6 +32,7 @@ import {
 } from '../common/itemEquality';
 import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
+import { listNameFromControl } from '../list/name';
 import { useLocale } from '../locale-provider/part';
 import { focusAs, usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
@@ -225,8 +226,11 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
+    readonly attrs: Record<string, unknown>;
     showText(): void;
   }): () => void;
+  addTriggerName(attrs: Record<string, unknown>): () => void;
+  listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
   setLabel(label: { readonly id: string }): () => void;
@@ -420,15 +424,18 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     {
       readonly insidePopup: boolean;
       readonly element: HTMLElement | null;
+      readonly attrs: Record<string, unknown>;
       showText(): void;
     }[]
   >([]);
+  const triggerNames = shallowReactive<Record<string, unknown>[]>([]);
   const inputIsControl = computed(
     () => source.inline || inputs.some((input) => !input.insidePopup),
   );
-  const controlInput = computed(
-    () => inputs.find((input) => source.inline || !input.insidePopup)?.element ?? null,
+  const controlInputEntry = computed(
+    () => inputs.find((input) => source.inline || !input.insidePopup) ?? null,
   );
+  const controlInput = computed(() => controlInputEntry.value?.element ?? null);
   const triggerElement = shallowRef<HTMLElement | null>(null);
   const control = computed(() =>
     inputIsControl.value ? controlInput.value : triggerElement.value,
@@ -1144,6 +1151,18 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     openByKey,
     press,
     addInput: (input) => add(inputs, input),
+    addTriggerName: (attrs) => add(triggerNames, attrs),
+    listName(attrs) {
+      const controlAttrs = inputIsControl.value
+        ? controlInputEntry.value?.attrs
+        : triggerNames.at(-1);
+      return listNameFromControl(
+        attrs,
+        controlAttrs,
+        [labels.at(-1)?.id, field?.labelledBy].filter(Boolean).join(' ') || undefined,
+        field?.hasLabel ? field.labelId : undefined,
+      );
+    },
     setTrigger(element) {
       triggerElement.value = element;
       return () => {

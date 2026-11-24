@@ -6,6 +6,7 @@ import { Combobox } from '../../src/combobox';
 // group with a label.
 defineProps({
   root: Object as PropType<Record<string, unknown>>,
+  input: Object as PropType<Record<string, unknown>>,
   dir: String,
   grouped: Boolean,
 });
@@ -18,7 +19,7 @@ const ROWS = [
 
 <template>
   <Combobox.Root grid inline :items="ROWS.flat()" v-bind="root">
-    <Combobox.Input data-testid="input" />
+    <Combobox.Input data-testid="input" v-bind="input" />
     <Combobox.List :dir="dir">
       <Combobox.Group v-if="grouped" data-testid="group">
         <Combobox.GroupLabel>Cells</Combobox.GroupLabel>

@@ -48,6 +48,7 @@ function elementProps() {
       id: elementId.value,
       role: 'listbox',
       tabindex: -1,
+      ...context.listName(attrs),
       'aria-multiselectable': context.multiple ? 'true' : undefined,
       'aria-readonly': context.readonly ? 'true' : undefined,
       class: hidesScrollbar.value ? styleDisableScrollbar.className : undefined,
