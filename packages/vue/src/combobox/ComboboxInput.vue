@@ -57,12 +57,7 @@ const removeInput = context.addInput({
   get element() {
     return element.value;
   },
-  get label() {
-    return attrs['aria-label'];
-  },
-  get labelledBy() {
-    return attrs['aria-labelledby'];
-  },
+  attrs,
   showText,
 });
 onUnmounted(removeInput);

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { nextTick } from 'vue';
+import ComboboxInField from '../../test/fixtures/ComboboxInField.vue';
 import ComboboxInline from '../../test/fixtures/ComboboxInline.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
 import { within } from '../../test/queries';
@@ -97,7 +98,28 @@ describe('server render and hydration', () => {
       hydrate(ComboboxInline, props, root);
       await nextTick();
       expect(byTestId(root, 'list')).toBe(list);
+      expect(list).toHaveAttribute('aria-labelledby', label.id);
+      expect(list).not.toHaveAttribute('aria-label');
       expect(within(root).getByRole('listbox', { name: 'Fruits' })).toBe(list);
     },
   );
+
+  test('the server HTML of an open combobox with a disabled portal names its list after a Field.Label that comes after it, and the page hydrates with no message', async () => {
+    const props = {
+      root: { defaultOpen: true },
+      portal: { disabled: true },
+      labelAfter: true,
+    };
+    const root = await renderOnServer('ComboboxInField', props);
+    const list = byTestId(root, 'list')!;
+    const label = byTestId(root, 'field-label')!;
+    expect(list).toHaveAttribute('aria-labelledby', label.id);
+    expect(list).not.toHaveAttribute('aria-label');
+    hydrate(ComboboxInField, props, root);
+    await waitFor(() => expect(list.checkVisibility({ visibilityProperty: true })).toBe(true));
+    expect(byTestId(root, 'list')).toBe(list);
+    expect(list).toHaveAttribute('aria-labelledby', label.id);
+    expect(list).not.toHaveAttribute('aria-label');
+    expect(within(root).getByRole('listbox', { name: 'Fruit' })).toBe(list);
+  });
 });

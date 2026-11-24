@@ -23,14 +23,7 @@ const { root, field } = context;
 useDeferredServerRender();
 const attrs = useAttrs();
 // Nuxt removes `onUnmounted` from its server build, with its arguments.
-const removeTriggerName = context.addTriggerName({
-  get label() {
-    return attrs['aria-label'];
-  },
-  get labelledBy() {
-    return attrs['aria-labelledby'];
-  },
-});
+const removeTriggerName = context.addTriggerName(attrs);
 onUnmounted(removeTriggerName);
 const { element, setElement } = useElement<HTMLElement>();
 // A trigger with its own `id` gives it to the field. Else the root gives its `id` to the field.

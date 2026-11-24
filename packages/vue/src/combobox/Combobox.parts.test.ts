@@ -269,9 +269,18 @@ describe('the list', () => {
   test('the listbox has the name of its control: Combobox.Label, Field.Label, or the aria-label or aria-labelledby of the input, and for the grid role', async () => {
     const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
 
-    const byLabel = await mountCombobox({ label: true, root: { defaultOpen: true } });
+    const labelInput = reactive<Props>({ 'aria-label': 'Search fruit' });
+    const byLabel = await mountCombobox({
+      label: true,
+      input: labelInput,
+      root: { defaultOpen: true },
+    });
     await waitFor(() => expect(shown()).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    labelInput['aria-labelledby'] = '';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Search fruit' })).toBe(byTestId('input'));
+    expect(screen.getByRole('listbox', { name: 'Search fruit' })).toBe(byTestId('list'));
     byLabel.unmount();
 
     const byNativeField = mount(ComboboxInField, { root: { defaultOpen: true } });
@@ -292,14 +301,25 @@ describe('the list', () => {
     expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
     byFieldAndAriaLabel.unmount();
 
-    // AccName 1.2: a non-native Field.Label (aria-labelledby) wins over aria-label on the input.
+    // AccName 1.2: a non-native Field.Label (aria-labelledby) wins over aria-label on the input,
+    // and joins Combobox.Label; a blank aria-labelledby on the input clears both.
+    const nonNativeInput = reactive<Props>({ 'aria-label': 'Search fruit' });
     const byNonNativeField = mount(ComboboxInField, {
       root: { defaultOpen: true },
+      comboboxLabel: true,
       nonNativeFieldLabel: true,
-      input: { 'aria-label': 'Search fruit' },
+      input: nonNativeInput,
     });
     await waitFor(() => expect(shown()).toBe(true));
-    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    expect(byTestId('list')).toHaveAttribute(
+      'aria-labelledby',
+      `${byTestId('combobox-label')!.id} ${byTestId('field-label')!.id}`,
+    );
+    nonNativeInput['aria-labelledby'] = '';
+    delete nonNativeInput['aria-label'];
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
     byNonNativeField.unmount();
 
     const inputProps = reactive<Props>({ 'aria-label': 'Search fruit' });
@@ -351,6 +371,16 @@ describe('the list', () => {
     expect(byTestId('list')).toHaveAttribute('aria-label', '');
     expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
     withBlank.unmount();
+
+    const withBlankLabelledBy = await mountCombobox({
+      input: { 'aria-label': 'Search fruit' },
+      list: { 'aria-labelledby': '' },
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(byTestId('list')).toHaveAttribute('aria-labelledby', '');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withBlankLabelledBy.unmount();
   });
 
   test('a trigger beside the input with an aria-label of its own does not name the list; with the input in the popup, the list has the name of the trigger', async () => {

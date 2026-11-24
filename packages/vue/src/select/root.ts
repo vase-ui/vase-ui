@@ -17,6 +17,7 @@ import type { FieldForControl } from '../field/control';
 import { compareItemEquality, defaultItemEquality, removeItem } from '../common/itemEquality';
 import { stringifyAsValue } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
+import { listNameFromControl } from '../list/name';
 import { useTypeahead } from '../list/typeahead';
 import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
@@ -95,7 +96,7 @@ export interface SelectContext {
   /** The content stays in the DOM from now on. */
   keep(): void;
   addLabel(label: { readonly id: string }): () => void;
-  addTriggerName(name: { readonly label: unknown; readonly labelledBy: unknown }): () => void;
+  addTriggerName(attrs: Record<string, unknown>): () => void;
   /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
   listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   /** The first item of the value, in the order of the document, shown or not. */
@@ -194,11 +195,7 @@ export function useSelectRoot(
   const itemValues = shallowReactive(new Map<Element, unknown>());
   const itemTexts = shallowReactive(new Map<Element, HTMLElement>());
   const labels = shallowReactive<{ readonly id: string }[]>([]);
-  const triggerNames = shallowReactive<{ readonly label: unknown; readonly labelledBy: unknown }[]>(
-    [],
-  );
-  const ariaText = (text: unknown) =>
-    typeof text === 'string' && text.trim() !== '' ? text : undefined;
+  const triggerNames = shallowReactive<Record<string, unknown>[]>([]);
   const container = () => listElement.value ?? root.popup;
 
   const fullWidth = computed(() => {
@@ -429,17 +426,20 @@ export function useSelectRoot(
       labels.push(label);
       return () => labels.splice(labels.indexOf(label), 1);
     },
-    addTriggerName(name) {
-      triggerNames.push(name);
-      return () => triggerNames.splice(triggerNames.indexOf(name), 1);
+    addTriggerName(attrs) {
+      triggerNames.push(attrs);
+      return () => {
+        const index = triggerNames.indexOf(attrs);
+        if (index !== -1) triggerNames.splice(index, 1);
+      };
     },
     listName(attrs) {
-      if ('aria-label' in attrs || 'aria-labelledby' in attrs) return {};
-      const trigger = triggerNames.at(-1);
-      const labelledBy = ariaText(trigger?.labelledBy) ?? field?.labelId ?? labels[0]?.id;
-      if (labelledBy) return { 'aria-labelledby': labelledBy };
-      const label = ariaText(trigger?.label);
-      return label ? { 'aria-label': label } : {};
+      return listNameFromControl(
+        attrs,
+        triggerNames.at(-1),
+        field?.labelId ?? labels[0]?.id,
+        field?.hasLabel ? field.labelId : undefined,
+      );
     },
     selectedItem,
   };

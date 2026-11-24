@@ -69,6 +69,7 @@ describe('server render and hydration', () => {
       const props = {
         root: { defaultOpen: true },
         portal: { disabled: true },
+        trigger: { 'aria-label': 'Region' },
         labelAfter: true,
         ...(list && { list }),
       };
@@ -76,9 +77,12 @@ describe('server render and hydration', () => {
       const label = root.querySelector('label')!;
       const target = root.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!;
       expect(target).toHaveAttribute('aria-labelledby', label.id);
+      expect(target).not.toHaveAttribute('aria-label');
       hydrate(SelectInField, props, root);
       await waitFor(() => expect(target.checkVisibility({ visibilityProperty: true })).toBe(true));
       expect(root.querySelector(`[data-testid="${testId}"]`)).toBe(target);
+      expect(target).toHaveAttribute('aria-labelledby', label.id);
+      expect(target).not.toHaveAttribute('aria-label');
       expect(within(root).getByRole('listbox', { name: 'Letter' })).toBe(target);
     },
   );

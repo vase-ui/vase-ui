@@ -32,6 +32,7 @@ import {
 } from '../common/itemEquality';
 import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
+import { listNameFromControl } from '../list/name';
 import { useLocale } from '../locale-provider/part';
 import { focusAs, usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
@@ -225,11 +226,10 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
-    readonly label: unknown;
-    readonly labelledBy: unknown;
+    readonly attrs: Record<string, unknown>;
     showText(): void;
   }): () => void;
-  addTriggerName(name: { readonly label: unknown; readonly labelledBy: unknown }): () => void;
+  addTriggerName(attrs: Record<string, unknown>): () => void;
   /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
   listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   setTrigger(element: HTMLElement | null): () => void;
@@ -425,16 +425,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     {
       readonly insidePopup: boolean;
       readonly element: HTMLElement | null;
-      readonly label: unknown;
-      readonly labelledBy: unknown;
+      readonly attrs: Record<string, unknown>;
       showText(): void;
     }[]
   >([]);
-  const triggerNames = shallowReactive<{ readonly label: unknown; readonly labelledBy: unknown }[]>(
-    [],
-  );
-  const ariaText = (text: unknown) =>
-    typeof text === 'string' && text.trim() !== '' ? text : undefined;
+  const triggerNames = shallowReactive<Record<string, unknown>[]>([]);
   const inputIsControl = computed(
     () => source.inline || inputs.some((input) => !input.insidePopup),
   );
@@ -1157,17 +1152,17 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     openByKey,
     press,
     addInput: (input) => add(inputs, input),
-    addTriggerName: (name) => add(triggerNames, name),
+    addTriggerName: (attrs) => add(triggerNames, attrs),
     listName(attrs) {
-      if ('aria-label' in attrs || 'aria-labelledby' in attrs) return {};
-      const controlName = inputIsControl.value ? controlInputEntry.value : triggerNames.at(-1);
-      const labelledBy =
-        ariaText(controlName?.labelledBy) ??
-        ([labels.at(-1)?.id, field?.labelledBy].filter(Boolean).join(' ') || undefined);
-      if (labelledBy) return { 'aria-labelledby': labelledBy };
-      const label = ariaText(controlName?.label);
-      if (label) return { 'aria-label': label };
-      return field?.labelId ? { 'aria-labelledby': field.labelId } : {};
+      const controlAttrs = inputIsControl.value
+        ? controlInputEntry.value?.attrs
+        : triggerNames.at(-1);
+      return listNameFromControl(
+        attrs,
+        controlAttrs,
+        [labels.at(-1)?.id, field?.labelledBy].filter(Boolean).join(' ') || undefined,
+        field?.hasLabel ? field.labelId : undefined,
+      );
     },
     setTrigger(element) {
       triggerElement.value = element;

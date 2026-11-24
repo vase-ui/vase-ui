@@ -15,11 +15,13 @@ defineProps({
   root: Object as PropType<Props>,
   trigger: Object as PropType<Props>,
   input: Object as PropType<Props>,
+  portal: Object as PropType<Props>,
   list: Object as PropType<Props>,
   items: { type: Array as PropType<unknown[]>, default: () => ['Apple', 'Banana', 'Cherry'] },
   inputInPopup: Boolean,
   comboboxLabel: Boolean,
   fieldLabel: { type: Boolean, default: true },
+  labelAfter: Boolean,
   nonNativeFieldLabel: Boolean,
 });
 </script>
@@ -27,19 +29,24 @@ defineProps({
 <template>
   <Form data-testid="form" v-bind="form">
     <Field.Root data-testid="field" v-bind="field">
-      <Field.Label v-if="fieldLabel && nonNativeFieldLabel" data-testid="field-label">
+      <Field.Label
+        v-if="fieldLabel && !labelAfter && nonNativeFieldLabel"
+        data-testid="field-label"
+      >
         <template #element="{ props: elementProps, elementRef }">
           <span v-bind="elementProps" :ref="elementRef">Fruit</span>
         </template>
       </Field.Label>
-      <Field.Label v-else-if="fieldLabel" data-testid="field-label">Fruit</Field.Label>
+      <Field.Label v-else-if="fieldLabel && !labelAfter" data-testid="field-label"
+        >Fruit</Field.Label
+      >
       <Combobox.Root :items="items" v-bind="root">
         <Combobox.Label v-if="comboboxLabel" data-testid="combobox-label">Fruit</Combobox.Label>
         <Combobox.Trigger v-if="inputInPopup" data-testid="trigger" v-bind="trigger">
           <Combobox.Value />
         </Combobox.Trigger>
         <Combobox.Input v-else data-testid="input" v-bind="input" />
-        <Combobox.Portal>
+        <Combobox.Portal v-bind="portal">
           <Combobox.Positioner>
             <Combobox.Popup data-testid="popup">
               <Combobox.Input v-if="inputInPopup" data-testid="input" v-bind="input" />
@@ -57,6 +64,7 @@ defineProps({
           </Combobox.Positioner>
         </Combobox.Portal>
       </Combobox.Root>
+      <Field.Label v-if="fieldLabel && labelAfter" data-testid="field-label">Fruit</Field.Label>
       <Field.Description data-testid="description">Pick a fruit.</Field.Description>
       <Field.Error data-testid="error" />
     </Field.Root>

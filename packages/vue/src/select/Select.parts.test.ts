@@ -189,10 +189,43 @@ describe('listbox name', () => {
     expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('popup'));
     popupListbox.unmount();
 
-    const inField = mount(SelectInField, { root: { defaultOpen: true } });
+    const inFieldTrigger = reactive<Record<string, unknown>>({});
+    const inField = mount(SelectInField, {
+      root: { defaultOpen: true },
+      trigger: inFieldTrigger,
+    });
     await waitFor(() => expect(shown()).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Letter' })).toBe(byTestId('popup'));
+    inFieldTrigger['aria-labelledby'] = '';
+    inFieldTrigger['aria-label'] = 'Region';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Region' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Region' })).toBe(byTestId('popup'));
+    delete inFieldTrigger['aria-label'];
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Letter' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Letter' })).toBe(byTestId('popup'));
     inField.unmount();
+
+    // AccName 1.2: Select.Label wins over aria-label on the trigger, unless developer aria-labelledby overrides it.
+    const labeledTrigger = reactive<Record<string, unknown>>({ 'aria-label': 'Region' });
+    const withLabelAndTrigger = mount(SelectParts, {
+      label: {},
+      list: {},
+      trigger: labeledTrigger,
+      root: { defaultOpen: true },
+    });
+    await waitFor(() => expect(shown()).toBe(true));
+    expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
+    labeledTrigger['aria-labelledby'] = '';
+    await nextTick();
+    expect(screen.getByRole('combobox', { name: 'Region' })).toBe(byTestId('trigger'));
+    expect(screen.getByRole('listbox', { name: 'Region' })).toBe(byTestId('list'));
+    delete labeledTrigger['aria-label'];
+    await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
+    expect(byTestId('list')).not.toHaveAttribute('aria-label');
+    withLabelAndTrigger.unmount();
 
     const show = reactive({ trigger: true });
     const triggerProps = reactive<Record<string, unknown>>({
