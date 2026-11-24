@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import ComboboxInForm from '../../test/fixtures/ComboboxInForm.vue';
+import ComboboxTextarea from '../../test/fixtures/ComboboxTextarea.vue';
 import { mount, settle, submitsPrevented } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -222,6 +223,49 @@ describe('the reset of a controlled root or of a changed default', () => {
     expect(log).toEqual(['update:modelValue Cherry', 'update:inputValue Cherry']);
     expect(entries()).toEqual([['a', 'Cherry']]);
     expect((byTestId('input') as HTMLInputElement).value).toBe('Cherry');
+  });
+});
+
+describe('the reset of a textarea in the slot of the input', () => {
+  const textarea = () => form().querySelector('textarea')!;
+
+  test.each([
+    { name: 'v-model:input-value', root: { inputValue: 'Ada' }, shown: 'Ada' },
+    { name: 'defaultInputValue', root: { defaultInputValue: 'Lin' }, shown: 'Lin' },
+    { name: 'the label of the value', root: { defaultValue: 'Apple' }, shown: 'Apple' },
+  ])('a reset with no edit gives the text of $name, and emits nothing', async ({ root, shown }) => {
+    const log: string[] = [];
+    mount(ComboboxTextarea, {
+      root: reactive<Props>({
+        ...root,
+        'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+        'onUpdate:modelValue': (value: string) => log.push(`update:modelValue ${value}`),
+      }),
+    });
+    await nextTick();
+    expect(textarea()).toHaveValue(shown);
+    form().reset();
+    await settle();
+    expect(textarea()).toHaveValue(shown);
+    expect(log).toEqual([]);
+  });
+
+  test('a reset whose text the parent refuses gives the text of v-model:input-value', async () => {
+    const log: string[] = [];
+    // This parent logs each update and writes none.
+    const root = reactive<Props>({
+      inputValue: 'Ada',
+      'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+    });
+    mount(ComboboxTextarea, { root });
+    await nextTick();
+    root.inputValue = 'Bob';
+    await nextTick();
+    expect(textarea()).toHaveValue('Bob');
+    form().reset();
+    await settle();
+    expect(log).toEqual(['update:inputValue Ada']);
+    expect(textarea()).toHaveValue('Bob');
   });
 });
 

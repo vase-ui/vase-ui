@@ -225,6 +225,8 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
+    /** Writes the text that the input shows to its element, after the next render. */
+    showTextAfterRender(): void;
   }): () => void;
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
@@ -416,7 +418,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 
   // The parts.
   const inputs = shallowReactive<
-    { readonly insidePopup: boolean; readonly element: HTMLElement | null }[]
+    {
+      readonly insidePopup: boolean;
+      readonly element: HTMLElement | null;
+      showTextAfterRender(): void;
+    }[]
   >([]);
   const inputIsControl = computed(
     () => source.inline || inputs.some((input) => !input.insidePopup),
@@ -1198,6 +1204,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           textState.setOwn(next);
           emit.updateText(next);
         }
+        // The default value of a `<textarea>` is its text, so the reset empties it, and the binding
+        // writes only a text that changed (test/measurements/input.test.ts).
+        for (const input of inputs) input.showTextAfterRender();
       };
       if (!followsLabel() || !inputIsControl.value) {
         resetText();
