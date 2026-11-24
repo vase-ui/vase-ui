@@ -70,8 +70,7 @@ watch(value, (next) => field?.setValue(next, next !== ''), { immediate: true });
 useFormReset(element, () => {
   const reset = resetValue(String(props.defaultValue ?? ''));
   if (value.value !== reset) changeValue(reset);
-  // The default value of a `<textarea>` is its text, so the reset empties it
-  // (test/measurements/input.test.ts).
+  // The reset empties a `<textarea>` (test/measurements/input.test.ts).
   showValue();
   field?.onReset();
 });

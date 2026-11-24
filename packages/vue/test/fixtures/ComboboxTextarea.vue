@@ -2,9 +2,7 @@
 import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 
-// A combobox in a form, whose input is a `<textarea>` in the `element` slot. `root` gives props to
-// the root. With `inputInPopup`, the trigger is the control, and the input is in a popup that stays
-// in the form.
+// With `inputInPopup`, the popup stays in the form.
 defineProps({ root: Object as PropType<Record<string, unknown>>, inputInPopup: Boolean });
 const FRUITS = ['Apple', 'Banana'];
 </script>

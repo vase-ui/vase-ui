@@ -252,7 +252,6 @@ describe('the reset of a textarea in the slot of the input', () => {
 
   test('a reset whose text the parent refuses gives the text of v-model:input-value', async () => {
     const log: string[] = [];
-    // This parent logs each update and writes none.
     const root = reactive<Props>({
       inputValue: 'Ada',
       'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),

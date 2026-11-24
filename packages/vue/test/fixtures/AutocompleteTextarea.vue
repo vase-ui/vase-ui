@@ -2,8 +2,6 @@
 import type { PropType } from 'vue';
 import { Autocomplete } from '../../src/autocomplete';
 
-// An autocomplete in a form, whose input is a `<textarea>` in the `element` slot. `root` gives
-// props to the root.
 defineProps({ root: Object as PropType<Record<string, unknown>> });
 const TAGS = ['feature', 'fix', 'docs'];
 </script>
