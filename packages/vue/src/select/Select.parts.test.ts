@@ -207,7 +207,6 @@ describe('listbox name', () => {
     expect(screen.getByRole('listbox', { name: 'Letter' })).toBe(byTestId('popup'));
     inField.unmount();
 
-    // AccName 1.2: Select.Label wins over aria-label on the trigger, unless developer aria-labelledby overrides it.
     const labeledTrigger = reactive<Record<string, unknown>>({ 'aria-label': 'Region' });
     const withLabelAndTrigger = mount(SelectParts, {
       label: {},

@@ -288,7 +288,6 @@ describe('the list', () => {
     expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
     byNativeField.unmount();
 
-    // AccName 1.2: aria-label on the input wins over a native <label for>, and whitespace falls back.
     const fieldInput = reactive<Props>({ 'aria-label': 'Search fruit' });
     const byFieldAndAriaLabel = mount(ComboboxInField, {
       root: { defaultOpen: true },
@@ -301,8 +300,6 @@ describe('the list', () => {
     expect(screen.getByRole('listbox', { name: 'Fruit' })).toBe(byTestId('list'));
     byFieldAndAriaLabel.unmount();
 
-    // AccName 1.2: a non-native Field.Label (aria-labelledby) wins over aria-label on the input,
-    // and joins Combobox.Label; a blank aria-labelledby on the input clears both.
     const nonNativeInput = reactive<Props>({ 'aria-label': 'Search fruit' });
     const byNonNativeField = mount(ComboboxInField, {
       root: { defaultOpen: true },

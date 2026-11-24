@@ -97,7 +97,6 @@ export interface SelectContext {
   keep(): void;
   addLabel(label: { readonly id: string }): () => void;
   addTriggerName(attrs: Record<string, unknown>): () => void;
-  /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
   listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   /** The first item of the value, in the order of the document, shown or not. */
   selectedItem(): ListItem | undefined;

@@ -2,10 +2,8 @@ const ariaText = (text: unknown) =>
   typeof text === 'string' && text.trim() !== '' ? text : undefined;
 
 /**
- * The `aria-labelledby` or `aria-label` of a listbox or grid from its control, in the order of
- * AccName 1.2: `aria-labelledby` of the control (developer value, else `labelledBy`), else its
- * `aria-label`, else `fallbackLabelledBy`. A developer `aria-label` or `aria-labelledby` on the
- * list, also a blank one, stops both defaults.
+ * The order follows AccName 1.2: `labelledBy` is `aria-labelledby` of the control, and
+ * `fallbackLabelledBy` is a native label.
  */
 export function listNameFromControl(
   listAttrs: Record<string, unknown>,

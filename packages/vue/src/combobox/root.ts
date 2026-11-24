@@ -230,7 +230,6 @@ export interface ComboboxRootContext {
     showText(): void;
   }): () => void;
   addTriggerName(attrs: Record<string, unknown>): () => void;
-  /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
   listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
