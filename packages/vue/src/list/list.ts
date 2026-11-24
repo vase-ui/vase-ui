@@ -4,7 +4,9 @@ import { inDocumentOrder } from '../common/element';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
+import { focusAs } from '../popup/focus';
 import { isComposing } from '../popup/layer';
+import type { InteractionType } from '../popup/root';
 
 export type HighlightReason = 'keyboard' | 'pointer' | 'none';
 
@@ -65,6 +67,11 @@ export interface ListOptions {
   container(): HTMLElement | null;
   /** The element that keeps the focus: the list is in virtual mode. */
   owner?(): HTMLElement | null;
+  /**
+   * The input that opened the list. The first highlight of an open focuses its item as that input
+   * would.
+   */
+  interaction?(): InteractionType;
   /** An arrow key at an end removes the highlight. */
   canLeave?(): boolean;
   /** A move of the pointer highlights its item. The default is `true`. */
@@ -310,6 +317,13 @@ export function useList(options: ListOptions): List {
     return nextRow?.[column] ?? nextRow?.at(-1);
   }
 
+  const inputOf = (reason: HighlightReason): InteractionType =>
+    reason === 'pointer'
+      ? 'mouse'
+      : reason === 'keyboard'
+        ? 'keyboard'
+        : (options.interaction?.() ?? '');
+
   const list: List = {
     get highlighted() {
       return highlighted.value;
@@ -354,7 +368,7 @@ export function useList(options: ListOptions): List {
       }
       highlighted.value = item;
       if (item) {
-        if (!virtual.value) item.element.focus({ preventScroll: true });
+        if (!virtual.value) focusAs(item.element, inputOf(reason));
         // `focus()` alone puts the item in the middle of the list
         // (test/measurements/menu.test.ts). A pointer scrolls nothing, so the list does not move
         // under it.

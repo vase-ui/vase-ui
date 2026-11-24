@@ -222,6 +222,7 @@ export function useSelectRoot(
     orientation: () => 'vertical',
     loop: () => false,
     container,
+    interaction: () => root.interaction,
     hover: () => props.highlightItemOnHover,
   });
 

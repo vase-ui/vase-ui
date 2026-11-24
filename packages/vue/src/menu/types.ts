@@ -218,7 +218,8 @@ export interface MenuPopupProps
    */
   id?: string | undefined;
   /**
-   * The element that gets the focus at the close. By default: the trigger, else the element that
+   * The element that gets the focus at the close. A function runs after the update of the close,
+   * so it finds an element that the update renders. By default: the trigger, else the element that
    * had the focus before the open. After an open by code, that element comes before the trigger.
    */
   finalFocus?: FocusTarget | undefined;

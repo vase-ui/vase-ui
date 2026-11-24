@@ -129,9 +129,10 @@ export interface DialogPopupProps
   initialFocus?: FocusTarget | undefined;
   /**
    * The element that gets the focus at the close, or `false` to keep the focus where it is. A
-   * function gets the type of the interaction and gives the element. By default: the trigger, else
-   * the element that had the focus before the open. After an open by code, that element comes
-   * before the trigger. For an element that is no tab stop, the focus goes to its first tab stop
+   * function gets the type of the interaction and gives the element. It runs after the update of
+   * the close, so it finds an element that the update renders. By default: the trigger, else the
+   * element that had the focus before the open. After an open by code, that element comes before
+   * the trigger. For an element that is no tab stop, the focus goes to its first tab stop
    * outside the popup. An element in the popup is no target.
    */
   finalFocus?: FocusTarget | undefined;

@@ -4,6 +4,7 @@ import { mergeCleanups } from '../common/mergeCleanups';
 import { isElement } from '../common/element';
 import { ownerDocument } from '../common/owner';
 import { dispatchClickWithModifiers } from '../common/dispatchClickWithModifiers';
+import { focusAs } from './focus';
 import { isReleaseAtPressPoint } from './isReleaseAtPressPoint';
 import type { PopupRoot } from './root';
 
@@ -78,7 +79,7 @@ export function usePopupPress(
   );
 
   function release(item: HTMLElement, event: PointerEvent) {
-    if (!options.virtual) item.focus({ preventScroll: true });
+    if (!options.virtual) focusAs(item, 'mouse');
     dispatchClickWithModifiers(item, event, { detail: 1, pointerType: 'mouse' });
   }
 
@@ -100,7 +101,7 @@ export function usePopupPress(
     }
     const disabled = options.disabledItemAt?.(path);
     if (disabled) {
-      if (!options.virtual && elapsed >= delays.item) disabled.focus({ preventScroll: true });
+      if (!options.virtual && elapsed >= delays.item) focusAs(disabled, 'mouse');
       return;
     }
     if (path.some((element) => element === trigger || options.inside(element))) return;
