@@ -98,7 +98,8 @@ describe('the line of a wrapped link', () => {
     mountLinks({ trigger: { delay: 300 } });
     await hoverLine('overlap', 0);
     await userEvent.pointer({ coords: { x: 1, y: 1 } });
-    // `focus()` after a key gives `:focus-visible` (test/measurements/preview-card.test.ts).
+    // `focus()` after a key gives `:focus-visible`. After a mouse press, only Chromium takes Shift
+    // as that key (test/measurements/preview-card.test.ts).
     await userEvent.keyboard('{Shift}');
     link('overlap').focus();
     const last = linesOf(link('overlap'))[1]!;

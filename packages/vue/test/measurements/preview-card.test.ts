@@ -99,16 +99,20 @@ describe(':focus-visible of a link in its `focusin` listener', () => {
     expect(log).toEqual(['true true']);
   });
 
-  test('of focus() follows the last input: true after a key, false after a mouse press', async () => {
+  // An earlier case or run can end with a mouse press, so the case starts with Tab.
+  test('of focus() is true after Tab and false after a mouse press; Shift after a press gives true only in Chromium', async () => {
     html(scene);
     const log = recordFocusin();
-    element('before').focus();
-    await userEvent.keyboard('{Shift}');
+    await userEvent.keyboard('{Tab}');
+    expect(activeId()).toBe('before');
     element('link').focus();
     element('link').blur();
     await userEvent.click(element('before'));
     element('link').focus();
-    expect(log).toEqual([true, false]);
+    element('link').blur();
+    await userEvent.keyboard('{Shift}');
+    element('link').focus();
+    expect(log).toEqual([true, false, server.browser === 'chromium']);
   });
 
   test('a mouse click on the link moves the focus to it with no :focus-visible, except in WebKit on macOS, which moves no focus', async () => {

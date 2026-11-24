@@ -75,6 +75,9 @@ describe('pointer capture in pointerdown', () => {
   // button down, so that move ends a press.
   test('a release outside the view gives pointerup in Chromium and WebKit; in Firefox the next move has buttons 0', async () => {
     const { element, log } = captured();
+    // Firefox keeps the capture after a release outside the view. After the removal of the element,
+    // it sends `lostpointercapture` to the document at the next pointer event in the view.
+    onTestFinished(() => userEvent.pointer({ coords: { x: 1, y: 1 } }));
     element.addEventListener('pointermove', (event) => {
       if (event.buttons === 0) log.push('element move with no button');
     });

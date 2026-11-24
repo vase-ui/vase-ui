@@ -432,7 +432,8 @@ describe('in the DOM', () => {
     expect(element).toHaveAttribute('data-instant', 'dismiss');
     unmount();
     mount(PreviewCardInTransition, { trigger: { delay: 0 } });
-    // `focus()` after a key gives `:focus-visible` (test/measurements/preview-card.test.ts).
+    // `focus()` after a key gives `:focus-visible`. After a mouse press, only Chromium takes Shift
+    // as that key (test/measurements/preview-card.test.ts).
     await userEvent.keyboard('{Shift}');
     byId('a').focus();
     const second = await opened();
