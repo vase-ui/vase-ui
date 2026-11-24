@@ -1061,3 +1061,55 @@ describe('a CSS zoom in a positioner', () => {
     });
   });
 });
+
+describe('the z-index of a positioner', () => {
+  test('is the number of a `var()` and of a `calc()`, and `auto` with no value', () => {
+    html(`<div style="--z: 80">
+      <div id="var" style="position: absolute; z-index: var(--z)"></div>
+      <div id="calc" style="position: absolute; z-index: calc(var(--z) + 1)"></div>
+      <div id="auto" style="position: absolute"></div></div>`);
+    const zIndex = (id: string) => getComputedStyle(element(id)).zIndex;
+    expect(['var', 'calc', 'auto'].map(zIndex)).toEqual(['80', '81', 'auto']);
+  });
+
+  test('puts a fixed element before it, with the same z-index, above each element with a lower z-index and under the positioner and each element with a higher one', () => {
+    html(`<div id="scrim" style="position: fixed; inset: 0; z-index: 60"></div>
+      <div id="viewport" style="position: fixed; inset: 0; z-index: 70; pointer-events: none">
+        <button id="inside" style="position: absolute; left: 10px; top: 100px; pointer-events: auto">Inside</button>
+      </div>
+      <div id="toasts" style="position: fixed; right: 0; bottom: 0; width: 100px; height: 40px; z-index: 78"></div>
+      <div id="block" style="position: fixed; inset: 0"></div>
+      <div id="positioner" style="--z: 80; position: absolute; left: 150px; top: 300px; width: 100px; height: 60px; z-index: var(--z)"></div>
+      <div id="above" style="position: fixed; left: 0; bottom: 0; width: 60px; height: 40px; z-index: 100"></div>`);
+    const points = {
+      corner: { x: 2, y: 2 },
+      inside: centerOf(element('inside')),
+      positioner: centerOf(element('positioner')),
+      toasts: { x: innerWidth - 10, y: innerHeight - 10 },
+      above: { x: 10, y: innerHeight - 10 },
+    };
+    const hits = () =>
+      Object.fromEntries(
+        Object.entries(points).map(([name, { x, y }]) => [
+          name,
+          document.elementFromPoint(x, y)?.id,
+        ]),
+      );
+    // With no z-index, the fixed element is under each element that has one.
+    expect(hits()).toEqual({
+      corner: 'scrim',
+      inside: 'inside',
+      positioner: 'positioner',
+      toasts: 'toasts',
+      above: 'above',
+    });
+    element('block').style.zIndex = getComputedStyle(element('positioner')).zIndex;
+    expect(hits()).toEqual({
+      corner: 'block',
+      inside: 'block',
+      positioner: 'positioner',
+      toasts: 'block',
+      above: 'above',
+    });
+  });
+});
