@@ -847,6 +847,32 @@ describe('the tab stop of the viewport', () => {
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
   });
 
+  test('a viewport whose scroll area is hidden keeps its answer when its content changes, and reads its content again when it shows', async () => {
+    const scene = reactive({ control: true, hidden: false, markup: '' });
+    const { root, viewport, before } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.hidden = true;
+    await settle();
+    scene.markup = '<p>Text</p>';
+    await settle();
+    scene.hidden = false;
+    await waitFor(() => expect(root.querySelector('.markup')!.offsetHeight).toBeGreaterThan(0));
+    await settle();
+    expect(viewport.tabIndex).toBe(-1);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('.control'));
+  });
+
+  test('a scroll reads no element of the content', async () => {
+    const { viewport } = await mountControls({ control: true });
+    const read = vi.spyOn(Element.prototype, 'querySelectorAll');
+    onTestFinished(() => read.mockRestore());
+    await scrollViewport(viewport, 0, 300);
+    await settle();
+    expect(read.mock.contexts).not.toContain(viewport);
+  });
+
   test.each([
     { attribute: 'tabindex', markup: '<div tabindex="-1">T</div>', set: '0' },
     { attribute: 'disabled', markup: '<button disabled>T</button>', set: null },

@@ -11,7 +11,12 @@ function find(selector: string) {
 
 /** Mounts `ScrollAreaInDialogs`, and waits for the first measurement of the scroll area of the page. */
 async function mountScene() {
-  const scene = reactive({ extraOnPage: false, extraInDialog: false, fieldInDialog: true });
+  const scene = reactive({
+    extraOnPage: false,
+    extraInDialog: false,
+    fieldInDialog: true,
+    lateArea: false,
+  });
   mount(ScrollAreaInDialogs, { scene });
   await waitFor(() => expect(find('.page-viewport')).toHaveAttribute('data-has-overflow-y'));
   await settle();
@@ -71,4 +76,17 @@ test('a viewport on the page whose content changes while a modal dialog is open 
   find('.before').focus();
   await userEvent.keyboard('{Tab}');
   expect(find('.page-control')).toHaveFocus();
+});
+
+test('a scroll area that mounts on the page while a modal dialog is open is out of the Tab order after the close', async () => {
+  const scene = await mountScene();
+  await userEvent.click(find('.modal-trigger'));
+  await waitFor(() => expect(find('.page-viewport').closest('[inert]')).not.toBeNull());
+  scene.lateArea = true;
+  await waitFor(() => expect(find('.late-viewport')).toHaveAttribute('data-has-overflow-y'));
+  await settle();
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => expect(document.querySelector('.modal')).toBeNull());
+  await settle();
+  expect(find('.late-viewport').tabIndex).toBe(-1);
 });

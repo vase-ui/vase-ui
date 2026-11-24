@@ -13,6 +13,8 @@ defineProps({
       /** The class `gone`, which the case styles. */
       gone?: boolean;
       markup?: string;
+      /** The `hidden` attribute on the root. */
+      hidden?: boolean;
     }>,
     default: () => ({}),
   },
@@ -21,7 +23,7 @@ defineProps({
 
 <template>
   <button type="button" class="before">Before</button>
-  <ScrollArea.Root style="width: 200px; height: 200px">
+  <ScrollArea.Root style="width: 200px; height: 200px" :hidden="scene.hidden">
     <ScrollArea.Viewport class="viewport" style="width: 100%; height: 100%">
       <button
         v-if="scene.control"
