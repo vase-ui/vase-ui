@@ -20,6 +20,7 @@ import RadioChoices from '../../test/fixtures/RadioChoices.vue';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { mount, mountError, settle, typeAtEnd } from '../../test/render';
 import { screen } from '../../test/queries';
+import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 /** Mounts a field with a label, an input, a description and one error, and waits one render. */
@@ -831,6 +832,17 @@ describe('Field.Error', () => {
     await nextTick();
     expect(error).toHaveClass('error-leave-active');
     expect(element.querySelector('input')).not.toHaveAttribute('aria-describedby');
+  });
+
+  test('an error with role="alert" of the developer enters the document with its message and its role, when the page sets invalid', async () => {
+    const root = reactive({ invalid: false });
+    const { error } = await mountField({ root, errors: [{ role: 'alert', message: 'Too long.' }] });
+    const inserted = readWhen(
+      () => error() !== null,
+      () => ({ role: error()!.getAttribute('role'), text: error()!.textContent }),
+    );
+    root.invalid = true;
+    expect(await inserted).toEqual({ role: 'alert', text: 'Too long.' });
   });
 
   test.each([

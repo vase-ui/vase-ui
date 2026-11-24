@@ -25,6 +25,8 @@ defineExpose({ field });
     <Field.Description v-if="shown.description !== false" v-bind="description">
       Your full name.
     </Field.Description>
-    <Field.Error v-for="(error, index) in errors" :key="index" v-bind="error" />
+    <Field.Error v-for="({ message, ...error }, index) in errors" :key="index" v-bind="error">
+      <template v-if="message" #default>{{ message }}</template>
+    </Field.Error>
   </Field.Root>
 </template>
