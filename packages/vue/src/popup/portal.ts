@@ -88,8 +88,8 @@ const portalMountedKey: InjectionKey<Readonly<Ref<boolean>>> = Symbol(
 );
 
 /**
- * The portal of a popup. A family with a positioner gives it as `positioner`. The fixed element of
- * its modal popup then takes the `z-index` of the positioner.
+ * The portal of a popup. A family whose modal popup has a positioner gives it as `positioner`. The
+ * fixed element of the modal popup then takes the `z-index` of the positioner.
  */
 export function usePopupPortal(
   root: PopupRoot,
@@ -136,10 +136,10 @@ export function usePopupPortal(
     { flush: 'post' },
   );
   // A page with a z-index scale puts a backdrop above a fixed element with no z-index, and the
-  // backdrop takes the presses that the popup must take. This element comes before the positioner
-  // in the same stacking context. So the z-index of the positioner puts it right under the
-  // positioner (test/measurements/popup.test.ts, "the z-index of a positioner"). The element is
-  // new at each open, so each open reads the z-index again.
+  // backdrop then takes the presses that this element must take. This element comes before the
+  // positioner in the same stacking context. With the z-index of the positioner, it is under the
+  // positioner and above each element with a lower z-index (test/measurements/popup.test.ts, "the
+  // z-index of a positioner"). Each open has a new element, so each open reads the z-index again.
   const zIndex = computed(() => {
     const element = blockElement.value && positioner?.value;
     const value = element && getComputedStyle(element).zIndex;
