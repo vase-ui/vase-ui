@@ -175,8 +175,12 @@ describe('touchDrag and penDrag', () => {
       });
       expect(stamps.length).toBeGreaterThanOrEqual(4);
       for (let index = 1; index < stamps.length; index += 1) {
-        expect(stamps[index]?.timeStamp).toBeGreaterThan(stamps[index - 1]?.timeStamp ?? Infinity);
+        const step = (stamps[index]?.timeStamp ?? 0) - (stamps[index - 1]?.timeStamp ?? Infinity);
+        expect(step).toBeGreaterThan(0);
+        expect(step).toBeLessThan(50);
       }
+      const dragDuration = (stamps.at(-1)?.timeStamp ?? 0) - (stamps[0]?.timeStamp ?? 0);
+      expect(dragDuration).toBeLessThan(100);
 
       stamps.length = 0;
       await touchDrag(point, point, 0, 200);
@@ -191,6 +195,18 @@ describe('touchDrag and penDrag', () => {
       expect(restDuration).toBeLessThan(300);
 
       stamps.length = 0;
+      await touchDrag(point, point, 0, () => {});
+      await waitFor(() => {
+        expect(stamps.at(-1)?.type).toBe('pointerup');
+      });
+      const [fnRestDown, fnRestUp] = stamps;
+      expect(fnRestDown?.type).toBe('pointerdown');
+      expect(fnRestUp?.type).toBe('pointerup');
+      const fnRestDuration = (fnRestUp?.timeStamp ?? 0) - (fnRestDown?.timeStamp ?? 0);
+      expect(fnRestDuration).toBeGreaterThan(0);
+      expect(fnRestDuration).toBeLessThan(100);
+
+      stamps.length = 0;
       try {
         vi.useFakeTimers({ now: 0 });
         await touchDrag(point, point, 0);
@@ -201,6 +217,8 @@ describe('touchDrag and penDrag', () => {
         expect(stamps.at(-1)?.type).toBe('pointerup');
       });
       const [fakeDown, fakeUp] = stamps;
+      expect(fakeDown?.type).toBe('pointerdown');
+      expect(fakeUp?.type).toBe('pointerup');
       const fakeDuration = (fakeUp?.timeStamp ?? 0) - (fakeDown?.timeStamp ?? 0);
       expect(fakeDuration).toBeGreaterThan(0);
       expect(fakeDuration).toBeLessThan(100);
