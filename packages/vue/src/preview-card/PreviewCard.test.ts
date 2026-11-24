@@ -433,8 +433,8 @@ describe('in the DOM', () => {
     unmount();
     mount(PreviewCardInTransition, { trigger: { delay: 0 } });
     // After a mouse press, a `focus()` after Shift gets `:focus-visible` only in Chromium
-    // (test/measurements/preview-card.test.ts). A repeat of this case starts after the press at its
-    // end, so the case moves the focus with Tab.
+    // (test/measurements/preview-card.test.ts). A repeat of this case starts after the press at
+    // its end.
     await userEvent.keyboard(TAB);
     expect(document.activeElement).toBe(byId('a'));
     const second = await opened();

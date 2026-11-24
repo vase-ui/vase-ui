@@ -554,8 +554,7 @@ describe('an open while the popup leaves', () => {
   });
 });
 
-// The opacity of the element in each frame until `stop` gives `true`, at most for 2 s. `time` is the
-// time of the animation timeline in that frame, in ms.
+// The opacity of the element in each frame until `stop` gives `true`, at most for 2 s.
 async function opacityFrames(target: Element, stop: () => boolean) {
   const frames: { opacity: number; visible: boolean; time: number }[] = [];
   const end = performance.now() + 2000;
@@ -585,9 +584,9 @@ function mountShow(
   return { scene: state, log, popup: () => document.querySelector<HTMLElement>('.popup') };
 }
 
-// A late frame can end a leave of 500 ms before the show. So the leave takes 100 s, and the case
-// moves it to its middle at its `transitionrun` event. A running transition keeps its duration, so
-// the case removes the 100 s there, and the enter has the 500 ms of the fixture.
+// A late frame can end a leave of 500 ms before the show, so the leave takes 100 s. A running
+// transition keeps its duration, so the case removes the 100 s after `transitionrun`, and the enter
+// has the 500 ms of the fixture.
 async function openThenLeaveToHalf(options: { readsLayout?: boolean } = {}) {
   const shown = mountShow({ open: false, rendered: true }, options);
   shown.scene.open = true;

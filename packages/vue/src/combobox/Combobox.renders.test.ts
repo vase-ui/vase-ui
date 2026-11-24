@@ -94,7 +94,7 @@ describe('the renders', () => {
     const collator = vi.spyOn(Intl, 'Collator');
     try {
       // The filter of a locale stays for the page, so each run takes a locale that no run took.
-      // A private use subtag makes the locale new, and the collator ignores it.
+      // The collator ignores a private use subtag.
       collatorCaseRuns += 1;
       mount(ComboboxRenders, {
         count: () => '',
