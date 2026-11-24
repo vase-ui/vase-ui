@@ -592,6 +592,50 @@ describe('a replaced element', () => {
     expect(textarea).toHaveValue('first');
   });
 
+  test('a reset with no edit gives a textarea in the element slot the value of v-model at its mount, and emits nothing', async () => {
+    const log: string[] = [];
+    const { root } = mount(TextareaInSlot, { field: {}, attrs: vModel('Ada', log) });
+    await nextTick();
+    const textarea = root.querySelector('textarea')!;
+    expect(textarea).toHaveValue('Ada');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(textarea).toHaveValue('Ada');
+    expect(log).toEqual([]);
+  });
+
+  test('a reset with no edit gives a textarea in the element slot its defaultValue', async () => {
+    const log: string[] = [];
+    const { root } = mount(TextareaInSlot, {
+      field: {},
+      attrs: recordEmits(log, { defaultValue: 'Grace' }),
+    });
+    await nextTick();
+    const textarea = root.querySelector('textarea')!;
+    expect(textarea).toHaveValue('Grace');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(textarea).toHaveValue('Grace');
+    expect(log).toEqual([]);
+  });
+
+  test('a reset whose value the parent refuses gives a textarea in the element slot the value of v-model', async () => {
+    const log: string[] = [];
+    // A field renders its control again when the reset clears its dirty state, and that render
+    // writes the value of a textarea.
+    const attrs = recordEmits(log, { modelValue: 'Ada' });
+    const { root } = mount(TextareaInSlot, { attrs });
+    await nextTick();
+    const textarea = root.querySelector('textarea')!;
+    attrs.modelValue = 'Bob';
+    await nextTick();
+    expect(textarea).toHaveValue('Bob');
+    root.querySelector('form')!.reset();
+    await settle();
+    expect(log).toEqual(['update Ada']);
+    expect(textarea).toHaveValue('Bob');
+  });
+
   test('a component in the slot gets the props on its element, and exposes the element', async () => {
     const log: string[] = [];
     const onInput = vi.fn();

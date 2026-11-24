@@ -225,6 +225,7 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
+    showText(): void;
   }): () => void;
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
@@ -416,7 +417,11 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
 
   // The parts.
   const inputs = shallowReactive<
-    { readonly insidePopup: boolean; readonly element: HTMLElement | null }[]
+    {
+      readonly insidePopup: boolean;
+      readonly element: HTMLElement | null;
+      showText(): void;
+    }[]
   >([]);
   const inputIsControl = computed(
     () => source.inline || inputs.some((input) => !input.insidePopup),
@@ -1198,6 +1203,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           textState.setOwn(next);
           emit.updateText(next);
         }
+        // The reset empties a `<textarea>`, and Vue writes the text again only when it changes
+        // (test/measurements/input.test.ts).
+        for (const input of inputs) input.showText();
       };
       if (!followsLabel() || !inputIsControl.value) {
         resetText();

@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomplete';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
+import AutocompleteTextarea from '../../test/fixtures/AutocompleteTextarea.vue';
 import AutocompleteValueAlone from '../../test/fixtures/AutocompleteValueAlone.vue';
 import { mount, mountError, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -216,6 +217,29 @@ describe('the form', () => {
     expect(log).toEqual(['update docs']);
     expect(input().value).toBe('docs');
   });
+
+  test.each([
+    { name: 'v-model', root: { modelValue: 'Grace' }, shown: 'Grace' },
+    { name: 'defaultValue', root: { defaultValue: 'Kay' }, shown: 'Kay' },
+  ])(
+    'a reset with no edit gives a textarea in the slot of the input the text of $name, and emits nothing',
+    async ({ root, shown }) => {
+      const log: string[] = [];
+      mount(AutocompleteTextarea, {
+        root: reactive<Props>({
+          ...root,
+          'onUpdate:modelValue': (text: string) => log.push(`update ${text}`),
+        }),
+      });
+      await nextTick();
+      const textarea = form().querySelector('textarea')!;
+      expect(textarea).toHaveValue(shown);
+      form().reset();
+      await settle();
+      expect(textarea).toHaveValue(shown);
+      expect(log).toEqual([]);
+    },
+  );
 
   test('`submitOnItemClick` submits the form of the root after a pick, also from an input in the popup', async () => {
     const values: unknown[] = [];
