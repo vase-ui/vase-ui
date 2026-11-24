@@ -5,9 +5,14 @@ import { ScrollArea } from '../../src/scroll-area';
 
 // A scroll area of the page that holds a control, a dialog that stays mounted and whose body is a
 // scroll area that holds a field, and a modal dialog. `extra` adds a control to a scroll area.
+// `fieldInDialog: false` removes the field.
 defineProps({
   scene: {
-    type: Object as PropType<{ extraOnPage?: boolean; extraInDialog?: boolean }>,
+    type: Object as PropType<{
+      extraOnPage?: boolean;
+      extraInDialog?: boolean;
+      fieldInDialog?: boolean;
+    }>,
     default: () => ({}),
   },
 });
@@ -28,7 +33,7 @@ defineProps({
       <Dialog.Popup aria-label="Edit">
         <ScrollArea.Root style="width: 200px; height: 100px">
           <ScrollArea.Viewport class="kept-viewport" style="width: 100%; height: 100%">
-            <input class="first" aria-label="First" />
+            <input v-if="scene.fieldInDialog !== false" class="first" aria-label="First" />
             <input v-if="scene.extraInDialog" aria-label="Second" />
             <div style="height: 1000px" />
           </ScrollArea.Viewport>

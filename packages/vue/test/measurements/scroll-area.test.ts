@@ -369,6 +369,7 @@ describe('a MutationObserver and a control that Vue hides', () => {
     gone.value = true;
     await nextTick();
     await Promise.resolve();
-    expect(records).toEqual(['shown attributes style', 'gone attributes class']);
+    // `v-show` writes its style in a hook after the patch.
+    expect(records).toEqual(['gone attributes class', 'shown attributes style']);
   });
 });
