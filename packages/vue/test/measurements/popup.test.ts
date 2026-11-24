@@ -585,20 +585,31 @@ function mountShow(
   return { scene: state, log, popup: () => document.querySelector<HTMLElement>('.popup') };
 }
 
+// A late frame can end a leave of 500 ms before the show. So the leave takes 100 s, and the case
+// moves it to its middle at its `transitionrun` event. A running transition keeps its duration, so
+// the case removes the 100 s there, and the enter has the 500 ms of the fixture.
 async function openThenLeaveToHalf(options: { readsLayout?: boolean } = {}) {
   const shown = mountShow({ open: false, rendered: true }, options);
   shown.scene.open = true;
   await waitFor(() => expect(shown.log).toContain('after-enter'));
   const element = shown.popup()!;
   shown.log.length = 0;
-  shown.scene.open = false;
-  await opacityFrames(element, () => Number(getComputedStyle(element).opacity) < 0.6);
+  element.style.transitionDuration = '100s';
+  await nextEvent(element, 'transitionrun', {
+    action: () => {
+      shown.scene.open = false;
+    },
+  });
+  element.style.removeProperty('transition-duration');
+  const [leave] = element.getAnimations();
+  const leaveMs = Number(leave!.effect!.getComputedTiming().duration);
+  leave!.currentTime = leaveMs / 2;
   return {
     ...shown,
     element,
     atOpen: Number(getComputedStyle(element).opacity),
     openedAt: Number(document.timeline.currentTime),
-    leaveMs: Number.parseFloat(getComputedStyle(element).transitionDuration) * 1000,
+    leaveMs,
   };
 }
 
