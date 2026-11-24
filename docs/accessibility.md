@@ -17,6 +17,8 @@ The components move the focus after an interaction. For example, an open dialog 
 
 Give each element that can get the focus a visible focus style, as [WCAG 2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) requires. Use the `:focus-visible` pseudo-class: it matches when the browser shows a focus indicator, such as after a key press.
 
+After a key on one of its parts, a popup or a list gives the focus to an element with `:focus-visible`. After a press of a mouse, a touch or a pen, it gives the focus with no `:focus-visible`, except to a field that takes text. So the item under a pointer shows no focus indicator, and the item that an arrow key reaches shows one. A browser without the `focusVisible` option of `focus()` decides the indicator by its own rule.
+
 ## Color contrast
 
 Give text and the parts of each control enough contrast with their background. [WCAG 1.4.3 Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) gives the ratio for text. [WCAG 1.4.11 Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html) gives it for the borders and the states of a control.

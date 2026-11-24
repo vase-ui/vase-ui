@@ -83,10 +83,36 @@ function resolve(
   return value;
 }
 
-function focus(element: HTMLElement | null | undefined, focusVisible?: boolean) {
-  // `focusVisible` makes Firefox show the ring after a key, as Chromium and WebKit do
-  // (test/measurements/popup.test.ts). A browser with no such option ignores it.
-  element?.focus({ preventScroll: true, ...(focusVisible && { focusVisible }) });
+/**
+ * A focus by script takes the ring of the last key, also after a press whose `mousedown` the code
+ * took over (`trigger.ts`), so a pointer needs `focusVisible: false`
+ * (test/measurements/select.test.ts). Firefox shows the ring after a key only with
+ * `focusVisible: true` (test/measurements/popup.test.ts). A field that takes text matches
+ * `:focus-visible` at each focus, and `false` would hide its ring, so a pointer gives it nothing
+ * (test/measurements/select.test.ts). A browser without the option ignores it.
+ */
+export function focusAs(element: HTMLElement | null | undefined, input: InteractionType = '') {
+  if (!element) return;
+  const ring = input === 'keyboard' ? true : input === '' || takesText(element) ? undefined : false;
+  element.focus({ preventScroll: true, ...(ring !== undefined && { focusVisible: ring }) });
+}
+
+const INPUT_TYPES_WITHOUT_TEXT = new Set([
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'image',
+  'radio',
+  'range',
+  'reset',
+  'submit',
+]);
+
+function takesText(element: HTMLElement) {
+  if (element.isContentEditable || element.localName === 'textarea') return true;
+  const { localName, type } = element as HTMLInputElement;
+  return localName === 'input' && !INPUT_TYPES_WITHOUT_TEXT.has(type);
 }
 
 /**
@@ -145,7 +171,8 @@ export function usePopupFocus(
         opens.value += 1;
         return;
       }
-      returnFocus();
+      const given = returnFocus();
+      if (given) void nextTick(() => settleFocus(given));
     },
     { flush: 'sync' },
   );
@@ -160,7 +187,7 @@ export function usePopupFocus(
     took = true;
     const target = resolve(options.initialFocus(), root.interaction);
     if (target !== true) {
-      if (target) focus(target);
+      if (target) focusAs(target, root.interaction);
       // WebKit keeps the text caret in a focused element that becomes inert
       // (test/measurements/dialog.test.ts), so that element loses the focus.
       const focused = activeElement(doc);
@@ -168,10 +195,13 @@ export function usePopupFocus(
       return;
     }
     if (root.interaction === 'touch') {
-      focus(popup);
+      focusAs(popup, root.interaction);
       return;
     }
-    focus(popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup);
+    focusAs(
+      popup.querySelector<HTMLElement>('[autofocus]') ?? tabbables(popup)[0] ?? popup,
+      root.interaction,
+    );
   }
 
   watch(
@@ -204,7 +234,7 @@ export function usePopupFocus(
         const active = activeElement(doc);
         if (active && active !== doc.body) return;
         focused = null;
-        focus(options.lostFocus?.());
+        focusAs(options.lostFocus?.());
       };
       const onFocusin = (event: FocusEvent) => (focused = event.target as Element);
       const observer = new MutationObserver(restore);
@@ -218,25 +248,35 @@ export function usePopupFocus(
 
   function returnFocus() {
     const popup = root.popup;
-    if (!popup) return;
+    if (!popup) return null;
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
     // A popup that took no focus at its open, as after a hover, gives back a focus that went into
     // it later.
-    if (!took && !options.noReturn && !popup.contains(active)) return;
+    if (!took && !options.noReturn && !popup.contains(active)) return null;
     took = false;
     // The focus stays where it went: after a move out of the popup, and after a press outside.
     // During `focusout`, the active element is `<body>`.
-    if ((options.noReturn ?? ['focus-out']).includes(root.reason ?? '')) return;
+    if ((options.noReturn ?? ['focus-out']).includes(root.reason ?? '')) return null;
     // In Chromium and Firefox, the `mousedown` of a press on the trigger gives it the focus before a
     // close at `click` (test/measurements/menu.test.ts). That focus is no move out of the popup, so
     // `finalFocus` applies in each browser.
-    const trigger = root.activeTrigger;
-    if (active && active !== doc.body && active !== trigger && !popup.contains(active)) return;
+    if (active && active !== doc.body && active !== root.activeTrigger && !popup.contains(active)) {
+      return null;
+    }
+    // The return to the trigger, or to the element that had the focus before the open, happens at
+    // once, so that a popup that another popup opens in the same task takes that element as the one
+    // that had the focus before.
+    const target = options.finalFocus();
+    if (target === undefined || target === true || target === null) moveFocus(popup);
+    return { popup, active };
+  }
+
+  // A focus of an element that left the DOM or is hidden does nothing. An element in the popup that
+  // closes is no target, also while the popup leaves. After an open by code, the element that had
+  // the focus before comes before the trigger (BUG-6037).
+  function moveFocus(popup: HTMLElement) {
     const target = resolve(options.finalFocus(), root.closeInteraction);
-    // A focus of an element that left the DOM or is hidden does nothing. An element in the popup
-    // that closes is no target, also while the popup leaves. After an open by code, the element
-    // that had the focus comes before the trigger (BUG-6037).
     const fallbacks = [focusableTrigger(), before as HTMLElement | null];
     if (root.interaction === '') fallbacks.reverse();
     const element =
@@ -245,28 +285,26 @@ export function usePopupFocus(
         : [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
             (each) => each?.isConnected && !popup.contains(each),
           );
-    if (!element) {
-      // The popup that leaves is inert. The browser moves the focus out of an inert element only
-      // when it updates the rendering, and WebKit keeps the text caret there
-      // (test/measurements/dialog.test.ts). So the focused element of the popup loses the focus.
-      void nextTick(() => {
-        const focused = activeElement(doc);
-        if (!root.open && focused && popup.contains(focused)) (focused as HTMLElement).blur();
-      });
-      return;
-    }
-    const keyboard = root.closeInteraction === 'keyboard';
-    if (!element.closest('[inert]')) {
-      focus(element, keyboard);
-      return;
-    }
-    // The layer removes its `inert` from the page in the update of the close. A focus of an inert
-    // element does nothing, and a focus in the same task after the removal works
-    // (test/measurements/dialog.test.ts).
-    void nextTick(() => {
-      const now = activeElement(doc);
-      if (!now || now === doc.body || popup.contains(now)) focus(element, keyboard);
-    });
+    if (!element) return null;
+    focusAs(element, root.closeInteraction);
+    return element;
+  }
+
+  // After the update of the close, each element that the update renders is in the document, and the
+  // page of a modal popup has no `inert` (test/measurements/dialog.test.ts).
+  function settleFocus({ popup, active }: { popup: HTMLElement; active: Element | null }) {
+    // An open in the same task takes the focus itself.
+    if (root.open) return;
+    const doc = ownerDocument(popup);
+    const now = activeElement(doc);
+    // A listener of the developer, or the return at the close, focused another element.
+    if (now && now !== doc.body && now !== active && !popup.contains(now)) return;
+    if (moveFocus(popup)) return;
+    // The popup that leaves is inert. The browser moves the focus out of an inert element only when
+    // it updates the rendering, and WebKit keeps the text caret there
+    // (test/measurements/dialog.test.ts). So the focused element of the popup loses the focus.
+    const focused = activeElement(doc);
+    if (focused && popup.contains(focused)) (focused as HTMLElement).blur();
   }
 
   return {
@@ -277,7 +315,7 @@ export function usePopupFocus(
       const first = tabbables(popup)[0];
       if (!took && !(options.tabIntoPopup?.() && first)) return;
       event.preventDefault();
-      focus(first ?? popup);
+      focusAs(first ?? popup);
     },
     /** The focus of a sentinel of the portal: before the content, or after it. */
     onSentinelFocus(place: 'before' | 'after', event: FocusEvent) {
@@ -288,12 +326,12 @@ export function usePopupFocus(
       const first = stops[0] ?? popup;
       const last = stops.at(-1) ?? popup;
       if (!fromPopup) {
-        focus(place === 'before' ? first : last);
+        focusAs(place === 'before' ? first : last);
       } else if (layer.trap) {
-        focus(place === 'before' ? last : first);
+        focusAs(place === 'before' ? last : first);
       } else if (place === 'before') {
         if (options.closeBefore) root.request(false, 'focus-out', event);
-        focus(options.beforeTarget?.() ?? focusableTrigger() ?? (before as HTMLElement | null));
+        focusAs(options.beforeTarget?.() ?? focusableTrigger() ?? (before as HTMLElement | null));
       } else {
         // The root that the last sentinel closes, such as the menu of a submenu. With no trigger,
         // a menu gives the focus back to the element that had it before the open, as a context
@@ -308,7 +346,7 @@ export function usePopupFocus(
         else if (options.exit) next = earlier;
         else if (earlier) next = nextTabStop(earlier, elements);
         if ((layerOf(exit) ?? layer).focusOut) exit.request(false, 'focus-out', event);
-        focus(next as HTMLElement | null | undefined);
+        focusAs(next as HTMLElement | null | undefined);
       }
     },
   };

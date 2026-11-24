@@ -212,6 +212,76 @@ describe('the press', () => {
   });
 });
 
+describe('the focus ring', () => {
+  const ringed = (element: Element) => element.matches(':focus-visible');
+  const active = () => document.activeElement;
+
+  async function tabToTrigger(trigger: HTMLElement) {
+    document.getElementById('before')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(active()).toBe(trigger);
+  }
+
+  test('a press on the trigger after Tab opens the menu with no ring on the popup or on an item under the pointer; an arrow key gives the ring, and a press on the trigger that closes the menu gives the trigger none', async () => {
+    const { trigger } = await mountMenu();
+    await tabToTrigger(trigger);
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(ringed(popup()!)).toBe(false);
+    for (const key of ['a', 'b']) {
+      await userEvent.pointer({ coords: centerOf(item(key)) });
+      await waitFor(() => expect(active()).toBe(item(key)));
+      expect(ringed(item(key))).toBe(false);
+    }
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(item('c')));
+    expect(ringed(item('c'))).toBe(true);
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await waitFor(() => expect(popup()).toBe(null));
+    await waitFor(() => expect(active()).toBe(trigger));
+    expect(ringed(trigger)).toBe(false);
+  });
+
+  test('an open with ArrowDown after a press that opened and closed the menu gives the first item the ring', async () => {
+    const { trigger } = await mountMenu();
+    await userEvent.pointer({ coords: centerOf(trigger), keys: '[MouseLeft]' });
+    await waitFor(() => expect(active()).toBe(popup()));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    await waitFor(() => expect(active()).toBe(trigger));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    expect(ringed(item('a'))).toBe(true);
+  });
+
+  test.skipIf(server.browser !== 'chromium')('a touch open gives the popup no ring', async () => {
+    const { trigger } = await mountMenu();
+    await tabToTrigger(trigger);
+    await touchDrag(centerOf(trigger), centerOf(trigger), 0);
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(ringed(popup()!)).toBe(false);
+  });
+
+  test('a release on a checkbox item and on a disabled item gives it the focus with no ring', async () => {
+    const { trigger } = await mountMenu({
+      root: { highlightItemOnHover: false },
+      items: [{ key: 'a' }, { key: 'b', attrs: { disabled: true } }],
+      checkbox: {},
+    });
+    for (const key of ['checkbox', 'b']) {
+      await tabToTrigger(trigger);
+      await userEvent.pointer([{ coords: centerOf(trigger) }, '[MouseLeft>]']);
+      await waitFor(() => expect(byTestId('positioner')?.style.visibility).toBe(''));
+      await wait(220);
+      await userEvent.pointer([{ coords: centerOf(item(key)) }, '[/MouseLeft]']);
+      await waitFor(() => expect(active()).toBe(item(key)));
+      expect(ringed(item(key))).toBe(false);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(popup()).toBe(null));
+    }
+  });
+});
+
 describe('a handle with payloads', () => {
   test('each trigger, an outside button through the props and an outside button through the handle open the menu with the payload of the trigger', async () => {
     mount(MenuHandlePayloads);
