@@ -856,7 +856,7 @@ describe('the tab stop of the viewport', () => {
     scene.markup = '<p>Text</p>';
     await settle();
     scene.hidden = false;
-    await waitFor(() => expect(root.querySelector('.markup')!.offsetHeight).toBeGreaterThan(0));
+    await waitFor(() => expect(root.querySelector<HTMLElement>('.markup')!.offsetHeight).toBeGreaterThan(0));
     await settle();
     expect(viewport.tabIndex).toBe(-1);
     before.focus();
