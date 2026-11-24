@@ -205,6 +205,7 @@ const CASES: Record<string, [MeasuredItem[], MeasuredItem[]]> = {
 /** The DOM of the list, in the form of the items. */
 function shownItems(container: Element) {
   return [...container.querySelectorAll('.Box > *')].map((element) =>
+    // An element of the frame is not an instance of the classes of this page.
     element.localName === 'input'
       ? `input ${element.getAttribute('aria-label')} ${element.getAttribute('aria-valuemax')} ${element.getAttribute('placeholder')} ${(element as HTMLInputElement).value}`
       : `span ${JSON.stringify(element.textContent)} ${element.getAttribute('aria-hidden')}`,
