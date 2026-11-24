@@ -6,10 +6,10 @@ import { Menu } from '../../src/menu';
 import { Popover } from '../../src/popover';
 import { Select } from '../../src/select';
 
-// An open modal dialog with a popup of another family in its popup, by `inner`. The viewport of
-// the dialog takes no press. The test gives the z-index of each layer with a style sheet. The popup
-// of the dialog has a button that logs each click, and the trigger of the inner popup. The log has
-// each change of an open state.
+// An open modal dialog with the popup of `inner` in its popup: a select, a menu, a modal popover,
+// a modal combobox or a nested dialog. The viewport of the dialog takes no press. A test gives the
+// z-index of each layer with a style sheet. The popup of the dialog has a button that logs each
+// click, and the trigger of the inner popup. The log has each change of an open state.
 defineProps({
   inner: {
     type: String as PropType<'select' | 'menu' | 'popover' | 'combobox' | 'dialog'>,

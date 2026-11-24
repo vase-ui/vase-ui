@@ -3,8 +3,8 @@ import { server, userEvent } from 'vitest/browser';
 import { nextTick, type Component } from 'vue';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
-import DialogOnZIndexScale from '../../test/fixtures/DialogOnZIndexScale.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
+import DialogWithInnerPopup from '../../test/fixtures/DialogWithInnerPopup.vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import NavigationMenuParts from '../../test/fixtures/NavigationMenuParts.vue';
@@ -402,7 +402,7 @@ async function openInDialog(
 ) {
   const log: string[] = [];
   if (scale) addStyleSheet(SCALE);
-  mount(DialogOnZIndexScale, { inner, log: { add: (entry: string) => log.push(entry) } });
+  mount(DialogWithInnerPopup, { inner, log: { add: (entry: string) => log.push(entry) } });
   const trigger = await waitFor(() => {
     const element = document.querySelector<HTMLElement>('[data-testid="trigger"]');
     expect(element?.checkVisibility()).toBe(true);
@@ -466,8 +466,8 @@ test.each(scaled)(
   },
 );
 
-// The positioner of a select stays in the DOM after a close. Only the new fixed element of the next
-// open makes the portal read its z-index again. The positioner of another family is new at each open.
+// The positioner of a select stays in the DOM after a close, as a positioner with `keepMounted`
+// does. So only the new fixed element of the next open makes the portal read the z-index again.
 test('Select in a dialog on a z-index scale: the next open takes the z-index that the positioner has then', async () => {
   const { block, trigger } = await openInDialog('select');
   const positioner = document.querySelector('[data-testid="positioner"]');
