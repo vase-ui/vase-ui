@@ -771,6 +771,8 @@ describe('the Tab order', () => {
   });
 
   test('a hover opens the menu, and Tab from the last tab stop of the page does not go into the popup; Shift+Tab into the page does not either', async () => {
+    // Tab moves the focus to the browser UI. A click returns the focus of Firefox to the page.
+    onTestFinished(() => userEvent.pointer({ coords: { x: 1, y: 1 }, keys: '[MouseLeft]' }));
     await mountMenu({ root: { delay: 0, closeDelay: 10_000 } });
     await userEvent.hover(get('trigger-one'));
     await shows('one');
