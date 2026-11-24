@@ -100,9 +100,9 @@ describe('inert', () => {
     expect(order).toEqual(['body', server.browser === 'firefox' ? 'last' : 'first']);
   });
 
-  // After Tab leaves the page, Firefox gives Tab another order until a click in the page. In both
-  // states, two Tabs from the last control reach <body>. So `inert` on the page does not keep Tab
-  // in the content, and a modal popup keeps it there with the sentinels of its portal.
+  // Two Tabs from the last control reach <body> before and after Tab left the page. So `inert` on
+  // the page does not keep Tab in the content, and a modal popup keeps it there with the sentinels
+  // of its portal.
   test('after Tab left the page and came back, Tab from the last control stays on it in Firefox, then goes to <body>; in Chromium and WebKit it goes to <body>, then to the first control', async () => {
     html(`<div inert><input id="outside" aria-label="Outside"></div>
       <div id="popup"><input id="first" aria-label="First"><input id="last" aria-label="Last"></div>`);
