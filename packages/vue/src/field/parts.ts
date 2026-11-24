@@ -71,7 +71,9 @@ export namespace Description {
 
 /**
  * An error message that shows while the field is invalid. The control names it in
- * `aria-describedby` while it shows.
+ * `aria-describedby` while it shows. It is not a live region. The page
+ * https://vase-ui.com/accessibility#errors tells how to announce an error that shows with no move
+ * of the focus.
  * Renders a `<div>` element.
  * @selector `[data-disabled]` The field is disabled.
  * @selector `[data-valid]` The field is valid.
