@@ -5,11 +5,8 @@ export type TextPiece =
 
 export const SITE_HOMEPAGE = 'https://vase-ui.com/';
 
-// An address in the text, such as a page of this site in a JSDoc text, becomes a link. Punctuation
-// after the address stays text.
 const ADDRESS = /(https:\/\/\S*[^\s.,:;)])/;
 
-/** Splits text into plain text, backtick code spans and links. */
 export function splitTextWithCode(text: string): TextPiece[] {
   return text.split('`').flatMap((piece, index): TextPiece[] => {
     if (index % 2 === 1) {
