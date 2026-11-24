@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { mergeProps, onMounted, onUnmounted, provide, useAttrs, watch } from 'vue';
+import { mergeProps, onMounted, onUnmounted, provide, shallowRef, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { styleDisableScrollbar } from '../common/styles';
+import { hasTabStop } from '../common/tabbable';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
 import type { ScrollAreaViewportProps, ScrollAreaViewportState } from './types';
 
@@ -18,11 +19,29 @@ const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 provide(viewportKey, true);
 
+// Chromium makes a scroll container a tab stop only while it holds no tab stop, Firefox makes each
+// one a tab stop, and WebKit none (test/measurements/scroll-area.test.ts). The viewport follows
+// Chromium: the arrow keys scroll it from a control in its content.
+const holdsTabStop = shallowRef(true);
+let readLater = false;
+
+// The tab stops of content with no box, or under an inert ancestor, do not count. The viewport
+// keeps its answer, and reads its content again at the next measurement of the root.
+function readContent() {
+  const target = element.value;
+  if (!target) return;
+  readLater = target.getClientRects().length === 0 || !!target.closest('[inert]');
+  if (!readLater) holdsTabStop.value = hasTabStop(target);
+}
+
 // Nuxt removes the call of `onUnmounted` from its server build, with its arguments, so the part
 // registers before the call.
 const remove = root.addViewport({
   get element() {
     return element.value;
+  },
+  measured() {
+    if (readLater) readContent();
   },
 });
 onUnmounted(remove);
@@ -33,6 +52,41 @@ watch(
     if (target) onCleanup(root.observe(target));
   },
   { flush: 'post' },
+);
+
+// The watcher runs before the render that writes the overflow, so that render writes the final
+// `tabindex`. A control can stop being a tab stop through `style` (`v-show`), `class` or `type`
+// with no change of nodes (test/measurements/scroll-area.test.ts).
+watch(
+  () => (root.state.hasOverflowX || root.state.hasOverflowY ? element.value : null),
+  (target, _, onCleanup) => {
+    if (!target) return;
+    readContent();
+    const observer = new MutationObserver((records) => {
+      // The root writes the overflow variables on the viewport at each scroll.
+      if (records.some((record) => record.target !== target || record.type === 'childList')) {
+        readContent();
+      }
+    });
+    observer.observe(target, {
+      subtree: true,
+      childList: true,
+      attributeFilter: [
+        'tabindex',
+        'disabled',
+        'inert',
+        'hidden',
+        'contenteditable',
+        'href',
+        'style',
+        'class',
+        'open',
+        'type',
+        'controls',
+      ],
+    });
+    onCleanup(() => observer.disconnect());
+  },
 );
 
 // The platform does not say who made a scroll. The scrolls that follow one of these events of the
@@ -82,8 +136,7 @@ function elementProps() {
   const { hasOverflowX, hasOverflowY } = root.state;
   return mergeProps(
     {
-      // A viewport that cannot scroll is not a tab stop.
-      tabindex: hasOverflowX || hasOverflowY ? 0 : -1,
+      tabindex: (hasOverflowX || hasOverflowY) && !holdsTabStop.value ? 0 : -1,
       class: styleDisableScrollbar.className,
       style: { overflow: 'scroll' },
       ...stateAttributes(root.state),

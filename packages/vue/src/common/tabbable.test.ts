@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest';
-import { tabbables } from './focus';
+import { hasTabStop, tabbables } from './tabbable';
 
 let root: HTMLElement | undefined;
 
@@ -75,5 +75,15 @@ describe('tabbables', () => {
       },
     );
     expect(stops).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('hasTabStop', () => {
+  test('is true for a tab stop in the container or in an open shadow root, and false for no tab stop', () => {
+    ids('<div id="host"></div><button tabindex="-1">A</button><button disabled>B</button>');
+    const container = root!;
+    expect(hasTabStop(container)).toBe(false);
+    container.querySelector('#host')!.attachShadow({ mode: 'open' }).innerHTML = '<input>';
+    expect(hasTabStop(container)).toBe(true);
   });
 });

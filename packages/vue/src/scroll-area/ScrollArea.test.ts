@@ -6,6 +6,7 @@ import { nextEvent } from '../../test/animation';
 import { dataAttributes } from '../../test/field';
 import { fireEvent } from '../../test/fireEvent';
 import ScrollAreaInSlots from '../../test/fixtures/ScrollAreaInSlots.vue';
+import ScrollAreaControls from '../../test/fixtures/ScrollAreaControls.vue';
 import ScrollAreaInTransition from '../../test/fixtures/ScrollAreaInTransition.vue';
 import ScrollAreaParts from '../../test/fixtures/ScrollAreaParts.vue';
 import ScrollAreaPartsAlone from '../../test/fixtures/ScrollAreaPartsAlone.vue';
@@ -784,6 +785,95 @@ describe('the platform', () => {
     await userEvent.keyboard('{Tab}');
     expect(document.activeElement).not.toBe(viewport);
   });
+});
+
+describe('the tab stop of the viewport', () => {
+  /** Mounts `ScrollAreaControls`, and waits for the first measurement. */
+  async function mountControls(scene: Record<string, unknown>) {
+    const { root } = mount(ScrollAreaControls, { scene });
+    const viewport = root.querySelector<HTMLElement>('.viewport')!;
+    await waitFor(() => expect(viewport).toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    return { root, viewport, before: root.querySelector<HTMLElement>('.before')! };
+  }
+
+  test('VUE-236: a viewport that scrolls is a tab stop only while its content holds no tab stop: Tab goes from the element before to the control; a control with tabindex -1 does not count', async () => {
+    const scene = reactive({ control: true });
+    const { root, viewport, before } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('.control'));
+
+    scene.control = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(viewport);
+  });
+
+  test('the viewport leaves the Tab order when a control mounts in its content, and comes back when the control unmounts or becomes disabled; a focused viewport keeps the focus', async () => {
+    const scene = reactive({ control: false, disabled: false });
+    const { viewport } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(0);
+    viewport.focus();
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    await settle();
+    expect(viewport).toHaveFocus();
+
+    scene.control = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.disabled = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+  });
+
+  test('the viewport comes back to the Tab order when v-show or a class hides the last control of its content, and leaves it when the control shows again', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '.gone { display: none }';
+    onTestFinished(() => style.remove());
+    const scene = reactive({ control: true, shown: true, gone: false });
+    const { viewport } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.shown = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.shown = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.gone = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.gone = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+  });
+
+  test.each([
+    { attribute: 'tabindex', markup: '<div tabindex="-1">T</div>', set: '0' },
+    { attribute: 'disabled', markup: '<button disabled>T</button>', set: null },
+    { attribute: 'inert', markup: '<div inert><button>T</button></div>', set: null },
+    { attribute: 'hidden', markup: '<button hidden>T</button>', set: null },
+    { attribute: 'contenteditable', markup: '<div>T</div>', set: 'true' },
+    { attribute: 'href', markup: '<a>T</a>', set: '#t' },
+    { attribute: 'style', markup: '<button style="display: none">T</button>', set: null },
+    {
+      attribute: 'class',
+      markup: '<style>.gone { display: none }</style><button class="gone">T</button>',
+      set: null,
+    },
+    { attribute: 'open', markup: '<dialog><button>T</button></dialog>', set: '' },
+    { attribute: 'type', markup: '<input type="hidden" aria-label="T">', set: 'text' },
+    { attribute: 'controls', markup: '<video></video>', set: '' },
+  ])(
+    'the viewport leaves the Tab order when $attribute makes an element of its content a tab stop',
+    async ({ attribute, markup, set }) => {
+      const { root, viewport } = await mountControls({ markup });
+      expect(viewport.tabIndex).toBe(0);
+      const element = root.querySelector('.markup > :last-child')!;
+      if (set === null) element.removeAttribute(attribute);
+      else element.setAttribute(attribute, set);
+      await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    },
+  );
 });
 
 describe('lifetime', () => {

@@ -9,6 +9,11 @@ export interface ScrollAreaPart {
   readonly element: HTMLElement | null;
 }
 
+/** A viewport. The root calls `measured` after each measurement. */
+export interface ScrollAreaViewportPart extends ScrollAreaPart {
+  measured(): void;
+}
+
 /** A scrollbar or a thumb. The properties are reactive. */
 export interface ScrollAreaAxisPart extends ScrollAreaPart {
   readonly orientation: Orientation;
@@ -52,7 +57,7 @@ export interface ScrollAreaForParts {
   startPress(event: PointerEvent, vertical: boolean): ScrollAreaPress | null;
   endPress(): void;
   /** Each `add*` function adds a part and returns the function that removes it. */
-  addViewport(part: ScrollAreaPart): () => void;
+  addViewport(part: ScrollAreaViewportPart): () => void;
   addScrollbar(part: ScrollAreaAxisPart): () => void;
   addThumb(part: ScrollAreaAxisPart): () => void;
   addCorner(): () => void;
