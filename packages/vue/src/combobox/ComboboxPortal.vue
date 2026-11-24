@@ -12,20 +12,25 @@ const props = withDefaults(defineProps<ComboboxPortalProps>(), {
 defineSlots<{ default?(): unknown }>();
 
 const context = injectComboboxRoot('Portal');
-const portal = usePopupPortal(context.root, context.layer, {
-  get to() {
-    return props.to;
+const portal = usePopupPortal(
+  context.root,
+  context.layer,
+  {
+    get to() {
+      return props.to;
+    },
+    get disabled() {
+      return props.disabled;
+    },
+    get defer() {
+      return props.defer;
+    },
+    get keepMounted() {
+      return props.keepMounted || context.keepsPopup;
+    },
   },
-  get disabled() {
-    return props.disabled;
-  },
-  get defer() {
-    return props.defer;
-  },
-  get keepMounted() {
-    return props.keepMounted || context.keepsPopup;
-  },
-});
+  context.positioner,
+);
 const owner = usePortalOwner(context.root, context.layer, portal.sentinels);
 providePortal();
 </script>

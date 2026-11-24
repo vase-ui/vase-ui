@@ -3,6 +3,7 @@ import { server, userEvent } from 'vitest/browser';
 import { nextTick, type Component } from 'vue';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import ComboboxParts from '../../test/fixtures/ComboboxParts.vue';
+import DialogOnZIndexScale from '../../test/fixtures/DialogOnZIndexScale.vue';
 import DialogParts from '../../test/fixtures/DialogParts.vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
@@ -369,6 +370,129 @@ test.each(pressedCovers)(
     expect(document.activeElement).toBe(document.querySelector(trigger));
   },
 );
+
+// A page with a z-index scale puts the positioner of a popup above the backdrop and the viewport
+// of a dialog. The fixed element of a modal popup takes the z-index of its positioner, so that it
+// covers what the popup covers, and a press outside reaches only that popup.
+const scaled = [
+  { name: 'Select', inner: 'select' },
+  { name: 'Menu', inner: 'menu' },
+  { name: 'Popover with modal true', inner: 'popover' },
+  { name: 'Combobox with modal true', inner: 'combobox' },
+] as const;
+
+const SCALE = `:root { --z-backdrop: 60; --z-viewport: 70; --z-popup: 80 }
+  [data-testid$="backdrop"] { z-index: var(--z-backdrop) }
+  [data-testid$="viewport"] { z-index: var(--z-viewport) }
+  [data-testid="positioner"] { z-index: var(--z-popup) }`;
+
+function addStyleSheet(css: string) {
+  const style = document.head.appendChild(document.createElement('style'));
+  style.textContent = css;
+  onTestFinished(() => style.remove());
+}
+
+/**
+ * Mounts the dialog and opens the popup in it with a click on its trigger. The log has the changes
+ * of an open state after that open.
+ */
+async function openInDialog(
+  inner: 'select' | 'menu' | 'popover' | 'combobox' | 'dialog',
+  scale = true,
+) {
+  const log: string[] = [];
+  if (scale) addStyleSheet(SCALE);
+  mount(DialogOnZIndexScale, { inner, log: { add: (entry: string) => log.push(entry) } });
+  const trigger = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[data-testid="trigger"]');
+    expect(element?.checkVisibility()).toBe(true);
+    return element!;
+  });
+  await userEvent.click(trigger);
+  const popup = () => document.querySelector('[data-testid="popup"]');
+  await waitFor(() => expect(popup()?.checkVisibility()).toBe(true));
+  log.length = 0;
+  // The first fixed element is the one of the dialog.
+  const block = await waitFor(() => {
+    const blocks = document.querySelectorAll<HTMLElement>(BLOCK);
+    expect(blocks).toHaveLength(2);
+    return blocks[1];
+  });
+  const button = document.querySelector<HTMLElement>('[data-testid="button"]')!;
+  return { log, trigger, block, button };
+}
+
+test.each(scaled)(
+  '$name in a dialog on a z-index scale: the fixed element has the z-index of the positioner, covers the dialog and leaves the trigger free',
+  async ({ inner }) => {
+    const { trigger, block } = await openInDialog(inner);
+    const positioner = document.querySelector('[data-testid="positioner"]')!;
+    expect(getComputedStyle(positioner).zIndex).toBe('80');
+    expect(getComputedStyle(block).zIndex).toBe('80');
+    expect(document.elementFromPoint(2, 2)).toBe(block);
+    const { x, y } = centerOf(trigger);
+    await waitFor(() => expect(trigger.contains(document.elementFromPoint(x, y))).toBe(true));
+  },
+);
+
+test.each(scaled)(
+  '$name in a dialog on a z-index scale: a press at the corner of the page closes the popup and not the dialog, and a second press closes the dialog',
+  async ({ inner }) => {
+    const { log } = await openInDialog(inner);
+    await userEvent.pointer({ coords: { x: 2, y: 2 }, keys: '[MouseLeft]' });
+    expect(log).toEqual([`${inner} false outside-press`]);
+    await userEvent.pointer({ coords: { x: 2, y: 2 }, keys: '[MouseLeft]' });
+    await waitFor(() =>
+      expect(log).toEqual([`${inner} false outside-press`, 'dialog false outside-press']),
+    );
+  },
+);
+
+test.each(scaled)(
+  '$name in a dialog on a z-index scale: a press on a button of the dialog closes the popup, and the button gets no click',
+  async ({ inner }) => {
+    const { log, button } = await openInDialog(inner);
+    await userEvent.pointer({ coords: centerOf(button), keys: '[MouseLeft]' });
+    expect(log).toEqual([`${inner} false outside-press`]);
+  },
+);
+
+test.each(scaled)(
+  '$name in a dialog with no z-index: the fixed element has none',
+  async ({ inner }) => {
+    const { block } = await openInDialog(inner, false);
+    expect(block.style.zIndex).toBe('');
+    expect(getComputedStyle(block).zIndex).toBe('auto');
+  },
+);
+
+// The positioner of a select stays in the DOM after a close. Only the new fixed element of the next
+// open makes the portal read its z-index again. The positioner of another family is new at each open.
+test('Select in a dialog on a z-index scale: the next open takes the z-index that the positioner has then', async () => {
+  const { block, trigger } = await openInDialog('select');
+  const positioner = document.querySelector('[data-testid="positioner"]');
+  expect(block.style.zIndex).toBe('80');
+  await userEvent.pointer({ coords: { x: 2, y: 2 }, keys: '[MouseLeft]' });
+  await waitFor(() => expect(block.isConnected).toBe(false));
+  addStyleSheet(':root { --z-popup: 90 }');
+  await userEvent.click(trigger);
+  const next = await waitFor(() => {
+    const blocks = document.querySelectorAll<HTMLElement>(BLOCK);
+    expect(blocks).toHaveLength(2);
+    return blocks[1];
+  });
+  expect(document.querySelector('[data-testid="positioner"]')).toBe(positioner);
+  expect(next.style.zIndex).toBe('90');
+});
+
+test('a nested dialog on a z-index scale: a press at the corner of the page closes only that dialog, and its fixed element has no z-index', async () => {
+  const { log, block } = await openInDialog('dialog');
+  expect(block.style.zIndex).toBe('');
+  expect(getComputedStyle(block).zIndex).toBe('auto');
+  expect(document.elementFromPoint(2, 2)).toBe(block);
+  await userEvent.pointer({ coords: { x: 2, y: 2 }, keys: '[MouseLeft]' });
+  expect(log).toEqual(['nested false outside-press']);
+});
 
 async function mountPopovers(...ids: string[]) {
   for (const id of ids) {
