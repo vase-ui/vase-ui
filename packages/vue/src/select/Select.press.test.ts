@@ -6,7 +6,7 @@ import type {
   SelectRootOpenChangeEventDetails,
 } from '@vase-ui/vue/select';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
-import { clientCenter, holdPress } from '../../test/pointer';
+import { clientCenter, holdPress, penDrag, touchDrag } from '../../test/pointer';
 import { mount, settle } from '../../test/render';
 import { wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
@@ -338,5 +338,121 @@ describe('the controlled open state', () => {
     await opened();
     expect(popup().id).toBe('fruits');
     expect(trigger()).toHaveAttribute('aria-controls', 'fruits');
+  });
+});
+
+describe('the focus ring', () => {
+  const ringed = (element: Element) => element.matches(':focus-visible');
+
+  async function tabTo(element: Element) {
+    document.getElementById('before')!.focus();
+    for (let tabs = 0; tabs < 4 && document.activeElement !== element; tabs += 1) {
+      await userEvent.keyboard('{Tab}');
+    }
+    expect(document.activeElement).toBe(element);
+  }
+
+  async function focused(element: Element) {
+    await waitFor(() => expect(document.activeElement).toBe(element));
+  }
+
+  test.each([
+    { from: 'the trigger', target: () => trigger() },
+    { from: 'a button that is not the trigger', target: () => document.getElementById('outside')! },
+  ])(
+    'a press on the trigger after Tab to $from gives the selected item and each item under the pointer no ring, and an arrow key gives the next item the ring',
+    async ({ target }) => {
+      await mountSelect({ root: { defaultValue: 'banana' } });
+      await tabTo(target());
+      await pressAt(trigger());
+      await opened();
+      await focused(item('banana'));
+      expect(ringed(item('banana'))).toBe(false);
+      for (const value of ['cherry', 'apple']) {
+        await userEvent.pointer({ coords: centerOf(item(value)) });
+        await focused(item(value));
+        expect(ringed(item(value))).toBe(false);
+      }
+      await userEvent.keyboard('{ArrowDown}');
+      await focused(item('apricot'));
+      expect(ringed(item('apricot'))).toBe(true);
+    },
+  );
+
+  test('an arrow key after a press on an item of a multiple select that stays open gives the next item the ring', async () => {
+    await mountSelect({ root: { multiple: true } });
+    await tabTo(trigger());
+    await pressAt(trigger());
+    await opened();
+    await pressAt(item('apricot'));
+    await focused(item('apricot'));
+    await userEvent.keyboard('{ArrowDown}');
+    await focused(item('banana'));
+    expect(ringed(item('banana'))).toBe(true);
+  });
+
+  test('an open with a key gives the selected item the ring, and a hover takes it away', async () => {
+    await mountSelect({ root: { defaultValue: 'banana' } });
+    await tabTo(trigger());
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await focused(item('banana'));
+    expect(ringed(item('banana'))).toBe(true);
+    await userEvent.pointer({ coords: centerOf(item('cherry')) });
+    await focused(item('cherry'));
+    expect(ringed(item('cherry'))).toBe(false);
+  });
+
+  test('the close gives the trigger the focus with no ring after a press on an item, and with the ring after Escape', async () => {
+    await mountSelect({ root: { defaultValue: 'banana' } });
+    await tabTo(document.getElementById('outside')!);
+    await pressAt(trigger());
+    await opened();
+    await pressAt(item('cherry'));
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    await focused(trigger());
+    expect(ringed(trigger())).toBe(false);
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    await focused(trigger());
+    expect(ringed(trigger())).toBe(true);
+  });
+
+  test('a press on the trigger that closes the popup gives the trigger the focus with no ring', async () => {
+    await mountSelect({ root: { defaultValue: 'banana' } });
+    await tabTo(document.getElementById('outside')!);
+    await pressAt(trigger());
+    await opened();
+    await pressAt(trigger());
+    await waitFor(() => expect(shown(popup())).toBe(false));
+    await focused(trigger());
+    expect(ringed(trigger())).toBe(false);
+  });
+
+  test.skipIf(server.browser !== 'chromium').each(['touch', 'pen'] as const)(
+    'a %s open gives the selected item no ring',
+    async (type) => {
+      await mountSelect({ root: { defaultValue: 'banana' } });
+      await tabTo(trigger());
+      const point = centerOf(trigger());
+      await (type === 'touch' ? touchDrag(point, point, 0) : penDrag(point, point, 0));
+      await opened();
+      await focused(item('banana'));
+      expect(ringed(item('banana'))).toBe(false);
+    },
+  );
+
+  test('a release on an item that the pointer did not highlight gives it the focus with no ring', async () => {
+    await mountSelect({ root: { multiple: true, highlightItemOnHover: false } });
+    await tabTo(trigger());
+    await userEvent.pointer({ coords: centerOf(trigger()), keys: '[MouseLeft>]' });
+    await opened();
+    await userEvent.pointer({ coords: centerOf(item('apricot')) });
+    await userEvent.pointer({ coords: centerOf(item('apricot')), keys: '[/MouseLeft]' });
+    await waitFor(() => expect(item('apricot')).toHaveAttribute('aria-selected', 'true'));
+    await focused(item('apricot'));
+    expect(ringed(item('apricot'))).toBe(false);
   });
 });

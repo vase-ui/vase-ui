@@ -61,7 +61,7 @@ type User = Awaited<ReturnType<Render>>['user'];
 
 interface Trigger {
   element: HTMLElement;
-  open: (user: User) => Promise<unknown>;
+  open: (user: User) => Promise<unknown> | void;
 }
 
 function click(element: HTMLElement) {
@@ -136,29 +136,24 @@ function unmarkedTriggers(name: string, depth: number, root: HTMLElement): Trigg
   if (depth === 0 && family === 'preview-card') {
     return [...root.querySelectorAll<HTMLElement>('a')].map((element) => ({
       element,
-      // A preview card opens 600 ms after a focus with `:focus-visible`, and `focus()` after a key
-      // has it. The case moves a fake clock by that time.
-      open: async (user: User) => {
-        await user.keyboard('{Shift}');
+      // A preview card opens 600 ms after a focus with `:focus-visible`, which `focusVisible: true`
+      // gives in each browser, also after a focus with `focusVisible: false` of an earlier demo.
+      // The case moves a fake clock by that time.
+      open: () => {
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-        element.focus();
+        element.focus({ focusVisible: true });
         vi.advanceTimersByTime(600);
         vi.useRealTimers();
       },
     }));
   }
   if (depth === 0 && family === 'tooltip') {
-    // A tooltip trigger has a name of its own. A Tab from an element just before it gives it the
-    // focus of a key, which opens its tooltip at once.
+    // A tooltip trigger has a name of its own. A focus with `:focus-visible` opens its tooltip at
+    // once, and `focusVisible: true` gives it in each browser, also after a focus with
+    // `focusVisible: false` of an earlier demo.
     return [...root.querySelectorAll<HTMLElement>('button[aria-label]')].map((element) => ({
       element,
-      open: async (user: User) => {
-        const start = element.parentNode!.insertBefore(document.createElement('span'), element);
-        start.tabIndex = -1;
-        start.focus();
-        await user.keyboard('{Tab}');
-        start.remove();
-      },
+      open: () => element.focus({ focusVisible: true }),
     }));
   }
   // A trigger of a navigation menu is a button with `aria-expanded` in the `<nav>` of the root or of

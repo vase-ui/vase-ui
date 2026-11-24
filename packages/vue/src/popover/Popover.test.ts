@@ -2100,6 +2100,17 @@ describe('the focus', () => {
     expect(trigger().matches(':focus-visible')).toBe(false);
   });
 
+  test('a press open after Tab gives the first tab stop no ring', async () => {
+    const { trigger } = await mountPopover();
+    byId('before').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(trigger());
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('first')));
+    expect(byTestId('first').matches(':focus-visible')).toBe(false);
+  });
+
   test('a press on an outside element that takes no focus gives the focus back to the trigger', async () => {
     const other = appendOutside('div');
     other.textContent = 'Other';

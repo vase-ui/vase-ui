@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import DialogFieldFocusedAtMount from '../../test/fixtures/DialogFieldFocusedAtMount.vue';
 import DialogFocusTargets from '../../test/fixtures/DialogFocusTargets.vue';
@@ -358,6 +358,76 @@ describe('the focus of a dialog', () => {
       await waitFor(() => expect(get('source-trigger')).toHaveFocus());
     },
   );
+});
+
+describe('the focus ring of a dialog', () => {
+  const ringed = (element: Element) => element.matches(':focus-visible');
+
+  test.each([
+    { name: 'an input', markup: '<input aria-label="New">' },
+    { name: 'a textarea', markup: '<textarea aria-label="New"></textarea>' },
+    { name: 'an element with contenteditable', markup: '<div contenteditable="true">New</div>' },
+  ])('a press open gives $name its ring', async ({ markup }) => {
+    const { trigger } = await mountTargets(false, {
+      initialFocus: () => {
+        get('popup').insertAdjacentHTML('beforeend', markup);
+        return get('popup').lastElementChild as HTMLElement;
+      },
+    });
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(get('popup').lastElementChild).toHaveFocus());
+    expect(ringed(get('popup').lastElementChild!)).toBe(true);
+  });
+
+  test.each([
+    { name: 'a button', markup: '<button>New</button>' },
+    { name: 'a checkbox', markup: '<input type="checkbox" aria-label="New">' },
+    { name: 'a range', markup: '<input type="range" aria-label="New">' },
+  ])('a press open after Tab gives $name that `initialFocus` names no ring', async ({ markup }) => {
+    const { trigger } = await mountTargets(false, {
+      initialFocus: () => {
+        get('popup').insertAdjacentHTML('beforeend', markup);
+        return get('popup').lastElementChild as HTMLElement;
+      },
+    });
+    get('outside-before').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(trigger);
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(get('popup').lastElementChild).toHaveFocus());
+    expect(ringed(get('popup').lastElementChild!)).toBe(false);
+  });
+
+  test('a touch open after Tab gives the popup no ring', async () => {
+    const { trigger } = await mountTargets(false);
+    get('outside-before').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(trigger);
+    tapOpen(trigger);
+    const popup = await opened();
+    await waitFor(() => expect(popup).toHaveFocus());
+    expect(ringed(popup)).toBe(false);
+  });
+
+  // After a press, a focus by script from a key listener has the ring in Chromium and WebKit, and
+  // in Firefox only with `focusVisible: true` (test/measurements/popup.test.ts).
+  test('an open by code after a press and a key leaves the ring of the first focus to the browser', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    mount(DialogParts, { root, popup: { initialFocus: () => get('button') } });
+    await nextTick();
+    const opener = document.getElementById('outside')!;
+    await userEvent.click(opener);
+    opener.addEventListener('click', () => (root.open = true));
+    // WebKit gives a pressed button no focus.
+    opener.focus();
+    await userEvent.keyboard('{Enter}');
+    await opened();
+    await waitFor(() => expect(get('button')).toHaveFocus());
+    expect(ringed(get('button'))).toBe(server.browser !== 'firefox');
+  });
 });
 
 describe('an Escape of a text composition', () => {

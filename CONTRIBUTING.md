@@ -302,7 +302,7 @@ A part handles the events that the browser sends. It detects no value that an el
 ### Platform and parity
 
 - A behavior of a part rests only on features that MDN marks "Baseline Widely available". The build supports the browsers of [Compiler flags](#compiler-flags).
-- `Temporal` is one exception: the date and time families need it, and an app loads a polyfill where a browser lacks it. The `focusVisible` option of `focus()` is the other: a part can give it where Base UI gives it, and a browser without it decides the focus ring.
+- `Temporal` is one exception: the date and time families need it, and an app loads a polyfill where a browser lacks it. The `focusVisible` option of `focus()` is the other: a part can give it where Base UI gives it. A part can also give `false` to a focus by script after a pointer input, which would keep the ring of an earlier key (`focusAs` in `popup/focus.ts`). A browser without the option decides the focus ring.
 - Each feature of Base UI stays, in the form of Vue. A feature is cut only for a better way that gives the developer or the user the same thing. The family file names that way.
 - Where Vase UI agrees with Base UI, match Base UI. Where another behavior is better for the user and the developer, keep it. Give it a row of `parity/better` and a test.
 - The library uses `@floating-ui/vue` only to place a popup beside its anchor.

@@ -253,6 +253,169 @@ describe('the focus ring after a submit that the validation blocks', () => {
   );
 });
 
+describe('a focus by script after a key and a press', () => {
+  /**
+   * In a new document, which has no focus that a mouse gave: Tab to `seat`, then a press on
+   * `trigger`. The press opens the popup at `pointerdown` and focuses `o2` in a microtask, as the
+   * trigger of Select does. A focus by script follows each `pointermove` over an option and each
+   * ArrowDown. With `preventDefault`, `mousedown` has its default prevented.
+   */
+  async function journey(options: { preventDefault: boolean; first?: boolean; hover?: boolean }) {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    onTestFinished(() => frame.remove());
+    frame.style.cssText =
+      'position: fixed; left: 0; top: 0; width: 400px; height: 300px; border: 0';
+    frame.srcdoc = `<body style="margin: 0">
+      <button id="before" style="display: block; width: 100px; height: 30px">Before</button>
+      <button id="seat" style="display: block; width: 100px; height: 30px">Seat</button>
+      <button id="trigger" style="display: block; width: 100px; height: 30px; margin-top: 10px">Trigger</button>
+      <div id="popup" hidden style="position: absolute; left: 0; top: 120px; width: 150px">
+        <div id="o1" tabindex="-1" style="height: 30px">1</div>
+        <div id="o2" tabindex="-1" style="height: 30px">2</div>
+        <div id="o3" tabindex="-1" style="height: 30px">3</div>
+      </div></body>`;
+    await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+    const doc = frame.contentDocument!;
+    const at = (id: string) => doc.getElementById(id)!;
+    const focus = (id: string, focusVisible?: boolean) =>
+      at(id).focus({ preventScroll: true, ...(focusVisible !== undefined && { focusVisible }) });
+    const ring = () => doc.activeElement!.matches(':focus-visible');
+    let focusAtPress: Element | null = null;
+    at('trigger').addEventListener('pointerdown', () => {
+      focusAtPress = doc.activeElement;
+      at('popup').hidden = false;
+      queueMicrotask(() => focus('o2', options.first ? false : undefined));
+    });
+    at('trigger').addEventListener('mousedown', (event) => {
+      if (options.preventDefault && doc.activeElement !== focusAtPress) event.preventDefault();
+    });
+    for (const id of ['o1', 'o2', 'o3']) {
+      at(id).addEventListener('pointermove', () => focus(id, options.hover ? false : undefined));
+    }
+    doc.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown') focus('o3');
+    });
+    at('before').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(doc.activeElement).toBe(at('seat'));
+    await userEvent.pointer({ coords: centerOf(at('trigger')), keys: '[MouseLeft]' });
+    const press = ring();
+    await userEvent.pointer({ coords: centerOf(at('o1')) });
+    const hover = ring();
+    await userEvent.keyboard('{ArrowDown}');
+    return { press, hover, key: ring() };
+  }
+
+  test.each([
+    {
+      name: 'a press with the default of `mousedown` prevented: each focus() has :focus-visible',
+      options: { preventDefault: true },
+      expected: { press: true, hover: true, key: true },
+    },
+    {
+      name: '`focusVisible: false` at the first focus only: each later focus() has :focus-visible, but in Firefox',
+      options: { preventDefault: true, first: true },
+      expected: { press: false, hover: server.browser !== 'firefox', key: true },
+    },
+    {
+      name: '`focusVisible: false` at the first focus and at each hover: only the focus of the key has :focus-visible',
+      options: { preventDefault: true, first: true, hover: true },
+      expected: { press: false, hover: false, key: true },
+    },
+    {
+      name: 'a press with the default of `mousedown`, which takes the focus from the popup: only the focus of the key has :focus-visible',
+      options: { preventDefault: false },
+      expected: { press: false, hover: false, key: true },
+    },
+  ])('after Tab, $name', async ({ options, expected }) => {
+    expect(await journey(options)).toEqual(expected);
+  });
+});
+
+describe('a focus by script on a field that takes text after a press', () => {
+  test.each([
+    { name: 'an input', markup: '<input id="field" aria-label="Field">' },
+    { name: 'a textarea', markup: '<textarea id="field" aria-label="Field"></textarea>' },
+    {
+      name: 'an element with contenteditable',
+      markup: '<div id="field" contenteditable>Field</div>',
+    },
+  ])('$name has :focus-visible, and `focusVisible: false` takes it away', async ({ markup }) => {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    onTestFinished(() => frame.remove());
+    frame.style.cssText =
+      'position: fixed; left: 0; top: 0; width: 400px; height: 300px; border: 0';
+    frame.srcdoc = `<body style="margin: 0">
+      <button id="press" style="display: block; width: 100px; height: 30px">Press</button>${markup}</body>`;
+    await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+    const doc = frame.contentDocument!;
+    const field = doc.getElementById('field')!;
+    await userEvent.pointer({
+      coords: centerOf(doc.getElementById('press')!),
+      keys: '[MouseLeft]',
+    });
+    field.focus();
+    const plain = field.matches(':focus-visible');
+    field.blur();
+    field.focus({ focusVisible: false });
+    expect({ plain, hidden: !field.matches(':focus-visible') }).toEqual({
+      plain: true,
+      hidden: true,
+    });
+  });
+});
+
+describe('a focus by script on an input that takes no text after a press', () => {
+  async function frameWith(markup: string) {
+    const frame = document.body.appendChild(document.createElement('iframe'));
+    onTestFinished(() => frame.remove());
+    frame.style.cssText =
+      'position: fixed; left: 0; top: 0; width: 400px; height: 300px; border: 0';
+    frame.srcdoc = `<body style="margin: 0">
+      <button id="before" style="display: block; width: 100px; height: 30px">Before</button>
+      <button id="press" style="display: block; width: 100px; height: 30px">Press</button>${markup}</body>`;
+    await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+    return frame.contentDocument!;
+  }
+
+  test.each([
+    { name: 'a checkbox', markup: '<input id="field" type="checkbox" aria-label="Field">' },
+    { name: 'a radio', markup: '<input id="field" type="radio" aria-label="Field">' },
+    { name: 'a range', markup: '<input id="field" type="range" aria-label="Field">' },
+    { name: 'a button input', markup: '<input id="field" type="button" value="Field">' },
+  ])(
+    '$name has no :focus-visible after a press, has it after Tab and a press whose `mousedown` has its default prevented, and `focusVisible: false` takes it away',
+    async ({ markup }) => {
+      const pointer = await frameWith(markup);
+      await userEvent.pointer({
+        coords: centerOf(pointer.getElementById('press')!),
+        keys: '[MouseLeft]',
+      });
+      pointer.getElementById('field')!.focus();
+      const afterPress = pointer.getElementById('field')!.matches(':focus-visible');
+      const doc = await frameWith(markup);
+      const field = doc.getElementById('field')!;
+      doc.getElementById('press')!.addEventListener('mousedown', (event) => event.preventDefault());
+      doc.getElementById('before')!.focus();
+      await userEvent.keyboard('{Tab}');
+      expect(doc.activeElement).toBe(doc.getElementById('press'));
+      await userEvent.pointer({
+        coords: centerOf(doc.getElementById('press')!),
+        keys: '[MouseLeft]',
+      });
+      field.focus();
+      const afterKey = field.matches(':focus-visible');
+      field.blur();
+      field.focus({ focusVisible: false });
+      expect({ afterPress, afterKey, hidden: !field.matches(':focus-visible') }).toEqual({
+        afterPress: false,
+        afterKey: true,
+        hidden: true,
+      });
+    },
+  );
+});
+
 describe('the list', () => {
   test('`focus()` puts an item in the middle of a list that scrolls; `preventScroll` and `scrollIntoView` with `nearest` scroll one row', async () => {
     html(
