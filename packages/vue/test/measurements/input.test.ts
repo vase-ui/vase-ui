@@ -125,7 +125,7 @@ describe('a native reset', () => {
     expect(log).toEqual(['microtask false', 'timer true']);
   });
 
-  test('empties a textarea whose value Vue binds, and gives an input the value attribute that Vue writes', () => {
+  test('empties a textarea whose value Vue binds, and gives an input the value attribute that Vue writes', async () => {
     const { root } = mount(MeasureResetControls);
     const input = root.querySelector('input')!;
     const textarea = root.querySelector('textarea')!;
@@ -133,6 +133,8 @@ describe('a native reset', () => {
     // The default value of an input is its `value` attribute. The one of a textarea is its text.
     expect([input.defaultValue, textarea.defaultValue]).toEqual(['Ada', '']);
     root.querySelector('form')!.reset();
+    await settle();
+    // The bound value did not change, so Vue does not write it again.
     expect([input.value, textarea.value]).toEqual(['Ada', '']);
   });
 

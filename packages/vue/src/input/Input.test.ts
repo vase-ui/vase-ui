@@ -622,7 +622,7 @@ describe('a replaced element', () => {
   test('a reset whose value the parent refuses gives a textarea in the element slot the value of v-model', async () => {
     const log: string[] = [];
     // This parent logs each update and writes none. A field renders its control again when the
-    // reset takes back its dirty state, and that render writes the value of a textarea.
+    // reset clears its dirty state, and that render writes the value of a textarea.
     const attrs = recordEmits(log, { modelValue: 'Ada' });
     const { root } = mount(TextareaInSlot, { attrs });
     await nextTick();

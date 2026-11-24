@@ -225,8 +225,8 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
-    /** Writes the text that the input shows to its element, after the next render. */
-    showTextAfterRender(): void;
+    /** Writes the text that the input shows to its element. */
+    showText(): void;
   }): () => void;
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
@@ -421,7 +421,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     {
       readonly insidePopup: boolean;
       readonly element: HTMLElement | null;
-      showTextAfterRender(): void;
+      showText(): void;
     }[]
   >([]);
   const inputIsControl = computed(
@@ -1204,9 +1204,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           textState.setOwn(next);
           emit.updateText(next);
         }
-        // The default value of a `<textarea>` is its text, so the reset empties it, and the binding
-        // writes only a text that changed (test/measurements/input.test.ts).
-        for (const input of inputs) input.showTextAfterRender();
+        // The default value of a `<textarea>` is its text, so the reset empties it, and Vue writes
+        // the text again only when it changes (test/measurements/input.test.ts).
+        for (const input of inputs) input.showText();
       };
       if (!followsLabel() || !inputIsControl.value) {
         resetText();

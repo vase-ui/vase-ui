@@ -222,7 +222,7 @@ describe('the form', () => {
     { name: 'v-model', root: { modelValue: 'Grace' }, shown: 'Grace' },
     { name: 'defaultValue', root: { defaultValue: 'Kay' }, shown: 'Kay' },
   ])(
-    'a reset with no edit gives a textarea in the slot of the input the text of $name',
+    'a reset with no edit gives a textarea in the slot of the input the text of $name, and emits nothing',
     async ({ root, shown }) => {
       const log: string[] = [];
       mount(AutocompleteTextarea, {

@@ -267,6 +267,24 @@ describe('the reset of a textarea in the slot of the input', () => {
     expect(log).toEqual(['update:inputValue Ada']);
     expect(textarea()).toHaveValue('Bob');
   });
+
+  test('a reset with no edit gives a textarea in the popup the text of v-model:input-value', async () => {
+    const log: string[] = [];
+    mount(ComboboxTextarea, {
+      inputInPopup: true,
+      root: {
+        inputValue: 'Ada',
+        'onUpdate:inputValue': (text: string) => log.push(`update:inputValue ${text}`),
+      },
+    });
+    await userEvent.click(byTestId('trigger'));
+    await waitFor(() => expect(form().querySelector('textarea')).not.toBe(null));
+    expect(textarea()).toHaveValue('Ada');
+    form().reset();
+    await settle();
+    expect(textarea()).toHaveValue('Ada');
+    expect(log).toEqual([]);
+  });
 });
 
 describe('the autofill', () => {

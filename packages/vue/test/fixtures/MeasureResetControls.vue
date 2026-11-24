@@ -7,15 +7,7 @@ const text = shallowRef('Ada');
 
 <template>
   <form>
-    <input
-      :value="text"
-      aria-label="Input"
-      @input="text = ($event.target as HTMLInputElement).value"
-    />
-    <textarea
-      :value="text"
-      aria-label="Textarea"
-      @input="text = ($event.target as HTMLTextAreaElement).value"
-    />
+    <input :value="text" aria-label="Input" />
+    <textarea :value="text" aria-label="Textarea" />
   </form>
 </template>
