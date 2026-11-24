@@ -16,7 +16,7 @@ import { nextEvent } from '../animation';
 import { holdPress, stopFling, touchDrag } from '../pointer';
 import { mount } from '../render';
 import { waitFor } from '../waitFor';
-import { tabbables } from '../../src/popup/focus';
+import { tabbables } from '../../src/common/tabbable';
 
 let root: HTMLElement | undefined;
 

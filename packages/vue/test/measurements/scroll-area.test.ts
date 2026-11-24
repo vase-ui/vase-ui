@@ -2,6 +2,7 @@
 // does, so that a part of Scroll Area has code only where the browser does not do it.
 import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
+import { createApp, h, nextTick, ref, vShow, withDirectives } from 'vue';
 import { nextEvent } from '../animation';
 import { takeReportedMessages } from '../reportedMessages';
 
@@ -301,5 +302,94 @@ describe('the first report of a ResizeObserver', () => {
     ]);
     expect(log.some((entry) => entry.startsWith('error ResizeObserver loop'))).toBe(true);
     takeReportedMessages();
+  });
+});
+
+describe('the Tab key and scroll containers', () => {
+  const SCROLLERS = `
+    <style>.scroller { height: 60px; overflow: auto } .long { height: 300px }</style>
+    <button id="start">Start</button>
+    <div id="empty" class="scroller"><p>Text</p><div class="long"></div></div>
+    <div id="withButton" class="scroller"><button id="button">Button</button><div class="long"></div></div>
+    <div id="withInput" class="scroller"><input id="input" aria-label="Input"><div class="long"></div></div>
+    <div id="withNegative" class="scroller"><button tabindex="-1">Not a tab stop</button><div class="long"></div></div>
+    <button id="end">End</button>`;
+
+  test('Chromium stops only at a scroll container with no tab stop in it, Firefox at each one, and WebKit at none', async () => {
+    html(SCROLLERS);
+    find('start').focus();
+    const order: string[] = [];
+    while (document.activeElement !== find('end') && order.length < 10) {
+      await userEvent.keyboard('{Tab}');
+      order.push(document.activeElement!.id);
+    }
+    expect(order).toEqual(
+      {
+        chromium: ['empty', 'button', 'input', 'withNegative', 'end'],
+        firefox: ['empty', 'withButton', 'button', 'withInput', 'input', 'withNegative', 'end'],
+        webkit: ['button', 'input', 'end'],
+      }[server.browser],
+    );
+  });
+
+  test('a focused scroll container keeps the focus when its tabindex goes from 0 to -1, and loses it in WebKit when tabindex is removed', async () => {
+    html(SCROLLERS);
+    const scroller = find('withButton');
+    scroller.tabIndex = 0;
+    scroller.focus();
+    expect(scroller).toHaveFocus();
+    scroller.tabIndex = -1;
+    await new Promise(requestAnimationFrame);
+    expect(scroller).toHaveFocus();
+
+    scroller.tabIndex = 0;
+    scroller.focus();
+    expect(scroller).toHaveFocus();
+    scroller.removeAttribute('tabindex');
+    await new Promise(requestAnimationFrame);
+    expect(document.activeElement).toBe(server.browser === 'webkit' ? document.body : scroller);
+  });
+});
+
+describe('an inert ancestor and contenteditable', () => {
+  test('gives isContentEditable false in WebKit after style resolves, and true in Chromium and Firefox', async () => {
+    html('<div id="wrap" inert><div id="editable" contenteditable="true">Edit</div></div>');
+    const editable = find('editable');
+    await new Promise(requestAnimationFrame);
+    expect(editable.isContentEditable).toBe(server.browser !== 'webkit');
+    find('wrap').removeAttribute('inert');
+    await new Promise(requestAnimationFrame);
+    expect(editable.isContentEditable).toBe(true);
+  });
+});
+
+describe('a MutationObserver and a control that Vue hides', () => {
+  test('sees a control that v-show or a class hides only through style or class', async () => {
+    html('<style>.gone { display: none }</style><div id="app"></div>');
+    const shown = ref(true);
+    const gone = ref(false);
+    const app = createApp({
+      render: () =>
+        h('div', [
+          withDirectives(h('button', { id: 'shown' }, 'Shown'), [[vShow, shown.value]]),
+          h('button', { id: 'gone', class: { gone: gone.value } }, 'Gone'),
+        ]),
+    });
+    app.mount(find('app'));
+    onTestFinished(() => app.unmount());
+    const records: string[] = [];
+    const observer = new MutationObserver((list) => {
+      for (const record of list) {
+        records.push(`${(record.target as Element).id} ${record.type} ${record.attributeName}`);
+      }
+    });
+    observer.observe(find('app'), { subtree: true, childList: true, attributes: true });
+    onTestFinished(() => observer.disconnect());
+    shown.value = false;
+    gone.value = true;
+    await nextTick();
+    await Promise.resolve();
+    // `v-show` writes its style in a hook after the patch.
+    expect(records).toEqual(['gone attributes class', 'shown attributes style']);
   });
 });

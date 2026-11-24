@@ -6,6 +6,7 @@ import { nextEvent } from '../../test/animation';
 import { dataAttributes } from '../../test/field';
 import { fireEvent } from '../../test/fireEvent';
 import ScrollAreaInSlots from '../../test/fixtures/ScrollAreaInSlots.vue';
+import ScrollAreaControls from '../../test/fixtures/ScrollAreaControls.vue';
 import ScrollAreaInTransition from '../../test/fixtures/ScrollAreaInTransition.vue';
 import ScrollAreaParts from '../../test/fixtures/ScrollAreaParts.vue';
 import ScrollAreaPartsAlone from '../../test/fixtures/ScrollAreaPartsAlone.vue';
@@ -786,6 +787,151 @@ describe('the platform', () => {
   });
 });
 
+describe('the tab stop of the viewport', () => {
+  async function mountControls(scene: Record<string, unknown>) {
+    const { root } = mount(ScrollAreaControls, { scene });
+    const viewport = root.querySelector<HTMLElement>('.viewport')!;
+    await waitFor(() => expect(viewport).toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    return { root, viewport, before: root.querySelector<HTMLElement>('.before')! };
+  }
+
+  test('VUE-236: a viewport that scrolls is a tab stop only while its content holds no tab stop: Tab goes from the element before to the control; a control with tabindex -1 does not count', async () => {
+    const scene = reactive({ control: true });
+    const { root, viewport, before } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('.control'));
+
+    scene.control = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(viewport);
+  });
+
+  test('the viewport leaves the Tab order when a control mounts in its content, and comes back when the control unmounts or becomes disabled; a focused viewport keeps the focus', async () => {
+    const scene = reactive({ control: false, disabled: false });
+    const { viewport } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(0);
+    viewport.focus();
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    await settle();
+    expect(viewport).toHaveFocus();
+
+    scene.control = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.disabled = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+  });
+
+  test('the viewport comes back to the Tab order when v-show or a class hides the last control of its content, and leaves it when the control shows again', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '.gone { display: none }';
+    onTestFinished(() => style.remove());
+    const scene = reactive({ control: true, shown: true, gone: false });
+    const { viewport } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.shown = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.shown = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.gone = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    scene.gone = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+  });
+
+  test('a viewport whose scroll area is hidden keeps its answer when its content changes, and reads its content again when it shows', async () => {
+    const scene = reactive({ control: true, hidden: false, markup: '' });
+    const { root, viewport, before } = await mountControls(scene);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.hidden = true;
+    await settle();
+    scene.markup = '<p>Text</p>';
+    await settle();
+    scene.hidden = false;
+    await waitFor(() =>
+      expect(root.querySelector<HTMLElement>('.markup')!.offsetHeight).toBeGreaterThan(0),
+    );
+    await settle();
+    expect(viewport.tabIndex).toBe(-1);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('.control'));
+
+    // Hide and show across frames: `ResizeObserver` reports the box again.
+    scene.hidden = true;
+    await new Promise(requestAnimationFrame);
+    scene.control = false;
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    expect(viewport.tabIndex).toBe(-1);
+    scene.hidden = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+
+    // Hide, change and show in one frame: no resize occurs, and one frame callback reads again.
+    scene.control = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    scene.hidden = true;
+    await nextTick();
+    scene.control = false;
+    await nextTick();
+    scene.hidden = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+  });
+
+  test('a scroll reads no element of the content, and a viewport with no overflow observes nothing', async () => {
+    const scene = reactive({ control: true, tall: true, markup: '' });
+    const { viewport } = await mountControls(scene);
+    const read = vi.spyOn(Element.prototype, 'querySelectorAll');
+    onTestFinished(() => read.mockRestore());
+    await scrollViewport(viewport, 0, 300);
+    await settle();
+    expect(read.mock.contexts).not.toContain(viewport);
+
+    scene.tall = false;
+    await waitFor(() => expect(viewport).not.toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    read.mockClear();
+    scene.markup = '<p>Idle</p>';
+    await settle();
+    expect(read.mock.contexts).not.toContain(viewport);
+  });
+
+  test.each([
+    { attribute: 'tabindex', markup: '<div tabindex="-1">T</div>', set: '0' },
+    { attribute: 'disabled', markup: '<button disabled>T</button>', set: null },
+    { attribute: 'inert', markup: '<div inert><button>T</button></div>', set: null },
+    { attribute: 'hidden', markup: '<button hidden>T</button>', set: null },
+    { attribute: 'contenteditable', markup: '<div>T</div>', set: 'true' },
+    { attribute: 'href', markup: '<a>T</a>', set: '#t' },
+    { attribute: 'style', markup: '<button style="display: none">T</button>', set: null },
+    {
+      attribute: 'class',
+      markup: '<style>.gone { display: none }</style><button class="gone">T</button>',
+      set: null,
+    },
+    { attribute: 'open', markup: '<dialog><button>T</button></dialog>', set: '' },
+    { attribute: 'type', markup: '<input type="hidden" aria-label="T">', set: 'text' },
+    { attribute: 'controls', markup: '<video></video>', set: '' },
+  ])(
+    'the viewport leaves the Tab order when $attribute makes an element of its content a tab stop',
+    async ({ attribute, markup, set }) => {
+      const { root, viewport } = await mountControls({ markup });
+      expect(viewport.tabIndex).toBe(0);
+      const element = root.querySelector('.markup > :last-child')!;
+      if (set === null) element.removeAttribute(attribute);
+      else element.setAttribute(attribute, set);
+      await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    },
+  );
+});
+
 describe('lifetime', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -807,8 +953,33 @@ describe('lifetime', () => {
   test('a scroll area that unmounts leaves no observer and no timer', async () => {
     const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
     const disconnect = vi.spyOn(ResizeObserver.prototype, 'disconnect');
+    onTestFinished(() => {
+      unobserve.mockRestore();
+      disconnect.mockRestore();
+    });
+    const observed = new Set<MutationObserver>();
+    const BrowserObserver = MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends BrowserObserver {
+        override observe(target: Node, options?: MutationObserverInit) {
+          if (target instanceof HTMLElement && target.classList.contains('viewport')) {
+            observed.add(this);
+          }
+          super.observe(target, options);
+        }
+        override disconnect() {
+          observed.delete(this);
+          super.disconnect();
+        }
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
     const scene = reactive({ content: true });
     const mounted = await mountArea({ scene });
+    expect(observed.size).toBe(1);
     scene.content = false;
     await nextTick();
     expect(unobserve).toHaveBeenCalledWith(
@@ -821,6 +992,7 @@ describe('lifetime', () => {
     mounted.unmount();
     expect(vi.getTimerCount()).toBe(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(observed.size).toBe(0);
   });
 
   test('a viewport that unmounts before it reads its animations leaves no timer', () => {

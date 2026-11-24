@@ -19,8 +19,8 @@ import {
   scrollAreaKey,
   stateAttributes,
   type ScrollAreaAxisPart,
-  type ScrollAreaPart,
   type ScrollAreaPress,
+  type ScrollAreaViewportPart,
 } from './root';
 import type { ScrollAreaRootProps, ScrollAreaRootState } from './types';
 
@@ -38,7 +38,7 @@ useStyleDisableScrollbar(element);
 
 // The last part of a list serves, so a `v-if` that replaces a part gives the new part in each order
 // of mount and unmount.
-const viewports = shallowReactive<ScrollAreaPart[]>([]);
+const viewports = shallowReactive<ScrollAreaViewportPart[]>([]);
 const scrollbars = shallowReactive<ScrollAreaAxisPart[]>([]);
 const thumbs = shallowReactive<ScrollAreaAxisPart[]>([]);
 const corners = shallowReactive<object[]>([]);
@@ -163,6 +163,7 @@ function measure() {
   const cornered = corners.length > 0 && overflow.x && overflow.y;
   cornerSize.width = cornered ? y.thickness : 0;
   cornerSize.height = cornered ? x.thickness : 0;
+  viewports.at(-1)?.measured();
 }
 
 // A part that mounts or leaves, a new overflow and a new corner size change the tracks. The

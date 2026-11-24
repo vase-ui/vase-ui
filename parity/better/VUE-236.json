@@ -1,0 +1,10 @@
+{
+  "id": "VUE-236",
+  "evidence": [
+    "https://developer.chrome.com/blog/keyboard-focusable-scrollers",
+    "https://html.spec.whatwg.org/multipage/interaction.html#focusable-area",
+    "https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html"
+  ],
+  "dueWith": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+  "behavior": "A viewport that can scroll is a tab stop only while its content holds no tab stop, as Chromium does for a native scroll container. A control in the content scrolls the viewport with the keyboard, so Tab goes directly to that control in Chromium, Firefox and WebKit. The first focus of a dialog whose body scrolls goes to its first control at each open. Base UI keeps `tabindex=\"0\"` on a viewport that holds a control, so Tab stops at the viewport first."
+}
