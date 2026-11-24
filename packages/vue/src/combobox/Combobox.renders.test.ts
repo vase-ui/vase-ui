@@ -37,6 +37,8 @@ async function openList(root: Record<string, unknown> = {}) {
   return spy;
 }
 
+let collatorCaseRuns = 0;
+
 describe('the renders', () => {
   test('20 steps of the highlight over 300 items render 39 items and 20 inputs, and no other part', async () => {
     const spy = await openList();
@@ -91,8 +93,13 @@ describe('the renders', () => {
   test('a mount with no text makes no collator, and the first typed text makes one', async () => {
     const collator = vi.spyOn(Intl, 'Collator');
     try {
-      // The filter of a locale stays for the page, so the case takes a locale of its own.
-      mount(ComboboxRenders, { count: () => '', root: { locale: 'de-CH' } });
+      // The filter of a locale stays for the page, so each run takes a locale that no run took.
+      // The collator ignores a private use subtag.
+      collatorCaseRuns += 1;
+      mount(ComboboxRenders, {
+        count: () => '',
+        root: { locale: `de-CH-x-run${collatorCaseRuns}` },
+      });
       await nextTick();
       expect(collator).not.toHaveBeenCalled();
       await userEvent.click(document.querySelector<HTMLInputElement>('[data-testid="input"]')!);

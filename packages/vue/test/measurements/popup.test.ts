@@ -556,13 +556,14 @@ describe('an open while the popup leaves', () => {
 
 // The opacity of the element in each frame until `stop` gives `true`, at most for 2 s.
 async function opacityFrames(target: Element, stop: () => boolean) {
-  const frames: { opacity: number; visible: boolean }[] = [];
+  const frames: { opacity: number; visible: boolean; time: number }[] = [];
   const end = performance.now() + 2000;
   while (!stop() && performance.now() < end) {
     await nextFrame();
     frames.push({
       opacity: Number(getComputedStyle(target).opacity),
       visible: target.checkVisibility(),
+      time: Number(document.timeline.currentTime),
     });
   }
   return frames;
@@ -583,20 +584,37 @@ function mountShow(
   return { scene: state, log, popup: () => document.querySelector<HTMLElement>('.popup') };
 }
 
+// A late frame can end a leave of 500 ms before the show, so the leave takes 100 s. A running
+// transition keeps its duration, so the case removes the 100 s after `transitionrun`, and the enter
+// has the 500 ms of the fixture.
 async function openThenLeaveToHalf(options: { readsLayout?: boolean } = {}) {
   const shown = mountShow({ open: false, rendered: true }, options);
   shown.scene.open = true;
   await waitFor(() => expect(shown.log).toContain('after-enter'));
   const element = shown.popup()!;
   shown.log.length = 0;
-  shown.scene.open = false;
-  await opacityFrames(element, () => Number(getComputedStyle(element).opacity) < 0.6);
-  return { ...shown, element, atOpen: Number(getComputedStyle(element).opacity) };
+  element.style.transitionDuration = '100s';
+  await nextEvent(element, 'transitionrun', {
+    action: () => {
+      shown.scene.open = false;
+    },
+  });
+  element.style.removeProperty('transition-duration');
+  const [leave] = element.getAnimations();
+  const leaveMs = Number(leave!.effect!.getComputedTiming().duration);
+  leave!.currentTime = leaveMs / 2;
+  return {
+    ...shown,
+    element,
+    atOpen: Number(getComputedStyle(element).opacity),
+    openedAt: Number(document.timeline.currentTime),
+    leaveMs,
+  };
 }
 
 describe('a show during the leave of an element with `v-show` in a <Transition>', () => {
-  test('keeps the element and goes back from where it is: `leave-cancelled`, `before-enter` and `after-enter` come once, and the opacity goes on down by less than 0.15', async () => {
-    const { scene, log, element, atOpen } = await openThenLeaveToHalf();
+  test('keeps the element and goes back from where it is: `leave-cancelled`, `before-enter` and `after-enter` come once, and the opacity falls no faster than the leave', async () => {
+    const { scene, log, element, atOpen, openedAt, leaveMs } = await openThenLeaveToHalf();
     scene.open = true;
     const frames = await opacityFrames(element, () => log.includes('after-enter'));
     expect(document.querySelectorAll('.popup')).toHaveLength(1);
@@ -610,9 +628,17 @@ describe('a show during the leave of an element with `v-show` in a <Transition>'
       'after-enter',
     ]);
     expect(frames.every((frame) => frame.visible)).toBe(true);
-    const lowest = Math.min(...frames.map((frame) => frame.opacity));
-    expect(atOpen - lowest).toBeLessThan(0.15);
-    expect(frames.at(-1)?.opacity).toBe(1);
+    // The leave falls on until the frame that starts the enter, and a late frame can come long after
+    // the read of `atOpen`. So the fall of each frame is compared with the time that passed.
+    expect(leaveMs).toBeGreaterThan(0);
+    const unexplainedFall = Math.max(
+      ...frames.map((frame) => atOpen - frame.opacity - (frame.time - openedAt) / leaveMs),
+    );
+    expect(unexplainedFall).toBeLessThan(0.02);
+    // Vue removes the classes of the enter at `after-enter`, also when its timer ends the enter
+    // before the last frame of the transition.
+    await nextFrame();
+    expect(getComputedStyle(element).opacity).toBe('1');
   });
 
   test('a read of the layout in `leave-cancelled` and `before-enter` reads the element with `display: none`, and the enter starts from its `enter-from` class', async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, inject, test } from 'vitest';
 import { nextTick } from 'vue';
 import DateTimeFieldsOnServer from '../../test/fixtures/DateTimeFieldsOnServer.vue';
+import { hydrateInFrame } from '../../test/hydrateInFrame';
 import { hydrate, renderOnServer } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 
@@ -63,7 +64,8 @@ describe('server render and hydration', () => {
   });
 
   // A virtual DOM part logs one message for a list with another count, also under
-  // `data-allow-mismatch` (test/measurements/date-time-field.test.ts). A Vapor part logs none.
+  // `data-allow-mismatch` (test/measurements/date-time-field.test.ts). A Vapor part logs none. Vue
+  // logs it one time for each copy of its module, so each run hydrates in a frame of its own.
   // The server renders `de-DE` with a 24-hour cycle, and the browser `ja-JP` with a 12-hour cycle.
   // The browser has one more segment, and a literal where the server had the zone name.
   test('a server with another count of items: the layout of the browser, and one message of a virtual DOM part', async () => {
@@ -75,13 +77,12 @@ describe('server render and hydration', () => {
       hourCycle: 24,
     });
     expect(segmentsOf(root)).toHaveLength(5);
-    hydrate(
-      DateTimeFieldsOnServer,
+    const hydrated = await hydrateInFrame(
+      'DateTimeFieldsOnServer',
       { family: 'date', value, locale: 'ja-JP', hourCycle: 12 },
       root,
     );
-    await nextTick();
-    expect(layoutOf(root)).toEqual([
+    expect(layoutOf(hydrated)).toEqual([
       'year 年',
       '"/"',
       'month 月',
@@ -95,7 +96,7 @@ describe('server render and hydration', () => {
       '" "',
       '"GMT-5"',
     ]);
-    const spans = [...root.querySelectorAll('[role="group"] span')];
+    const spans = [...hydrated.querySelectorAll('[role="group"] span')];
     expect(spans.map((span) => span.getAttribute('aria-hidden'))).toEqual([
       ...Array.from({ length: 5 }, () => 'true'),
       null,

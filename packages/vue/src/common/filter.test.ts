@@ -17,6 +17,10 @@ describe('getFilter', () => {
   });
 
   it('compares each different window of text with a query one time', () => {
+    const { contains } = getFilter({ locale: 'en-US' });
+    // The filter of a locale stays for the page, and it keeps the comparisons of its last query.
+    // A query that is not the one of the case clears them.
+    contains('a', 'b');
     const compare = Object.getOwnPropertyDescriptor(Intl.Collator.prototype, 'compare')!.get!;
     let comparisons = 0;
     const spy = vi.spyOn(Intl.Collator.prototype, 'compare', 'get').mockImplementation(function (
@@ -26,7 +30,6 @@ describe('getFilter', () => {
       return compare.call(this);
     });
     try {
-      const { contains } = getFilter({ locale: 'en-US' });
       const labels = Array.from({ length: 1000 }, (_, index) => `Option ${index + 1}`);
       expect(labels.filter((label) => contains(label, '9'))).toHaveLength(271);
       // The windows are the 6 letters of "Option", the space and the 10 digits.
