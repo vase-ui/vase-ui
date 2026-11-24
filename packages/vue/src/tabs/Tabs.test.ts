@@ -1078,7 +1078,7 @@ describe('the scroll after a key', () => {
   }
 
   // A list of 300 px with tabs of 90 px: the end of the list cuts the fourth tab and hides the
-  // fifth one.
+  // fifth one. The page can scroll, and the list is in the view but not at its top.
   async function mountScrollingList({
     orientation = 'horizontal',
     list = '',
@@ -1091,7 +1091,7 @@ describe('the scroll after a key', () => {
     const tabs = await mountTabs({
       root: { defaultValue: 'a', orientation },
       list: {
-        style: `display: flex; flex-direction: ${vertical ? 'column; width: 120px' : 'row'}; ${size}: 300px; overflow: auto; ${list}`,
+        style: `display: flex; flex-direction: ${vertical ? 'column; width: 120px' : 'row'}; ${size}: 300px; overflow: auto; margin-block: 40px 200vh; ${list}`,
       },
       tabs: 'abcdefghij'
         .slice(0, count)
@@ -1102,6 +1102,8 @@ describe('the scroll after a key', () => {
         })),
       dir,
     });
+    // An earlier case can leave the page scrolled.
+    window.scrollTo(0, 0);
     const scroll = () => Math.round(vertical ? tabs.list.scrollTop : tabs.list.scrollLeft);
     /** Scrolls the list to `start`, focuses `key` with no scroll, and presses `keys`. */
     async function moveFrom(key: string, start: number, ...keys: string[]) {
@@ -1202,15 +1204,17 @@ describe('the scroll after a key', () => {
     });
   });
 
-  test('a key in a list that is out of the view scrolls the page so that the focused tab shows', async () => {
+  test('a key in a list below the view scrolls the page by the least distance that shows the focused tab', async () => {
     const { moveFrom, tab } = await mountScrollingList({ list: `margin-top: 200vh; ${padding}` });
-    expect(await moveFrom('c', 0, '{ArrowRight}')).toMatchObject({
+    expect(await moveFrom('c', 0, '{ArrowRight}')).toEqual({
       focused: 'd',
+      scroll: 84,
       pageScrolled: true,
     });
-    const rect = tab('d').getBoundingClientRect();
-    expect(rect.top).toBeGreaterThanOrEqual(-1);
-    expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight + 1);
+    // WebKit scrolls the page by whole pixels.
+    expect(
+      Math.abs(tab('d').getBoundingClientRect().bottom - window.innerHeight),
+    ).toBeLessThanOrEqual(1);
   });
 
   test('a key in a list that does not overflow scrolls nothing', async () => {

@@ -224,7 +224,7 @@ describe('the scroll of a focus in a list that scrolls', () => {
   const padding = { list: 'scroll-padding-inline: 24px; scroll-padding-block: 24px' };
   const margin = { tab: 'scroll-margin-inline: 24px; scroll-margin-block: 24px' };
 
-  test('focus() in a horizontal list: Chromium leaves a cut tab cut, Firefox centers it with a scroll-padding or a scroll-margin, WebKit stops at the scroll-padding or at the edge; each centers a hidden tab and leaves a tab cut at the start cut', async () => {
+  test('focus() in a horizontal list: Chromium leaves a tab that the end cuts cut; Firefox centers it with a scroll-padding or a scroll-margin, else leaves it cut; WebKit scrolls it to the scroll-padding, or to the edge with neither, and leaves it cut with a scroll-margin; each centers a hidden tab and leaves a tab that the start cuts cut', async () => {
     const outcomes: Record<string, number[]> = {};
     for (const [name, style] of Object.entries({ padding, margin, neither: {} })) {
       const move = tabList(style);
