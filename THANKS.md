@@ -4,11 +4,11 @@
 
 Vase UI is a port, so the people on this page did the hard part before we started. They spent years on focus management, screen readers and browser bugs. We carried their work across, and we thank each of them.
 
-Each list is GitHub's contributor list of the project, read on `2026-11-23` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
+Each list is GitHub's contributor list of the project, read on `2026-11-24` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
 
 ## Base UI
 
-The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `52fac378e79c7eeccb38ae97adb9d33d9650b177`. Vase UI is a port of Base UI.
+The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `df283577954738d028f43629af7d50e96200dd82`. Vase UI is a port of Base UI.
 
 - [atomiks](https://github.com/atomiks)
 - [Michał Dudak](https://github.com/michaldudak)
@@ -147,6 +147,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `52f
 - Chawin Tan
 - [Hao](https://github.com/chiahao)
 - [Spencer Steffen](https://github.com/citrus)
+- [Atul Tameshwari](https://github.com/codingwolf-at)
 - [Cody Schaaf](https://github.com/CodySchaaf)
 - [CrawlerCode](https://github.com/CrawlerCode)
 - [Cristian](https://github.com/cristianchiriac)
