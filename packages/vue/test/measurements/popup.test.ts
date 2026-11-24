@@ -89,6 +89,8 @@ describe('inert', () => {
   test('Tab from the last control of the content that stays in use goes to <body>, then to the first control in Chromium and WebKit, and to the last in Firefox', async () => {
     html(`<div inert><input id="outside" aria-label="Outside"></div>
       <div id="popup"><input id="first" aria-label="First"><input id="last" aria-label="Last"></div>`);
+    // Tab moves the focus to the browser UI. A click returns the focus of Firefox to the page.
+    onTestFinished(() => userEvent.pointer({ coords: { x: 1, y: 1 }, keys: '[MouseLeft]' }));
     element('last').focus();
     const order: (string | undefined)[] = [];
     for (let index = 0; index < 2; index += 1) {
