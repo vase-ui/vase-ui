@@ -29,7 +29,7 @@ defineSlots<{
 const context = injectSelectRoot('Popup');
 const positioner = injectSelectPositioner('Popup');
 const { root, list, typeahead } = context;
-// Without a list part, the popup is the listbox and names a label that can come after it.
+// The popup and a list in it name a label of the select or of its field, which can come after them.
 useDeferredServerRender();
 const attrs = useAttrs();
 const generatedId = useId();

@@ -367,17 +367,22 @@ describe('the list', () => {
     beside.unmount();
 
     const scene = reactive({ trigger: true });
+    const triggerAttrs = reactive<Props>({ 'aria-label': 'Choose fruit' });
     const inPopup = await mountCombobox({
       root: { defaultOpen: true },
       inputInPopup: true,
       scene,
-      triggerAttrs: { 'aria-label': 'Choose fruit' },
+      triggerAttrs,
       input: { 'aria-label': 'Filter fruit' },
     });
     await waitFor(() => expect(shown()).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Choose fruit' })).toBe(byTestId('list'));
+    triggerAttrs['aria-labelledby'] = 'outside';
+    await nextTick();
+    expect(screen.getByRole('listbox', { name: 'Outside' })).toBe(byTestId('list'));
     scene.trigger = false;
     await nextTick();
+    expect(byTestId('list')).not.toHaveAttribute('aria-labelledby');
     expect(byTestId('list')).not.toHaveAttribute('aria-label');
     inPopup.unmount();
   });
