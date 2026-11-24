@@ -5,6 +5,7 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureControlledInput from '../fixtures/MeasureControlledInput.vue';
 import MeasureInputListeners from '../fixtures/MeasureInputListeners.vue';
+import MeasureResetControls from '../fixtures/MeasureResetControls.vue';
 import { mount, settle, typeAtEnd } from '../render';
 
 let root: HTMLElement | undefined;
@@ -122,6 +123,17 @@ describe('a native reset', () => {
     await userEvent.click(root!.querySelector('button')!);
     await timer();
     expect(log).toEqual(['microtask false', 'timer true']);
+  });
+
+  test('empties a textarea whose value Vue binds, and gives an input the value attribute that Vue writes', () => {
+    const { root } = mount(MeasureResetControls);
+    const input = root.querySelector('input')!;
+    const textarea = root.querySelector('textarea')!;
+    expect([input.value, textarea.value]).toEqual(['Ada', 'Ada']);
+    // The default value of an input is its `value` attribute. The one of a textarea is its text.
+    expect([input.defaultValue, textarea.defaultValue]).toEqual(['Ada', '']);
+    root.querySelector('form')!.reset();
+    expect([input.value, textarea.value]).toEqual(['Ada', '']);
   });
 
   test('does not change an input that is out of the document, as an input that KeepAlive holds', () => {
