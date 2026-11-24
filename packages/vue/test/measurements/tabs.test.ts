@@ -190,8 +190,7 @@ describe('the computed translate', () => {
 });
 
 describe('the scroll of a focus in a list that scrolls', () => {
-  // A list of 300 px with tabs of 90 px. The end of the list cuts tab 3 (270-360 px) and hides tab
-  // 5 (450-540 px). A scroll of 120 px cuts tab 1 (90-180 px) at the start.
+  // The end of the list cuts tab 3 and hides tab 5. A scroll of 120 px cuts tab 1 at the start.
   function tabList({ list = '', tab = '', vertical = false, rtl = false } = {}) {
     root?.remove();
     const size = vertical ? 'height: 90px' : 'width: 90px; height: 32px';
@@ -204,7 +203,6 @@ describe('the scroll of a focus in a list that scrolls', () => {
     html(`<button id="before" style="display: block; height: 20px">Before</button>
       <div id="list" role="tablist" ${rtl ? 'dir="rtl"' : ''}
         style="display: flex; flex-direction: ${vertical ? 'column; width: 120px; height' : 'row; width'}: 300px; overflow: auto; ${list}">${tabs}</div>`);
-    /** Scrolls the list to `start`, moves the focus to the tab `index` with `move`, and reads the scroll. */
     return async (index: number, start: number, move: (tab: HTMLElement) => void) => {
       const listElement = element('list');
       if (vertical) listElement.scrollTop = start;

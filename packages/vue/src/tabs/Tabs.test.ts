@@ -1077,8 +1077,8 @@ describe('the scroll after a key', () => {
     count?: number;
   }
 
-  // A list of 300 px with tabs of 90 px: the end of the list cuts the fourth tab and hides the
-  // fifth one. The page can scroll, and the list is in the view but not at its top.
+  // The end of the list cuts the fourth tab and hides the fifth. The page can scroll, and the list
+  // is in the view but not at its top.
   async function mountScrollingList({
     orientation = 'horizontal',
     list = '',
@@ -1105,7 +1105,6 @@ describe('the scroll after a key', () => {
     // An earlier case can leave the page scrolled.
     window.scrollTo(0, 0);
     const scroll = () => Math.round(vertical ? tabs.list.scrollTop : tabs.list.scrollLeft);
-    /** Scrolls the list to `start`, focuses `key` with no scroll, and presses `keys`. */
     async function moveFrom(key: string, start: number, ...keys: string[]) {
       if (vertical) tabs.list.scrollTop = start;
       else tabs.list.scrollLeft = start;

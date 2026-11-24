@@ -119,8 +119,7 @@ function focusFirstOf(elements: HTMLElement[]) {
   });
 }
 
-// The scroll of `scrollIntoView` with 'nearest' for a tab that fits in the list, on the list only: it
-// reads the `scroll-padding` of the list and the `scroll-margin` of the tab
+// The scroll of `scrollIntoView` with 'nearest' for a tab that fits in the list, on the list only
 // (test/measurements/tabs.test.ts).
 function showActiveTab() {
   const list = element.value;
