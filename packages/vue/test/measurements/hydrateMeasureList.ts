@@ -7,7 +7,10 @@ const { createVaporSSRApp, vaporInteropPlugin } = vue as unknown as {
   vaporInteropPlugin: vue.Plugin;
 };
 
-/** Hydrates `MeasureHydratedList` in the window of the caller, so Vue has a fresh module state. */
+/**
+ * Hydrates `MeasureHydratedList` in `container` with the Vue of the window that loads this module.
+ * A frame that loads it has a Vue of its own.
+ */
 export async function hydrateMeasureList(
   appKind: AppKind,
   props: Record<string, unknown>,

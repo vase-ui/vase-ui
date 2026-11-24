@@ -3,10 +3,9 @@
 // do not do it.
 import { afterEach, describe, expect, inject, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
-import { version } from 'vue';
 import MeasureHydratedList, { type MeasuredItem } from '../fixtures/MeasureHydratedList.vue';
 import { hydrate, renderOnServer, settle } from '../render';
-import { isReportedMessage, takeReportedMessages } from '../reportedMessages';
+import { takeReportedMessages } from '../reportedMessages';
 import type { hydrateMeasureList } from './hydrateMeasureList';
 
 let root: HTMLElement | undefined;
@@ -24,8 +23,8 @@ afterEach(() => {
 
 describe('a native date input', () => {
   test('Backspace empties a unit, so the input has no value', async () => {
-    // On a repeat in WebKit, Backspace in an `<input type="date">` parsed by `innerHTML` navigates
-    // the frame back and closes the browser connection.
+    // On a repeat, WebKit goes back in the history at Backspace in a date input from the HTML parser
+    // with no layout yet. That closes the connection of the browser.
     const input = html('').appendChild(document.createElement('input'));
     input.type = 'date';
     input.value = '2026-11-14';
@@ -273,22 +272,17 @@ describe('Vue hydrates a list of inputs and spans that differs from the server H
     html('').appendChild(frame);
     await loaded;
     const frameWindow = frame.contentWindow as Window & {
-      console: Console;
       onFrameReady?: (fn: typeof hydrateMeasureList) => void;
       onFrameError?: (error: unknown) => void;
     };
+    // Vite gives the flags to this page only. The Vue of the frame writes to the console of this
+    // page, so its messages reach `takeReportedMessages()`.
     Object.assign(frameWindow, {
+      console,
       __VUE_OPTIONS_API__: true,
       __VUE_PROD_DEVTOOLS__: false,
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
     });
-    const messages: string[] = [];
-    for (const method of ['warn', 'error'] as const) {
-      frameWindow.console[method] = (...args: unknown[]) => {
-        const text = `console.${method}: ${args.map(String).join(' ')}`;
-        if (isReportedMessage(text, version)) messages.push(text);
-      };
-    }
     const container = frame.contentDocument!.body.firstElementChild!;
     container.innerHTML = serverRoot.innerHTML;
     const moduleUrl = new URL('./hydrateMeasureList.ts', import.meta.url).href;
@@ -307,7 +301,7 @@ describe('Vue hydrates a list of inputs and spans that differs from the server H
     );
     try {
       expect(shownItems(container)).toEqual(rightItems(clientItems));
-      expect(messages).toEqual(
+      expect(takeReportedMessages()).toEqual(
         isVaporFixture ? [] : ['console.error: Hydration completed but contains mismatches.'],
       );
     } finally {
