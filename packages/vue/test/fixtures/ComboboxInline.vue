@@ -3,12 +3,17 @@ import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 
 // A combobox with its list in place.
-defineProps({ root: Object as PropType<Record<string, unknown>> });
+defineProps({
+  root: Object as PropType<Record<string, unknown>>,
+  label: Boolean,
+  labelAfter: Boolean,
+});
 const FRUITS = ['Apple', 'Banana', 'Cherry'];
 </script>
 
 <template>
   <Combobox.Root inline :items="FRUITS" v-bind="root">
+    <Combobox.Label v-if="label" data-testid="label">Fruits</Combobox.Label>
     <Combobox.Input data-testid="input" aria-label="Fruit" />
     <Combobox.Status data-testid="status">Three fruits.</Combobox.Status>
     <Combobox.List data-testid="list">
@@ -16,6 +21,7 @@ const FRUITS = ['Apple', 'Banana', 'Cherry'];
         <Combobox.Item :value="item" :data-testid="`item-${item}`">{{ item }}</Combobox.Item>
       </template>
     </Combobox.List>
+    <Combobox.Label v-if="labelAfter" data-testid="label">Fruits</Combobox.Label>
   </Combobox.Root>
   <button id="outside">Outside</button>
 </template>

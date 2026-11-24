@@ -10,6 +10,7 @@ import {
   useId,
   watch,
 } from 'vue';
+import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../common/styles';
@@ -28,6 +29,8 @@ defineSlots<{
 const context = injectSelectRoot('Popup');
 const positioner = injectSelectPositioner('Popup');
 const { root, list, typeahead } = context;
+// Without a list part, the popup is the listbox and names a label that can come after it.
+useDeferredServerRender();
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
@@ -96,6 +99,7 @@ function elementProps(hidden = false) {
   const listProps = ownsList.value
     ? {
         role: 'listbox',
+        ...context.listName(attrs),
         'aria-multiselectable': context.multiple ? 'true' : undefined,
         'aria-readonly': context.readonly ? 'true' : undefined,
         onScroll: (event: Event) => positioner.onScroll(event.currentTarget as HTMLElement),

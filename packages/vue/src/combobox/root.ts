@@ -225,8 +225,13 @@ export interface ComboboxRootContext {
   addInput(input: {
     readonly insidePopup: boolean;
     readonly element: HTMLElement | null;
+    readonly label: unknown;
+    readonly labelledBy: unknown;
     showText(): void;
   }): () => void;
+  addTriggerName(name: { readonly label: unknown; readonly labelledBy: unknown }): () => void;
+  /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
+  listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   setTrigger(element: HTMLElement | null): () => void;
   setList(list: { readonly element: HTMLElement | null; readonly id: string }): () => void;
   setLabel(label: { readonly id: string }): () => void;
@@ -420,15 +425,23 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     {
       readonly insidePopup: boolean;
       readonly element: HTMLElement | null;
+      readonly label: unknown;
+      readonly labelledBy: unknown;
       showText(): void;
     }[]
   >([]);
+  const triggerNames = shallowReactive<{ readonly label: unknown; readonly labelledBy: unknown }[]>(
+    [],
+  );
+  const ariaText = (text: unknown) =>
+    typeof text === 'string' && text.trim() !== '' ? text : undefined;
   const inputIsControl = computed(
     () => source.inline || inputs.some((input) => !input.insidePopup),
   );
-  const controlInput = computed(
-    () => inputs.find((input) => source.inline || !input.insidePopup)?.element ?? null,
+  const controlInputEntry = computed(
+    () => inputs.find((input) => source.inline || !input.insidePopup) ?? null,
   );
+  const controlInput = computed(() => controlInputEntry.value?.element ?? null);
   const triggerElement = shallowRef<HTMLElement | null>(null);
   const control = computed(() =>
     inputIsControl.value ? controlInput.value : triggerElement.value,
@@ -1144,6 +1157,18 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     openByKey,
     press,
     addInput: (input) => add(inputs, input),
+    addTriggerName: (name) => add(triggerNames, name),
+    listName(attrs) {
+      if ('aria-label' in attrs || 'aria-labelledby' in attrs) return {};
+      const controlName = inputIsControl.value ? controlInputEntry.value : triggerNames.at(-1);
+      const labelledBy =
+        ariaText(controlName?.labelledBy) ??
+        ([labels.at(-1)?.id, field?.labelledBy].filter(Boolean).join(' ') || undefined);
+      if (labelledBy) return { 'aria-labelledby': labelledBy };
+      const label = ariaText(controlName?.label);
+      if (label) return { 'aria-label': label };
+      return field?.labelId ? { 'aria-labelledby': field.labelId } : {};
+    },
     setTrigger(element) {
       triggerElement.value = element;
       return () => {

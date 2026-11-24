@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, useAttrs, useId, watch } from 'vue';
+import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../common/styles';
@@ -16,6 +17,8 @@ defineSlots<{
 
 const context = injectSelectRoot('List');
 const positioner = injectSelectPositioner('List');
+// The listbox names a label of the select or of its field, which can come after it.
+useDeferredServerRender();
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
@@ -48,6 +51,7 @@ function elementProps() {
       id: elementId.value,
       role: 'listbox',
       tabindex: -1,
+      ...context.listName(attrs),
       'aria-multiselectable': context.multiple ? 'true' : undefined,
       'aria-readonly': context.readonly ? 'true' : undefined,
       class: hidesScrollbar.value ? styleDisableScrollbar.className : undefined,

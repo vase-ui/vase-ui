@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
+import SelectInField from '../../test/fixtures/SelectInField.vue';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
+import { within } from '../../test/queries';
 import { hydrate, renderOnServer } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
 
@@ -57,4 +59,27 @@ describe('server render and hydration', () => {
     expect(listboxOf(root)).toBe(popup);
     await waitFor(() => expect(positioner.style.visibility).toBe(''));
   });
+
+  test.each([
+    { name: 'Select.List', list: {}, testId: 'list' },
+    { name: 'Select.Popup', list: undefined, testId: 'popup' },
+  ])(
+    'the server HTML of an open select with a disabled portal names its $name, also when a Field.Label comes after the select, and the page hydrates with no message',
+    async ({ list, testId }) => {
+      const props = {
+        root: { defaultOpen: true },
+        portal: { disabled: true },
+        labelAfter: true,
+        ...(list && { list }),
+      };
+      const root = await renderOnServer('SelectInField', props);
+      const label = root.querySelector('label')!;
+      const target = root.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!;
+      expect(target).toHaveAttribute('aria-labelledby', label.id);
+      hydrate(SelectInField, props, root);
+      await waitFor(() => expect(target.checkVisibility({ visibilityProperty: true })).toBe(true));
+      expect(root.querySelector(`[data-testid="${testId}"]`)).toBe(target);
+      expect(within(root).getByRole('listbox', { name: 'Letter' })).toBe(target);
+    },
+  );
 });

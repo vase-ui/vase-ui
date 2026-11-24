@@ -335,6 +335,8 @@ export namespace Arrow {
 /**
  * The list of the items.
  * Renders a `<div>` element.
+ * Takes its name from the control, `Combobox.Label` or `Field.Label`. Give it `aria-label` when a
+ * plain `<label for>` names the control.
  * @selector `[data-empty]` The list has no item to show.
  */
 export const List: typeof ComboboxList = ComboboxList;

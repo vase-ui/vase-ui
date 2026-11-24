@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, mergeProps, onUnmounted, useAttrs, useId } from 'vue';
+import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { injectComboboxRoot } from './root';
@@ -16,6 +17,8 @@ defineSlots<{
 }>();
 
 const context = injectComboboxRoot('List');
+// The list names a label of the combobox or of its field, which can come after it.
+useDeferredServerRender();
 const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
@@ -38,6 +41,7 @@ function elementProps() {
     {
       id: elementId.value,
       role: context.grid ? 'grid' : 'listbox',
+      ...context.listName(attrs),
       'aria-multiselectable': context.mode === 'multiple' ? 'true' : undefined,
       // In a grid the attribute says that the cells cannot change.
       'aria-readonly': context.readonly && !context.grid ? 'true' : undefined,

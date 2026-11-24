@@ -95,6 +95,9 @@ export interface SelectContext {
   /** The content stays in the DOM from now on. */
   keep(): void;
   addLabel(label: { readonly id: string }): () => void;
+  addTriggerName(name: { readonly label: unknown; readonly labelledBy: unknown }): () => void;
+  /** The `aria-labelledby` or `aria-label` of the list, when no attribute of the developer names it. */
+  listName(attrs: Record<string, unknown>): { 'aria-labelledby'?: string; 'aria-label'?: string };
   /** The first item of the value, in the order of the document, shown or not. */
   selectedItem(): ListItem | undefined;
 }
@@ -191,6 +194,11 @@ export function useSelectRoot(
   const itemValues = shallowReactive(new Map<Element, unknown>());
   const itemTexts = shallowReactive(new Map<Element, HTMLElement>());
   const labels = shallowReactive<{ readonly id: string }[]>([]);
+  const triggerNames = shallowReactive<{ readonly label: unknown; readonly labelledBy: unknown }[]>(
+    [],
+  );
+  const ariaText = (text: unknown) =>
+    typeof text === 'string' && text.trim() !== '' ? text : undefined;
   const container = () => listElement.value ?? root.popup;
 
   const fullWidth = computed(() => {
@@ -420,6 +428,18 @@ export function useSelectRoot(
     addLabel(label) {
       labels.push(label);
       return () => labels.splice(labels.indexOf(label), 1);
+    },
+    addTriggerName(name) {
+      triggerNames.push(name);
+      return () => triggerNames.splice(triggerNames.indexOf(name), 1);
+    },
+    listName(attrs) {
+      if ('aria-label' in attrs || 'aria-labelledby' in attrs) return {};
+      const trigger = triggerNames.at(-1);
+      const labelledBy = ariaText(trigger?.labelledBy) ?? field?.labelId ?? labels[0]?.id;
+      if (labelledBy) return { 'aria-labelledby': labelledBy };
+      const label = ariaText(trigger?.label);
+      return label ? { 'aria-label': label } : {};
     },
     selectedItem,
   };

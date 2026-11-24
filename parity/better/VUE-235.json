@@ -1,0 +1,14 @@
+{
+  "id": "VUE-235",
+  "evidence": [
+    "https://www.w3.org/TR/wai-aria-1.2/#listbox",
+    "https://www.w3.org/TR/wai-aria-1.2/#grid",
+    "https://www.w3.org/TR/accname-1.2/",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-autocomplete-list/",
+    "https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html"
+  ],
+  "behavior": "`Select.List`, `Select.Popup` when it is the listbox, `Combobox.List` and `Autocomplete.List` take the accessible name of their control. In the order of AccName 1.2, the part uses `aria-labelledby` of the control or its label part, else `aria-label` of the control, else `Field.Label`. An `aria-label` or `aria-labelledby` of the developer on the list wins, and the part then writes neither attribute. Base UI gives the listbox no name.",
+  "dueWith": "packages/react/src/select/list/SelectList.tsx",
+  "families": ["combobox", "autocomplete"]
+}
