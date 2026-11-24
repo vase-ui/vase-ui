@@ -1,0 +1,11 @@
+{
+  "id": "VUE-234",
+  "evidence": [
+    "https://drafts.csswg.org/cssom-view/#dom-element-scrollintoview",
+    "https://github.com/web-platform-tests/wpt/blob/04f5462752a0f2f4d74604da5b122606641fd86b/css/css-scroll-snap/scroll-padding-focus.html#L3",
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+  ],
+  "behavior": "After an arrow key, Home or End moves the focus to a tab, the whole tab shows in the list, inside the `scroll-padding` of the list and the `scroll-margin` of the tab. The list scrolls by the least distance. The page scrolls only when the tab is out of the view. The scroll of `focus()` differs in each browser: Chromium can leave a cut tab cut, and Firefox can center it. Base UI documents no scroll of the list.",
+  "dueWith": "packages/react/src/tabs/list/TabsList.tsx"
+}

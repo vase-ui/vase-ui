@@ -90,6 +90,9 @@ function onKeydown(event: KeyboardEvent, from: RootTab) {
     .flatMap((tab) => (tab.element ? [tab.element] : []))
     .sort(byDocumentOrder);
   const focusedTab = focusFirstOf(candidates(elements, from.element, step));
+  // The scroll of `focus()` differs in each browser and can leave the tab cut
+  // (test/measurements/tabs.test.ts).
+  focusedTab?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   const tab = root.tabs.find((candidate) => candidate.element === focusedTab);
   if (tab && !tab.disabled && props.activateOnFocus) root.select(tab.value, event);
 }
@@ -110,14 +113,14 @@ function candidates(elements: HTMLElement[], from: HTMLElement | null, step: Ste
 // render.
 function focusFirstOf(elements: HTMLElement[]) {
   return elements.find((candidate) => {
-    candidate.focus();
+    candidate.focus({ preventScroll: true });
     const rootNode = candidate.getRootNode();
     return 'activeElement' in rootNode && rootNode.activeElement === candidate;
   });
 }
 
-// The scroll of `focus()` reads the `scroll-padding` of the list and the `scroll-margin` of the tab.
-// This scroll reads them too.
+// The scroll of `scrollIntoView` with 'nearest' for a tab that fits in the list, on the list only
+// (test/measurements/tabs.test.ts).
 function showActiveTab() {
   const list = element.value;
   const tab = root.activeTab?.element;
