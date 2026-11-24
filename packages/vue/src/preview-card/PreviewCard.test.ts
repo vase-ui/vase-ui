@@ -432,10 +432,10 @@ describe('in the DOM', () => {
     expect(element).toHaveAttribute('data-instant', 'dismiss');
     unmount();
     mount(PreviewCardInTransition, { trigger: { delay: 0 } });
-    // `focus()` after a key gives `:focus-visible`. After a mouse press, only Chromium takes Shift
-    // as that key (test/measurements/preview-card.test.ts).
-    await userEvent.keyboard('{Shift}');
-    byId('a').focus();
+    // A repeat of this case starts after the press at its end, and after a press only Chromium
+    // takes Shift as a key for `focus()` (test/measurements/preview-card.test.ts). Tab works.
+    await userEvent.keyboard(TAB);
+    expect(document.activeElement).toBe(byId('a'));
     const second = await opened();
     expect(second).toHaveAttribute('data-instant', 'focus');
     await userEvent.click(byId('outside'));
