@@ -126,7 +126,7 @@ To style the parent dialog while a nested dialog is open, use the `[data-nested-
 
 The `initialFocus` and `finalFocus` props of `Dialog.Popup` set the element that gets the focus when the dialog opens and when it closes.
 
-Set a prop to `false` to move no focus. Or give a function that gets the type of the interaction and returns the element to focus. A modal dialog makes the rest of the page inert, so an element outside the popup cannot keep or get the focus at the open.
+Set a prop to `false` to move no focus. Or give a function that gets the type of the interaction and returns the element to focus. A modal dialog makes the rest of the page inert, so an element outside the popup cannot keep or get the focus at the open. The function of `finalFocus` runs after the update of the close, so it finds an element that the update renders.
 
 <DemoFrame>
   <DemoDialogFocusManagement />

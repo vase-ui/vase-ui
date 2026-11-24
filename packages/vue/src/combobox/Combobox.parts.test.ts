@@ -340,6 +340,34 @@ describe('the popup', () => {
     await waitFor(() => expect(popup()).toBe(null));
     expect(document.activeElement).toBe(input());
   });
+
+  test('a press on an item gives the element of `finalFocus` no ring after a key, and Enter gives it the ring', async () => {
+    await mountCombobox({ popup: { finalFocus: () => document.getElementById('outside') } });
+    const outside = document.getElementById('outside')!;
+    for (const pick of ['press', 'Enter']) {
+      input().focus();
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(popup()).not.toBe(null));
+      if (pick === 'press') await userEvent.click(byTestId('item-Apple')!);
+      else await userEvent.keyboard('{ArrowDown}{Enter}');
+      await waitFor(() => expect(document.activeElement).toBe(outside));
+      expect(outside.matches(':focus-visible'), pick).toBe(pick === 'Enter');
+    }
+  });
+
+  test('the focus stays on an element that code focuses after the close', async () => {
+    const outside = () => document.getElementById('outside')!;
+    await mountCombobox({
+      root: { onValueChange: () => void Promise.resolve().then(() => outside().focus()) },
+      popup: { finalFocus: () => document.getElementById('before') },
+    });
+    await userEvent.click(input());
+    await waitFor(() => expect(popup()).not.toBe(null));
+    await userEvent.click(byTestId('item-Apple')!);
+    await waitFor(() => expect(popup()).toBe(null));
+    await settle();
+    expect(document.activeElement).toBe(outside());
+  });
 });
 
 describe('the positioner', () => {

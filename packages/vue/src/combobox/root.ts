@@ -33,7 +33,7 @@ import {
 import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolveValueLabel';
 import { useList, type List, type ListItem } from '../list/list';
 import { useLocale } from '../locale-provider/part';
-import { usePopupFocus, type FocusTarget } from '../popup/focus';
+import { focusAs, usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
@@ -506,16 +506,25 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     tabIntoPopup: () => inputIsControl.value,
   });
   // An input that is the control keeps the focus while the popup is open, so the popup returns no
-  // focus at its close. A `finalFocus` of the developer still gets the focus, as in Base UI.
+  // focus at its close. A `finalFocus` of the developer still gets the focus, as in Base UI. Its
+  // target can be an element that the update of the close renders, so it waits for that update.
   watch(
     () => root.open,
     (open) => {
       const target = popupFocus.value.finalFocus;
       if (open || source.inline || !inputIsControl.value || target === undefined) return;
       if (root.reason === 'focus-out' || root.reason === 'outside-press') return;
-      const element = typeof target === 'function' ? target(root.closeInteraction) : target;
-      if (typeof element === 'object' && element?.isConnected)
-        element.focus({ preventScroll: true });
+      const doc = ownerDocument(controlInput.value);
+      const active = activeElement(doc);
+      void nextTick(() => {
+        // The focus is on another element, such as one that code focused after the close.
+        const now = activeElement(doc);
+        if (now && now !== doc.body && now !== active) return;
+        const element = typeof target === 'function' ? target(root.closeInteraction) : target;
+        if (typeof element === 'object' && element?.isConnected) {
+          focusAs(element, root.closeInteraction);
+        }
+      });
     },
     { flush: 'sync' },
   );

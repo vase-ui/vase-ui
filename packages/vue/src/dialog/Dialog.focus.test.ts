@@ -301,6 +301,24 @@ describe('the focus of a dialog', () => {
     expect(trigger).toHaveFocus();
   });
 
+  test('leaves the focus on an element that code focuses after the close', async () => {
+    mount(DialogParts, {
+      root: { modal: false },
+      close: {
+        'data-testid': 'close',
+        onClick: () =>
+          void Promise.resolve().then(() => document.getElementById('outside')!.focus()),
+      },
+    });
+    await nextTick();
+    await userEvent.click(document.querySelector<HTMLElement>('[data-key="t"]')!);
+    await opened();
+    await userEvent.click(get('close'));
+    await closed();
+    await waitSingleFrame();
+    expect(document.activeElement).toBe(document.getElementById('outside'));
+  });
+
   test('goes to the popup when a field that took the focus at its own mount leaves', async () => {
     const scene = reactive({ field: true });
     mount(DialogFieldFocusedAtMount, { scene });
