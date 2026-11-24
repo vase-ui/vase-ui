@@ -102,8 +102,9 @@ describe(':focus-visible of a link in its `focusin` listener', () => {
   test('of focus() follows the last input: true after a key, false after a mouse press', async () => {
     html(scene);
     const log = recordFocusin();
-    element('before').focus();
-    await userEvent.keyboard('{Shift}');
+    // Tab onto the button sets keyboard focus visibility after a mouse press in each browser.
+    await userEvent.keyboard('{Tab}');
+    expect(activeId()).toBe('before');
     element('link').focus();
     element('link').blur();
     await userEvent.click(element('before'));

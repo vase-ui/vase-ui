@@ -3,9 +3,11 @@
 // do not do it.
 import { afterEach, describe, expect, inject, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
+import { version } from 'vue';
 import MeasureHydratedList, { type MeasuredItem } from '../fixtures/MeasureHydratedList.vue';
 import { hydrate, renderOnServer, settle } from '../render';
-import { takeReportedMessages } from '../reportedMessages';
+import { isReportedMessage, takeReportedMessages } from '../reportedMessages';
+import type { hydrateMeasureList } from './hydrateMeasureList';
 
 let root: HTMLElement | undefined;
 
@@ -22,7 +24,12 @@ afterEach(() => {
 
 describe('a native date input', () => {
   test('Backspace empties a unit, so the input has no value', async () => {
-    const input = html('<input type="date" value="2026-11-14">').querySelector('input')!;
+    // On a repeat in WebKit, Backspace in an `<input type="date">` parsed by `innerHTML` navigates
+    // the frame back and closes the browser connection.
+    const input = html('').appendChild(document.createElement('input'));
+    input.type = 'date';
+    input.value = '2026-11-14';
+    expect(input.value).toBe('2026-11-14');
     input.focus();
     await userEvent.keyboard('{Backspace}');
     expect(input.value).toBe('');
@@ -249,13 +256,63 @@ describe('Vue hydrates a list of inputs and spans that differs from the server H
     },
   );
 
-  // Vue logs this message one time in a page, so the case is the only one of the file with it.
+  // Vue logs this message one time for each copy of its module (`hasLoggedMismatchError`), so each
+  // run hydrates in a frame of its own.
   test('another count: the DOM of the browser, and one message of a virtual DOM component also under `data-allow-mismatch`', async () => {
-    const { shown, messages } = await hydrateCase('another count', { allow: true, write: true });
-    expect(shown).toEqual(rightItems(CASES['another count']![1]));
-    expect(messages).toEqual(
-      isVaporFixture ? [] : ['console.error: Hydration completed but contains mismatches.'],
+    const [serverItems, clientItems] = CASES['another count']!;
+    const props = { allow: true, write: true };
+    const serverRoot = await renderOnServer('MeasureHydratedList', {
+      items: serverItems,
+      ...props,
+    });
+    const frame = document.createElement('iframe');
+    const loaded = new Promise<void>((resolve) =>
+      frame.addEventListener('load', () => resolve(), { once: true }),
     );
+    frame.srcdoc = '<!doctype html><html><body><div></div></body></html>';
+    html('').appendChild(frame);
+    await loaded;
+    const frameWindow = frame.contentWindow as Window & {
+      console: Console;
+      onFrameReady?: (fn: typeof hydrateMeasureList) => void;
+      onFrameError?: (error: unknown) => void;
+    };
+    Object.assign(frameWindow, {
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+    });
+    const messages: string[] = [];
+    for (const method of ['warn', 'error'] as const) {
+      frameWindow.console[method] = (...args: unknown[]) => {
+        const text = `console.${method}: ${args.map(String).join(' ')}`;
+        if (isReportedMessage(text, version)) messages.push(text);
+      };
+    }
+    const container = frame.contentDocument!.body.firstElementChild!;
+    container.innerHTML = serverRoot.innerHTML;
+    const moduleUrl = new URL('./hydrateMeasureList.ts', import.meta.url).href;
+    const hydrateInFrame = await new Promise<typeof hydrateMeasureList>((resolve, reject) => {
+      frameWindow.onFrameReady = resolve;
+      frameWindow.onFrameError = reject;
+      const script = frame.contentDocument!.createElement('script');
+      script.type = 'module';
+      script.textContent = `import(${JSON.stringify(moduleUrl)}).then((mod) => window.onFrameReady(mod.hydrateMeasureList), (err) => window.onFrameError(err));`;
+      frame.contentDocument!.head.appendChild(script);
+    });
+    const unmount = await hydrateInFrame(
+      inject('app'),
+      { items: clientItems, ...props },
+      container,
+    );
+    try {
+      expect(shownItems(container)).toEqual(rightItems(clientItems));
+      expect(messages).toEqual(
+        isVaporFixture ? [] : ['console.error: Hydration completed but contains mismatches.'],
+      );
+    } finally {
+      unmount();
+    }
   });
 
   test('without `data-allow-mismatch`, Vue warns for a text', async () => {
