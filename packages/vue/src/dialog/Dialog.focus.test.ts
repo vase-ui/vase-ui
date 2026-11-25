@@ -340,7 +340,7 @@ describe('the focus of a dialog', () => {
   test('a modal dialog that unmounts at its close gives the focus back to its opener', async () => {
     mount(DialogOpensDialog, { mode: 'unmount-on-close' });
     await nextTick();
-    // A click gives a button no focus in WebKit on macOS, so a key presses the opener.
+    // A click gives a button no focus in WebKit on macOS.
     get('opener').focus();
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(byTestId('close')).toHaveFocus());

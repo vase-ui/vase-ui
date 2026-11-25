@@ -26,7 +26,6 @@ interface ReturnChain {
   readonly targets: () => (HTMLElement | null)[];
   readonly settleFromChild: (childPopup: HTMLElement) => HTMLElement | null;
   closing: boolean;
-  /** This close returns the focus (not `focus-out` or `inputKeepsFocus`). */
   returnsFocus: boolean;
   settled: boolean;
 }
@@ -370,8 +369,8 @@ export function usePopupFocus(
       ...ownTargets(),
     ]);
     if (moved) return moved;
-    // When the popup that opened this one closes in the same task, such as a menu and its submenu,
-    // that popup runs its own close rules and `finalFocus`.
+    // A parent that closes in the same task, such as a menu and its submenu, applies its own close
+    // rules and `finalFocus`.
     if (parent?.closing) return parent.settleFromChild(popup);
     return focusFirst(doc, popup, inherited);
   }

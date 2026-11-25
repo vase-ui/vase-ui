@@ -525,7 +525,7 @@ describe('the handle', () => {
       const element = await opened();
       await waitFor(() => expect(element).toHaveFocus());
       handle.close();
-      // The return waits for the update of the close, and the open cancels it.
+      // The return waits for the close update.
       expect(element).toHaveFocus();
       handle.open('second');
       await waitFor(() => expect(element).toHaveFocus());

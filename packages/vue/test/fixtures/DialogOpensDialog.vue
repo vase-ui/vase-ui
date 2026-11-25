@@ -6,13 +6,6 @@ import { Popover } from '../../src/popover';
 type Mode =
   'chain' | 'unmount-on-close' | 'mount-from-dialog' | 'mount-from-popover' | 'in-place-popover';
 
-// Chained and conditional modal dialogs for focus return tests.
-// - `chain`: a button in the first modal dialog closes it and opens the second in one task.
-// - `unmount-on-close`: a `v-if` modal dialog unmounts itself at `openChange(false)`.
-// - `mount-from-dialog` / `mount-from-popover`: the first popup closes and mounts a `v-if` modal
-//   dialog with `defaultOpen`.
-// - `in-place-popover`: a disabled-portal popover inside the first modal dialog closes and opens
-//   the second modal dialog while the first stays open.
 defineProps({
   mode: { type: String as PropType<Mode>, default: 'chain' },
 });
