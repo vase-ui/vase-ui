@@ -43,12 +43,10 @@ const HOVER_POPUPS = new Set(['Tooltip', 'PreviewCard']);
 const DIALOG_POPUPS = new Set(['Dialog', 'Drawer']);
 const FIXTURES = Object.fromEntries(POPUPS.map((popup) => [popup, `Animated${popup}`]));
 
-/** Returns `true` when the popup opens on pointer hover and closes when the pointer moves away. */
 export function isHoverPopup(popup: string | null): boolean {
   return popup !== null && HOVER_POPUPS.has(popup);
 }
 
-/** Returns `true` when the check places the popup in the center of the viewport. */
 export function isDialogPopup(popup: string | null): boolean {
   return popup !== null && DIALOG_POPUPS.has(popup);
 }
@@ -69,18 +67,12 @@ const ANCHOR_ORIGIN = {
 const MARKER = 'popup';
 /** The time from the first visible frame of the enter, or from the close, to the interruption. */
 const INTERRUPTION_DELAY = 250;
-/** Where the pointer goes to close a hover popup: away from the trigger and from the popup. */
 const AWAY = { x: 8, y: 8 };
-/** How far the origin can be from the anchor, beyond the gap between the popup and the anchor. */
 const ORIGIN_TOLERANCE = 2;
 /** A popup grows when its smallest width in the enter is at most this part of its width at rest. */
 const GROWTH_LIMIT = 0.9;
 
-/**
- * The place of a dialog or a drawer in each library: the center of the viewport. A fixture has no
- * style but the animation, as a fixture of the timing run. With no style, a dialog or a drawer
- * shows at the top of the page, on the trigger.
- */
+/** Fixtures have no layout CSS, so without this style a dialog or drawer shows on the trigger. */
 const DIALOG_STYLE = `
 [data-bench='popup'] {
   position: fixed;
@@ -146,27 +138,20 @@ async function startRecording(page: Page): Promise<void> {
   );
 }
 
-/** The ids of the visible elements of the popup in a frame. */
 function shownIdList(frame: Frame): number[] {
   return (frame.elements[MARKER] ?? [])
     .filter((element) => element.visible)
     .map((element) => element.id);
 }
 
-/** The ids of the visible elements of the popup in a frame, such as `3`. */
 function shownIds(frame: Frame): string {
   return shownIdList(frame).join(',');
 }
 
 /**
- * Removes a wrong reading of WebKit from the frames. In the frame where a transition ends, WebKit
- * can give an opacity near the start of the transition (about 0.03 at an enter end, or about 0.97
- * at an exit end). At the end of an enter, the frame drops by more than `JUMP_LIMIT`, and the next
- * frame shows the same element at full opacity. At the end of an exit, the frame rises by more
- * than `JUMP_LIMIT` from `HIDDEN_LIMIT` or less to below `FULL_OPACITY`, and the element leaves
- * next (nothing shows, or a new element starts at `HIDDEN_LIMIT` or less). A real flash to full
- * opacity before removal stays. Chromium and Firefox give no such reading, so in their frames the
- * same change is a jump.
+ * In the frame where a transition ends, WebKit can report an opacity near the start (about 0.03 at
+ * enter end, 0.97 at exit end). Chromium and Firefox do not. `current < FULL_OPACITY` keeps a real
+ * flash to full opacity before removal.
  */
 export function withoutWebKitEndReadings(recording: Recording, engine: string): Recording {
   if (engine !== 'webkit') {
@@ -454,9 +439,8 @@ interface Place {
 }
 
 /**
- * The computed `transform-origin` of the popup that shows, its rectangle and that of its anchor,
- * after the end of each animation. Right after a transition of `transform` ends, WebKit can give the
- * rectangle of the first frame of the transition.
+ * Waits until no animation runs: right after a `transform` transition ends, WebKit can report the
+ * rectangle of the first frame.
  */
 async function readPlace(page: Page): Promise<Place | undefined> {
   await page.waitForFunction(() => document.getAnimations().length === 0, undefined, {
@@ -484,7 +468,6 @@ async function readPlace(page: Page): Promise<Place | undefined> {
   });
 }
 
-/** Where the popup is from its anchor: above it, below it, beside it or on it. */
 function sideOf({ popup, anchor }: Place): 'above' | 'below' | 'beside' | 'on' {
   if (popup.y + popup.height <= anchor.y + ORIGIN_TOLERANCE) {
     return 'above';
@@ -495,12 +478,6 @@ function sideOf({ popup, anchor }: Place): 'above' | 'below' | 'beside' | 'on' {
   return gapBetween(popup, anchor) > 0 ? 'beside' : 'on';
 }
 
-/**
- * The popup grows in its enter, and the point of its computed `transform-origin` is no further from
- * the anchor than the gap between them, plus `ORIGIN_TOLERANCE`. With `flipped`, the run first
- * finds the side where the popup opens. Then it puts the anchor at that edge of the viewport, and
- * the popup must open on the other side.
- */
 async function originAtAnchor(
   page: Page,
   popup: string | null,
@@ -564,12 +541,8 @@ async function originAtAnchor(
 }
 
 /**
- * The fixtures `Animated<Popup>`: `trigger` opens the popup `popup`, which has the animation. The
- * popup goes from the hidden style of `style.css` to opacity 1 and scale 1 in 500 ms, linear, and
- * back the same way. A press on the trigger and Escape open and close Dialog, Popover, Menu,
- * Select, Combobox, NavigationMenu and Drawer. The pointer on the trigger and away opens and
- * closes Tooltip and PreviewCard, with an open delay and a close delay of 0. A fixture whose
- * positioner anchors to a wrapper marks that element with `anchor`.
+ * Hover fixtures must set open and close delays to 0. A fixture whose positioner anchors to a
+ * wrapper marks that wrapper with `data-bench="anchor"`.
  */
 export const POPUP_ANIMATIONS: Group = {
   id: 'popup-animations',

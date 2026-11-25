@@ -10,7 +10,6 @@ import type { Frame, Recording } from './recorder.ts';
 
 const RECT = { x: 0, y: 0, width: 100, height: 100 };
 
-/** A recording of the marker `popup`, with one element (`null`: absent) and one frame each 16 ms. */
 function recording(...opacities: (number | null | { id: number; opacity: number })[]): Recording {
   const frames: Frame[] = opacities.map((entry, index) => {
     const item =
