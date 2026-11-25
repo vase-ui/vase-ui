@@ -97,13 +97,15 @@ const tracker = useSwipeTracker({
     opened = false;
     closed = null;
     movement = 0;
-    drawer.write({ x: 0, y: 0, progress: 1 });
-    drawer.setSwiping(true);
   },
   move(x, y, event) {
     movement = along(direction.value, x, y);
     if (!opened && movement >= 1) {
       opened = !root.request(true, 'swipe', event, element.value).isCanceled;
+      if (opened) {
+        drawer.write({ x: 0, y: 0, progress: 1 });
+        drawer.setSwiping(true);
+      }
     }
     follow();
   },

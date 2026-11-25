@@ -40,7 +40,7 @@ function elementProps() {
       role: 'presentation',
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      'data-swiping': drawer.swiping ? '' : undefined,
+      'data-swiping': !closed && drawer.swiping ? '' : undefined,
       style: {
         '--drawer-swipe-progress': progress,
         '--drawer-swipe-strength': held ? held.strength : 1,

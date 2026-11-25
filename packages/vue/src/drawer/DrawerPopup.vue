@@ -123,13 +123,13 @@ function elementProps() {
       'data-nested-drawer-open': state.value.nestedDrawerOpen ? '' : undefined,
       'data-nested-drawer-swiping': state.value.nestedDrawerSwiping ? '' : undefined,
       'data-swipe-direction': drawer.swipeDirection,
-      'data-swiping': drawer.swiping ? '' : undefined,
+      'data-swiping': !closed && drawer.swiping ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       style: {
         // The popup follows the pointer with no delay of its own transition.
-        transition: drawer.swiping ? 'none' : undefined,
+        transition: !closed && drawer.swiping ? 'none' : undefined,
         '--nested-drawers': drawer.nestedOpen,
         '--drawer-height':
           drawer.nestedPresent && drawer.height > 0 ? `${drawer.height}px` : undefined,
