@@ -53,14 +53,24 @@ watch(element, (viewport, _, onCleanup) => {
   drawer.setViewport(viewport);
   if (!viewport) return;
   const html = viewport.ownerDocument.documentElement;
-  const observer = new ResizeObserver(() =>
+  const measure = () =>
     drawer.setSizes({
       viewport: viewport.offsetHeight,
       rootFontSize: Number.parseFloat(getComputedStyle(html).fontSize),
-    }),
-  );
+    });
+  measure();
+  let frame = 0;
+  // A size change during observer delivery can resize an indent ancestor and cause a
+  // ResizeObserver loop error.
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(measure);
+  });
   observer.observe(viewport);
-  onCleanup(() => observer.disconnect());
+  onCleanup(() => {
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+  });
 });
 
 /** The selection of the document, when it has text of the popup. */

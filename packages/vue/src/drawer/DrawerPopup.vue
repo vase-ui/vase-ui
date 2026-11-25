@@ -65,10 +65,37 @@ watch(
 );
 watch(element, (popup, _, onCleanup) => {
   if (!popup) return;
-  const observer = new ResizeObserver(() => drawer.setSizes({ popup: popup.offsetHeight }));
+  const measure = () => drawer.setSizes({ popup: popup.offsetHeight });
+  measure();
+  let frame = 0;
+  // A size change during observer delivery can resize a parent drawer popup and cause a
+  // ResizeObserver loop error.
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(measure);
+  });
   observer.observe(popup);
-  onCleanup(() => observer.disconnect());
+  onCleanup(() => {
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+  });
 });
+// The popup sets height variables on its element directly. A render for those variables can reset
+// keyboard styles on a scroller inside the popup.
+watch(
+  [element, () => drawer.nestedPresent, () => drawer.height, () => drawer.frontmostHeight],
+  ([popup, nestedPresent, height, frontmostHeight]) => {
+    if (!popup) return;
+    if (nestedPresent && height > 0) popup.style.setProperty('--drawer-height', `${height}px`);
+    else popup.style.removeProperty('--drawer-height');
+    if (frontmostHeight > 0) {
+      popup.style.setProperty('--drawer-frontmost-height', `${frontmostHeight}px`);
+    } else {
+      popup.style.removeProperty('--drawer-frontmost-height');
+    }
+  },
+  { flush: 'post', immediate: true },
+);
 const removeLeaving = root.addLeaving(() => element.value);
 onUnmounted(removeLeaving);
 
@@ -96,10 +123,6 @@ function elementProps() {
         // The popup follows the pointer with no delay of its own transition.
         transition: drawer.swiping ? 'none' : undefined,
         '--nested-drawers': drawer.nestedOpen,
-        '--drawer-height':
-          drawer.nestedPresent && drawer.height > 0 ? `${drawer.height}px` : undefined,
-        '--drawer-frontmost-height':
-          drawer.frontmostHeight > 0 ? `${drawer.frontmostHeight}px` : undefined,
         '--drawer-snap-point-offset': `${drawer.swipeDirection === 'up' ? -offset : offset}px`,
         '--drawer-swipe-movement-x': `${sample.x}px`,
         '--drawer-swipe-movement-y': `${sample.y}px`,

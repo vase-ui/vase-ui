@@ -58,9 +58,18 @@ onMounted(() => {
   watch(
     elements,
     (observed, _, onCleanup) => {
-      const observer = new ResizeObserver(update);
+      let frame = 0;
+      // An update during observer delivery can resize the list or an ancestor and cause a
+      // ResizeObserver loop error.
+      const observer = new ResizeObserver(() => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(update);
+      });
       for (const target of observed) if (target) observer.observe(target);
-      onCleanup(() => observer.disconnect());
+      onCleanup(() => {
+        observer.disconnect();
+        cancelAnimationFrame(frame);
+      });
     },
     { immediate: true, flush: 'post' },
   );

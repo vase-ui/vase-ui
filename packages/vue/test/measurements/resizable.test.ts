@@ -409,8 +409,8 @@ describe('a ResizeObserver callback that changes the size of the items that it o
     return result;
   }
 
-  // The root measures at once for a delivery with the root, and in the next frame for a delivery
-  // of panels alone.
+  // The root measures in the next frame for each ResizeObserver delivery. Panels and observed
+  // ancestors then resize with no loop error.
   test('a change at once or in a microtask gives a loop error, unless the row is in the delivery; a change in the next frame gives none', async () => {
     const results: Record<string, string> = {};
     for (const withRow of [false, true]) {

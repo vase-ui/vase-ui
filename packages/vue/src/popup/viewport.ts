@@ -45,7 +45,8 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       };
       measure();
       let frame = 0;
-      // The positioner can take the popup's height. Resize that ancestor after observer delivery.
+      // The positioner can use the size of the popup. A change during observer delivery can resize
+      // that ancestor and cause a ResizeObserver loop error.
       const observer = new ResizeObserver(() => {
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(measure);

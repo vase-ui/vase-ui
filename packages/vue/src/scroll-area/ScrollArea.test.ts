@@ -394,6 +394,27 @@ describe('overflow', () => {
     await nextTick();
     expect(area).toHaveAttribute('data-has-overflow-y');
   });
+
+  test('content that grows to overflow gives no resize loop error when `data-has-overflow-y` changes the padding of a border-box viewport', async () => {
+    const css = document.head.appendChild(document.createElement('style'));
+    css.textContent = '.viewport[data-has-overflow-y] { padding-right: 16px; }';
+    onTestFinished(() => css.remove());
+    const scene = reactive({ width: 100, height: 100 });
+    const { area } = await mountArea({
+      scene,
+      viewport: { style: 'box-sizing: border-box; width: 100%; height: 100%' },
+    });
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    scene.height = 500;
+    await waitFor(() => expect(area).toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    expect(errors).toEqual([]);
+  });
 });
 
 describe('animations in the viewport', () => {

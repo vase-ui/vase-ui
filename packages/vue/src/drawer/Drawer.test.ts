@@ -286,6 +286,38 @@ describe('Drawer', () => {
       await closed();
       expect(log.some((entry) => entry.startsWith('snapPointChange'))).toBe(false);
     });
+
+    test('a viewport resize that updates `--drawer-swipe-progress` on an observed indent gives no resize loop error', async () => {
+      const indentStyle = document.head.appendChild(document.createElement('style'));
+      indentStyle.textContent =
+        '[data-testid="indent"] { height: calc(100px + var(--drawer-swipe-progress, 0) * 40px); }';
+      onTestFinished(() => indentStyle.remove());
+      const viewportProps = reactive<Props>({ style: 'position: static; height: 100px' });
+      await mountDrawer({
+        provider: true,
+        root: { defaultOpen: true, snapPoints: ['150px', 1] },
+        portal: { disabled: true },
+        viewport: viewportProps,
+        popup: { style: 'height: 300px' },
+      });
+      await opened();
+      const indent = get('indent');
+      const observer = new ResizeObserver(() => {});
+      observer.observe(indent);
+      onTestFinished(() => observer.disconnect());
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const errors: string[] = [];
+      const onError = (event: ErrorEvent) => errors.push(event.message);
+      window.addEventListener('error', onError);
+      onTestFinished(() => window.removeEventListener('error', onError));
+
+      viewportProps.style = 'position: static; height: 400px';
+      await waitFor(() =>
+        expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('1'),
+      );
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(errors).toEqual([]);
+    });
   });
 
   describe('nested drawers', () => {
