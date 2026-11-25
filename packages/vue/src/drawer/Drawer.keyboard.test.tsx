@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, nextTick, onMounted, shallowRef } from 'vue';
+import { defineComponent, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -199,11 +199,11 @@ function setFieldTop(field: HTMLElement, scroll: HTMLElement, top: number) {
   field.getBoundingClientRect = () => new DOMRect(0, top - scroll.scrollTop, 320, 40);
 }
 
-// React focuses an `autoFocus` element at the mount. `v-show` removes `display: none` in the post
-// flush of the update that mounts the slot, so the focus moves in `nextTick`.
+// React focuses an `autoFocus` element at the mount. A `ref` callback can run before the input is in
+// the document, so this component focuses it in `onMounted`.
 const FocusedInput = defineComponent(() => {
   const input = shallowRef<HTMLInputElement | null>(null);
-  onMounted(() => void nextTick(() => input.value?.focus()));
+  onMounted(() => input.value?.focus());
   return () => <input ref={input} data-testid="input" type="text" />;
 });
 
@@ -251,12 +251,13 @@ const KeyboardDrawer = defineComponent({
     open: { type: Boolean, default: true },
     modal: { type: [Boolean, String] as PropType<boolean | 'trap-focus'>, default: false },
     initialFocus: { type: Boolean, default: undefined },
+    portalDisabled: { type: Boolean, default: false },
   },
   setup(props, { slots }) {
     return () => (
       <Drawer.Root open={props.open} modal={props.modal}>
         <Drawer.VirtualKeyboardProvider>
-          <Drawer.Portal>
+          <Drawer.Portal disabled={props.portalDisabled}>
             <Drawer.Viewport data-testid="viewport">
               <Drawer.Popup data-testid="popup" initialFocus={props.initialFocus}>
                 {slots.default?.()}
@@ -2325,14 +2326,12 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     });
 
     await render(() => (
-      <KeyboardDrawer modal initialFocus={false}>
+      <KeyboardDrawer modal initialFocus={false} portalDisabled>
         <FocusedInput />
       </KeyboardDrawer>
     ));
 
-    await waitFor(() => {
-      expect(screen.getByTestId('input')).toHaveFocus();
-    });
+    expect(screen.getByTestId('input')).toHaveFocus();
     await waitFor(() => {
       expect(screen.getByTestId('viewport').style.getPropertyValue('--drawer-keyboard-inset')).toBe(
         '300px',

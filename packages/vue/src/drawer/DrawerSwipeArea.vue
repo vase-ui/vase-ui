@@ -101,9 +101,9 @@ const tracker = useSwipeTracker({
     movement = along(direction.value, x, y);
     if (!opened && movement >= 1) {
       opened = !root.request(true, 'swipe', event, element.value).isCanceled;
-      if (opened) {
-        drawer.write({ x: 0, y: 0, progress: 1 });
+      if (opened && root.open) {
         drawer.setSwiping(true);
+        if (!drawer.popupVisible) drawer.write({ x: 0, y: 0, progress: 1 });
       }
     }
     follow();
@@ -127,13 +127,21 @@ const tracker = useSwipeTracker({
   },
 });
 
-// A swipe ends when the area becomes disabled. A drawer that it opened stays open.
-watch(
-  () => props.disabled,
-  (disabled) => {
-    if (disabled && tracker.pressing) tracker.cancel();
-  },
-);
+// The swipe state starts once the drawer opens, and ends when the area becomes disabled or the
+// drawer closes.
+watch([() => props.disabled, () => root.open] as const, ([disabled, open], [, wasOpen]) => {
+  if (disabled && tracker.pressing) {
+    tracker.cancel();
+    return;
+  }
+  if (open && !wasOpen && opened && tracker.swiping.value && !drawer.swiping) {
+    drawer.setSwiping(true);
+    if (drawer.popupVisible) follow();
+    else drawer.write({ x: 0, y: 0, progress: 1 });
+  } else if (!open && wasOpen && opened && tracker.pressing) {
+    tracker.cancel();
+  }
+});
 
 // The popup shows after its `v-show` update, with its enter class and layout sizes.
 watch(

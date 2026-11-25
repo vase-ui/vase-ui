@@ -59,6 +59,7 @@ export interface DrawerLeaving {
   readonly offset: number | null;
   readonly expanded: boolean;
   readonly strength: number;
+  readonly height: number;
 }
 
 /** What a `Drawer.Root` gives to its parts and to each `Drawer.Root` in it. The properties are reactive. */
@@ -295,9 +296,16 @@ export function useDrawerRoot<Payload>(
   // Vue patches a popup and a backdrop that leave with `v-show`. They keep the swipe and snap
   // values of the close until the leave ends or the drawer opens again.
   watch(
-    [() => root.open, offset, liveExpanded, rest] as const,
-    ([open], [wasOpen, openOffset, openExpanded, openRest]) => {
-      if (open) {
+    [
+      () => root.open,
+      () => root.leaving || root.keepMounted,
+      offset,
+      liveExpanded,
+      rest,
+      frontmost,
+    ] as const,
+    ([open, keeps], [wasOpen, , openOffset, openExpanded, openRest, openHeight]) => {
+      if (open || !keeps) {
         leaving.value = null;
         pendingSwipe = null;
         return;
@@ -305,16 +313,15 @@ export function useDrawerRoot<Payload>(
       if (!wasOpen) return;
       const swipe = pendingSwipe;
       pendingSwipe = null;
-      if (root.leaving || root.keepMounted) {
-        leaving.value = {
-          x: swipe?.x ?? 0,
-          y: swipe?.y ?? 0,
-          progress: swipe?.progress ?? openRest,
-          offset: openOffset,
-          expanded: openExpanded,
-          strength: swipe?.strength ?? 1,
-        };
-      }
+      leaving.value = {
+        x: swipe?.x ?? 0,
+        y: swipe?.y ?? 0,
+        progress: swipe?.progress ?? openRest,
+        offset: openOffset,
+        expanded: openExpanded,
+        strength: swipe?.strength ?? 1,
+        height: openHeight,
+      };
     },
   );
 
@@ -423,8 +430,9 @@ export function useDrawerRoot<Payload>(
     (open) => {
       if (open) {
         drawer.clearDismiss();
-      } else if (swiping.value && !pendingSwipe) {
-        pendingSwipe = { x: sample.x, y: sample.y, progress: sample.progress, strength: 1 };
+      } else if (swiping.value) {
+        pendingSwipe ??= { x: sample.x, y: sample.y, progress: sample.progress, strength: 1 };
+        drawer.setSwiping(false);
       }
     },
     { flush: 'sync' },

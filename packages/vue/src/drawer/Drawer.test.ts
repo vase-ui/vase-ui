@@ -646,7 +646,7 @@ describe('Drawer', () => {
       ]);
     });
 
-    test('keeps the snap point offset, expanded state and backdrop progress while leaving', async () => {
+    test('keeps the snap point offset, expanded state and backdrop progress during the leave', async () => {
       const style = document.head.appendChild(document.createElement('style'));
       style.textContent = '.drawer-test-leave-active { transition-duration: 100s; }';
       onTestFinished(() => style.remove());
@@ -685,6 +685,33 @@ describe('Drawer', () => {
       expect(popup).not.toHaveAttribute('data-expanded');
       expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('300px');
       expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('1');
+    });
+
+    test('clears the held leave values after the leave ends, so a kept closed popup starts at rest', async () => {
+      const root = reactive<Props>({
+        open: true,
+        snapPoints: ['100px', 1],
+        defaultSnapPoint: '100px',
+        snapPoint: 1,
+        'onUpdate:open': (open: boolean) => (root.open = open),
+        'onUpdate:snapPoint': (point: DrawerSnapPoint | null) => (root.snapPoint = point),
+      });
+      const portal = reactive<Props>({ keepMounted: false });
+      await mountDrawer({
+        root,
+        portal,
+        viewport: { style: 'height: 600px' },
+        popup: { style: 'height: 400px' },
+      });
+      const popup = await opened();
+      await waitFor(() => expect(popup).toHaveAttribute('data-expanded'));
+      await userEvent.keyboard('{Escape}');
+      await closed();
+      expect(root.snapPoint).toBe('100px');
+      portal.keepMounted = true;
+      const closedPopup = await opened();
+      expect(closedPopup).toHaveAttribute('hidden');
+      expect(closedPopup).not.toHaveAttribute('data-expanded');
     });
   });
 

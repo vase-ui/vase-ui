@@ -87,8 +87,8 @@ watch(element, (popup, _, onCleanup) => {
   observer.observe(popup);
   onCleanup(() => observer.disconnect());
 });
-// A direct style write keeps a `ResizeObserver` height update from a second slot render at an
-// open (`test/measurements/drawer.test.ts`).
+// A direct write keeps a `ResizeObserver` update from a second slot render at an open. Vue keeps
+// an unbound style property (`test/measurements/drawer.test.ts`).
 watch(
   [element, () => drawer.frontmostHeight] as const,
   ([popup, frontmost]) => {
@@ -117,13 +117,13 @@ function elementProps() {
       'data-nested-drawer-open': state.value.nestedDrawerOpen ? '' : undefined,
       'data-nested-drawer-swiping': state.value.nestedDrawerSwiping ? '' : undefined,
       'data-swipe-direction': drawer.swipeDirection,
-      'data-swiping': !closed && drawer.swiping ? '' : undefined,
+      'data-swiping': drawer.swiping ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       style: {
         // The popup follows the pointer with no delay of its own transition.
-        transition: !closed && drawer.swiping ? 'none' : undefined,
+        transition: drawer.swiping ? 'none' : undefined,
         '--nested-drawers': drawer.nestedOpen,
         '--drawer-height':
           drawer.nestedPresent && drawer.height > 0 ? `${drawer.height}px` : undefined,

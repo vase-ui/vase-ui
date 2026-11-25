@@ -143,7 +143,7 @@ describe('a nested drawer', () => {
     expect(kept).toBe(`${parent.offsetHeight}px`);
   });
 
-  test('reopening a leaving nested drawer keeps the same popup and keeps the parent height', async () => {
+  test('an open while a nested drawer leaves keeps the same popup and the height of the parent', async () => {
     const style = document.head.appendChild(document.createElement('style'));
     style.textContent = '.drawer-test-leave-active { transition-duration: 100s; }';
     onTestFinished(() => style.remove());

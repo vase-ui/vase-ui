@@ -120,7 +120,7 @@ function dismiss(release: SwipeRelease, traveled: number, restore: () => void) {
   drawer.setDismiss(strength);
   drawer.setSwiping(false);
   root.request(false, 'swipe', release.event);
-  // The leaving state keeps the place of the release; the sample resets for the next open.
+  // `drawer.leaving` keeps the place of the release; the sample resets for the next open.
   void nextTick(() => {
     // A listener cancelled the close, or the parent kept the drawer open.
     if (root.open) {

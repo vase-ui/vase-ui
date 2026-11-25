@@ -35,17 +35,17 @@ function elementProps() {
   const closed = !root.open;
   const held = drawer.leaving;
   const progress = held ? held.progress : drawer.progress;
+  const height = progress > 0 ? (held ? held.height : drawer.frontmostHeight) : 0;
   return mergeProps(
     {
       role: 'presentation',
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      'data-swiping': !closed && drawer.swiping ? '' : undefined,
+      'data-swiping': drawer.swiping ? '' : undefined,
       style: {
         '--drawer-swipe-progress': progress,
         '--drawer-swipe-strength': held ? held.strength : 1,
-        '--drawer-height':
-          progress > 0 && drawer.frontmostHeight > 0 ? `${drawer.frontmostHeight}px` : undefined,
+        '--drawer-height': height > 0 ? `${height}px` : undefined,
       },
       onMousedown: keepFocus,
     },
