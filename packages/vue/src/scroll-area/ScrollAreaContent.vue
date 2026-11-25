@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mergeProps, useAttrs, watch } from 'vue';
+import { mergeProps, onUnmounted, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { injectScrollArea, injectViewport, stateAttributes } from './root';
 import type { ScrollAreaContentProps, ScrollAreaContentState } from './types';
@@ -12,10 +12,13 @@ defineSlots<{
   element?(scope: ElementSlotProps<ScrollAreaContentState>): unknown;
 }>();
 
-injectViewport();
+const viewport = injectViewport();
 const root = injectScrollArea('Content');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
+
+const remove = viewport.addContent();
+onUnmounted(remove);
 
 // The content can change its size with no change of the size of the viewport.
 watch(

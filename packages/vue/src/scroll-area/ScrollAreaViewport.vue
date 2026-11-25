@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onMounted, onUnmounted, provide, shallowRef, useAttrs, watch } from 'vue';
-import { useElement, type ElementSlotProps } from '../common/element';
+import { isElement, useElement, type ElementSlotProps } from '../common/element';
 import { styleDisableScrollbar } from '../common/styles';
 import { hasTabStop } from '../common/tabbable';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
@@ -17,7 +17,16 @@ defineSlots<{
 const root = injectScrollArea('Viewport');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-provide(viewportKey, true);
+const contents = shallowRef(0);
+provide(viewportKey, {
+  addContent() {
+    contents.value += 1;
+    return () => {
+      contents.value -= 1;
+      root.measure();
+    };
+  },
+});
 
 // Chromium makes a scroll container a tab stop only while it holds no tab stop, Firefox makes each
 // one a tab stop, and WebKit none (test/measurements/scroll-area.test.ts). The viewport follows
@@ -77,6 +86,38 @@ watch(
   element,
   (target, _, onCleanup) => {
     if (target) onCleanup(root.observe(target));
+  },
+  { flush: 'post' },
+);
+
+// With no `ScrollArea.Content`, the viewport watches its own content: `ResizeObserver` on its
+// element children for size changes, and a subtree `MutationObserver` for added or removed nodes
+// and direct text changes (test/measurements/scroll-area.test.ts).
+watch(
+  () => (contents.value === 0 ? element.value : null),
+  (target, _, onCleanup) => {
+    if (!target) return;
+    const observed = new Map<Node, () => void>();
+    const watchChild = (node: Node) => {
+      if (isElement(node)) observed.set(node, root.observe(node));
+    };
+    for (const child of target.children) watchChild(child);
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.target !== target) continue;
+        for (const node of record.removedNodes) {
+          observed.get(node)?.();
+          observed.delete(node);
+        }
+        for (const node of record.addedNodes) watchChild(node);
+      }
+      root.measure();
+    });
+    observer.observe(target, { childList: true, characterData: true, subtree: true });
+    onCleanup(() => {
+      observer.disconnect();
+      for (const stop of observed.values()) stop();
+    });
   },
   { flush: 'post' },
 );

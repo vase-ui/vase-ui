@@ -393,3 +393,56 @@ describe('a MutationObserver and a control that Vue hides', () => {
     expect(records).toEqual(['gone attributes class', 'shown attributes style']);
   });
 });
+
+describe('content changes in a scroll container', () => {
+  test('ResizeObserver on a scroll container does not report when content grows, and MutationObserver needs subtree to see direct text changes', async () => {
+    html(`
+      <div id="scroller" style="width: 200px; height: 100px; overflow: scroll">Short</div>
+      <div id="blockScroller" style="width: 200px; height: 100px; overflow: scroll">
+        <div id="box" style="height: 20px"></div>
+      </div>`);
+    const scroller = find('scroller');
+    const blockScroller = find('blockScroller');
+    const box = find('box');
+    const resized: string[] = [];
+    let settled = false;
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!settled) return;
+      for (const entry of entries) resized.push(entry.target.id);
+    });
+    resizeObserver.observe(scroller);
+    resizeObserver.observe(blockScroller);
+    resizeObserver.observe(box);
+    onTestFinished(() => resizeObserver.disconnect());
+
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    settled = true;
+
+    const shallow: string[] = [];
+    const deep: string[] = [];
+    const shallowObserver = new MutationObserver((list) => {
+      for (const record of list) shallow.push(record.type);
+    });
+    const deepObserver = new MutationObserver((list) => {
+      for (const record of list) deep.push(record.type);
+    });
+    shallowObserver.observe(scroller, { childList: true, characterData: true });
+    deepObserver.observe(scroller, { childList: true, characterData: true, subtree: true });
+    onTestFinished(() => {
+      shallowObserver.disconnect();
+      deepObserver.disconnect();
+    });
+
+    scroller.firstChild!.textContent = 'Line '.repeat(200);
+    box.style.height = '500px';
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+
+    expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    expect(blockScroller.scrollHeight).toBeGreaterThan(blockScroller.clientHeight);
+    expect(shallow).toEqual([]);
+    expect(deep).toEqual(['characterData']);
+    expect(resized).toEqual(['box']);
+  });
+});

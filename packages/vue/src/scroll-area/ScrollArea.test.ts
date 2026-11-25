@@ -7,6 +7,7 @@ import { dataAttributes } from '../../test/field';
 import { fireEvent } from '../../test/fireEvent';
 import ScrollAreaInSlots from '../../test/fixtures/ScrollAreaInSlots.vue';
 import ScrollAreaControls from '../../test/fixtures/ScrollAreaControls.vue';
+import ScrollAreaDirectContent from '../../test/fixtures/ScrollAreaDirectContent.vue';
 import ScrollAreaInTransition from '../../test/fixtures/ScrollAreaInTransition.vue';
 import ScrollAreaParts from '../../test/fixtures/ScrollAreaParts.vue';
 import ScrollAreaPartsAlone from '../../test/fixtures/ScrollAreaPartsAlone.vue';
@@ -930,6 +931,220 @@ describe('the tab stop of the viewport', () => {
       await waitFor(() => expect(viewport.tabIndex).toBe(-1));
     },
   );
+});
+
+describe('content without ScrollArea.Content', () => {
+  async function mountDirect(scene: Record<string, unknown>) {
+    const mounted = mount(ScrollAreaDirectContent, { scene });
+    const viewport = mounted.root.querySelector<HTMLElement>('.viewport')!;
+    const area = mounted.root.querySelector<HTMLElement>('.root')!;
+    const before = mounted.root.querySelector<HTMLElement>('.before')!;
+    await waitFor(() => expect(distance(viewport, 'y-end')).not.toBe(''));
+    await settle();
+    return { ...mounted, viewport, area, before };
+  }
+
+  test('text that grows from 1 to 60 lines after the mount gives tabindex 0, and 60 back to 1 gives -1 while a focused viewport keeps the focus', async () => {
+    const scene = reactive({ lines: 1 });
+    const { viewport, area, before } = await mountDirect(scene);
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.lines = 60;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(viewport);
+
+    scene.lines = 1;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    await settle();
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport).toHaveFocus();
+  });
+
+  test('content that grows to overflow while holding a control keeps tabindex -1', async () => {
+    const scene = reactive({ lines: 1, control: true });
+    const { root, viewport, area, before } = await mountDirect(scene);
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.lines = 60;
+    await waitFor(() => expect(area).toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    expect(viewport.tabIndex).toBe(-1);
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(root.querySelector('.control'));
+  });
+
+  test('text directly in the viewport counts when its text node changes', async () => {
+    const scene = reactive({ text: 'One line.' });
+    const { viewport, area } = await mountDirect(scene);
+    expect(viewport.children.length).toBe(0);
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.text = 'Line of text. '.repeat(200);
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+
+    scene.text = 'One line.';
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+  });
+
+  test('an element child that grows counts, at mount and when added after the mount, and leaves no resize observation on removal', async () => {
+    const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
+    onTestFinished(() => unobserve.mockRestore());
+    const scene = reactive({ box: true, boxHeight: 50 });
+    const { root, viewport, area } = await mountDirect(scene);
+    const firstBox = root.querySelector<HTMLElement>('.box')!;
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.boxHeight = 1000;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+    await settle();
+
+    scene.boxHeight = 50;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    await settle();
+
+    scene.box = false;
+    await settle();
+    expect(unobserve).toHaveBeenCalledWith(firstBox);
+
+    scene.box = true;
+    await settle();
+    const lateBox = root.querySelector<HTMLElement>('.box')!;
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.boxHeight = 1000;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+    await settle();
+
+    scene.box = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    expect(unobserve).toHaveBeenCalledWith(lateBox);
+  });
+
+  test('content inside a height 100% child that grows past the viewport counts, and ResizeObserver watches only direct children', async () => {
+    const resizeTargets: Element[] = [];
+    const originalResizeObserve = ResizeObserver.prototype.observe;
+    const resizeSpy = vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(function (
+      this: ResizeObserver,
+      target: Element,
+      options?: ResizeObserverOptions,
+    ) {
+      resizeTargets.push(target);
+      originalResizeObserve.call(this, target, options);
+    });
+    onTestFinished(() => resizeSpy.mockRestore());
+
+    const scene = reactive({ fill: true, lines: 1 });
+    const { root, viewport, area } = await mountDirect(scene);
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    expect(viewport.tabIndex).toBe(-1);
+
+    scene.lines = 60;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+    expect(new Set(resizeTargets)).toEqual(new Set([viewport, root.querySelector('.fill')]));
+
+    scene.lines = 1;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+  });
+
+  test('a viewport with a Content creates no extra observer and runs no measurement at a child change that keeps the size', async () => {
+    const resizeTargets: Element[] = [];
+    const originalResizeObserve = ResizeObserver.prototype.observe;
+    const resizeSpy = vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(function (
+      this: ResizeObserver,
+      target: Element,
+      options?: ResizeObserverOptions,
+    ) {
+      resizeTargets.push(target);
+      originalResizeObserve.call(this, target, options);
+    });
+    onTestFinished(() => resizeSpy.mockRestore());
+
+    const mutationTargets: Node[] = [];
+    const BrowserObserver = MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends BrowserObserver {
+        override observe(target: Node, options?: MutationObserverInit) {
+          if (target instanceof HTMLElement && target.classList.contains('viewport')) {
+            mutationTargets.push(target);
+          }
+          super.observe(target, options);
+        }
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const scene = reactive({ content: true, extra: false });
+    const { root, viewport } = await mountDirect(scene);
+    expect(mutationTargets).toEqual([]);
+    expect(resizeTargets).toHaveLength(2);
+    expect(new Set(resizeTargets)).toEqual(new Set([viewport, root.querySelector('.content')]));
+
+    const setProperty = vi.spyOn(viewport.style, 'setProperty');
+    onTestFinished(() => setProperty.mockRestore());
+    scene.extra = true;
+    await settle();
+    expect(setProperty).not.toHaveBeenCalled();
+  });
+
+  test('mounting Content stops direct-child observation, and unmounting Content measures again', async () => {
+    const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
+    onTestFinished(() => unobserve.mockRestore());
+    const observed = new Set<MutationObserver>();
+    const BrowserObserver = MutationObserver;
+    vi.stubGlobal(
+      'MutationObserver',
+      class extends BrowserObserver {
+        override observe(target: Node, options?: MutationObserverInit) {
+          if (target instanceof HTMLElement && target.classList.contains('viewport')) {
+            observed.add(this);
+          }
+          super.observe(target, options);
+        }
+        override disconnect() {
+          observed.delete(this);
+          super.disconnect();
+        }
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const scene = reactive({ content: false, contentHeight: 1000, box: true, boxHeight: 50 });
+    const { root, viewport, area } = await mountDirect(scene);
+    const box = root.querySelector<HTMLElement>('.box')!;
+    expect(observed.size).toBe(1);
+
+    scene.content = true;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(unobserve).toHaveBeenCalledWith(box);
+    // Only the tab-stop observer stays on the overflowing viewport with Content.
+    expect(observed.size).toBe(1);
+    await settle();
+
+    scene.box = false;
+    scene.content = false;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+  });
 });
 
 describe('lifetime', () => {

@@ -63,6 +63,12 @@ export interface ScrollAreaForParts {
   addCorner(): () => void;
 }
 
+/** What a viewport gives to its content. */
+export interface ScrollAreaViewportForContent {
+  /** Registers a `ScrollArea.Content` part and returns the function that removes it. */
+  addContent(): () => void;
+}
+
 export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area' : undefined,
 );
@@ -70,8 +76,7 @@ export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol(
 export const scrollbarKey: InjectionKey<{ readonly orientation: Orientation }> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area scrollbar' : undefined,
 );
-/** The mark that a viewport gives to its content. */
-export const viewportKey: InjectionKey<true> = Symbol(
+export const viewportKey: InjectionKey<ScrollAreaViewportForContent> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area viewport' : undefined,
 );
 
@@ -92,9 +97,11 @@ export function injectScrollbar() {
 }
 
 export function injectViewport() {
-  if (!inject(viewportKey, false)) {
+  const viewport = inject(viewportKey, null);
+  if (!viewport) {
     throw createError(56);
   }
+  return viewport;
 }
 
 const present = (value: boolean) => (value ? '' : undefined);
