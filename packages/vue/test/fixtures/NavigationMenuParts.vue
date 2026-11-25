@@ -133,7 +133,7 @@ defineExpose({ root: rootPart });
     <NavigationMenu.Portal v-else-if="withPortal.shown" v-bind="portal">
       <NavigationMenu.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <NavigationMenu.Positioner data-testid="positioner" v-bind="positioner">
-        <Transition v-bind="popupTransition ?? { css: false }" appear>
+        <Transition v-bind="popupTransition ?? { css: false }">
           <NavigationMenu.Popup data-testid="popup" v-bind="popup">
             <NavigationMenu.Arrow v-if="arrow" data-testid="arrow" v-bind="arrow" />
             <NavigationMenu.Viewport v-if="!noViewport" data-testid="viewport" v-bind="viewport" />

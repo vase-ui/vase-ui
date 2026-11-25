@@ -17,7 +17,7 @@ import '../../../behavior/style.css';
       </NavigationMenu.List>
       <NavigationMenu.Portal>
         <NavigationMenu.Positioner class="nav-positioner">
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <NavigationMenu.Popup data-bench="popup" class="bench-motion">
               <NavigationMenu.Arrow />
               <NavigationMenu.Viewport />

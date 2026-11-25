@@ -2,13 +2,20 @@ import { afterEach, describe, expect, inject, onTestFinished, test } from 'vites
 import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { NavigationMenuRootChangeEventDetails } from '@vase-ui/vue/navigation-menu';
+import NavigationMenuInTransition from '../../test/fixtures/NavigationMenuInTransition.vue';
 import NavigationMenuParts from '../../test/fixtures/NavigationMenuParts.vue';
 import NavigationMenuPartAlone from '../../test/fixtures/NavigationMenuPartAlone.vue';
 import NavigationMenuRouterLinks from '../../test/fixtures/NavigationMenuRouterLinks.vue';
 import NavigationMenuScoped from '../../test/fixtures/NavigationMenuScoped.vue';
 import NavigationMenuWithDialog from '../../test/fixtures/NavigationMenuWithDialog.vue';
 import TabsInNavigationMenu from '../../test/fixtures/TabsInNavigationMenu.vue';
-import { nextEvent } from '../../test/animation';
+import {
+  finishAnimations,
+  mostMatches,
+  nextEvent,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { movePointerThrough, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -961,27 +968,6 @@ describe('the content', () => {
     expect(byTestId('content-one')).toBe(null);
   });
 
-  test('a reopen while the popup leaves shows the new item in a new popup after the leave', async () => {
-    await mountMenu({ root: { defaultValue: 'one' }, popupTransition: { name: 'fade' } });
-    await shows('one');
-    const popup = await opened();
-    // The reopen and the check come in the task where the leave of 80 ms starts.
-    const atReopen = readWhen(
-      () => popup.classList.contains('fade-leave-active'),
-      async () => {
-        get('trigger-two').click();
-        await nextTick();
-        return popup.contains(byTestId('content-one'));
-      },
-    );
-    await userEvent.click(byId('outside'));
-    expect(await atReopen).toBe(true);
-    await waitFor(() => expect(popup.isConnected).toBe(false));
-    const next = await shows('two');
-    expect(get('popup')).not.toBe(popup);
-    expect(get('popup').contains(next)).toBe(true);
-  });
-
   test('a portal of a nested root goes to the target of the portal of its parent', async () => {
     const container = document.body.appendChild(document.createElement('div'));
     try {
@@ -1090,6 +1076,22 @@ describe('the size', () => {
     observer.disconnect();
     expect(values).not.toContain('0px');
     expect(get('popup').offsetWidth).toBe(get('content-one').offsetWidth);
+  });
+
+  test('a disabled portal open at the mount sizes the positioner from the content', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      portal: { disabled: true },
+      positioner: {
+        style: 'width: var(--positioner-width); height: var(--positioner-height)',
+      },
+      popup: { class: 'sized', style: 'border: 1px solid' },
+    });
+    await shows('one');
+    await frame();
+    await frame();
+    expect(get('positioner').style.getPropertyValue('--positioner-width')).toBe('202px');
+    expect(get('popup').offsetWidth).toBe(202);
   });
 
   test('the window that changes its size gives the positioner data-instant for 100 ms', async () => {
@@ -1355,6 +1357,338 @@ describe('a dialog in a content', () => {
     await userEvent.click(get('dialog-button'));
     await wait(50);
     expect(get('trigger')).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
+describe('a popup in a <Transition>', () => {
+  test('an open while the menu leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+    const log = new Set<string>();
+    const root = reactive<Props>({ modelValue: 'one' });
+    mount(NavigationMenuInTransition, {
+      root,
+      popup: { class: 'slow' },
+      backdrop: { class: 'slow' },
+      log,
+    });
+    const first = await opened();
+    const backdrop = get('backdrop');
+    await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
+    root.modelValue = null;
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = [first, backdrop].map(shownOpacity);
+    root.modelValue = 'one';
+    const frames = await opacityUntilRest([first, backdrop]);
+    expect(get('popup')).toBe(first);
+    expect(get('backdrop')).toBe(backdrop);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave') || log.has('backdrop-after-leave')).toBe(false);
+    frames.forEach((opacities, index) => {
+      expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+      expect(opacities.at(-1)).toBe(1);
+    });
+  });
+
+  test('an open on another trigger while the popup leaves keeps the popup, goes back from where it is, moves to that trigger in the first frame, and updates its label', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { defaultValue: 'one' },
+      popup: { class: 'slow' },
+      log,
+    });
+    await shows('one');
+    await placed();
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    get('trigger-two').click();
+    await nextTick();
+    const firstFrame = await new Promise<{
+      offset: number;
+      hasTwo: boolean;
+      labelledby: string | null;
+    }>((resolve) =>
+      requestAnimationFrame(() => {
+        const box = get('positioner').getBoundingClientRect();
+        const anchor = get('trigger-two').getBoundingClientRect();
+        resolve({
+          offset: box.left + box.width / 2 - (anchor.left + anchor.width / 2),
+          hasTwo: first.contains(byTestId('content-two')),
+          labelledby: first.getAttribute('aria-labelledby'),
+        });
+      }),
+    );
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(get('popup')).toBe(first);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+    expect(firstFrame.hasTwo).toBe(true);
+    expect(firstFrame.labelledby).toBe('trigger-two');
+    expect(Math.abs(firstFrame.offset)).toBeLessThan(1);
+  });
+
+  test('an open on another trigger while the popup leaves animates its size from the old content to the new content', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { defaultValue: 'one' },
+      popup: { class: 'nav-sized slow' },
+      log,
+    });
+    await shows('one');
+    await placed();
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const widths: string[] = [];
+    const widthObserver = new MutationObserver(() =>
+      widths.push(first.style.getPropertyValue('--popup-width')),
+    );
+    widthObserver.observe(first, { attributeFilter: ['style'] });
+    onTestFinished(() => widthObserver.disconnect());
+    const transitions: string[] = [];
+    const onRun = (event: TransitionEvent) => transitions.push(event.propertyName);
+    first.addEventListener('transitionrun', onRun);
+    onTestFinished(() => first.removeEventListener('transitionrun', onRun));
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    transitions.length = 0;
+    get('trigger-two').click();
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(get('popup')).toBe(first);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+    expect(widths).toContain('200px');
+    expect(widths).toContain('300px');
+    expect(widths.lastIndexOf('300px')).toBeGreaterThan(widths.indexOf('200px'));
+    expect(transitions).toContain('width');
+    expect(get('positioner').style.getPropertyValue('--positioner-width')).toBe('300px');
+    await waitFor(() => expect(first.style.getPropertyValue('--popup-width')).toBe(''));
+    expect(first.offsetWidth).toBe(300);
+  });
+
+  test('a hover open with `delay` that closes after `closeDelay` reopens on another trigger during the leave with no delay, and goes back from where it is', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { delay: 60, closeDelay: 60 },
+      popup: { class: 'slow' },
+      log,
+    });
+    await nextTick();
+    await userEvent.hover(get('trigger-one'));
+    await shows('one');
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    await userEvent.hover(get('link-blog'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    await userEvent.hover(get('trigger-two'));
+    await shows('two');
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(get('popup')).toBe(first);
+    expect(first.contains(get('content-two'))).toBe(true);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+  });
+
+  test('a press on another navigation menu while the first leaves keeps the old content and label in the leaving popup until its leave ends', async () => {
+    mount(NavigationMenuInTransition, {
+      popup: { class: 'slow', 'data-testid': 'popup-a' },
+      triggers: { one: { id: 'a-one', 'data-testid': 'a-trigger-one' } },
+      contents: { one: { 'data-testid': 'a-content-one' } },
+    });
+    mount(NavigationMenuInTransition, {
+      popup: { class: 'slow', 'data-testid': 'popup-b' },
+      triggers: {
+        one: { id: 'b-one', 'data-testid': 'b-trigger-one', style: 'margin-top: 200px' },
+      },
+      contents: { one: { 'data-testid': 'b-content-one' } },
+    });
+    await nextTick();
+    await userEvent.click(get('a-trigger-one'));
+    await waitFor(() => expect(byTestId('a-content-one')).not.toBe(null));
+    const popupA = get('popup-a');
+    const contentA = get('a-content-one');
+    await finishAnimations(popupA);
+    await userEvent.click(get('b-trigger-one'));
+    await waitFor(() => expect(popupA).toHaveClass('nav-leave-leave-active'));
+    await waitFor(() => expect(byTestId('b-content-one')).not.toBe(null));
+    await nextTick();
+    expect(popupA.contains(contentA)).toBe(true);
+    expect(contentA).not.toHaveAttribute('hidden');
+    expect(popupA).toHaveAttribute('aria-labelledby', 'a-one');
+    expect(popupA).toHaveAttribute('inert');
+    expect(get('popup-b').contains(get('b-content-one'))).toBe(true);
+    await finishAnimations(popupA);
+    await waitFor(() => expect(popupA.isConnected).toBe(false));
+    expect(contentA.isConnected).toBe(false);
+    expect(get('popup-b').isConnected).toBe(true);
+  });
+
+  test('a hover on another trigger while the popup leaves opens its item with no delay in the same popup', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { delay: 10_000, closeDelay: 0 },
+      popup: { class: 'slow' },
+      log,
+    });
+    await nextTick();
+    await userEvent.click(get('trigger-one'));
+    await shows('one');
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(first).toHaveClass('nav-leave-leave-active'));
+    await userEvent.hover(get('trigger-two'));
+    await shows('two');
+    expect(get('popup')).toBe(first);
+    expect(first.contains(get('content-two'))).toBe(true);
+    expect(log.has('after-leave')).toBe(false);
+  });
+
+  test('a close keeps the leaving content and label in the popup until the leave ends', async () => {
+    const root = reactive<Props>({ modelValue: 'one' });
+    mount(NavigationMenuInTransition, { root, popup: { class: 'slow' } });
+    const content = await shows('one');
+    const element = await opened();
+    await finishAnimations(element);
+    root.modelValue = null;
+    await waitFor(() => expect(element).toHaveClass('nav-leave-leave-active'));
+    await nextTick();
+    expect(element.contains(content)).toBe(true);
+    expect(content).not.toHaveAttribute('hidden');
+    expect(element).toHaveAttribute('aria-labelledby', 'trigger-one');
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(content.isConnected).toBe(false);
+  });
+
+  test('a close and an open in one task keep the popup and the focus in its content', async () => {
+    const root = reactive<Props>({ modelValue: 'one' });
+    mount(NavigationMenuInTransition, { root, popup: { class: 'slow' } });
+    await shows('one');
+    await placed();
+    const first = await opened();
+    await finishAnimations(first);
+    get('link-one-a').focus();
+    expect(document.activeElement).toBe(get('link-one-a'));
+    root.modelValue = null;
+    root.modelValue = 'one';
+    await nextTick();
+    await frame();
+    await frame();
+    expect(get('popup')).toBe(first);
+    expect(document.activeElement).toBe(get('link-one-a'));
+  });
+
+  test('Escape returns the focus to the trigger while the popup leaves, and a reopen by key keeps the popup so Tab enters the content', async () => {
+    mount(NavigationMenuInTransition, { popup: { class: 'slow' } });
+    await nextTick();
+    await userEvent.click(get('trigger-one'));
+    await shows('one');
+    await placed();
+    const first = await opened();
+    await finishAnimations(first);
+    get('link-one-a').focus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(first).toHaveClass('nav-leave-leave-active'));
+    await waitFor(() => expect(document.activeElement).toBe(get('trigger-one')));
+    await userEvent.keyboard('{ArrowDown}');
+    await shows('one');
+    expect(get('popup')).toBe(first);
+    await tab();
+    expect(document.activeElement).toBe(get('link-one-a'));
+  });
+
+  test('the content of the popup stays mounted until the leave ends', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({ modelValue: 'one' });
+    mount(NavigationMenuInTransition, {
+      root,
+      popup: { class: 'slow' },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const content = await shows('one');
+    const element = await opened();
+    await finishAnimations(element);
+    await waitFor(() => expect(log).toContain('after-enter'));
+    root.modelValue = null;
+    await waitFor(() => expect(element).toHaveClass('nav-leave-leave-active'));
+    await nextTick();
+    expect(log).not.toContain('child unmounted');
+    expect(content.isConnected).toBe(true);
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log.slice(-2)).toEqual(['after-leave', 'child unmounted']);
+    expect(content.isConnected).toBe(false);
+  });
+
+  test('with `:css="false"`, the enter runs once with no `appear`, and the popup leaves when `done` runs', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({ modelValue: 'one' });
+    let endLeave = () => {};
+    mount(NavigationMenuInTransition, {
+      root,
+      jsHooks: {
+        enter(done: () => void) {
+          log.push('enter');
+          done();
+        },
+        leave(done: () => void) {
+          log.push('leave');
+          endLeave = done;
+        },
+      },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const element = await opened();
+    await waitFor(() => expect(log).toEqual(['before-enter', 'enter', 'after-enter']));
+    root.modelValue = null;
+    await waitFor(() => expect(log).toContain('leave'));
+    expect(element.isConnected).toBe(true);
+    expect(log).not.toContain('child unmounted');
+    endLeave();
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log).toEqual([
+      'before-enter',
+      'enter',
+      'after-enter',
+      'leave',
+      'after-leave',
+      'child unmounted',
+    ]);
+  });
+
+  test('a kept content stays in the leaving popup until the leave ends, then returns hidden to its item', async () => {
+    const root = reactive<Props>({ modelValue: 'one' });
+    mount(NavigationMenuInTransition, {
+      root,
+      contents: { one: { keepMounted: true } },
+      popup: { class: 'slow' },
+    });
+    const content = await shows('one');
+    const element = await opened();
+    await finishAnimations(element);
+    root.modelValue = null;
+    await waitFor(() => expect(element).toHaveClass('nav-leave-leave-active'));
+    await nextTick();
+    expect(element.contains(content)).toBe(true);
+    expect(content).not.toHaveAttribute('hidden');
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    await waitFor(() => expect(content.parentElement!.localName).toBe('li'));
+    expect(content).toHaveAttribute('hidden');
   });
 });
 
