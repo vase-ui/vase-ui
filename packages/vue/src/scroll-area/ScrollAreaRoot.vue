@@ -185,6 +185,13 @@ function measure() {
 
 // A part that mounts or leaves, a new overflow and a new corner size change the tracks. The
 // measurement runs before the next paint.
+watch(
+  viewport,
+  (target) => {
+    if (target) measure();
+  },
+  { flush: 'post' },
+);
 watch(thresholds, measure, { flush: 'post' });
 watch(
   [
