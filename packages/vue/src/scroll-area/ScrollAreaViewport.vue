@@ -23,7 +23,7 @@ provide(viewportKey, {
     contents.value += 1;
     return () => {
       contents.value -= 1;
-      root.measure();
+      root.scheduleMeasure();
     };
   },
 });
@@ -90,29 +90,45 @@ watch(
   { flush: 'post' },
 );
 
-// `ResizeObserver` on a scroll container does not report when its content changes size, and
-// `MutationObserver` needs `subtree` to see direct text changes (test/measurements/scroll-area.test.ts).
+// `ResizeObserver` on a scroll container does not report when content grows
+// (test/measurements/scroll-area.test.ts). Each direct `Text` node gets its own observation so
+// nested text changes cause no measurement.
 watch(
   () => (contents.value === 0 ? element.value : null),
   (target, _, onCleanup) => {
     if (!target) return;
     const observed = new Map<Node, () => void>();
-    const watchChild = (node: Node) => {
-      if (isElement(node)) observed.set(node, root.observe(node));
-    };
-    for (const child of target.children) watchChild(child);
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.target !== target) continue;
-        for (const node of record.removedNodes) {
-          observed.get(node)?.();
-          observed.delete(node);
-        }
-        for (const node of record.addedNodes) watchChild(node);
+    const texts = new Set<Node>();
+    const watchNode = (node: Node) => {
+      if (isElement(node)) {
+        observed.set(node, root.observe(node));
+      } else if (node.nodeType === 3) {
+        texts.add(node);
+        observer.observe(node, { characterData: true });
       }
-      root.measure();
+    };
+    const observer = new MutationObserver((records) => {
+      let removedText = false;
+      for (const record of records) {
+        for (const node of record.removedNodes) {
+          if (texts.delete(node)) {
+            removedText = true;
+          } else {
+            observed.get(node)?.();
+            observed.delete(node);
+          }
+        }
+        for (const node of record.addedNodes) watchNode(node);
+      }
+      if (removedText) {
+        observer.disconnect();
+        observer.observe(target, { childList: true });
+        for (const text of texts) observer.observe(text, { characterData: true });
+      }
+      root.scheduleMeasure();
     });
-    observer.observe(target, { childList: true, characterData: true, subtree: true });
+    observer.observe(target, { childList: true });
+    for (const child of target.childNodes) watchNode(child);
     onCleanup(() => {
       observer.disconnect();
       for (const stop of observed.values()) stop();

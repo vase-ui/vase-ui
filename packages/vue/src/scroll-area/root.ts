@@ -47,6 +47,8 @@ export interface ScrollAreaForParts {
   thumb(vertical: boolean): HTMLElement | null;
   /** Reads the viewport and the tracks, and writes the state, the variables and the thumbs. */
   measure(): void;
+  /** Schedules a measurement on the next animation frame, at most one time in a frame. */
+  scheduleMeasure(): void;
   /** Measures when the size of `element` changes. Returns the function that stops it. */
   observe(element: Element): () => void;
   /** Makes the axis scrolling until 500 ms pass with no other call. */

@@ -7,9 +7,11 @@ defineProps({
     type: Object as PropType<{
       lines?: number;
       text?: string;
+      secondText?: string;
       box?: boolean;
       boxHeight?: number;
-      fill?: boolean;
+      wrap?: boolean;
+      nestedText?: string;
       control?: boolean;
       content?: boolean;
       contentHeight?: number;
@@ -30,7 +32,10 @@ defineProps({
       </ScrollArea.Content>
       <template v-else-if="scene.text !== undefined">{{ scene.text }}</template>
       <div v-else-if="scene.box" class="box" :style="{ height: `${scene.boxHeight ?? 50}px` }" />
-      <div v-else-if="scene.fill" class="fill" style="height: 100%">
+      <div v-else-if="scene.wrap" class="wrap" style="min-height: 100%">
+        <div class="fixed-row" style="height: 20px; overflow: hidden">
+          <span class="nested-text">{{ scene.nestedText ?? 'Initial' }}</span>
+        </div>
         <p v-for="line in scene.lines ?? 0" :key="line" style="margin: 0">
           Line {{ line }} of a text.
         </p>
@@ -41,6 +46,7 @@ defineProps({
           Line {{ line }} of a text.
         </p>
       </template>
+      <template v-if="scene.secondText !== undefined">{{ scene.secondText }}</template>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 </template>

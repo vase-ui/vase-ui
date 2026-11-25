@@ -934,6 +934,11 @@ describe('the tab stop of the viewport', () => {
 });
 
 describe('content without ScrollArea.Content', () => {
+  async function nextFrames() {
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+  }
+
   async function mountDirect(scene: Record<string, unknown>) {
     const mounted = mount(ScrollAreaDirectContent, { scene });
     const viewport = mounted.root.querySelector<HTMLElement>('.viewport')!;
@@ -979,8 +984,8 @@ describe('content without ScrollArea.Content', () => {
     expect(document.activeElement).toBe(root.querySelector('.control'));
   });
 
-  test('text directly in the viewport counts when its text node changes', async () => {
-    const scene = reactive({ text: 'One line.' });
+  test('text directly in the viewport counts at mount and when added after the mount, and runs no measurement after removal', async () => {
+    const scene = reactive<{ text?: string; secondText?: string }>({ text: 'One line.' });
     const { viewport, area } = await mountDirect(scene);
     expect(viewport.children.length).toBe(0);
     expect(area).not.toHaveAttribute('data-has-overflow-y');
@@ -993,6 +998,30 @@ describe('content without ScrollArea.Content', () => {
     scene.text = 'One line.';
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
     expect(area).not.toHaveAttribute('data-has-overflow-y');
+
+    scene.secondText = 'More.';
+    await settle();
+    const addedText = [...viewport.childNodes].find(
+      (node) => node.nodeType === 3 && node.textContent === 'More.',
+    )!;
+    scene.secondText = 'Late text. '.repeat(200);
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
+
+    scene.secondText = undefined;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    await nextFrames();
+
+    // A change of the removed text node runs no measurement, while the first text node still counts.
+    const setProperty = vi.spyOn(viewport.style, 'setProperty');
+    onTestFinished(() => setProperty.mockRestore());
+    addedText.textContent = 'Detached '.repeat(200);
+    await nextFrames();
+    expect(setProperty).not.toHaveBeenCalled();
+
+    scene.text = 'Line of text. '.repeat(200);
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
   });
 
   test('an element child that grows counts, at mount and when added after the mount, and leaves no resize observation on removal', async () => {
@@ -1033,7 +1062,7 @@ describe('content without ScrollArea.Content', () => {
     expect(unobserve).toHaveBeenCalledWith(lateBox);
   });
 
-  test('content inside a height 100% child that grows past the viewport counts, and ResizeObserver watches only direct children', async () => {
+  test('a direct wrapper that grows with nested content counts, ResizeObserver watches only direct children, and nested text changes that keep its size run no measurement', async () => {
     const resizeTargets: Element[] = [];
     const originalResizeObserve = ResizeObserver.prototype.observe;
     const resizeSpy = vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(function (
@@ -1046,19 +1075,95 @@ describe('content without ScrollArea.Content', () => {
     });
     onTestFinished(() => resizeSpy.mockRestore());
 
-    const scene = reactive({ fill: true, lines: 1 });
+    const scene = reactive({ wrap: true, lines: 1, nestedText: 'Initial' });
     const { root, viewport, area } = await mountDirect(scene);
     expect(area).not.toHaveAttribute('data-has-overflow-y');
     expect(viewport.tabIndex).toBe(-1);
 
+    const setProperty = vi.spyOn(viewport.style, 'setProperty');
+    onTestFinished(() => setProperty.mockRestore());
+    scene.nestedText = 'Updated';
+    await nextFrames();
+    expect(setProperty).not.toHaveBeenCalled();
+
     scene.lines = 60;
     await waitFor(() => expect(viewport.tabIndex).toBe(0));
     expect(area).toHaveAttribute('data-has-overflow-y');
-    expect(new Set(resizeTargets)).toEqual(new Set([viewport, root.querySelector('.fill')]));
+    expect(new Set(resizeTargets)).toEqual(new Set([viewport, root.querySelector('.wrap')]));
+    await nextFrames();
+
+    setProperty.mockClear();
+    scene.nestedText = 'Updated again';
+    await nextFrames();
+    expect(setProperty).not.toHaveBeenCalled();
 
     scene.lines = 1;
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
     expect(area).not.toHaveAttribute('data-has-overflow-y');
+  });
+
+  test('direct mutations in one frame run at most one measurement in that frame', async () => {
+    const scene = reactive<{ text?: string; lines?: number }>({ text: 'One line.' });
+    const { viewport } = await mountDirect(scene);
+    const byFrame = new Map<unknown, number>();
+    const original = viewport.style.setProperty.bind(viewport.style);
+    const setProperty = vi
+      .spyOn(viewport.style, 'setProperty')
+      .mockImplementation((name, value, priority) => {
+        if (name === '--scroll-area-overflow-y-end') {
+          const frame = document.timeline.currentTime;
+          byFrame.set(frame, (byFrame.get(frame) ?? 0) + 1);
+        }
+        original(name, value, priority);
+      });
+    onTestFinished(() => setProperty.mockRestore());
+
+    // Ten microtask-separated direct text changes in one frame coalesce into one measurement.
+    const textNode = [...viewport.childNodes].find(
+      (node) => node.nodeType === 3 && node.textContent === 'One line.',
+    )!;
+    for (let step = 1; step <= 10; step += 1) {
+      textNode.textContent = 'Line of text. '.repeat(step * 20);
+      await Promise.resolve();
+    }
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    await settle();
+    expect(Math.max(...byFrame.values())).toBe(1);
+
+    // Direct element additions run at most one measurement in a frame across rAF and ResizeObserver.
+    byFrame.clear();
+    scene.text = undefined;
+    await waitFor(() => expect(viewport.tabIndex).toBe(-1));
+    await nextFrames();
+    await settle();
+    byFrame.clear();
+    scene.lines = 60;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    await nextFrames();
+    expect(Math.max(...byFrame.values())).toBe(1);
+  });
+
+  test('an unmount or a scroll while a direct-content measurement frame waits cancels that frame', async () => {
+    const scene = reactive({ text: 'One line.' });
+    const mounted = await mountDirect(scene);
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const before = vi.getTimerCount();
+    scene.text = 'Line of text. '.repeat(200);
+    await nextTick();
+    await Promise.resolve();
+    expect(vi.getTimerCount()).toBe(before + 1);
+    await fireEvent.scroll(mounted.viewport);
+    // `onScroll` starts the 100 ms `userScrollEnd` timer and cancels the pending frame.
+    expect(vi.getTimerCount()).toBe(before + 1);
+    scene.text = 'One line.';
+    await nextTick();
+    await Promise.resolve();
+    expect(vi.getTimerCount()).toBe(before + 2);
+    mounted.unmount();
+    expect(vi.getTimerCount()).toBe(before);
   });
 
   test('a viewport with a Content creates no extra observer and runs no measurement at a child change that keeps the size', async () => {
@@ -1100,7 +1205,7 @@ describe('content without ScrollArea.Content', () => {
     const setProperty = vi.spyOn(viewport.style, 'setProperty');
     onTestFinished(() => setProperty.mockRestore());
     scene.extra = true;
-    await settle();
+    await nextFrames();
     expect(setProperty).not.toHaveBeenCalled();
   });
 

@@ -117,10 +117,34 @@ function readAxis(target: HTMLElement, vertical: boolean, rtl: boolean) {
   };
 }
 
+let measureFrame = 0;
+let measuredAt: CSSNumberish | null = null;
+
+function frameTime() {
+  const target = viewport.value;
+  return target ? target.ownerDocument.timeline.currentTime : null;
+}
+
+function cancelMeasureFrame() {
+  if (!measureFrame) return;
+  cancelAnimationFrame(measureFrame);
+  measureFrame = 0;
+}
+
+function scheduleMeasure() {
+  if (measureFrame) return;
+  measureFrame = requestAnimationFrame(() => {
+    measureFrame = 0;
+    measure();
+  });
+}
+
 function measure() {
+  cancelMeasureFrame();
   const target = viewport.value;
   // An element with `display: none` has no box, so it has no sizes to read.
   if (!target || target.getClientRects().length === 0) return;
+  measuredAt = frameTime();
   const rtl = getComputedStyle(target).direction === 'rtl';
   const x = readAxis(target, false, rtl);
   const y = readAxis(target, true, rtl);
@@ -168,6 +192,7 @@ function measure() {
 
 // A part that mounts or leaves, a new overflow and a new corner size change the tracks. The
 // measurement runs before the next paint.
+watch(thresholds, measure, { flush: 'post' });
 watch(
   [
     scrollbarX,
@@ -179,9 +204,18 @@ watch(
     () => overflow.y,
     () => cornerSize.width,
     () => cornerSize.height,
-    thresholds,
   ],
-  measure,
+  () => {
+    if (
+      scrollbarX.value ||
+      scrollbarY.value ||
+      corners.length > 0 ||
+      cornerSize.width > 0 ||
+      cornerSize.height > 0
+    ) {
+      measure();
+    }
+  },
   { flush: 'post' },
 );
 
@@ -233,8 +267,19 @@ provide(scrollAreaKey, {
   scrollbar: (vertical) => (vertical ? scrollbarY.value : scrollbarX.value),
   thumb: (vertical) => (vertical ? thumbY.value : thumbX.value),
   measure,
+  scheduleMeasure,
   observe(target) {
-    observer ??= new ResizeObserver(measure);
+    // One animation frame shares one `timeline.currentTime` across `requestAnimationFrame` and
+    // `ResizeObserver` (test/measurements/scroll-area.test.ts). A second call in the same frame
+    // moves to the next frame.
+    observer ??= new ResizeObserver(() => {
+      const now = frameTime();
+      if (now !== null && now === measuredAt) {
+        scheduleMeasure();
+        return;
+      }
+      measure();
+    });
     observer.observe(target);
     return () => observer?.unobserve(target);
   },
@@ -284,6 +329,7 @@ provide(scrollAreaKey, {
 });
 
 onUnmounted(() => {
+  cancelMeasureFrame();
   observer?.disconnect();
   clearTimeout(timers.x);
   clearTimeout(timers.y);
