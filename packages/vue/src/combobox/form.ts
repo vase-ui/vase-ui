@@ -46,11 +46,10 @@ export function useComboboxForm(
       context.setText(filled, details);
       return;
     }
-    // With no `items`, the labels are the text of the items, which mount one update after the kept
-    // popup (`usePopupPart`).
+    // With no `items`, the labels are the text of the items, which mount with the kept popup.
     if (!context.data && context.mountedItems().length === 0) {
       context.keepPopup();
-      void nextTick(() => void nextTick(() => selectFilled(filled, details)));
+      void nextTick(() => selectFilled(filled, details));
       return;
     }
     selectFilled(filled, details);

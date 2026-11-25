@@ -633,7 +633,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         return;
       }
       kept.value = null;
-      const finishOpen = () => {
+      // The items mount in this update.
+      void nextTick(() => {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
         if (hasValue.value && source.mode !== 'none' && !list.find()) {
@@ -649,12 +650,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
             key,
           );
         }
-      };
-      // A popup that mounts renders its content one update later (`usePopupPart`).
-      const mountsPopup = !root.popup;
-      void nextTick(() => {
-        if (mountsPopup) void nextTick(finishOpen);
-        else finishOpen();
       });
     },
   );
