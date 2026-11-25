@@ -19,9 +19,39 @@ import {
 } from './samples.ts';
 import type { CaseResult, Group } from './types.ts';
 
-const POPUPS = ['Dialog', 'Popover', 'Menu', 'Select', 'Tooltip'];
-const ANCHORED_POPUPS = ['Popover', 'Menu', 'Select', 'Tooltip'];
+const POPUPS = [
+  'Dialog',
+  'Popover',
+  'Menu',
+  'Select',
+  'Tooltip',
+  'PreviewCard',
+  'Combobox',
+  'NavigationMenu',
+  'Drawer',
+];
+const ANCHORED_POPUPS = [
+  'Popover',
+  'Menu',
+  'Select',
+  'Tooltip',
+  'PreviewCard',
+  'Combobox',
+  'NavigationMenu',
+];
+const HOVER_POPUPS = new Set(['Tooltip', 'PreviewCard']);
+const DIALOG_POPUPS = new Set(['Dialog', 'Drawer']);
 const FIXTURES = Object.fromEntries(POPUPS.map((popup) => [popup, `Animated${popup}`]));
+
+/** Returns `true` when the popup opens on pointer hover and closes when the pointer moves away. */
+export function isHoverPopup(popup: string | null): boolean {
+  return popup !== null && HOVER_POPUPS.has(popup);
+}
+
+/** Returns `true` when the check places the popup in the center of the viewport. */
+export function isDialogPopup(popup: string | null): boolean {
+  return popup !== null && DIALOG_POPUPS.has(popup);
+}
 const STARTING = {
   text: 'CSS Transitions, starting of transitions',
   url: 'https://www.w3.org/TR/css-transitions-1/#starting',
@@ -38,7 +68,7 @@ const ANCHOR_ORIGIN = {
 const MARKER = 'popup';
 /** The time from the first visible frame of the enter, or from the close, to the interruption. */
 const INTERRUPTION_DELAY = 250;
-/** Where the pointer goes to close a tooltip: away from the trigger and from the popup. */
+/** Where the pointer goes to close a hover popup: away from the trigger and from the popup. */
 const AWAY = { x: 8, y: 8 };
 /** How far the origin can be from the trigger, beyond the gap between the popup and the trigger. */
 const ORIGIN_TOLERANCE = 2;
@@ -46,9 +76,9 @@ const ORIGIN_TOLERANCE = 2;
 const GROWTH_LIMIT = 0.9;
 
 /**
- * The place of the dialog in each library: the center of the viewport. A fixture has no style but
- * the animation, as a fixture of the timing run. With no style, a dialog shows at the top of the
- * page, on the trigger.
+ * The place of a dialog or a drawer in each library: the center of the viewport. A fixture has no
+ * style but the animation, as a fixture of the timing run. With no style, a dialog or a drawer
+ * shows at the top of the page, on the trigger.
  */
 const DIALOG_STYLE = `
 [data-bench='popup'] {
@@ -77,14 +107,14 @@ interface Rect {
 
 /** The input of a popup: a press on the trigger and Escape, or the pointer on the trigger and away. */
 function inputOf(page: Page, popup: string | null) {
-  const isTooltip = popup === 'Tooltip';
+  const hover = isHoverPopup(popup);
   return {
-    openName: isTooltip ? 'pointer on the trigger' : 'press',
+    openName: hover ? 'pointer on the trigger' : 'press',
     open: async () => {
       const { x, y } = await centerOf(page, 'trigger');
-      await (isTooltip ? page.mouse.move(x, y) : pressAt(page, { x, y }));
+      await (hover ? page.mouse.move(x, y) : pressAt(page, { x, y }));
     },
-    close: () => (isTooltip ? page.mouse.move(AWAY.x, AWAY.y) : page.keyboard.press('Escape')),
+    close: () => (hover ? page.mouse.move(AWAY.x, AWAY.y) : page.keyboard.press('Escape')),
   };
 }
 
@@ -124,13 +154,13 @@ function shownIds(frame: Frame): string {
 }
 
 /**
- * Removes a wrong reading of WebKit from the frames. In the frame where a transition to full opacity
- * ends, a read of the opacity after a layout can give an opacity near the start of the transition,
- * and the next frame gives full opacity. The recorder reads the rectangle of an element, which makes
- * a layout, before its opacity. A read before the layout in the same frame gives full opacity. Such
- * a frame drops by more than `JUMP_LIMIT` between two frames of the same element, and the frame
- * after it is at full opacity. Chromium and Firefox give no such reading, so in their frames the
- * same drop is a jump.
+ * Removes a wrong reading of WebKit from the frames. In the frame where a transition ends, a read
+ * of the opacity after a layout can give an opacity near the start of the transition. A read before
+ * the layout in the same frame gives the end value. A wait in the same frame makes a layout before
+ * the recorder reads the opacity. At the end of an enter, the frame drops by more than
+ * `JUMP_LIMIT`, and the next frame shows the same element at full opacity. At the end of an exit,
+ * the frame rises by more than `JUMP_LIMIT` from `HIDDEN_LIMIT` or less, and the element leaves
+ * next. Chromium and Firefox give no such reading, so in their frames the same change is a jump.
  */
 export function withoutWebKitEndReadings(recording: Recording, engine: string): Recording {
   if (engine !== 'webkit') {
@@ -140,15 +170,22 @@ export function withoutWebKitEndReadings(recording: Recording, engine: string): 
   const isEndReading = (frame: Frame, index: number) => {
     const before = frames[index - 1];
     const after = frames[index + 1];
-    return (
-      before !== undefined &&
-      after !== undefined &&
-      shownIds(before) !== '' &&
-      shownIds(before) === shownIds(frame) &&
-      shownIds(frame) === shownIds(after) &&
+    if (before === undefined || after === undefined) {
+      return false;
+    }
+    const id = shownIds(frame);
+    if (id === '' || shownIds(before) !== id) {
+      return false;
+    }
+    const previous = shownOpacity(before, MARKER);
+    const current = shownOpacity(frame, MARKER);
+    const enterEnd =
+      shownIds(after) === id &&
       shownOpacity(after, MARKER) >= FULL_OPACITY &&
-      shownOpacity(before, MARKER) - shownOpacity(frame, MARKER) > JUMP_LIMIT
-    );
+      previous - current > JUMP_LIMIT;
+    const exitEnd =
+      shownIds(after) === '' && previous <= HIDDEN_LIMIT && current - previous > JUMP_LIMIT;
+    return enterEnd || exitEnd;
   };
   return { ...recording, frames: frames.filter((frame, index) => !isEndReading(frame, index)) };
 }
@@ -184,7 +221,7 @@ async function waitForRest(page: Page): Promise<boolean> {
 }
 
 async function placeDialog(page: Page, popup: string | null): Promise<void> {
-  if (popup === 'Dialog') {
+  if (isDialogPopup(popup)) {
     await page.addStyleTag({ content: DIALOG_STYLE });
   }
 }
@@ -416,7 +453,9 @@ async function readPlace(page: Page): Promise<Place | undefined> {
     const popup = Array.from(document.querySelectorAll('[data-bench="popup"]')).find((element) =>
       element.checkVisibility(),
     );
-    const trigger = document.querySelector('[data-bench="trigger"]');
+    const trigger =
+      document.querySelector('[data-bench="anchor"]') ??
+      document.querySelector('[data-bench="trigger"]');
     if (popup === undefined || trigger === null) {
       return undefined;
     }
@@ -514,9 +553,10 @@ async function originAtAnchor(
 /**
  * The fixtures `Animated<Popup>`: `trigger` opens the popup `popup`, which has the animation. The
  * popup goes from the hidden style of `style.css` to opacity 1 and scale 1 in 500 ms, linear, and
- * back the same way. A press on the trigger and Escape open and close Dialog, Popover, Menu and
- * Select. The pointer on the trigger and away opens and closes Tooltip, with an open delay and a
- * close delay of 0.
+ * back the same way. A press on the trigger and Escape open and close Dialog, Popover, Menu,
+ * Select, Combobox, NavigationMenu and Drawer. The pointer on the trigger and away opens and
+ * closes Tooltip and PreviewCard, with an open delay and a close delay of 0. A fixture whose
+ * positioner anchors to a wrapper marks that element with `anchor`.
  */
 export const POPUP_ANIMATIONS: Group = {
   id: 'popup-animations',
