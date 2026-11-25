@@ -6,7 +6,6 @@ import {
   type SwitchState,
 } from '@vase-ui/vue/switch';
 
-// The exposed `element` is the native input, so a template ref can read it.
 const toggleSwitch = null as unknown as InstanceType<typeof Switch>;
 expectType<HTMLInputElement | null, typeof toggleSwitch.element>(toggleSwitch.element);
 
@@ -28,7 +27,6 @@ export const state: SwitchState = {
   filled: false,
 };
 
-// The types of the part are on the part too.
 const namespaceProps = null as unknown as Switch.Props;
 const namespaceState = null as unknown as Switch.State;
 expectType<SwitchProps, typeof namespaceProps>(namespaceProps);

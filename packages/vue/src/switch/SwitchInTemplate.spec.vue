@@ -4,7 +4,6 @@ import { expectType } from '#test-utils';
 import { Switch, type SwitchState } from '@vase-ui/vue/switch';
 </script>
 
-<!-- A switch takes the native attributes of its input, and its slot gives the state. -->
 <template>
   <Switch
     name="wifi"

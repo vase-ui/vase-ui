@@ -292,7 +292,6 @@ describe('clicks and the keyboard', () => {
     expect(listeners.onClick).not.toHaveBeenCalled();
     expect(bubbleLog).toEqual([]);
 
-    // Enabled switch with focusableWhenDisabled still submits on Enter and toggles on Space.
     enabled!.focus();
     await userEvent.keyboard('{Enter}');
     expect(submits).toHaveBeenCalledOnce();
@@ -564,7 +563,6 @@ describe('in a field', () => {
     expect(fieldElement).not.toHaveAttribute('data-touched');
     expect(onTouched).not.toHaveBeenCalled();
 
-    // Clicking the sibling `<label for>` does not toggle the disabled focusable switch.
     await userEvent.click(root.querySelector('label')!, { force: true });
     expect(input.checked).toBe(true);
   });

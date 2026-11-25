@@ -13,21 +13,16 @@ defineProps({
       buttonDisabled?: boolean;
       focusableWhenDisabled?: boolean;
       orientation?: 'horizontal' | 'vertical';
-      /** The toggle group is disabled. */
       toggleGroupDisabled?: boolean;
-      /** The toggle `one` is disabled. */
       disabledOne?: boolean;
-      /** The toggle `one` stays in the tab order while disabled. */
       focusableOne?: boolean;
       /** The toggle `one` is a disabled `<span>`. */
       disabledSpan?: boolean;
       /** The toggle `two` is disabled. */
       disabledTwo?: boolean;
-      /** The toggle `two` stays in the tab order while disabled. */
       focusableTwo?: boolean;
       /** The toolbar has no button before the group. */
       noFirst?: boolean;
-      /** The toolbar has no buttons after the group. */
       noAfter?: boolean;
     }>,
     default: () => ({}),
