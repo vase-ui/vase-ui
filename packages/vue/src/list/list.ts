@@ -374,7 +374,8 @@ export function useList(options: ListOptions): List {
         // under it.
         if (reason !== 'pointer')
           item.element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      } else if (!virtual.value && previous) {
+      } else if (!virtual.value && previous && reason !== 'none') {
+        // A clear with reason `'none'`, such as at a close, leaves the focus where it is.
         const active = activeElement(ownerDocument(previous.element));
         if (active && previous.element.contains(active)) {
           options.container()?.focus({ preventScroll: true });

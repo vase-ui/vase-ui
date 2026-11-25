@@ -525,8 +525,8 @@ describe('the handle', () => {
       const element = await opened();
       await waitFor(() => expect(element).toHaveFocus());
       handle.close();
-      // A `finalFocus` of `false` moves no focus at the close.
-      expect(element.matches(':focus')).toBe(finalFocus === false);
+      // The return waits for the close update.
+      expect(element).toHaveFocus();
       handle.open('second');
       await waitFor(() => expect(element).toHaveFocus());
       expect(popup()).toBe(element);
