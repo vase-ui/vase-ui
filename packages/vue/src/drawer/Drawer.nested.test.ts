@@ -2,6 +2,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
+import { finishAnimations } from '../../test/animation';
 import { mount } from '../../test/render';
 import { readWhen } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
@@ -140,5 +141,38 @@ describe('a nested drawer', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe(''));
     expect(kept).toBe(`${parent.offsetHeight}px`);
+  });
+
+  test('reopening a leaving nested drawer keeps the same popup and keeps the parent height', async () => {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = '.drawer-test-leave-active { transition-duration: 100s; }';
+    onTestFinished(() => style.remove());
+    await mountDrawer({
+      root: { defaultOpen: true },
+      nested: {
+        root: { defaultOpen: true },
+        popup: { style: 'height: 200px' },
+        transition: true,
+      },
+    });
+    const parent = await opened();
+    const child = await opened('nested-');
+    await finishAnimations(child);
+    await waitFor(() => expect(child).not.toHaveClass('drawer-test-enter-active'));
+    await waitFor(() => expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px'));
+    await waitFor(() =>
+      expect(parent.style.getPropertyValue('--drawer-frontmost-height')).toBe('200px'),
+    );
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(child).toHaveClass('drawer-test-leave-active'));
+    expect(parent).not.toHaveAttribute('data-nested-drawer-open');
+    expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px');
+    await userEvent.click(get('nested-trigger'));
+    await waitFor(() => expect(child).not.toHaveClass('drawer-test-leave-active'));
+    expect([...document.querySelectorAll('[data-testid="nested-popup"]')]).toEqual([child]);
+    expect(parent).toHaveAttribute('data-nested-drawer-open');
+    expect(parent.style.getPropertyValue('--nested-drawers')).toBe('1');
+    expect(parent.style.getPropertyValue('--drawer-height')).toBe('300px');
+    expect(parent.style.getPropertyValue('--drawer-frontmost-height')).toBe('200px');
   });
 });

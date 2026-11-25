@@ -28,7 +28,6 @@ const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!'
                 :enter-from-class="backdropHiddenClass"
                 :leave-to-class="backdropHiddenClass"
                 :leave-active-class="backdropLeavingClass"
-                appear
               >
                 <Drawer.Backdrop
                   class="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] absolute inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute"
@@ -39,7 +38,6 @@ const popupLeavingClass = 'duration-[calc(var(--drawer-swipe-strength)*400ms)]!'
                   :enter-from-class="popupHiddenClass"
                   :leave-to-class="popupHiddenClass"
                   :leave-active-class="popupLeavingClass"
-                  appear
                 >
                   <Drawer.Popup
                     class="w-full max-h-[calc(80vh+var(--bleed))] -mb-[var(--bleed)] border-t border-neutral-950 bg-white px-6 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px)+var(--bleed))] text-neutral-950 outline-none shadow-[0.25rem_0.25rem_0] shadow-black/12 overflow-y-auto overscroll-contain transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] [transform:translateY(var(--drawer-swipe-movement-y))] data-swiping:select-none dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"

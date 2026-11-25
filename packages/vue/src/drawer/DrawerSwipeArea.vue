@@ -53,9 +53,10 @@ function popupSize(popup: HTMLElement) {
   return axisOf(closing.value) === 'x' ? popup.offsetWidth : popup.offsetHeight;
 }
 
-// The popup mounts in the class of its enter, at its closed place (test/measurements/drawer.test.ts).
+// The popup shows in the class of its enter, at its closed place (test/measurements/drawer.test.ts).
 function closedPlace(popup: HTMLElement) {
   const size = popupSize(popup);
+  if (!size) return null;
   const matrix = new DOMMatrixReadOnly(getComputedStyle(popup).transform);
   const offset = Math.abs(axisOf(closing.value) === 'x' ? matrix.m41 : matrix.m42);
   return offset > 0.5 ? Math.min(size, offset) : size;
@@ -63,7 +64,7 @@ function closedPlace(popup: HTMLElement) {
 
 function follow() {
   const popup = root.popup;
-  if (!opened || !root.open || !popup) return;
+  if (!opened || !root.open || !popup || !drawer.popupVisible) return;
   closed ??= closedPlace(popup);
   if (!closed) return;
   const shown = Math.max(0, movement);
@@ -133,13 +134,13 @@ watch(
   },
 );
 
-// The popup of an open by the swipe mounts after the open, and after the leave of an earlier popup.
+// The popup shows after its `v-show` update, with its enter class and layout sizes.
 watch(
-  () => root.popup,
-  (popup) => {
-    if (popup && tracker.swiping.value) follow();
+  () => drawer.popupVisible,
+  (visible) => {
+    if (visible && tracker.swiping.value) follow();
   },
-  { flush: 'post' },
+  { flush: 'sync' },
 );
 
 const state = computed<DrawerSwipeAreaState>(() => ({

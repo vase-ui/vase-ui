@@ -15,7 +15,6 @@ const popupLeavingClass = styles.PopupLeaving;
           :enter-from-class="popupHiddenClass"
           :leave-to-class="popupHiddenClass"
           :leave-active-class="popupLeavingClass"
-          appear
         >
           <Drawer.Popup :class="styles.Popup">
             <Drawer.Content :class="styles.Content">

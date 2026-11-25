@@ -2,6 +2,7 @@
 import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 import { Dialog } from '../../src/dialog';
+import { Drawer } from '../../src/drawer';
 import { Menu } from '../../src/menu';
 import { NavigationMenu } from '../../src/navigation-menu';
 import { Popover } from '../../src/popover';
@@ -16,7 +17,14 @@ import PartTransition from './PartTransition.vue';
 defineProps({
   family: {
     type: String as PropType<
-      'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card' | 'combobox' | 'navigation-menu'
+      | 'dialog'
+      | 'drawer'
+      | 'popover'
+      | 'menu'
+      | 'tooltip'
+      | 'preview-card'
+      | 'combobox'
+      | 'navigation-menu'
     >,
     required: true,
   },
@@ -51,6 +59,29 @@ defineProps({
       </PartTransition>
     </Dialog.Portal>
   </Dialog.Root>
+  <Drawer.Root v-else-if="family === 'drawer'" :open="scene.open">
+    <Drawer.Portal :keep-mounted>
+      <PartTransition :on="!inSlot" name="backdrop" :log>
+        <Drawer.Backdrop data-testid="backdrop" :as>
+          <template v-if="inSlot" #element="{ props, elementRef }">
+            <section v-bind="props" :ref="elementRef" />
+          </template>
+          {{ count('backdrop') }}
+        </Drawer.Backdrop>
+      </PartTransition>
+      <Drawer.Viewport>
+        <PartTransition :on="!inSlot" name="popup" :log>
+          <Drawer.Popup data-testid="popup" :as>
+            <template v-if="inSlot" #element="{ props, elementRef }">
+              <section v-bind="props" :ref="elementRef" />
+            </template>
+            {{ count('popup') }}
+            Drawer
+          </Drawer.Popup>
+        </PartTransition>
+      </Drawer.Viewport>
+    </Drawer.Portal>
+  </Drawer.Root>
   <Popover.Root v-else-if="family === 'popover'" :open="scene.open">
     <Popover.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>

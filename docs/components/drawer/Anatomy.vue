@@ -10,11 +10,11 @@ import { Drawer } from '@vase-ui/vue/drawer';
         <Drawer.Trigger />
         <Drawer.SwipeArea />
         <Drawer.Portal>
-          <Transition name="fade" appear>
+          <Transition name="fade">
             <Drawer.Backdrop />
           </Transition>
           <Drawer.Viewport>
-            <Transition name="sheet" appear>
+            <Transition name="sheet">
               <Drawer.Popup>
                 <Drawer.Content>
                   <Drawer.Title />

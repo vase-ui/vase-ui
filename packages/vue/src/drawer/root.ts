@@ -51,6 +51,16 @@ export interface DrawerSample {
   progress: number;
 }
 
+/** The swipe and snap-point values that the popup and the backdrop keep while they leave. */
+export interface DrawerLeaving {
+  readonly x: number;
+  readonly y: number;
+  readonly progress: number;
+  readonly offset: number | null;
+  readonly expanded: boolean;
+  readonly strength: number;
+}
+
 /** What a `Drawer.Root` gives to its parts and to each `Drawer.Root` in it. The properties are reactive. */
 export interface DrawerRoot {
   readonly dialog: DialogForParts;
@@ -76,6 +86,10 @@ export interface DrawerRoot {
   readonly sample: DrawerSample;
   /** The progress that the parts render: of the swipe, else of the rest place. */
   readonly progress: number;
+  /** The values of the last open render while the popup leaves or stays hidden by `keepMounted`. */
+  readonly leaving: DrawerLeaving | null;
+  /** True once `v-show` shows the popup with its enter class and layout sizes. */
+  readonly popupVisible: boolean;
   readonly snap: {
     readonly points: readonly ResolvedSnapPoint[];
     readonly active: DrawerSnapPoint | null;
@@ -92,6 +106,7 @@ export interface DrawerRoot {
   readonly backdrop: HTMLElement | null;
   setViewport(element: HTMLElement | null): void;
   setBackdrop(element: HTMLElement | null): void;
+  setPopupVisible(visible: boolean): void;
   setSizes(sizes: Partial<SnapSizes>): void;
   setSwiping(swiping: boolean, far?: boolean): void;
   addNested(child: DrawerRoot): () => void;
@@ -99,6 +114,8 @@ export interface DrawerRoot {
   markContentPress(event: PointerEvent): void;
   isContentPress(event: PointerEvent): boolean;
   write(sample: Partial<DrawerSample>): void;
+  /** Records the release swipe state and strength before a swipe close. */
+  setDismiss(strength: number): void;
   /** Removes the marks of a swipe close from the popup and the backdrop. */
   clearDismiss(): void;
 }
@@ -237,9 +254,12 @@ export function useDrawerRoot<Payload>(
 
   const viewport = shallowRef<HTMLElement | null>(null);
   const backdrop = shallowRef<HTMLElement | null>(null);
+  const popupVisible = shallowRef(false);
   const swiping = shallowRef(false);
   const swipingFar = shallowRef(false);
   const sample = shallowReactive<DrawerSample>({ x: 0, y: 0, progress: 0 });
+  const leaving = shallowRef<DrawerLeaving | null>(null);
+  let pendingSwipe: { x: number; y: number; progress: number; strength: number } | null = null;
   const children = shallowReactive<DrawerRoot[]>([]);
   const contentPresses = new WeakSet<Event>();
 
@@ -267,8 +287,41 @@ export function useDrawerRoot<Payload>(
     const child = children.find((each) => each.dialog.root.open);
     return child ? child.frontmostHeight : height.value;
   });
+  const liveExpanded = computed(() => active.value === 1);
   const rest = computed(() =>
     root.open && !dialog.nested ? snapProgress(points.value, offset.value) : 0,
+  );
+
+  // Vue patches a popup and a backdrop that leave with `v-show`. They keep the swipe and snap
+  // values of the close until the leave ends or the drawer opens again.
+  watch(
+    [() => root.open, offset, liveExpanded, rest] as const,
+    ([open], [wasOpen, openOffset, openExpanded, openRest]) => {
+      if (open) {
+        leaving.value = null;
+        pendingSwipe = null;
+        return;
+      }
+      if (!wasOpen) return;
+      const swipe = pendingSwipe;
+      pendingSwipe = null;
+      if (root.leaving || root.keepMounted) {
+        leaving.value = {
+          x: swipe?.x ?? 0,
+          y: swipe?.y ?? 0,
+          progress: swipe?.progress ?? openRest,
+          offset: openOffset,
+          expanded: openExpanded,
+          strength: swipe?.strength ?? 1,
+        };
+      }
+    },
+  );
+  watch(
+    () => root.keepMounted || root.leaving,
+    (keeps) => {
+      if (!keeps) leaving.value = null;
+    },
   );
 
   const provider = inject(providerKey, null);
@@ -314,6 +367,12 @@ export function useDrawerRoot<Payload>(
     get progress() {
       return swiping.value ? sample.progress : rest.value;
     },
+    get leaving() {
+      return leaving.value;
+    },
+    get popupVisible() {
+      return popupVisible.value;
+    },
     snap: {
       get points() {
         return points.value;
@@ -334,6 +393,7 @@ export function useDrawerRoot<Payload>(
     },
     setViewport: (element) => (viewport.value = element),
     setBackdrop: (element) => (backdrop.value = element),
+    setPopupVisible: (visible) => (popupVisible.value = visible),
     setSizes(next) {
       Object.assign(sizes, next);
     },
@@ -350,7 +410,11 @@ export function useDrawerRoot<Payload>(
     write(next) {
       Object.assign(sample, next);
     },
+    setDismiss(strength) {
+      pendingSwipe = { x: sample.x, y: sample.y, progress: sample.progress, strength };
+    },
     clearDismiss() {
+      pendingSwipe = null;
       for (const target of [root.popup, backdrop.value]) {
         target?.removeAttribute('data-swipe-dismiss');
         target?.style.setProperty('--drawer-swipe-strength', '1');
@@ -358,12 +422,17 @@ export function useDrawerRoot<Payload>(
     },
   };
   provide(drawerKey, drawer);
-  // A popup and a backdrop that the portal keeps closed have the marks of a swipe close, and Vue
-  // does not remove an attribute that it did not write.
+  // Vue does not remove `data-swipe-dismiss`, because the part does not bind it. A swipe close
+  // from a swipe area resets `sample` right after the close request, so the sync close captures it.
   watch(
     () => root.open,
     (open) => {
-      if (open) drawer.clearDismiss();
+      if (open) {
+        drawer.clearDismiss();
+        leaving.value = null;
+      } else if (swiping.value && !pendingSwipe) {
+        pendingSwipe = { x: sample.x, y: sample.y, progress: sample.progress, strength: 1 };
+      }
     },
     { flush: 'sync' },
   );

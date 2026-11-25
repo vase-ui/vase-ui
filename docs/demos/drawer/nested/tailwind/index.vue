@@ -27,7 +27,6 @@ const handleClassName =
         enter-from-class="opacity-0!"
         leave-to-class="opacity-0!"
         leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
-        appear
       >
         <Drawer.Backdrop
           class="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] fixed inset-0 bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh"
@@ -38,7 +37,6 @@ const handleClassName =
           :enter-from-class="popupHiddenClass"
           :leave-to-class="popupHiddenClass"
           :leave-active-class="popupLeavingClass"
-          appear
         >
           <Drawer.Popup :class="popupClassName">
             <div :class="handleClassName" />
@@ -64,7 +62,6 @@ const handleClassName =
                           :enter-from-class="popupHiddenClass"
                           :leave-to-class="popupHiddenClass"
                           :leave-active-class="popupLeavingClass"
-                          appear
                         >
                           <Drawer.Popup :class="popupClassName">
                             <div :class="handleClassName" />
@@ -102,7 +99,6 @@ const handleClassName =
                                           :enter-from-class="popupHiddenClass"
                                           :leave-to-class="popupHiddenClass"
                                           :leave-active-class="popupLeavingClass"
-                                          appear
                                         >
                                           <Drawer.Popup :class="popupClassName">
                                             <div :class="handleClassName" />

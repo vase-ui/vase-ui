@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, onMounted, shallowRef } from 'vue';
+import { defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -199,11 +199,11 @@ function setFieldTop(field: HTMLElement, scroll: HTMLElement, top: number) {
   field.getBoundingClientRect = () => new DOMRect(0, top - scroll.scrollTop, 320, 40);
 }
 
-// React focuses an `autoFocus` element at the mount. A `ref` callback can run before the input is in
-// the document, so this component focuses it in `onMounted`.
+// React focuses an `autoFocus` element at the mount. `v-show` removes `display: none` in the post
+// flush of the update that mounts the slot, so the focus moves in `nextTick`.
 const FocusedInput = defineComponent(() => {
   const input = shallowRef<HTMLInputElement | null>(null);
-  onMounted(() => input.value?.focus());
+  onMounted(() => void nextTick(() => input.value?.focus()));
   return () => <input ref={input} data-testid="input" type="text" />;
 });
 
@@ -2330,7 +2330,9 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
       </KeyboardDrawer>
     ));
 
-    expect(screen.getByTestId('input')).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByTestId('input')).toHaveFocus();
+    });
     await waitFor(() => {
       expect(screen.getByTestId('viewport').style.getPropertyValue('--drawer-keyboard-inset')).toBe(
         '300px',

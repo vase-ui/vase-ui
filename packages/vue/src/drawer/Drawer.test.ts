@@ -3,9 +3,16 @@ import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import { Drawer, type DrawerSnapPoint } from '@vase-ui/vue/drawer';
 import DialogWithDrawer from '../../test/fixtures/DialogWithDrawer.vue';
+import DrawerInTransition from '../../test/fixtures/DrawerInTransition.vue';
 import DrawerPartAlone from '../../test/fixtures/DrawerPartAlone.vue';
 import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import DrawerWithKeyboard from '../../test/fixtures/DrawerWithKeyboard.vue';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -475,6 +482,209 @@ describe('Drawer', () => {
       await opened();
       await nextTick();
       expect(TestCloseWatcher.watchers).toEqual([]);
+    });
+  });
+
+  describe('the leave and reopen', () => {
+    const byId = (id: string) => document.getElementById(id)!;
+
+    test('an open while the drawer leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+      const log: string[] = [];
+      mount(DrawerInTransition, {
+        popup: { class: 'slow' },
+        backdrop: { class: 'slow' },
+        log: { add: (entry: string) => log.push(entry) },
+      });
+      await nextTick();
+      await userEvent.click(byId('a'));
+      const first = await opened();
+      const backdrop = get('backdrop');
+      await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+      await waitFor(() => expect(log).toContain('after-enter'));
+      const counts = mostMatches('[data-testid="popup"]');
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+      const atOpen = [first, backdrop].map(shownOpacity);
+      byId('a').click();
+      const frames = await opacityUntilRest([first, backdrop]);
+      expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([first]);
+      expect(byTestId('backdrop')).toBe(backdrop);
+      expect(counts()).toBe(1);
+      expect(log).not.toContain('after-leave');
+      expect(log).not.toContain('backdrop-after-leave');
+      expect(log).toContain('leave-cancelled');
+      frames.forEach((opacities, index) => {
+        expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+        expect(opacities.at(-1)).toBe(1);
+      });
+    });
+
+    test('an open while the drawer leaves gives the focus to the popup again', async () => {
+      mount(DrawerInTransition, { popup: { class: 'slow' } });
+      await nextTick();
+      const trigger = byId('a');
+      await userEvent.click(trigger);
+      const element = await opened();
+      await waitFor(() => expect(document.activeElement).toBe(element));
+      await finishAnimations(element);
+      await waitFor(() => expect(element).not.toHaveClass('sheet-enter-active'));
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(element).toHaveClass('sheet-leave-active'));
+      await waitFor(() => expect(document.activeElement).toBe(trigger));
+      trigger.click();
+      await waitFor(() => expect(document.activeElement).toBe(element));
+      expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([element]);
+    });
+
+    test('a close and an open in one task keep the popup and give it the focus again', async () => {
+      const handle = Drawer.createHandle();
+      mount(DrawerInTransition, { root: { handle }, popup: { class: 'slow' } });
+      await nextTick();
+      await userEvent.click(byId('a'));
+      const element = await opened();
+      await waitFor(() => expect(document.activeElement).toBe(element));
+      await finishAnimations(element);
+      await waitFor(() => expect(element).not.toHaveClass('sheet-enter-active'));
+      handle.close();
+      handle.open('a');
+      await nextTick();
+      await waitFor(() => expect(document.activeElement).toBe(element));
+      expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([element]);
+    });
+
+    test('an open from another trigger during the leave keeps the popup and shows the new payload', async () => {
+      mount(DrawerInTransition, {
+        payloads: ['First', 'Second'],
+        popup: { class: 'slow' },
+      });
+      await nextTick();
+      await userEvent.click(byId('a'));
+      const first = await opened();
+      expect(get('payload').textContent).toBe('First');
+      await finishAnimations(first);
+      await waitFor(() => expect(first).not.toHaveClass('sheet-enter-active'));
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+      byId('b').click();
+      await waitFor(() => expect(get('payload').textContent).toBe('Second'));
+      expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([first]);
+      const [frames = []] = await opacityUntilRest([first]);
+      expect(frames.at(-1)).toBe(1);
+    });
+
+    test('the payload stays during the leave when the parent clears `triggerId` at the close', async () => {
+      const root = reactive<Props>({ open: true, triggerId: 'a' });
+      mount(DrawerInTransition, {
+        root,
+        payloads: ['First', 'Second'],
+        popup: { class: 'slow' },
+      });
+      const element = await opened();
+      expect(get('payload').textContent).toBe('First');
+      await finishAnimations(element);
+      await waitFor(() => expect(element).not.toHaveClass('sheet-enter-active'));
+      root.open = false;
+      root.triggerId = null;
+      await waitFor(() => expect(element).toHaveClass('sheet-leave-active'));
+      expect(get('payload').textContent).toBe('First');
+      await finishAnimations(element);
+      await waitFor(() => expect(element.isConnected).toBe(false));
+    });
+
+    test('the content of the popup stays mounted until the leave ends', async () => {
+      const log: string[] = [];
+      mount(DrawerInTransition, {
+        root: { defaultOpen: true },
+        popup: { class: 'slow' },
+        log: { add: (entry: string) => log.push(entry) },
+      });
+      const element = await opened();
+      await finishAnimations(element);
+      await waitFor(() => expect(log).toContain('after-enter'));
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(element).toHaveClass('sheet-leave-active'));
+      await nextTick();
+      expect(log).not.toContain('child unmounted');
+      await finishAnimations(element);
+      await waitFor(() => expect(element.isConnected).toBe(false));
+      expect(log.slice(-2)).toEqual(['after-leave', 'child unmounted']);
+    });
+
+    test('with `:css="false"`, the enter runs once with no `appear`, and the popup leaves when `done` runs', async () => {
+      const log: string[] = [];
+      const root = reactive({ open: true });
+      let endLeave = () => {};
+      mount(DrawerInTransition, {
+        root,
+        jsHooks: {
+          enter(done: () => void) {
+            log.push('enter');
+            done();
+          },
+          leave(done: () => void) {
+            log.push('leave');
+            endLeave = done;
+          },
+        },
+        log: { add: (entry: string) => log.push(entry) },
+      });
+      const element = await opened();
+      await waitFor(() => expect(log).toEqual(['before-enter', 'enter', 'after-enter']));
+      root.open = false;
+      await waitFor(() => expect(log).toContain('leave'));
+      expect(element.isConnected).toBe(true);
+      expect(log).not.toContain('child unmounted');
+      endLeave();
+      await waitFor(() => expect(element.isConnected).toBe(false));
+      expect(log).toEqual([
+        'before-enter',
+        'enter',
+        'after-enter',
+        'leave',
+        'after-leave',
+        'child unmounted',
+      ]);
+    });
+
+    test('keeps the snap point offset, expanded state and backdrop progress while leaving', async () => {
+      const style = document.head.appendChild(document.createElement('style'));
+      style.textContent = '.drawer-test-leave-active { transition-duration: 100s; }';
+      onTestFinished(() => style.remove());
+      const root = reactive<Props>({
+        open: true,
+        snapPoints: ['100px', 1],
+        defaultSnapPoint: '100px',
+        snapPoint: 1,
+        'onUpdate:open': (open: boolean) => (root.open = open),
+        'onUpdate:snapPoint': (point: DrawerSnapPoint | null) => (root.snapPoint = point),
+      });
+      await mountDrawer({
+        root,
+        backdrop: {},
+        transition: true,
+        viewport: { style: 'height: 600px' },
+        popup: { style: 'height: 400px' },
+      });
+      const popup = await opened();
+      const backdrop = get('backdrop');
+      await finishAnimations(popup);
+      await waitFor(() => expect(popup).toHaveAttribute('data-expanded'));
+      expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('0px');
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(popup).toHaveClass('drawer-test-leave-active'));
+      await nextTick();
+      expect(root.snapPoint).toBe('100px');
+      expect(popup).toHaveAttribute('data-expanded');
+      expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('0px');
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+
+      root.open = true;
+      await waitFor(() => expect(popup).not.toHaveClass('drawer-test-leave-active'));
+      expect(popup).not.toHaveAttribute('data-expanded');
+      expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('300px');
+      expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('1');
     });
   });
 

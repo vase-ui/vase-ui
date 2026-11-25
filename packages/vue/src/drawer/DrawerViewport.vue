@@ -109,18 +109,18 @@ function dismiss(release: SwipeRelease, traveled: number, restore: () => void) {
     along(direction, release.lastVelocityX, release.lastVelocityY) ||
     along(direction, release.velocityX, release.velocityY);
   const strength = releaseStrength(size, traveled, velocity);
-  // Vue does not patch an element that leaves in a `<Transition>`, so the release writes the marks
-  // of the leave (test/measurements/drawer.test.ts).
+  // The release marks the popup and the backdrop before the close, so the leave reads them at once
+  // (test/measurements/drawer.test.ts).
   for (const target of [popup, drawer.backdrop]) {
     target?.setAttribute('data-swipe-dismiss', '');
     target?.removeAttribute('data-swiping');
     target?.style.setProperty('--drawer-swipe-strength', String(strength));
   }
   if (popup?.style.transition === 'none') popup.style.transition = '';
+  drawer.setDismiss(strength);
   drawer.setSwiping(false);
   root.request(false, 'swipe', release.event);
-  // Vue does not patch the popup that leaves, so it leaves from the place of the release. The
-  // sample goes back to the open place for the popup of the next open.
+  // The leaving state keeps the place of the release; the sample resets for the next open.
   void nextTick(() => {
     // A listener cancelled the close, or the parent kept the drawer open.
     if (root.open) {
