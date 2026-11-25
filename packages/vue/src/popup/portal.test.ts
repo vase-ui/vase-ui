@@ -1,8 +1,11 @@
 import { describe, expect, inject, test } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
+import PopupFocusAtMountFamilies from '../../test/fixtures/PopupFocusAtMountFamilies.vue';
 import PopupPartsOfFamilies from '../../test/fixtures/PopupPartsOfFamilies.vue';
 import { finishAnimations } from '../../test/animation';
 import { mount } from '../../test/render';
+import { waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
@@ -84,6 +87,22 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts, popupTag }) =>
         await new Promise((resolve) => requestAnimationFrame(resolve));
       }
       expect(renders).toEqual(Object.fromEntries(parts.map((part) => [part, 1])));
+    },
+  );
+
+  test.each(['onMounted', 'directive'] as const)(
+    'a focus in %s of the content moves the focus into the popup at an open from the trigger',
+    async (mode) => {
+      const log: { focused: boolean; shown: boolean }[] = [];
+      mount(PopupFocusAtMountFamilies, { family, mode, log: { add: (entry) => log.push(entry) } });
+      const trigger = byTestId('trigger')!;
+      await (family === 'tooltip' || family === 'preview-card'
+        ? userEvent.hover(trigger)
+        : userEvent.click(trigger));
+      await waitFor(() => expect(log).toHaveLength(1));
+      expect(log).toEqual([{ focused: true, shown: true }]);
+      await waitSingleFrame();
+      expect(byTestId('field')).toHaveFocus();
     },
   );
 
