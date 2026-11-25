@@ -420,8 +420,8 @@ describe('the list', () => {
       `<div id="list" style="height: 90px; overflow: auto">${Array.from({ length: 10 }, (_, index) => `<div id="i${index}" tabindex="-1" style="height: 30px">${index}</div>`).join('')}</div>`,
     );
     element('i3').focus();
-    await nextFrame();
-    expect(element('list').scrollTop).toBe(60);
+    // WebKit scrolls after `focus()` in a later task, which can run after the first animation frame.
+    await waitFor(() => expect(element('list').scrollTop).toBe(60));
     element('list').scrollTop = 0;
     element('i3').focus({ preventScroll: true });
     element('i3').scrollIntoView({ block: 'nearest', inline: 'nearest' });
