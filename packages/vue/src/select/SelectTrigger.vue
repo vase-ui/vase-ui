@@ -101,7 +101,7 @@ function onBlur(event: FocusEvent) {
   if (next && isInPopup(context.layer, next)) return;
   // A string of the typeahead ends when the focus leaves the select.
   context.typeahead.reset();
-  if (element.value) field?.onLeave(element.value);
+  if (element.value && !trigger.button.disabled.value) field?.onLeave(element.value);
 }
 
 function elementProps() {

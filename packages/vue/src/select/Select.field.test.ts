@@ -229,16 +229,20 @@ describe('the field', () => {
     const field = reactive<Attrs>({ disabled: true });
     const fieldset = reactive<Attrs>({});
     const root = reactive<Attrs>({});
-    await mountField({ field, fieldset, root });
+    const triggerProps = reactive({ focusableWhenDisabled: false });
+    await mountField({ field, fieldset, root, trigger: triggerProps });
     expect(trigger()).toBeDisabled();
     field.disabled = false;
-    fieldset.disabled = true;
-    await settle();
-    expect(trigger()).toBeDisabled();
-    fieldset.disabled = undefined;
     root.disabled = true;
     await settle();
     expect(trigger()).toBeDisabled();
+    root.disabled = false;
+    triggerProps.focusableWhenDisabled = true;
+    fieldset.disabled = true;
+    await settle();
+    expect(trigger()).toBeDisabled();
+    trigger().focus();
+    expect(trigger()).not.toHaveFocus();
   });
 
   test('VUE-112: a disabled fieldset gives the form no value', async () => {
