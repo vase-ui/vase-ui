@@ -408,6 +408,51 @@ test('a behavior cell keeps the reason of a fail, and names each case with no fi
   ]);
 });
 
+test('a check case with no measured library yet is not listed as not provided', () => {
+  const withUnmeasuredCase = benchmarksReportOf(
+    {
+      ...results,
+      behavior: {
+        chromium: behaviorPart({
+          'popup-animations.enter': {
+            'vase-ui': [behaviorCase('Dialog', 3), behaviorCase('Tooltip', 3)],
+            'headless-ui': [behaviorCase('Dialog', 3)],
+          },
+        }),
+      },
+    },
+    { groups: [] },
+    { notes: [] },
+    [
+      {
+        id: 'popup-animations',
+        title: 'Popup animations',
+        checks: [
+          {
+            id: 'enter',
+            title: 'Enter.',
+            expectation: { text: 'Source', url: 'https://example.com/' },
+            scenario: {
+              Dialog: 'AnimatedDialog',
+              Tooltip: 'AnimatedTooltip',
+              Drawer: 'AnimatedDrawer',
+            },
+            cases: ['Dialog', 'Tooltip', 'Drawer'],
+            run,
+          },
+        ],
+      },
+    ],
+  );
+  const row = withUnmeasuredCase.behaviorTables[0]?.rows[0];
+  const vase = row?.cells['vase-ui'];
+  assert.ok(typeof vase === 'object');
+  assert.deepEqual(vase.notProvided, []);
+  const headless = row?.cells['headless-ui'];
+  assert.ok(typeof headless === 'object');
+  assert.deepEqual(headless.notProvided, ['Tooltip']);
+});
+
 test('a library with no fixture is not provided, and a check with no results is not measured', () => {
   assert.equal(cellOf('enter', 'vuetify0'), 'not-provided');
   assert.equal(cellOf('later', 'vase-ui'), 'not-measured');

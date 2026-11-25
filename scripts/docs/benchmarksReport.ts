@@ -823,12 +823,20 @@ function behaviorCell(
   }
   const ranCases = new Set(engines.flatMap((engine) => engine.cases.map((item) => item.case)));
   const scenarios = new Set([...ranCases].flatMap((name) => scenarioOf(check, name) ?? []));
+  const measuredScenarios = new Set(
+    ran.flatMap(({ part }) =>
+      Object.values(part.checks[key] ?? {}).flatMap((cases) =>
+        (cases ?? []).flatMap((item) => scenarioOf(check, item.case) ?? []),
+      ),
+    ),
+  );
   return {
     engines,
     results: engineGroupsOf(engines, check.kind === 'fact' ? sameMeasures : agree),
-    notProvided: (check.cases ?? []).filter(
-      (name) => !scenarios.has(scenarioOf(check, name) ?? ''),
-    ),
+    notProvided: (check.cases ?? []).filter((name) => {
+      const scenario = scenarioOf(check, name) ?? '';
+      return measuredScenarios.has(scenario) && !scenarios.has(scenario);
+    }),
     fixtures:
       typeof check.scenario === 'string'
         ? [{ case: null, path: fixtureFileOf(library, check.scenario) }]

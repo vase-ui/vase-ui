@@ -52,6 +52,7 @@ export function isHoverPopup(popup: string | null): boolean {
 export function isDialogPopup(popup: string | null): boolean {
   return popup !== null && DIALOG_POPUPS.has(popup);
 }
+
 const STARTING = {
   text: 'CSS Transitions, starting of transitions',
   url: 'https://www.w3.org/TR/css-transitions-1/#starting',
@@ -70,7 +71,7 @@ const MARKER = 'popup';
 const INTERRUPTION_DELAY = 250;
 /** Where the pointer goes to close a hover popup: away from the trigger and from the popup. */
 const AWAY = { x: 8, y: 8 };
-/** How far the origin can be from the trigger, beyond the gap between the popup and the trigger. */
+/** How far the origin can be from the anchor, beyond the gap between the popup and the anchor. */
 const ORIGIN_TOLERANCE = 2;
 /** A popup grows when its smallest width in the enter is at most this part of its width at rest. */
 const GROWTH_LIMIT = 0.9;
@@ -145,22 +146,27 @@ async function startRecording(page: Page): Promise<void> {
   );
 }
 
-/** The ids of the visible elements of the popup in a frame, such as `3`. */
-function shownIds(frame: Frame): string {
+/** The ids of the visible elements of the popup in a frame. */
+function shownIdList(frame: Frame): number[] {
   return (frame.elements[MARKER] ?? [])
     .filter((element) => element.visible)
-    .map((element) => element.id)
-    .join(',');
+    .map((element) => element.id);
+}
+
+/** The ids of the visible elements of the popup in a frame, such as `3`. */
+function shownIds(frame: Frame): string {
+  return shownIdList(frame).join(',');
 }
 
 /**
- * Removes a wrong reading of WebKit from the frames. In the frame where a transition ends, a read
- * of the opacity after a layout can give an opacity near the start of the transition. A read before
- * the layout in the same frame gives the end value. A wait in the same frame makes a layout before
- * the recorder reads the opacity. At the end of an enter, the frame drops by more than
- * `JUMP_LIMIT`, and the next frame shows the same element at full opacity. At the end of an exit,
- * the frame rises by more than `JUMP_LIMIT` from `HIDDEN_LIMIT` or less, and the element leaves
- * next. Chromium and Firefox give no such reading, so in their frames the same change is a jump.
+ * Removes a wrong reading of WebKit from the frames. In the frame where a transition ends, WebKit
+ * can give an opacity near the start of the transition (about 0.03 at an enter end, or about 0.97
+ * at an exit end). At the end of an enter, the frame drops by more than `JUMP_LIMIT`, and the next
+ * frame shows the same element at full opacity. At the end of an exit, the frame rises by more
+ * than `JUMP_LIMIT` from `HIDDEN_LIMIT` or less to below `FULL_OPACITY`, and the element leaves
+ * next (nothing shows, or a new element starts at `HIDDEN_LIMIT` or less). A real flash to full
+ * opacity before removal stays. Chromium and Firefox give no such reading, so in their frames the
+ * same change is a jump.
  */
 export function withoutWebKitEndReadings(recording: Recording, engine: string): Recording {
   if (engine !== 'webkit') {
@@ -173,7 +179,8 @@ export function withoutWebKitEndReadings(recording: Recording, engine: string): 
     if (before === undefined || after === undefined) {
       return false;
     }
-    const id = shownIds(frame);
+    const idList = shownIdList(frame);
+    const id = idList.join(',');
     if (id === '' || shownIds(before) !== id) {
       return false;
     }
@@ -183,8 +190,14 @@ export function withoutWebKitEndReadings(recording: Recording, engine: string): 
       shownIds(after) === id &&
       shownOpacity(after, MARKER) >= FULL_OPACITY &&
       previous - current > JUMP_LIMIT;
+    const afterIds = new Set(shownIdList(after));
+    const left = idList.every((each) => !afterIds.has(each));
     const exitEnd =
-      shownIds(after) === '' && previous <= HIDDEN_LIMIT && current - previous > JUMP_LIMIT;
+      left &&
+      previous <= HIDDEN_LIMIT &&
+      current < FULL_OPACITY &&
+      current - previous > JUMP_LIMIT &&
+      shownOpacity(after, MARKER) <= HIDDEN_LIMIT;
     return enterEnd || exitEnd;
   };
   return { ...recording, frames: frames.filter((frame, index) => !isEndReading(frame, index)) };
@@ -437,11 +450,11 @@ const CLOSES_BY_ITSELF = 'The popup closes by itself after its enter.';
 interface Place {
   origin: string;
   popup: Rect;
-  trigger: Rect;
+  anchor: Rect;
 }
 
 /**
- * The computed `transform-origin` of the popup that shows, its rectangle and that of the trigger,
+ * The computed `transform-origin` of the popup that shows, its rectangle and that of its anchor,
  * after the end of each animation. Right after a transition of `transform` ends, WebKit can give the
  * rectangle of the first frame of the transition.
  */
@@ -453,10 +466,10 @@ async function readPlace(page: Page): Promise<Place | undefined> {
     const popup = Array.from(document.querySelectorAll('[data-bench="popup"]')).find((element) =>
       element.checkVisibility(),
     );
-    const trigger =
+    const anchor =
       document.querySelector('[data-bench="anchor"]') ??
       document.querySelector('[data-bench="trigger"]');
-    if (popup === undefined || trigger === null) {
+    if (popup === undefined || anchor === null) {
       return undefined;
     }
     const rectOf = (element: Element) => {
@@ -466,26 +479,26 @@ async function readPlace(page: Page): Promise<Place | undefined> {
     return {
       origin: getComputedStyle(popup).transformOrigin,
       popup: rectOf(popup),
-      trigger: rectOf(trigger),
+      anchor: rectOf(anchor),
     };
   });
 }
 
-/** Where the popup is from the trigger: above it, below it, beside it or on it. */
-function sideOf({ popup, trigger }: Place): 'above' | 'below' | 'beside' | 'on' {
-  if (popup.y + popup.height <= trigger.y + ORIGIN_TOLERANCE) {
+/** Where the popup is from its anchor: above it, below it, beside it or on it. */
+function sideOf({ popup, anchor }: Place): 'above' | 'below' | 'beside' | 'on' {
+  if (popup.y + popup.height <= anchor.y + ORIGIN_TOLERANCE) {
     return 'above';
   }
-  if (popup.y >= trigger.y + trigger.height - ORIGIN_TOLERANCE) {
+  if (popup.y >= anchor.y + anchor.height - ORIGIN_TOLERANCE) {
     return 'below';
   }
-  return gapBetween(popup, trigger) > 0 ? 'beside' : 'on';
+  return gapBetween(popup, anchor) > 0 ? 'beside' : 'on';
 }
 
 /**
  * The popup grows in its enter, and the point of its computed `transform-origin` is no further from
- * the trigger than the gap between them, plus `ORIGIN_TOLERANCE`. With `flipped`, the run first
- * finds the side where the popup opens. Then it puts the trigger at that edge of the viewport, and
+ * the anchor than the gap between them, plus `ORIGIN_TOLERANCE`. With `flipped`, the run first
+ * finds the side where the popup opens. Then it puts the anchor at that edge of the viewport, and
  * the popup must open on the other side.
  */
 async function originAtAnchor(
@@ -532,21 +545,21 @@ async function originAtAnchor(
       .map(({ rect }) => rect.width),
   );
   const growth = Math.min(...widths) / place.popup.width;
-  const distance = distanceToRect(originPoint(place.origin, place.popup), place.trigger);
-  const gap = gapBetween(place.popup, place.trigger);
+  const distance = distanceToRect(originPoint(place.origin, place.popup), place.anchor);
+  const gap = gapBetween(place.popup, place.anchor);
   const side = sideOf(place);
   const edge = expected === 'above' ? 'bottom' : 'top';
   const sideText =
-    expected === undefined ? '' : ` At the ${edge} edge, the popup is ${side} the trigger.`;
-  const measure = `Origin ${distance.toFixed(1)} px from the trigger. Gap ${gap.toFixed(1)} px.${sideText}`;
+    expected === undefined ? '' : ` At the ${edge} edge, the popup is ${side} the anchor.`;
+  const measure = `Origin ${distance.toFixed(1)} px from the anchor. Gap ${gap.toFixed(1)} px.${sideText}`;
   return verdictOf(measure, [
     expected !== undefined &&
       side !== expected &&
-      `The popup does not flip: at the ${edge} edge, it is ${side} the trigger.`,
+      `The popup does not flip: at the ${edge} edge, it is ${side} the anchor.`,
     growth > GROWTH_LIMIT &&
       `The popup does not grow: its smallest width in the enter is ${String(Math.round(growth * 100))}% of its width at rest.`,
     distance > gap + ORIGIN_TOLERANCE &&
-      `The origin is ${distance.toFixed(1)} px from the trigger, and the gap is ${gap.toFixed(1)} px.`,
+      `The origin is ${distance.toFixed(1)} px from the anchor, and the gap is ${gap.toFixed(1)} px.`,
   ]);
 }
 
