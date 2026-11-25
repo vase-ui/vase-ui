@@ -48,7 +48,7 @@ onBeforeUnmount(() => {
 
 // `v-show` removes `display: none` in the post flush after `entered` becomes `true`, after a post
 // watcher of `setup`. In a `disabled` portal, the content teleports into the viewport in the update
-// after the mount. Wait one tick so `usePopupSizes` measures the shown popup with its content.
+// after the mount.
 const ready = shallowRef(false);
 watch(
   entered,
@@ -57,8 +57,6 @@ watch(
   },
   { immediate: true, flush: 'post' },
 );
-// The popup takes the size of its new content in steps at each change of the item, also during a
-// leave. It does the same when the shown content changes, such as in a nested menu.
 const sizes = usePopupSizes(() => (popup.open && ready.value ? element.value : null));
 const slot = inject(sizesKey, null);
 if (slot) {
