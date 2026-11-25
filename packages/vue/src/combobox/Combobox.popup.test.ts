@@ -348,7 +348,7 @@ describe('a popup in a <Transition>', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
     const atOpen = shownOpacity(first);
-    await userEvent.click(trigger());
+    trigger().click();
     const [frames = []] = await opacityUntilRest([first]);
     expect(popup()).toBe(first);
     expect(popups()).toBe(1);
