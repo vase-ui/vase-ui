@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { reactive } from 'vue';
 import PreviewCardLinks from '../../test/fixtures/PreviewCardLinks.vue';
 import { mount } from '../../test/render';
+import { readAfter } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 import { linesOf } from './line';
 
@@ -61,9 +62,23 @@ describe('the line of a wrapped link', () => {
 
   test('the card is at the line that the pointer is on at the end of the delay', async () => {
     mountLinks({ trigger: { delay: 150 }, positioner: { side: 'top' } });
+    const overlap = link('overlap');
+    const second = linesOf(overlap)[1]!;
+    const closedBeforeMove = readAfter(overlap, 'pointerenter', 50, () => {
+      const closed = positioner() === null;
+      overlap.dispatchEvent(
+        new PointerEvent('pointermove', {
+          bubbles: true,
+          composed: true,
+          pointerType: 'mouse',
+          clientX: center(second),
+          clientY: (second.top + second.bottom) / 2,
+        }),
+      );
+      return closed;
+    });
     await hoverLine('overlap', 0);
-    await hoverLine('overlap', 1);
-    const second = linesOf(link('overlap'))[1]!;
+    expect(await closedBeforeMove).toBe(true);
     await placedAt((box) => expectNear(box.bottom, second.top));
   });
 

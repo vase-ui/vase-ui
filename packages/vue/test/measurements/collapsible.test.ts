@@ -8,7 +8,7 @@ import MeasureInjectedPanel from '../fixtures/MeasureInjectedPanel.vue';
 import MeasureKeptHeight from '../fixtures/MeasureKeptHeight.vue';
 import MeasureUntilFound from '../fixtures/MeasureUntilFound.vue';
 import { hydrate, mount, renderOnServer } from '../render';
-import { wait } from '../wait';
+import { wait, waitSingleFrame } from '../wait';
 import { waitFor } from '../waitFor';
 
 let root: HTMLElement | undefined;
@@ -36,6 +36,12 @@ function countTransitions(target: Element) {
     runs.push((event as TransitionEvent).propertyName),
   );
   return runs;
+}
+
+async function waitFrames(count: number) {
+  for (let index = 0; index < count; index += 1) {
+    await waitSingleFrame();
+  }
 }
 
 // The parts that call `useEnterAfterLeave` render their element in this way. `Avatar.Image` removes
@@ -167,12 +173,14 @@ describe('a kept element whose hidden Vue writes, with the height of a variable'
     const target = host.firstElementChild!;
     const runs = countTransitions(target);
     // An app opens the element in a later task than the one of its mount.
-    await wait(50);
+    await waitFrames(2);
     const toggle = async () => {
+      const start = runs.length;
       scene.open = !scene.open;
       await nextTick();
-      await wait(200);
-      return [...runs];
+      await waitFrames(2);
+      await Promise.all(target.getAnimations().map((transition) => transition.finished));
+      return runs.slice(start);
     };
     return { toggle };
   }
@@ -182,14 +190,14 @@ describe('a kept element whose hidden Vue writes, with the height of a variable'
     expect(await after.toggle()).toEqual([]);
     const both = await scenario({ kind: 'Variable', writes: 'both' });
     expect(await both.toggle()).toEqual(['height']);
+    expect(await both.toggle()).toEqual([]);
     expect(await both.toggle()).toEqual(['height']);
-    expect(await both.toggle()).toEqual(['height', 'height']);
   });
 
   test('a close has a transition when the [hidden] rule keeps the box', async () => {
     const kept = await scenario({ kind: 'VariableKeptBox', writes: 'both' });
-    await kept.toggle();
-    expect(await kept.toggle()).toEqual(['height', 'height']);
+    expect(await kept.toggle()).toEqual(['height']);
+    expect(await kept.toggle()).toEqual(['height']);
   });
 
   test('the grid rows animate an open and a close; with hidden="until-found" a close takes the height to 0 at once', async () => {
