@@ -964,7 +964,7 @@ describe('content without ScrollArea.Content', () => {
     expect(viewport).toHaveFocus();
   });
 
-  test('content that grows to overflow while holding a control keeps tabindex -1', async () => {
+  test('content that grows to overflow with a control in it keeps tabindex -1', async () => {
     const scene = reactive({ lines: 1, control: true });
     const { root, viewport, area, before } = await mountDirect(scene);
     expect(area).not.toHaveAttribute('data-has-overflow-y');
@@ -1104,7 +1104,7 @@ describe('content without ScrollArea.Content', () => {
     expect(setProperty).not.toHaveBeenCalled();
   });
 
-  test('mounting Content stops direct-child observation, and unmounting Content measures again', async () => {
+  test('a Content that mounts stops direct-child observation, and one that unmounts measures again', async () => {
     const unobserve = vi.spyOn(ResizeObserver.prototype, 'unobserve');
     onTestFinished(() => unobserve.mockRestore());
     const observed = new Set<MutationObserver>();
@@ -1128,7 +1128,13 @@ describe('content without ScrollArea.Content', () => {
       vi.unstubAllGlobals();
     });
 
-    const scene = reactive({ content: false, contentHeight: 1000, box: true, boxHeight: 50 });
+    const scene = reactive({
+      content: false,
+      contentHeight: 1000,
+      box: true,
+      boxHeight: 50,
+      lines: 0,
+    });
     const { root, viewport, area } = await mountDirect(scene);
     const box = root.querySelector<HTMLElement>('.box')!;
     expect(observed.size).toBe(1);
@@ -1136,7 +1142,7 @@ describe('content without ScrollArea.Content', () => {
     scene.content = true;
     await waitFor(() => expect(viewport.tabIndex).toBe(0));
     expect(unobserve).toHaveBeenCalledWith(box);
-    // Only the tab-stop observer stays on the overflowing viewport with Content.
+    // Only the tab-stop observer stays when Content is present.
     expect(observed.size).toBe(1);
     await settle();
 

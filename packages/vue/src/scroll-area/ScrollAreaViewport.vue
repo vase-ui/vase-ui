@@ -90,9 +90,8 @@ watch(
   { flush: 'post' },
 );
 
-// With no `ScrollArea.Content`, the viewport watches its own content: `ResizeObserver` on its
-// element children for size changes, and a subtree `MutationObserver` for added or removed nodes
-// and direct text changes (test/measurements/scroll-area.test.ts).
+// `ResizeObserver` on a scroll container does not report when its content changes size, and
+// `MutationObserver` needs `subtree` to see direct text changes (test/measurements/scroll-area.test.ts).
 watch(
   () => (contents.value === 0 ? element.value : null),
   (target, _, onCleanup) => {
