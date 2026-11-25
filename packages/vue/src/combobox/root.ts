@@ -146,7 +146,7 @@ export interface ComboboxRootContext {
   readonly text: string;
   /** The text that the input shows: the text, or the inline completion of a key highlight. */
   readonly shownText: string;
-  /** The text of the close, which an input in a kept popup shows until the next open. */
+  /** The text of the close for an input in a kept popup or a popup that leaves, until the leave ends or the next open. */
   readonly keptText: string | null;
   /** A fill of the browser keeps the closed popup in the DOM, so that its items stay mounted. */
   readonly keepsPopup: boolean;
@@ -367,7 +367,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
    */
   const highlightSelectedLater = shallowRef(false);
   // A kept popup or a popup that leaves in a `<Transition>` shows its exit after the close, so it
-  // keeps the filter and the text of its input until the leave ends or the next open
+  // keeps the query and the text of its last open render until the leave ends or the next open
   // (test/measurements/combobox.test.ts, "a kept popup that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
   // The text of an autofill of the input, which is no query (Base UI).
@@ -375,8 +375,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   // With no `items`, the labels of a fill are the text of the items, so the popup stays from the
   // first fill on, as in Base UI.
   const keepsPopup = shallowRef(false);
-  const query = computed(() => {
-    if (kept.value) return kept.value.query;
+  const liveQuery = computed(() => {
     const trimmed = text.value.trim();
     // A single combobox shows each item while its input shows the label of its value.
     if (source.mode === 'single' && !typed.value && trimmed === labelOf(valueModel.value).trim()) {
@@ -385,6 +384,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (!typed.value && text.value === filledText.value) return '';
     return trimmed;
   });
+  const query = computed(() => (kept.value ? kept.value.query : liveQuery.value));
   const filteredItems = computed<readonly unknown[]>((previous) => {
     let next: readonly unknown[];
     if (source.filteredItems) next = source.filteredItems;
@@ -611,6 +611,21 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
   );
 
+  // Vue patches a popup that leaves, so it keeps the query and text of its last open render. This
+  // also holds when a pick or the parent changes the text at the close.
+  watch([() => root.open, liveQuery, text] as const, ([open], [wasOpen, openQuery, openText]) => {
+    if (open) kept.value = null;
+    else if (wasOpen) {
+      kept.value = root.keepMounted || root.leaving ? { query: openQuery, text: openText } : null;
+    }
+  });
+  watch(
+    () => root.keepMounted || root.leaving,
+    (keeps) => {
+      if (!keeps) kept.value = null;
+    },
+  );
+
   // The key that opened the popup, for the highlight after the items mounted.
   let openKey: KeyboardEvent | undefined;
   watch(
@@ -627,12 +642,9 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         // The highlight event of no item resets the last highlight. A virtualized list emits none
         // for a highlight that it removes.
         if (source.virtualized) lastHighlight = { value: undefined, index: -1 };
-        kept.value =
-          root.keepMounted || root.leaving ? { query: query.value, text: text.value } : null;
         resetText(new Event('vase-ui'), root.reason === 'item-press');
         return;
       }
-      kept.value = null;
       // The items mount in this update.
       void nextTick(() => {
         if (!root.open || list.highlighted) return;
@@ -651,12 +663,6 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
           );
         }
       });
-    },
-  );
-  watch(
-    () => root.leaving,
-    (leaving) => {
-      if (!leaving && !root.keepMounted) kept.value = null;
     },
   );
 

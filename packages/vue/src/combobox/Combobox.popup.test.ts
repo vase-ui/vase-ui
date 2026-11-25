@@ -444,6 +444,86 @@ describe('a popup in a <Transition>', () => {
     ]);
   });
 
+  test('a press on the trigger beside the input while the popup leaves keeps the popup and goes back from where it is', async () => {
+    const log = new Set<string>();
+    mount(ComboboxInTransition, {
+      popup: { class: 'slow' },
+      log,
+    });
+    await nextTick();
+    await userEvent.click(trigger());
+    await opened();
+    const first = popup()!;
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    trigger().click();
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(popup()).toBe(first);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+  });
+
+  test('text typed in the outside input while the popup leaves keeps the popup, goes back from where it is, and updates the filter and empty state', async () => {
+    const log = new Set<string>();
+    mount(ComboboxInTransition, {
+      popup: { class: 'slow' },
+      log,
+    });
+    await nextTick();
+    await userEvent.type(input(), 'zzz');
+    await opened();
+    const first = popup()!;
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    await waitFor(() => expect(first).toHaveTextContent('No match.'));
+    expect(first).toHaveAttribute('data-empty', '');
+    expect(input()).toHaveAttribute('data-list-empty', '');
+    const popups = mostMatches('[data-testid="popup"]');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    expect(first).toHaveAttribute('data-empty', '');
+    expect(first).toHaveTextContent('No match.');
+    const atOpen = shownOpacity(first);
+    input().value = 'b';
+    input().dispatchEvent(
+      new InputEvent('input', { bubbles: true, inputType: 'insertText', data: 'b' }),
+    );
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(popup()).toBe(first);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+    await waitFor(() =>
+      expect(
+        [...document.querySelectorAll('[role="option"]')].map((el) => el.textContent!.trim()),
+      ).toEqual(['banana']),
+    );
+    expect(first).not.toHaveAttribute('data-empty');
+    expect(input()).not.toHaveAttribute('data-list-empty');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atEmpty = shownOpacity(first);
+    input().value = 'zzz';
+    input().dispatchEvent(
+      new InputEvent('input', { bubbles: true, inputType: 'insertText', data: 'zzz' }),
+    );
+    const [emptyFrames = []] = await opacityUntilRest([first]);
+    expect(popup()).toBe(first);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...emptyFrames)).toBeGreaterThan(atEmpty - 0.15);
+    expect(emptyFrames.at(-1)).toBe(1);
+    await waitFor(() => expect(first).toHaveAttribute('data-empty', ''));
+    expect(first).toHaveTextContent('No match.');
+    expect(input()).toHaveAttribute('data-list-empty', '');
+  });
+
   test('after a leave ends, the outside input clears `data-list-empty` from the closed query', async () => {
     mount(ComboboxInTransition, { popup: { class: 'slow' } });
     await nextTick();
@@ -452,9 +532,12 @@ describe('a popup in a <Transition>', () => {
     const element = popup()!;
     await finishAnimations(element);
     await waitFor(() => expect(input()).toHaveAttribute('data-list-empty', ''));
+    await waitFor(() => expect(element).toHaveTextContent('No match.'));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(element).toHaveClass('combobox-leave-leave-active'));
     expect(document.querySelectorAll('[role="option"]')).toHaveLength(0);
+    expect(element).toHaveAttribute('data-empty', '');
+    expect(element).toHaveTextContent('No match.');
     await finishAnimations(element);
     await closed();
     await waitFor(() => expect(input()).not.toHaveAttribute('data-list-empty'));

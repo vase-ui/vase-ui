@@ -788,6 +788,22 @@ describe('a popup in a <Transition>', () => {
     });
   });
 
+  test('a pick in a filtered autocomplete keeps its filtered items while the popup leaves', async () => {
+    mount(AutocompleteInTransition, { popup: { class: 'slow' } });
+    await nextTick();
+    await userEvent.type(input(), 'f');
+    await opened();
+    const element = popup()!;
+    await finishAnimations(element);
+    await waitFor(() => expect(itemNames()).toEqual(['feature', 'fix']));
+    await userEvent.click(byTestId('item-feature')!);
+    await waitFor(() => expect(element).toHaveClass('auto-leave-leave-active'));
+    expect(input().value).toBe('feature');
+    expect(itemNames()).toEqual(['feature', 'fix']);
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+  });
+
   test('the content of the popup stays mounted until the leave ends', async () => {
     const log: string[] = [];
     const root = reactive<Props>({ open: true });

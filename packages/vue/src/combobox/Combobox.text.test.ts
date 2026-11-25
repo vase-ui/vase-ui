@@ -605,6 +605,8 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await waitFor(() => expect(options()).toEqual(['apple', 'apricot']));
     await userEvent.click(item('apple'));
     await leaving();
+    expect(input().value).toBe('ap');
+    expect(options()).toEqual(['apple', 'apricot']);
     await userEvent.click(trigger(), { force: true });
     await reopened();
     await waitFor(() => expect(input().value).toBe(''));
@@ -631,6 +633,38 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await settle();
     expect(input().value).toBe('banana');
     expect(log).toEqual([]);
+  });
+
+  test('a pick in a filtered single combobox keeps its filtered items while the popup leaves, and the next open shows each item', async () => {
+    mount(ComboboxInTransition, {});
+    await nextTick();
+    await userEvent.type(input(), 'ap');
+    await opened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot']));
+    await userEvent.click(item('apple'));
+    await leaving();
+    expect(input().value).toBe('apple');
+    expect(options()).toEqual(['apple', 'apricot']);
+    await userEvent.click(trigger(), { force: true });
+    await reopened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot', 'banana']));
+  });
+
+  test('Escape after a typed text that matches the selected label keeps its filtered items while the popup leaves', async () => {
+    mount(ComboboxInTransition, { root: { defaultValue: 'apple' } });
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    await userEvent.keyboard('x{Backspace}');
+    await waitFor(() => expect(options()).toEqual(['apple']));
+    await userEvent.keyboard('{Escape}');
+    await leaving();
+    expect(input().value).toBe('apple');
+    expect(options()).toEqual(['apple']);
+    await closed();
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot', 'banana']));
   });
 
   test('a close that the parent does not apply keeps the text and the filter', async () => {
