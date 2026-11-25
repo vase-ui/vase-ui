@@ -1,4 +1,4 @@
-import { nextTick, shallowRef, watch } from 'vue';
+import { nextTick, onScopeDispose, shallowRef, watch } from 'vue';
 import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
@@ -20,6 +20,12 @@ export type FocusTarget =
 
 /** The element that had the focus before the open of each root. */
 const befores = new WeakMap<PopupRoot, Element | null>();
+
+/**
+ * The return targets of each root. A popup that opens from inside another popup keeps the targets
+ * of that popup as its last targets, because the update of the open can make them `inert`.
+ */
+const returnTargets = new Map<PopupRoot, () => (HTMLElement | null)[]>();
 
 function resolve(
   target: FocusTarget | undefined,
@@ -83,6 +89,12 @@ export function usePopupFocus(
      * @default ['focus-out']
      */
     noReturn?: readonly string[];
+    /**
+     * An input outside the popup keeps the focus while the popup is open. The return then gives
+     * the focus only to an element of `finalFocus`, and not at a close by `'focus-out'` or
+     * `'outside-press'`.
+     */
+    inputKeepsFocus?: () => boolean;
     /** The element that takes the focus when the focused element of the popup leaves or hides. */
     lostFocus?: () => HTMLElement | null;
     /** The first sentinel also asks for a close when it gets the focus from the popup. */
@@ -111,18 +123,46 @@ export function usePopupFocus(
     return trigger?.matches(CANDIDATES) ? (trigger as HTMLElement) : null;
   }
 
+  // After an open by code, the element that had the focus before comes before the trigger
+  // (BUG-6037).
+  function targets() {
+    const own = [focusableTrigger(), before as HTMLElement | null];
+    if (root.interaction === '') own.reverse();
+    return [...own, ...inherited];
+  }
+  let inherited: (HTMLElement | null)[] = [];
+  returnTargets.set(root, targets);
+  onScopeDispose(() => returnTargets.delete(root));
+
+  let pending: ReturnType<typeof returnFocus> = null;
   watch(
     () => root.open,
     (open) => {
       if (open) {
         took = false;
         opens.value += 1;
+        pending = null;
+        // The open reads the targets before the update that writes `inert`.
+        const active = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
+        const from = [...returnTargets].find(([other]) => other !== root && other.popup?.contains(active));
+        inherited = from ? from[1]() : [];
         return;
       }
-      const given = returnFocus();
-      if (given) void nextTick(() => settleFocus(given));
+      pending = returnFocus();
     },
     { flush: 'sync' },
+  );
+  // The return waits for the update of the close, so that each element that the update renders is
+  // in the document, and a modal popup has removed `inert` (test/measurements/dialog.test.ts).
+  watch(
+    () => root.open,
+    (open) => {
+      if (open || !pending) return;
+      const given = pending;
+      pending = null;
+      void nextTick(() => settleFocus(given));
+    },
+    { flush: 'post' },
   );
 
   function takeFocus(popup: HTMLElement) {
@@ -199,6 +239,13 @@ export function usePopupFocus(
     if (!popup) return null;
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
+    if (options.inputKeepsFocus?.() && !popup.contains(active)) {
+      const reason = root.reason ?? '';
+      if (options.finalFocus() === undefined || ['focus-out', 'outside-press'].includes(reason)) {
+        return null;
+      }
+      return { popup, active, onlyFinalFocus: true };
+    }
     // A popup that took no focus at its open, as after a hover, gives back a focus that went into
     // it later.
     if (!took && !options.noReturn && !popup.contains(active)) return null;
@@ -212,41 +259,36 @@ export function usePopupFocus(
     if (active && active !== doc.body && active !== root.activeTrigger && !popup.contains(active)) {
       return null;
     }
-    // The return to the trigger, or to the element that had the focus before the open, happens at
-    // once, so that a popup that another popup opens in the same task takes that element as the one
-    // that had the focus before.
-    const target = options.finalFocus();
-    if (target === undefined || target === true || target === null) moveFocus(popup);
-    return { popup, active };
+    return { popup, active, onlyFinalFocus: false };
   }
 
-  // A focus of an element that left the DOM or is hidden does nothing. An element in the popup that
-  // closes is no target, also while the popup leaves. After an open by code, the element that had
-  // the focus before comes before the trigger (BUG-6037).
+  // A focus of an element that left the DOM, is hidden, `inert` or disabled does nothing, so the
+  // next target gets the focus. An element in the popup that closes is no target, also while the
+  // popup leaves.
   function moveFocus(popup: HTMLElement) {
     const target = resolve(options.finalFocus(), root.closeInteraction);
-    const fallbacks = [focusableTrigger(), before as HTMLElement | null];
-    if (root.interaction === '') fallbacks.reverse();
-    const element =
-      target === false
-        ? undefined
-        : [target === true ? null : tabStopOf(target, popup), ...fallbacks].find(
-            (each) => each?.isConnected && !popup.contains(each),
-          );
-    if (!element) return null;
-    focusAs(element, root.closeInteraction);
-    return element;
+    if (target === false) return null;
+    const doc = ownerDocument(popup);
+    for (const each of [target === true ? null : tabStopOf(target, popup), ...targets()]) {
+      if (!each?.isConnected || popup.contains(each)) continue;
+      focusAs(each, root.closeInteraction);
+      if (activeElement(doc) === each) return each;
+    }
+    return null;
   }
 
-  // After the update of the close, each element that the update renders is in the document, and the
-  // page of a modal popup has no `inert` (test/measurements/dialog.test.ts).
-  function settleFocus({ popup, active }: { popup: HTMLElement; active: Element | null }) {
+  function settleFocus({ popup, active, onlyFinalFocus }: NonNullable<typeof pending>) {
     // An open in the same task takes the focus itself.
     if (root.open) return;
     const doc = ownerDocument(popup);
     const now = activeElement(doc);
-    // A listener of the developer, or the return at the close, focused another element.
+    // A listener of the developer focused another element.
     if (now && now !== doc.body && now !== active && !popup.contains(now)) return;
+    if (onlyFinalFocus) {
+      const target = resolve(options.finalFocus(), root.closeInteraction);
+      if (typeof target === 'object' && target.isConnected) focusAs(target, root.closeInteraction);
+      return;
+    }
     if (moveFocus(popup)) return;
     // The popup that leaves is inert. The browser moves the focus out of an inert element only when
     // it updates the rendering, and WebKit keeps the text caret there

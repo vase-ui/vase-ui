@@ -34,7 +34,7 @@ import { flattenLeafItems, stringifyAsLabel, type Group } from '../common/resolv
 import { useList, type List, type ListItem } from '../list/list';
 import { listNameFromControl } from '../list/name';
 import { useLocale } from '../locale-provider/part';
-import { focusAs, usePopupFocus, type FocusTarget } from '../popup/focus';
+import { usePopupFocus, type FocusTarget } from '../popup/focus';
 import { isInPopup, useLayer, type Layer } from '../popup/layer';
 import { useFullWidth, type Side, type usePlacement } from '../popup/placement';
 import { usePopupPress } from '../popup/press';
@@ -516,31 +516,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     initialFocus: () => popupFocus.value.initialFocus,
     finalFocus: () => popupFocus.value.finalFocus,
     tabIntoPopup: () => inputIsControl.value,
+    inputKeepsFocus: () => inputIsControl.value && !source.inline,
   });
-  // An input that is the control keeps the focus while the popup is open, so the popup returns no
-  // focus at its close. A `finalFocus` of the developer still gets the focus, as in Base UI. Its
-  // target can be an element that the update of the close renders, so it waits for that update.
-  watch(
-    () => root.open,
-    (open) => {
-      const target = popupFocus.value.finalFocus;
-      if (open || source.inline || !inputIsControl.value || target === undefined) return;
-      if (root.reason === 'focus-out' || root.reason === 'outside-press') return;
-      const doc = ownerDocument(controlInput.value);
-      const active = activeElement(doc);
-      void nextTick(() => {
-        if (root.open) return;
-        // Code can focus another element after the close.
-        const now = activeElement(doc);
-        if (now && now !== doc.body && now !== active) return;
-        const element = typeof target === 'function' ? target(root.closeInteraction) : target;
-        if (typeof element === 'object' && element?.isConnected) {
-          focusAs(element, root.closeInteraction);
-        }
-      });
-    },
-    { flush: 'sync' },
-  );
   const expanded = computed(() => root.open || source.inline);
 
   // The highlight.
