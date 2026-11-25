@@ -43,11 +43,7 @@ const contentLeaveToClass = styles.ContentLeaveTo;
       <template #default="{ payload }">
         <PreviewCard.Portal>
           <PreviewCard.Positioner :side-offset="8" :class="styles.Positioner">
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <PreviewCard.Popup :class="styles.Popup">
                 <PreviewCard.Arrow :class="styles.Arrow" />
                 <PreviewCard.Viewport v-slot="{ triggerId }" :class="styles.Viewport">

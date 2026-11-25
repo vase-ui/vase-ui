@@ -49,4 +49,23 @@ describe('server render and hydration', () => {
     await waitFor(() => expect(popupOf(document.body)).not.toBe(null));
     expect(root.contains(popupOf(document.body))).toBe(false);
   });
+
+  test('a disabled portal of an open root renders the shown popup and backdrop in place with no `display: none`, and hydrates with no message', async () => {
+    const props = {
+      root: { defaultOpen: true },
+      portal: { disabled: true },
+      backdrop: {},
+    };
+    const root = await renderOnServer('PreviewCardParts', props);
+    const element = popupOf(root) as HTMLElement;
+    const backdrop = root.querySelector<HTMLElement>('[data-testid="backdrop"]')!;
+    expect(element.style.display).toBe('');
+    expect(backdrop.style.display).toBe('');
+    hydrate(PreviewCardParts, props, root);
+    await nextTick();
+    expect(popupOf(root)).toBe(element);
+    expect(root.querySelector('[data-testid="backdrop"]')).toBe(backdrop);
+    expect(element.style.display).toBe('');
+    expect(backdrop.style.display).toBe('');
+  });
 });

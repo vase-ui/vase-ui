@@ -73,11 +73,7 @@ const popupHiddenClass = '[transform:scale(0.98)] opacity-0';
             :side-offset="8"
             class="h-[var(--positioner-height)] w-[var(--positioner-width)] max-w-[var(--available-width)]"
           >
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <PreviewCard.Popup
                 class="relative h-[var(--popup-height,auto)] w-[var(--popup-width,auto)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[transform,opacity] duration-100 ease-out dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
               >

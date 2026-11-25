@@ -17,7 +17,7 @@ const popupHiddenClass = styles.PopupHidden;
 
     <PreviewCard.Portal>
       <PreviewCard.Positioner :side-offset="8">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <PreviewCard.Popup :class="styles.Popup">
             <PreviewCard.Arrow :class="styles.Arrow" />
             <div :class="styles.PopupContent">

@@ -47,11 +47,7 @@ const contentLeaveToClass =
             :side-offset="8"
             class="h-[var(--positioner-height)] w-[var(--positioner-width)] max-w-[var(--available-width)] transition-[top,left,right,bottom,transform] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <PreviewCard.Popup
                 class="relative h-[var(--popup-height,auto)] w-[var(--popup-width,auto)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 transition-[width,height,opacity,transform] duration-[0.35s] ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
               >

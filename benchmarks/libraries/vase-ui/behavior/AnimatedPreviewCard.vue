@@ -11,7 +11,7 @@ import '../../../behavior/style.css';
       </PreviewCard.Trigger>
       <PreviewCard.Portal>
         <PreviewCard.Positioner>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <PreviewCard.Popup data-bench="popup" class="bench-motion">
               <PreviewCard.Arrow />
               Preview

@@ -10,9 +10,8 @@ import { Tooltip } from '../../src/tooltip';
 // With a viewport in the popup, the positioner has its place in `top`, `left`, `right` and `bottom`,
 // with a transition. The popup enters from the side that it is on, and fades in with a CSS
 // animation.
-// The popup of a preview card mounts at each open, so its `<Transition>` has `appear`. With
-// `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`. The
-// popover has a second trigger with the `id` "second", 150 pixels to the right of the first.
+// With `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`.
+// The popover has a second trigger with the `id` "second", 150 pixels to the right of the first.
 defineProps({
   family: {
     type: String as PropType<'Popover' | 'Menu' | 'Tooltip' | 'PreviewCard'>,
@@ -80,7 +79,7 @@ defineProps({
     <PreviewCard.Root :handle>
       <PreviewCard.Portal>
         <PreviewCard.Positioner data-testid="positioner" class="first-place-positioner">
-          <Transition name="first-place" appear>
+          <Transition name="first-place">
             <PreviewCard.Popup data-testid="popup" class="first-place-popup">
               <PreviewCard.Viewport>Popup</PreviewCard.Viewport>
             </PreviewCard.Popup>

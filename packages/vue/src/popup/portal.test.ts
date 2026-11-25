@@ -12,6 +12,7 @@ const FAMILIES = [
   { family: 'popover', parts: ['backdrop', 'popup'] },
   { family: 'menu', parts: ['backdrop', 'popup'] },
   { family: 'tooltip', parts: ['popup'] },
+  { family: 'preview-card', parts: ['backdrop', 'popup'] },
 ] as const;
 
 function mountFamily(family: string, inSlot = false) {

@@ -3,6 +3,7 @@ import type { PropType } from 'vue';
 import { Dialog } from '../../src/dialog';
 import { Menu } from '../../src/menu';
 import { Popover } from '../../src/popover';
+import { PreviewCard } from '../../src/preview-card';
 import { Tooltip } from '../../src/tooltip';
 import PartTransition from './PartTransition.vue';
 
@@ -11,7 +12,10 @@ import PartTransition from './PartTransition.vue';
 // `<Transition>`. Tooltip has no backdrop. Each part has `as` and calls `count` with its name in its
 // content.
 defineProps({
-  family: { type: String as PropType<'dialog' | 'popover' | 'menu' | 'tooltip'>, required: true },
+  family: {
+    type: String as PropType<'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card'>,
+    required: true,
+  },
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
   inSlot: Boolean,
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
@@ -88,7 +92,7 @@ defineProps({
       </Menu.Positioner>
     </Menu.Portal>
   </Menu.Root>
-  <Tooltip.Root v-else :open="scene.open">
+  <Tooltip.Root v-else-if="family === 'tooltip'" :open="scene.open">
     <Tooltip.Portal>
       <Tooltip.Positioner>
         <PartTransition :on="!inSlot" name="popup" :log>
@@ -103,4 +107,27 @@ defineProps({
       </Tooltip.Positioner>
     </Tooltip.Portal>
   </Tooltip.Root>
+  <PreviewCard.Root v-else :open="scene.open">
+    <PreviewCard.Portal>
+      <PartTransition :on="!inSlot" name="backdrop" :log>
+        <PreviewCard.Backdrop data-testid="backdrop" :as>
+          <template v-if="inSlot" #element="{ props, elementRef }">
+            <section v-bind="props" :ref="elementRef" />
+          </template>
+          {{ count('backdrop') }}
+        </PreviewCard.Backdrop>
+      </PartTransition>
+      <PreviewCard.Positioner>
+        <PartTransition :on="!inSlot" name="popup" :log>
+          <PreviewCard.Popup data-testid="popup" :as>
+            <template v-if="inSlot" #element="{ props, elementRef }">
+              <section v-bind="props" :ref="elementRef" />
+            </template>
+            {{ count('popup') }}
+            PreviewCard
+          </PreviewCard.Popup>
+        </PartTransition>
+      </PreviewCard.Positioner>
+    </PreviewCard.Portal>
+  </PreviewCard.Root>
 </template>

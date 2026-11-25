@@ -7,10 +7,16 @@ import PreviewCardInTransition from '../../test/fixtures/PreviewCardInTransition
 import PreviewCardPartAlone from '../../test/fixtures/PreviewCardPartAlone.vue';
 import PreviewCardParts from '../../test/fixtures/PreviewCardParts.vue';
 import PreviewCardSlots from '../../test/fixtures/PreviewCardSlots.vue';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
-import { readAfter, readWhen } from '../../test/wait';
+import { readAfter, readWhen, waitSingleFrame } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 type Props = Record<string, unknown>;
@@ -370,6 +376,147 @@ describe('in the DOM', () => {
     await waitFor(() => expect(positioner()).toBe(null));
   });
 
+  test('an open while the card leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+    const log = new Set<string>();
+    const root = reactive<Props>({ open: true });
+    mount(PreviewCardInTransition, {
+      root,
+      popup: { class: 'slow' },
+      backdrop: { class: 'slow' },
+      log,
+    });
+    const first = await opened();
+    const backdrop = byTestId('backdrop');
+    await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
+    root.open = false;
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = [first, backdrop].map(shownOpacity);
+    root.open = true;
+    const frames = await opacityUntilRest([first, backdrop]);
+    expect(popup()).toBe(first);
+    expect(byTestId('backdrop')).toBe(backdrop);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave') || log.has('backdrop-after-leave')).toBe(false);
+    frames.forEach((opacities, index) => {
+      expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+      expect(opacities.at(-1)).toBe(1);
+    });
+  });
+
+  test('an open by another link while the card leaves shows the same popup at that link, with its payload, in the first frame', async () => {
+    mount(PreviewCardInTransition, {
+      trigger: { delay: 0, closeDelay: 0 },
+      payloads: ['first', 'second'],
+      popup: { class: 'slow' },
+    });
+    await nextTick();
+    await userEvent.hover(byId('a'));
+    const element = await opened();
+    await placed();
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('card-enter-active'));
+    await userEvent.hover(byId('outside'));
+    await waitFor(() => expect(element).toHaveClass('card-leave-active'));
+    byId('b').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await nextTick();
+    const firstFrame = await new Promise<{ payload: string; offset: number }>((resolve) =>
+      requestAnimationFrame(() => {
+        const box = positioner()!.getBoundingClientRect();
+        const anchor = byId('b').getBoundingClientRect();
+        resolve({
+          payload: byTestId('payload').textContent,
+          offset: box.left + box.width / 2 - (anchor.left + anchor.width / 2),
+        });
+      }),
+    );
+    expect(popup()).toBe(element);
+    expect(firstFrame.payload).toBe('second');
+    expect(Math.abs(firstFrame.offset)).toBeLessThan(1);
+  });
+
+  test('the popup that leaves keeps the payload of its close when the parent clears the trigger', async () => {
+    const root = reactive<Props>({
+      triggerId: 'a',
+      'onUpdate:triggerId': (id: string | null) => (root.triggerId = id),
+      onOpenChange: (open: boolean) => {
+        if (!open) root.triggerId = null;
+      },
+    });
+    mount(PreviewCardInTransition, {
+      root,
+      trigger: { delay: 0, closeDelay: 0 },
+      payloads: ['first', 'second'],
+      popup: { class: 'slow' },
+    });
+    await nextTick();
+    await userEvent.hover(byId('a'));
+    const element = await opened();
+    await finishAnimations(element);
+    await waitFor(() => expect(element).not.toHaveClass('card-enter-active'));
+    await userEvent.hover(byId('outside'));
+    await waitFor(() => expect(element).toHaveClass('card-leave-active'));
+    expect(root.triggerId).toBe(null);
+    await nextTick();
+    expect(byTestId('payload')).toHaveTextContent('first');
+  });
+
+  test('the content of the popup stays mounted until the leave ends', async () => {
+    const log: string[] = [];
+    mount(PreviewCardInTransition, {
+      root: { defaultOpen: true },
+      popup: { class: 'slow' },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const element = await opened();
+    await finishAnimations(element);
+    await waitFor(() => expect(log).toContain('after-enter'));
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(element).toHaveClass('card-leave-active'));
+    await nextTick();
+    expect(log).not.toContain('child unmounted');
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log.slice(-2)).toEqual(['after-leave', 'child unmounted']);
+  });
+
+  test('with `:css="false"`, the enter runs once with no `appear`, and the popup leaves when `done` runs', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({ open: true });
+    let endLeave = () => {};
+    mount(PreviewCardInTransition, {
+      root,
+      jsHooks: {
+        enter(done: () => void) {
+          log.push('enter');
+          done();
+        },
+        leave(done: () => void) {
+          log.push('leave');
+          endLeave = done;
+        },
+      },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const element = await opened();
+    await waitFor(() => expect(log).toEqual(['before-enter', 'enter', 'after-enter']));
+    root.open = false;
+    await waitFor(() => expect(log).toContain('leave'));
+    expect(element.isConnected).toBe(true);
+    expect(log).not.toContain('child unmounted');
+    endLeave();
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log).toEqual([
+      'before-enter',
+      'enter',
+      'after-enter',
+      'leave',
+      'after-leave',
+      'child unmounted',
+    ]);
+  });
+
   test('with `keepMounted`, the closed popup and backdrop stay with `hidden` and `inert`', async () => {
     const { trigger } = await mountCard({
       portal: { keepMounted: true },
@@ -701,6 +848,34 @@ describe('the hover', () => {
       expect(log.at(-2)).toBe('openChange false trigger-hover');
     },
   );
+
+  test('a hover on the link while the card leaves after a hover close opens it at once, and the same popup goes back from where it is', async () => {
+    const log: string[] = [];
+    const trigger = reactive<Props>({ delay: 0, closeDelay: 0 });
+    mount(PreviewCardInTransition, {
+      root: rootEvents(log),
+      trigger,
+      popup: { class: 'slow' },
+    });
+    await nextTick();
+    await userEvent.hover(byId('a'));
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(first).not.toHaveClass('card-enter-active'));
+    trigger.delay = 10_000;
+    const popups = mostMatches('[data-testid="popup"]');
+    await userEvent.hover(byId('outside'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    byId('a').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await nextTick();
+    expect(log.at(-2)).toBe('openChange true trigger-hover');
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(popup()).toBe(first);
+    expect(popups()).toBe(1);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+  });
 
   test('a hover on a link while the card leaves after a hover close opens it with no delay, in a <Transition> and with `keepMounted`; after the leave, the delay holds', async () => {
     for (const portal of [{}, { keepMounted: true }]) {
@@ -1085,6 +1260,28 @@ describe('the viewport', () => {
     await waitFor(() => expect(byTestId('payload')).toHaveTextContent('second'));
     await wait(50);
     expect(byTestId('viewport')).not.toHaveAttribute('data-instant');
+  });
+
+  test('in a positioner with the size of its variables, the popup has the size of its content at the first open', async () => {
+    const { trigger } = await mountCard({
+      viewport: {},
+      positioner: {
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
+      triggers: [{ key: 't', attrs: { payload: 'first', delay: 0 } }],
+    });
+    await userEvent.hover(trigger());
+    const element = await opened();
+    await placed();
+    await waitFor(() =>
+      expect(positioner()!.style.getPropertyValue('--positioner-width')).not.toBe(''),
+    );
+    for (let frame = 0; frame < 3; frame += 1) await waitSingleFrame();
+    expect(element.offsetWidth).toBeGreaterThan(0);
+    expect(element.offsetWidth).toBe(element.scrollWidth);
+    expect(positioner()!.style.getPropertyValue('--positioner-width')).toBe(
+      `${element.offsetWidth}px`,
+    );
   });
 });
 

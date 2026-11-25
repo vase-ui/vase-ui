@@ -67,11 +67,7 @@ const popupHiddenClass = styles.PopupHidden;
       <template #default="{ payload }">
         <PreviewCard.Portal>
           <PreviewCard.Positioner :side-offset="8" :class="styles.Positioner">
-            <Transition
-              :enter-from-class="popupHiddenClass"
-              :leave-to-class="popupHiddenClass"
-              appear
-            >
+            <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
               <PreviewCard.Popup :class="styles.Popup">
                 <PreviewCard.Arrow :class="styles.Arrow" />
                 <div v-if="payload === 'typography'" :class="styles.PopupContent">
