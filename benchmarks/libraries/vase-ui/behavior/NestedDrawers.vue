@@ -18,7 +18,6 @@ const drawerCount = ref(0);
             enter-from-class="drawer-hidden"
             leave-to-class="drawer-hidden"
             leave-active-class="drawer-leaving"
-            appear
           >
             <Drawer.Popup data-bench="drawer-1" class="drawer-popup">
               <div data-bench="drawer-1-handle" />
@@ -36,7 +35,6 @@ const drawerCount = ref(0);
                           enter-from-class="drawer-hidden"
                           leave-to-class="drawer-hidden"
                           leave-active-class="drawer-leaving"
-                          appear
                         >
                           <Drawer.Popup data-bench="drawer-2" class="drawer-popup">
                             <div data-bench="drawer-2-handle" />

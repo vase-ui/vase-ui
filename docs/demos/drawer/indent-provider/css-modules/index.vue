@@ -24,7 +24,6 @@ const popupLeavingClass = styles.PopupLeaving;
                 :enter-from-class="backdropHiddenClass"
                 :leave-to-class="backdropHiddenClass"
                 :leave-active-class="backdropLeavingClass"
-                appear
               >
                 <Drawer.Backdrop :class="styles.Backdrop" />
               </Transition>
@@ -33,7 +32,6 @@ const popupLeavingClass = styles.PopupLeaving;
                   :enter-from-class="popupHiddenClass"
                   :leave-to-class="popupHiddenClass"
                   :leave-active-class="popupLeavingClass"
-                  appear
                 >
                   <Drawer.Popup :class="styles.Popup">
                     <div :class="styles.Handle" />

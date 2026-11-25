@@ -10,7 +10,7 @@ import '../../../behavior/style.css';
       <Drawer.Portal>
         <Drawer.Backdrop />
         <Drawer.Viewport>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <Drawer.Popup data-bench="popup" class="bench-motion">
               <Drawer.Content>
                 <Drawer.Title>Title</Drawer.Title>

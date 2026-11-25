@@ -53,12 +53,7 @@ const id = (name: string) => `${props.testPrefix}${name}`;
         v-bind="swipeArea"
       />
       <Drawer.Portal v-bind="portal">
-        <Transition
-          name="drawer-test"
-          :css="transition"
-          :appear="transition"
-          :enter-from-class="enterFromClass"
-        >
+        <Transition name="drawer-test" :css="transition" :enter-from-class="enterFromClass">
           <Drawer.Backdrop
             v-if="backdrop"
             :data-testid="id('backdrop')"
@@ -71,12 +66,7 @@ const id = (name: string) => `${props.testPrefix}${name}`;
           class="drawer-test-viewport"
           v-bind="viewport"
         >
-          <Transition
-            name="drawer-test"
-            :css="transition"
-            :appear="transition"
-            :enter-from-class="enterFromClass"
-          >
+          <Transition name="drawer-test" :css="transition" :enter-from-class="enterFromClass">
             <Drawer.Popup
               v-if="scene?.popup !== false"
               :data-testid="id('popup')"

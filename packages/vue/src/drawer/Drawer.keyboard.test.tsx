@@ -251,12 +251,13 @@ const KeyboardDrawer = defineComponent({
     open: { type: Boolean, default: true },
     modal: { type: [Boolean, String] as PropType<boolean | 'trap-focus'>, default: false },
     initialFocus: { type: Boolean, default: undefined },
+    portalDisabled: { type: Boolean, default: false },
   },
   setup(props, { slots }) {
     return () => (
       <Drawer.Root open={props.open} modal={props.modal}>
         <Drawer.VirtualKeyboardProvider>
-          <Drawer.Portal>
+          <Drawer.Portal disabled={props.portalDisabled}>
             <Drawer.Viewport data-testid="viewport">
               <Drawer.Popup data-testid="popup" initialFocus={props.initialFocus}>
                 {slots.default?.()}
@@ -2325,7 +2326,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     });
 
     await render(() => (
-      <KeyboardDrawer modal initialFocus={false}>
+      <KeyboardDrawer modal initialFocus={false} portalDisabled>
         <FocusedInput />
       </KeyboardDrawer>
     ));

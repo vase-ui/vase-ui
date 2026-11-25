@@ -7,7 +7,7 @@ import { Drawer } from '@vase-ui/vue/drawer';
     <Drawer.Trigger>Open</Drawer.Trigger>
     <Drawer.Portal>
       <Drawer.Viewport>
-        <Transition name="sheet" appear>
+        <Transition name="sheet">
           <Drawer.Popup>
             <Drawer.Content>
               <Drawer.Title>Example drawer</Drawer.Title>

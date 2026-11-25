@@ -29,7 +29,6 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
           enter-from-class="opacity-0!"
           leave-to-class="opacity-0!"
           leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
-          appear
         >
           <Drawer.Backdrop
             class="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] absolute inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute"
@@ -42,7 +41,6 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
             enter-from-class="[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
             leave-to-class="[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))]!"
             leave-active-class="duration-[calc(var(--drawer-swipe-strength)*400ms)]!"
-            appear
           >
             <Drawer.Popup
               class="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(20rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-neutral-950 bg-white p-6 pr-[calc(1.5rem+3rem)] text-neutral-950 outline-none shadow-[0.25rem_0.25rem_0] shadow-black/12 overflow-y-auto touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[20rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"

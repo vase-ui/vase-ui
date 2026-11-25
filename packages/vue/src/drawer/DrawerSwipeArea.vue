@@ -53,7 +53,7 @@ function popupSize(popup: HTMLElement) {
   return axisOf(closing.value) === 'x' ? popup.offsetWidth : popup.offsetHeight;
 }
 
-// The popup mounts in the class of its enter, at its closed place (test/measurements/drawer.test.ts).
+// The popup shows in the class of its enter, at its closed place (test/measurements/drawer.test.ts).
 function closedPlace(popup: HTMLElement) {
   const size = popupSize(popup);
   const matrix = new DOMMatrixReadOnly(getComputedStyle(popup).transform);
@@ -63,7 +63,7 @@ function closedPlace(popup: HTMLElement) {
 
 function follow() {
   const popup = root.popup;
-  if (!opened || !root.open || !popup) return;
+  if (!opened || !root.open || !popup || !drawer.popupVisible) return;
   closed ??= closedPlace(popup);
   if (!closed) return;
   const shown = Math.max(0, movement);
@@ -96,13 +96,15 @@ const tracker = useSwipeTracker({
     opened = false;
     closed = null;
     movement = 0;
-    drawer.write({ x: 0, y: 0, progress: 1 });
-    drawer.setSwiping(true);
   },
   move(x, y, event) {
     movement = along(direction.value, x, y);
     if (!opened && movement >= 1) {
       opened = !root.request(true, 'swipe', event, element.value).isCanceled;
+      if (opened && root.open) {
+        drawer.setSwiping(true);
+        if (!drawer.popupVisible) drawer.write({ x: 0, y: 0, progress: 1 });
+      }
     }
     follow();
   },
@@ -125,21 +127,26 @@ const tracker = useSwipeTracker({
   },
 });
 
-// A swipe ends when the area becomes disabled. A drawer that it opened stays open.
-watch(
-  () => props.disabled,
-  (disabled) => {
-    if (disabled && tracker.pressing) tracker.cancel();
-  },
-);
+watch([() => props.disabled, () => root.open] as const, ([disabled, open], [, wasOpen]) => {
+  if (disabled && tracker.pressing) {
+    tracker.cancel();
+    return;
+  }
+  if (open && !wasOpen && opened && tracker.swiping.value && !drawer.swiping) {
+    drawer.setSwiping(true);
+    if (drawer.popupVisible) follow();
+    else drawer.write({ x: 0, y: 0, progress: 1 });
+  } else if (!open && wasOpen && opened && tracker.pressing) {
+    tracker.cancel();
+  }
+});
 
-// The popup of an open by the swipe mounts after the open, and after the leave of an earlier popup.
 watch(
-  () => root.popup,
-  (popup) => {
-    if (popup && tracker.swiping.value) follow();
+  () => drawer.popupVisible,
+  (visible) => {
+    if (visible && tracker.swiping.value) follow();
   },
-  { flush: 'post' },
+  { flush: 'sync' },
 );
 
 const state = computed<DrawerSwipeAreaState>(() => ({

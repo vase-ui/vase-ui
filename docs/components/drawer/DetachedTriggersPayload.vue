@@ -12,7 +12,7 @@ const demoDrawer = Drawer.createHandle<{ title: string }>();
     <template #default="{ payload }">
       <Drawer.Portal>
         <Drawer.Viewport>
-          <Transition name="sheet" appear>
+          <Transition name="sheet">
             <Drawer.Popup>
               <Drawer.Content>
                 <Drawer.Title>{{ payload?.title }}</Drawer.Title>
