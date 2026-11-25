@@ -2250,6 +2250,9 @@ describe('the portal, the positioner and the popup', () => {
       name: 't',
       root: { defaultOpen: true },
       triggers: [{ key: 't', attrs: { style: 'position: fixed; top: 260px; left: 320px' } }],
+      positioner: {
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
       viewport: false,
     });
     await mountTooltips({ tooltips: [tooltip] });

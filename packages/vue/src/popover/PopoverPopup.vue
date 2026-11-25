@@ -3,7 +3,7 @@ import { computed, mergeProps, onBeforeUnmount, useAttrs, useId, watch } from 'v
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupPart } from '../popup/portal';
-import { edgeStyle, sizeVariables } from '../popup/viewport';
+import { sizeVariables, usePopupEdge } from '../popup/viewport';
 import { injectPopoverRoot, injectPositioner } from './root';
 import type { PopoverPopupProps, PopoverPopupState } from './types';
 
@@ -45,6 +45,12 @@ watch(
   { immediate: true },
 );
 
+usePopupEdge(
+  () => element.value,
+  () => placement.physicalSide.value,
+  () => context.viewport.value?.positioner,
+);
+
 function elementProps() {
   const closed = !root.open;
   return mergeProps(
@@ -61,10 +67,7 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      style: [
-        sizeVariables('popup', context.viewport.value?.popup),
-        context.viewport.value?.positioner ? edgeStyle(placement.physicalSide.value) : {},
-      ],
+      style: sizeVariables('popup', context.viewport.value?.popup),
     },
     attrs,
   );

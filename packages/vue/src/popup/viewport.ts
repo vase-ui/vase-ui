@@ -23,13 +23,88 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
 }
 
 /**
- * Anchors a popup in a viewport to the edge of the positioner that faces the trigger, so it grows
- * away from the trigger while its size changes.
+ * Anchors a popup in a viewport to the trigger-side edge of the positioner, so it grows away from
+ * the trigger.
  */
 export function edgeStyle(side: 'top' | 'bottom' | 'left' | 'right'): CSSProperties {
   if (side === 'top') return { position: 'absolute', bottom: 0 };
   if (side === 'left') return { position: 'absolute', right: 0 };
   return {};
+}
+
+/**
+ * Writes `edgeStyle` on the popup element while a viewport sizes its positioner. Direct writes
+ * add no render of the popup, and the helper restores the style if the positioner collapses to
+ * zero.
+ */
+export function usePopupEdge(
+  element: () => HTMLElement | null,
+  side: () => 'top' | 'bottom' | 'left' | 'right',
+  positionerSize: () => Size | undefined,
+) {
+  watch(
+    [
+      element,
+      side,
+      () => {
+        const size = positionerSize();
+        return !!size && size.width > 0 && size.height > 0;
+      },
+    ],
+    ([popup, currentSide, active], _, onCleanup) => {
+      if (!popup || !active) return;
+      const styles = edgeStyle(currentSide);
+      if (!styles.position) return;
+      let live = true;
+      let applied = false;
+      let previous: { position: string; bottom: string; right: string } | null = null;
+      const restore = () => {
+        if (!applied || !previous) return;
+        applied = false;
+        popup.style.position = previous.position;
+        popup.style.bottom = previous.bottom;
+        popup.style.right = previous.right;
+      };
+      const apply = () => {
+        if (!live) return;
+        previous = {
+          position: popup.style.position,
+          bottom: popup.style.bottom,
+          right: popup.style.right,
+        };
+        popup.style.position = 'absolute';
+        if (styles.bottom !== undefined) popup.style.bottom = `${styles.bottom}`;
+        if (styles.right !== undefined) popup.style.right = `${styles.right}`;
+        applied = true;
+        const parent = popup.parentElement;
+        if (
+          parent &&
+          (parent.offsetWidth === 0 || parent.offsetHeight === 0) &&
+          popup.offsetWidth > 0 &&
+          popup.offsetHeight > 0
+        ) {
+          restore();
+        }
+      };
+      const parent = popup.parentElement;
+      const size = positionerSize();
+      // The positioner patches its size variables in its next render after the first measure.
+      if (
+        parent &&
+        size &&
+        parent.style.getPropertyValue('--positioner-width') !== `${size.width}px`
+      ) {
+        void nextTick(apply);
+      } else {
+        apply();
+      }
+      onCleanup(() => {
+        live = false;
+        restore();
+      });
+    },
+    { flush: 'post', immediate: true },
+  );
 }
 
 /**
@@ -51,7 +126,11 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       // positioner with that size would keep the popup at that size. The observer measures the
       // popup when it shows.
       const measure = () => {
-        if (current.checkVisibility()) positioner.value = sizeOf(current);
+        if (!current.checkVisibility()) return;
+        const next = sizeOf(current);
+        const previous = positioner.value;
+        if (previous?.width === next.width && previous.height === next.height) return;
+        positioner.value = next;
       };
       measure();
       let frame = 0;
@@ -167,8 +246,8 @@ function sizeOf(element: HTMLElement): Size {
   const height = parent?.style.getPropertyValue('--positioner-height') ?? '';
   const absolute = position === 'absolute';
   // A popup with `position: absolute` shrinks to fit the old or unsized positioner. Read its size
-  // in flow against a `max-content` positioner, and keep its formatting context so child margins
-  // stay inside.
+  // in flow against a `max-content` positioner, and keep its block context so child margins stay
+  // inside.
   if (absolute) {
     if (getComputedStyle(element).display === 'block') element.style.display = 'flow-root';
     element.style.position = 'static';
@@ -177,7 +256,7 @@ function sizeOf(element: HTMLElement): Size {
     parent.style.setProperty('--positioner-width', 'max-content');
     parent.style.setProperty('--positioner-height', 'max-content');
   }
-  // `offsetWidth` truncates fractional text widths and can wrap text inside a `position: absolute`
+  // `offsetWidth` truncates fractional text widths and can wrap text in a `position: absolute`
   // popup. Use the whole-pixel ceiling of the border-box width.
   const css = getComputedStyle(element);
   let rawWidth = Number.parseFloat(css.width) || 0;

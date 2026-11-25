@@ -3,7 +3,7 @@ import { computed, mergeProps, provide, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupPart } from '../popup/portal';
-import { edgeStyle, sizeVariables } from '../popup/viewport';
+import { sizeVariables, usePopupEdge } from '../popup/viewport';
 import { groupItemsKey } from './filter';
 import { injectMenu, injectPositioner } from './root';
 import type { MenuPopupProps, MenuPopupState } from './types';
@@ -73,6 +73,12 @@ function onKeydown(event: KeyboardEvent) {
   else menu.onKeydown(event);
 }
 
+usePopupEdge(
+  () => element.value,
+  () => placement.physicalSide.value,
+  () => menu.viewport.value?.positioner,
+);
+
 function elementProps() {
   const closed = !root.open;
   const hasList = !!menu.listElement.value;
@@ -93,10 +99,7 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted && !menu.childLeaving ? true : undefined,
       inert: closed ? true : undefined,
-      style: [
-        sizeVariables('popup', menu.viewport.value?.popup),
-        menu.viewport.value?.positioner ? edgeStyle(placement.physicalSide.value) : {},
-      ],
+      style: sizeVariables('popup', menu.viewport.value?.popup),
       onKeydown,
       onPointermove: menu.filter
         ? (event: PointerEvent) => menu.filter?.takePointer(event)

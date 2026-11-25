@@ -12,7 +12,7 @@ import {
 } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupPart } from '../popup/portal';
-import { edgeStyle, sizeVariables, usePopupSizes } from '../popup/viewport';
+import { sizeVariables, usePopupEdge, usePopupSizes } from '../popup/viewport';
 import { injectNavigationMenuRoot, injectPositioner, sizesKey } from './root';
 import type { NavigationMenuPopupProps, NavigationMenuPopupState } from './types';
 
@@ -86,6 +86,12 @@ watch(
   { immediate: true },
 );
 
+usePopupEdge(
+  () => element.value,
+  () => placement.physicalSide.value,
+  () => (root.target ? sizes.positioner.value : undefined),
+);
+
 function elementProps() {
   const closed = !popup.open;
   return mergeProps(
@@ -99,10 +105,7 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && popup.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      style: [
-        sizeVariables('popup', sizes.popup.value),
-        root.target && sizes.positioner.value ? edgeStyle(placement.physicalSide.value) : {},
-      ],
+      style: sizeVariables('popup', sizes.popup.value),
     },
     attrs,
   );

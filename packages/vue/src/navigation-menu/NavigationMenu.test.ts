@@ -1148,7 +1148,7 @@ describe('the placement', () => {
       });
       await mountMenu({
         root: { defaultValue: 'one' },
-        list: { style: 'display: flex; margin: 300px 0 0 40px; padding: 0; list-style: none' },
+        list: { style: 'display: flex; margin: 300px 0 0 150px; padding: 0; list-style: none' },
         positioner: { side: 'top', sideOffset: 4, collisionAvoidance: { side: 'none' } },
       });
       await shows('one');
