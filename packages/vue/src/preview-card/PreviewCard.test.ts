@@ -1246,6 +1246,76 @@ describe('the arrow', () => {
 });
 
 describe('the viewport', () => {
+  function nextResize(element: Element) {
+    return new Promise<void>((resolve) => {
+      const observer = new ResizeObserver(() => {
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(element);
+    });
+  }
+
+  async function openSizedCard() {
+    const root = reactive({ open: true, defaultTriggerId: 'link' });
+    await mountCard({
+      root,
+      triggers: [{ key: 't', attrs: { id: 'link' } }],
+      portal: { keepMounted: true },
+      positioner: { style: { height: 'var(--positioner-height)' } },
+      // A kept popup can still have a box during its CSS exit.
+      popup: { style: { display: 'block' } },
+      viewport: {},
+    });
+    await placed();
+    const card = byTestId('popup');
+    const box = byTestId('positioner');
+    await nextResize(card);
+    await waitSingleFrame();
+    const height = card.offsetHeight;
+    expect(box.style.getPropertyValue('--positioner-height')).toBe(`${height}px`);
+    return { root, card, box, height, content: byTestId('text') };
+  }
+
+  test('a popup that grows after it opens gives no resize loop error and its positioner fits it in the next frame', async () => {
+    const { card, box, height, content } = await openSizedCard();
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    content.style.paddingBottom = '1px';
+    await nextResize(card);
+    await waitSingleFrame();
+    expect(errors).toEqual([]);
+    expect(card.offsetHeight).toBe(height + 1);
+    expect(box.offsetHeight).toBe(card.offsetHeight);
+  });
+
+  test('a close before the next frame keeps the last open size of the positioner during the exit', async () => {
+    const { root, card, box, height, content } = await openSizedCard();
+    content.style.paddingBottom = '1px';
+    await new Promise<void>((resolve) => {
+      const observer = new ResizeObserver(([entry]) => {
+        if (entry.target === box) {
+          // The delivery of the parent lets the browser deliver the deeper popup again this frame.
+          observer.unobserve(box);
+          content.style.paddingBottom = '2px';
+        } else {
+          observer.disconnect();
+          root.open = false;
+          resolve();
+        }
+      });
+      observer.observe(box);
+      observer.observe(card);
+    });
+    await waitSingleFrame();
+    expect(card).toHaveAttribute('hidden');
+    expect(card.offsetHeight).toBe(height + 2);
+    expect(box.style.getPropertyValue('--positioner-height')).toBe(`${height}px`);
+  });
+
   test('gives the id of the active link to its slot, and the card writes no `trigger-change`', async () => {
     const { trigger } = await mountCard({
       viewport: {},
