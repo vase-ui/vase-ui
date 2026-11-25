@@ -18,6 +18,7 @@ defineProps({
   },
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
   inSlot: Boolean,
+  keepMounted: Boolean,
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
   as: String as PropType<keyof HTMLElementTagNameMap>,
   count: { type: Function as PropType<(part: string) => string>, default: () => '' },
@@ -26,7 +27,7 @@ defineProps({
 
 <template>
   <Dialog.Root v-if="family === 'dialog'" :open="scene.open">
-    <Dialog.Portal>
+    <Dialog.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <Dialog.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
@@ -47,7 +48,7 @@ defineProps({
     </Dialog.Portal>
   </Dialog.Root>
   <Popover.Root v-else-if="family === 'popover'" :open="scene.open">
-    <Popover.Portal>
+    <Popover.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <Popover.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
@@ -70,7 +71,7 @@ defineProps({
     </Popover.Portal>
   </Popover.Root>
   <Menu.Root v-else-if="family === 'menu'" :open="scene.open">
-    <Menu.Portal>
+    <Menu.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <Menu.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">
@@ -93,7 +94,7 @@ defineProps({
     </Menu.Portal>
   </Menu.Root>
   <Tooltip.Root v-else-if="family === 'tooltip'" :open="scene.open">
-    <Tooltip.Portal>
+    <Tooltip.Portal :keep-mounted>
       <Tooltip.Positioner>
         <PartTransition :on="!inSlot" name="popup" :log>
           <Tooltip.Popup data-testid="popup" :as>
@@ -108,7 +109,7 @@ defineProps({
     </Tooltip.Portal>
   </Tooltip.Root>
   <PreviewCard.Root v-else :open="scene.open">
-    <PreviewCard.Portal>
+    <PreviewCard.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <PreviewCard.Backdrop data-testid="backdrop" :as>
           <template v-if="inSlot" #element="{ props, elementRef }">

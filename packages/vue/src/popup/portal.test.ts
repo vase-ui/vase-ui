@@ -15,13 +15,18 @@ const FAMILIES = [
   { family: 'preview-card', parts: ['backdrop', 'popup'] },
 ] as const;
 
-function mountFamily(family: string, inSlot = false) {
-  const scene = reactive({ open: true });
+function mountFamily(
+  family: string,
+  inSlot = false,
+  options: { open?: boolean; keepMounted?: boolean } = {},
+) {
+  const scene = reactive({ open: options.open ?? true });
   const log: string[] = [];
   mount(PopupPartsOfFamilies, {
     family,
     scene,
     inSlot,
+    keepMounted: options.keepMounted,
     log: { add: (entry: string) => log.push(entry) },
   });
   return { scene, log };
@@ -79,5 +84,16 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts }) => {
     expect(elements.map((element) => element.localName)).toEqual(parts.map(() => 'section'));
     scene.open = false;
     await waitFor(() => expect(elements.some((element) => element.isConnected)).toBe(false));
+  });
+
+  test('in the `element` slot with `keepMounted`: the closed parts stay in the DOM with `hidden` and `inert`', async () => {
+    mountFamily(family, true, { open: false, keepMounted: true });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    for (const part of parts) {
+      const element = byTestId(part)!;
+      expect(element.localName).toBe('section');
+      expect(element).toHaveAttribute('hidden');
+      expect(element).toHaveAttribute('inert');
+    }
   });
 });
