@@ -1398,17 +1398,20 @@ describe('a popup in a <Transition>', () => {
     const atOpen = shownOpacity(first);
     get('trigger-two').click();
     await nextTick();
-    const firstFrame = await new Promise<{ offset: number; hasTwo: boolean; labelledby: string | null }>(
-      (resolve) =>
-        requestAnimationFrame(() => {
-          const box = get('positioner').getBoundingClientRect();
-          const anchor = get('trigger-two').getBoundingClientRect();
-          resolve({
-            offset: box.left + box.width / 2 - (anchor.left + anchor.width / 2),
-            hasTwo: first.contains(byTestId('content-two')),
-            labelledby: first.getAttribute('aria-labelledby'),
-          });
-        }),
+    const firstFrame = await new Promise<{
+      offset: number;
+      hasTwo: boolean;
+      labelledby: string | null;
+    }>((resolve) =>
+      requestAnimationFrame(() => {
+        const box = get('positioner').getBoundingClientRect();
+        const anchor = get('trigger-two').getBoundingClientRect();
+        resolve({
+          offset: box.left + box.width / 2 - (anchor.left + anchor.width / 2),
+          hasTwo: first.contains(byTestId('content-two')),
+          labelledby: first.getAttribute('aria-labelledby'),
+        });
+      }),
     );
     const [frames = []] = await opacityUntilRest([first]);
     expect(get('popup')).toBe(first);
