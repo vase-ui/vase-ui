@@ -8,6 +8,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 import { postcssFollowSiteTheme } from '../../docs/.vitepress/postcssFollowSiteTheme.ts';
 import { compilePartsAsVapor } from './test/server/compilePartsAsVapor.ts';
 import expectations from './test/vaporParts/expectedFailures.json' with { type: 'json' };
+import { lockClipboard, unlockClipboard } from './test/server/clipboard.ts';
 import { collectGarbage } from './test/server/collectGarbage.ts';
 import { inspectBrowserFrame } from './test/server/inspectBrowserFrame.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
@@ -18,7 +19,13 @@ const browserOptions = {
   provider: playwright({ contextOptions }),
   headless: true,
   screenshotFailures: false,
-  commands: { collectGarbage, inspectBrowserFrame, renderOnServer },
+  commands: {
+    collectGarbage,
+    inspectBrowserFrame,
+    lockClipboard,
+    renderOnServer,
+    unlockClipboard,
+  },
 };
 const vaporPartsFiles = Object.keys(expectations.files);
 for (const file of vaporPartsFiles) {
