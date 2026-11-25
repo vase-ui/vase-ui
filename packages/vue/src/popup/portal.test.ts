@@ -12,40 +12,51 @@ const FAMILIES = [
   { family: 'popover', parts: ['backdrop', 'popup'] },
   { family: 'menu', parts: ['backdrop', 'popup'] },
   { family: 'tooltip', parts: ['popup'] },
+  { family: 'preview-card', parts: ['backdrop', 'popup'] },
 ] as const;
 
-function mountFamily(family: string, inSlot = false) {
-  const scene = reactive({ open: true });
+function mountFamily(
+  family: string,
+  inSlot = false,
+  options: { open?: boolean; keepMounted?: boolean; as?: keyof HTMLElementTagNameMap } = {},
+) {
+  const scene = reactive({ open: options.open ?? true });
   const log: string[] = [];
   mount(PopupPartsOfFamilies, {
     family,
     scene,
     inSlot,
+    keepMounted: options.keepMounted,
+    as: options.as,
     log: { add: (entry: string) => log.push(entry) },
   });
   return { scene, log };
 }
 
 describe.each(FAMILIES)('the parts of $family', ({ family, parts }) => {
-  test('in a <Transition>: the parts that leave are inert with no `hidden`, `after-leave` comes once for each, and the portal then removes them', async () => {
-    const { scene, log } = mountFamily(family);
-    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
-    const elements = parts.map((part) => byTestId(part)!);
-    await Promise.all(elements.map(finishAnimations));
-    await waitFor(() => expect(log).toHaveLength(parts.length));
-    scene.open = false;
-    await nextTick();
-    for (const element of elements) {
-      expect(element).toHaveAttribute('inert');
-      expect(element).not.toHaveAttribute('hidden');
-      expect(element.checkVisibility()).toBe(true);
-    }
-    await Promise.all(elements.map(finishAnimations));
-    await waitFor(() => expect(elements.some((element) => element.isConnected)).toBe(false));
-    expect(log.toSorted()).toEqual(
-      parts.flatMap((part) => [`${part} after-enter`, `${part} after-leave`]).toSorted(),
-    );
-  });
+  test.each([{ as: undefined }, { as: 'section' }] as const)(
+    'in a <Transition> with `as` $as: the parts that leave are inert with no `hidden`, `after-leave` comes once for each, and the portal then removes them',
+    async ({ as }) => {
+      const { scene, log } = mountFamily(family, false, { as });
+      await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+      const elements = parts.map((part) => byTestId(part)!);
+      expect(elements.map((element) => element.localName)).toEqual(parts.map(() => as ?? 'div'));
+      await Promise.all(elements.map(finishAnimations));
+      await waitFor(() => expect(log).toHaveLength(parts.length));
+      scene.open = false;
+      await nextTick();
+      for (const element of elements) {
+        expect(element).toHaveAttribute('inert');
+        expect(element).not.toHaveAttribute('hidden');
+        expect(element.checkVisibility()).toBe(true);
+      }
+      await Promise.all(elements.map(finishAnimations));
+      await waitFor(() => expect(elements.some((element) => element.isConnected)).toBe(false));
+      expect(log.toSorted()).toEqual(
+        parts.flatMap((part) => [`${part} after-enter`, `${part} after-leave`]).toSorted(),
+      );
+    },
+  );
 
   // The counts are renders of the virtual DOM: a Vapor component updates each binding alone.
   test.runIf(inject('app') === 'vdom').each([{ as: undefined }, { as: 'section' }])(
@@ -78,5 +89,16 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts }) => {
     expect(elements.map((element) => element.localName)).toEqual(parts.map(() => 'section'));
     scene.open = false;
     await waitFor(() => expect(elements.some((element) => element.isConnected)).toBe(false));
+  });
+
+  test('in the `element` slot with `keepMounted`: the closed parts stay in the DOM with `hidden` and `inert`', async () => {
+    mountFamily(family, true, { open: false, keepMounted: true });
+    await waitFor(() => expect(byTestId('popup')).not.toBe(null));
+    for (const part of parts) {
+      const element = byTestId(part)!;
+      expect(element.localName).toBe('section');
+      expect(element).toHaveAttribute('hidden');
+      expect(element).toHaveAttribute('inert');
+    }
   });
 });
