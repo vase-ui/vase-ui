@@ -56,7 +56,6 @@ function popupSize(popup: HTMLElement) {
 // The popup shows in the class of its enter, at its closed place (test/measurements/drawer.test.ts).
 function closedPlace(popup: HTMLElement) {
   const size = popupSize(popup);
-  if (!size) return null;
   const matrix = new DOMMatrixReadOnly(getComputedStyle(popup).transform);
   const offset = Math.abs(axisOf(closing.value) === 'x' ? matrix.m41 : matrix.m42);
   return offset > 0.5 ? Math.min(size, offset) : size;

@@ -1001,6 +1001,9 @@ describe('the swipe area', () => {
     const release = await press(centerOf('swipe-area'), { x: 0, y: -120 }, 6);
     await nextTick();
     expect(get('popup').hidden).toBe(true);
+    expect(get('popup').hasAttribute('data-swiping')).toBe(false);
+    expect(get('popup').style.transition).toBe('');
+    expect(get('backdrop').hasAttribute('data-swiping')).toBe(false);
     await release();
     await nextTick();
     expect(get('popup').hasAttribute('data-swiping')).toBe(false);

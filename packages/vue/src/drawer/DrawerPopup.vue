@@ -51,24 +51,18 @@ const state = computed<DrawerPopupState>(() => ({
 }));
 
 watch(element, (popup) => root.setPopup(popup), { flush: 'sync' });
-// `v-show` removes `display: none` and applies `enter-from` in the post flush after `shown`
-// becomes `true`, after a post watcher of `setup`.
+// `v-show` removes `display: none` and applies `enter-from` in the post flush, after this watcher.
 const visible = computed(() => root.open && shown.value);
 watch(
   visible,
   (isVisible) => {
-    if (!isVisible) drawer.setPopupVisible(false);
-  },
-  { flush: 'sync' },
-);
-watch(
-  visible,
-  (isVisible) => {
-    if (isVisible) {
-      void nextTick(() => {
-        if (visible.value) drawer.setPopupVisible(true);
-      });
+    if (!isVisible) {
+      drawer.setPopupVisible(false);
+      return;
     }
+    void nextTick(() => {
+      if (visible.value) drawer.setPopupVisible(true);
+    });
   },
   { immediate: true, flush: 'post' },
 );

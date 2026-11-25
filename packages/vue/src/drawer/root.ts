@@ -317,12 +317,6 @@ export function useDrawerRoot<Payload>(
       }
     },
   );
-  watch(
-    () => root.keepMounted || root.leaving,
-    (keeps) => {
-      if (!keeps) leaving.value = null;
-    },
-  );
 
   const provider = inject(providerKey, null);
 
@@ -429,7 +423,6 @@ export function useDrawerRoot<Payload>(
     (open) => {
       if (open) {
         drawer.clearDismiss();
-        leaving.value = null;
       } else if (swiping.value && !pendingSwipe) {
         pendingSwipe = { x: sample.x, y: sample.y, progress: sample.progress, strength: 1 };
       }
