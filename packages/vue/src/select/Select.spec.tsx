@@ -48,7 +48,13 @@ export const positionerProps: Select.Positioner.Props = {
   collisionAvoidance: { fallbackAxisSide: 'none' },
 };
 
-export const triggerProps: Select.Trigger.Props = { focusableWhenDisabled: undefined };
+export const triggerProps: Select.Trigger.Props = {
+  disabled: true,
+  focusableWhenDisabled: true,
+};
+export const undefinedTriggerProps: Select.Trigger.Props = {
+  focusableWhenDisabled: undefined,
+};
 <Select.Trigger disabled focusableWhenDisabled />;
 // @ts-expect-error `focusableWhenDisabled` is a Boolean.
 <Select.Trigger focusableWhenDisabled="yes" />;

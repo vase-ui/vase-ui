@@ -186,7 +186,7 @@ export interface SelectTriggerProps
    */
   disabled?: boolean | undefined;
   /**
-   * A disabled button stays in the tab order, and a focused button keeps the focus. A disabled
+   * A disabled trigger stays in the tab order, and a focused trigger keeps the focus. A disabled
    * fieldset still disables a native button.
    * @default false
    */

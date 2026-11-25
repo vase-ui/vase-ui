@@ -34,18 +34,58 @@ describe('server render and hydration', () => {
     expect(root.querySelector('button')).toHaveTextContent('Yellow banana');
   });
 
-  test('the server HTML of a disabled trigger with focusableWhenDisabled has aria-disabled and no disabled, and hydrates without a mismatch', async () => {
-    const props = { root: { disabled: true }, trigger: { focusableWhenDisabled: true } };
-    const root = await renderOnServer('SelectParts', props);
-    const trigger = root.querySelector<HTMLButtonElement>('button[role="combobox"]')!;
-    expect(trigger).toHaveAttribute('aria-disabled', 'true');
-    expect(trigger).not.toHaveAttribute('disabled');
-    hydrate(SelectParts, props, root);
-    await nextTick();
-    expect(root.querySelector('[role="combobox"]')).toBe(trigger);
-    trigger.focus();
-    expect(trigger).toHaveFocus();
-  });
+  test.each([
+    {
+      name: 'a disabled trigger',
+      fixture: 'SelectParts',
+      component: SelectParts,
+      props: {
+        root: { name: 'fruit', defaultValue: 'banana' },
+        trigger: { disabled: true, focusableWhenDisabled: true },
+      },
+      inputDisabled: false,
+    },
+    {
+      name: 'a disabled root',
+      fixture: 'SelectParts',
+      component: SelectParts,
+      props: {
+        root: { disabled: true, name: 'fruit', defaultValue: 'banana' },
+        trigger: { focusableWhenDisabled: true },
+      },
+      inputDisabled: true,
+    },
+    {
+      name: 'a disabled field',
+      fixture: 'SelectInField',
+      component: SelectInField,
+      props: {
+        field: { disabled: true },
+        root: { name: 'letter', defaultValue: 'a' },
+        trigger: { focusableWhenDisabled: true },
+      },
+      inputDisabled: true,
+    },
+  ])(
+    'the server HTML of $name with focusableWhenDisabled has aria-disabled and no disabled, and hydrates without a mismatch',
+    async ({ fixture, component, props, inputDisabled }) => {
+      const root = await renderOnServer(fixture, props);
+      const trigger = root.querySelector<HTMLButtonElement>('button[role="combobox"]')!;
+      const hidden = root.querySelector<HTMLInputElement>('input[type="hidden"]')!;
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+      expect(trigger).not.toHaveAttribute('disabled');
+      expect(hidden.disabled).toBe(inputDisabled);
+      hydrate(component, props, root);
+      await nextTick();
+      expect(root.querySelector('[role="combobox"]')).toBe(trigger);
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+      expect(trigger).not.toHaveAttribute('disabled');
+      trigger.focus();
+      expect(trigger).toHaveFocus();
+      await userEvent.click(trigger, { force: true });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    },
+  );
 
   test('VUE-51: the server HTML names a label that comes after the trigger, and the page hydrates with no message', async () => {
     const props = { labelAfter: {}, root: { defaultValue: 'banana' } };

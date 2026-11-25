@@ -485,9 +485,10 @@ describe('the trigger', () => {
     expect(trigger()).toHaveAttribute('aria-disabled', 'true');
   });
 
-  test('VUE-237: a disabled trigger with focusableWhenDisabled keeps its tab stop and ignores a press, Enter, Space, an arrow key and a typed key', async () => {
+  test('VUE-237: a disabled trigger with focusableWhenDisabled keeps its tab stop and ignores a press, its label, Enter, Space, an arrow key and a typed key', async () => {
     const log: string[] = [];
-    await mountSelect({
+    const first = await mountSelect({
+      label: {},
       root: rootEvents(log, { defaultValue: 'apple' }),
       trigger: { disabled: true, focusableWhenDisabled: true },
     });
@@ -500,9 +501,35 @@ describe('the trigger', () => {
     await userEvent.keyboard('{Enter} {ArrowDown}{ArrowUp}b');
     expect(trigger()).toHaveFocus();
     await userEvent.click(trigger(), { force: true });
+    await userEvent.click(byTestId('label'));
+    expect(trigger()).toHaveFocus();
     expect(trigger()).toHaveAttribute('aria-expanded', 'false');
     expect(valueText()).toBe('apple');
     expect(log).toEqual([]);
+    first.unmount();
+
+    const custom = await mountSelect({
+      root: rootEvents(log, { defaultValue: 'apple' }),
+      trigger: { as: 'div', disabled: true, focusableWhenDisabled: true },
+    });
+    expect(trigger()).toHaveAttribute('aria-disabled', 'true');
+    expect(trigger()).toHaveAttribute('tabindex', '0');
+    expect(trigger()).not.toHaveAttribute('disabled');
+    document.getElementById('before')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(trigger()).toHaveFocus();
+    await userEvent.keyboard('{Enter} {ArrowDown}{ArrowUp}b');
+    await userEvent.click(trigger(), { force: true });
+    expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+    expect(valueText()).toBe('apple');
+    expect(log).toEqual([]);
+    custom.unmount();
+
+    await mountSelect({ trigger: { focusableWhenDisabled: true } });
+    expect(trigger()).not.toHaveAttribute('aria-disabled');
+    expect(trigger()).not.toHaveAttribute('disabled');
+    await userEvent.click(trigger());
+    await opened();
   });
 
   test('has the state attributes of the value and the side of the popup', async () => {
