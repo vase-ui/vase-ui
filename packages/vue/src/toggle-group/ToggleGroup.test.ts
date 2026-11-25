@@ -485,6 +485,51 @@ describe('the tab stop', () => {
     await userEvent.keyboard('{Tab}');
     expect(focused()).toBe('after');
   });
+
+  test('a group whose toggles are all disabled with focusableWhenDisabled has one tab stop; beside an enabled toggle, the arrow keys skip such a toggle', async () => {
+    const allDisabled = items('a', 'b', 'c').map((item) => ({
+      ...item,
+      attrs: { disabled: true, focusableWhenDisabled: true },
+    }));
+    const first = await mountGroup({}, allDisabled);
+    await nextTick();
+    expect(first.tabindexes()).toEqual(['0', '-1', '-1']);
+    first.before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(focused()).toBe('a');
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('a');
+    await userEvent.keyboard('{Tab}');
+    expect(focused()).toBe('after');
+
+    const disabledGroup = await mountGroup(
+      { disabled: true },
+      items('a', 'b').map((item) => ({ ...item, attrs: { focusableWhenDisabled: true } })),
+    );
+    await nextTick();
+    expect(disabledGroup.tabindexes()).toEqual(['0', '-1']);
+    expect(disabledGroup.toggle('a')).toHaveAttribute('aria-disabled', 'true');
+
+    const mixed = items('a', 'b', 'c', 'd');
+    mixed[0]!.attrs = { disabled: true, focusableWhenDisabled: true };
+    mixed[2]!.attrs = { disabled: true, focusableWhenDisabled: true };
+    const second = await mountGroup({}, mixed);
+    await nextTick();
+    expect(second.tabindexes()).toEqual(['-1', '0', '-1', '-1']);
+    second.toggle('b').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('d');
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('b');
+
+    second.items[1]!.attrs = { disabled: true, focusableWhenDisabled: true };
+    await settle();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(focused()).toBe('b');
+    expect(second.tabindexes()).toEqual(['-1', '-1', '-1', '0']);
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('d');
+  });
 });
 
 describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)', (kind) => {
@@ -502,6 +547,16 @@ describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)'
     expect(find('GroupCustom')).toHaveAttribute('tabindex', '0');
     expect(find('GroupInLegend')).not.toHaveAttribute('data-disabled');
     expect(find('GroupInLegend').querySelector('.State')).toHaveTextContent('false');
+  });
+
+  test('a native toggle with focusableWhenDisabled does not take the tab stop of the group from a disabled non-native toggle that keeps the focus', async () => {
+    const scene = reactive({ kind, disabled: true, focusable: true, customDisabled: true });
+    const { root } = mount(TogglesInFieldset, { scene });
+    const find = (name: string) => root.querySelector<HTMLElement>(`.${name}`)!;
+    await settle();
+    expect(find('GroupNative').matches(':disabled')).toBe(true);
+    expect(find('GroupCustom')).toHaveAttribute('aria-disabled', 'true');
+    expect(find('GroupCustom')).toHaveAttribute('tabindex', '0');
   });
 });
 
@@ -620,4 +675,63 @@ describe('in a toolbar', () => {
     const kept = await mountInToolbar({ buttonDisabled: true, focusableWhenDisabled: false });
     expect(kept.element('alone').matches(':disabled')).toBe(true);
   });
+
+  test('in a Toolbar, the arrow keys reach a disabled toggle with focusableWhenDisabled, and the toggle keeps the tab stop of the toolbar', async () => {
+    const { element } = await mountInToolbar({ disabledTwo: true, focusableTwo: true });
+    const two = element('two');
+    expect(two).toHaveAttribute('aria-disabled', 'true');
+    expect(two.matches(':disabled')).toBe(false);
+    element('one').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('two');
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    await userEvent.click(two, { force: true });
+    expect(two).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.keyboard('{Tab}');
+    expect(focused()).toBe('after');
+    expect(two).toHaveAttribute('tabindex', '0');
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(focused()).toBe('two');
+    await userEvent.keyboard('{ArrowRight}');
+    expect(focused()).toBe('alone');
+  });
+
+  test.each([
+    { name: 'a disabled toolbar', extra: { disabled: true } },
+    { name: 'a disabled Toolbar.Group', extra: { groupDisabled: true } },
+    { name: 'a disabled ToggleGroup', extra: { toggleGroupDisabled: true } },
+    { name: 'each toggle disabled', extra: { disabledOne: true, disabledTwo: true } },
+  ])(
+    'in a Toolbar with $name and focusableWhenDisabled on every toggle, the toolbar keeps one roving tab stop and the arrow keys move across them',
+    async ({ extra }) => {
+      const { element } = await mountInToolbar({
+        noFirst: true,
+        noAfter: true,
+        focusableOne: true,
+        focusableTwo: true,
+        ...extra,
+      });
+      const one = element('one');
+      const two = element('two');
+      expect(one).toHaveAttribute('aria-disabled', 'true');
+      expect(two).toHaveAttribute('aria-disabled', 'true');
+      expect(one).toHaveAttribute('tabindex', '0');
+      expect(two).toHaveAttribute('tabindex', '-1');
+      element('before').focus();
+      await userEvent.keyboard('{Tab}');
+      expect(focused()).toBe('one');
+      await userEvent.keyboard('{ArrowRight}');
+      expect(focused()).toBe('two');
+      expect(one).toHaveAttribute('tabindex', '-1');
+      expect(two).toHaveAttribute('tabindex', '0');
+      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(' ');
+      expect(two).toHaveAttribute('aria-pressed', 'false');
+      await userEvent.keyboard('{Tab}');
+      expect(focused()).toBe('after');
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+      expect(focused()).toBe('two');
+    },
+  );
 });

@@ -54,7 +54,10 @@ const tabStop = computed(() => {
   if (toolbar) return undefined;
   const last = focused.value;
   if (last && !last.disabled) return last;
-  return enabledToggles()[0];
+  return (
+    togglesInOrder((toggle) => !toggle.disabled)[0] ??
+    togglesInOrder((toggle) => toggle.focusable)[0]
+  );
 });
 
 provide(toggleGroupKey, {
@@ -112,10 +115,8 @@ function press(toggleValue: string, pressed: boolean, details: ToggleGroupChange
   return true;
 }
 
-function enabledToggles() {
-  return toggles
-    .filter((toggle) => !toggle.disabled)
-    .sort((a, b) => byDocumentOrder(a.element, b.element));
+function togglesInOrder(predicate: (toggle: GroupToggle) => boolean) {
+  return toggles.filter(predicate).sort((a, b) => byDocumentOrder(a.element, b.element));
 }
 
 function onFocusin(event: FocusEvent) {
@@ -126,7 +127,7 @@ function onFocusin(event: FocusEvent) {
 function onKeydown(event: KeyboardEvent) {
   const current = toggles.find((toggle) => toggle.element === event.target);
   if (!current || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
-  const enabled = enabledToggles().map((toggle) => toggle.element);
+  const enabled = togglesInOrder((toggle) => !toggle.disabled).map((toggle) => toggle.element);
   const group = event.currentTarget as HTMLElement;
   // A focused toggle can be disabled, and the keys still move on from it.
   const next =

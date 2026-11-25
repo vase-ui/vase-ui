@@ -29,6 +29,12 @@ export interface SwitchProps extends /* @vue-ignore */ Omit<
    */
   disabled?: boolean;
   /**
+   * A disabled switch stays in the tab order, and a focused switch keeps the focus. A disabled
+   * fieldset still disables the switch.
+   * @default false
+   */
+  focusableWhenDisabled?: boolean | undefined;
+  /**
    * The user cannot change the state. The switch stays in the tab order and is not validated.
    * @default false
    */

@@ -7,6 +7,7 @@ export interface GroupToggle {
   readonly element: HTMLElement;
   /** The toggle is disabled, by each cause. */
   readonly disabled: boolean;
+  readonly focusable: boolean;
 }
 
 /** What a group gives to its toggles. The properties are reactive. */

@@ -10,6 +10,8 @@ defineProps({
       kind: 'fieldset' | 'root';
       disabled: boolean;
       ownDisabled?: boolean;
+      focusable?: boolean;
+      customDisabled?: boolean;
     }>,
     required: true,
   },
@@ -25,13 +27,26 @@ defineProps({
         <span class="State">{{ state.disabled }}</span>
       </ToggleGroup>
     </legend>
-    <Toggle v-slot="{ state }" class="Native" :disabled="scene.ownDisabled">
+    <Toggle
+      v-slot="{ state }"
+      class="Native"
+      :disabled="scene.ownDisabled"
+      :focusable-when-disabled="scene.focusable"
+    >
       Native {{ state.disabled }}
     </Toggle>
     <Toggle v-slot="{ state }" as="span" class="Custom">Custom {{ state.disabled }}</Toggle>
     <ToggleGroup v-slot="{ state }" class="Group">
-      <Toggle value="a" class="GroupNative">A</Toggle>
-      <Toggle value="b" as="span" class="GroupCustom">B</Toggle>
+      <Toggle value="a" class="GroupNative" :focusable-when-disabled="scene.focusable">A</Toggle>
+      <Toggle
+        value="b"
+        as="span"
+        class="GroupCustom"
+        :disabled="scene.customDisabled"
+        :focusable-when-disabled="scene.focusable"
+      >
+        B
+      </Toggle>
       <span class="State">{{ state.disabled }}</span>
     </ToggleGroup>
   </component>

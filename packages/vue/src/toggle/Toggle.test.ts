@@ -27,6 +27,7 @@ async function mountToggles(...toggles: Record<string, unknown>[]) {
   await nextTick();
   return {
     root,
+    form: root.querySelector('form')!,
     before: root.querySelector<HTMLInputElement>('#before')!,
     toggles: [...root.querySelectorAll<HTMLElement>('.Ancestor > *')],
   };
@@ -221,6 +222,101 @@ describe('disabled', () => {
     expect(element).toHaveAttribute('aria-pressed', 'false');
     expect(log).toEqual([]);
   });
+
+  test('VUE-237: a disabled toggle with focusableWhenDisabled keeps its tab stop and the focus, has aria-disabled, and a press, Enter or Space does not change it', async () => {
+    const log: string[] = [];
+    const { before, toggles } = await mountToggles(
+      record(log, { disabled: true, focusableWhenDisabled: true }),
+      { focusableWhenDisabled: true },
+    );
+    const [disabledToggle, enabledToggle] = toggles;
+    expect(disabledToggle!.getAttributeNames().sort()).toEqual([
+      'aria-disabled',
+      'aria-pressed',
+      'type',
+    ]);
+    expect(disabledToggle).toHaveAttribute('aria-disabled', 'true');
+    expect(disabledToggle!.matches(':disabled')).toBe(false);
+    expect(disabledToggle!.querySelector('.State')).toHaveTextContent('false true');
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(disabledToggle).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    expect(disabledToggle).toHaveFocus();
+    await userEvent.click(disabledToggle!, { force: true });
+    expect(disabledToggle).toHaveAttribute('aria-pressed', 'false');
+    expect(log).toEqual([]);
+
+    expect(enabledToggle).not.toHaveAttribute('aria-disabled');
+    await userEvent.click(enabledToggle!);
+    expect(enabledToggle).toHaveAttribute('aria-pressed', 'true');
+
+    const span = await mountInSlot('span', { disabled: true, focusableWhenDisabled: true });
+    expect(span.element).toHaveAttribute('aria-disabled', 'true');
+    expect(span.element).toHaveAttribute('tabindex', '0');
+    span.element.focus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    expect(span.element).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('a disabled toggle with focusableWhenDisabled and type="submit" ignores its label and submits no form at a press, Space, Enter or Enter in a text field', async () => {
+    const log: string[] = [];
+    const { root } = mount(Toggles, {
+      labelFor: 'submit-toggle',
+      toggles: [
+        record(log, {
+          id: 'submit-toggle',
+          type: 'submit',
+          disabled: true,
+          focusableWhenDisabled: true,
+        }),
+      ],
+    });
+    await nextTick();
+    const form = root.querySelector('form')!;
+    const before = root.querySelector<HTMLInputElement>('#before')!;
+    const toggle = root.querySelector<HTMLElement>('#submit-toggle')!;
+    const label = root.querySelector<HTMLLabelElement>('#toggle-label')!;
+    const submits = vi.fn();
+    form.addEventListener('submit', submits);
+
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
+    expect(toggle).not.toHaveAttribute('disabled');
+    await userEvent.click(label, { force: true });
+    await userEvent.click(toggle, { force: true });
+    toggle.focus();
+    expect(toggle).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    before.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(submits).not.toHaveBeenCalled();
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(log).toEqual([]);
+  });
+
+  test('a toggle that the page disables while it has the focus keeps the focus', async () => {
+    const log: string[] = [];
+    const attrs = record(log, { disabled: false, focusableWhenDisabled: true });
+    const { before, toggles } = await mountToggles(attrs);
+    const [toggle] = toggles;
+    before.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(toggle).toHaveFocus();
+    attrs.disabled = true;
+    await settle();
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    await userEvent.click(toggle!, { force: true });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(log).toEqual([]);
+  });
 });
 
 describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)', (kind) => {
@@ -243,5 +339,17 @@ describe.each(['fieldset', 'root'] as const)('VUE-112: a disabled fieldset (%s)'
     scene.disabled = false;
     await settle();
     expect(find('Native')).toHaveTextContent('Native true');
+  });
+
+  test('a native toggle with focusableWhenDisabled still gets disabled and leaves the tab order', async () => {
+    const scene = reactive({ kind, disabled: true, ownDisabled: false, focusable: true });
+    const { root } = mount(TogglesInFieldset, { scene });
+    const find = (name: string) => root.querySelector<HTMLElement>(`.${name}`)!;
+    await settle();
+    expect(find('Native').matches(':disabled')).toBe(true);
+    expect(find('Native')).not.toHaveAttribute('aria-disabled');
+    find('InLegend').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(find('Native')).not.toHaveFocus();
   });
 });

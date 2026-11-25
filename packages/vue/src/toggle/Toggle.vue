@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<ToggleProps>(), {
   modelValue: undefined,
   defaultPressed: false,
   disabled: false,
+  focusableWhenDisabled: false,
 });
 const emit = defineEmits<ToggleEmits>();
 defineSlots<{
@@ -27,9 +28,14 @@ const toolbar = inject(toolbarKey, null);
 const attrs = useAttrs();
 const generatedValue = useId();
 const { element, setElement } = useElement<HTMLElement>();
-const { disabled: isDisabled, mergeAttributes } = useButton({
+const {
+  disabled: isDisabled,
+  focusable,
+  mergeAttributes,
+} = useButton({
   element,
   disabled: () => props.disabled || !!group?.disabled,
+  focusableWhenDisabled: () => props.focusableWhenDisabled,
   type: 'button',
   tag: useAsTag(() => props.as, 'button'),
 });
@@ -49,7 +55,7 @@ const toolbarTabindex =
   group && toolbar
     ? useToolbarItem(toolbar, element, {
         disabled: () => isDisabled.value,
-        focusable: () => !isDisabled.value,
+        focusable: () => focusable.value,
       })
     : undefined;
 
@@ -66,6 +72,9 @@ if (group) {
           element: el,
           get disabled() {
             return isDisabled.value;
+          },
+          get focusable() {
+            return focusable.value;
           },
         }),
       );

@@ -13,12 +13,17 @@ defineProps({
       buttonDisabled?: boolean;
       focusableWhenDisabled?: boolean;
       orientation?: 'horizontal' | 'vertical';
+      toggleGroupDisabled?: boolean;
+      disabledOne?: boolean;
+      focusableOne?: boolean;
       /** The toggle `one` is a disabled `<span>`. */
       disabledSpan?: boolean;
       /** The toggle `two` is disabled. */
       disabledTwo?: boolean;
+      focusableTwo?: boolean;
       /** The toolbar has no button before the group. */
       noFirst?: boolean;
+      noAfter?: boolean;
     }>,
     default: () => ({}),
   },
@@ -30,20 +35,34 @@ defineProps({
   <Toolbar.Root :disabled="scene.disabled" :orientation="scene.orientation">
     <Toolbar.Button v-if="!scene.noFirst" id="first">First</Toolbar.Button>
     <Toolbar.Group :disabled="scene.groupDisabled">
-      <ToggleGroup v-slot="{ state }" :multiple="scene.multiple" :default-value="['one']">
+      <ToggleGroup
+        v-slot="{ state }"
+        :disabled="scene.toggleGroupDisabled"
+        :multiple="scene.multiple"
+        :default-value="['one']"
+      >
         <Toggle
           id="one"
           value="one"
           :as="scene.disabledSpan ? 'span' : undefined"
-          :disabled="scene.disabledSpan"
+          :disabled="scene.disabledSpan || scene.disabledOne"
+          :focusable-when-disabled="scene.focusableOne"
         >
           One
         </Toggle>
-        <Toggle id="two" value="two" :disabled="scene.disabledTwo">Two</Toggle>
+        <Toggle
+          id="two"
+          value="two"
+          :disabled="scene.disabledTwo"
+          :focusable-when-disabled="scene.focusableTwo"
+        >
+          Two
+        </Toggle>
         <span class="State">{{ state.disabled }}</span>
       </ToggleGroup>
     </Toolbar.Group>
     <Toolbar.Button
+      v-if="!scene.noAfter"
       :disabled="scene.buttonDisabled"
       :focusable-when-disabled="scene.focusableWhenDisabled ?? true"
     >
@@ -51,7 +70,7 @@ defineProps({
         <Toggle id="alone" v-bind="props" :ref="elementRef">Alone</Toggle>
       </template>
     </Toolbar.Button>
-    <Toolbar.Button id="last">Last</Toolbar.Button>
+    <Toolbar.Button v-if="!scene.noAfter" id="last">Last</Toolbar.Button>
   </Toolbar.Root>
   <input id="after" aria-label="After" />
 </template>

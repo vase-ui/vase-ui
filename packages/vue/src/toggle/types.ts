@@ -17,6 +17,12 @@ export interface ToggleProps<Value extends string = string>
    */
   disabled?: boolean;
   /**
+   * A disabled toggle stays in the tab order, and a focused toggle keeps the focus. A disabled
+   * fieldset still disables a native button.
+   * @default false
+   */
+  focusableWhenDisabled?: boolean | undefined;
+  /**
    * The value of the toggle in a `ToggleGroup`. Give it when the group has `v-model` or
    * `defaultValue`. With none, the toggle has a value of its own.
    */
