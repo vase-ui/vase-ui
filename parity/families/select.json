@@ -535,7 +535,7 @@
     {
       "entry": "Trigger",
       "prop": "focusableWhenDisabled",
-      "reason": "Keeps a disabled trigger in the tab order and keeps the focus when the page disables a focused trigger."
+      "reason": "The trigger keeps its tab stop and any existing focus when disabled."
     },
     {
       "entry": "Trigger",

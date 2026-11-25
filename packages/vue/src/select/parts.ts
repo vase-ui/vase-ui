@@ -108,8 +108,8 @@ export namespace Label {
  * @selector `[data-pressed]` The popup is open.
  * @selector `[data-popup-side]` The side of the trigger that the open popup is on, or `none` while the popup covers the trigger.
  * @selector `[data-placeholder]` The select has no value.
- * @selector `:disabled` The trigger is disabled, and it is a native button out of the tab order.
- * @selector `[aria-disabled="true"]` The trigger is disabled, and it stays in the tab order or is not a native button. `:enabled` also matches such a native button, so select an enabled trigger with `:not(:disabled, [aria-disabled="true"])`.
+ * @selector `:disabled` The disabled native button has no tab stop.
+ * @selector `[aria-disabled="true"]` Matches disabled non-native triggers and focusable disabled native buttons. Those buttons also match `:enabled`. Use `:not(:disabled, [aria-disabled="true"])` for enabled triggers.
  * @selector `[aria-readonly="true"]` The select is read-only.
  * @selector `[aria-required="true"]` The select is required.
  * @selector `[aria-invalid="true"]` In a `Field.Root`, the value is invalid.
