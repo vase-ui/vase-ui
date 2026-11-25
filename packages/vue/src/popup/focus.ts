@@ -141,7 +141,6 @@ export function usePopupFocus(
       if (open) {
         took = false;
         opens.value += 1;
-        pending = null;
         // The open reads the targets before the update that writes `inert`.
         const active = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
         const from = [...returnTargets].find(([other]) => other !== root && other.popup?.contains(active));
@@ -240,10 +239,7 @@ export function usePopupFocus(
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
     if (options.inputKeepsFocus?.() && !popup.contains(active)) {
-      const reason = root.reason ?? '';
-      if (options.finalFocus() === undefined || ['focus-out', 'outside-press'].includes(reason)) {
-        return null;
-      }
+      if (['focus-out', 'outside-press'].includes(root.reason ?? '')) return null;
       return { popup, active, onlyFinalFocus: true };
     }
     // A popup that took no focus at its open, as after a hover, gives back a focus that went into
@@ -270,7 +266,7 @@ export function usePopupFocus(
     if (target === false) return null;
     const doc = ownerDocument(popup);
     for (const each of [target === true ? null : tabStopOf(target, popup), ...targets()]) {
-      if (!each?.isConnected || popup.contains(each)) continue;
+      if (!each || popup.contains(each)) continue;
       focusAs(each, root.closeInteraction);
       if (activeElement(doc) === each) return each;
     }
@@ -286,7 +282,7 @@ export function usePopupFocus(
     if (now && now !== doc.body && now !== active && !popup.contains(now)) return;
     if (onlyFinalFocus) {
       const target = resolve(options.finalFocus(), root.closeInteraction);
-      if (typeof target === 'object' && target.isConnected) focusAs(target, root.closeInteraction);
+      if (typeof target === 'object') focusAs(target, root.closeInteraction);
       return;
     }
     if (moveFocus(popup)) return;
