@@ -154,7 +154,9 @@ export function usePopupFocus(
     { flush: 'sync' },
   );
   // The return waits for the update of the close, so that each element that the update renders is
-  // in the document, and a modal popup has removed `inert` (test/measurements/dialog.test.ts).
+  // in the document, and a modal popup has removed `inert` (test/measurements/dialog.test.ts). A
+  // `nextTick` in the `sync` watcher would run before the update when no job of the update is in
+  // the queue yet.
   watch(
     () => root.open,
     (open) => {
