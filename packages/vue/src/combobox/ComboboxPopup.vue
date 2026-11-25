@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
+import { computed, mergeProps, onBeforeUnmount, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
+import { usePopupPart } from '../popup/portal';
 import { injectComboboxRoot, injectPositioner, useTriggerIsControl } from './root';
 import type { ComboboxPopupProps, ComboboxPopupState } from './types';
 
@@ -25,8 +26,7 @@ const { element, setElement } = useElement<HTMLElement>();
 // With the trigger as the control, the popup is a dialog, also in a root with no `Input`.
 const isDialog = useTriggerIsControl(context);
 
-// While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(() => (root.open && !root.leaving) || root.keepMounted);
+const { entered, shown } = usePopupPart(root, element);
 const state = computed<ComboboxPopupState>(() => ({
   open: root.open,
   side: placement.side.value,
@@ -46,8 +46,6 @@ watch(
   ([initialFocus, finalFocus]) => (context.popupFocus.value = { initialFocus, finalFocus }),
   { immediate: true },
 );
-const removeLeaving = root.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
 
 function elementProps() {
   const closed = !root.open;
@@ -60,7 +58,7 @@ function elementProps() {
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,
       'data-empty': state.value.empty ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
-      hidden: closed ? true : undefined,
+      hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       // A press on the popup keeps the focus on the input (test/measurements/combobox.test.ts, "a
       // press in a popup while a text input has the focus").
@@ -75,18 +73,21 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- The `element` slot renders a fragment, which takes no `v-show`. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+  <template v-if="$slots.element">
+    <slot
+      v-if="root.open || root.keepMounted"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
+    <slot v-if="entered" :state="state" />
   </component>
-  <div v-else-if="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+  <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

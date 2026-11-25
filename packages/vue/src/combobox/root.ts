@@ -362,13 +362,13 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   // With `autoHighlight`, the first item that mounts after the text gets the highlight.
   const highlightFirst = shallowRef(false);
   /**
-   * The selected item gets the highlight when it mounts: at the mount of an inline list, and at an
-   * open that waits for the leave of the old popup.
+   * The selected item gets the highlight when it mounts: at the mount of an inline list, and when
+   * items mount after the open.
    */
   const highlightSelectedLater = shallowRef(false);
-  // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
-  // the text of its input until the next open (test/measurements/combobox.test.ts, "a kept popup
-  // that closes").
+  // A kept popup or a popup that leaves in a `<Transition>` shows its exit after the close, so it
+  // keeps the filter and the text of its input until the leave ends or the next open
+  // (test/measurements/combobox.test.ts, "a kept popup that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
   // The text of an autofill of the input, which is no query (Base UI).
   const filledText = shallowRef<string | null>(null);
@@ -627,16 +627,15 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         // The highlight event of no item resets the last highlight. A virtualized list emits none
         // for a highlight that it removes.
         if (source.virtualized) lastHighlight = { value: undefined, index: -1 };
-        kept.value = root.keepMounted ? { query: query.value, text: text.value } : null;
+        kept.value =
+          root.keepMounted || root.leaving ? { query: query.value, text: text.value } : null;
         resetText(new Event('vase-ui'), root.reason === 'item-press');
         return;
       }
       kept.value = null;
-      // The items mount in this update.
-      void nextTick(() => {
+      const finishOpen = () => {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
-        // A new popup waits while the old one leaves, so its items mount later.
         if (hasValue.value && source.mode !== 'none' && !list.find()) {
           highlightSelectedLater.value = true;
           return;
@@ -650,7 +649,19 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
             key,
           );
         }
+      };
+      // A popup that mounts renders its content one update later (`usePopupPart`).
+      const mountsPopup = !root.popup;
+      void nextTick(() => {
+        if (mountsPopup) void nextTick(finishOpen);
+        else finishOpen();
       });
+    },
+  );
+  watch(
+    () => root.leaving,
+    (leaving) => {
+      if (!leaving && !root.keepMounted) kept.value = null;
     },
   );
 
