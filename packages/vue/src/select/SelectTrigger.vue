@@ -11,7 +11,10 @@ import type { SelectTriggerProps, SelectTriggerState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<SelectTriggerProps>(), { disabled: false });
+const props = withDefaults(defineProps<SelectTriggerProps>(), {
+  disabled: false,
+  focusableWhenDisabled: false,
+});
 defineSlots<{
   default?(scope: { state: SelectTriggerState }): unknown;
   element?(scope: ElementSlotProps<SelectTriggerState>): unknown;
@@ -37,6 +40,7 @@ const trigger = usePopupTrigger(() => root, {
   id: () => triggerId.value,
   payload: () => undefined,
   disabled: () => props.disabled || context.disabled,
+  focusableWhenDisabled: () => props.focusableWhenDisabled,
   tag: useAsTag(() => props.as, 'button'),
   pressStart: () => true,
   keyClickByKeydown: true,
