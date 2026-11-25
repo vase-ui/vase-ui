@@ -1078,6 +1078,22 @@ describe('the size', () => {
     expect(get('popup').offsetWidth).toBe(get('content-one').offsetWidth);
   });
 
+  test('a disabled portal open at the mount sizes the positioner from the content', async () => {
+    await mountMenu({
+      root: { defaultValue: 'one' },
+      portal: { disabled: true },
+      positioner: {
+        style: 'width: var(--positioner-width); height: var(--positioner-height)',
+      },
+      popup: { class: 'sized', style: 'border: 1px solid' },
+    });
+    await shows('one');
+    await frame();
+    await frame();
+    expect(get('positioner').style.getPropertyValue('--positioner-width')).toBe('202px');
+    expect(get('popup').offsetWidth).toBe(202);
+  });
+
   test('the window that changes its size gives the positioner data-instant for 100 ms', async () => {
     await mountMenu({ root: { defaultValue: 'one' } });
     await shows('one');
@@ -1374,11 +1390,11 @@ describe('a popup in a <Transition>', () => {
     });
   });
 
-  test('an open on another trigger while the popup leaves keeps the popup, goes back from where it is, moves to that trigger in the first frame, and updates its size and label', async () => {
+  test('an open on another trigger while the popup leaves keeps the popup, goes back from where it is, moves to that trigger in the first frame, and updates its label', async () => {
     const log = new Set<string>();
     mount(NavigationMenuInTransition, {
       root: { defaultValue: 'one' },
-      popup: { class: 'nav-sized slow' },
+      popup: { class: 'slow' },
       log,
     });
     await shows('one');
@@ -1386,12 +1402,6 @@ describe('a popup in a <Transition>', () => {
     const first = await opened();
     await finishAnimations(first);
     await waitFor(() => expect(log.has('after-enter')).toBe(true));
-    const widths: string[] = [];
-    const widthObserver = new MutationObserver(() =>
-      widths.push(first.style.getPropertyValue('--popup-width')),
-    );
-    widthObserver.observe(first, { attributeFilter: ['style'] });
-    onTestFinished(() => widthObserver.disconnect());
     const popups = mostMatches('[data-testid="popup"]');
     await userEvent.click(byId('outside'));
     await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
@@ -1422,12 +1432,107 @@ describe('a popup in a <Transition>', () => {
     expect(firstFrame.hasTwo).toBe(true);
     expect(firstFrame.labelledby).toBe('trigger-two');
     expect(Math.abs(firstFrame.offset)).toBeLessThan(1);
+  });
+
+  test('an open on another trigger while the popup leaves animates its size from the old content to the new content', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { defaultValue: 'one' },
+      popup: { class: 'nav-sized slow' },
+      log,
+    });
+    await shows('one');
+    await placed();
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const widths: string[] = [];
+    const widthObserver = new MutationObserver(() =>
+      widths.push(first.style.getPropertyValue('--popup-width')),
+    );
+    widthObserver.observe(first, { attributeFilter: ['style'] });
+    onTestFinished(() => widthObserver.disconnect());
+    const transitions: string[] = [];
+    const onRun = (event: TransitionEvent) => transitions.push(event.propertyName);
+    first.addEventListener('transitionrun', onRun);
+    onTestFinished(() => first.removeEventListener('transitionrun', onRun));
+    await userEvent.click(byId('outside'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    transitions.length = 0;
+    get('trigger-two').click();
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(get('popup')).toBe(first);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
     expect(widths).toContain('200px');
     expect(widths).toContain('300px');
     expect(widths.lastIndexOf('300px')).toBeGreaterThan(widths.indexOf('200px'));
+    expect(transitions).toContain('width');
     expect(get('positioner').style.getPropertyValue('--positioner-width')).toBe('300px');
     await waitFor(() => expect(first.style.getPropertyValue('--popup-width')).toBe(''));
     expect(first.offsetWidth).toBe(300);
+  });
+
+  test('a hover open with `delay` that closes after `closeDelay` reopens on another trigger during the leave with no delay, and goes back from where it is', async () => {
+    const log = new Set<string>();
+    mount(NavigationMenuInTransition, {
+      root: { delay: 60, closeDelay: 60 },
+      popup: { class: 'slow' },
+      log,
+    });
+    await nextTick();
+    await userEvent.hover(get('trigger-one'));
+    await shows('one');
+    const first = await opened();
+    await finishAnimations(first);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    await userEvent.hover(get('link-blog'));
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = shownOpacity(first);
+    await userEvent.hover(get('trigger-two'));
+    await shows('two');
+    const [frames = []] = await opacityUntilRest([first]);
+    expect(get('popup')).toBe(first);
+    expect(first.contains(get('content-two'))).toBe(true);
+    expect(log.has('after-leave')).toBe(false);
+    expect(Math.min(...frames)).toBeGreaterThan(atOpen - 0.15);
+    expect(frames.at(-1)).toBe(1);
+  });
+
+  test('a press on another navigation menu while the first leaves keeps the old content and label in the leaving popup until its leave ends', async () => {
+    mount(NavigationMenuInTransition, {
+      popup: { class: 'slow', 'data-testid': 'popup-a' },
+      triggers: { one: { id: 'a-one', 'data-testid': 'a-trigger-one' } },
+      contents: { one: { 'data-testid': 'a-content-one' } },
+    });
+    mount(NavigationMenuInTransition, {
+      popup: { class: 'slow', 'data-testid': 'popup-b' },
+      triggers: {
+        one: { id: 'b-one', 'data-testid': 'b-trigger-one', style: 'margin-top: 200px' },
+      },
+      contents: { one: { 'data-testid': 'b-content-one' } },
+    });
+    await nextTick();
+    await userEvent.click(get('a-trigger-one'));
+    await waitFor(() => expect(byTestId('a-content-one')).not.toBe(null));
+    const popupA = get('popup-a');
+    const contentA = get('a-content-one');
+    await finishAnimations(popupA);
+    await userEvent.click(get('b-trigger-one'));
+    await waitFor(() => expect(popupA).toHaveClass('nav-leave-leave-active'));
+    await waitFor(() => expect(byTestId('b-content-one')).not.toBe(null));
+    await nextTick();
+    expect(popupA.contains(contentA)).toBe(true);
+    expect(contentA).not.toHaveAttribute('hidden');
+    expect(popupA).toHaveAttribute('aria-labelledby', 'a-one');
+    expect(popupA).toHaveAttribute('inert');
+    expect(get('popup-b').contains(get('b-content-one'))).toBe(true);
+    await finishAnimations(popupA);
+    await waitFor(() => expect(popupA.isConnected).toBe(false));
+    expect(contentA.isConnected).toBe(false);
+    expect(get('popup-b').isConnected).toBe(true);
   });
 
   test('a hover on another trigger while the popup leaves opens its item with no delay in the same popup', async () => {

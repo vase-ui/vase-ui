@@ -59,10 +59,14 @@ describe('server render and hydration', () => {
     expect(takeReportedMessages()).toEqual([]);
   });
 
-  test('a disabled portal of an open root renders the shown popup and backdrop in place with no `display: none`, and hydrates with no message', async () => {
+  test('a disabled portal of an open root renders the shown popup and backdrop in place with no `display: none`, hydrates with no message, and sizes the positioner from the content', async () => {
     const props = {
       root: { defaultValue: 'one' },
       portal: { disabled: true },
+      positioner: {
+        style: 'width: var(--positioner-width); height: var(--positioner-height)',
+      },
+      popup: { class: 'sized' },
       backdrop: {},
     };
     const root = await renderOnServer('NavigationMenuParts', props);
@@ -78,6 +82,12 @@ describe('server render and hydration', () => {
     expect(backdrop.style.display).toBe('');
     await waitFor(() => expect(byTestId(root, 'content-one')).not.toBe(null));
     expect(byTestId(root, 'viewport')!.contains(byTestId(root, 'content-one'))).toBe(true);
+    await waitFor(() =>
+      expect(byTestId(root, 'positioner')!.style.getPropertyValue('--positioner-width')).toBe(
+        '200px',
+      ),
+    );
+    expect(popup.offsetWidth).toBe(200);
     expect(takeReportedMessages()).toEqual([]);
   });
 });

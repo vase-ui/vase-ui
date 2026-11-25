@@ -110,4 +110,10 @@ defineProps({
     width 80ms,
     height 80ms;
 }
+.nav-sized.slow.nav-leave-enter-active {
+  transition:
+    width 80ms,
+    height 80ms,
+    opacity 800ms linear;
+}
 </style>
