@@ -1075,13 +1075,14 @@ describe('the swipe area', () => {
     const backdrop = get('backdrop');
     await waitFor(() => expect(popup.className).toBe('drawer-test-popup'));
     await userEvent.keyboard('{Escape}');
-    const release = await press(centerOf('swipe-area'), { x: 0, y: -100 }, 10);
+    // Past half of the popup, so the release keeps it open at any speed and starts no held leave.
+    const release = await press(centerOf('swipe-area'), { x: 0, y: -200 }, 10);
     expect([...document.querySelectorAll('[data-testid="popup"]')]).toEqual([popup]);
     await endLeave(popup, backdrop);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
     expect(document.querySelectorAll('[data-testid="popup"]')).toHaveLength(1);
     await nextTick();
-    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-y')).toBe('200px');
+    expect(get('popup').style.getPropertyValue('--drawer-swipe-movement-y')).toBe('100px');
     await release();
   });
 });
