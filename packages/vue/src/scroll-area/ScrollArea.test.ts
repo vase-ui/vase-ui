@@ -1144,6 +1144,10 @@ describe('content without ScrollArea.Content', () => {
     scene.content = false;
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
     expect(area).not.toHaveAttribute('data-has-overflow-y');
+
+    scene.lines = 60;
+    await waitFor(() => expect(viewport.tabIndex).toBe(0));
+    expect(area).toHaveAttribute('data-has-overflow-y');
   });
 });
 
