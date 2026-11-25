@@ -1,5 +1,5 @@
 export * from '../src/common/testUtils';
-export { pasteText, withClipboard } from './clipboard';
+export { pasteText } from './clipboard';
 export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export { installPartsInterop, isVaporApp, isVaporParts } from './testApp';
 export { mockBrowserToday, mockToday } from './mockBrowserToday';

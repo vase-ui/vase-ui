@@ -5,7 +5,6 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { cdp, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureNumberInputs from '../fixtures/MeasureNumberInputs.vue';
-import { withClipboard } from '../clipboard';
 import { dragAndDrop, holdPress } from '../pointer';
 import { mount, settle } from '../render';
 
@@ -312,13 +311,11 @@ describe('text input events', () => {
     target!.focus();
     target!.setSelectionRange(2, 2);
     await userEvent.keyboard('x');
-    await withClipboard(async () => {
-      source!.focus();
-      source!.select();
-      await userEvent.copy();
-      target!.focus();
-      await userEvent.paste();
-    });
+    source!.focus();
+    source!.select();
+    await userEvent.copy();
+    target!.focus();
+    await userEvent.paste();
     await dragAndDrop(drag, target!);
     await timer();
     expect(heard).toEqual([

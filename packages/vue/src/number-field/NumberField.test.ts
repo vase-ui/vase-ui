@@ -7,7 +7,6 @@ import {
   type NumberFieldRootCommitEventDetails,
 } from '@vase-ui/vue/number-field';
 import { platform } from '../common/platform';
-import { withClipboard } from '../../test/clipboard';
 import { dataAttributes } from '../../test/field';
 import NumberFieldInLocaleProvider from '../../test/fixtures/NumberFieldInLocaleProvider.vue';
 import NumberFieldInputAlone from '../../test/fixtures/NumberFieldInputAlone.vue';
@@ -529,25 +528,23 @@ describe('paste and composition', () => {
     const log: string[] = [];
     const { root, input } = await mountField({ root: record(log, { defaultValue: 12 }) });
     const source = root.appendChild(document.createElement('input'));
-    await withClipboard(async () => {
-      source.value = '34';
-      source.focus();
-      source.select();
-      await userEvent.copy();
-      input.focus();
-      input.setSelectionRange(1, 1);
-      await userEvent.paste();
-      await settle();
-      expect(input.value).toBe('1342');
-      expect(input.selectionStart).toBe(3);
-      source.value = '-';
-      source.focus();
-      source.select();
-      await userEvent.copy();
-      input.focus();
-      input.select();
-      await userEvent.paste();
-    });
+    source.value = '34';
+    source.focus();
+    source.select();
+    await userEvent.copy();
+    input.focus();
+    input.setSelectionRange(1, 1);
+    await userEvent.paste();
+    await settle();
+    expect(input.value).toBe('1342');
+    expect(input.selectionStart).toBe(3);
+    source.value = '-';
+    source.focus();
+    source.select();
+    await userEvent.copy();
+    input.focus();
+    input.select();
+    await userEvent.paste();
     await settle();
     // The blur gave the typed number its format.
     expect(input.value).toBe('1,342');

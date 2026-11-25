@@ -7,7 +7,7 @@ import {
   type OTPFieldRootCompleteEventDetails,
   type OTPFieldRootInvalidEventDetails,
 } from '@vase-ui/vue/otp-field';
-import { pasteText, withClipboard } from '../../test/clipboard';
+import { pasteText } from '../../test/clipboard';
 import { dataAttributes, leave, recordValidate } from '../../test/field';
 import OTPFieldInFieldset from '../../test/fixtures/OTPFieldInFieldset.vue';
 import OTPFieldInForm from '../../test/fixtures/OTPFieldInForm.vue';
@@ -1407,13 +1407,11 @@ describe('a real keyboard and pointer', () => {
     });
     const source = root.querySelector<HTMLInputElement>('#before')!;
     source.value = '12 34-56';
-    await withClipboard(async () => {
-      source.focus();
-      source.select();
-      await userEvent.copy();
-      await userEvent.click(slots[0]!);
-      await userEvent.paste();
-    });
+    source.focus();
+    source.select();
+    await userEvent.copy();
+    await userEvent.click(slots[0]!);
+    await userEvent.paste();
     await settle();
     expect(values()).toEqual(['1', '2', '3', '4', '5', '6']);
     expect(focused()).toBe(5);
