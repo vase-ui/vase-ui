@@ -11,7 +11,10 @@ import type { SelectTriggerProps, SelectTriggerState } from './types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<SelectTriggerProps>(), { disabled: false });
+const props = withDefaults(defineProps<SelectTriggerProps>(), {
+  disabled: false,
+  focusableWhenDisabled: false,
+});
 defineSlots<{
   default?(scope: { state: SelectTriggerState }): unknown;
   element?(scope: ElementSlotProps<SelectTriggerState>): unknown;
@@ -37,6 +40,7 @@ const trigger = usePopupTrigger(() => root, {
   id: () => triggerId.value,
   payload: () => undefined,
   disabled: () => props.disabled || context.disabled,
+  focusableWhenDisabled: () => props.focusableWhenDisabled,
   tag: useAsTag(() => props.as, 'button'),
   pressStart: () => true,
   keyClickByKeydown: true,
@@ -97,7 +101,7 @@ function onBlur(event: FocusEvent) {
   if (next && isInPopup(context.layer, next)) return;
   // A string of the typeahead ends when the focus leaves the select.
   context.typeahead.reset();
-  if (element.value) field?.onLeave(element.value);
+  if (element.value && !trigger.button.disabled.value) field?.onLeave(element.value);
 }
 
 function elementProps() {

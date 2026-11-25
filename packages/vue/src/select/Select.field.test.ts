@@ -156,6 +156,55 @@ describe('the field', () => {
     await waitFor(() => expect(field).toHaveAttribute('data-touched'));
   });
 
+  test.each(['trigger', 'root', 'field'] as const)(
+    'with focusableWhenDisabled, a disabled %s keeps the focus on the trigger, ignores input and its label, and leaves the field untouched at a leave',
+    async (source) => {
+      const props = {
+        trigger: reactive({ disabled: false, focusableWhenDisabled: true }),
+        root: reactive({ disabled: false, name: 'letter', defaultValue: 'a', modal: false }),
+        field: reactive({ disabled: false }),
+      };
+      const { field, form, label } = await mountField(props);
+      trigger().focus();
+      props[source].disabled = true;
+      await settle();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(trigger()).toHaveFocus();
+      expect(trigger()).toHaveAttribute('aria-disabled', 'true');
+      expect(trigger()).not.toHaveAttribute('disabled');
+      expect(new FormData(form).get('letter')).toBe(source === 'trigger' ? 'a' : null);
+
+      await userEvent.keyboard('{Enter} {ArrowDown}{ArrowUp}b');
+      await userEvent.click(trigger(), { force: true });
+      await userEvent.click(label, { force: true });
+      expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+      expect(shown(byTestId('popup'))).toBe(false);
+      expect(trigger()).toHaveTextContent('a');
+
+      trigger().focus();
+      await userEvent.keyboard('{Tab}');
+      await settle();
+      expect(document.getElementById('submit-button')).toHaveFocus();
+      expect(field).not.toHaveAttribute('data-touched');
+
+      props[source].disabled = false;
+      await nextTick();
+      trigger().focus();
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(byTestId('item-a')).toHaveFocus());
+      props[source].disabled = true;
+      await nextTick();
+      await userEvent.pointer({
+        coords: { x: window.innerWidth - 5, y: window.innerHeight - 5 },
+        keys: '[MouseLeft]',
+      });
+      await waitFor(() => expect(trigger()).toHaveAttribute('aria-expanded', 'false'));
+      await settle();
+      expect(field).not.toHaveAttribute('data-touched');
+    },
+  );
+
   test('aria-describedby of the developer comes before the ids of the field', async () => {
     await mountField({ trigger: { 'aria-describedby': 'hint' } });
     expect(trigger()).toHaveAttribute('aria-describedby', 'hint description');
@@ -193,17 +242,26 @@ describe('the field', () => {
   test('a disabled field, a disabled fieldset and the root disable the trigger', async () => {
     const field = reactive<Attrs>({ disabled: true });
     const fieldset = reactive<Attrs>({});
-    const root = reactive<Attrs>({});
-    await mountField({ field, fieldset, root });
+    const root = reactive<Attrs>({ name: 'letter', defaultValue: 'a' });
+    const triggerProps = reactive({ focusableWhenDisabled: false });
+    const { form } = await mountField({ field, fieldset, root, trigger: triggerProps });
     expect(trigger()).toBeDisabled();
     field.disabled = false;
-    fieldset.disabled = true;
-    await settle();
-    expect(trigger()).toBeDisabled();
-    fieldset.disabled = undefined;
     root.disabled = true;
     await settle();
     expect(trigger()).toBeDisabled();
+    root.disabled = false;
+    fieldset.disabled = true;
+    await settle();
+    expect(trigger()).toBeDisabled();
+    expect(trigger()).not.toHaveAttribute('aria-disabled');
+    triggerProps.focusableWhenDisabled = true;
+    await settle();
+    expect(trigger()).toBeDisabled();
+    expect(trigger()).not.toHaveAttribute('aria-disabled');
+    expect(new FormData(form).get('letter')).toBe(null);
+    trigger().focus();
+    expect(trigger()).not.toHaveFocus();
   });
 
   test('VUE-112: a disabled fieldset gives the form no value', async () => {

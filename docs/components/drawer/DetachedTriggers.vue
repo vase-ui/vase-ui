@@ -10,7 +10,7 @@ const demoDrawer = Drawer.createHandle();
   <Drawer.Root :handle="demoDrawer">
     <Drawer.Portal>
       <Drawer.Viewport>
-        <Transition name="sheet" appear>
+        <Transition name="sheet">
           <Drawer.Popup>Drawer</Drawer.Popup>
         </Transition>
       </Drawer.Viewport>

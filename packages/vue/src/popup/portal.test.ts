@@ -9,6 +9,7 @@ const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-test
 
 const FAMILIES = [
   { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'drawer', parts: ['backdrop', 'popup'], popupTag: 'div' },
   { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div' },
   { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div' },
   { family: 'tooltip', parts: ['popup'], popupTag: 'div' },

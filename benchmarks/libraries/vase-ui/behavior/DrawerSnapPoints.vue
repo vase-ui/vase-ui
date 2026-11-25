@@ -19,7 +19,6 @@ const snapPoint = shallowRef<Drawer.Root.SnapPoint | null>('480px');
             enter-from-class="drawer-hidden"
             leave-to-class="drawer-hidden"
             leave-active-class="drawer-leaving"
-            appear
           >
             <Drawer.Popup data-bench="drawer" class="drawer-popup">
               <div data-bench="drawer-handle" />

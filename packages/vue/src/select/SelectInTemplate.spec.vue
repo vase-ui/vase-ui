@@ -14,6 +14,10 @@ function onFontChange(value: string | null, details: Select.Root.ChangeEventDeta
 
 <template>
   <Select.Root v-model="font" @value-change="onFontChange">
+    <Select.Trigger disabled focusable-when-disabled />
+    <Select.Trigger :focusable-when-disabled="undefined" />
+    <!-- @vue-expect-error -->
+    <Select.Trigger focusable-when-disabled="yes" />
     <Select.Value v-slot="{ state }">
       <span v-if="expectType<boolean, typeof state.placeholder>(state.placeholder) === undefined" />
     </Select.Value>

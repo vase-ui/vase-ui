@@ -22,7 +22,6 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
           :enter-from-class="styles.BackdropHidden"
           :leave-to-class="styles.BackdropHidden"
           :leave-active-class="styles.BackdropLeaving"
-          appear
         >
           <Drawer.Backdrop :class="styles.Backdrop" />
         </Transition>
@@ -31,7 +30,6 @@ const portalContainer = useTemplateRef<HTMLDivElement>('portalContainer');
             :enter-from-class="styles.PopupHidden"
             :leave-to-class="styles.PopupHidden"
             :leave-active-class="styles.PopupLeaving"
-            appear
           >
             <Drawer.Popup :class="styles.Popup">
               <Drawer.Content :class="styles.Content">

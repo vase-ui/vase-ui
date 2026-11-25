@@ -57,7 +57,7 @@
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/Drawer.swipe.test.ts",
-      "reason": "`Drawer.swipe.test.ts` tests the swipe area: the open at 1 px with the area as the trigger, the popup that follows the finger from its closed place, the release, a release outside the popup that closes nothing, a disabled area, an area that becomes disabled or inert in a swipe, an open that the parent refuses, a press outside after a swipe that opened the drawer, no text selection and the focus that stays, and a swipe while the popup of the last close leaves: the popup enters at the place of the finger after the leave. The Indent has the progress of the Backdrop. Pointer Events carry the swipe, so the cases about touch events and compatibility pointer events have no counterpart."
+      "reason": "`Drawer.swipe.test.ts` tests the swipe area: the open at 1 px with the area as the trigger, the popup that follows the finger from its closed place, the release, a release outside the popup that closes nothing, a disabled area, an area that becomes disabled or inert in a swipe, an open that the parent refuses, a press outside after a swipe that opened the drawer, no text selection and the focus that stays, and a swipe while the popup of the last close leaves: the same popup cancels its leave and follows the finger. The Indent has the progress of the Backdrop. Pointer Events carry the swipe, so the cases about touch events and compatibility pointer events have no counterpart."
     },
     {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",

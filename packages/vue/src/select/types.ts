@@ -185,6 +185,11 @@ export interface SelectTriggerProps
    * @default false
    */
   disabled?: boolean | undefined;
+  /**
+   * Keeps the tab stop and focus when disabled, unless a fieldset disables the native button.
+   * @default false
+   */
+  focusableWhenDisabled?: boolean | undefined;
 }
 
 export interface SelectTriggerState<Value = any> extends SelectFieldState {

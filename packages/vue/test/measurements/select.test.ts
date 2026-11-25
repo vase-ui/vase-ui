@@ -43,6 +43,18 @@ function centerOf(target: Element) {
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+test('a focused combobox button loses focus with disabled and keeps it with aria-disabled', async () => {
+  html('<button id="trigger" role="combobox">Fruit</button>');
+  const trigger = element<HTMLButtonElement>('trigger');
+  trigger.focus();
+  trigger.setAttribute('aria-disabled', 'true');
+  await nextFrame();
+  expect(trigger).toHaveFocus();
+  trigger.removeAttribute('aria-disabled');
+  trigger.disabled = true;
+  await waitFor(() => expect(document.body).toHaveFocus());
+});
+
 describe('a key on a closed native select', () => {
   test('selects the next option whose text starts with it, with `input` and `change`, and no popup', async () => {
     html(

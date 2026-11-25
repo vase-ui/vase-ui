@@ -351,7 +351,7 @@ The drawer can show different content for each trigger. Give a `payload` to each
 
 ### Stacking and animations
 
-Use CSS transitions or animations for the open, the close, the swipe and the stack. Put the backdrop and the popup each in a `<Transition appear>`, and animate the open and the close with its classes. A swipe that closes the drawer leaves the popup at the place of the drag, and the leave starts from there.
+Use CSS transitions or animations for the open, the close, the swipe and the stack. Put the backdrop and the popup each in a `<Transition>` with no `appear`, and animate the open and the close with its classes. An open during the leave keeps the same popup and backdrop, and their transitions go back from where they are. A swipe that closes the drawer leaves the popup at the place of the drag, and the leave starts from there.
 
 The `--nested-drawers` CSS variable gives the depth in the stack. The frontmost drawer has the index `0`.
 

@@ -162,8 +162,8 @@ export function useSelectRoot(
       emit('openChange', open, details as SelectRootOpenChangeEventDetails);
       if (details.isCanceled || open) return;
       if (details.reason === 'focus-out' || details.reason === 'outside-press') {
-        const trigger = root.activeTrigger;
-        if (trigger) field?.onLeave(trigger);
+        const trigger = root.triggers.find((entry) => entry.id === root.activeTriggerId);
+        if (trigger?.element && !trigger.disabled) field?.onLeave(trigger.element);
       }
     },
     emitOpen: (open) => emit('update:open', open),
