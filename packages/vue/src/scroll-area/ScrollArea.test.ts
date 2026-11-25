@@ -1012,7 +1012,6 @@ describe('content without ScrollArea.Content', () => {
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
     await nextFrames();
 
-    // A change of the removed text node runs no measurement, while the first text node still counts.
     const setProperty = vi.spyOn(viewport.style, 'setProperty');
     onTestFinished(() => setProperty.mockRestore());
     addedText.textContent = 'Detached '.repeat(200);
@@ -1118,7 +1117,6 @@ describe('content without ScrollArea.Content', () => {
       });
     onTestFinished(() => setProperty.mockRestore());
 
-    // Ten microtask-separated direct text changes in one frame coalesce into one measurement.
     const textNode = [...viewport.childNodes].find(
       (node) => node.nodeType === 3 && node.textContent === 'One line.',
     )!;
@@ -1130,7 +1128,6 @@ describe('content without ScrollArea.Content', () => {
     await settle();
     expect(Math.max(...byFrame.values())).toBe(1);
 
-    // Direct element additions run at most one measurement in a frame across rAF and ResizeObserver.
     byFrame.clear();
     scene.text = undefined;
     await waitFor(() => expect(viewport.tabIndex).toBe(-1));
@@ -1156,7 +1153,7 @@ describe('content without ScrollArea.Content', () => {
     await Promise.resolve();
     expect(vi.getTimerCount()).toBe(before + 1);
     await fireEvent.scroll(mounted.viewport);
-    // `onScroll` starts the 100 ms `userScrollEnd` timer and cancels the pending frame.
+    // `onScroll` cancels the frame and starts the `userScrollEnd` timer.
     expect(vi.getTimerCount()).toBe(before + 1);
     scene.text = 'One line.';
     await nextTick();

@@ -270,8 +270,7 @@ provide(scrollAreaKey, {
   scheduleMeasure,
   observe(target) {
     // One animation frame shares one `timeline.currentTime` across `requestAnimationFrame` and
-    // `ResizeObserver` (test/measurements/scroll-area.test.ts). A second call in the same frame
-    // moves to the next frame.
+    // `ResizeObserver` (test/measurements/scroll-area.test.ts).
     observer ??= new ResizeObserver(() => {
       const now = frameTime();
       if (now !== null && now === measuredAt) {

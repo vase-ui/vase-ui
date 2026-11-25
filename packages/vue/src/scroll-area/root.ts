@@ -65,9 +65,7 @@ export interface ScrollAreaForParts {
   addCorner(): () => void;
 }
 
-/** What a viewport gives to its content. */
 export interface ScrollAreaViewportForContent {
-  /** Registers a `ScrollArea.Content` part and returns the function that removes it. */
   addContent(): () => void;
 }
 
