@@ -291,11 +291,7 @@ const popupInstantClass = styles.PopupInstant;
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition
-          :enter-from-class="popupHiddenClass"
-          :leave-active-class="popupInstantClass"
-          appear
-        >
+        <Transition :enter-from-class="popupHiddenClass" :leave-active-class="popupInstantClass">
           <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
             <div :class="styles.Viewport">
               <Combobox.Status>

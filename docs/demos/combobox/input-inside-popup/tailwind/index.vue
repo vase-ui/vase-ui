@@ -257,11 +257,7 @@ const popupHiddenClass = 'scale-90 opacity-0';
       </Combobox.Trigger>
       <Combobox.Portal>
         <Combobox.Positioner align="start" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Combobox.Popup
               class="[--input-container-height:2rem] max-h-[24.5rem] max-w-[var(--available-width)] origin-[var(--transform-origin)] bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-150 dark:bg-neutral-950 dark:text-white dark:shadow-none"
               aria-label="Select country"

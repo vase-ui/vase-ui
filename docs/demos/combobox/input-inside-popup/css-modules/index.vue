@@ -253,11 +253,7 @@ const popupHiddenClass = styles.PopupHidden;
       </Combobox.Trigger>
       <Combobox.Portal>
         <Combobox.Positioner align="start" :side-offset="4">
-          <Transition
-            :enter-from-class="popupHiddenClass"
-            :leave-to-class="popupHiddenClass"
-            appear
-          >
+          <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
             <Combobox.Popup :class="styles.Popup" aria-label="Select country">
               <Combobox.Input placeholder="e.g. United Kingdom" :class="styles.Input" />
               <div :class="styles.Viewport">
