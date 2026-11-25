@@ -121,7 +121,7 @@ describe('a native checkbox with role="switch"', () => {
     expect(viaLabel).toEqual([]);
   });
 
-  test('with aria-disabled, still joins FormData with a name, blocks validity when required, and submits on Enter unless keydown prevents default', async () => {
+  test('with aria-disabled, still joins FormData with a name, blocks validity when required or with custom validity, and submits on Enter unless keydown prevents default', async () => {
     html(`<form>
       <input type="checkbox" role="switch" id="named" name="a" value="1" checked aria-disabled="true">
       <input type="checkbox" role="switch" id="unnamed" value="2" checked aria-disabled="true">
@@ -135,6 +135,20 @@ describe('a native checkbox with role="switch"', () => {
     expect(form.checkValidity()).toBe(false);
     req.required = false;
     expect(form.checkValidity()).toBe(true);
+    named.setCustomValidity('No.');
+    expect([named.willValidate, named.matches(':invalid'), form.checkValidity()]).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    named.disabled = true;
+    expect([named.willValidate, named.matches(':invalid'), form.checkValidity()]).toEqual([
+      false,
+      false,
+      true,
+    ]);
+    named.disabled = false;
+    named.setCustomValidity('');
     let submits = 0;
     form.addEventListener('submit', (event) => {
       event.preventDefault();

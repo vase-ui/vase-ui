@@ -53,7 +53,6 @@ export function keepClickForChange() {
 export function useChecked(options: {
   model: () => boolean | undefined;
   defaultChecked: () => boolean;
-  disabled?: () => boolean;
   readonly: () => boolean;
   required: () => boolean;
   /** The entry of the form while the checkbox is unchecked. */
@@ -148,9 +147,7 @@ export function useChecked(options: {
     }),
     onClick,
     onChange,
-    onBlur: (event: FocusEvent) => {
-      if (!options.disabled?.()) field?.onLeave(event.currentTarget as Element);
-    },
+    onBlur: (event: FocusEvent) => field?.onLeave(event.currentTarget as Element),
   }));
 
   return { checked, attributes };

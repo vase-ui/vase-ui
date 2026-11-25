@@ -27,6 +27,7 @@ async function mountToggles(...toggles: Record<string, unknown>[]) {
   await nextTick();
   return {
     root,
+    form: root.querySelector('form')!,
     before: root.querySelector<HTMLInputElement>('#before')!,
     toggles: [...root.querySelectorAll<HTMLElement>('.Ancestor > *')],
   };
@@ -258,6 +259,42 @@ describe('disabled', () => {
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard(' ');
     expect(span.element).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('a disabled toggle with focusableWhenDisabled and type="submit" ignores its label and submits no form at a press, Space, Enter or Enter in a text field', async () => {
+    const log: string[] = [];
+    const { root } = mount(Toggles, {
+      labelFor: 'submit-toggle',
+      toggles: [
+        record(log, {
+          id: 'submit-toggle',
+          type: 'submit',
+          disabled: true,
+          focusableWhenDisabled: true,
+        }),
+      ],
+    });
+    await nextTick();
+    const form = root.querySelector('form')!;
+    const before = root.querySelector<HTMLInputElement>('#before')!;
+    const toggle = root.querySelector<HTMLElement>('#submit-toggle')!;
+    const label = root.querySelector<HTMLLabelElement>('#toggle-label')!;
+    const submits = vi.fn();
+    form.addEventListener('submit', submits);
+
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
+    expect(toggle).not.toHaveAttribute('disabled');
+    await userEvent.click(label, { force: true });
+    await userEvent.click(toggle, { force: true });
+    toggle.focus();
+    expect(toggle).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard(' ');
+    before.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(submits).not.toHaveBeenCalled();
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(log).toEqual([]);
   });
 
   test('a toggle that the page disables while it has the focus keeps the focus', async () => {

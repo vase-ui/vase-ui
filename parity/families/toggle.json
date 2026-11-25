@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/toggle/ToggleDataAttributes.ts",
       "kind": "not-applicable",
-      "reason": "The part writes no `data-pressed` and no `data-disabled`. CSS selects the states on the same element: `[aria-pressed='true']`, `:disabled`, and `[aria-disabled='true']` on a disabled toggle that stays in the tab order or is not a native button. The family has no namespace of constants."
+      "reason": "The part writes no `data-pressed` and no `data-disabled`. CSS selects the states on the same element: `[aria-pressed='true']` and `:disabled`. `[aria-disabled='true']` selects a disabled toggle that stays in the tab order or is not a native button. The family has no namespace of constants."
     },
     {
       "upstream": "packages/react/src/toggle/Toggle.test.tsx",
@@ -27,7 +27,7 @@
       "upstream": "docs/src/app/(docs)/react/components/toggle/types.md",
       "entry": "ToggleDataAttributes",
       "kind": "not-applicable",
-      "reason": "The part writes no `data-pressed` and no `data-disabled`: `[aria-pressed='true']`, `:disabled`, and `[aria-disabled='true']` on a disabled toggle that stays in the tab order or is not a native button, select the states on the same element. The family has no namespace of constants."
+      "reason": "The part writes no `data-pressed` and no `data-disabled`. CSS selects the states on the same element: `[aria-pressed='true']` and `:disabled`. `[aria-disabled='true']` selects a disabled toggle that stays in the tab order or is not a native button. The family has no namespace of constants."
     }
   ],
   "surfaceAdditions": [

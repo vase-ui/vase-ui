@@ -54,6 +54,26 @@ describe('server render and hydration', () => {
     expect(input).not.toHaveAttribute('required');
   });
 
+  test('the server HTML of a switch with focusableWhenDisabled in a disabled field has aria-disabled and no disabled, name or required, with no mismatch', async () => {
+    const props = {
+      field: { name: 'wifi', disabled: true },
+      attrs: { defaultChecked: true, required: true, focusableWhenDisabled: true },
+    };
+    const root = await renderOnServer('SwitchInField', props);
+    const input = root.querySelector('input')!;
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).not.toHaveAttribute('disabled');
+    expect(input).not.toHaveAttribute('name');
+    expect(input).not.toHaveAttribute('required');
+    hydrate(SwitchInField, props, root);
+    await nextTick();
+    expect(root.querySelector('input')).toBe(input);
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).not.toHaveAttribute('disabled');
+    expect(input).not.toHaveAttribute('name');
+    expect(input).not.toHaveAttribute('required');
+  });
+
   test.each([false, true])(
     'in a field, the label names the server id; a label after the switch has data-filled; the hydration gives the rest (label after: %s)',
     async (labelAfter) => {

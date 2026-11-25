@@ -696,4 +696,42 @@ describe('in a toolbar', () => {
     await userEvent.keyboard('{ArrowRight}');
     expect(focused()).toBe('alone');
   });
+
+  test.each([
+    { name: 'a disabled toolbar', extra: { disabled: true } },
+    { name: 'a disabled Toolbar.Group', extra: { groupDisabled: true } },
+    { name: 'a disabled ToggleGroup', extra: { toggleGroupDisabled: true } },
+    { name: 'each toggle disabled', extra: { disabledOne: true, disabledTwo: true } },
+  ])(
+    'in a Toolbar with $name and focusableWhenDisabled on every toggle, the toolbar keeps one roving tab stop and the arrow keys move across them',
+    async ({ extra }) => {
+      const { element } = await mountInToolbar({
+        noFirst: true,
+        noAfter: true,
+        focusableOne: true,
+        focusableTwo: true,
+        ...extra,
+      });
+      const one = element('one');
+      const two = element('two');
+      expect(one).toHaveAttribute('aria-disabled', 'true');
+      expect(two).toHaveAttribute('aria-disabled', 'true');
+      expect(one).toHaveAttribute('tabindex', '0');
+      expect(two).toHaveAttribute('tabindex', '-1');
+      element('before').focus();
+      await userEvent.keyboard('{Tab}');
+      expect(focused()).toBe('one');
+      await userEvent.keyboard('{ArrowRight}');
+      expect(focused()).toBe('two');
+      expect(one).toHaveAttribute('tabindex', '-1');
+      expect(two).toHaveAttribute('tabindex', '0');
+      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(' ');
+      expect(two).toHaveAttribute('aria-pressed', 'false');
+      await userEvent.keyboard('{Tab}');
+      expect(focused()).toBe('after');
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+      expect(focused()).toBe('two');
+    },
+  );
 });

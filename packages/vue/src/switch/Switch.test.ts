@@ -78,16 +78,30 @@ describe('the element', () => {
     await waitFor(() => expect(fence.hasAttribute('data-disabled')).toBe(true));
   });
 
-  test('in a disabled fieldset, a switch with focusableWhenDisabled gets disabled and has no aria-disabled', async () => {
-    const scene = reactive({ shown: false, fieldsetDisabled: true, focusable: true });
-    const { root } = mount(SwitchParts, { scene });
-    await settle();
-    const fence = root.querySelector('.Fence')!;
-    const input = fence.querySelector('input')!;
-    expect(fence).toHaveAttribute('data-disabled');
-    expect(input.matches(':disabled')).toBe(true);
-    expect(input).not.toHaveAttribute('aria-disabled');
-  });
+  test.each(['fieldset', 'root', 'div'] as const)(
+    'in a disabled %s, a switch with focusableWhenDisabled gets disabled, has no aria-disabled and leaves the tab order',
+    async (kind) => {
+      const scene = reactive({
+        shown: false,
+        kind,
+        fieldsetDisabled: true,
+        ownDisabled: true,
+        focusable: true,
+      });
+      const { root } = mount(SwitchParts, { scene });
+      await settle();
+      const fence = root.querySelector('.Fence')!;
+      const input = fence.querySelector('input')!;
+      const styled = root.querySelectorAll('input')[1]!;
+      expect(fence).toHaveAttribute('data-disabled');
+      expect(input).toHaveAttribute('disabled');
+      expect(input.matches(':disabled')).toBe(true);
+      expect(input).not.toHaveAttribute('aria-disabled');
+      styled.focus();
+      await userEvent.keyboard('{Tab}');
+      expect(input).not.toHaveFocus();
+    },
+  );
 });
 
 describe('the state', () => {
@@ -200,7 +214,10 @@ describe('clicks and the keyboard', () => {
     const listeners = Object.fromEntries(
       events.map((type) => [`on${type[0]!.toUpperCase()}${type.slice(1)}`, vi.fn()]),
     );
-    const onKeydown = vi.fn();
+    const keydownDefaultPrevented: boolean[] = [];
+    const onKeydown = vi.fn((event: KeyboardEvent) => {
+      if (event.key === 'Enter') keydownDefaultPrevented.push(event.defaultPrevented);
+    });
     const { root, form, inputs } = await mountSwitches([
       { name: 'wifi', value: 'enabled', defaultChecked: true, focusableWhenDisabled: true },
       { disabled: true },
@@ -253,6 +270,7 @@ describe('clicks and the keyboard', () => {
     expect(focusableOff).toHaveFocus();
     expect(submits).not.toHaveBeenCalled();
     expect(onKeydown).toHaveBeenCalled();
+    expect(keydownDefaultPrevented).toEqual([false]);
 
     await userEvent.click(focusableOff!, { force: true });
     focusableOff!.click();
@@ -260,7 +278,12 @@ describe('clicks and the keyboard', () => {
       force: true,
       position: { x: 2, y: 2 },
     });
+    await userEvent.click(root.querySelectorAll('label')[3]!, {
+      force: true,
+      position: { x: 2, y: 2 },
+    });
     expect(focusableOff!.checked).toBe(false);
+    expect(focusableOn!.checked).toBe(true);
     expect(log).toEqual([]);
     expect(listeners.onPointerdown).toHaveBeenCalledOnce();
     expect(listeners.onPointerup).toHaveBeenCalledOnce();
@@ -540,5 +563,77 @@ describe('in a field', () => {
     await settle();
     expect(fieldElement).not.toHaveAttribute('data-touched');
     expect(onTouched).not.toHaveBeenCalled();
+
+    // Clicking the sibling `<label for>` does not toggle the disabled focusable switch.
+    await userEvent.click(root.querySelector('label')!, { force: true });
+    expect(input.checked).toBe(true);
+  });
+
+  test('with focusableWhenDisabled, disabling a switch or its field clears custom validity from validate and restores it when enabled again', async () => {
+    const field = reactive<Record<string, unknown>>({
+      name: 'wifi',
+      disabled: false,
+      validationMode: 'blur',
+      validate: () => 'Must be set.',
+    });
+    const attrs = reactive<Record<string, unknown>>({
+      disabled: false,
+      focusableWhenDisabled: true,
+    });
+    const { root } = mount(SwitchInField, { field, attrs });
+    await nextTick();
+    const input = root.querySelector('input')!;
+    const form = root.querySelector('form')!;
+
+    input.focus();
+    await leave(input);
+    expect(input.validationMessage).toBe('Must be set.');
+    expect(input.matches(':invalid')).toBe(true);
+    expect(form.checkValidity()).toBe(false);
+
+    attrs.disabled = true;
+    await nextTick();
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).not.toHaveAttribute('disabled');
+    expect(input.validationMessage).toBe('');
+    expect(input.matches(':invalid')).toBe(false);
+    expect(form.checkValidity()).toBe(true);
+
+    attrs.disabled = false;
+    await nextTick();
+    expect(input.validationMessage).toBe('Must be set.');
+    expect(input.matches(':invalid')).toBe(true);
+    expect(form.checkValidity()).toBe(false);
+
+    field.disabled = true;
+    await nextTick();
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).not.toHaveAttribute('disabled');
+    expect(input.validationMessage).toBe('');
+    expect(input.matches(':invalid')).toBe(false);
+    expect(form.checkValidity()).toBe(true);
+  });
+
+  test('in a Form, a disabled switch with focusableWhenDisabled is omitted from submitted values and does not block submit', async () => {
+    const submitted: unknown[] = [];
+    const { root } = mount(SwitchInField, {
+      form: {
+        onSubmit: (_event: SubmitEvent, values: Record<string, unknown>) => submitted.push(values),
+      },
+      field: { name: 'wifi', validate: () => 'No.' },
+      attrs: {
+        defaultChecked: true,
+        disabled: true,
+        required: true,
+        focusableWhenDisabled: true,
+      },
+    });
+    await nextTick();
+    const input = root.querySelector('input')!;
+    expect(input).toHaveAttribute('aria-disabled', 'true');
+    expect(input).not.toHaveAttribute('disabled');
+    root.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
+    await settle();
+    expect(submitted).toEqual([{}]);
   });
 });

@@ -155,6 +155,20 @@ watch(foundDirty, (dirty) => {
   emit('update:dirty', dirty);
 });
 
+// A disabled control that keeps the focus (or a read-only checkbox or switch) has `willValidate`
+// true, so a custom validity message from `validate` would still block its form
+// (test/measurements/switch.test.ts).
+watch(
+  barred,
+  (isBarred) => {
+    if (isBarred) removeMessages();
+    else if (result.value?.ofValidate && result.value.errors.length > 0) {
+      writeMessage(result.value.errors);
+    }
+  },
+  { flush: 'post' },
+);
+
 const formField: FormField = {
   get name() {
     return fieldName.value;
@@ -239,7 +253,12 @@ provide(fieldKey, {
     // browser sends `blur` when a focused control becomes disabled or loses its box. The user left
     // the control only when it is still in the document, enabled and shown.
     queueMicrotask(() => {
-      if (!left.isConnected || left.matches(':disabled') || left.getClientRects().length === 0) {
+      if (
+        !left.isConnected ||
+        fieldOrControlDisabled.value ||
+        left.matches(':disabled') ||
+        left.getClientRects().length === 0
+      ) {
         return;
       }
       if (!state.value.touched) emit('update:touched', true);
@@ -402,13 +421,17 @@ function applyResult(output: FieldValidateResult) {
     result.value = passed;
     return;
   }
-  messageInput = validationInput();
-  messageInput?.setCustomValidity(messages.join('\n').replaceAll('\r\n', '\n'));
+  writeMessage(messages);
   result.value = {
     failures: { ...noFailures, customError: true },
     errors: messages,
     ofValidate: true,
   };
+}
+
+function writeMessage(messages: string[]) {
+  messageInput = validationInput();
+  messageInput?.setCustomValidity(messages.join('\n').replaceAll('\r\n', '\n'));
 }
 
 /**

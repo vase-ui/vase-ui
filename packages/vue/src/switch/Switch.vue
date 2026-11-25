@@ -36,7 +36,6 @@ const keepsFocus = computed(
 const { checked, attributes } = useChecked({
   model: () => props.modelValue,
   defaultChecked: () => props.defaultChecked,
-  disabled: () => isDisabled.value,
   readonly: () => props.readonly,
   required: () => props.required && !keepsFocus.value,
   uncheckedValue: () => props.uncheckedValue,
@@ -90,7 +89,6 @@ function elementProps() {
       onClick: stopWhileDisabled,
       onMousedown: stopWhileDisabled,
       onMouseup: stopWhileDisabled,
-      onKeydown,
     },
     {
       type: 'checkbox',
@@ -103,6 +101,8 @@ function elementProps() {
       ...attributes.value,
     },
     joinDescribedBy(attrs, field),
+    // Runs after the key listeners of the developer, so they see `defaultPrevented` as false.
+    { onKeydown },
   );
 }
 </script>
