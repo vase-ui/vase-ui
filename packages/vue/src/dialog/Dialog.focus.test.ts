@@ -337,6 +337,53 @@ describe('the focus of a dialog', () => {
     },
   );
 
+  test('a modal dialog that unmounts at its close gives the focus back to its opener', async () => {
+    mount(DialogOpensDialog, { mode: 'unmount-on-close' });
+    await nextTick();
+    // A click gives a button no focus in WebKit on macOS, so a key presses the opener.
+    get('opener').focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(byTestId('close')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(byTestId('second-popup')).toBe(null));
+    await waitSingleFrame();
+    expect(get('opener')).toHaveFocus();
+  });
+
+  test.each([
+    { name: 'a dialog', mode: 'mount-from-dialog' },
+    { name: 'a popover', mode: 'mount-from-popover' },
+  ] as const)(
+    '$name that closes and mounts a modal dialog in one task: the close of the dialog gives the focus to the trigger of the first',
+    async ({ mode }) => {
+      mount(DialogOpensDialog, { mode });
+      await nextTick();
+      await userEvent.click(get('first-trigger'));
+      await waitFor(() => expect(byTestId('next')).toHaveFocus());
+      await userEvent.click(get('next'));
+      await waitFor(() => expect(byTestId('close')).toHaveFocus());
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(byTestId('second-popup')).toBe(null));
+      await waitSingleFrame();
+      expect(get('first-trigger')).toHaveFocus();
+    },
+  );
+
+  test('an in-place popover in a modal dialog that opens another modal dialog gives the focus back to the trigger of the popover', async () => {
+    mount(DialogOpensDialog, { mode: 'in-place-popover' });
+    await nextTick();
+    await userEvent.click(get('first-trigger'));
+    await waitFor(() => expect(byTestId('popover-trigger')).toHaveFocus());
+    await userEvent.click(get('popover-trigger'));
+    await waitFor(() => expect(byTestId('next')).toHaveFocus());
+    await userEvent.click(get('next'));
+    await waitFor(() => expect(byTestId('close')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(byTestId('second-popup')).toBe(null));
+    await waitSingleFrame();
+    expect(get('popover-trigger')).toHaveFocus();
+  });
+
   test('a trigger that is disabled while its popup is open and enabled by the close gets the focus', async () => {
     const attrs = reactive({ disabled: false });
     mount(DialogParts, {

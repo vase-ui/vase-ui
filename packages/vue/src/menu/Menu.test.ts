@@ -1174,6 +1174,47 @@ describe('submenus', () => {
     expect(active()).toBe(trigger);
   });
 
+  test('a pick of an item of the submenu applies `finalFocus` of the root menu', async () => {
+    const { trigger } = await mountMenu({
+      popup: { finalFocus: () => document.getElementById('before') },
+      submenu: { trigger: { delay: 0 } },
+    });
+    await openWithKeyboard(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{Enter}');
+    await closed();
+    expect(active()).toBe(document.getElementById('before'));
+  });
+
+  test('a pick of an item of the submenu moves no focus to the trigger when `finalFocus` of the root menu is `false`', async () => {
+    const { trigger } = await mountMenu({
+      popup: { finalFocus: false },
+      submenu: { trigger: { delay: 0 } },
+    });
+    await openWithKeyboard(trigger);
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(active()).toBe(item('s1')));
+    await userEvent.keyboard('{Enter}');
+    await closed();
+    await nextTick();
+    expect(active()).not.toBe(trigger);
+  });
+
+  test('a close moves no focus to the popup before the trigger gets it', async () => {
+    let popupFocuses = 0;
+    const { trigger } = await mountMenu({
+      popup: { onFocus: () => (popupFocuses += 1) },
+    });
+    await openWithKeyboard(trigger);
+    await waitFor(() => expect(active()).toBe(item('a')));
+    popupFocuses = 0;
+    await userEvent.keyboard('{Escape}');
+    await closed();
+    expect(active()).toBe(trigger);
+    expect(popupFocuses).toBe(0);
+  });
+
   test('a submenu that opens closes its sibling with `sibling-open`', async () => {
     const sub: string[] = [];
     const { trigger } = await mountMenu({

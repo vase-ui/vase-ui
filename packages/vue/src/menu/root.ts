@@ -378,8 +378,6 @@ export function useMenuRoot<Payload>(
     );
   }
 
-  // The order of these watchers matters: the focus goes back at the close, then the highlight
-  // goes.
   watch(
     () => root.open,
     (open) => {

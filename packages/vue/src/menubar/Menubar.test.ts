@@ -276,6 +276,23 @@ describe.for([
       await waitFor(() => expect(popupOf('edit')).toBe(null));
     },
   );
+
+  test('a press outside an open submenu closes each menu and gives no focus to the trigger', async () => {
+    await mountForm({ submenus: true });
+    element('file').focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(popupOf('file')).not.toBe(null));
+    await userEvent.keyboard('{End}{ArrowRight}');
+    await waitFor(() => expect(byTestId('share-popup')).not.toBe(null));
+    await userEvent.pointer({
+      coords: { x: window.innerWidth - 10, y: window.innerHeight - 10 },
+      keys: '[MouseLeft]',
+    });
+    await waitFor(() => expect(popupOf('file')).toBe(null));
+    await nextTick();
+    await nextTick();
+    expect(active()).not.toBe(element('file'));
+  });
 });
 
 describe('a bar with a root around the first trigger and a root outside the bar for the other triggers', () => {

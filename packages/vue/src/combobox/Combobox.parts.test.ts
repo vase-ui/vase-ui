@@ -547,6 +547,26 @@ describe('the popup', () => {
     expect(document.activeElement).toBe(input());
     expect(popup()).not.toBe(null);
   });
+
+  test('a combobox that closes, opens again, and closes by an outside press in one task moves no focus to `finalFocus`', async () => {
+    await mountCombobox({
+      popup: { finalFocus: () => document.getElementById('outside') },
+    });
+    const outside = document.getElementById('outside')!;
+    outside.addEventListener('mousedown', (event) => event.preventDefault());
+    input().focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(popup()).not.toBe(null));
+    for (const key of ['Escape', 'ArrowDown']) {
+      input().dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    }
+    outside.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse', button: 0 }),
+    );
+    await waitFor(() => expect(popup()).toBe(null));
+    await settle();
+    expect(document.activeElement).toBe(input());
+  });
 });
 
 describe('the positioner', () => {
