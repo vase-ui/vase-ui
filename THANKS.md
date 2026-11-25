@@ -8,7 +8,7 @@ Each list is GitHub's contributor list of the project, read on `2026-11-25` (UTC
 
 ## Base UI
 
-The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `df283577954738d028f43629af7d50e96200dd82`. Vase UI is a port of Base UI.
+The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `7cf1db8bb75025333679cd394e3bef2b226747a4`. Vase UI is a port of Base UI.
 
 - [atomiks](https://github.com/atomiks)
 - [Michał Dudak](https://github.com/michaldudak)
@@ -60,6 +60,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `df2
 - [yossarian](https://github.com/captain-yossarian)
 - [Andrew Cherniavskii](https://github.com/cherniavskii)
 - [Christopher Pruijsen](https://github.com/cpruijsen)
+- [Henry Q. Dineen](https://github.com/henryqdineen)
 - [Marko Ćupić](https://github.com/markocupic024)
 - [Maxence Mauduit](https://github.com/mmaxence)
 - [netochavess](https://github.com/netochavess)
@@ -81,7 +82,6 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `df2
 - [Gilberto S.](https://github.com/gilsmt)
 - [hasanozacar](https://github.com/hasanozacar)
 - [haseeb](https://github.com/haseebdaone)
-- [Henry Q. Dineen](https://github.com/henryqdineen)
 - [Thomas Howlett](https://github.com/howlettt)
 - [Ingo Köpp](https://github.com/ingokpp)
 - [Vadim I](https://github.com/ivp-dev)
