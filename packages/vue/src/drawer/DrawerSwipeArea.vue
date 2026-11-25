@@ -127,8 +127,6 @@ const tracker = useSwipeTracker({
   },
 });
 
-// The swipe state starts once the drawer opens, and ends when the area becomes disabled or the
-// drawer closes.
 watch([() => props.disabled, () => root.open] as const, ([disabled, open], [, wasOpen]) => {
   if (disabled && tracker.pressing) {
     tracker.cancel();
@@ -143,7 +141,6 @@ watch([() => props.disabled, () => root.open] as const, ([disabled, open], [, wa
   }
 });
 
-// The popup shows after its `v-show` update, with its enter class and layout sizes.
 watch(
   () => drawer.popupVisible,
   (visible) => {

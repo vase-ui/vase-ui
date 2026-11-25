@@ -1242,7 +1242,6 @@ describe('the swipe area', () => {
   });
 
   test('keeps one popup for a swipe while the popup of the last close leaves, at the place of the finger', async () => {
-    // The popup and the backdrop of the close leave until the swipe cancels their leave.
     holdTransition('leave');
     await mountArea({ transition: true });
     await drag(centerOf('swipe-area'), { x: 0, y: -200 }, 10);
