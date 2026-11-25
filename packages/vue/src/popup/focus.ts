@@ -143,7 +143,9 @@ export function usePopupFocus(
         opens.value += 1;
         // The open reads the targets before the update that writes `inert`.
         const active = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
-        const from = [...returnTargets].find(([other]) => other !== root && other.popup?.contains(active));
+        const from = [...returnTargets].find(
+          ([other]) => other !== root && other.popup?.contains(active),
+        );
         inherited = from ? from[1]() : [];
         return;
       }
