@@ -8,7 +8,7 @@ import MeasureInjectedPanel from '../fixtures/MeasureInjectedPanel.vue';
 import MeasureKeptHeight from '../fixtures/MeasureKeptHeight.vue';
 import MeasureUntilFound from '../fixtures/MeasureUntilFound.vue';
 import { hydrate, mount, renderOnServer } from '../render';
-import { wait } from '../wait';
+import { wait, waitSingleFrame } from '../wait';
 import { waitFor } from '../waitFor';
 
 let root: HTMLElement | undefined;
@@ -27,6 +27,21 @@ function html(markup: string) {
 
 function element<T extends HTMLElement = HTMLElement>(id: string) {
   return root!.querySelector<T>(`#${id}`)!;
+}
+
+/** Counts the transitions that start on `target`. */
+function countTransitions(target: Element) {
+  const runs: string[] = [];
+  target.addEventListener('transitionrun', (event) =>
+    runs.push((event as TransitionEvent).propertyName),
+  );
+  return runs;
+}
+
+async function waitFrames(count: number) {
+  for (let index = 0; index < count; index += 1) {
+    await waitSingleFrame();
+  }
 }
 
 // The parts that call `useEnterAfterLeave` render their element in this way. `Avatar.Image` removes
@@ -156,14 +171,16 @@ describe('a kept element whose hidden Vue writes, with the height of a variable'
     const scene = reactive({ open: false });
     const { root: host } = mount(MeasureKeptHeight, { scene, ...props });
     const target = host.firstElementChild!;
+    const runs = countTransitions(target);
     // An app opens the element in a later task than the one of its mount.
-    await wait(50);
+    await waitFrames(2);
     const toggle = async () => {
+      const start = runs.length;
       scene.open = !scene.open;
       await nextTick();
-      const transitions = target.getAnimations();
-      await Promise.all(transitions.map((transition) => transition.finished));
-      return transitions.map((transition) => (transition as CSSTransition).transitionProperty);
+      await waitFrames(2);
+      await Promise.all(target.getAnimations().map((transition) => transition.finished));
+      return runs.slice(start);
     };
     return { toggle };
   }
