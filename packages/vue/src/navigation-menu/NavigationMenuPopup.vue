@@ -9,11 +9,10 @@ import {
   shallowRef,
   useAttrs,
   watch,
-  type CSSProperties,
 } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupPart } from '../popup/portal';
-import { sizeVariables, usePopupSizes } from '../popup/viewport';
+import { edgeStyle, sizeVariables, usePopupSizes } from '../popup/viewport';
 import { injectNavigationMenuRoot, injectPositioner, sizesKey } from './root';
 import type { NavigationMenuPopupProps, NavigationMenuPopupState } from './types';
 
@@ -87,14 +86,6 @@ watch(
   { immediate: true },
 );
 
-// At the side `top` and at the physical side `left`, the popup is at the edge of the positioner that
-// faces the trigger, so it grows away from the trigger while its size changes.
-function edgeStyle(side: 'top' | 'bottom' | 'left' | 'right'): CSSProperties {
-  if (side === 'top') return { position: 'absolute', bottom: 0 };
-  if (side === 'left') return { position: 'absolute', right: 0 };
-  return {};
-}
-
 function elementProps() {
   const closed = !popup.open;
   return mergeProps(
@@ -108,7 +99,10 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && popup.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      style: [sizeVariables('popup', sizes.popup.value), edgeStyle(placement.physicalSide.value)],
+      style: [
+        sizeVariables('popup', sizes.popup.value),
+        root.target && sizes.positioner.value ? edgeStyle(placement.physicalSide.value) : {},
+      ],
     },
     attrs,
   );

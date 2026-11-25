@@ -3,7 +3,7 @@ import { computed, mergeProps, provide, useAttrs, useId, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupPart } from '../popup/portal';
-import { sizeVariables } from '../popup/viewport';
+import { edgeStyle, sizeVariables } from '../popup/viewport';
 import { groupItemsKey } from './filter';
 import { injectMenu, injectPositioner } from './root';
 import type { MenuPopupProps, MenuPopupState } from './types';
@@ -93,7 +93,10 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted && !menu.childLeaving ? true : undefined,
       inert: closed ? true : undefined,
-      style: sizeVariables('popup', menu.viewport.value?.popup),
+      style: [
+        sizeVariables('popup', menu.viewport.value?.popup),
+        menu.viewport.value?.positioner ? edgeStyle(placement.physicalSide.value) : {},
+      ],
       onKeydown,
       onPointermove: menu.filter
         ? (event: PointerEvent) => menu.filter?.takePointer(event)

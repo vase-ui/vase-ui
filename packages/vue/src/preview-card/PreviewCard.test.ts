@@ -1353,6 +1353,112 @@ describe('the viewport', () => {
       `${element.offsetWidth}px`,
     );
   });
+
+  test.each([
+    { label: 'side="top"', side: 'top' as const, dir: 'ltr' as const, axis: 'height' as const },
+    { label: 'side="left"', side: 'left' as const, dir: 'ltr' as const, axis: 'width' as const },
+    {
+      label: 'side="inline-end" in RTL',
+      side: 'inline-end' as const,
+      dir: 'rtl' as const,
+      axis: 'width' as const,
+    },
+  ])(
+    'on $label, late content growth expands away from the trigger on frame 0 with no overlap and no resize loop error',
+    async ({ side, dir, axis }) => {
+      const { trigger } = await mountCard({
+        root: { defaultOpen: true, defaultTriggerId: 'link' },
+        triggers: [
+          {
+            key: 't',
+            attrs: {
+              id: 'link',
+              style: 'position: fixed; top: 260px; left: 320px; width: 60px; height: 24px',
+            },
+          },
+        ],
+        positioner: {
+          side,
+          dir,
+          sideOffset: 8,
+          collisionAvoidance: { side: 'none' },
+          style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+        },
+        popup: {
+          style: { width: 'var(--popup-width, auto)', height: 'var(--popup-height, auto)' },
+        },
+        viewport: {},
+      });
+      await opened();
+      await placed();
+      const card = byTestId('popup');
+      const box = byTestId('positioner');
+      const text = byTestId('text');
+      text.style.width = '100px';
+      text.style.height = '40px';
+      await waitFor(() =>
+        expect(box.style.getPropertyValue(`--positioner-${axis}`)).toBe(
+          `${axis === 'height' ? card.offsetHeight : card.offsetWidth}px`,
+        ),
+      );
+      await waitSingleFrame();
+      await waitSingleFrame();
+      const trigRect = trigger().getBoundingClientRect();
+      const before = card.getBoundingClientRect();
+
+      const errors: string[] = [];
+      const onError = (event: ErrorEvent) => errors.push(event.message);
+      window.addEventListener('error', onError);
+      onTestFinished(() => window.removeEventListener('error', onError));
+
+      let f0Pop!: DOMRect;
+      let f0Pos!: DOMRect;
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          text.style[axis] = axis === 'height' ? '80px' : '140px';
+          requestAnimationFrame(() => {
+            f0Pop = card.getBoundingClientRect();
+            f0Pos = box.getBoundingClientRect();
+            requestAnimationFrame(() => resolve());
+          });
+        });
+      });
+
+      expect(Math.round(f0Pos[axis])).toBe(Math.round(before[axis]));
+      expect(Math.round(f0Pop[axis])).toBe(Math.round(before[axis] + 40));
+      if (axis === 'height') {
+        expect(Math.round(f0Pop.bottom)).toBe(Math.round(trigRect.top - 8));
+        expect(Math.round(f0Pop.top)).toBe(Math.round(before.top - 40));
+      } else {
+        expect(Math.round(f0Pop.right)).toBe(Math.round(trigRect.left - 8));
+        expect(Math.round(f0Pop.left)).toBe(Math.round(before.left - 40));
+      }
+      expect(card.style.position).toBe('absolute');
+      expect(card.style[axis === 'height' ? 'bottom' : 'right']).toBe('0px');
+      await waitFor(() =>
+        expect(box.style.getPropertyValue(`--positioner-${axis}`)).toBe(
+          `${Math.round(before[axis] + 40)}px`,
+        ),
+      );
+      await waitSingleFrame();
+      expect(errors).toEqual([]);
+    },
+  );
+
+  test('with no viewport on side="top", the popup gets no anchoring style', async () => {
+    await mountCard({
+      root: { defaultOpen: true, defaultTriggerId: 'link' },
+      triggers: [
+        { key: 't', attrs: { id: 'link', style: 'position: fixed; top: 260px; left: 320px' } },
+      ],
+      positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+    });
+    const card = await opened();
+    await placed();
+    await waitSingleFrame();
+    expect(card.style.position).toBe('');
+    expect(card.style.bottom).toBe('');
+  });
 });
 
 // The case throws in `setup`, so it is the last of the file.

@@ -1,4 +1,4 @@
-import { nextTick, onUnmounted, shallowRef, watch, type ShallowRef } from 'vue';
+import { nextTick, onUnmounted, shallowRef, watch, type CSSProperties, type ShallowRef } from 'vue';
 import type { PopupRoot } from './root';
 
 type Size = { width: number; height: number };
@@ -20,6 +20,16 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
   return size
     ? { [`--${prefix}-width`]: `${size.width}px`, [`--${prefix}-height`]: `${size.height}px` }
     : {};
+}
+
+/**
+ * Anchors a popup in a viewport to the edge of the positioner that faces the trigger, so it grows
+ * away from the trigger while its size changes.
+ */
+export function edgeStyle(side: 'top' | 'bottom' | 'left' | 'right'): CSSProperties {
+  if (side === 'top') return { position: 'absolute', bottom: 0 };
+  if (side === 'left') return { position: 'absolute', right: 0 };
+  return {};
 }
 
 /**
@@ -150,7 +160,49 @@ export function usePopupViewport(
 }
 
 function sizeOf(element: HTMLElement): Size {
-  return { width: element.offsetWidth, height: element.offsetHeight };
+  const parent = element.parentElement;
+  const position = element.style.position;
+  const display = element.style.display;
+  const width = parent?.style.getPropertyValue('--positioner-width') ?? '';
+  const height = parent?.style.getPropertyValue('--positioner-height') ?? '';
+  const absolute = position === 'absolute';
+  // A popup with `position: absolute` shrinks to fit the old or unsized positioner. Read its size
+  // in flow against a `max-content` positioner, and keep its formatting context so child margins
+  // stay inside.
+  if (absolute) {
+    if (getComputedStyle(element).display === 'block') element.style.display = 'flow-root';
+    element.style.position = 'static';
+  }
+  if (parent) {
+    parent.style.setProperty('--positioner-width', 'max-content');
+    parent.style.setProperty('--positioner-height', 'max-content');
+  }
+  // `offsetWidth` truncates fractional text widths and can wrap text inside a `position: absolute`
+  // popup. Use the whole-pixel ceiling of the border-box width.
+  const css = getComputedStyle(element);
+  let rawWidth = Number.parseFloat(css.width) || 0;
+  if (css.boxSizing !== 'border-box') {
+    rawWidth +=
+      (Number.parseFloat(css.paddingLeft) || 0) +
+      (Number.parseFloat(css.paddingRight) || 0) +
+      (Number.parseFloat(css.borderLeftWidth) || 0) +
+      (Number.parseFloat(css.borderRightWidth) || 0);
+  }
+  const size = {
+    width: Math.max(element.offsetWidth, Math.ceil(rawWidth - 0.001)),
+    height: element.offsetHeight,
+  };
+  if (absolute) {
+    element.style.position = position;
+    element.style.display = display;
+  }
+  if (parent) {
+    if (width) parent.style.setProperty('--positioner-width', width);
+    else parent.style.removeProperty('--positioner-width');
+    if (height) parent.style.setProperty('--positioner-height', height);
+    else parent.style.removeProperty('--positioner-height');
+  }
+  return size;
 }
 
 // The side of the center of one trigger from the other. A distance of 5 px or less is no side.

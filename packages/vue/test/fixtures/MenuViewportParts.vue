@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import type { PropType } from 'vue';
 import { Menu } from '../../src/menu';
+
+type Props = Record<string, unknown>;
 
 // Two triggers of one root, side by side, and a viewport whose content has the id of the active
 // trigger as its `key` in a `<Transition>`. The content of the second trigger is taller.
+defineProps({
+  positioner: Object as PropType<Props>,
+  popup: Object as PropType<Props>,
+});
 </script>
 
 <template>
@@ -12,8 +19,8 @@ import { Menu } from '../../src/menu';
         <Menu.Trigger id="one" payload="One">One</Menu.Trigger>
         <Menu.Trigger id="two" payload="Two">Two</Menu.Trigger>
         <Menu.Portal>
-          <Menu.Positioner data-testid="positioner">
-            <Menu.Popup data-testid="popup" class="sized">
+          <Menu.Positioner data-testid="positioner" v-bind="positioner">
+            <Menu.Popup data-testid="popup" class="sized" v-bind="popup">
               <Menu.Viewport data-testid="viewport">
                 <template #default="{ triggerId }">
                   <Transition name="slide">

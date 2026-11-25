@@ -2,7 +2,7 @@
 import { computed, mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupPart } from '../popup/portal';
-import { sizeVariables } from '../popup/viewport';
+import { edgeStyle, sizeVariables } from '../popup/viewport';
 import { injectPositioner, injectPreviewCardRoot } from './root';
 import type { PreviewCardPopupProps, PreviewCardPopupState } from './types';
 
@@ -48,7 +48,10 @@ function elementProps() {
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
       hidden: closed && root.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
-      style: sizeVariables('popup', context.viewport.value?.popup),
+      style: [
+        sizeVariables('popup', context.viewport.value?.popup),
+        context.viewport.value?.positioner ? edgeStyle(placement.physicalSide.value) : {},
+      ],
     },
     attrs,
   );
