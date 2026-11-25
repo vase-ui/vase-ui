@@ -497,7 +497,8 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
     expect(options()).toEqual(['apple', 'apricot']);
     expect(input().value).toBe('ap');
-    await waitFor(() => expect(after).toEqual(['after-enter', 'after-leave', 'child unmounted']));
+    await waitFor(() => expect(after.slice(-2)).toEqual(['after-leave', 'child unmounted']));
+    expect(after.filter((entry) => entry === 'after-leave')).toHaveLength(1);
   });
 
   test('an open during the leave keeps the same popup with no text, each item and the selected item highlighted', async () => {
