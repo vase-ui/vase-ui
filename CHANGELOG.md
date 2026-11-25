@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026.11.9
+
+Same Base UI release and commit as 2026.11.8.
+
+### Added
+
+- Add `focusableWhenDisabled` to `Toggle` and `Switch`. With `disabled` and this prop, the control keeps its tab stop and focus, and has `aria-disabled="true"` with no `disabled`. It ignores presses, its label, Space and Enter, and Enter submits no form. Such a `Switch` enters no form data, does not make the form invalid as `required`, and does not touch its `Field` at blur. `Field.Root` clears its custom validity message while a control is barred and restores it when the control leaves that state. In a `ToggleGroup` where every toggle is disabled, the tab stop goes to the first focusable toggle. Inside a disabled `<fieldset>`, the native disabled state wins. ([#880](https://github.com/vase-ui/vase-ui/pull/880))
+
+### Fixed
+
+- A popup returns the focus once, after the update of its close, so `finalFocus` and the trigger are in the document and not `inert`. A popup that opens from inside another popup in one task takes the return targets of that popup. When a Dialog opens from a modal Dialog button or a Menu item, its close focuses the first popup's trigger, not `<body>`. Combobox returns the focus through the same code. A test that checks the focus in the same task as a close sees the popup focused, because the return runs after the update. ([#881](https://github.com/vase-ui/vase-ui/pull/881))
+- A Combobox that closes and opens again in one task moves no focus to `finalFocus`. ([#879](https://github.com/vase-ui/vase-ui/pull/879))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.8 (B) | 2026.11.9 (B) |
+| ------- | ------------: | ------------: |
+| Raw     |     2,254,190 |     2,275,651 |
+| gzip    |       741,607 |       748,578 |
+| Brotli  |       647,384 |       653,687 |
+
 ## 2026.11.8
 
 Same Base UI release and commit as 2026.11.7.
