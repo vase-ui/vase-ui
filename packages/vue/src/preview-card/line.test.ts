@@ -1,4 +1,4 @@
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { reactive } from 'vue';
 import PreviewCardLinks from '../../test/fixtures/PreviewCardLinks.vue';
@@ -60,9 +60,17 @@ describe('the line of a wrapped link', () => {
   });
 
   test('the card is at the line that the pointer is on at the end of the delay', async () => {
-    mountLinks({ trigger: { delay: 150 }, positioner: { side: 'top' } });
-    await hoverLine('overlap', 0);
-    await hoverLine('overlap', 1);
+    const delay = 150;
+    mountLinks({ trigger: { delay }, positioner: { side: 'top' } });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await hoverLine('overlap', 0);
+      await hoverLine('overlap', 1);
+      expect(positioner()).toBeNull();
+      vi.advanceTimersByTime(delay);
+    } finally {
+      vi.useRealTimers();
+    }
     const second = linesOf(link('overlap'))[1]!;
     await placedAt((box) => expectNear(box.bottom, second.top));
   });
