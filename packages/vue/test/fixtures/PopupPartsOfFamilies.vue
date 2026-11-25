@@ -3,6 +3,7 @@ import type { PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 import { Dialog } from '../../src/dialog';
 import { Menu } from '../../src/menu';
+import { NavigationMenu } from '../../src/navigation-menu';
 import { Popover } from '../../src/popover';
 import { PreviewCard } from '../../src/preview-card';
 import { Tooltip } from '../../src/tooltip';
@@ -15,7 +16,7 @@ import PartTransition from './PartTransition.vue';
 defineProps({
   family: {
     type: String as PropType<
-      'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card' | 'combobox'
+      'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card' | 'combobox' | 'navigation-menu'
     >,
     required: true,
   },
@@ -134,7 +135,7 @@ defineProps({
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
   </PreviewCard.Root>
-  <Combobox.Root v-else :open="scene.open" :items="['Item']">
+  <Combobox.Root v-else-if="family === 'combobox'" :open="scene.open" :items="['Item']">
     <Combobox.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <Combobox.Backdrop data-testid="backdrop" :as>
@@ -161,4 +162,33 @@ defineProps({
       </Combobox.Positioner>
     </Combobox.Portal>
   </Combobox.Root>
+  <NavigationMenu.Root v-else :model-value="scene.open ? 'one' : null">
+    <NavigationMenu.List>
+      <NavigationMenu.Item value="one">
+        <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+        <NavigationMenu.Content>NavigationMenu</NavigationMenu.Content>
+      </NavigationMenu.Item>
+    </NavigationMenu.List>
+    <NavigationMenu.Portal :keep-mounted>
+      <PartTransition :on="!inSlot" name="backdrop" :log>
+        <NavigationMenu.Backdrop data-testid="backdrop" :as>
+          <template v-if="inSlot" #element="{ props, elementRef }">
+            <section v-bind="props" :ref="elementRef" />
+          </template>
+          {{ count('backdrop') }}
+        </NavigationMenu.Backdrop>
+      </PartTransition>
+      <NavigationMenu.Positioner>
+        <PartTransition :on="!inSlot" name="popup" :log>
+          <NavigationMenu.Popup data-testid="popup" :as>
+            <template v-if="inSlot" #element="{ props, elementRef }">
+              <section v-bind="props" :ref="elementRef" />
+            </template>
+            {{ count('popup') }}
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </PartTransition>
+      </NavigationMenu.Positioner>
+    </NavigationMenu.Portal>
+  </NavigationMenu.Root>
 </template>

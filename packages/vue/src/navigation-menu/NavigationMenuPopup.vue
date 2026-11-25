@@ -3,13 +3,16 @@ import {
   computed,
   inject,
   mergeProps,
+  nextTick,
   onBeforeUnmount,
   onUnmounted,
+  shallowRef,
   useAttrs,
   watch,
   type CSSProperties,
 } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
+import { usePopupPart } from '../popup/portal';
 import { sizeVariables, usePopupSizes } from '../popup/viewport';
 import { injectNavigationMenuRoot, injectPositioner, sizesKey } from './root';
 import type { NavigationMenuPopupProps, NavigationMenuPopupState } from './types';
@@ -28,8 +31,7 @@ const { popup } = root;
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
 
-// While the old popup leaves, a new open waits: a second element would keep its enter classes.
-const shown = computed(() => (popup.open && !popup.leaving) || popup.keepMounted);
+const { entered, shown } = usePopupPart(popup, element);
 const state = computed<NavigationMenuPopupState>(() => ({
   open: popup.open,
   side: placement.side.value,
@@ -43,13 +45,24 @@ watch(element, (current) => popup.setPopup(current), { flush: 'sync' });
 onBeforeUnmount(() => {
   if (popup.popup === element.value) popup.setPopup(null);
 });
-const removeLeaving = popup.addLeaving(() => element.value);
-onUnmounted(removeLeaving);
 
+// `v-show` removes `display: none` in the post flush after `entered` becomes `true`, after a post
+// watcher of `setup`. Wait one tick so `usePopupSizes` measures the shown popup before the first
+// change of the item.
+const ready = shallowRef(entered.value);
+if (!ready.value) {
+  watch(
+    entered,
+    () => {
+      void nextTick(() => (ready.value = true));
+    },
+    { flush: 'post', once: true },
+  );
+}
 // The popup takes the size of its new content in steps: at a change of the item, also at an open
-// while a kept popup leaves, and at a change in the shown content, such as a nested menu that
+// while the popup leaves, and at a change in the shown content, such as a nested menu that
 // changes its item.
-const sizes = usePopupSizes(() => (popup.open ? element.value : null));
+const sizes = usePopupSizes(() => (popup.open && ready.value ? element.value : null));
 const slot = inject(sizesKey, null);
 if (slot) {
   slot.value = sizes;
@@ -98,7 +111,7 @@ function elementProps() {
       'data-align': state.value.align,
       'data-anchor-hidden': state.value.anchorHidden ? '' : undefined,
       // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
-      hidden: closed ? true : undefined,
+      hidden: closed && popup.keepMounted ? true : undefined,
       inert: closed ? true : undefined,
       style: [sizeVariables('popup', sizes.popup.value), edgeStyle(placement.physicalSide.value)],
     },
@@ -109,18 +122,21 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
+<!-- The `element` slot renders a fragment, which takes no `v-show`. -->
 <template>
-  <slot
-    v-if="shown && $slots.element"
-    name="element"
-    :props="elementProps()"
-    :elementRef="setElement"
-    :state="state"
-  />
-  <component :is="as" v-else-if="shown && as" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+  <template v-if="$slots.element">
+    <slot
+      v-if="popup.open || popup.keepMounted"
+      name="element"
+      :props="elementProps()"
+      :elementRef="setElement"
+      :state="state"
+    />
+  </template>
+  <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
+    <slot v-if="entered" :state="state" />
   </component>
-  <nav v-else-if="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+  <nav v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
+    <slot v-if="entered" :state="state" />
   </nav>
 </template>

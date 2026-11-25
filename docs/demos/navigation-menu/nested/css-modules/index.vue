@@ -127,7 +127,6 @@ const handbookLinks = [
                     <Transition
                       :enter-from-class="styles.EnterFrom"
                       :leave-to-class="styles.LeaveTo"
-                      appear
                     >
                       <NavigationMenu.Popup :class="styles.Popup">
                         <NavigationMenu.Viewport :class="styles.Viewport" />
@@ -148,7 +147,7 @@ const handbookLinks = [
         :side-offset="10"
         :collision-padding="{ top: 5, bottom: 5, left: 20, right: 20 }"
       >
-        <Transition :enter-from-class="styles.EnterFrom" :leave-to-class="styles.LeaveTo" appear>
+        <Transition :enter-from-class="styles.EnterFrom" :leave-to-class="styles.LeaveTo">
           <NavigationMenu.Popup :class="styles.Popup">
             <NavigationMenu.Arrow :class="styles.Arrow" />
             <NavigationMenu.Viewport :class="styles.Viewport" />

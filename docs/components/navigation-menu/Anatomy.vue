@@ -16,11 +16,11 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
     </NavigationMenu.List>
 
     <NavigationMenu.Portal>
-      <Transition appear>
+      <Transition>
         <NavigationMenu.Backdrop />
       </Transition>
       <NavigationMenu.Positioner>
-        <Transition appear>
+        <Transition>
           <NavigationMenu.Popup>
             <NavigationMenu.Arrow />
             <NavigationMenu.Viewport />

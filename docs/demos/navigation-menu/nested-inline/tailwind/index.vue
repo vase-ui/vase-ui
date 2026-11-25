@@ -191,7 +191,6 @@ const linkCardClassName =
         <Transition
           enter-from-class="scale-90 opacity-0"
           leave-to-class="scale-90 opacity-0 duration-150 ease-[ease] transition-[opacity,scale]"
-          appear
         >
           <NavigationMenu.Popup
             class="relative h-[var(--popup-height)] w-[var(--popup-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0] shadow-black/12 outline-none transition-[opacity,transform,width,height,scale] duration-[var(--duration)] ease-[var(--easing)] dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"

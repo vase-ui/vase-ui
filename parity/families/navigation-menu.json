@@ -92,7 +92,7 @@
       "title": "seeds the popup width from the exiting panel when reopening after hovering a top-level link",
       "kind": "replaced",
       "test": "packages/vue/src/navigation-menu/NavigationMenu.open.test.ts",
-      "reason": "A kept popup that leaves with CSS on `[hidden]` keeps its panel. An open on another trigger during the leave changes its size in steps from that panel. A popup in a `<Transition>` cannot come back, so an open during its leave shows the new item in a new popup after the leave."
+      "reason": "A popup that leaves in a `<Transition>` or with `keepMounted` keeps its panel. An open on another trigger during the leave keeps the same popup and changes its size in steps from that panel."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",

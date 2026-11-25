@@ -8,12 +8,13 @@ import { waitFor } from '../../test/waitFor';
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
 const FAMILIES = [
-  { family: 'dialog', parts: ['backdrop', 'popup'] },
-  { family: 'popover', parts: ['backdrop', 'popup'] },
-  { family: 'menu', parts: ['backdrop', 'popup'] },
-  { family: 'tooltip', parts: ['popup'] },
-  { family: 'preview-card', parts: ['backdrop', 'popup'] },
-  { family: 'combobox', parts: ['backdrop', 'popup'] },
+  { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'tooltip', parts: ['popup'], popupTag: 'div' },
+  { family: 'preview-card', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'combobox', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'navigation-menu', parts: ['backdrop', 'popup'], popupTag: 'nav' },
 ] as const;
 
 function mountFamily(
@@ -34,14 +35,16 @@ function mountFamily(
   return { scene, log };
 }
 
-describe.each(FAMILIES)('the parts of $family', ({ family, parts }) => {
+describe.each(FAMILIES)('the parts of $family', ({ family, parts, popupTag }) => {
   test.each([{ as: undefined }, { as: 'section' }] as const)(
     'in a <Transition> with `as` $as: the parts that leave are inert with no `hidden`, `after-leave` comes once for each, and the portal then removes them',
     async ({ as }) => {
       const { scene, log } = mountFamily(family, false, { as });
       await waitFor(() => expect(byTestId('popup')).not.toBe(null));
       const elements = parts.map((part) => byTestId(part)!);
-      expect(elements.map((element) => element.localName)).toEqual(parts.map(() => as ?? 'div'));
+      expect(elements.map((element) => element.localName)).toEqual(
+        parts.map((part) => as ?? (part === 'popup' ? popupTag : 'div')),
+      );
       await Promise.all(elements.map(finishAnimations));
       await waitFor(() => expect(log).toHaveLength(parts.length));
       scene.open = false;
