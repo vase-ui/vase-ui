@@ -38,7 +38,7 @@ function elementProps() {
 defineExpose({ element });
 </script>
 
-<!-- A fragment takes no `v-show`, so the `element` slot renders only while the popup is open. -->
+<!-- The `element` slot renders a fragment, which takes no `v-show`. -->
 <template>
   <template v-if="$slots.element">
     <slot

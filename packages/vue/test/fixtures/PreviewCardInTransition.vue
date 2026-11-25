@@ -6,12 +6,7 @@ import UnmountLog from './UnmountLog.vue';
 type Props = Record<string, unknown>;
 type JsHooks = { enter(done: () => void): void; leave(done: () => void): void };
 
-// Two links and a popup in a `<Transition>` in a portal, with an optional backdrop. The leave of
-// the popup takes 300 ms. A popup and a backdrop with the class `slow` enter and leave in 3 s with
-// a linear opacity. With `keepMounted` on the portal, Vue runs no transition, and an animation of
-// `[hidden]` that fills forwards hides the kept popup in 300 ms. With `jsHooks`, the `<Transition>`
-// runs JavaScript hooks with `:css="false"`. A child of the popup writes `child unmounted` at its
-// unmount.
+// With `keepMounted`, Vue starts no transition, so `.card[hidden]` animates the leave.
 defineProps({
   root: Object as PropType<Props>,
   trigger: Object as PropType<Props>,

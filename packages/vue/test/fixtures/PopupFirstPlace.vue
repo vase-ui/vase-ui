@@ -5,13 +5,8 @@ import { Popover } from '../../src/popover';
 import { PreviewCard } from '../../src/preview-card';
 import { Tooltip } from '../../src/tooltip';
 
-// A trigger with the `id` "trigger" at the bottom of the view, outside the root of `family`, which
-// it reaches through `handle`. The view has no room under the trigger, so the popup goes above it.
-// With a viewport in the popup, the positioner has its place in `top`, `left`, `right` and `bottom`,
-// with a transition. The popup enters from the side that it is on, and fades in with a CSS
-// animation.
-// With `keepMounted`, the popup of the popover fades in with a transition when it loses `hidden`.
-// The popover has a second trigger with the `id` "second", 150 pixels to the right of the first.
+// The view has no room under the trigger, so the popup goes above it. With a viewport in the popup,
+// the positioner uses `top`, `left`, `right` and `bottom`.
 defineProps({
   family: {
     type: String as PropType<'Popover' | 'Menu' | 'Tooltip' | 'PreviewCard'>,
