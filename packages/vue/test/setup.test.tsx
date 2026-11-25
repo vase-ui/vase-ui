@@ -1,5 +1,5 @@
-import { afterAll, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { server, userEvent } from 'vitest/browser';
+import { afterAll, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { commands, server, userEvent } from 'vitest/browser';
 import { defineComponent, onMounted, onUnmounted, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import {
@@ -9,6 +9,7 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import { wait } from './wait';
 
 describe('test setup', () => {
   const { render } = createRenderer();
@@ -335,5 +336,66 @@ describe('pointer lock', () => {
 
     expect(await refusal).toBeInstanceOf(DOMException);
     expect(document.pointerLockElement).toBe(null);
+  });
+});
+
+describe('real clipboard across parallel test files', () => {
+  // Vitest runs the tests of a file in order. Each second test checks that the first test released
+  // the clipboard lock.
+
+  it('waits for another holder before a real copy, and ignores a stale unlock token', async () => {
+    const stale = await commands.lockClipboard();
+    await commands.unlockClipboard(stale);
+
+    const input = document.body.appendChild(document.createElement('input'));
+    input.value = 'abc';
+    onTestFinished(() => input.remove());
+    input.focus();
+    input.select();
+
+    const other = await commands.lockClipboard();
+    let copied = false;
+    const copy = userEvent.copy().then(() => {
+      copied = true;
+    });
+    try {
+      await commands.unlockClipboard(stale);
+      await wait(30);
+      expect(copied).toBe(false);
+      await commands.unlockClipboard(other);
+      await copy;
+      expect(copied).toBe(true);
+    } finally {
+      await commands.unlockClipboard(other);
+    }
+  });
+
+  it('releases the clipboard lock when the last test ended', async () => {
+    const token = await commands.lockClipboard();
+    await commands.unlockClipboard(token);
+  });
+
+  describe('a test that times out while it waits for the clipboard', () => {
+    let other: number | undefined;
+    beforeEach(async () => {
+      other = await commands.lockClipboard();
+    });
+
+    it('times out while it waits for the clipboard', { fails: true, timeout: 1 }, async () => {
+      const held = other!;
+      other = undefined;
+      // Unlock after the test times out and `setup.ts` counts it as ended.
+      onTestFinished(() => {
+        setTimeout(() => {
+          void commands.unlockClipboard(held);
+        }, 0);
+      });
+      await userEvent.copy();
+    });
+  });
+
+  it('gets the clipboard lock after the timed-out waiter ended', async () => {
+    const token = await commands.lockClipboard();
+    await commands.unlockClipboard(token);
   });
 });

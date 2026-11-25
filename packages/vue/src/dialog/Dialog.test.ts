@@ -1173,6 +1173,11 @@ describe('the focus', () => {
   ])(
     'a close with $name while a field of the popup has the focus: the field loses the focus, and typed text does not reach it',
     async ({ trigger, popup: popupProps }) => {
+      // Long enough that only the case ends enter and leave.
+      const style = document.head.appendChild(document.createElement('style'));
+      style.textContent =
+        '.slow.pop-enter-active, .slow.pop-leave-active { transition-duration: 100s; }';
+      onTestFinished(() => style.remove());
       const scene = mount(DialogInTransition, {
         root: { defaultOpen: !trigger },
         trigger,
@@ -1183,13 +1188,18 @@ describe('the focus', () => {
         await userEvent.click(scene.root.querySelector<HTMLElement>('[aria-haspopup="dialog"]')!);
       }
       const element = await opened();
+      await finishAnimations(element);
+      await waitFor(() => expect(element).not.toHaveClass('pop-enter-active'));
       const field = element.querySelector('input')!;
       field.focus();
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(element).toHaveClass('pop-leave-active'));
       await userEvent.keyboard('ab');
+      expect(element).toHaveClass('pop-leave-active');
       expect(field.value).toBe('');
       expect(document.activeElement).toBe(document.body);
+      await finishAnimations(element);
+      await waitFor(() => expect(element.isConnected).toBe(false));
     },
   );
 

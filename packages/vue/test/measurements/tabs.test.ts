@@ -7,6 +7,7 @@ import { server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureLeaveAttribute from '../fixtures/MeasureLeaveAttribute.vue';
 import { mount } from '../render';
+import { wait } from '../wait';
 
 let root: HTMLElement | undefined;
 
@@ -209,6 +210,8 @@ describe('the scroll of a focus in a list that scrolls', () => {
       else listElement.scrollLeft = start;
       element('before').focus({ preventScroll: true });
       move(element(`tab-${index}`));
+      // WebKit scrolls after `focus()` in a later task, which can run after the first animation frame.
+      await wait(0);
       await nextFrame();
       return Math.round(vertical ? listElement.scrollTop : listElement.scrollLeft);
     };

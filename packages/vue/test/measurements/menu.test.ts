@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
 import { touchDrag } from '../pointer';
+import { waitFor } from '../waitFor';
 
 let root: HTMLElement | undefined;
 
@@ -235,8 +236,8 @@ describe('the scroll of a list', () => {
       `<div id="list" style="position: absolute; left: 0; top: 0; width: 200px; height: 150px; overflow: auto">${items}</div>`,
     );
     element('i5').focus();
-    await nextFrame();
-    expect(element('list').scrollTop).toBe(90);
+    // WebKit scrolls after `focus()` in a later task, which can run after the first animation frame.
+    await waitFor(() => expect(element('list').scrollTop).toBe(90));
     element('list').scrollTop = 0;
     element('i5').focus({ preventScroll: true });
     element('i5').scrollIntoView({ block: 'nearest', inline: 'nearest' });

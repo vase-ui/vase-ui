@@ -6,6 +6,8 @@ import { failOnReportedMessages } from './reportedMessages';
 declare module 'vitest/browser' {
   interface BrowserCommands {
     collectGarbage: () => Promise<void>;
+    lockClipboard: () => Promise<number>;
+    unlockClipboard: (token: number) => Promise<void>;
   }
 }
 
@@ -115,6 +117,35 @@ if (typeof document !== 'undefined') {
   // `test/waitFor.ts` rejects in the same way. A command that the function starts after a wait of
   // another kind, such as a frame, can still run in the next test. The `onTestFinished` hooks of the
   // test run before that hook, so a release in such a hook does not reject.
+  // Parallel test files in Chromium and WebKit share one clipboard. The lock stops another file
+  // from a write to the clipboard between the copy and the paste of a test.
+  const CLIPBOARD_COMMANDS = new Set<string>(['copy', 'cut', 'paste']);
+  let clipboardToken: number | undefined;
+  let acquiringClipboard: { endedAtCall: number; promise: Promise<void> } | undefined;
+
+  async function acquireClipboard(endedAtCall: number, name: string) {
+    if (clipboardToken !== undefined) return;
+    if (acquiringClipboard?.endedAtCall !== endedAtCall) {
+      const acquiring = {
+        endedAtCall,
+        promise: (async () => {
+          const token = await commands.lockClipboard();
+          if (endedTests() !== endedAtCall) {
+            await commands.unlockClipboard(token);
+            throw new Error(`The test ended before the command userEvent.${name} ended.`);
+          }
+          clipboardToken = token;
+        })().finally(() => {
+          if (acquiringClipboard === acquiring) {
+            acquiringClipboard = undefined;
+          }
+        }),
+      };
+      acquiringClipboard = acquiring;
+    }
+    await acquiringClipboard.promise;
+  }
+
   const runningCommands = new Set<Promise<void>>();
   for (const name of [
     'click',
@@ -140,6 +171,9 @@ if (typeof document !== 'undefined') {
     Object.defineProperty(userEvent, name, {
       async value(...args: never[]) {
         const endedAtCall = endedTests();
+        if (CLIPBOARD_COMMANDS.has(name)) {
+          await acquireClipboard(endedAtCall, name);
+        }
         const running = command(...args);
         runningCommands.add(running);
         try {
@@ -174,6 +208,11 @@ if (typeof document !== 'undefined') {
     onTestFinished(async () => {
       countEndedTest();
       await Promise.allSettled(runningCommands);
+      if (clipboardToken !== undefined) {
+        const token = clipboardToken;
+        clipboardToken = undefined;
+        await commands.unlockClipboard(token);
+      }
       if (hadInvalidEvent) {
         closeValidationPopup();
       }

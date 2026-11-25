@@ -7,6 +7,7 @@ import { playwright } from '@vitest/browser-playwright';
 import type { Plugin } from 'vite';
 import { configDefaults, defineConfig, type TestProjectInlineConfiguration } from 'vitest/config';
 import { BaseSequencer, type TestSpecification } from 'vitest/node';
+import { lockClipboard, unlockClipboard } from './test/server/clipboard.ts';
 import { collectGarbage } from './test/server/collectGarbage.ts';
 import { contextOptions, engineInstances } from './test/server/engineInstances.ts';
 import { renderOnServer } from './test/server/renderOnServer.ts';
@@ -67,7 +68,7 @@ function setup(name: string, app: AppKind, vapor?: RegExp): TestProjectInlineCon
         provider: playwright({ contextOptions }),
         headless: true,
         screenshotFailures: false,
-        commands: { collectGarbage, renderOnServer },
+        commands: { collectGarbage, lockClipboard, renderOnServer, unlockClipboard },
         instances: engineInstances(name),
       },
     },
