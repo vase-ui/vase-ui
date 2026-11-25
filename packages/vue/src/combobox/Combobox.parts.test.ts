@@ -505,6 +505,17 @@ describe('the popup', () => {
     }
   });
 
+  test('Escape after a Tab into the popup gives the focus back to the input', async () => {
+    await mountCombobox({ button: true });
+    await userEvent.click(input());
+    await waitFor(() => expect(popup()).not.toBe(null));
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(byTestId('popup-button')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(popup()).toBe(null));
+    await waitFor(() => expect(input()).toHaveFocus());
+  });
+
   test('the focus stays on an element that code focuses after the close', async () => {
     const outside = () => document.getElementById('outside')!;
     await mountCombobox({
