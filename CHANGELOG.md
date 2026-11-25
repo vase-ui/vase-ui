@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.11.10
+
+Same Base UI release and commit as 2026.11.9.
+
+### Fixed
+
+- Preview Card, Combobox (and Autocomplete) and Navigation Menu keep their popup and backdrop mounted with `v-show` through a leave. Dialog, Popover, Menu, Select and Tooltip already do the same. An open during the leave keeps the same popup and backdrop. A CSS transition goes back from where it is and does not start again. The popup renders its content once per open and unmounts it after the leave. Combobox and Autocomplete keep the list and the input text of the last open while the popup leaves. These popups need no `appear` on `<Transition>`; with JavaScript hooks, `appear` runs the enter hooks twice. You can remove `appear` from `<Transition>` on these popups and backdrops. ([#884](https://github.com/vase-ui/vase-ui/pull/884), [#885](https://github.com/vase-ui/vase-ui/pull/885), [#886](https://github.com/vase-ui/vase-ui/pull/886))
+- With no `ScrollArea.Content`, `ScrollArea.Viewport` measures again when its direct children change or grow, and when its direct text changes. A viewport whose content grows after the mount becomes a tab stop (`tabindex="0"`) when it overflows and holds no tab stop. Before 2026.11.10, it kept `tabindex="-1"`. Measurements run at most once a frame. ([#887](https://github.com/vase-ui/vase-ui/pull/887))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.9 (B) | 2026.11.10 (B) |
+| ------- | ------------: | -------------: |
+| Raw     |     2,275,651 |      2,280,123 |
+| gzip    |       748,578 |        749,971 |
+| Brotli  |       653,687 |        654,497 |
+
 ## 2026.11.9
 
 Same Base UI release and commit as 2026.11.8.
