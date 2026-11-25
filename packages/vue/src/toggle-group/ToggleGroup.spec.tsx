@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import type { Toggle, ToggleProps } from '@vase-ui/vue/toggle';
+import { Toggle, type ToggleProps } from '@vase-ui/vue/toggle';
 import {
   ToggleGroup,
   type ToggleGroupChangeEventDetails,
@@ -44,3 +44,15 @@ expectType<ToggleProps<ReadonlyValue>, typeof toggleProps>(toggleProps);
 // The exposed `element` is the element of the part, so a template ref can read it.
 const toggle = null as unknown as InstanceType<typeof Toggle>;
 expectType<HTMLElement | null, typeof toggle.element>(toggle.element);
+
+export const focusableToggleProps: ToggleProps = {
+  disabled: true,
+  focusableWhenDisabled: true,
+};
+export const undefinedFocusableToggleProps: ToggleProps = {
+  focusableWhenDisabled: undefined,
+};
+export const focusableToggle = <Toggle disabled focusableWhenDisabled />;
+
+// @ts-expect-error `focusableWhenDisabled` is a Boolean.
+export const wrongFocusableToggle = <Toggle focusableWhenDisabled="yes" />;

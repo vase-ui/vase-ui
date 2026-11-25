@@ -39,6 +39,11 @@ export function useButton(options: {
   const disabledByFieldset = computed(() => isNative.value === true && inDisabledFieldset.value);
   /** Disabled by the part, or by a disabled fieldset around a native button. */
   const disabled = computed(() => options.disabled() || disabledByFieldset.value);
+  // A disabled `<fieldset>` takes each button in it out of the tab order. A `Fieldset.Root` with
+  // another element does the same.
+  const focusable = computed(
+    () => !disabled.value || (!!options.focusableWhenDisabled?.() && !disabledByFieldset.value),
+  );
   // A boolean: the mount of an element with the expected tag gives the part no second render.
   const writesType = computed(() => {
     const name = options.element.value?.localName ?? options.tag();
@@ -80,16 +85,14 @@ export function useButton(options: {
 
   const rule = computed(() => {
     const isDisabled = disabled.value;
-    // A disabled `<fieldset>` takes each button in it out of the tab order. A `Fieldset.Root` with
-    // another element does the same.
-    const focusable = !!options.focusableWhenDisabled?.() && !disabledByFieldset.value;
+    const canFocus = focusable.value;
     const native =
-      isDisabled && focusable
+      isDisabled && canFocus
         ? { 'aria-disabled': 'true' }
         : { disabled: isDisabled ? '' : undefined };
     const other = {
       role: 'button',
-      tabindex: isDisabled && !focusable ? -1 : 0,
+      tabindex: canFocus ? 0 : -1,
       'aria-disabled': isDisabled ? 'true' : undefined,
     };
     // An element that the part does not know yet gets the attributes of both. So the server HTML
@@ -110,6 +113,7 @@ export function useButton(options: {
 
   return {
     disabled,
+    focusable,
     /**
      * The attributes of the element. The values of the developer (`attrs`) win, then those of the
      * part (`own`), then those of the button. The key listeners run last, so that

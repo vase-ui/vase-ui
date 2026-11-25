@@ -11,8 +11,9 @@ import type {
  * A control that the user can set to on or off.
  * Renders an `<input>` element with the type `checkbox` and the role `switch`.
  * @selector `:checked` The switch is on.
- * @selector `:disabled` The switch is disabled.
- * @selector `:required` The switch is required and not read-only.
+ * @selector `:disabled` The switch is disabled and out of the tab order.
+ * @selector `[aria-disabled="true"]` The switch is disabled and stays in the tab order. `:enabled` also matches such an input, so select an enabled switch with `:not(:disabled, [aria-disabled="true"])`.
+ * @selector `:required` The switch is required, not read-only, and not kept in the tab order while disabled.
  * @selector `[aria-readonly="true"]` The switch is read-only.
  * @selector `[data-valid]` The field of the switch is valid.
  * @selector `[aria-invalid="true"]` The field of the switch is invalid.

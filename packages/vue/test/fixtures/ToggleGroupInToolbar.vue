@@ -17,6 +17,8 @@ defineProps({
       disabledSpan?: boolean;
       /** The toggle `two` is disabled. */
       disabledTwo?: boolean;
+      /** The toggle `two` stays in the tab order while disabled. */
+      focusableTwo?: boolean;
       /** The toolbar has no button before the group. */
       noFirst?: boolean;
     }>,
@@ -39,7 +41,14 @@ defineProps({
         >
           One
         </Toggle>
-        <Toggle id="two" value="two" :disabled="scene.disabledTwo">Two</Toggle>
+        <Toggle
+          id="two"
+          value="two"
+          :disabled="scene.disabledTwo"
+          :focusable-when-disabled="scene.focusableTwo"
+        >
+          Two
+        </Toggle>
         <span class="State">{{ state.disabled }}</span>
       </ToggleGroup>
     </Toolbar.Group>

@@ -12,6 +12,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<SwitchProps>(), {
   // An absent `modelValue` makes the switch uncontrolled.
   modelValue: undefined,
+  focusableWhenDisabled: false,
 });
 const emit = defineEmits<SwitchEmits>();
 const slots = defineSlots<{
@@ -25,19 +26,25 @@ useDeferredServerRender();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLInputElement>();
 const inDisabledFieldset = useInDisabledFieldset(element);
+const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
+// A disabled `<fieldset>` takes each input in it out of the tab order. A `Fieldset.Root` with
+// another element does the same.
+const keepsFocus = computed(
+  () => isDisabled.value && props.focusableWhenDisabled && !inDisabledFieldset.value,
+);
 
 const { checked, attributes } = useChecked({
   model: () => props.modelValue,
   defaultChecked: () => props.defaultChecked,
+  disabled: () => isDisabled.value,
   readonly: () => props.readonly,
-  required: () => props.required,
+  required: () => props.required && !keepsFocus.value,
   uncheckedValue: () => props.uncheckedValue,
   element,
   field,
   emitChange: (next, details) => emit('checkedChange', next, details),
   emitModel: (next) => emit('update:modelValue', next),
 });
-const isDisabled = computed(() => !!field?.disabled || props.disabled || inDisabledFieldset.value);
 const elementId = useControlId(
   field,
   () => props.id,
@@ -64,14 +71,35 @@ useFieldControl(field, element, {
 
 defineExpose({ element });
 
+// A native disabled switch gets no `mousedown`, `mouseup` or `click`, and no ancestor gets them
+// in the bubble phase (test/measurements/switch.test.ts).
+function stopWhileDisabled(event: Event) {
+  if (!keepsFocus.value) return;
+  if (event.type === 'click') event.preventDefault();
+  event.stopImmediatePropagation();
+}
+
+// Enter on a native checkbox submits its form (test/measurements/switch.test.ts).
+function onKeydown(event: KeyboardEvent) {
+  if (keepsFocus.value && event.key === 'Enter') event.preventDefault();
+}
+
 function elementProps() {
   return mergeProps(
+    {
+      onClick: stopWhileDisabled,
+      onMousedown: stopWhileDisabled,
+      onMouseup: stopWhileDisabled,
+      onKeydown,
+    },
     {
       type: 'checkbox',
       role: 'switch',
       id: elementId.value,
-      name: field?.name ?? props.name,
-      disabled: isDisabled.value,
+      // An input with no `name` puts no entry in `FormData` (test/measurements/switch.test.ts).
+      name: keepsFocus.value ? undefined : (field?.name ?? props.name),
+      disabled: isDisabled.value && !keepsFocus.value,
+      'aria-disabled': keepsFocus.value ? 'true' : undefined,
       ...attributes.value,
     },
     joinDescribedBy(attrs, field),

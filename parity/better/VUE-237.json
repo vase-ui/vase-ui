@@ -1,0 +1,12 @@
+{
+  "id": "VUE-237",
+  "evidence": [
+    "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#focusabilityofdisabledcontrols",
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html",
+    "https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html",
+    "https://www.w3.org/TR/core-aam-1.2/#ariaDisabledTrue"
+  ],
+  "dueWith": "packages/react/src/toggle/Toggle.tsx",
+  "families": ["switch"],
+  "behavior": "`Toggle` and `Switch` accept `focusableWhenDisabled`, so a disabled control stays in the tab order with `aria-disabled=\"true\"` and keeps the focus when the page disables it. A `ToggleGroup` whose toggles are all disabled with the prop keeps one tab stop, and a `Toolbar` reaches such toggles with the arrow keys. A disabled `Switch` that keeps the focus puts no entry in its form, does not block constraint validation, does not touch its field at a blur, and ignores a press, Space and Enter. Base UI gives `focusableWhenDisabled` to `Button` and the `Toolbar` items only."
+}

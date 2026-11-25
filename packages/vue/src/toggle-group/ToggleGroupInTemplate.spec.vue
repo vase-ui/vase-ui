@@ -36,8 +36,10 @@ function onWrongEventDetails(value: Alignment[], eventDetails: string) {
   <Toggle
     type="submit"
     aria-label="Bold"
+    focusable-when-disabled
     @pressed-change="(pressed, details) => details.cancel()"
   />
+  <Toggle :focusable-when-disabled="undefined" />
   <Toggle as="span" v-slot="{ state }">
     <span @click="expectType<ToggleState, typeof state>(state)">Bold</span>
   </Toggle>
@@ -60,4 +62,6 @@ function onWrongEventDetails(value: Alignment[], eventDetails: string) {
   </Toggle>
   <!-- @vue-expect-error `defaultPressed` is a Boolean -->
   <Toggle default-pressed="yes" />
+  <!-- @vue-expect-error `focusableWhenDisabled` is a Boolean -->
+  <Toggle focusable-when-disabled="yes" />
 </template>

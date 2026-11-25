@@ -22,6 +22,12 @@ describe('server render and hydration', () => {
       pressed: 'false',
     },
     {
+      name: 'a disabled toggle that keeps the focus',
+      attrs: { disabled: true, focusableWhenDisabled: true },
+      attributes: ['aria-disabled', 'aria-pressed', 'type'],
+      pressed: 'false',
+    },
+    {
       name: 'a toggle with a tag in as',
       attrs: { as: 'span' },
       attributes: ['aria-pressed', 'role', 'tabindex'],
