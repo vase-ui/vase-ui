@@ -15,6 +15,8 @@ defineProps({
   inputInPopup: Boolean,
   items: { type: Array as PropType<unknown[]>, default: () => ['feature', 'fix', 'docs', 'chore'] },
   input: Object as PropType<Props>,
+  portal: Object as PropType<Props>,
+  backdrop: Object as PropType<Props>,
   list: Object as PropType<Props>,
   field: Object as PropType<Props>,
   clear: Boolean,
@@ -46,7 +48,8 @@ const textOf = (item: unknown) =>
           <Autocomplete.Input data-testid="input" v-bind="input" />
           <Autocomplete.Clear v-if="clear" data-testid="clear" />
         </Autocomplete.InputGroup>
-        <Autocomplete.Portal>
+        <Autocomplete.Portal v-bind="portal">
+          <Autocomplete.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
           <Autocomplete.Positioner>
             <Autocomplete.Popup data-testid="popup">
               <Autocomplete.Input v-if="inputInPopup" data-testid="input" v-bind="input" />

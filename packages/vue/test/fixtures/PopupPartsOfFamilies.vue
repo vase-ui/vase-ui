@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PropType } from 'vue';
+import { Combobox } from '../../src/combobox';
 import { Dialog } from '../../src/dialog';
 import { Menu } from '../../src/menu';
 import { Popover } from '../../src/popover';
@@ -13,7 +14,9 @@ import PartTransition from './PartTransition.vue';
 // content.
 defineProps({
   family: {
-    type: String as PropType<'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card'>,
+    type: String as PropType<
+      'dialog' | 'popover' | 'menu' | 'tooltip' | 'preview-card' | 'combobox'
+    >,
     required: true,
   },
   scene: { type: Object as PropType<{ open: boolean }>, required: true },
@@ -108,7 +111,7 @@ defineProps({
       </Tooltip.Positioner>
     </Tooltip.Portal>
   </Tooltip.Root>
-  <PreviewCard.Root v-else :open="scene.open">
+  <PreviewCard.Root v-else-if="family === 'preview-card'" :open="scene.open">
     <PreviewCard.Portal :keep-mounted>
       <PartTransition :on="!inSlot" name="backdrop" :log>
         <PreviewCard.Backdrop data-testid="backdrop" :as>
@@ -131,4 +134,31 @@ defineProps({
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
   </PreviewCard.Root>
+  <Combobox.Root v-else :open="scene.open" :items="['Item']">
+    <Combobox.Portal :keep-mounted>
+      <PartTransition :on="!inSlot" name="backdrop" :log>
+        <Combobox.Backdrop data-testid="backdrop" :as>
+          <template v-if="inSlot" #element="{ props, elementRef }">
+            <section v-bind="props" :ref="elementRef" />
+          </template>
+          {{ count('backdrop') }}
+        </Combobox.Backdrop>
+      </PartTransition>
+      <Combobox.Positioner>
+        <PartTransition :on="!inSlot" name="popup" :log>
+          <Combobox.Popup data-testid="popup" :as>
+            <template v-if="inSlot" #element="{ props, elementRef }">
+              <section v-bind="props" :ref="elementRef" />
+            </template>
+            {{ count('popup') }}
+            <Combobox.List>
+              <template #item="{ item }">
+                <Combobox.Item :value="item">{{ item }}</Combobox.Item>
+              </template>
+            </Combobox.List>
+          </Combobox.Popup>
+        </PartTransition>
+      </Combobox.Positioner>
+    </Combobox.Portal>
+  </Combobox.Root>
 </template>

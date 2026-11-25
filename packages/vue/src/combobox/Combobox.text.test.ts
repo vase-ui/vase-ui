@@ -45,7 +45,7 @@ async function leaving() {
   await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
 }
 
-/** Waits for the popup of an open after the leave of the old popup. */
+/** Waits for the popup to cancel its leave and stay open. */
 async function reopened() {
   await waitFor(() => {
     expect(popup()).not.toBe(null);
@@ -496,10 +496,11 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
     expect(options()).toEqual(['apple', 'apricot']);
-    await waitFor(() => expect(after).toEqual(['after-leave']));
+    expect(input().value).toBe('ap');
+    await waitFor(() => expect(after).toEqual(['after-enter', 'after-leave', 'child unmounted']));
   });
 
-  test('an open during the leave shows the new popup with no text, each item and the selected item highlighted', async () => {
+  test('an open during the leave keeps the same popup with no text, each item and the selected item highlighted', async () => {
     const log: string[] = [];
     mount(ComboboxInTransition, {
       inputInPopup: true,
@@ -508,12 +509,15 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await nextTick();
     await userEvent.click(trigger());
     await opened();
+    const first = popup()!;
     await waitFor(() => expect(document.activeElement).toBe(input()));
     await userEvent.type(input(), 'banana');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
     await userEvent.click(trigger(), { force: true });
     await waitFor(() => expect(popup()?.className ?? '').not.toContain('leave'));
+    expect(popup()).toBe(first);
+    await waitFor(() => expect(document.activeElement).toBe(input()));
     expect(input().value).toBe('');
     expect(options()).toEqual(['apple', 'apricot', 'banana']);
     await waitFor(() => expect(item('banana')).toHaveAttribute('data-highlighted'));

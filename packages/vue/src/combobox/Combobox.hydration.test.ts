@@ -75,6 +75,25 @@ describe('server render and hydration', () => {
     expect(byTestId(root, 'popup')).toBe(popup);
   });
 
+  test('a disabled portal of an open root renders the shown popup and backdrop in place with no `display: none`, and hydrates with no message', async () => {
+    const props = {
+      root: { defaultOpen: true },
+      portal: { disabled: true },
+      backdrop: {},
+    };
+    const root = await renderOnServer('ComboboxParts', props);
+    const popup = byTestId(root, 'popup')!;
+    const backdrop = byTestId(root, 'backdrop')!;
+    expect(popup.style.display).toBe('');
+    expect(backdrop.style.display).toBe('');
+    hydrate(ComboboxParts, props, root);
+    await nextTick();
+    expect(byTestId(root, 'popup')).toBe(popup);
+    expect(byTestId(root, 'backdrop')).toBe(backdrop);
+    expect(popup.style.display).toBe('');
+    expect(backdrop.style.display).toBe('');
+  });
+
   test('the list of an inline root is in the server HTML; the text of its status comes after the mount', async () => {
     const root = await renderOnServer('ComboboxInline');
     expect(byTestId(root, 'list')!.querySelectorAll('[role="option"]')).toHaveLength(3);

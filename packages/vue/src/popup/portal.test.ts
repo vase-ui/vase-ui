@@ -13,6 +13,7 @@ const FAMILIES = [
   { family: 'menu', parts: ['backdrop', 'popup'] },
   { family: 'tooltip', parts: ['popup'] },
   { family: 'preview-card', parts: ['backdrop', 'popup'] },
+  { family: 'combobox', parts: ['backdrop', 'popup'] },
 ] as const;
 
 function mountFamily(

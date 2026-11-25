@@ -2,9 +2,16 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import type { AutocompleteRootChangeEventDetails } from '@vase-ui/vue/autocomplete';
+import AutocompleteInTransition from '../../test/fixtures/AutocompleteInTransition.vue';
 import AutocompleteParts from '../../test/fixtures/AutocompleteParts.vue';
 import AutocompleteTextarea from '../../test/fixtures/AutocompleteTextarea.vue';
 import AutocompleteValueAlone from '../../test/fixtures/AutocompleteValueAlone.vue';
+import {
+  finishAnimations,
+  mostMatches,
+  opacityUntilRest,
+  shownOpacity,
+} from '../../test/animation';
 import { screen } from '../../test/queries';
 import { mount, mountError, settle } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
@@ -747,6 +754,96 @@ describe('the field', () => {
     await mountAutocomplete({ root: { defaultOpen: true }, field: { name: 'tag' } });
     await waitFor(() => expect(popup()?.checkVisibility({ visibilityProperty: true })).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Tag' })).toBe(byTestId('list'));
+  });
+});
+
+describe('a popup in a <Transition>', () => {
+  test('an open while the autocomplete leaves keeps the popup and the backdrop, which go back from where they are', async () => {
+    const log = new Set<string>();
+    const root = reactive<Props>({ open: true });
+    mount(AutocompleteInTransition, {
+      root,
+      popup: { class: 'slow' },
+      backdrop: { class: 'slow' },
+      log,
+    });
+    await opened();
+    const first = popup()!;
+    const backdrop = byTestId('backdrop')!;
+    await Promise.all([finishAnimations(first), finishAnimations(backdrop)]);
+    await waitFor(() => expect(log.has('after-enter')).toBe(true));
+    const popups = mostMatches('[data-testid="popup"]');
+    root.open = false;
+    await waitFor(() => expect(shownOpacity(first)).toBeLessThan(0.8));
+    const atOpen = [first, backdrop].map(shownOpacity);
+    root.open = true;
+    const frames = await opacityUntilRest([first, backdrop]);
+    expect(popup()).toBe(first);
+    expect(byTestId('backdrop')).toBe(backdrop);
+    expect(popups()).toBe(1);
+    expect(log.has('after-leave') || log.has('backdrop-after-leave')).toBe(false);
+    frames.forEach((opacities, index) => {
+      expect(Math.min(...opacities)).toBeGreaterThan(atOpen[index]! - 0.15);
+      expect(opacities.at(-1)).toBe(1);
+    });
+  });
+
+  test('the content of the popup stays mounted until the leave ends', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({ open: true });
+    mount(AutocompleteInTransition, {
+      root,
+      popup: { class: 'slow' },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    await opened();
+    const element = popup()!;
+    await finishAnimations(element);
+    await waitFor(() => expect(log).toContain('after-enter'));
+    root.open = false;
+    await waitFor(() => expect(element).toHaveClass('auto-leave-leave-active'));
+    await nextTick();
+    expect(log).not.toContain('child unmounted');
+    await finishAnimations(element);
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log.slice(-2)).toEqual(['after-leave', 'child unmounted']);
+  });
+
+  test('with `:css="false"`, the enter runs once with no `appear`, and the popup leaves when `done` runs', async () => {
+    const log: string[] = [];
+    const root = reactive<Props>({ open: true });
+    let endLeave = () => {};
+    mount(AutocompleteInTransition, {
+      root,
+      jsHooks: {
+        enter(done: () => void) {
+          log.push('enter');
+          done();
+        },
+        leave(done: () => void) {
+          log.push('leave');
+          endLeave = done;
+        },
+      },
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    await opened();
+    const element = popup()!;
+    await waitFor(() => expect(log).toEqual(['before-enter', 'enter', 'after-enter']));
+    root.open = false;
+    await waitFor(() => expect(log).toContain('leave'));
+    expect(element.isConnected).toBe(true);
+    expect(log).not.toContain('child unmounted');
+    endLeave();
+    await waitFor(() => expect(element.isConnected).toBe(false));
+    expect(log).toEqual([
+      'before-enter',
+      'enter',
+      'after-enter',
+      'leave',
+      'after-leave',
+      'child unmounted',
+    ]);
   });
 });
 

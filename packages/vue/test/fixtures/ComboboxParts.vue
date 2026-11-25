@@ -24,6 +24,7 @@ defineProps({
   label: Boolean,
   input: Object as PropType<Props>,
   portal: Object as PropType<Props>,
+  backdrop: Object as PropType<Props>,
   positioner: Object as PropType<Props>,
   popup: Object as PropType<Props>,
   list: Object as PropType<Props>,
@@ -92,6 +93,7 @@ export const FRUITS = [
       v-bind="clear"
     />
     <Combobox.Portal v-bind="portal">
+      <Combobox.Backdrop v-if="backdrop" data-testid="backdrop" v-bind="backdrop" />
       <Combobox.Positioner data-testid="positioner" v-bind="positioner">
         <Combobox.Popup v-if="scene.popup !== false" data-testid="popup" v-bind="popup">
           <Combobox.InputGroup v-if="inputInPopup" data-testid="popup-group">
