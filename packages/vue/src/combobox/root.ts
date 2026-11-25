@@ -146,7 +146,7 @@ export interface ComboboxRootContext {
   readonly text: string;
   /** The text that the input shows: the text, or the inline completion of a key highlight. */
   readonly shownText: string;
-  /** The text of the close for an input in a kept popup or a popup that leaves, until the leave ends or the next open. */
+  /** The last open text for an input in a closed popup that stays mounted or leaves. */
   readonly keptText: string | null;
   /** A fill of the browser keeps the closed popup in the DOM, so that its items stay mounted. */
   readonly keepsPopup: boolean;
@@ -361,13 +361,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const typed = shallowRef(false);
   // With `autoHighlight`, the first item that mounts after the text gets the highlight.
   const highlightFirst = shallowRef(false);
-  /**
-   * The selected item gets the highlight when it mounts: at the mount of an inline list, and when
-   * items mount after the open.
-   */
   const highlightSelectedLater = shallowRef(false);
-  // A kept popup or a popup that leaves in a `<Transition>` shows its exit after the close, so it
-  // keeps the query and the text of its last open render until the leave ends or the next open
+  // A kept popup or a popup in `<Transition>` stays shown during its exit
   // (test/measurements/combobox.test.ts, "a kept popup that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
   // The text of an autofill of the input, which is no query (Base UI).
@@ -611,8 +606,8 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
   );
 
-  // Vue patches a popup that leaves, so it keeps the query and text of its last open render. This
-  // also holds when a pick or the parent changes the text at the close.
+  // Vue patches a popup that leaves. A pick or the parent can change `liveQuery` or `text`
+  // at the close.
   watch([() => root.open, liveQuery, text] as const, ([open], [wasOpen, openQuery, openText]) => {
     if (open) kept.value = null;
     else if (wasOpen) {

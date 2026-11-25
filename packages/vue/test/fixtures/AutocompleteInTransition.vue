@@ -6,7 +6,6 @@ import UnmountLog from './UnmountLog.vue';
 type Props = Record<string, unknown>;
 type JsHooks = { enter(done: () => void): void; leave(done: () => void): void };
 
-// An autocomplete whose popup and optional backdrop animate in `<Transition>`.
 defineProps({
   root: Object as PropType<Props>,
   items: { type: Array as PropType<unknown[]>, default: () => ['feature', 'fix', 'docs'] },

@@ -45,7 +45,6 @@ async function leaving() {
   await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
 }
 
-/** Waits for the popup to cancel its leave and stay open. */
 async function reopened() {
   await waitFor(() => {
     expect(popup()).not.toBe(null);

@@ -6,9 +6,6 @@ import UnmountLog from './UnmountLog.vue';
 type Props = Record<string, unknown>;
 type JsHooks = { enter(done: () => void): void; leave(done: () => void): void };
 
-// A combobox whose popup is in a `<Transition>` with a leave of 400 ms. With `inputInPopup`, the
-// trigger is the control and shows the value, and the input is in the popup; else a trigger is
-// after the input. `log` records transition hooks and child unmounts.
 defineProps({
   root: Object as PropType<Props>,
   items: { type: Array as PropType<unknown[]>, default: () => ['apple', 'apricot', 'banana'] },
