@@ -1173,7 +1173,7 @@ describe('the focus', () => {
   ])(
     'a close with $name while a field of the popup has the focus: the field loses the focus, and typed text does not reach it',
     async ({ trigger, popup: popupProps }) => {
-      // Hold both enter and leave for 100 s so that the case ends each one itself.
+      // Long enough that only the case ends enter and leave.
       const style = document.head.appendChild(document.createElement('style'));
       style.textContent =
         '.slow.pop-enter-active, .slow.pop-leave-active { transition-duration: 100s; }';

@@ -117,9 +117,8 @@ if (typeof document !== 'undefined') {
   // `test/waitFor.ts` rejects in the same way. A command that the function starts after a wait of
   // another kind, such as a frame, can still run in the next test. The `onTestFinished` hooks of the
   // test run before that hook, so a release in such a hook does not reject.
-  // Parallel test files in Chromium and WebKit share the one clipboard of the browser process. A
-  // test that runs `copy`, `cut` or `paste` holds the clipboard lock until its commands end. No
-  // other file then overwrites the clipboard between copy and paste.
+  // Parallel test files in Chromium and WebKit share one clipboard. The lock stops another file
+  // from a write to the clipboard between the copy and the paste of a test.
   const CLIPBOARD_COMMANDS = new Set<string>(['copy', 'cut', 'paste']);
   let clipboardToken: number | undefined;
   let acquiringClipboard: { endedAtCall: number; promise: Promise<void> } | undefined;

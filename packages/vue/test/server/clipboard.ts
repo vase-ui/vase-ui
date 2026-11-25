@@ -4,10 +4,7 @@ let owner = 0;
 let nextToken = 0;
 const waiters: (() => void)[] = [];
 
-/**
- * Claims the one clipboard of the browser process. Parallel test files in Chromium and WebKit
- * share that clipboard across browser contexts.
- */
+/** Parallel test files in Chromium and WebKit share one clipboard across browser contexts. */
 export const lockClipboard: BrowserCommand = async () => {
   if (owner !== 0) {
     await new Promise<void>((resolve) => {
@@ -19,7 +16,6 @@ export const lockClipboard: BrowserCommand = async () => {
   return nextToken;
 };
 
-/** Releases the clipboard when `token` still holds it. */
 export const unlockClipboard: BrowserCommand<[token: number]> = (_context, token) => {
   if (owner !== token) return;
   const next = waiters.shift();
