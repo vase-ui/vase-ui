@@ -11,13 +11,13 @@ describe('withClipboard', () => {
       await wait(40);
       log.push('end 1');
     });
-    const second = withClipboard(async () => {
+    const second = withClipboard(() => {
       log.push('start 2');
       throw new Error('boom');
     }).catch(() => {
       log.push('caught 2');
     });
-    const third = withClipboard(async () => {
+    const third = withClipboard(() => {
       log.push('start 3');
       log.push('end 3');
     });
@@ -32,7 +32,7 @@ describe('withClipboard', () => {
     const second = await commands.lockClipboard();
     try {
       await commands.unlockClipboard(first);
-      const third = withClipboard(async () => {
+      const third = withClipboard(() => {
         log.push('third');
       });
       await wait(30);

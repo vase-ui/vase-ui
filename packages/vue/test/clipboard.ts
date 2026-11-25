@@ -13,7 +13,7 @@ declare module 'vitest/browser' {
  * Runs a real copy and paste under the clipboard lock of the browser process. Parallel test files
  * in Chromium and WebKit share one clipboard.
  */
-export async function withClipboard<T>(action: () => Promise<T>): Promise<T> {
+export async function withClipboard<T>(action: () => T | Promise<T>): Promise<T> {
   const token = await commands.lockClipboard();
   onTestFinished(() => commands.unlockClipboard(token));
   try {

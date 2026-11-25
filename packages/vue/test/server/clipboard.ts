@@ -8,7 +8,7 @@ const waiters: (() => void)[] = [];
  * Claims the one clipboard of the browser process. Parallel test files in Chromium and WebKit
  * share that clipboard across browser contexts.
  */
-export const lockClipboard: BrowserCommand<[]> = async () => {
+export const lockClipboard: BrowserCommand = async () => {
   if (owner !== 0) {
     await new Promise<void>((resolve) => {
       waiters.push(resolve);
