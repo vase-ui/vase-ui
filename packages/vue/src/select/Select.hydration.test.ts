@@ -34,6 +34,19 @@ describe('server render and hydration', () => {
     expect(root.querySelector('button')).toHaveTextContent('Yellow banana');
   });
 
+  test('the server HTML of a disabled trigger with focusableWhenDisabled has aria-disabled and no disabled, and hydrates without a mismatch', async () => {
+    const props = { root: { disabled: true }, trigger: { focusableWhenDisabled: true } };
+    const root = await renderOnServer('SelectParts', props);
+    const trigger = root.querySelector<HTMLButtonElement>('button[role="combobox"]')!;
+    expect(trigger).toHaveAttribute('aria-disabled', 'true');
+    expect(trigger).not.toHaveAttribute('disabled');
+    hydrate(SelectParts, props, root);
+    await nextTick();
+    expect(root.querySelector('[role="combobox"]')).toBe(trigger);
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+  });
+
   test('VUE-51: the server HTML names a label that comes after the trigger, and the page hydrates with no message', async () => {
     const props = { labelAfter: {}, root: { defaultValue: 'banana' } };
     const root = await renderOnServer('SelectParts', props);

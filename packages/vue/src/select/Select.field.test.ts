@@ -156,6 +156,41 @@ describe('the field', () => {
     await waitFor(() => expect(field).toHaveAttribute('data-touched'));
   });
 
+  test.each(['trigger', 'root', 'field'] as const)(
+    'with focusableWhenDisabled, a disabled %s keeps the focus on the trigger and a Tab away or a press outside its open popup leaves the field untouched',
+    async (source) => {
+      const props = {
+        trigger: reactive({ disabled: false, focusableWhenDisabled: true }),
+        root: reactive({ disabled: false, name: 'letter', defaultValue: 'a', modal: false }),
+        field: reactive({ disabled: false }),
+      };
+      const { field, form } = await mountField(props);
+      trigger().focus();
+      props[source].disabled = true;
+      await nextTick();
+      expect(trigger()).toHaveFocus();
+      expect(trigger()).toHaveAttribute('aria-disabled', 'true');
+      expect(new FormData(form).get('letter')).toBe(source === 'trigger' ? 'a' : null);
+      await userEvent.keyboard('{Tab}');
+      expect(document.getElementById('submit-button')).toHaveFocus();
+      expect(field).not.toHaveAttribute('data-touched');
+
+      props[source].disabled = false;
+      await nextTick();
+      trigger().focus();
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(byTestId('item-a')).toHaveFocus());
+      props[source].disabled = true;
+      await nextTick();
+      await userEvent.pointer({
+        coords: { x: window.innerWidth - 5, y: window.innerHeight - 5 },
+        keys: '[MouseLeft]',
+      });
+      await waitFor(() => expect(trigger()).toHaveAttribute('aria-expanded', 'false'));
+      expect(field).not.toHaveAttribute('data-touched');
+    },
+  );
+
   test('aria-describedby of the developer comes before the ids of the field', async () => {
     await mountField({ trigger: { 'aria-describedby': 'hint' } });
     expect(trigger()).toHaveAttribute('aria-describedby', 'hint description');

@@ -48,6 +48,11 @@ export const positionerProps: Select.Positioner.Props = {
   collisionAvoidance: { fallbackAxisSide: 'none' },
 };
 
+export const triggerProps: Select.Trigger.Props = { focusableWhenDisabled: undefined };
+<Select.Trigger disabled focusableWhenDisabled />;
+// @ts-expect-error `focusableWhenDisabled` is a Boolean.
+<Select.Trigger focusableWhenDisabled="yes" />;
+
 // A template ref of a part has its element.
 const popup = null as unknown as InstanceType<typeof Select.Popup>;
 expectType<HTMLElement | null, typeof popup.element>(popup.element);

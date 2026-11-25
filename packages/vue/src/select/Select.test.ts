@@ -485,6 +485,26 @@ describe('the trigger', () => {
     expect(trigger()).toHaveAttribute('aria-disabled', 'true');
   });
 
+  test('VUE-237: a disabled trigger with focusableWhenDisabled keeps its tab stop and ignores a press, Enter, Space, an arrow key and a typed key', async () => {
+    const log: string[] = [];
+    await mountSelect({
+      root: rootEvents(log, { defaultValue: 'apple' }),
+      trigger: { disabled: true, focusableWhenDisabled: true },
+    });
+    expect(trigger()).toHaveAttribute('aria-disabled', 'true');
+    expect(trigger()).not.toHaveAttribute('disabled');
+    expect(trigger()).not.toHaveAttribute('focusablewhendisabled');
+    document.getElementById('before')!.focus();
+    await userEvent.keyboard('{Tab}');
+    expect(trigger()).toHaveFocus();
+    await userEvent.keyboard('{Enter} {ArrowDown}{ArrowUp}b');
+    expect(trigger()).toHaveFocus();
+    await userEvent.click(trigger(), { force: true });
+    expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+    expect(valueText()).toBe('apple');
+    expect(log).toEqual([]);
+  });
+
   test('has the state attributes of the value and the side of the popup', async () => {
     await mountSelect({ root: { required: true } });
     expect(trigger()).toHaveAttribute('aria-required', 'true');
