@@ -98,7 +98,7 @@ const popupHiddenClass = styles.PopupHidden;
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Combobox.Popup :class="styles.Popup">
             <Combobox.Empty>
               <div :class="styles.Empty">No produce found.</div>

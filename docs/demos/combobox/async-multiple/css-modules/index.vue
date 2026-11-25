@@ -325,7 +325,7 @@ const popupHiddenClass = styles.PopupHidden;
 
     <Combobox.Portal>
       <Combobox.Positioner :class="styles.Positioner" :side-offset="4">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Combobox.Popup :class="styles.Popup" :aria-busy="isPending || undefined">
             <div :class="styles.Viewport">
               <Combobox.Status>

@@ -19,3 +19,23 @@ test('the server HTML has one name: the input; with the input in the popup, the 
   hydrate(AutocompleteParts, inPopup, second);
   await waitFor(() => expect(second.querySelectorAll('[name="tag"]')).toHaveLength(1));
 });
+
+test('a disabled portal of an open root renders the shown popup and backdrop in place with no `display: none`, and hydrates with no message', async () => {
+  const props = {
+    root: { defaultOpen: true },
+    portal: { disabled: true },
+    backdrop: {},
+  };
+  const root = await renderOnServer('AutocompleteParts', props);
+  const popup = root.querySelector<HTMLElement>('[data-testid="popup"]')!;
+  const backdrop = root.querySelector<HTMLElement>('[data-testid="backdrop"]')!;
+  expect(popup.style.display).toBe('');
+  expect(backdrop.style.display).toBe('');
+  expect(popup.querySelectorAll('[role="option"]')).toHaveLength(4);
+  hydrate(AutocompleteParts, props, root);
+  await nextTick();
+  expect(root.querySelector('[data-testid="popup"]')).toBe(popup);
+  expect(root.querySelector('[data-testid="backdrop"]')).toBe(backdrop);
+  expect(popup.style.display).toBe('');
+  expect(backdrop.style.display).toBe('');
+});

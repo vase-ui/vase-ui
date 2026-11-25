@@ -45,7 +45,6 @@ async function leaving() {
   await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
 }
 
-/** Waits for the popup of an open after the leave of the old popup. */
 async function reopened() {
   await waitFor(() => {
     expect(popup()).not.toBe(null);
@@ -496,10 +495,12 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
     expect(options()).toEqual(['apple', 'apricot']);
-    await waitFor(() => expect(after).toEqual(['after-leave']));
+    expect(input().value).toBe('ap');
+    await waitFor(() => expect(after.slice(-2)).toEqual(['after-leave', 'child unmounted']));
+    expect(after.filter((entry) => entry === 'after-leave')).toHaveLength(1);
   });
 
-  test('an open during the leave shows the new popup with no text, each item and the selected item highlighted', async () => {
+  test('an open during the leave keeps the same popup with no text, each item and the selected item highlighted', async () => {
     const log: string[] = [];
     mount(ComboboxInTransition, {
       inputInPopup: true,
@@ -508,12 +509,15 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await nextTick();
     await userEvent.click(trigger());
     await opened();
+    const first = popup()!;
     await waitFor(() => expect(document.activeElement).toBe(input()));
     await userEvent.type(input(), 'banana');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(popup()?.className).toContain('combobox-leave-leave-active'));
     await userEvent.click(trigger(), { force: true });
     await waitFor(() => expect(popup()?.className ?? '').not.toContain('leave'));
+    expect(popup()).toBe(first);
+    await waitFor(() => expect(document.activeElement).toBe(input()));
     expect(input().value).toBe('');
     expect(options()).toEqual(['apple', 'apricot', 'banana']);
     await waitFor(() => expect(item('banana')).toHaveAttribute('data-highlighted'));
@@ -600,6 +604,8 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await waitFor(() => expect(options()).toEqual(['apple', 'apricot']));
     await userEvent.click(item('apple'));
     await leaving();
+    expect(input().value).toBe('ap');
+    expect(options()).toEqual(['apple', 'apricot']);
     await userEvent.click(trigger(), { force: true });
     await reopened();
     await waitFor(() => expect(input().value).toBe(''));
@@ -626,6 +632,38 @@ describe('VUE-220: a popup that leaves in a <Transition>', () => {
     await settle();
     expect(input().value).toBe('banana');
     expect(log).toEqual([]);
+  });
+
+  test('a pick in a filtered single combobox keeps its filtered items while the popup leaves, and the next open shows each item', async () => {
+    mount(ComboboxInTransition, {});
+    await nextTick();
+    await userEvent.type(input(), 'ap');
+    await opened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot']));
+    await userEvent.click(item('apple'));
+    await leaving();
+    expect(input().value).toBe('apple');
+    expect(options()).toEqual(['apple', 'apricot']);
+    await userEvent.click(trigger(), { force: true });
+    await reopened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot', 'banana']));
+  });
+
+  test('Escape after a typed text that matches the selected label keeps its filtered items while the popup leaves', async () => {
+    mount(ComboboxInTransition, { root: { defaultValue: 'apple' } });
+    await nextTick();
+    await userEvent.click(input());
+    await opened();
+    await userEvent.keyboard('x{Backspace}');
+    await waitFor(() => expect(options()).toEqual(['apple']));
+    await userEvent.keyboard('{Escape}');
+    await leaving();
+    expect(input().value).toBe('apple');
+    expect(options()).toEqual(['apple']);
+    await closed();
+    await userEvent.click(trigger());
+    await opened();
+    await waitFor(() => expect(options()).toEqual(['apple', 'apricot', 'banana']));
   });
 
   test('a close that the parent does not apply keeps the text and the filter', async () => {

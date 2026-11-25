@@ -18,7 +18,7 @@ const id = useId();
       </Combobox.InputGroup>
       <Combobox.Portal>
         <Combobox.Positioner>
-          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden" appear>
+          <Transition enter-from-class="bench-hidden" leave-to-class="bench-hidden">
             <Combobox.Popup data-bench="popup" class="bench-motion">
               <Combobox.Empty>No results</Combobox.Empty>
               <Combobox.List>

@@ -114,7 +114,6 @@ const state = computed<ComboboxInputState>(() => ({
 const composed = shallowRef<string | null>(null);
 let compositionEnded = false;
 
-// An input in a kept popup shows the text of the close until the next open.
 const shown = () => (inPopup ? (context.keptText ?? context.shownText) : context.shownText);
 
 function showText() {

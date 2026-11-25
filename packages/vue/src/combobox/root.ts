@@ -146,7 +146,7 @@ export interface ComboboxRootContext {
   readonly text: string;
   /** The text that the input shows: the text, or the inline completion of a key highlight. */
   readonly shownText: string;
-  /** The text of the close, which an input in a kept popup shows until the next open. */
+  /** The last open text for an input in a closed popup that stays mounted or leaves. */
   readonly keptText: string | null;
   /** A fill of the browser keeps the closed popup in the DOM, so that its items stay mounted. */
   readonly keepsPopup: boolean;
@@ -361,22 +361,16 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
   const typed = shallowRef(false);
   // With `autoHighlight`, the first item that mounts after the text gets the highlight.
   const highlightFirst = shallowRef(false);
-  /**
-   * The selected item gets the highlight when it mounts: at the mount of an inline list, and at an
-   * open that waits for the leave of the old popup.
-   */
   const highlightSelectedLater = shallowRef(false);
-  // A kept popup shows its exit after the close in Chromium and WebKit, so it keeps the filter and
-  // the text of its input until the next open (test/measurements/combobox.test.ts, "a kept popup
-  // that closes").
+  // A kept popup or a popup in `<Transition>` stays shown during its exit
+  // (test/measurements/combobox.test.ts, "a kept popup that closes").
   const kept = shallowRef<{ query: string; text: string } | null>(null);
   // The text of an autofill of the input, which is no query (Base UI).
   const filledText = shallowRef<string | null>(null);
   // With no `items`, the labels of a fill are the text of the items, so the popup stays from the
   // first fill on, as in Base UI.
   const keepsPopup = shallowRef(false);
-  const query = computed(() => {
-    if (kept.value) return kept.value.query;
+  const liveQuery = computed(() => {
     const trimmed = text.value.trim();
     // A single combobox shows each item while its input shows the label of its value.
     if (source.mode === 'single' && !typed.value && trimmed === labelOf(valueModel.value).trim()) {
@@ -385,6 +379,7 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     if (!typed.value && text.value === filledText.value) return '';
     return trimmed;
   });
+  const query = computed(() => (kept.value ? kept.value.query : liveQuery.value));
   const filteredItems = computed<readonly unknown[]>((previous) => {
     let next: readonly unknown[];
     if (source.filteredItems) next = source.filteredItems;
@@ -611,6 +606,21 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
     },
   );
 
+  // Vue patches a popup that leaves. A pick or the parent can change `liveQuery` or `text`
+  // at the close.
+  watch([() => root.open, liveQuery, text] as const, ([open], [wasOpen, openQuery, openText]) => {
+    if (open) kept.value = null;
+    else if (wasOpen) {
+      kept.value = root.keepMounted || root.leaving ? { query: openQuery, text: openText } : null;
+    }
+  });
+  watch(
+    () => root.keepMounted || root.leaving,
+    (keeps) => {
+      if (!keeps) kept.value = null;
+    },
+  );
+
   // The key that opened the popup, for the highlight after the items mounted.
   let openKey: KeyboardEvent | undefined;
   watch(
@@ -627,16 +637,13 @@ export function useComboboxRoot(source: RootSource, emit: RootEmit) {
         // The highlight event of no item resets the last highlight. A virtualized list emits none
         // for a highlight that it removes.
         if (source.virtualized) lastHighlight = { value: undefined, index: -1 };
-        kept.value = root.keepMounted ? { query: query.value, text: text.value } : null;
         resetText(new Event('vase-ui'), root.reason === 'item-press');
         return;
       }
-      kept.value = null;
       // The items mount in this update.
       void nextTick(() => {
         if (!root.open || list.highlighted) return;
         if (highlightSelected()) return;
-        // A new popup waits while the old one leaves, so its items mount later.
         if (hasValue.value && source.mode !== 'none' && !list.find()) {
           highlightSelectedLater.value = true;
           return;

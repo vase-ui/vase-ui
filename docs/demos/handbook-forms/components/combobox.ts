@@ -44,7 +44,7 @@ export const Positioner = withProps(Combobox.Positioner, { class: 'outline-none'
 const POPUP_HIDDEN = 'scale-95 opacity-0';
 
 const PopupWrapper: FunctionalComponent = (_, { attrs, slots }) =>
-  h(Transition, { enterFromClass: POPUP_HIDDEN, leaveToClass: POPUP_HIDDEN, appear: true }, () =>
+  h(Transition, { enterFromClass: POPUP_HIDDEN, leaveToClass: POPUP_HIDDEN }, () =>
     h(
       Combobox.Popup,
       mergeProps(

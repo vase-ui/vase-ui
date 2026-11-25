@@ -333,7 +333,7 @@ const popupHiddenClass = 'scale-95 opacity-0';
 
     <Combobox.Portal>
       <Combobox.Positioner class="outline-none" :side-offset="4">
-        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass" appear>
+        <Transition :enter-from-class="popupHiddenClass" :leave-to-class="popupHiddenClass">
           <Combobox.Popup
             class="w-[var(--anchor-width)] max-w-[var(--available-width)] origin-[var(--transform-origin)] border border-neutral-950 bg-white text-neutral-950 shadow-[0.25rem_0.25rem_0_rgb(0_0_0_/_12%)] transition-[scale,opacity] duration-100 dark:border-white dark:bg-neutral-950 dark:text-white dark:shadow-none"
             :aria-busy="isPending || undefined"
