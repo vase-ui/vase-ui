@@ -47,6 +47,8 @@ export interface ScrollAreaForParts {
   thumb(vertical: boolean): HTMLElement | null;
   /** Reads the viewport and the tracks, and writes the state, the variables and the thumbs. */
   measure(): void;
+  /** Schedules a measurement on the next animation frame, at most one time in a frame. */
+  scheduleMeasure(): void;
   /** Measures when the size of `element` changes. Returns the function that stops it. */
   observe(element: Element): () => void;
   /** Makes the axis scrolling until 500 ms pass with no other call. */
@@ -63,6 +65,10 @@ export interface ScrollAreaForParts {
   addCorner(): () => void;
 }
 
+export interface ScrollAreaViewportForContent {
+  addContent(): () => void;
+}
+
 export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area' : undefined,
 );
@@ -70,8 +76,7 @@ export const scrollAreaKey: InjectionKey<ScrollAreaForParts> = Symbol(
 export const scrollbarKey: InjectionKey<{ readonly orientation: Orientation }> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area scrollbar' : undefined,
 );
-/** The mark that a viewport gives to its content. */
-export const viewportKey: InjectionKey<true> = Symbol(
+export const viewportKey: InjectionKey<ScrollAreaViewportForContent> = Symbol(
   process.env.NODE_ENV !== 'production' ? 'scroll area viewport' : undefined,
 );
 
@@ -92,9 +97,11 @@ export function injectScrollbar() {
 }
 
 export function injectViewport() {
-  if (!inject(viewportKey, false)) {
+  const viewport = inject(viewportKey, null);
+  if (!viewport) {
     throw createError(56);
   }
+  return viewport;
 }
 
 const present = (value: boolean) => (value ? '' : undefined);

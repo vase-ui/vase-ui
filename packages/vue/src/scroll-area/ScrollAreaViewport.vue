@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { mergeProps, onMounted, onUnmounted, provide, shallowRef, useAttrs, watch } from 'vue';
-import { useElement, type ElementSlotProps } from '../common/element';
+import { isElement, useElement, type ElementSlotProps } from '../common/element';
 import { styleDisableScrollbar } from '../common/styles';
 import { hasTabStop } from '../common/tabbable';
 import { injectScrollArea, stateAttributes, viewportKey } from './root';
@@ -17,7 +17,16 @@ defineSlots<{
 const root = injectScrollArea('Viewport');
 const attrs = useAttrs();
 const { element, setElement } = useElement<HTMLElement>();
-provide(viewportKey, true);
+const contents = shallowRef(0);
+provide(viewportKey, {
+  addContent() {
+    contents.value += 1;
+    return () => {
+      contents.value -= 1;
+      root.scheduleMeasure();
+    };
+  },
+});
 
 // Chromium makes a scroll container a tab stop only while it holds no tab stop, Firefox makes each
 // one a tab stop, and WebKit none (test/measurements/scroll-area.test.ts). The viewport follows
@@ -77,6 +86,53 @@ watch(
   element,
   (target, _, onCleanup) => {
     if (target) onCleanup(root.observe(target));
+  },
+  { flush: 'post' },
+);
+
+// `ResizeObserver` on a scroll container does not report when content grows
+// (test/measurements/scroll-area.test.ts). Each direct `Text` node gets its own observation so
+// nested text changes cause no measurement.
+watch(
+  () => (contents.value === 0 ? element.value : null),
+  (target, _, onCleanup) => {
+    if (!target) return;
+    const observed = new Map<Node, () => void>();
+    const texts = new Set<Node>();
+    const watchNode = (node: Node) => {
+      if (isElement(node)) {
+        observed.set(node, root.observe(node));
+      } else if (node.nodeType === 3) {
+        texts.add(node);
+        observer.observe(node, { characterData: true });
+      }
+    };
+    const observer = new MutationObserver((records) => {
+      let removedText = false;
+      for (const record of records) {
+        for (const node of record.removedNodes) {
+          if (texts.delete(node)) {
+            removedText = true;
+          } else {
+            observed.get(node)?.();
+            observed.delete(node);
+          }
+        }
+        for (const node of record.addedNodes) watchNode(node);
+      }
+      if (removedText) {
+        observer.disconnect();
+        observer.observe(target, { childList: true });
+        for (const text of texts) observer.observe(text, { characterData: true });
+      }
+      root.scheduleMeasure();
+    });
+    observer.observe(target, { childList: true });
+    for (const child of target.childNodes) watchNode(child);
+    onCleanup(() => {
+      observer.disconnect();
+      for (const stop of observed.values()) stop();
+    });
   },
   { flush: 'post' },
 );

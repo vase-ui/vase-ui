@@ -393,3 +393,89 @@ describe('a MutationObserver and a control that Vue hides', () => {
     expect(records).toEqual(['gone attributes class', 'shown attributes style']);
   });
 });
+
+describe('content changes in a scroll container', () => {
+  test('ResizeObserver on a scroll container misses content growth, while direct Text observation catches direct text changes without subtree', async () => {
+    html(`
+      <div id="scroller" style="width: 200px; height: 100px; overflow: scroll">Short<div id="nested"><span id="inner">Nested</span></div></div>
+      <div id="blockScroller" style="width: 200px; height: 100px; overflow: scroll">
+        <div id="box" style="height: 20px"></div>
+      </div>`);
+    const scroller = find('scroller');
+    const inner = find('inner');
+    const blockScroller = find('blockScroller');
+    const box = find('box');
+    const resized: string[] = [];
+    let settled = false;
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!settled) return;
+      for (const entry of entries) resized.push(entry.target.id);
+    });
+    resizeObserver.observe(scroller);
+    resizeObserver.observe(blockScroller);
+    resizeObserver.observe(box);
+    onTestFinished(() => resizeObserver.disconnect());
+
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    settled = true;
+
+    const elementOnly: string[] = [];
+    const narrow: string[] = [];
+    const elementObserver = new MutationObserver((list) => {
+      for (const record of list) elementOnly.push(record.type);
+    });
+    const narrowObserver = new MutationObserver((list) => {
+      for (const record of list) narrow.push(record.type);
+    });
+    elementObserver.observe(scroller, { childList: true, characterData: true });
+    narrowObserver.observe(scroller, { childList: true });
+    narrowObserver.observe(scroller.firstChild!, { characterData: true });
+    onTestFinished(() => {
+      elementObserver.disconnect();
+      narrowObserver.disconnect();
+    });
+
+    inner.firstChild!.textContent = 'Nested changed';
+    await Promise.resolve();
+    const afterNested = [...narrow];
+
+    scroller.firstChild!.textContent = 'Line '.repeat(200);
+    box.style.height = '500px';
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+
+    expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+    expect(blockScroller.scrollHeight).toBeGreaterThan(blockScroller.clientHeight);
+    expect(elementOnly).toEqual([]);
+    expect(afterNested).toEqual([]);
+    expect(narrow).toEqual(['characterData']);
+    expect(resized).toEqual(['box']);
+  });
+
+  test('requestAnimationFrame and ResizeObserver in the same frame share document.timeline.currentTime', async () => {
+    html('<div id="box" style="width: 100px; height: 100px"></div>');
+    const box = find('box');
+    const times: [string, CSSNumberish | null][] = [];
+    const resizeObserver = new ResizeObserver(() => {
+      times.push(['ro', document.timeline.currentTime]);
+    });
+    onTestFinished(() => resizeObserver.disconnect());
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        times.push(['raf1', document.timeline.currentTime]);
+        resizeObserver.observe(box);
+        requestAnimationFrame(() => {
+          times.push(['raf2', document.timeline.currentTime]);
+          resolve();
+        });
+      });
+    });
+
+    expect(times.map(([phase]) => phase)).toEqual(['raf1', 'ro', 'raf2']);
+    expect(times[0]![1]).not.toBeNull();
+    expect(times[1]![1]).toBe(times[0]![1]);
+    expect(times[2]![1]).not.toBe(times[0]![1]);
+  });
+});
