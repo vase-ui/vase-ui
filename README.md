@@ -26,6 +26,16 @@ Every Base UI feature has a Vase UI form. The parity page names each feature tha
 - [The parity page](https://vase-ui.com/parity) shows, for every component, the Base UI commit it matches, and every Base UI change with its state: mirrored, queued, or not applicable to Vue, with the reason.
 - Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.
 
+<!-- #region donation -->
+
+## Donate
+
+Vase UI is free, and a 501(c)(3) non-profit makes it. If Vase UI saves you time, please donate. Each donation helps us port every Base UI release and keep more than 6,500 tests green in three browsers.
+
+[![Donate on GitHub Sponsors](https://img.shields.io/badge/Donate-GitHub%20Sponsors-ea4aaa?logo=githubsponsors&logoColor=white&style=for-the-badge)](https://github.com/sponsors/mathematic-inc)
+
+<!-- #endregion donation -->
+
 ## Install
 
 ```sh
@@ -57,9 +67,3 @@ Vase UI is a port, so the hard part was done before we started. The engineers be
 Report bugs in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs). Request changes or features in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas). See [Contributing](https://vase-ui.com/contributing) for the process and [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for our code rules.
 
 Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
-
-<!-- #region donation -->
-
-> This project is free and open-source work by a 501(c)(3) non-profit. If you find it useful, please consider [donating](https://github.com/sponsors/mathematic-inc).
-
-<!-- #endregion donation -->

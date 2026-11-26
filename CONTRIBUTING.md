@@ -503,7 +503,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 
 - GitHub Pages serves the site at the root of `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores it when a workflow publishes the site.
 - A page is a Markdown file in `docs`, with an `order` in its front matter. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
-- `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
+- `docs/index.md` includes the region `home` of `README.md`. The region `donation` is inside it. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
 - `README.md` and the description of `packages/vue/package.json` give the count of the components of `parity/upstream.json`. In `benchmarks/features.json`, the Base UI cell of the row "Components in all" gives it too. Each cell of the row "Components of Base UI" counts against it. `pnpm test:docs` fails when one of them gives another count, or when the parity page does not count each component as done.
 - Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
 - The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same commands. Change them together.
