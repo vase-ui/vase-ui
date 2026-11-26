@@ -54,10 +54,10 @@ describe('server render and hydration', () => {
     const popup = popupOf(root)!;
     expect(popup).not.toBe(null);
     const positioner = popup.parentElement!;
-    expect(positioner.style.visibility).toBe('hidden');
+    expect(positioner.style.opacity).toBe('0');
     hydrate(PopoverParts, props, root);
     await nextTick();
     expect(popupOf(root)).toBe(popup);
-    await waitFor(() => expect(positioner.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner.style.opacity).toBe(''));
   });
 });

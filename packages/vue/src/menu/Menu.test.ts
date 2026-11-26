@@ -59,7 +59,7 @@ async function closed(find = popup) {
 }
 
 async function placed() {
-  await waitFor(() => expect(byTestId('positioner')?.style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId('positioner')?.style.opacity).toBe(''));
 }
 
 function centerOf(element: Element) {
@@ -2810,7 +2810,7 @@ describe('more of the pointer', () => {
     await placed();
     await userEvent.pointer({ coords: centerOf(item('sub')) });
     await opened(subPopup);
-    await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('sub-positioner')?.style.opacity).toBe(''));
     await new Promise((resolve) => setTimeout(resolve, 220));
     await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))], 1);
     await userEvent.pointer([{ coords: centerOf(item('s1')) }, '[/MouseLeft]']);
@@ -2857,7 +2857,7 @@ describe('more of the pointer', () => {
     await userEvent.hover(item('a'));
     await userEvent.hover(item('sub'));
     await opened(subPopup);
-    await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('sub-positioner')?.style.opacity).toBe(''));
     await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))]);
     await userEvent.hover(item('deep'));
     await opened(() => byTestId('deep-popup'));

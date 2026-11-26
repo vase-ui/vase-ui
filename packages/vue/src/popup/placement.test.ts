@@ -11,7 +11,9 @@ import { addReducedMotionRule, nextEvent } from '../../test/animation';
 import ComboboxStatic from '../../test/fixtures/ComboboxStatic.vue';
 import MenuParts from '../../test/fixtures/MenuParts.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
+import PopoverPlaceWithFocus from '../../test/fixtures/PopoverPlaceWithFocus.vue';
 import PopupFirstPlace from '../../test/fixtures/PopupFirstPlace.vue';
+import type { PopupContentReading } from '../../test/fixtures/popupContent';
 import SelectParts from '../../test/fixtures/SelectParts.vue';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
@@ -246,4 +248,90 @@ describe('the first place of an open', () => {
       expect(element).toHaveAttribute('aria-expanded', 'true');
     },
   );
+
+  it('places a disabled portal inside a positioned container on the first frame while letting content focus at mount', async () => {
+    const handle = Popover.createHandle();
+    const log: PopupContentReading[] = [];
+    mount(PopoverPlaceWithFocus, {
+      mode: 'relative',
+      handle,
+      log: { add: (entry: PopupContentReading) => log.push(entry) },
+    });
+    await nextTick();
+    handle.open('trigger');
+    const firstFrame = await new Promise<{
+      topDiff: number;
+      leftDiff: number;
+      opacity: string;
+    }>((resolve) =>
+      requestAnimationFrame(() => {
+        const trigger = byTestId('trigger').getBoundingClientRect();
+        const pos = byTestId('positioner');
+        const rect = pos.getBoundingClientRect();
+        resolve({
+          topDiff: Math.abs(rect.top - trigger.bottom),
+          leftDiff: Math.abs(rect.left - trigger.left),
+          opacity: pos.style.opacity,
+        });
+      }),
+    );
+    expect(log).toEqual([{ shown: true, sized: true, focused: true }]);
+    expect(document.activeElement).toBe(byTestId('field'));
+    expect(firstFrame.opacity).toBe('');
+    expect(firstFrame.topDiff).toBeLessThan(1);
+    expect(firstFrame.leftDiff).toBeLessThan(1);
+  });
+
+  it('keeps a scrolled page in place when content calls `focus()` at mount, and places the popup on the first frame', async () => {
+    const handle = Popover.createHandle();
+    const log: PopupContentReading[] = [];
+    mount(PopoverPlaceWithFocus, {
+      mode: 'scrolled',
+      handle,
+      log: { add: (entry: PopupContentReading) => log.push(entry) },
+    });
+    await nextTick();
+    window.scrollTo(0, 1800);
+    const before = window.scrollY;
+    try {
+      handle.open('trigger');
+      const firstFrame = await new Promise<{
+        topDiff: number;
+        scrollY: number;
+        opacity: string;
+      }>((resolve) =>
+        requestAnimationFrame(() => {
+          const trigger = byTestId('trigger').getBoundingClientRect();
+          const pos = byTestId('positioner');
+          const rect = pos.getBoundingClientRect();
+          resolve({
+            topDiff: Math.abs(rect.top - trigger.bottom),
+            scrollY: window.scrollY,
+            opacity: pos.style.opacity,
+          });
+        }),
+      );
+      expect(log).toEqual([{ shown: true, sized: true, focused: true }]);
+      expect(document.activeElement).toBe(byTestId('field'));
+      expect(firstFrame.opacity).toBe('');
+      expect(firstFrame.scrollY).toBe(before);
+      expect(firstFrame.topDiff).toBeLessThan(1);
+    } finally {
+      window.scrollTo(0, 0);
+    }
+  });
+
+  it('flips a popup whose height comes only from its content to the open side on the first frame with no transitions', async () => {
+    const handle = Popover.createHandle();
+    mount(PopoverPlaceWithFocus, { mode: 'content-sized', handle });
+    await nextTick();
+    handle.open('trigger');
+    const firstFrame = await new Promise<{ side: string | null; transitions: number }>((resolve) =>
+      requestAnimationFrame(() => {
+        const pos = byTestId('positioner');
+        resolve({ side: pos.getAttribute('data-side'), transitions: pos.getAnimations().length });
+      }),
+    );
+    expect(firstFrame).toEqual({ side: 'top', transitions: 0 });
+  });
 });

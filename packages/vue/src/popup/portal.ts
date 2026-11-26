@@ -178,6 +178,21 @@ export function usePopupPortal(
 }
 
 /**
+ * The two updates of a part that hides its own element with `v-show`: `mounted` becomes `true`
+ * after the mount to show the element, and `entered` becomes `true` after that update so the
+ * content mounts in a shown element (test/measurements/popup.test.ts, "the content of a part that
+ * `v-show` shows"). With `immediate`, or before the portal mounts (as on the server and in a
+ * `disabled` portal at the first render), `entered` starts `true`.
+ */
+export function usePopupShow(immediate = false) {
+  const mounted = shallowRef(!inject(portalMountedKey, null)?.value);
+  onMounted(() => (mounted.value = true));
+  const entered = shallowRef(mounted.value || immediate);
+  watch(mounted, (value) => (entered.value = value), { flush: 'post' });
+  return { mounted, entered };
+}
+
+/**
  * Whether a popup or a backdrop in a portal shows its element, which the part hides with `v-show`.
  * A `<Transition>` around the part then makes an open during the leave go back from where it is
  * (test/measurements/popup.test.ts). The element shows one update after its mount, so the
@@ -191,11 +206,9 @@ export function usePopupPortal(
  * (`Menu.renders.test.ts`).
  */
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
-  const mounted = shallowRef(!inject(portalMountedKey, null)?.value);
-  onMounted(() => (mounted.value = true));
-  const entered = shallowRef(mounted.value);
-  watch(mounted, (value) => (entered.value = value), { flush: 'post' });
-  onUnmounted(root.addLeaving(() => element.value));
+  const { mounted, entered } = usePopupShow();
+  const removeLeaving = root.addLeaving(() => element.value);
+  onUnmounted(removeLeaving);
   return { entered, shown: computed(() => root.keepMounted || (root.open && mounted.value)) };
 }
 

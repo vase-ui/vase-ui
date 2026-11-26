@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import {
-  computed,
-  mergeProps,
-  onBeforeUnmount,
-  onMounted,
-  onUnmounted,
-  shallowRef,
-  useAttrs,
-  useId,
-  watch,
-} from 'vue';
+import { computed, mergeProps, onBeforeUnmount, onUnmounted, useAttrs, useId, watch } from 'vue';
 import { useDeferredServerRender } from '../common/deferredServerRender';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../common/styles';
+import { usePopupShow } from '../popup/portal';
 import { scrollEdges } from './alignment';
 import { injectSelectPositioner, injectSelectRoot } from './root';
 import type { SelectPopupProps, SelectPopupState } from './types';
@@ -35,12 +26,17 @@ const attrs = useAttrs();
 const generatedId = useId();
 const { element, setElement } = useElement<HTMLElement>();
 
-// An element that mounts while the root is open shows one update after its mount, so a
-// `<Transition>` around the part runs its enter with no `appear` (test/measurements/select.test.ts).
-const mounted = shallowRef(false);
-onMounted(() => (mounted.value = true));
+// An element that mounts while the root is open shows one update after its mount, and renders its
+// content in the update after that, so a `<Transition>` runs its enter with no `appear` and a
+// mount hook runs in a shown element (test/measurements/select.test.ts). When the popup mounts
+// closed, its items mount at once for closed typeahead and value lookup.
+const { mounted, entered } = usePopupShow(!root.open);
 const shown = computed(() => root.open && mounted.value);
-watch(shown, (isShown) => (context.popupShown.value = isShown), { flush: 'sync', immediate: true });
+watch(
+  () => shown.value && entered.value,
+  (isShown) => (context.popupShown.value = isShown),
+  { flush: 'sync', immediate: true },
+);
 
 const state = computed<SelectPopupState>(() => ({
   open: root.open,
@@ -148,9 +144,9 @@ and `inert` while closed. -->
     :state="state"
   />
   <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </component>
   <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

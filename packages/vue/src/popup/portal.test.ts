@@ -11,17 +11,28 @@ import { waitFor } from '../../test/waitFor';
 
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
-// A positioner hides its popup with `visibility: hidden` until the first place of the popup, and a
-// hidden element takes no focus. So the content of a positioned popup takes no focus at its mount.
 const FAMILIES = [
-  { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: false },
-  { family: 'drawer', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: false },
-  { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
-  { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
-  { family: 'tooltip', parts: ['popup'], popupTag: 'div', positioned: true },
-  { family: 'preview-card', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
-  { family: 'combobox', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
-  { family: 'navigation-menu', parts: ['backdrop', 'popup'], popupTag: 'nav', positioned: true },
+  { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'drawer', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'tooltip', parts: ['popup'], popupTag: 'div' },
+  { family: 'preview-card', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'combobox', parts: ['backdrop', 'popup'], popupTag: 'div' },
+  { family: 'navigation-menu', parts: ['backdrop', 'popup'], popupTag: 'nav' },
+] as const;
+
+const CONTENT_FAMILIES = [
+  'dialog',
+  'drawer',
+  'popover',
+  'menu',
+  'tooltip',
+  'preview-card',
+  'combobox',
+  'combobox-popup-input',
+  'navigation-menu',
+  'navigation-menu-content',
 ] as const;
 
 // A Vapor template takes only a function directive, which runs when the template creates its
@@ -99,21 +110,6 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts, popupTag }) =>
     },
   );
 
-  test.each(MODES)(
-    'a hook of the mount of the content (%s) finds the popup shown and the content with a size, at an open from the trigger',
-    async (mode) => {
-      const log: PopupContentReading[] = [];
-      mount(PopupContentFamilies, {
-        family,
-        mode,
-        log: { add: (entry: PopupContentReading) => log.push(entry) },
-      });
-      await openFromTrigger(family);
-      await waitFor(() => expect(log).toHaveLength(1));
-      expect(log[0]).toMatchObject({ shown: true, sized: true });
-    },
-  );
-
   test('in the `element` slot: the parts leave the DOM at the close', async () => {
     const { scene } = mountFamily(family, true);
     await waitFor(() => expect(byTestId('popup')).not.toBe(null));
@@ -142,25 +138,97 @@ async function openFromTrigger(family: string) {
     : userEvent.click(trigger));
 }
 
-describe.each(FAMILIES.filter(({ positioned }) => !positioned))(
-  'the focus of the content of $family',
-  ({ family }) => {
+describe.each(CONTENT_FAMILIES)('the mount of the content of %s', (family) => {
+  test.each(MODES)(
+    'a hook of the mount (%s) finds the popup shown and sized, moves the focus there, and default `initialFocus` keeps it',
+    async (mode) => {
+      const log: PopupContentReading[] = [];
+      mount(PopupContentFamilies, {
+        family,
+        mode,
+        log: { add: (entry: PopupContentReading) => log.push(entry) },
+      });
+      await openFromTrigger(family);
+      await waitFor(() => expect(log).toHaveLength(1));
+      expect(log[0]).toEqual({ shown: true, sized: true, focused: true });
+      await waitSingleFrame();
+      expect(byTestId('field')).toHaveFocus();
+    },
+  );
+});
+
+describe('the mount of the content of a `disabled` portal', () => {
+  test.each(['dialog', 'popover'] as const)(
+    '%s mounts open with its content shown, sized, and focused',
+    async (family) => {
+      const log: PopupContentReading[] = [];
+      mount(PopupContentFamilies, {
+        family,
+        mode: 'onMounted',
+        defaultOpen: true,
+        disabledPortal: true,
+        log: { add: (entry: PopupContentReading) => log.push(entry) },
+      });
+      await waitFor(() => expect(log).toHaveLength(1));
+      expect(log[0]).toEqual({ shown: true, sized: true, focused: true });
+      await waitSingleFrame();
+      expect(byTestId('field')).toHaveFocus();
+    },
+  );
+});
+
+describe.each(['select', 'select-anchored'] as const)(
+  'the mount of the content of %s',
+  (family) => {
     test.each(MODES)(
-      'a focus in a hook of the mount (%s) moves the focus into the popup at an open from the trigger, and it stays with `initialFocus` false',
+      'an open by click or code finds the popup shown, sized, and focusable in %s, and then focuses the selected item',
       async (mode) => {
-        const log: PopupContentReading[] = [];
-        mount(PopupContentFamilies, {
-          family,
-          mode,
-          keepFocus: true,
-          log: { add: (entry: PopupContentReading) => log.push(entry) },
-        });
-        await openFromTrigger(family);
-        await waitFor(() => expect(log).toHaveLength(1));
-        expect(log[0]?.focused).toBe(true);
-        await waitSingleFrame();
-        expect(byTestId('field')).toHaveFocus();
+        for (const button of ['trigger', 'opener'] as const) {
+          const log: PopupContentReading[] = [];
+          const { unmount } = mount(PopupContentFamilies, {
+            family,
+            mode,
+            selectValue: 'one',
+            log: { add: (entry: PopupContentReading) => log.push(entry) },
+          });
+          try {
+            await userEvent.click(byTestId(button)!);
+            await waitFor(() => expect(log).toHaveLength(1));
+            expect(log[0]).toEqual({ shown: true, sized: true, focused: true });
+            await waitFor(() => expect(byTestId('item-one')).toHaveFocus());
+          } finally {
+            unmount();
+          }
+        }
       },
     );
+
+    test('a defaultOpen mount finds the popup shown, sized, and focusable, and then focuses the selected item', async () => {
+      const log: PopupContentReading[] = [];
+      mount(PopupContentFamilies, {
+        family,
+        mode: 'onMounted',
+        defaultOpen: true,
+        selectValue: 'one',
+        log: { add: (entry: PopupContentReading) => log.push(entry) },
+      });
+      await waitFor(() => expect(log).toHaveLength(1));
+      expect(log[0]).toEqual({ shown: true, sized: true, focused: true });
+      await waitFor(() => expect(byTestId('item-one')).toHaveFocus());
+    });
   },
 );
+
+test('a select-anchored with no selected item keeps a child focus from `onMounted` at a click open', async () => {
+  const log: PopupContentReading[] = [];
+  mount(PopupContentFamilies, {
+    family: 'select-anchored',
+    mode: 'onMounted',
+    log: { add: (entry: PopupContentReading) => log.push(entry) },
+  });
+  await userEvent.click(byTestId('opener')!);
+  await waitFor(() => expect(log).toHaveLength(1));
+  expect(log[0]).toEqual({ shown: true, sized: true, focused: true });
+  await waitSingleFrame();
+  expect(byTestId('field')).toHaveFocus();
+});

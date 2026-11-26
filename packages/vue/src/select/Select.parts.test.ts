@@ -173,7 +173,7 @@ describe('groups', () => {
 });
 
 describe('listbox name', () => {
-  const shown = () => byTestId('popup')?.checkVisibility({ visibilityProperty: true });
+  const shown = () => byTestId('popup')?.checkVisibility({ opacityProperty: true });
 
   test('VUE-235: the listbox has the name of the trigger: Select.Label, Field.Label, or the aria-label of the trigger; Select.Popup has it when it is the listbox', async () => {
     const first = mount(SelectParts, { label: {}, list: {}, root: { defaultOpen: true } });

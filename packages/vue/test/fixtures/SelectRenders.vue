@@ -27,6 +27,7 @@ const ITEMS = Array.from({ length: 10 }, (_, index) => `Item ${index}`);
     <Select.Portal>
       <Select.Positioner data-testid="positioner" :align-item-with-trigger="false">
         <Select.Popup data-testid="popup">
+          {{ count('popup') }}
           <Select.Item v-for="item in ITEMS" :key="item" :value="item">{{ item }}</Select.Item>
         </Select.Popup>
       </Select.Positioner>

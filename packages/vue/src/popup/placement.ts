@@ -27,7 +27,7 @@ import {
   type VirtualElement,
 } from '@floating-ui/vue';
 
-import { computed, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
+import { computed, nextTick, shallowRef, watch, type CSSProperties, type Ref } from 'vue';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerWindow } from '../common/owner';
 import type { PopupRoot } from './root';
@@ -350,10 +350,6 @@ export function usePlacement(
   // Vapor sets a template ref before it inserts the element. Floating UI reads the ancestors of the
   // positioner, so the positioner goes to Floating UI after the render.
   const positioner = shallowRef<HTMLElement | null>(null);
-  watch(options.positioner, (element) => (positioner.value = element), {
-    flush: 'post',
-    immediate: true,
-  });
   const floating = useFloating(reference, positioner, {
     placement,
     strategy: () => props.positionMethod,
@@ -411,17 +407,43 @@ export function usePlacement(
     const given = options.place?.();
     return given === undefined ? floating.isPositioned.value : given !== null;
   });
+  // Before the first place, the positioner stays at `position: fixed; left: 0; top: 0` with
+  // `opacity: 0` and `pointer-events: none`, so a `focus()` at the mount of the content lands and
+  // does not scroll the page (test/measurements/popup.test.ts), and a closed kept popup does not
+  // intercept the pointer. `nextTick` waits until the flush finishes (including the popup show and
+  // content mount updates), then switches to `positionMethod` in the same tick that gives the
+  // element to Floating UI: Vue flushes that style before Floating UI reads the offset parent
+  // after `isRTL()`, so a positioned container and a content-sized popup place on the first frame
+  // with no extra render (`Menu.renders.test.ts`).
+  const measuring = shallowRef(false);
+  watch(
+    [() => root.open, options.positioner],
+    ([open, element]) => {
+      if (!element) {
+        measuring.value = false;
+        positioner.value = null;
+        return;
+      }
+      if (!open || positioner.value === element) return;
+      const start = () => {
+        if (!root.open || options.positioner.value !== element) return;
+        measuring.value = true;
+        positioner.value = element;
+      };
+      if (placed.value) start();
+      else void nextTick(start);
+    },
+    { flush: 'post', immediate: true },
+  );
   // Floating UI reads the layout before it gives a place. So at the first place of an open, the
   // browser has a style of the positioner at `0 0` or at its place of the last open, and of the
   // popup on the first side. The place then starts CSS transitions from these styles, such as of
-  // `left` and of an `enter-from` class of the side (test/measurements/popup.test.ts, "the first
-  // place of an open"). An open shows the popup at its place, so the positioner ends the
-  // transitions that start from this place to the update that shows the popup. They include a
-  // transition of `visibility`, which keeps the popup hidden and unfocusable
-  // (test/measurements/popup.test.ts, "a change of an inherited property"). A place that the caller
-  // gives can show the popup some updates later, as the item alignment of Select does. A transition
-  // that started before the first place continues, such as the enter of a popup that loses
-  // `hidden`. A later place of the open, such as at another trigger, keeps its transitions.
+  // `left`, `opacity` and an `enter-from` class of the side (test/measurements/popup.test.ts, "the
+  // first place of an open"). An open shows the popup at its place, so the positioner ends the
+  // transitions that start from this place to the update that shows the popup. A place that the
+  // caller gives can show the popup some updates later, as the item alignment of Select does. A
+  // transition that started before the first place continues, such as the enter of a popup that
+  // loses `hidden`. A later place of the open, such as at another trigger, keeps its transitions.
   let nextPlaceIsFirst = true;
   const firstPlaceAnimations = shallowRef<Set<Animation> | null>(null);
   watch(
@@ -466,8 +488,11 @@ export function usePlacement(
     const given = options.place?.();
     const data = floating.middlewareData.value.insets as Insets | undefined;
     let place: CSSProperties = floating.floatingStyles.value;
-    if (given !== undefined) place = { position: 'fixed' };
-    else if (data?.x) {
+    if (given !== undefined) {
+      place = given === null ? { position: 'fixed', left: '0', top: '0' } : { position: 'fixed' };
+    } else if (!placed.value && !measuring.value) {
+      place = { position: 'fixed', left: '0', top: '0' };
+    } else if (data?.x) {
       place = {
         position: floating.strategy.value,
         [data.x]: `${floating.x.value}px`,
@@ -482,7 +507,8 @@ export function usePlacement(
       '--anchor-height': anchorSize.value?.height,
       '--transform-origin': floating.middlewareData.value.transformOrigin?.value as
         string | undefined,
-      visibility: placed.value ? undefined : 'hidden',
+      opacity: placed.value ? undefined : 0,
+      pointerEvents: placed.value ? undefined : 'none',
       ...given,
     };
   });
@@ -491,7 +517,7 @@ export function usePlacement(
   watch(
     () => {
       const animations = firstPlaceAnimations.value;
-      return animations && style.value.visibility !== 'hidden' ? animations : null;
+      return animations && style.value.opacity !== 0 ? animations : null;
     },
     (animations) => {
       const element = options.positioner.value;

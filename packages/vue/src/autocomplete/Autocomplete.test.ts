@@ -747,12 +747,12 @@ describe('the field', () => {
       root: { defaultOpen: true },
       input: { 'aria-label': 'Tags' },
     });
-    await waitFor(() => expect(popup()?.checkVisibility({ visibilityProperty: true })).toBe(true));
+    await waitFor(() => expect(popup()?.checkVisibility({ opacityProperty: true })).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Tags' })).toBe(byTestId('list'));
     first.unmount();
 
     await mountAutocomplete({ root: { defaultOpen: true }, field: { name: 'tag' } });
-    await waitFor(() => expect(popup()?.checkVisibility({ visibilityProperty: true })).toBe(true));
+    await waitFor(() => expect(popup()?.checkVisibility({ opacityProperty: true })).toBe(true));
     expect(screen.getByRole('listbox', { name: 'Tag' })).toBe(byTestId('list'));
   });
 });

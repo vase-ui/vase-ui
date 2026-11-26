@@ -73,7 +73,7 @@ async function closed() {
 }
 
 async function placed() {
-  await waitFor(() => expect(positioner()?.style.visibility).toBe(''));
+  await waitFor(() => expect(positioner()?.style.opacity).toBe(''));
 }
 
 /**
@@ -961,9 +961,7 @@ describe('the dismissal', () => {
     const laterPopup = named('later')!;
     // The later popup opens under the trigger of its own app, below the earlier app.
     await waitFor(() =>
-      expect(laterPopup.closest<HTMLElement>('[data-testid="positioner"]')!.style.visibility).toBe(
-        '',
-      ),
+      expect(laterPopup.closest<HTMLElement>('[data-testid="positioner"]')!.style.opacity).toBe(''),
     );
     await userEvent.click(laterPopup.querySelector('p') ?? laterPopup, {
       position: { x: 2, y: 2 },
@@ -1222,7 +1220,7 @@ describe('the dismissal', () => {
       });
       await waitFor(() =>
         expect(
-          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
@@ -1253,7 +1251,7 @@ describe('the dismissal', () => {
       mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
       await waitFor(() =>
         expect(
-          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
@@ -1506,7 +1504,7 @@ describe('the dismissal', () => {
           },
           container,
         );
-        await waitFor(() => expect(inShadow('positioner')?.style.visibility).toBe(''));
+        await waitFor(() => expect(inShadow('positioner')?.style.opacity).toBe(''));
         await userEvent.click(target);
         await waitFor(() => expect(inShadow('popup')).toBe(null));
         expect(triggers).toEqual(['outside-press t']);
@@ -1573,7 +1571,7 @@ describe('the dismissal', () => {
       });
       await opened();
       await placed();
-      await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+      await waitFor(() => expect(byTestId('nested-positioner').style.opacity).toBe(''));
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const start = centerOf(byTestId('nested-button'));
       await touchDrag(start, { x: start.x, y: start.y - 40 });
@@ -1591,7 +1589,7 @@ describe('the dismissal', () => {
     });
     await opened();
     await placed();
-    await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('nested-positioner').style.opacity).toBe(''));
     // The parent popup can take its place again after the child opens, so the press waits for the
     // frame after that.
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));

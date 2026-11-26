@@ -4,7 +4,7 @@ import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument } from '../common/owner';
 import { activeElement } from '../common/shadowDom';
 import { CANDIDATES, isTabbable, tabbables } from '../common/tabbable';
-import { layerOf, type Layer } from './layer';
+import { isInPopup, layerOf, type Layer } from './layer';
 import type { InteractionType, PopupRoot } from './root';
 
 /**
@@ -183,6 +183,8 @@ export function usePopupFocus(
 
   function enter() {
     pending = null;
+    const active = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
+    openedFrom = active && root.popup?.contains(active) ? before : active;
     if (chain) {
       chain.closing = false;
       chain.returnsFocus = false;
@@ -222,7 +224,6 @@ export function usePopupFocus(
       if (open) {
         took = false;
         opens.value += 1;
-        openedFrom = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
         // The open reads the targets before the update that writes `inert`.
         enter();
         return;
@@ -246,6 +247,7 @@ export function usePopupFocus(
       if (root.open) return;
       const given = pending;
       pending = null;
+      openedFrom = null;
       scheduleClose(given, chain);
     },
     { flush: 'post' },
@@ -255,6 +257,7 @@ export function usePopupFocus(
   onScopeDispose(() => {
     const given = pending;
     pending = null;
+    openedFrom = null;
     const closing = chain;
     if (given || closing?.closing) scheduleClose(given, closing);
     else if (closing) release(closing);
@@ -263,11 +266,15 @@ export function usePopupFocus(
   function takeFocus(popup: HTMLElement) {
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
-    const origin = popup.contains(active) ? openedFrom : active;
+    const inside = !!active && (popup.contains(active) || isInPopup(layer, active));
+    const origin = inside ? openedFrom : active;
+    openedFrom = null;
     before = origin === doc.body ? null : origin;
     befores.set(root, before);
     took = true;
     const target = resolve(options.initialFocus(), root.interaction);
+    // A child that mounted with the popup can already hold the focus; keep it (Base UI).
+    if (inside) return;
     if (target !== true) {
       if (target) focusAs(target, root.interaction);
       // WebKit keeps the text caret in a focused element that becomes inert

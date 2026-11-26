@@ -38,7 +38,7 @@ async function mountSelect(setup: Props = {}) {
 
 async function opened() {
   await waitFor(() => expect(shown(popup())).toBe(true));
-  await waitFor(() => expect(positioner().style.visibility).toBe(''));
+  await waitFor(() => expect(positioner().style.opacity).toBe(''));
 }
 
 async function closed() {
@@ -65,7 +65,7 @@ function expectTextOverValue(edge: 'left' | 'right' = 'left', value = 'banana') 
 
 async function popoverOpened() {
   await waitFor(() =>
-    expect(byTestId('popover-popup')?.checkVisibility({ visibilityProperty: true })).toBe(true),
+    expect(byTestId('popover-popup')?.checkVisibility({ opacityProperty: true })).toBe(true),
   );
 }
 
@@ -259,7 +259,7 @@ describe('the place of the popup', () => {
         resolve({
           side: positioner().getAttribute('data-side'),
           shown: ['apple', 'apricot', 'banana', 'cherry'].filter((value) =>
-            item(value).checkVisibility({ visibilityProperty: true }),
+            item(value).checkVisibility({ opacityProperty: true }),
           ),
           focused: document.activeElement === item('banana'),
         }),
@@ -611,6 +611,22 @@ describe.skipIf(server.browser !== 'chromium')('a touch open', () => {
 });
 
 describe.runIf(inject('app') === 'vdom')('the renders', () => {
+  test('a direct open renders the content of the popup once', async () => {
+    const renders: Record<string, number> = {};
+    const count = (part: string) => {
+      renders[part] = (renders[part] ?? 0) + 1;
+      return '';
+    };
+    mount(SelectRenders, { count });
+    await nextTick();
+    await userEvent.click(trigger());
+    await opened();
+    for (let frame = 0; frame < 3; frame += 1) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    expect(renders.popup).toBe(1);
+  });
+
   test('the keys that move the highlight render no trigger', async () => {
     const renders: Record<string, number> = {};
     const count = (part: string) => {

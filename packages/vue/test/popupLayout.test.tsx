@@ -58,7 +58,7 @@ it.each([true, false])(
 
     open.value = true;
     // The positioner is hidden until its first place.
-    await waitFor(() => expect(positioner().style.visibility).toBe(''));
+    await waitFor(() => expect(positioner().style.opacity).toBe(''));
 
     expectPlacement();
     expect(positioner().dataset.side).toBe(aligned ? 'none' : 'bottom');
@@ -364,7 +364,7 @@ describe('VUE-194: the transform origin of a popup with a margin', () => {
       onTestFinished(() => anchor.remove());
       await render(() => element(anchor));
       const positioner = () => screen.getByTestId('positioner');
-      await waitFor(() => expect(positioner().style.visibility).toBe(''));
+      await waitFor(() => expect(positioner().style.opacity).toBe(''));
       await waitFor(() =>
         expect(positioner().style.getPropertyValue('--transform-origin')).toMatch(/px/),
       );

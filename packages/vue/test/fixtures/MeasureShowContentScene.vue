@@ -8,14 +8,12 @@ import MeasureShowContentChild from './MeasureShowContentChild.vue';
 // the content is in the element.
 defineProps({
   later: Boolean,
-  scene: { type: Object as PropType<{ open: boolean }>, required: true },
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
 });
 </script>
 
 <template>
   <Transition
-    v-if="scene.open"
     @before-enter="log.add('before-enter')"
     @enter="
       (element: Element) =>

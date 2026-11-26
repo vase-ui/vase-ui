@@ -153,7 +153,7 @@ export function mostMatches(selector: string) {
 
 /**
  * Many apps apply this rule for `prefers-reduced-motion: reduce`. The default `transition-property`
- * is `all`, so a change of a property starts a transition, `visibility` too.
+ * is `all`, so a change of a property starts a transition, `opacity` too.
  */
 export function addReducedMotionRule() {
   const style = document.head.appendChild(document.createElement('style'));

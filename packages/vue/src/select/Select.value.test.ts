@@ -30,7 +30,7 @@ async function mountSelect(setup: Props = {}) {
 
 async function opened() {
   await waitFor(() => expect(shown(popup())).toBe(true));
-  await waitFor(() => expect(byTestId('positioner').style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId('positioner').style.opacity).toBe(''));
 }
 
 async function closed() {

@@ -267,7 +267,7 @@ describe('the list', () => {
   );
 
   test('the listbox has the name of its control: Combobox.Label, Field.Label, or the aria-label or aria-labelledby of the input, and for the grid role', async () => {
-    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+    const shown = () => popup()?.checkVisibility({ opacityProperty: true });
 
     const labelInput = reactive<Props>({ 'aria-label': 'Search fruit' });
     const byLabel = await mountCombobox({
@@ -337,7 +337,7 @@ describe('the list', () => {
   });
 
   test('an aria-label or an aria-labelledby on the list wins, and the part then writes neither attribute', async () => {
-    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+    const shown = () => popup()?.checkVisibility({ opacityProperty: true });
 
     const withLabel = await mountCombobox({
       label: true,
@@ -381,7 +381,7 @@ describe('the list', () => {
   });
 
   test('a trigger beside the input with an aria-label of its own does not name the list; with the input in the popup, the list has the name of the trigger', async () => {
-    const shown = () => popup()?.checkVisibility({ visibilityProperty: true });
+    const shown = () => popup()?.checkVisibility({ opacityProperty: true });
 
     const beside = await mountCombobox({
       root: { defaultOpen: true },

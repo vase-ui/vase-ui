@@ -507,7 +507,7 @@ describe('the parts', () => {
     const trigger = document.querySelector<HTMLElement>('[data-testid="trigger"]')!;
     await userEvent.click(trigger);
     const positioner = () => document.querySelector<HTMLElement>('[data-testid="positioner"]')!;
-    await waitFor(() => expect(positioner().style.visibility).toBe(''));
+    await waitFor(() => expect(positioner().style.opacity).toBe(''));
     await userEvent.keyboard('{Escape}');
     trigger.style.marginLeft = '120px';
     const width = document.documentElement.scrollWidth;

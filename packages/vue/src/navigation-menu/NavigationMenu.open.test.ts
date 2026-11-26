@@ -61,7 +61,7 @@ describe('the first place', () => {
     const root = await renderOnServer('NavigationMenuParts', props);
     hydrate(NavigationMenuParts, props, root);
     await waitFor(() => expect(byTestId('positioner')).not.toBe(null));
-    await waitFor(() => expect(get('positioner').style.visibility).toBe(''));
+    await waitFor(() => expect(get('positioner').style.opacity).toBe(''));
     await waitFor(() => expect(get('positioner')).not.toHaveAttribute('data-instant'));
   });
 });

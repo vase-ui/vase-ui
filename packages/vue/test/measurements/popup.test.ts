@@ -730,20 +730,61 @@ describe('the content of a part that `v-show` shows', () => {
       ],
     },
   ])(
-    'with the content in the update that shows the element: $later, a virtual DOM app runs the `mounted` hook of a child before the `updated` hook of `v-show`, and a Vapor app shows the element in its render effect',
+    'with the content one update later ($later), a virtual DOM app runs the `mounted` hook of a child before the `updated` hook of `v-show`, and a Vapor app shows the element in its render effect',
     async ({ later, virtualDom, vapor }) => {
-      const scene = reactive({ open: false });
       const log: string[] = [];
       mount(MeasureShowContentScene, {
         later,
-        scene,
         log: { add: (entry: string) => log.push(entry) },
       });
-      scene.open = true;
       await waitFor(() => expect(log).toContain('after-enter'));
       expect(log).toEqual(inject('app').startsWith('vapor') ? vapor : virtualDom);
     },
   );
+});
+
+describe('an unplaced positioner before its first place', () => {
+  test('`visibility: hidden` blocks `focus()`, `opacity: 0` with `pointer-events: none` lets `focus()` land, and `position: fixed; left: 0; top: 0` keeps a scrolled page in place and hides a positioned ancestor from `offsetParent`', async () => {
+    html(`<div id="absolute" style="position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none"><input id="absolute-input" aria-label="Absolute"></div>
+      <div style="height: 2000px"></div>
+      <div id="relative" style="position: relative">
+        <div id="hidden" style="position: fixed; left: 0; top: 0; visibility: hidden"><input id="hidden-input" aria-label="Hidden"></div>
+        <div id="fixed" style="position: fixed; left: 0; top: 0; opacity: 0; pointer-events: none"><input id="fixed-input" aria-label="Fixed"></div>
+        <div id="in-relative" style="position: absolute; left: 0; top: 0"></div>
+      </div>
+      <div style="height: 1000px"></div>`);
+    onTestFinished(() => scrollTo(0, 0));
+    scrollTo(0, 1500);
+    const before = scrollY;
+    expect(before).toBeGreaterThan(1000);
+    element('hidden-input').focus();
+    const hiddenFocus = activeId();
+    element('fixed-input').focus();
+    const fixedFocus = activeId();
+    await nextFrame();
+    const afterFixed = scrollY;
+    element('absolute-input').focus();
+    const absoluteFocus = activeId();
+    await nextFrame();
+    const afterAbsolute = scrollY;
+    expect({
+      hiddenFocus,
+      fixedFocus,
+      fixedKeptScroll: afterFixed === before,
+      absoluteFocus,
+      absoluteScrolled: afterAbsolute < before,
+      fixedOffsetParent: element('fixed').offsetParent,
+      relativeOffsetParent: element('in-relative').offsetParent?.id,
+    }).toEqual({
+      hiddenFocus: 'body',
+      fixedFocus: 'fixed-input',
+      fixedKeptScroll: true,
+      absoluteFocus: 'absolute-input',
+      absoluteScrolled: true,
+      fixedOffsetParent: null,
+      relativeOffsetParent: 'relative',
+    });
+  });
 });
 
 describe('a directive object in a Vapor template', () => {

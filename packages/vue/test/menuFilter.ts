@@ -36,9 +36,9 @@ export async function mountTree(props: Record<string, unknown> = {}) {
   return { ...result, trigger: trigger! };
 }
 
-/** Waits for the popup of `key`, else of the root, in its place: its elements can take the focus. */
+/** Waits for the popup of `key`, else of the root, in its place. */
 export async function opened(key?: string) {
-  await waitFor(() => expect(popup(key)?.checkVisibility({ visibilityProperty: true })).toBe(true));
+  await waitFor(() => expect(popup(key)?.checkVisibility({ opacityProperty: true })).toBe(true));
   return popup(key)!;
 }
 

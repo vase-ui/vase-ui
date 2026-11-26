@@ -16,7 +16,7 @@ const at = (x: number, y: number) => ({
 });
 
 async function placed(testId: string) {
-  await waitFor(() => expect(byTestId(testId)?.style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId(testId)?.style.opacity).toBe(''));
   return byTestId(testId)!;
 }
 

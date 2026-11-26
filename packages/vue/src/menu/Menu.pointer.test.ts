@@ -271,7 +271,7 @@ describe('the focus ring', () => {
     for (const key of ['checkbox', 'b']) {
       await tabToTrigger(trigger);
       await userEvent.pointer([{ coords: centerOf(trigger) }, '[MouseLeft>]']);
-      await waitFor(() => expect(byTestId('positioner')?.style.visibility).toBe(''));
+      await waitFor(() => expect(byTestId('positioner')?.style.opacity).toBe(''));
       await wait(220);
       await userEvent.pointer([{ coords: centerOf(item(key)) }, '[/MouseLeft]']);
       await waitFor(() => expect(active()).toBe(item(key)));

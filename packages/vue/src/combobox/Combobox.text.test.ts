@@ -350,7 +350,7 @@ describe('the text of a multiple combobox after a pick', () => {
       keys: '[MouseLeft>]',
     });
     await opened();
-    await waitFor(() => expect(byTestId('positioner')?.style.visibility ?? '').toBe(''));
+    await waitFor(() => expect(byTestId('positioner')?.style.opacity ?? '').toBe(''));
     const target = clientCenter(item('apple'));
     await userEvent.pointer({ coords: { x: target.clientX, y: target.clientY } });
     await userEvent.pointer({ keys: '[/MouseLeft]' });
