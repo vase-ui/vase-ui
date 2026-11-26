@@ -3,7 +3,7 @@ import { computed, mergeProps, onBeforeUnmount, useAttrs, useId, watch } from 'v
 import { useElement, type ElementSlotProps } from '../common/element';
 import { givenId } from '../common/id';
 import { usePopupPart } from '../popup/portal';
-import { sizeVariables } from '../popup/viewport';
+import { sizeVariables, usePopupEdge } from '../popup/viewport';
 import { injectPopoverRoot, injectPositioner } from './root';
 import type { PopoverPopupProps, PopoverPopupState } from './types';
 
@@ -43,6 +43,12 @@ watch(
   () => [props.initialFocus, props.finalFocus] as const,
   ([initialFocus, finalFocus]) => (context.popupFocus.value = { initialFocus, finalFocus }),
   { immediate: true },
+);
+
+usePopupEdge(
+  () => element.value,
+  () => placement.physicalSide.value,
+  () => context.viewport.value?.positioner,
 );
 
 function elementProps() {

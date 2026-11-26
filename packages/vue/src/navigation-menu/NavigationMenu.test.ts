@@ -562,11 +562,16 @@ describe('the hover', () => {
 
 describe('the names of the content', () => {
   test('VUE-73: an open trigger with no content in the document has no aria-controls', async () => {
-    await mountMenu({ noViewport: true });
+    await mountMenu({
+      noViewport: true,
+      positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+    });
     get('trigger-one').click();
     await opened();
     expect(get('trigger-one')).toHaveAttribute('aria-expanded', 'true');
     expect(get('trigger-one')).not.toHaveAttribute('aria-controls');
+    expect(get('popup').style.position).toBe('');
+    expect(get('popup').style.bottom).toBe('');
   });
 
   test('VUE-86: an open trigger follows the id of its content in aria-controls', async () => {
@@ -1143,7 +1148,7 @@ describe('the placement', () => {
       });
       await mountMenu({
         root: { defaultValue: 'one' },
-        list: { style: 'display: flex; margin: 300px 0 0 40px; padding: 0; list-style: none' },
+        list: { style: 'display: flex; margin: 300px 0 0 150px; padding: 0; list-style: none' },
         positioner: { side: 'top', sideOffset: 4, collisionAvoidance: { side: 'none' } },
       });
       await shows('one');

@@ -1573,6 +1573,66 @@ describe('the viewport', () => {
     // At the end of the animation the popup has no size of its own.
     expect(element.style.getPropertyValue('--popup-height')).toBe('');
   });
+
+  test('on side="top", late content growth expands upward on frame 0 with no trigger overlap and no resize loop error', async () => {
+    const anchor = document.body.appendChild(document.createElement('button'));
+    anchor.style.cssText = 'position: fixed; top: 260px; left: 320px; width: 60px; height: 24px';
+    onTestFinished(() => anchor.remove());
+    mount(MenuViewportParts, {
+      positioner: {
+        anchor,
+        side: 'top',
+        sideOffset: 8,
+        collisionAvoidance: { side: 'none' },
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
+      popup: { style: { width: 'var(--popup-width, auto)', height: 'var(--popup-height, auto)' } },
+    });
+    await nextTick();
+    await userEvent.click(document.getElementById('one')!);
+    const element = await opened();
+    await placed();
+    const box = byTestId('positioner')!;
+    await waitFor(() =>
+      expect(box.style.getPropertyValue('--positioner-height')).toBe(`${element.offsetHeight}px`),
+    );
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const anchorRect = anchor.getBoundingClientRect();
+    const before = element.getBoundingClientRect();
+    const content = element.querySelector<HTMLElement>('.content')!;
+
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    let f0Pop!: DOMRect;
+    let f0Pos!: DOMRect;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        content.style.paddingBottom = '40px';
+        requestAnimationFrame(() => {
+          f0Pop = element.getBoundingClientRect();
+          f0Pos = box.getBoundingClientRect();
+          requestAnimationFrame(() => resolve());
+        });
+      });
+    });
+
+    expect(Math.round(f0Pos.height)).toBe(Math.round(before.height));
+    expect(Math.round(f0Pop.height)).toBe(Math.round(before.height + 40));
+    expect(Math.round(f0Pop.bottom)).toBe(Math.round(anchorRect.top - 8));
+    expect(Math.round(f0Pop.top)).toBe(Math.round(before.top - 40));
+    expect(element.style.position).toBe('absolute');
+    expect(element.style.bottom).toBe('0px');
+    await waitFor(() =>
+      expect(box.style.getPropertyValue('--positioner-height')).toBe(
+        `${Math.round(before.height + 40)}px`,
+      ),
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(errors).toEqual([]);
+  });
 });
 
 describe('more behaviors of the parts', () => {

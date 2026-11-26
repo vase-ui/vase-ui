@@ -2249,16 +2249,96 @@ describe('the portal, the positioner and the popup', () => {
     const tooltip = reactive<{ name: string } & Props>({
       name: 't',
       root: { defaultOpen: true },
+      triggers: [{ key: 't', attrs: { style: 'position: fixed; top: 260px; left: 320px' } }],
+      positioner: {
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
       viewport: false,
     });
     await mountTooltips({ tooltips: [tooltip] });
-    await opened();
+    const element = await opened();
     await waitFor(() => expect(positioner()!.style.transform).toMatch(/^translate\(/));
+    expect(element.style.position).toBe('');
+    expect(element.style.bottom).toBe('');
     tooltip.viewport = true;
     await waitFor(() => expect(positioner()!.style.transform).toBe(''));
     expect(positioner()!.style.left).toMatch(/px$/);
+    await waitFor(() => expect(element.style.position).toBe('absolute'));
+    expect(element.style.bottom).toBe('0px');
     tooltip.viewport = false;
     await waitFor(() => expect(positioner()!.style.transform).toMatch(/^translate\(/));
+    expect(element.style.position).toBe('');
+    expect(element.style.bottom).toBe('');
+  });
+
+  test('on side="top", late content growth expands upward on frame 0 with no trigger overlap and no resize loop error', async () => {
+    await mountTooltips({
+      tooltips: [
+        {
+          name: 't',
+          root: { defaultOpen: true },
+          viewport: true,
+          triggers: [
+            {
+              key: 't',
+              attrs: {
+                style: 'position: fixed; top: 260px; left: 320px; width: 60px; height: 24px',
+              },
+            },
+          ],
+          positioner: {
+            sideOffset: 8,
+            collisionAvoidance: { side: 'none' },
+            style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+          },
+          popup: {
+            style: { width: 'var(--popup-width, auto)', height: 'var(--popup-height, auto)' },
+          },
+        },
+      ],
+    });
+    const element = await opened();
+    const box = positioner()!;
+    await waitFor(() => expect(box.style.visibility).toBe(''));
+    await waitFor(() =>
+      expect(box.style.getPropertyValue('--positioner-height')).toBe(`${element.offsetHeight}px`),
+    );
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const trigRect = trigger().getBoundingClientRect();
+    const before = element.getBoundingClientRect();
+    const view = byTestId('viewport-t')!;
+
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    let f0Pop!: DOMRect;
+    let f0Pos!: DOMRect;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        view.style.paddingBottom = '40px';
+        requestAnimationFrame(() => {
+          f0Pop = element.getBoundingClientRect();
+          f0Pos = box.getBoundingClientRect();
+          requestAnimationFrame(() => resolve());
+        });
+      });
+    });
+
+    expect(Math.round(f0Pos.height)).toBe(Math.round(before.height));
+    expect(Math.round(f0Pop.height)).toBe(Math.round(before.height + 40));
+    expect(Math.round(f0Pop.bottom)).toBe(Math.round(trigRect.top - 8));
+    expect(Math.round(f0Pop.top)).toBe(Math.round(before.top - 40));
+    expect(element.style.position).toBe('absolute');
+    expect(element.style.bottom).toBe('0px');
+    await waitFor(() =>
+      expect(box.style.getPropertyValue('--positioner-height')).toBe(
+        `${Math.round(before.height + 40)}px`,
+      ),
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(errors).toEqual([]);
   });
 
   test('a popup with a viewport on the left side has its place from the right edge', async () => {

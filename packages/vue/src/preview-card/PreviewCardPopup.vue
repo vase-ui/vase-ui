@@ -2,7 +2,7 @@
 import { computed, mergeProps, onBeforeUnmount, useAttrs, watch } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
 import { usePopupPart } from '../popup/portal';
-import { sizeVariables } from '../popup/viewport';
+import { sizeVariables, usePopupEdge } from '../popup/viewport';
 import { injectPositioner, injectPreviewCardRoot } from './root';
 import type { PreviewCardPopupProps, PreviewCardPopupState } from './types';
 
@@ -34,6 +34,12 @@ watch(element, (popup) => root.setPopup(popup), { flush: 'sync' });
 onBeforeUnmount(() => {
   if (root.popup === element.value) root.setPopup(null);
 });
+
+usePopupEdge(
+  () => element.value,
+  () => placement.physicalSide.value,
+  () => context.viewport.value?.positioner,
+);
 
 function elementProps() {
   const closed = !root.open;

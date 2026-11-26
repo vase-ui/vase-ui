@@ -394,6 +394,50 @@ describe('overflow', () => {
     await nextTick();
     expect(area).toHaveAttribute('data-has-overflow-y');
   });
+
+  test('the root measures when the viewport mounts, so the scrollbar and its thumb show before the observer reports a size', async () => {
+    // A real observer reports in the first frame (test/measurements/scroll-area.test.ts, "the
+    // first report of a ResizeObserver"). The test replaces it, so only the measure at the mount
+    // can show the parts.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const { root } = mount(ScrollAreaParts);
+    const thumb = () => root.querySelector<HTMLElement>('.thumb-y');
+    await waitFor(() => expect(thumb()?.offsetHeight).toBe(40));
+    expect(getComputedStyle(thumb()!).visibility).toBe('visible');
+    expect(root.querySelector('.root')).toHaveAttribute('data-has-overflow-y');
+  });
+
+  test('content that grows to overflow gives no resize loop error when `data-has-overflow-y` changes the padding of a border-box viewport', async () => {
+    const css = document.head.appendChild(document.createElement('style'));
+    css.textContent = '.viewport[data-has-overflow-y] { padding-right: 16px; }';
+    onTestFinished(() => css.remove());
+    const scene = reactive({ width: 100, height: 100 });
+    const { area } = await mountArea({
+      scene,
+      viewport: { style: 'box-sizing: border-box; width: 100%; height: 100%' },
+    });
+    expect(area).not.toHaveAttribute('data-has-overflow-y');
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    scene.height = 500;
+    await waitFor(() => expect(area).toHaveAttribute('data-has-overflow-y'));
+    await settle();
+    expect(errors).toEqual([]);
+  });
 });
 
 describe('animations in the viewport', () => {
@@ -934,9 +978,8 @@ describe('the tab stop of the viewport', () => {
 });
 
 describe('content without ScrollArea.Content', () => {
-  async function nextFrames() {
-    await new Promise(requestAnimationFrame);
-    await new Promise(requestAnimationFrame);
+  async function nextFrames(count = 2) {
+    for (let frame = 0; frame < count; frame += 1) await new Promise(requestAnimationFrame);
   }
 
   async function mountDirect(scene: Record<string, unknown>) {
@@ -945,7 +988,10 @@ describe('content without ScrollArea.Content', () => {
     const area = mounted.root.querySelector<HTMLElement>('.root')!;
     const before = mounted.root.querySelector<HTMLElement>('.before')!;
     await waitFor(() => expect(distance(viewport, 'y-end')).not.toBe(''));
-    await settle();
+    // The first frame gives each observed element its first report, and the root measures in the
+    // next frame. A wait of three frames ends after that measure
+    // (test/measurements/scroll-area.test.ts, "the first report of a ResizeObserver").
+    await nextFrames(3);
     return { ...mounted, viewport, area, before };
   }
 

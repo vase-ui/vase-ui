@@ -412,6 +412,38 @@ describe('the panel space', () => {
     expect(widthOf(at('a'))).toBeCloseTo(120, 0);
   });
 
+  test('narrowing a root whose fixed pixel panel wraps a sibling panel taller gives no resize loop error when an ancestor is observed', async () => {
+    const { root, spec, at } = await mountLayout({
+      frame: 'width: 400px',
+      parts: [
+        { kind: 'panel', key: 'a', attrs: { defaultSize: '150px', minSize: '150px' } },
+        { kind: 'handle', key: 'h1', attrs: { style: 'flex: none; width: 0px' } },
+        {
+          kind: 'panel',
+          key: 'b',
+          controls: Array.from({ length: 12 }, (_, index) => `btn-${index}`),
+        },
+      ],
+    });
+    const host = root.firstElementChild as HTMLElement;
+    const beforeHeight = host.offsetHeight;
+    const observer = new ResizeObserver(() => {});
+    observer.observe(host);
+    onTestFinished(() => observer.disconnect());
+    await frames(3);
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    spec.frame = 'width: 200px';
+    await nextTick();
+    await frames(3);
+    expect(errors).toEqual([]);
+    expect(widthOf(at('a'))).toBeCloseTo(150, 0);
+    expect(host.offsetHeight).toBeGreaterThan(beforeHeight);
+  });
+
   test('a hidden root shows its sizes and takes the pixels of a fixed panel when it shows, and keeps them when it hides again', async () => {
     const { spec, at } = await mountLayout({
       frame: 'display: none; width: 400px; height: 100px',

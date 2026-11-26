@@ -1246,6 +1246,76 @@ describe('the arrow', () => {
 });
 
 describe('the viewport', () => {
+  function nextResize(element: Element) {
+    return new Promise<void>((resolve) => {
+      const observer = new ResizeObserver(() => {
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(element);
+    });
+  }
+
+  async function openSizedCard() {
+    const root = reactive({ open: true, defaultTriggerId: 'link' });
+    await mountCard({
+      root,
+      triggers: [{ key: 't', attrs: { id: 'link' } }],
+      portal: { keepMounted: true },
+      positioner: { style: { height: 'var(--positioner-height)' } },
+      // A kept popup can still have a box during its CSS exit.
+      popup: { style: { display: 'block' } },
+      viewport: {},
+    });
+    await placed();
+    const card = byTestId('popup');
+    const box = byTestId('positioner');
+    await nextResize(card);
+    await waitSingleFrame();
+    const height = card.offsetHeight;
+    expect(box.style.getPropertyValue('--positioner-height')).toBe(`${height}px`);
+    return { root, card, box, height, content: byTestId('text') };
+  }
+
+  test('a popup that grows after it opens gives no resize loop error and its positioner fits it in the next frame', async () => {
+    const { card, box, height, content } = await openSizedCard();
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    content.style.paddingBottom = '1px';
+    await nextResize(card);
+    await waitSingleFrame();
+    expect(errors).toEqual([]);
+    expect(card.offsetHeight).toBe(height + 1);
+    expect(box.offsetHeight).toBe(card.offsetHeight);
+  });
+
+  test('a close before the next frame keeps the last open size of the positioner during the exit', async () => {
+    const { root, card, box, height, content } = await openSizedCard();
+    content.style.paddingBottom = '1px';
+    await new Promise<void>((resolve) => {
+      const observer = new ResizeObserver(([entry]) => {
+        if (entry.target === box) {
+          // The delivery of the parent lets the browser deliver the deeper popup again this frame.
+          observer.unobserve(box);
+          content.style.paddingBottom = '2px';
+        } else {
+          observer.disconnect();
+          root.open = false;
+          resolve();
+        }
+      });
+      observer.observe(box);
+      observer.observe(card);
+    });
+    await waitSingleFrame();
+    expect(card).toHaveAttribute('hidden');
+    expect(card.offsetHeight).toBe(height + 2);
+    expect(box.style.getPropertyValue('--positioner-height')).toBe(`${height}px`);
+  });
+
   test('gives the id of the active link to its slot, and the card writes no `trigger-change`', async () => {
     const { trigger } = await mountCard({
       viewport: {},
@@ -1282,6 +1352,112 @@ describe('the viewport', () => {
     expect(positioner()!.style.getPropertyValue('--positioner-width')).toBe(
       `${element.offsetWidth}px`,
     );
+  });
+
+  test.each([
+    { label: 'side="top"', side: 'top' as const, dir: 'ltr' as const, axis: 'height' as const },
+    { label: 'side="left"', side: 'left' as const, dir: 'ltr' as const, axis: 'width' as const },
+    {
+      label: 'side="inline-end" in RTL',
+      side: 'inline-end' as const,
+      dir: 'rtl' as const,
+      axis: 'width' as const,
+    },
+  ])(
+    'on $label, late content growth expands away from the trigger on frame 0 with no overlap and no resize loop error',
+    async ({ side, dir, axis }) => {
+      const { trigger } = await mountCard({
+        root: { defaultOpen: true, defaultTriggerId: 'link' },
+        triggers: [
+          {
+            key: 't',
+            attrs: {
+              id: 'link',
+              style: 'position: fixed; top: 260px; left: 320px; width: 60px; height: 24px',
+            },
+          },
+        ],
+        positioner: {
+          side,
+          dir,
+          sideOffset: 8,
+          collisionAvoidance: { side: 'none' },
+          style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+        },
+        popup: {
+          style: { width: 'var(--popup-width, auto)', height: 'var(--popup-height, auto)' },
+        },
+        viewport: {},
+      });
+      await opened();
+      await placed();
+      const card = byTestId('popup');
+      const box = byTestId('positioner');
+      const text = byTestId('text');
+      text.style.width = '100px';
+      text.style.height = '40px';
+      await waitFor(() =>
+        expect(box.style.getPropertyValue(`--positioner-${axis}`)).toBe(
+          `${axis === 'height' ? card.offsetHeight : card.offsetWidth}px`,
+        ),
+      );
+      await waitSingleFrame();
+      await waitSingleFrame();
+      const trigRect = trigger().getBoundingClientRect();
+      const before = card.getBoundingClientRect();
+
+      const errors: string[] = [];
+      const onError = (event: ErrorEvent) => errors.push(event.message);
+      window.addEventListener('error', onError);
+      onTestFinished(() => window.removeEventListener('error', onError));
+
+      let f0Pop!: DOMRect;
+      let f0Pos!: DOMRect;
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          text.style[axis] = axis === 'height' ? '80px' : '140px';
+          requestAnimationFrame(() => {
+            f0Pop = card.getBoundingClientRect();
+            f0Pos = box.getBoundingClientRect();
+            requestAnimationFrame(() => resolve());
+          });
+        });
+      });
+
+      expect(Math.round(f0Pos[axis])).toBe(Math.round(before[axis]));
+      expect(Math.round(f0Pop[axis])).toBe(Math.round(before[axis] + 40));
+      if (axis === 'height') {
+        expect(Math.round(f0Pop.bottom)).toBe(Math.round(trigRect.top - 8));
+        expect(Math.round(f0Pop.top)).toBe(Math.round(before.top - 40));
+      } else {
+        expect(Math.round(f0Pop.right)).toBe(Math.round(trigRect.left - 8));
+        expect(Math.round(f0Pop.left)).toBe(Math.round(before.left - 40));
+      }
+      expect(card.style.position).toBe('absolute');
+      expect(card.style[axis === 'height' ? 'bottom' : 'right']).toBe('0px');
+      await waitFor(() =>
+        expect(box.style.getPropertyValue(`--positioner-${axis}`)).toBe(
+          `${Math.round(before[axis] + 40)}px`,
+        ),
+      );
+      await waitSingleFrame();
+      expect(errors).toEqual([]);
+    },
+  );
+
+  test('with no viewport on side="top", the popup gets no anchoring style', async () => {
+    await mountCard({
+      root: { defaultOpen: true, defaultTriggerId: 'link' },
+      triggers: [
+        { key: 't', attrs: { id: 'link', style: 'position: fixed; top: 260px; left: 320px' } },
+      ],
+      positioner: { side: 'top', collisionAvoidance: { side: 'none' } },
+    });
+    const card = await opened();
+    await placed();
+    await waitSingleFrame();
+    expect(card.style.position).toBe('');
+    expect(card.style.bottom).toBe('');
   });
 });
 
