@@ -56,7 +56,7 @@ async function closed() {
 }
 
 async function placed() {
-  await waitFor(() => expect(positioner()?.style.visibility).toBe(''));
+  await waitFor(() => expect(positioner()?.style.opacity).toBe(''));
 }
 
 /**
@@ -673,7 +673,7 @@ describe('the dismissal', () => {
     });
     await opened();
     await placed();
-    await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('nested-positioner').style.opacity).toBe(''));
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await userEvent.pointer([
       { coords: centerOf(byTestId('nested-text')) },

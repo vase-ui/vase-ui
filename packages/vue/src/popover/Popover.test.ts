@@ -73,7 +73,7 @@ async function closed() {
 }
 
 async function placed() {
-  await waitFor(() => expect(positioner()?.style.visibility).toBe(''));
+  await waitFor(() => expect(positioner()?.style.opacity).toBe(''));
 }
 
 /**
@@ -961,9 +961,7 @@ describe('the dismissal', () => {
     const laterPopup = named('later')!;
     // The later popup opens under the trigger of its own app, below the earlier app.
     await waitFor(() =>
-      expect(laterPopup.closest<HTMLElement>('[data-testid="positioner"]')!.style.visibility).toBe(
-        '',
-      ),
+      expect(laterPopup.closest<HTMLElement>('[data-testid="positioner"]')!.style.opacity).toBe(''),
     );
     await userEvent.click(laterPopup.querySelector('p') ?? laterPopup, {
       position: { x: 2, y: 2 },
@@ -1222,7 +1220,7 @@ describe('the dismissal', () => {
       });
       await waitFor(() =>
         expect(
-          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
@@ -1253,7 +1251,7 @@ describe('the dismissal', () => {
       mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
       await waitFor(() =>
         expect(
-          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.visibility,
+          container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
       inShadow()!.querySelector('button')!.focus();
@@ -1506,7 +1504,7 @@ describe('the dismissal', () => {
           },
           container,
         );
-        await waitFor(() => expect(inShadow('positioner')?.style.visibility).toBe(''));
+        await waitFor(() => expect(inShadow('positioner')?.style.opacity).toBe(''));
         await userEvent.click(target);
         await waitFor(() => expect(inShadow('popup')).toBe(null));
         expect(triggers).toEqual(['outside-press t']);
@@ -1573,7 +1571,7 @@ describe('the dismissal', () => {
       });
       await opened();
       await placed();
-      await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+      await waitFor(() => expect(byTestId('nested-positioner').style.opacity).toBe(''));
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const start = centerOf(byTestId('nested-button'));
       await touchDrag(start, { x: start.x, y: start.y - 40 });
@@ -1591,7 +1589,7 @@ describe('the dismissal', () => {
     });
     await opened();
     await placed();
-    await waitFor(() => expect(byTestId('nested-positioner').style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('nested-positioner').style.opacity).toBe(''));
     // The parent popup can take its place again after the child opens, so the press waits for the
     // frame after that.
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
@@ -4050,11 +4048,20 @@ describe('the viewport', () => {
     await placed();
     await waitFor(() => expect(element.getAnimations()).toEqual([]));
     const old = `${element.offsetHeight}px`;
-    // The popup shows one update after its mount, and the positioner gets its size at the next
-    // frame.
+    // The popup measures itself one update after its content mounts. Its observer then measures it
+    // again in the frame after its first delivery, and that measure writes the style of the
+    // positioner. The record starts after it.
     await waitFor(() =>
       expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(old),
     );
+    await new Promise<void>((resolve) => {
+      const resizes = new ResizeObserver(() => {
+        resizes.disconnect();
+        resolve();
+      });
+      resizes.observe(element);
+    });
+    await waitSingleFrame();
     const popupSizes: string[] = [];
     const positionerSizes: string[] = [];
     const record = (list: string[], value: string) => {

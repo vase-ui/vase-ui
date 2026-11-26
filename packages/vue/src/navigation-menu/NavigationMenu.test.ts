@@ -65,7 +65,7 @@ async function closed() {
 }
 
 async function placed() {
-  await waitFor(() => expect(get('positioner').style.visibility).toBe(''));
+  await waitFor(() => expect(get('positioner').style.opacity).toBe(''));
 }
 
 function centerOf(element: Element) {
@@ -1239,7 +1239,7 @@ describe('the placement', () => {
       },
     });
     await waitFor(() => expect(byTestId('content-sub-a')).not.toBe(null));
-    await waitFor(() => expect(get('nested-positioner').style.visibility).toBe(''));
+    await waitFor(() => expect(get('nested-positioner').style.opacity).toBe(''));
     expect(get('nested-positioner')).toHaveAttribute('data-side', 'bottom');
   });
 

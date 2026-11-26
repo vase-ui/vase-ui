@@ -188,17 +188,11 @@ export function useList(options: ListOptions): List {
     },
   );
 
-  const reachable = (element: Element, hidden?: boolean) =>
-    (hidden || shown(element)) && !element.matches(':disabled');
-
   // An item with `visibility: hidden` takes no focus, and `checkVisibility()` counts it as shown
-  // with no option. A popup has `visibility: hidden` until it is placed, and its items count then.
-  // A shown item needs one check.
-  function shown(element: Element) {
-    if (element.checkVisibility({ visibilityProperty: true })) return true;
-    const container = options.container();
-    return !container?.checkVisibility({ visibilityProperty: true }) && element.checkVisibility();
-  }
+  // with no option.
+  const reachable = (element: Element, hidden?: boolean) =>
+    (hidden || element.checkVisibility({ visibilityProperty: true })) &&
+    !element.matches(':disabled');
 
   // The items in the document, in the order of the document.
   function connected() {

@@ -292,7 +292,7 @@ describe('the parts', () => {
         get('trigger-two').click();
       }
       await waitFor(() => expect(get('positioner')).not.toHaveAttribute('hidden'));
-      await waitFor(() => expect(get('positioner').style.visibility).toBe(''));
+      await waitFor(() => expect(get('positioner').style.opacity).toBe(''));
       for (let index = 0; index < 3; index += 1) {
         await frame();
         expect(get('positioner').getAnimations()).toEqual([]);

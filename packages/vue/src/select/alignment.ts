@@ -323,7 +323,7 @@ export function useItemAlignment(
         marginTop: `${margin.top}px`,
         marginBottom: `${margin.bottom}px`,
       };
-      place.value = { ...style, visibility: 'hidden' };
+      place.value = { ...style, opacity: 0 };
       await nextTick();
       if (current !== run || !root.open) return;
       maxHeight = popupStyles.maxHeight.endsWith('px')
@@ -392,10 +392,10 @@ export function useItemAlignment(
     /** The place for `usePlacement`: none while the popup is anchored. */
     place: computed(() => (aligned.value ? place.value : undefined)),
     /** The popup that covers the trigger has its height and its scroll. */
-    ready: computed(() => !aligned.value || (!!place.value && place.value.visibility !== 'hidden')),
+    ready: computed(() => !aligned.value || (!!place.value && place.value.opacity !== 0)),
     /** The list scrolled. */
     onScroll(scroller: HTMLElement) {
-      if (aligned.value && pinned && !full && place.value?.visibility !== 'hidden') {
+      if (aligned.value && pinned && !full && place.value?.opacity !== 0) {
         const grown = grownPlace({
           height,
           room,

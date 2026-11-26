@@ -39,7 +39,7 @@ const shown = (element: HTMLElement | null) => !!element?.checkVisibility();
 
 async function opened() {
   await waitFor(() => expect(shown(popup())).toBe(true));
-  await waitFor(() => expect(byTestId('positioner').style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId('positioner').style.opacity).toBe(''));
   return popup();
 }
 

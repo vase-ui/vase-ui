@@ -106,11 +106,11 @@ describe('server render and hydration', () => {
     const popup = listboxOf(root)!;
     expect(popup).not.toBe(null);
     const positioner = popup.parentElement!;
-    expect(positioner.style.visibility).toBe('hidden');
+    expect(positioner.style.opacity).toBe('0');
     hydrate(SelectParts, props, root);
     await nextTick();
     expect(listboxOf(root)).toBe(popup);
-    await waitFor(() => expect(positioner.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner.style.opacity).toBe(''));
   });
 
   test.each([
@@ -132,7 +132,7 @@ describe('server render and hydration', () => {
       expect(target).toHaveAttribute('aria-labelledby', label.id);
       expect(target).not.toHaveAttribute('aria-label');
       hydrate(SelectInField, props, root);
-      await waitFor(() => expect(target.checkVisibility({ visibilityProperty: true })).toBe(true));
+      await waitFor(() => expect(target.checkVisibility({ opacityProperty: true })).toBe(true));
       expect(root.querySelector(`[data-testid="${testId}"]`)).toBe(target);
       expect(target).toHaveAttribute('aria-labelledby', label.id);
       expect(target).not.toHaveAttribute('aria-label');

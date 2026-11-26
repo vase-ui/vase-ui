@@ -135,7 +135,7 @@ describe('server render and hydration', () => {
     expect(list).toHaveAttribute('aria-labelledby', label.id);
     expect(list).not.toHaveAttribute('aria-label');
     hydrate(ComboboxInField, props, root);
-    await waitFor(() => expect(list.checkVisibility({ visibilityProperty: true })).toBe(true));
+    await waitFor(() => expect(list.checkVisibility({ opacityProperty: true })).toBe(true));
     expect(byTestId(root, 'list')).toBe(list);
     expect(list).toHaveAttribute('aria-labelledby', label.id);
     expect(list).not.toHaveAttribute('aria-label');

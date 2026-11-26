@@ -45,9 +45,9 @@ onBeforeUnmount(() => {
   if (popup.popup === element.value) popup.setPopup(null);
 });
 
-// `v-show` removes `display: none` in the post flush after `entered` becomes `true`, after a post
-// watcher of `setup`. In a `disabled` portal, the content teleports into the viewport in the update
-// after the mount.
+// `v-show` removes `display: none` in the post flush in which `entered` becomes `true`, and the
+// content renders in the update after it. The tick waits for that update. In a `disabled` portal,
+// the content teleports into the viewport in the update after the mount.
 const ready = shallowRef(false);
 watch(
   entered,

@@ -124,7 +124,8 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       if (!current) return;
       // A popup with `display: none`, such as one update after its mount, has no size. A
       // positioner with that size would keep the popup at that size. The observer measures the
-      // popup when it shows.
+      // popup when it shows. A popup shows one update before its content mounts, so the first
+      // measure waits for that update.
       const measure = () => {
         if (!current.checkVisibility()) return;
         const next = sizeOf(current);
@@ -132,7 +133,7 @@ export function usePopupSizes(element: () => HTMLElement | null) {
         if (previous?.width === next.width && previous.height === next.height) return;
         positioner.value = next;
       };
-      measure();
+      void nextTick(measure);
       let frame = 0;
       // The positioner can use the size of the popup. A change during observer delivery can resize
       // that ancestor and cause a ResizeObserver loop error.

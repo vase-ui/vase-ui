@@ -15,7 +15,7 @@ const link = (id: string) => document.getElementById(id)!;
 /** Waits until the box of the placed positioner passes the check. */
 async function placedAt(check: (box: DOMRect) => void) {
   await waitFor(() => {
-    expect(positioner()?.style.visibility).toBe('');
+    expect(positioner()?.style.opacity).toBe('');
     check(positioner()!.getBoundingClientRect());
   });
 }

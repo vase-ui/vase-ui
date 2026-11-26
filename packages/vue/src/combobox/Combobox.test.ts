@@ -629,7 +629,7 @@ describe('highlight', () => {
     await mountCombobox({ list: { style: 'max-height: 90px; overflow: auto' } });
     await userEvent.click(input());
     await opened();
-    await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('positioner')!.style.opacity).toBe(''));
     const rect = list().getBoundingClientRect();
     await userEvent.keyboard('{Escape}');
     await closed();
@@ -652,7 +652,7 @@ describe('highlight', () => {
     await mountCombobox();
     await userEvent.click(input());
     await opened();
-    await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('positioner')!.style.opacity).toBe(''));
     const rect = item('Banana').getBoundingClientRect();
     const rest = { x: Math.round(rect.left + 20), y: Math.round(rect.top + rect.height / 2) };
     await userEvent.keyboard('{Escape}');
@@ -1194,7 +1194,7 @@ describe('the parts of the popup', () => {
     await mountCombobox({ root: { defaultOpen: true } });
     await opened();
     const positioner = byTestId('positioner')!;
-    await waitFor(() => expect(positioner.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner.style.opacity).toBe(''));
     const group = byTestId('group')!;
     group.style.width = '400px';
     await waitFor(() => {
@@ -1456,7 +1456,7 @@ describe('more rules', () => {
       };
       const narrow = await mountCombobox({ root: { modal: true } });
       await tap();
-      await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+      await waitFor(() => expect(byTestId('positioner')!.style.opacity).toBe(''));
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(isScrollLocked()).toBe(false);
       narrow.unmount();
@@ -1508,7 +1508,7 @@ describe('more rules', () => {
       keys: '[MouseLeft>]',
     });
     await opened();
-    await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('positioner')!.style.opacity).toBe(''));
     const target = item('Banana').getBoundingClientRect();
     await userEvent.pointer({ coords: { x: target.left + 5, y: target.top + 5 } });
     await userEvent.pointer({ keys: '[/MouseLeft]' });

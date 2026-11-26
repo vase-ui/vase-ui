@@ -703,7 +703,7 @@ describe('the hover', () => {
     });
     await userEvent.hover(trigger());
     const element = await opened();
-    await waitFor(() => expect(positioner()!.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner()!.style.opacity).toBe(''));
     const from = centerOf(trigger());
     const to = centerOf(element);
     // Moves in the triangle to the popup, 10 ms apart, keep a hoverable popup open.
@@ -735,7 +735,7 @@ describe('the hover', () => {
     });
     await userEvent.hover(trigger());
     const element = await opened();
-    await waitFor(() => expect(positioner()!.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner()!.style.opacity).toBe(''));
     const center = centerOf(trigger());
     const box = trigger().getBoundingClientRect();
     const moveTo = (point: { x: number; y: number }) =>
@@ -2299,7 +2299,7 @@ describe('the portal, the positioner and the popup', () => {
     });
     const element = await opened();
     const box = positioner()!;
-    await waitFor(() => expect(box.style.visibility).toBe(''));
+    await waitFor(() => expect(box.style.opacity).toBe(''));
     await waitFor(() =>
       expect(box.style.getPropertyValue('--positioner-height')).toBe(`${element.offsetHeight}px`),
     );
@@ -2378,7 +2378,7 @@ describe('the portal, the positioner and the popup', () => {
     });
     await userEvent.hover(trigger('a'));
     await opened();
-    await waitFor(() => expect(positioner()!.style.visibility).toBe(''));
+    await waitFor(() => expect(positioner()!.style.opacity).toBe(''));
     const side = positioner()!.getAttribute('data-side');
     expect(byTestId('arrow-t')).toHaveAttribute('data-side', side);
     expect(byTestId('viewport-t')).toHaveTextContent('a');

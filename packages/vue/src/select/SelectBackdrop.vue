@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, mergeProps, onMounted, onUnmounted, shallowRef, useAttrs } from 'vue';
+import { computed, mergeProps, onUnmounted, useAttrs } from 'vue';
 import { useElement, type ElementSlotProps } from '../common/element';
+import { usePopupShow } from '../popup/portal';
 import { injectPortal, injectSelectRoot } from './root';
 import type { SelectBackdropProps, SelectBackdropState } from './types';
 
@@ -19,9 +20,8 @@ const { element, setElement } = useElement<HTMLElement>();
 const removeLeaving = root.addLeaving(() => element.value);
 onUnmounted(removeLeaving);
 
-// As `Select.Popup`: the element shows one update after an open mount.
-const mounted = shallowRef(false);
-onMounted(() => (mounted.value = true));
+// As `Select.Popup`: the element shows one update after an open mount, and its content follows.
+const { mounted, entered } = usePopupShow(!root.open);
 const shown = computed(() => root.open && mounted.value);
 const state = computed<SelectBackdropState>(() => ({ open: root.open }));
 
@@ -50,9 +50,9 @@ defineExpose({ element });
     :state="state"
   />
   <component :is="as" v-else-if="as" v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </component>
   <div v-else v-show="shown" v-bind="elementProps()" :ref="setElement">
-    <slot :state="state" />
+    <slot v-if="entered" :state="state" />
   </div>
 </template>

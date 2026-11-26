@@ -30,7 +30,7 @@ function rootEvents(log: string[], props: Props = {}) {
 }
 
 async function placed() {
-  await waitFor(() => expect(byTestId('positioner')?.style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId('positioner')?.style.opacity).toBe(''));
 }
 
 async function rightPress(x: number, y: number) {
@@ -562,7 +562,7 @@ describe('more of the release and the native menu', () => {
     await placed();
     await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))], 2);
     await waitFor(() => expect(byTestId('sub-popup')).not.toBe(null));
-    await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+    await waitFor(() => expect(byTestId('sub-positioner')?.style.opacity).toBe(''));
     await movePointerThrough(centerOf(item('sub')), [centerOf(item('s1'))], 2);
     await rightRelease(centerOf(item('s1')));
     await waitFor(() => expect(popup()).toBe(null));
@@ -598,7 +598,7 @@ describe('more of the release and the native menu', () => {
         await movePointerThrough({ x: 100, y: 80 }, [point], 2);
       } else {
         await movePointerThrough({ x: 100, y: 80 }, [centerOf(item('sub'))], 2);
-        await waitFor(() => expect(byTestId('sub-positioner')?.style.visibility).toBe(''));
+        await waitFor(() => expect(byTestId('sub-positioner')?.style.opacity).toBe(''));
         const box = byTestId('sub-popup')!.getBoundingClientRect();
         point = { x: box.left + 5, y: box.bottom - 5 };
         await movePointerThrough(

@@ -178,20 +178,37 @@ export function usePopupPortal(
 }
 
 /**
+ * The two updates of a part that hides its own element with `v-show`: `mounted` becomes `true`
+ * after the mount to show the element, and `entered` becomes `true` after that update so the
+ * content mounts in a shown element (test/measurements/popup.test.ts, "the content of a part that
+ * `v-show` shows"). With `immediate`, or before the portal mounts (as on the server and in a
+ * `disabled` portal at the first render), `entered` starts `true`.
+ */
+export function usePopupShow(immediate = false) {
+  const mounted = shallowRef(!inject(portalMountedKey, null)?.value);
+  onMounted(() => (mounted.value = true));
+  const entered = shallowRef(mounted.value || immediate);
+  watch(mounted, (value) => (entered.value = value), { flush: 'post' });
+  return { mounted, entered };
+}
+
+/**
  * Whether a popup or a backdrop in a portal shows its element, which the part hides with `v-show`.
  * A `<Transition>` around the part then makes an open during the leave go back from where it is
  * (test/measurements/popup.test.ts). The element shows one update after its mount, so the
  * `<Transition>` runs its enter with no `appear`. An element that renders before its portal is
  * mounted, as on the server and in a disabled portal at the first render, shows at its mount. The
- * root keeps the element until its leave ends. The part renders its content while `entered`. So
- * the update that shows the element is the first render of the content, and an item of a `v-for`
- * in it does not render two times (`Menu.renders.test.ts`).
+ * root keeps the element until its leave ends. The part renders its content in the update after the
+ * one that shows the element: Vue runs the `mounted` hook of a child before the `updated` hook of
+ * `v-show`, so a child that mounts in the update that shows the element mounts in an element with
+ * `display: none` (test/measurements/popup.test.ts, "the content of a part that `v-show` shows").
+ * An item of a `v-for` in the content does not render two times (`Menu.renders.test.ts`).
  */
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
-  const entered = shallowRef(!inject(portalMountedKey, null)?.value);
-  onMounted(() => (entered.value = true));
-  onUnmounted(root.addLeaving(() => element.value));
-  return { entered, shown: computed(() => root.keepMounted || (root.open && entered.value)) };
+  const { mounted, entered } = usePopupShow();
+  const removeLeaving = root.addLeaving(() => element.value);
+  onUnmounted(removeLeaving);
+  return { entered, shown: computed(() => root.keepMounted || (root.open && mounted.value)) };
 }
 
 /**

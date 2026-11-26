@@ -32,7 +32,7 @@ async function mountStatic(props: Props = {}) {
 
 async function opened() {
   await waitFor(() => expect(popup()).not.toBe(null));
-  await waitFor(() => expect(byTestId('positioner')!.style.visibility).toBe(''));
+  await waitFor(() => expect(byTestId('positioner')!.style.opacity).toBe(''));
 }
 
 async function closed() {

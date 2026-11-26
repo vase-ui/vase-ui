@@ -111,7 +111,7 @@ describe('the renders', () => {
     }
   });
 
-  test('an open by ArrowDown over 300 items checks the visibility of the first item and its list only', async () => {
+  test('an open by ArrowDown over 300 items checks the visibility of the first item only', async () => {
     mount(ComboboxRenders, { count: () => '' });
     await nextTick();
     document.querySelector<HTMLInputElement>('[data-testid="input"]')!.focus();
@@ -123,8 +123,7 @@ describe('the renders', () => {
       );
       await nextTick();
       const first = document.querySelector('[role="option"]');
-      const list = document.querySelector('[role="listbox"]');
-      expect(new Set(read.mock.contexts)).toEqual(new Set([first, list]));
+      expect(new Set(read.mock.contexts)).toEqual(new Set([first]));
     } finally {
       read.mockRestore();
     }

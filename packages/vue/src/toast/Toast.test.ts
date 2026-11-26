@@ -2286,7 +2286,7 @@ describe('anchored toasts', () => {
     });
     const element = await waitFor(() => {
       const found = document.querySelector<HTMLElement>('[data-testid="positioner"]');
-      expect(found?.style.visibility).toBe('');
+      expect(found?.style.opacity).toBe('');
       return found!;
     });
     expect(element).toHaveAttribute('data-side', 'top');
