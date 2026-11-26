@@ -9,5 +9,3 @@ import PageLinks from './.vitepress/components/PageLinks.vue';
 ## Start
 
 <PageLinks />
-
-<!--@include: ../README.md#donation-->

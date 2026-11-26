@@ -31,8 +31,25 @@ for (const { target, file, region } of includes) {
   });
 }
 
-for (const region of ['home', 'donation']) {
-  test(`docs/index.md includes the region ${region} of README.md`, () => {
-    assert.ok(includes.some((include) => include.target === `../README.md#${region}`));
-  });
-}
+test('docs/index.md includes the region home of README.md', () => {
+  assert.ok(includes.some((include) => include.target === '../README.md#home'));
+});
+
+test('the region donation of README.md is inside the region home, so the home page shows it', () => {
+  const lines = readFileSync(join(DOCS_ROOT, '..', 'README.md'), 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim());
+  const [homeStart, donationStart, donationEnd, homeEnd] = [
+    '<!-- #region home -->',
+    '<!-- #region donation -->',
+    '<!-- #endregion donation -->',
+    '<!-- #endregion home -->',
+  ].map((marker) => lines.indexOf(marker));
+  assert.ok(
+    homeStart >= 0 &&
+      homeStart < donationStart &&
+      donationStart < donationEnd &&
+      donationEnd < homeEnd,
+    'README.md must have the region donation between the start and the end of the region home.',
+  );
+});
