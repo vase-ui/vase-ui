@@ -57,6 +57,8 @@ Without `keepMounted`, a `Portal` part renders its content only while the popup 
 
 The popup and the backdrop of Dialog, Alert Dialog, Popover, Menu, Context Menu, Menubar, Tooltip, Preview Card, Combobox, Autocomplete, Navigation Menu, Drawer, Date Picker, Date Range Picker and Time Picker show their element one update after they mount. So their `<Transition>` runs the enter with no `appear`. Do not give it `appear`: in a virtual DOM app, Vue then calls the JavaScript hooks of the enter twice. In a `disabled` portal, a popup that is open at the first render shows at once, as in the server HTML, with no enter.
 
+The content of one of these popups mounts in the update after the one that shows the element. So `onMounted` of a component in the content runs in a shown element and reads its layout, and a JavaScript `enter` hook runs before the content mounts. A popup with a positioner stays hidden until its first place, and a hidden element takes no focus. In such a popup, a `focus()` in `onMounted` moves no focus: use `initialFocus`.
+
 When one of these popups opens again during its leave, it is the same element. Vue calls `leave-cancelled`, and a transition goes back from where it is. The backdrop does the same. Do not read the layout of the element, such as `offsetWidth`, in `leave-cancelled` or `before-enter`. During these hooks, the element has `display: none`, and a read of the layout ends its transition. The enter then starts from the `enter-from` class.
 
 While an element leaves, the element that takes its place can already be in the DOM. To remove the element that leaves from the flow, give the `leave-active` class `position: absolute`.

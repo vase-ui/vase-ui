@@ -8,6 +8,7 @@ import { nextTick, reactive } from 'vue';
 import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
 import MeasureFirstPlace from '../fixtures/MeasureFirstPlace.vue';
 import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
+import MeasureShowContentScene from '../fixtures/MeasureShowContentScene.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
 import MeasureTransitionReopen from '../fixtures/MeasureTransitionReopen.vue';
 import MeasureTransitionShow from '../fixtures/MeasureTransitionShow.vue';
@@ -691,6 +692,55 @@ describe('a show during the leave of an element with `v-show` in a <Transition>'
         'after-enter': calls('after-enter'),
       });
       if (css) expect(frames.find((frame) => frame.visible)?.opacity).toBeLessThan(0.2);
+    },
+  );
+});
+
+describe('the content of a part that `v-show` shows', () => {
+  test.each([
+    {
+      later: false,
+      virtualDom: [
+        'mounted, popup hidden, not focused',
+        'before-enter',
+        'enter, content in the element',
+        'after-enter',
+      ],
+      vapor: [
+        'before-enter',
+        'enter, content in the element',
+        'mounted, popup shown, focused',
+        'after-enter',
+      ],
+    },
+    {
+      later: true,
+      virtualDom: [
+        'before-enter',
+        'enter, content not in the element',
+        'mounted, popup shown, focused',
+        'after-enter',
+      ],
+      vapor: [
+        'before-enter',
+        'enter, content not in the element',
+        'mounted, popup shown, focused',
+        'after-enter',
+      ],
+    },
+  ])(
+    'with the content in the update that shows the element: $later, a virtual DOM app runs the `mounted` hook of a child before the `updated` hook of `v-show`, and a Vapor app shows the element in its render effect',
+    async ({ later, virtualDom, vapor }) => {
+      const scene = reactive({ open: false });
+      const log: string[] = [];
+      mount(MeasureShowContentScene, {
+        later,
+        scene,
+        log: { add: (entry: string) => log.push(entry) },
+      });
+      scene.open = true;
+      await waitFor(() => expect(log).toContain('after-enter'));
+      expect(log).toEqual(inject('app').startsWith('vapor') ? vapor : virtualDom);
     },
   );
 });

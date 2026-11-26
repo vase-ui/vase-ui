@@ -1,8 +1,9 @@
 import { describe, expect, inject, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
-import PopupFocusAtMountFamilies from '../../test/fixtures/PopupFocusAtMountFamilies.vue';
+import PopupContentFamilies from '../../test/fixtures/PopupContentFamilies.vue';
 import PopupPartsOfFamilies from '../../test/fixtures/PopupPartsOfFamilies.vue';
+import type { PopupContentReading } from '../../test/fixtures/popupContent';
 import { finishAnimations } from '../../test/animation';
 import { mount } from '../../test/render';
 import { waitSingleFrame } from '../../test/wait';
@@ -10,16 +11,24 @@ import { waitFor } from '../../test/waitFor';
 
 const byTestId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
 
+// A positioner hides its popup with `visibility: hidden` until the first place of the popup, and a
+// hidden element takes no focus. So the content of a positioned popup takes no focus at its mount.
 const FAMILIES = [
-  { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'drawer', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'tooltip', parts: ['popup'], popupTag: 'div' },
-  { family: 'preview-card', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'combobox', parts: ['backdrop', 'popup'], popupTag: 'div' },
-  { family: 'navigation-menu', parts: ['backdrop', 'popup'], popupTag: 'nav' },
+  { family: 'dialog', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: false },
+  { family: 'drawer', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: false },
+  { family: 'popover', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
+  { family: 'menu', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
+  { family: 'tooltip', parts: ['popup'], popupTag: 'div', positioned: true },
+  { family: 'preview-card', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
+  { family: 'combobox', parts: ['backdrop', 'popup'], popupTag: 'div', positioned: true },
+  { family: 'navigation-menu', parts: ['backdrop', 'popup'], popupTag: 'nav', positioned: true },
 ] as const;
+
+// A Vapor template takes only a function directive, which runs when the template creates its
+// element. So only a virtual DOM fixture has a directive with a `mounted` hook.
+const MODES = inject('app').startsWith('vapor')
+  ? (['onMounted'] as const)
+  : (['onMounted', 'directive'] as const);
 
 function mountFamily(
   family: string,
@@ -90,19 +99,18 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts, popupTag }) =>
     },
   );
 
-  test.each(['onMounted', 'directive'] as const)(
-    'a focus in %s of the content moves the focus into the popup at an open from the trigger',
+  test.each(MODES)(
+    'a hook of the mount of the content (%s) finds the popup shown and the content with a size, at an open from the trigger',
     async (mode) => {
-      const log: { focused: boolean; shown: boolean }[] = [];
-      mount(PopupFocusAtMountFamilies, { family, mode, log: { add: (entry) => log.push(entry) } });
-      const trigger = byTestId('trigger')!;
-      await (family === 'tooltip' || family === 'preview-card'
-        ? userEvent.hover(trigger)
-        : userEvent.click(trigger));
+      const log: PopupContentReading[] = [];
+      mount(PopupContentFamilies, {
+        family,
+        mode,
+        log: { add: (entry: PopupContentReading) => log.push(entry) },
+      });
+      await openFromTrigger(family);
       await waitFor(() => expect(log).toHaveLength(1));
-      expect(log).toEqual([{ focused: true, shown: true }]);
-      await waitSingleFrame();
-      expect(byTestId('field')).toHaveFocus();
+      expect(log[0]).toMatchObject({ shown: true, sized: true });
     },
   );
 
@@ -126,3 +134,33 @@ describe.each(FAMILIES)('the parts of $family', ({ family, parts, popupTag }) =>
     }
   });
 });
+
+async function openFromTrigger(family: string) {
+  const trigger = byTestId('trigger')!;
+  await (family === 'tooltip' || family === 'preview-card'
+    ? userEvent.hover(trigger)
+    : userEvent.click(trigger));
+}
+
+describe.each(FAMILIES.filter(({ positioned }) => !positioned))(
+  'the focus of the content of $family',
+  ({ family }) => {
+    test.each(MODES)(
+      'a focus in a hook of the mount (%s) moves the focus into the popup at an open from the trigger, and it stays with `initialFocus` false',
+      async (mode) => {
+        const log: PopupContentReading[] = [];
+        mount(PopupContentFamilies, {
+          family,
+          mode,
+          keepFocus: true,
+          log: { add: (entry: PopupContentReading) => log.push(entry) },
+        });
+        await openFromTrigger(family);
+        await waitFor(() => expect(log).toHaveLength(1));
+        expect(log[0]?.focused).toBe(true);
+        await waitSingleFrame();
+        expect(byTestId('field')).toHaveFocus();
+      },
+    );
+  },
+);

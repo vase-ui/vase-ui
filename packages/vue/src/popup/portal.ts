@@ -183,15 +183,20 @@ export function usePopupPortal(
  * (test/measurements/popup.test.ts). The element shows one update after its mount, so the
  * `<Transition>` runs its enter with no `appear`. An element that renders before its portal is
  * mounted, as on the server and in a disabled portal at the first render, shows at its mount. The
- * root keeps the element until its leave ends. The part renders its content while `entered`. So
- * the update that shows the element is the first render of the content, and an item of a `v-for`
- * in it does not render two times (`Menu.renders.test.ts`).
+ * root keeps the element until its leave ends. The part renders its content in the update after the
+ * one that shows the element: Vue runs the `mounted` hook of a child before the `updated` hook of
+ * `v-show`, so a child that mounts in the update that shows the element mounts in an element with
+ * `display: none` (test/measurements/popup.test.ts, "the content of a part that `v-show` shows").
+ * The content renders once, and an item of a `v-for` in it does not render two times
+ * (`Menu.renders.test.ts`).
  */
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
-  const entered = shallowRef(!inject(portalMountedKey, null)?.value);
-  onMounted(() => (entered.value = true));
+  const mounted = shallowRef(!inject(portalMountedKey, null)?.value);
+  onMounted(() => (mounted.value = true));
+  const entered = shallowRef(mounted.value);
+  watch(mounted, (value) => (entered.value = value), { flush: 'post' });
   onUnmounted(root.addLeaving(() => element.value));
-  return { entered, shown: computed(() => root.keepMounted || (root.open && entered.value)) };
+  return { entered, shown: computed(() => root.keepMounted || (root.open && mounted.value)) };
 }
 
 /**

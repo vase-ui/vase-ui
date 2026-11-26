@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PropType } from 'vue';
+import { computed, type PropType } from 'vue';
 import { Combobox } from '../../src/combobox';
 import { Dialog } from '../../src/dialog';
 import { Drawer } from '../../src/drawer';
@@ -8,11 +8,14 @@ import { NavigationMenu } from '../../src/navigation-menu';
 import { Popover } from '../../src/popover';
 import { PreviewCard } from '../../src/preview-card';
 import { Tooltip } from '../../src/tooltip';
-import PopupFocusAtMount from './PopupFocusAtMount.vue';
+import PopupContentDirective from './PopupContentDirective.vue';
+import PopupContentOnMounted from './PopupContentOnMounted.vue';
+import type { PopupContentMode, PopupContentReading } from './popupContent';
 
-// One popup of a family, closed, with its trigger. Its content is an input that takes the focus at
-// its mount. A tooltip and a preview card open at the hover of their trigger with no delay.
-defineProps({
+// One popup of a family, closed, with its trigger. Its content is an input that takes the focus in
+// a hook of its mount. A tooltip and a preview card open at the hover of their trigger with no
+// delay. With `keepFocus`, a dialog and a drawer move no focus of their own at the open.
+const props = defineProps({
   family: {
     type: String as PropType<
       | 'dialog'
@@ -26,20 +29,21 @@ defineProps({
     >,
     required: true,
   },
-  mode: { type: String as PropType<'onMounted' | 'directive'>, required: true },
-  log: {
-    type: Object as PropType<{ add(entry: { focused: boolean; shown: boolean }): void }>,
-    required: true,
-  },
+  mode: { type: String as PropType<PopupContentMode>, required: true },
+  keepFocus: Boolean,
+  log: { type: Object as PropType<{ add(entry: PopupContentReading): void }>, required: true },
 });
+const content = computed(() =>
+  props.mode === 'onMounted' ? PopupContentOnMounted : PopupContentDirective,
+);
 </script>
 
 <template>
   <Dialog.Root v-if="family === 'dialog'">
     <Dialog.Trigger data-testid="trigger">Open</Dialog.Trigger>
     <Dialog.Portal>
-      <Dialog.Popup data-testid="popup">
-        <PopupFocusAtMount :mode :log />
+      <Dialog.Popup data-testid="popup" :initial-focus="keepFocus ? false : undefined">
+        <component :is="content" :log />
       </Dialog.Popup>
     </Dialog.Portal>
   </Dialog.Root>
@@ -47,8 +51,8 @@ defineProps({
     <Drawer.Trigger data-testid="trigger">Open</Drawer.Trigger>
     <Drawer.Portal>
       <Drawer.Viewport>
-        <Drawer.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+        <Drawer.Popup data-testid="popup" :initial-focus="keepFocus ? false : undefined">
+          <component :is="content" :log />
         </Drawer.Popup>
       </Drawer.Viewport>
     </Drawer.Portal>
@@ -58,7 +62,7 @@ defineProps({
     <Popover.Portal>
       <Popover.Positioner>
         <Popover.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
         </Popover.Popup>
       </Popover.Positioner>
     </Popover.Portal>
@@ -68,7 +72,7 @@ defineProps({
     <Menu.Portal>
       <Menu.Positioner>
         <Menu.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
         </Menu.Popup>
       </Menu.Positioner>
     </Menu.Portal>
@@ -78,7 +82,7 @@ defineProps({
     <Tooltip.Portal>
       <Tooltip.Positioner>
         <Tooltip.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
         </Tooltip.Popup>
       </Tooltip.Positioner>
     </Tooltip.Portal>
@@ -88,7 +92,7 @@ defineProps({
     <PreviewCard.Portal>
       <PreviewCard.Positioner>
         <PreviewCard.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
         </PreviewCard.Popup>
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
@@ -99,7 +103,7 @@ defineProps({
     <Combobox.Portal>
       <Combobox.Positioner>
         <Combobox.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
         </Combobox.Popup>
       </Combobox.Positioner>
     </Combobox.Portal>
@@ -114,7 +118,7 @@ defineProps({
     <NavigationMenu.Portal>
       <NavigationMenu.Positioner>
         <NavigationMenu.Popup data-testid="popup">
-          <PopupFocusAtMount :mode :log />
+          <component :is="content" :log />
           <NavigationMenu.Viewport />
         </NavigationMenu.Popup>
       </NavigationMenu.Positioner>
