@@ -245,9 +245,8 @@ function sizeOf(element: HTMLElement): Size {
   const width = parent?.style.getPropertyValue('--positioner-width') ?? '';
   const height = parent?.style.getPropertyValue('--positioner-height') ?? '';
   const absolute = position === 'absolute';
-  // A popup with `position: absolute` shrinks to fit the old or unsized positioner. Read its size
-  // in flow against a `max-content` positioner, and keep its block context so child margins stay
-  // inside.
+  // A popup with `position: absolute` shrinks to fit the old or unsized positioner, so its size
+  // is read in flow. `flow-root` keeps child margins inside the popup.
   if (absolute) {
     if (getComputedStyle(element).display === 'block') element.style.display = 'flow-root';
     element.style.position = 'static';
@@ -256,8 +255,8 @@ function sizeOf(element: HTMLElement): Size {
     parent.style.setProperty('--positioner-width', 'max-content');
     parent.style.setProperty('--positioner-height', 'max-content');
   }
-  // `offsetWidth` truncates fractional text widths and can wrap text in a `position: absolute`
-  // popup. Use the whole-pixel ceiling of the border-box width.
+  // `offsetWidth` truncates fractional text widths and can wrap text in a
+  // `position: absolute` popup.
   const css = getComputedStyle(element);
   let rawWidth = Number.parseFloat(css.width) || 0;
   if (css.boxSizing !== 'border-box') {
