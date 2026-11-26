@@ -3,9 +3,7 @@ import type { PropType } from 'vue';
 import MeasureShowContent from './MeasureShowContent.vue';
 import MeasureShowContentChild from './MeasureShowContentChild.vue';
 
-// A `<Transition>` that mounts with its part, as a portal mounts them, and a child in the part.
-// Each hook of the `<Transition>` writes its name in the log. The `enter` hook also writes whether
-// the content is in the element.
+// A `<Transition>` that mounts with its part, as a portal mounts them.
 defineProps({
   later: Boolean,
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },

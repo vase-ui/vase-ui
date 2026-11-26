@@ -5,12 +5,6 @@ import { Menu } from '../../src/menu';
 import PopupContentOnMounted from './PopupContentOnMounted.vue';
 import type { PopupContentReading } from './popupContent';
 
-// Modes:
-// - `v-model`: a button outside opens a dialog through `v-model:open`, with a trigger present.
-// - `default-open`: a button mounts a dialog with `default-open` while that button holds focus.
-// - `initial-focus`: a dialog with an `initialFocus` function that returns a button before the
-//   child that focuses itself at mount.
-// - `menu-arrow`: a menu whose content focuses a field at mount, opened with `ArrowDown`.
 defineProps({
   mode: {
     type: String as PropType<'v-model' | 'default-open' | 'initial-focus' | 'menu-arrow'>,

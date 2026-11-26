@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { onMounted, useTemplateRef, type PropType } from 'vue';
 
-// A child that gives its input the focus in `onMounted`, and writes whether its popup shows and
-// whether the input has the focus after the call.
 const props = defineProps({
   log: { type: Object as PropType<{ add(entry: string): void }>, required: true },
 });

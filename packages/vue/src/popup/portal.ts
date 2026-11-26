@@ -202,8 +202,7 @@ export function usePopupShow(immediate = false) {
  * one that shows the element: Vue runs the `mounted` hook of a child before the `updated` hook of
  * `v-show`, so a child that mounts in the update that shows the element mounts in an element with
  * `display: none` (test/measurements/popup.test.ts, "the content of a part that `v-show` shows").
- * The content renders once, and an item of a `v-for` in it does not render two times
- * (`Menu.renders.test.ts`).
+ * An item of a `v-for` in the content does not render two times (`Menu.renders.test.ts`).
  */
 export function usePopupPart(root: PopupRoot, element: Readonly<Ref<Element | null>>) {
   const { mounted, entered } = usePopupShow();

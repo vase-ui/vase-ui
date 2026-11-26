@@ -13,9 +13,6 @@ import PopupContentDirective from './PopupContentDirective.vue';
 import PopupContentOnMounted from './PopupContentOnMounted.vue';
 import type { PopupContentMode, PopupContentReading } from './popupContent';
 
-// One popup of a family, closed by default, with a first tab stop before the input that takes the
-// focus in a hook of its mount. A tooltip and a preview card open at the hover of their trigger
-// with no delay.
 const props = defineProps({
   family: {
     type: String as PropType<
