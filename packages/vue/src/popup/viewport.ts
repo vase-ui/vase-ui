@@ -44,16 +44,10 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       const measure = () => {
         if (current.checkVisibility()) positioner.value = sizeOf(current);
       };
-      let stopped = false;
-      void nextTick(() => {
-        if (!stopped) measure();
-      });
+      void nextTick(measure);
       const observer = new ResizeObserver(measure);
       observer.observe(current);
-      onCleanup(() => {
-        stopped = true;
-        observer.disconnect();
-      });
+      onCleanup(() => observer.disconnect());
     },
     // A viewport in the content of a popup part mounts after the popup element.
     { flush: 'post', immediate: true },
