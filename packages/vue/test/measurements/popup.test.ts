@@ -2,11 +2,12 @@
 // the library. Each one states what the browser or Vue does, so that the layer has code only where
 // they do not do it. Where the browsers differ, the measurement states each one. Vue does not patch
 // an element that leaves in a `<Transition>`: see `tabs.test.ts`.
-import { afterEach, describe, expect, inject, onTestFinished, test } from 'vitest';
+import { afterEach, describe, expect, inject, onTestFinished, test, vi } from 'vitest';
 import { page, server, userEvent } from 'vitest/browser';
 import { nextTick, reactive } from 'vue';
 import MeasureFirstFrame from '../fixtures/MeasureFirstFrame.vue';
 import MeasureFirstPlace from '../fixtures/MeasureFirstPlace.vue';
+import MeasureObjectDirective from '../fixtures/MeasureObjectDirective.vue';
 import MeasurePortalOrder from '../fixtures/MeasurePortalOrder.vue';
 import MeasureShowContentScene from '../fixtures/MeasureShowContentScene.vue';
 import MeasureTransitionMount from '../fixtures/MeasureTransitionMount.vue';
@@ -741,6 +742,22 @@ describe('the content of a part that `v-show` shows', () => {
       scene.open = true;
       await waitFor(() => expect(log).toContain('after-enter'));
       expect(log).toEqual(inject('app').startsWith('vapor') ? vapor : virtualDom);
+    },
+  );
+});
+
+describe('a directive object in a Vapor template', () => {
+  // A Vapor directive is a function, so it has no `beforeUpdate` hook: a part cannot show its element
+  // before the update of its children with a directive and still compile in both modes.
+  test.runIf(inject('app').startsWith('vapor'))(
+    'gets a warning that a Vapor directive must be a function',
+    () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => warn.mockRestore());
+      mount(MeasureObjectDirective);
+      expect(warn.mock.calls.map(([message]) => String(message))).toEqual([
+        expect.stringContaining('Vapor directives must be a function'),
+      ]);
     },
   );
 });
