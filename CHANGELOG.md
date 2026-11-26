@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026.11.11
+
+Same Base UI release and commit as 2026.11.10.
+
+### Added
+
+- Add `focusableWhenDisabled` to `Select.Trigger`. With `disabled` and this prop, the trigger keeps its tab stop and focus, and has `aria-disabled="true"` with no `disabled`. This holds when `Select.Root` or `Field.Root` is disabled. The trigger ignores a press, its label, Enter, Space, the arrow keys and typed keys, so it does not open. A leave by Tab, or a press outside an open popup, does not touch its `Field`. The trigger does not match `:disabled`, so style it with `[aria-disabled="true"]`. Inside a disabled `<fieldset>`, the native disabled state wins. ([#892](https://github.com/vase-ui/vase-ui/pull/892))
+
+### Changed
+
+- The popup and the backdrop of every popup family render their content in the update after the one that shows the element. So `onMounted` of a child runs in a shown element and reads its layout. A JavaScript `enter` hook of the `<Transition>` runs before the content mounts. Before 2026.11.11, the content was in the element at that call. `Select.Popup` and `Select.Backdrop` do the same when they mount open. The popup families are Dialog, Alert Dialog, Drawer, Popover, Menu, Context Menu, Menubar, Tooltip, Preview Card, Combobox, Autocomplete, Navigation Menu, Date Picker, Date Range Picker and Time Picker. ([#893](https://github.com/vase-ui/vase-ui/pull/893))
+
+### Fixed
+
+- `Drawer.Popup` and `Drawer.Backdrop` keep their element mounted with `v-show` through a leave, as Dialog, Popover, Menu and the other popups do. An open during the leave keeps the same popup and backdrop. A CSS transition goes back from where it is and does not start again. A swipe, the snap points and nested drawers keep their behavior. The popup renders its content once per open and unmounts it after the leave. A `<Transition>` around `Drawer.Popup` or `Drawer.Backdrop` needs no `appear`; with JavaScript hooks, `appear` runs the enter hooks twice. You can remove `appear` from it. ([#890](https://github.com/vase-ui/vase-ui/pull/890))
+- Seven `ResizeObserver` callbacks measure in the next frame. They belong to `Toast.Content`, `Drawer.Popup`, `Drawer.Viewport`, `ScrollArea.Root`, `Tabs.Indicator`, `Resizable.Root` and the `Viewport` of Popover, Menu, Tooltip, Preview Card and Navigation Menu. So content that grows late no longer fires "ResizeObserver loop completed with undelivered notifications" in Chromium, Firefox or WebKit. With a `Viewport`, a popup above or left of its trigger sits at the edge of its positioner that faces the trigger. So late growth expands away from the trigger and does not overlap it. ([#891](https://github.com/vase-ui/vase-ui/pull/891))
+- A child that calls `focus()` in `onMounted`, or a directive that does it in `mounted`, moves the focus into a popup again. This holds in every popup family and in `Select`. A hidden element takes no focus. Before 2026.11.11, the popup had `display: none` while its content mounted, or its positioner had `visibility: hidden` until its first place. A positioner that has no place yet now has `opacity: 0` and `pointer-events: none` at `position: fixed; left: 0; top: 0`. So a `focus()` inside it lands, and the page does not scroll. The default `initialFocus` keeps a focus that a child already moved into the popup, as Base UI does. At the close, the focus returns to the element that had it before the open. ([#893](https://github.com/vase-ui/vase-ui/pull/893))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.10 (B) | 2026.11.11 (B) |
+| ------- | -------------: | -------------: |
+| Raw     |      2,280,123 |      2,307,747 |
+| gzip    |        749,971 |        758,535 |
+| Brotli  |        654,497 |        661,600 |
+
 ## 2026.11.10
 
 Same Base UI release and commit as 2026.11.9.
