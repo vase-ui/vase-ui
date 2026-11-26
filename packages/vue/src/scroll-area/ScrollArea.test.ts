@@ -395,6 +395,29 @@ describe('overflow', () => {
     expect(area).toHaveAttribute('data-has-overflow-y');
   });
 
+  test('the root measures when the viewport mounts, so the scrollbar and its thumb show before the observer reports a size', async () => {
+    // A real observer reports in the first frame (test/measurements/scroll-area.test.ts, "the
+    // first report of a ResizeObserver"). The test replaces it, so only the measure at the mount
+    // can show the parts.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const { root } = mount(ScrollAreaParts);
+    const thumb = () => root.querySelector<HTMLElement>('.thumb-y');
+    await waitFor(() => expect(thumb()?.offsetHeight).toBe(40));
+    expect(getComputedStyle(thumb()!).visibility).toBe('visible');
+    expect(root.querySelector('.root')).toHaveAttribute('data-has-overflow-y');
+  });
+
   test('content that grows to overflow gives no resize loop error when `data-has-overflow-y` changes the padding of a border-box viewport', async () => {
     const css = document.head.appendChild(document.createElement('style'));
     css.textContent = '.viewport[data-has-overflow-y] { padding-right: 16px; }';

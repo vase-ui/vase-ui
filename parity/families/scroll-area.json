@@ -65,13 +65,6 @@
     },
     {
       "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
-      "describe": ["<ScrollArea.Root />", "sizing"],
-      "title": "shows scrollbars after mount compute before the first ResizeObserver measurement",
-      "kind": "not-applicable",
-      "reason": "The case replaces the observer with one that reports nothing. A real observer reports in the first frame, before the paint, in Chromium, Firefox and WebKit (`test/measurements/scroll-area.test.ts`). The parts measure nothing by hand at the mount."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
       "describe": ["<ScrollArea.Root />", "overflow data attributes"],
       "title": "recomputes horizontal overflow edges when direction changes",
       "kind": "not-applicable",
