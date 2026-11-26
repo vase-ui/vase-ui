@@ -955,9 +955,8 @@ describe('the tab stop of the viewport', () => {
 });
 
 describe('content without ScrollArea.Content', () => {
-  async function nextFrames() {
-    await new Promise(requestAnimationFrame);
-    await new Promise(requestAnimationFrame);
+  async function nextFrames(count = 2) {
+    for (let frame = 0; frame < count; frame += 1) await new Promise(requestAnimationFrame);
   }
 
   async function mountDirect(scene: Record<string, unknown>) {
@@ -966,7 +965,10 @@ describe('content without ScrollArea.Content', () => {
     const area = mounted.root.querySelector<HTMLElement>('.root')!;
     const before = mounted.root.querySelector<HTMLElement>('.before')!;
     await waitFor(() => expect(distance(viewport, 'y-end')).not.toBe(''));
-    await settle();
+    // The first frame gives each observed element its first report, and the root measures in the
+    // next frame. A wait of three frames ends after that measure
+    // (test/measurements/scroll-area.test.ts, "the first report of a ResizeObserver").
+    await nextFrames(3);
     return { ...mounted, viewport, area, before };
   }
 
