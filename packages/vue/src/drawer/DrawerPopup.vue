@@ -83,20 +83,34 @@ watch(
 );
 watch(element, (popup, _, onCleanup) => {
   if (!popup) return;
-  const observer = new ResizeObserver(() => drawer.setSizes({ popup: popup.offsetHeight }));
+  const measure = () => drawer.setSizes({ popup: popup.offsetHeight });
+  measure();
+  let frame = 0;
+  // A size change during observer delivery can resize a parent drawer popup and cause a
+  // ResizeObserver loop error.
+  const observer = new ResizeObserver(() => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(measure);
+  });
   observer.observe(popup);
-  onCleanup(() => observer.disconnect());
+  onCleanup(() => {
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+  });
 });
-// A direct write keeps a `ResizeObserver` update from a second slot render at an open. Vue keeps
-// an unbound style property (`test/measurements/drawer.test.ts`).
+// Direct writes keep a `ResizeObserver` update from a second slot render at an open and keep
+// height updates from a reset of keyboard styles inside the popup. Vue keeps an unbound style
+// property (`test/measurements/drawer.test.ts`).
 watch(
-  [element, () => drawer.frontmostHeight] as const,
-  ([popup, frontmost]) => {
+  [element, () => drawer.nestedPresent, () => drawer.height, () => drawer.frontmostHeight] as const,
+  ([popup, nestedPresent, height, frontmost]) => {
     if (!popup) return;
+    if (nestedPresent && height > 0) popup.style.setProperty('--drawer-height', `${height}px`);
+    else popup.style.removeProperty('--drawer-height');
     if (frontmost > 0) popup.style.setProperty('--drawer-frontmost-height', `${frontmost}px`);
     else popup.style.removeProperty('--drawer-frontmost-height');
   },
-  { flush: 'sync' },
+  { flush: 'sync', immediate: true },
 );
 
 function elementProps() {
@@ -125,8 +139,6 @@ function elementProps() {
         // The popup follows the pointer with no delay of its own transition.
         transition: drawer.swiping ? 'none' : undefined,
         '--nested-drawers': drawer.nestedOpen,
-        '--drawer-height':
-          drawer.nestedPresent && drawer.height > 0 ? `${drawer.height}px` : undefined,
         '--drawer-snap-point-offset': `${drawer.swipeDirection === 'up' ? -offset : offset}px`,
         '--drawer-swipe-movement-x': `${x}px`,
         '--drawer-swipe-movement-y': `${y}px`,

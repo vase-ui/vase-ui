@@ -23,13 +23,20 @@ watch(
   (content, _, onCleanup) => {
     if (!content) return;
     root.measure();
-    const resize = new ResizeObserver(() => root.measure());
+    let frame = 0;
+    // A measure during observer delivery can resize an ancestor or sibling toast and cause a
+    // ResizeObserver loop error.
+    const resize = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => root.measure());
+    });
     const mutation = new MutationObserver(() => root.measure());
     resize.observe(content);
     mutation.observe(content, { childList: true, characterData: true, subtree: true });
     onCleanup(() => {
       resize.disconnect();
       mutation.disconnect();
+      cancelAnimationFrame(frame);
     });
   },
   { immediate: true, flush: 'post' },

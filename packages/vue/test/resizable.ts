@@ -98,8 +98,8 @@ export async function doubleClick(element: Element) {
   await nextTick();
 }
 
-/** Waits for the root to read a new size of the page: an observer reads it in a frame. */
-export async function frames(count = 2) {
+/** Waits for the root to read a new page size in the next animation frame. */
+export async function frames(count = 3) {
   for (let index = 0; index < count; index += 1) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
   }

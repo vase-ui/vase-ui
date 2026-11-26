@@ -118,12 +118,6 @@ function readAxis(target: HTMLElement, vertical: boolean, rtl: boolean) {
 }
 
 let measureFrame = 0;
-let measuredAt: CSSNumberish | null = null;
-
-function frameTime() {
-  const target = viewport.value;
-  return target ? target.ownerDocument.timeline.currentTime : null;
-}
 
 function cancelMeasureFrame() {
   if (!measureFrame) return;
@@ -144,7 +138,6 @@ function measure() {
   const target = viewport.value;
   // An element with `display: none` has no box, so it has no sizes to read.
   if (!target || target.getClientRects().length === 0) return;
-  measuredAt = frameTime();
   const rtl = getComputedStyle(target).direction === 'rtl';
   const x = readAxis(target, false, rtl);
   const y = readAxis(target, true, rtl);
@@ -192,6 +185,13 @@ function measure() {
 
 // A part that mounts or leaves, a new overflow and a new corner size change the tracks. The
 // measurement runs before the next paint.
+watch(
+  viewport,
+  (target) => {
+    if (target) measure();
+  },
+  { flush: 'post' },
+);
 watch(thresholds, measure, { flush: 'post' });
 watch(
   [
@@ -269,16 +269,9 @@ provide(scrollAreaKey, {
   measure,
   scheduleMeasure,
   observe(target) {
-    // One animation frame shares one `timeline.currentTime` across `requestAnimationFrame` and
-    // `ResizeObserver` (test/measurements/scroll-area.test.ts).
-    observer ??= new ResizeObserver(() => {
-      const now = frameTime();
-      if (now !== null && now === measuredAt) {
-        scheduleMeasure();
-        return;
-      }
-      measure();
-    });
+    // A measure during observer delivery can change an ancestor attribute or corner variable.
+    // That change can resize an observed element and cause a ResizeObserver loop error.
+    observer ??= new ResizeObserver(scheduleMeasure);
     observer.observe(target);
     return () => observer?.unobserve(target);
   },

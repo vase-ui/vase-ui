@@ -143,6 +143,38 @@ describe('a nested drawer', () => {
     expect(kept).toBe(`${parent.offsetHeight}px`);
   });
 
+  test('a nested popup that grows after it opens gives no resize loop error when the drawer below follows `--drawer-frontmost-height`', async () => {
+    const stack = document.head.appendChild(document.createElement('style'));
+    stack.textContent = `.drawer-test-popup[data-nested-drawer-open] {
+      height: var(--drawer-frontmost-height, var(--drawer-height));
+      transition: none;
+    }`;
+    onTestFinished(() => stack.remove());
+    await mountDrawer({
+      root: { defaultOpen: true },
+      nested: { root: { defaultOpen: true }, popup: { style: 'height: auto; transition: none' } },
+    });
+    const parent = await opened();
+    const child = await opened('nested-');
+    await waitFor(() =>
+      expect(parent.style.getPropertyValue('--drawer-frontmost-height')).toBe(
+        `${child.offsetHeight}px`,
+      ),
+    );
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    const before = child.offsetHeight;
+    get('nested-text').style.paddingBottom = '40px';
+    await waitFor(() => expect(parent.offsetHeight).toBe(before + 40));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(errors).toEqual([]);
+    expect(parent.style.getPropertyValue('--drawer-frontmost-height')).toBe(`${before + 40}px`);
+  });
+
   test('an open while a nested drawer leaves keeps the same popup and the height of the parent', async () => {
     const style = document.head.appendChild(document.createElement('style'));
     style.textContent = '.drawer-test-leave-active { transition-duration: 100s; }';

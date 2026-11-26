@@ -4048,11 +4048,20 @@ describe('the viewport', () => {
     await placed();
     await waitFor(() => expect(element.getAnimations()).toEqual([]));
     const old = `${element.offsetHeight}px`;
-    // The popup shows one update after its mount, and the positioner gets its size at the next
-    // frame.
+    // The popup measures itself one update after its content mounts. Its observer then measures it
+    // again in the frame after its first delivery, and that measure writes the style of the
+    // positioner. The record starts after it.
     await waitFor(() =>
       expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(old),
     );
+    await new Promise<void>((resolve) => {
+      const resizes = new ResizeObserver(() => {
+        resizes.disconnect();
+        resolve();
+      });
+      resizes.observe(element);
+    });
+    await waitSingleFrame();
     const popupSizes: string[] = [];
     const positionerSizes: string[] = [];
     const record = (list: string[], value: string) => {
@@ -4194,6 +4203,68 @@ describe('the viewport', () => {
     await closed();
     root.open = true;
     expect(await opened()).not.toHaveAttribute('data-instant');
+  });
+
+  test('on side="top", late content growth expands upward on frame 0 with no trigger overlap and no resize loop error', async () => {
+    const anchor = document.body.appendChild(document.createElement('button'));
+    anchor.style.cssText = 'position: fixed; top: 260px; left: 320px; width: 60px; height: 24px';
+    onTestFinished(() => anchor.remove());
+    mount(PopoverViewportParts, {
+      positioner: {
+        anchor,
+        side: 'top',
+        sideOffset: 8,
+        collisionAvoidance: { side: 'none' },
+        style: { width: 'var(--positioner-width)', height: 'var(--positioner-height)' },
+      },
+      popup: { style: { width: 'var(--popup-width, auto)', height: 'var(--popup-height, auto)' } },
+    });
+    await nextTick();
+    await userEvent.click(byId('one'));
+    const element = await opened();
+    await placed();
+    await waitFor(() =>
+      expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(
+        `${element.offsetHeight}px`,
+      ),
+    );
+    await waitSingleFrame();
+    await waitSingleFrame();
+    const anchorRect = anchor.getBoundingClientRect();
+    const before = element.getBoundingClientRect();
+    const content = element.querySelector<HTMLElement>('.content')!;
+
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    let f0Pop!: DOMRect;
+    let f0Pos!: DOMRect;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        content.style.paddingBottom = '40px';
+        requestAnimationFrame(() => {
+          f0Pop = element.getBoundingClientRect();
+          f0Pos = positioner()!.getBoundingClientRect();
+          requestAnimationFrame(() => resolve());
+        });
+      });
+    });
+
+    expect(Math.round(f0Pos.height)).toBe(Math.round(before.height));
+    expect(Math.round(f0Pop.height)).toBe(Math.round(before.height + 40));
+    expect(Math.round(f0Pop.bottom)).toBe(Math.round(anchorRect.top - 8));
+    expect(Math.round(f0Pop.top)).toBe(Math.round(before.top - 40));
+    expect(element.style.position).toBe('absolute');
+    expect(element.style.bottom).toBe('0px');
+    await waitFor(() =>
+      expect(positioner()!.style.getPropertyValue('--positioner-height')).toBe(
+        `${Math.round(before.height + 40)}px`,
+      ),
+    );
+    await waitSingleFrame();
+    expect(errors).toEqual([]);
   });
 });
 

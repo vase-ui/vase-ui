@@ -452,30 +452,4 @@ describe('content changes in a scroll container', () => {
     expect(narrow).toEqual(['characterData']);
     expect(resized).toEqual(['box']);
   });
-
-  test('requestAnimationFrame and ResizeObserver in the same frame share document.timeline.currentTime', async () => {
-    html('<div id="box" style="width: 100px; height: 100px"></div>');
-    const box = find('box');
-    const times: [string, CSSNumberish | null][] = [];
-    const resizeObserver = new ResizeObserver(() => {
-      times.push(['ro', document.timeline.currentTime]);
-    });
-    onTestFinished(() => resizeObserver.disconnect());
-
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        times.push(['raf1', document.timeline.currentTime]);
-        resizeObserver.observe(box);
-        requestAnimationFrame(() => {
-          times.push(['raf2', document.timeline.currentTime]);
-          resolve();
-        });
-      });
-    });
-
-    expect(times.map(([phase]) => phase)).toEqual(['raf1', 'ro', 'raf2']);
-    expect(times[0]![1]).not.toBeNull();
-    expect(times[1]![1]).toBe(times[0]![1]);
-    expect(times[2]![1]).not.toBe(times[0]![1]);
-  });
 });

@@ -414,6 +414,29 @@ describe('<Tabs.Indicator />', () => {
       await waitFor(() => expectVariablesOfActiveTab(indicator(), list, activeTab()));
       expect(renders.length - before).toBeLessThan(5);
     });
+
+    test('a tab that grows after mount gives no resize loop error when an in-flow indicator resizes the tab list', async () => {
+      const style = document.head.appendChild(document.createElement('style'));
+      style.textContent =
+        '[data-testid^="indicator"] { display: block; flex: none; width: var(--active-tab-width); height: var(--active-tab-height); }';
+      onTestFinished(() => style.remove());
+      const { indicator, activeTab } = await mountLayout({
+        listStyle: 'display: inline-flex; position: relative',
+        root: { modelValue: 1 },
+        tabs: fixedTabs('width: 60px; height: 30px; flex: none', 2),
+      });
+      await nextFrame();
+      await nextFrame();
+      const errors: string[] = [];
+      const onError = (event: ErrorEvent) => errors.push(event.message);
+      window.addEventListener('error', onError);
+      onTestFinished(() => window.removeEventListener('error', onError));
+
+      activeTab().style.width = '100px';
+      await waitFor(() => expect(variable(indicator(), 'width')).toBe('100px'));
+      await nextFrame();
+      expect(errors).toEqual([]);
+    });
   });
 
   describe('pre-hydration script execution', () => {

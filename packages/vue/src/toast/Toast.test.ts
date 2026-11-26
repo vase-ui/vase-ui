@@ -906,6 +906,29 @@ describe('the stack', () => {
     await waitFor(() => expect(manager.toasts.value[0]!.height).toBeGreaterThan(first));
     expect(manager.toasts.value[0]!.updateKey).toBe(1);
   });
+
+  test('a front toast whose content grows after it opens gives no resize loop error when a toast behind follows `--toast-frontmost-height`', async () => {
+    style(
+      '[data-id] { position: absolute; top: 0; width: 200px; height: var(--toast-frontmost-height, var(--toast-height)); }' +
+        '[data-id="a"] [data-testid="content"] { height: 100%; }',
+    );
+    const { manager } = await mountToasts();
+    await added(manager, { id: 'a', title: 'Back' }, { id: 'b', title: 'Front' });
+    await waitFor(() => expect(manager.toasts.value[0]!.height).toBeGreaterThan(0));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener('error', onError);
+    onTestFinished(() => window.removeEventListener('error', onError));
+
+    const first = manager.toasts.value[0]!.height!;
+    const frontContent = toastRoot('b')!.querySelector<HTMLElement>('[data-testid="content"]')!;
+    frontContent.style.paddingBottom = '30px';
+    await waitFor(() => expect(manager.toasts.value[0]!.height).toBe(first + 30));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(errors).toEqual([]);
+    expect(viewport().style.getPropertyValue('--toast-frontmost-height')).toBe(`${first + 30}px`);
+  });
 });
 
 describe('the roots', () => {

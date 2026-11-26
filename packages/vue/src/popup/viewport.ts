@@ -1,4 +1,4 @@
-import { nextTick, onUnmounted, shallowRef, watch, type ShallowRef } from 'vue';
+import { nextTick, onUnmounted, shallowRef, watch, type CSSProperties, type ShallowRef } from 'vue';
 import type { PopupRoot } from './root';
 
 type Size = { width: number; height: number };
@@ -23,6 +23,91 @@ export function sizeVariables(prefix: 'popup' | 'positioner', size: Size | undef
 }
 
 /**
+ * Anchors a popup in a viewport to the trigger-side edge of the positioner, so it grows away from
+ * the trigger.
+ */
+export function edgeStyle(side: 'top' | 'bottom' | 'left' | 'right'): CSSProperties {
+  if (side === 'top') return { position: 'absolute', bottom: 0 };
+  if (side === 'left') return { position: 'absolute', right: 0 };
+  return {};
+}
+
+/**
+ * Writes `edgeStyle` on the popup element while a viewport sizes its positioner. Direct writes
+ * add no render of the popup, and the helper restores the style if the positioner collapses to
+ * zero.
+ */
+export function usePopupEdge(
+  element: () => HTMLElement | null,
+  side: () => 'top' | 'bottom' | 'left' | 'right',
+  positionerSize: () => Size | undefined,
+) {
+  watch(
+    [
+      element,
+      side,
+      () => {
+        const size = positionerSize();
+        return !!size && size.width > 0 && size.height > 0;
+      },
+    ],
+    ([popup, currentSide, active], _, onCleanup) => {
+      if (!popup || !active) return;
+      const styles = edgeStyle(currentSide);
+      if (!styles.position) return;
+      let live = true;
+      let applied = false;
+      let previous: { position: string; bottom: string; right: string } | null = null;
+      const restore = () => {
+        if (!applied || !previous) return;
+        applied = false;
+        popup.style.position = previous.position;
+        popup.style.bottom = previous.bottom;
+        popup.style.right = previous.right;
+      };
+      const apply = () => {
+        if (!live) return;
+        previous = {
+          position: popup.style.position,
+          bottom: popup.style.bottom,
+          right: popup.style.right,
+        };
+        popup.style.position = 'absolute';
+        if (styles.bottom !== undefined) popup.style.bottom = `${styles.bottom}`;
+        if (styles.right !== undefined) popup.style.right = `${styles.right}`;
+        applied = true;
+        const parent = popup.parentElement;
+        if (
+          parent &&
+          (parent.offsetWidth === 0 || parent.offsetHeight === 0) &&
+          popup.offsetWidth > 0 &&
+          popup.offsetHeight > 0
+        ) {
+          restore();
+        }
+      };
+      const parent = popup.parentElement;
+      const size = positionerSize();
+      // The positioner patches its size variables in its next render after the first measure.
+      if (
+        parent &&
+        size &&
+        parent.style.getPropertyValue('--positioner-width') !== `${size.width}px`
+      ) {
+        void nextTick(apply);
+      } else {
+        apply();
+      }
+      onCleanup(() => {
+        live = false;
+        restore();
+      });
+    },
+    { flush: 'post', immediate: true },
+  );
+}
+
+/**
  * The sizes of a popup whose content changes while it is open. At rest, the positioner has the
  * size of the popup. Call `resize()` before or after the DOM update of the new content. It gives
  * the popup its present size, then the positioner and the popup the size of the new content. When
@@ -42,12 +127,25 @@ export function usePopupSizes(element: () => HTMLElement | null) {
       // popup when it shows. A popup shows one update before its content mounts, so the first
       // measure waits for that update.
       const measure = () => {
-        if (current.checkVisibility()) positioner.value = sizeOf(current);
+        if (!current.checkVisibility()) return;
+        const next = sizeOf(current);
+        const previous = positioner.value;
+        if (previous?.width === next.width && previous.height === next.height) return;
+        positioner.value = next;
       };
       void nextTick(measure);
-      const observer = new ResizeObserver(measure);
+      let frame = 0;
+      // The positioner can use the size of the popup. A change during observer delivery can resize
+      // that ancestor and cause a ResizeObserver loop error.
+      const observer = new ResizeObserver(() => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(measure);
+      });
       observer.observe(current);
-      onCleanup(() => observer.disconnect());
+      onCleanup(() => {
+        observer.disconnect();
+        cancelAnimationFrame(frame);
+      });
     },
     // A viewport in the content of a popup part mounts after the popup element.
     { flush: 'post', immediate: true },
@@ -142,7 +240,48 @@ export function usePopupViewport(
 }
 
 function sizeOf(element: HTMLElement): Size {
-  return { width: element.offsetWidth, height: element.offsetHeight };
+  const parent = element.parentElement;
+  const position = element.style.position;
+  const display = element.style.display;
+  const width = parent?.style.getPropertyValue('--positioner-width') ?? '';
+  const height = parent?.style.getPropertyValue('--positioner-height') ?? '';
+  const absolute = position === 'absolute';
+  // A popup with `position: absolute` shrinks to fit the old or unsized positioner, so its size
+  // is read in flow. `flow-root` keeps child margins inside the popup.
+  if (absolute) {
+    if (getComputedStyle(element).display === 'block') element.style.display = 'flow-root';
+    element.style.position = 'static';
+  }
+  if (parent) {
+    parent.style.setProperty('--positioner-width', 'max-content');
+    parent.style.setProperty('--positioner-height', 'max-content');
+  }
+  // `offsetWidth` truncates fractional text widths and can wrap text in a
+  // `position: absolute` popup.
+  const css = getComputedStyle(element);
+  let rawWidth = Number.parseFloat(css.width) || 0;
+  if (css.boxSizing !== 'border-box') {
+    rawWidth +=
+      (Number.parseFloat(css.paddingLeft) || 0) +
+      (Number.parseFloat(css.paddingRight) || 0) +
+      (Number.parseFloat(css.borderLeftWidth) || 0) +
+      (Number.parseFloat(css.borderRightWidth) || 0);
+  }
+  const size = {
+    width: Math.max(element.offsetWidth, Math.ceil(rawWidth - 0.001)),
+    height: element.offsetHeight,
+  };
+  if (absolute) {
+    element.style.position = position;
+    element.style.display = display;
+  }
+  if (parent) {
+    if (width) parent.style.setProperty('--positioner-width', width);
+    else parent.style.removeProperty('--positioner-width');
+    if (height) parent.style.setProperty('--positioner-height', height);
+    else parent.style.removeProperty('--positioner-height');
+  }
+  return size;
 }
 
 // The side of the center of one trigger from the other. A distance of 5 px or less is no side.
