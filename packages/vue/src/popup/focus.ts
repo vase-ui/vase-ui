@@ -120,6 +120,9 @@ export function usePopupFocus(
   },
 ) {
   let before: Element | null = null;
+  // The element that had the focus at the open, for a child of the popup that takes the focus at
+  // its mount, before `takeFocus`.
+  let openedFrom: Element | null = null;
   let took = false;
   // A close and an open in one task keep the same popup element, so the popup takes the focus at
   // each open.
@@ -219,6 +222,7 @@ export function usePopupFocus(
       if (open) {
         took = false;
         opens.value += 1;
+        openedFrom = activeElement(ownerDocument(root.activeTrigger ?? root.popup));
         // The open reads the targets before the update that writes `inert`.
         enter();
         return;
@@ -259,7 +263,8 @@ export function usePopupFocus(
   function takeFocus(popup: HTMLElement) {
     const doc = ownerDocument(popup);
     const active = activeElement(doc);
-    before = active === doc.body ? null : active;
+    const origin = popup.contains(active) ? openedFrom : active;
+    before = origin === doc.body ? null : origin;
     befores.set(root, before);
     took = true;
     const target = resolve(options.initialFocus(), root.interaction);

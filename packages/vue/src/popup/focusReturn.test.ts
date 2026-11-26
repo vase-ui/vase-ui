@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { nextTick } from 'vue';
 import PopupFocusReturn from '../../test/fixtures/PopupFocusReturn.vue';
+import PopupContentOpenedByCode from '../../test/fixtures/PopupContentOpenedByCode.vue';
+import type { PopupContentReading } from '../../test/fixtures/popupContent';
 import PopupOpenedByCode from '../../test/fixtures/PopupOpenedByCode.vue';
 import { mount } from '../../test/render';
 import { waitFor } from '../../test/waitFor';
@@ -24,6 +26,24 @@ describe('the focus after a popup that code opened closes', () => {
       expect(byTestId('popover-popup')).not.toBe(null);
     },
   );
+});
+
+describe('the focus after a dialog with a content that takes the focus at its mount closes', () => {
+  test('goes back to the button that opened the dialog by code, not to the trigger', async () => {
+    const log: PopupContentReading[] = [];
+    mount(PopupContentOpenedByCode, {
+      log: { add: (entry: PopupContentReading) => log.push(entry) },
+    });
+    await waitFor(() => expect(byTestId('opener')).not.toBe(null));
+    // A click gives a button no focus in WebKit on macOS, so a key presses the button.
+    byTestId('opener')!.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(log).toHaveLength(1));
+    expect(log[0]?.focused).toBe(true);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(byTestId('popup')).toBe(null));
+    await waitFor(() => expect(document.activeElement).toBe(byTestId('opener')));
+  });
 });
 
 describe.each([
