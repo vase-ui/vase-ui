@@ -75,7 +75,6 @@ describe('Tab after a key listener moved the focus', () => {
 });
 
 describe('the focus move of Tab', () => {
-  /** The `focusout` of each move, with the phase and the default of the last `keydown`. */
   function recordMoves() {
     const controller = new AbortController();
     onTestFinished(() => controller.abort());

@@ -546,8 +546,6 @@ test('a tap in a popover that opened later closes no popover that opened before 
   expect(popup('earlier')).not.toBe(null);
 });
 
-// A script that moves the focus out of a popup closes nothing. Tab closes the popup, a press outside
-// closes it, and so does the focus that leaves a trigger, for each cause.
 interface Holder extends Family {
   /** The trigger of the root. */
   trigger: string;
@@ -606,9 +604,8 @@ const holders: Holder[] = [
 ];
 
 /**
- * Mounts the popup open, with a button in a live region outside it: a modal popup leaves a live
- * region in use, so its button takes a focus that a script moves. `stays` waits for the timers that
- * a close can use, and reads whether the popup is open.
+ * A modal popup leaves a live region in use, so the button in the live region takes a focus that a
+ * script moves. `stays` waits for the timers that a close can use.
  */
 async function mountHolder(family: Family) {
   const live = document.body.appendChild(document.createElement('div'));
@@ -667,7 +664,6 @@ test.each(holders)(
   '$name: a focus that a script moves into a frame closes nothing, with the pointer away from the frame',
   async (family) => {
     const { live, inside, stays } = await mountHolder(family);
-    // The pointer is not over the frame, which is at the right of the view.
     await userEvent.pointer({ coords: { x: 4, y: 4 } });
     const frame = live.appendChild(document.createElement('iframe'));
     frame.style.cssText = 'position: fixed; right: 0; bottom: 100px; width: 100px; height: 50px';
@@ -735,8 +731,7 @@ test('a Tab that a listener cancels closes nothing, and neither does a script th
   const { second, after, stays } = await mountInPlace();
   const controller = new AbortController();
   onTestFinished(() => controller.abort());
-  // The listener of the window comes before that of the layer, so its timer runs before the timer of
-  // the layer.
+  // A capture listener of the window runs first, so its timer runs before the timer of the layer.
   window.addEventListener(
     'keydown',
     (event) => {
@@ -766,7 +761,6 @@ test('a Tab that a listener lets go on, after it moved the focus out of the popu
 test('Tab from the last tab stop of a popup in place into a frame closes it', async () => {
   const { second, after, shown } = await mountInPlace();
   const outside = document.getElementById('outside')!;
-  // The frame is the next tab stop.
   after.tabIndex = -1;
   outside.tabIndex = -1;
   const frame = document.body.appendChild(document.createElement('iframe'));
@@ -862,8 +856,7 @@ test('a Tab that moves no focus does not close the popup on a later script focus
     { capture: true, signal: controller.signal },
   );
   second.focus();
-  // Control+Tab in Chromium and WebKit, and Alt+Tab in Firefox, send a trusted Tab `keydown` with
-  // no `focusout`.
+  // The key combination of each browser sends a trusted Tab `keydown` and moves no focus.
   await userEvent.keyboard(
     server.browser === 'firefox' ? '{Alt>}{Tab}{/Alt}' : '{Control>}{Tab}{/Control}',
   );
@@ -894,9 +887,7 @@ test('a Tab in another document does not make a script focus out in this documen
     expect(button).not.toBe(null);
     return button!;
   });
-  // When the Tab `keydown` runs in the frame, a capture listener on the frame window queues an
-  // unmount of the frame popup and a script focus out in the parent document before the timer of
-  // the layer runs.
+  // A capture listener of the frame window runs first, so its timer runs before that of the layer.
   let frameTabs = 0;
   const controller = new AbortController();
   onTestFinished(() => controller.abort());

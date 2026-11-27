@@ -537,7 +537,6 @@ function takeTabMove(event: FocusEvent) {
   return true;
 }
 
-/** The event path has the popup of the layer, or an element of a layer above it. */
 function isPathInPopup(entry: Entry, path: readonly EventTarget[]) {
   const above = stack.slice(stack.indexOf(entry) + 1).flatMap(entryElements);
   const popups = [entry.layer.root.popup, ...above];
@@ -553,8 +552,6 @@ function onFocusout(event: FocusEvent) {
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {
     if (!entry.layer.focusOut || !isPathInside(entry, path)) continue;
-    // Tab closes the popup when it moves the focus out. A script that moves the focus out of the
-    // popup closes nothing. The focus that leaves a trigger closes the popup for each cause.
     const closes = tab || !isPathInPopup(entry, path);
     if (related) {
       if (!closes) continue;
