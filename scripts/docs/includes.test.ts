@@ -7,7 +7,6 @@ const DOCS_ROOT = join(import.meta.dirname, '..', '..', 'docs');
 const INCLUDE = /<!--\s*@include:\s*(.*?)\s*-->/g;
 const NOT_PAGE_FOLDERS = new Set(['node_modules', 'public']);
 
-/** Each include of each page of the site, with the page as its path from the docs folder. */
 const includes = readdirSync(DOCS_ROOT, { recursive: true, encoding: 'utf8' })
   .filter((page) => {
     const [folder = ''] = page.split(/[\\/]/);
@@ -66,8 +65,6 @@ test('the third line of CHANGELOG.md is the heading of its newest version', () =
   assert.match(version ?? '', /^## \d{4}\.\d{1,2}\.\d+$/);
 });
 
-// A heading of an included file has the level that it has in its own file. The two lines lower it
-// below the heading of the page.
 for (const { page, target } of includes.filter(({ page }) => page !== 'index.md')) {
   const lowered = target !== '../README.md#donation';
   test(`${page}: the headings of ${target} are ${lowered ? 'one level lower' : 'at their level'}`, () => {

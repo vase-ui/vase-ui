@@ -25,7 +25,6 @@ export const REDIRECTS: Redirect[] = [
  * no redirect rule, so the file is a page. An anchor of the address is a heading of the text, and
  * that heading has the same id in the page. The script thus keeps the anchor. The exception is the
  * anchor of the title of the address, which is the name of its file: the section takes its place.
- * A browser that runs no script goes to the section.
  */
 export function redirectPage({ from, to, section }: Redirect, site: string): string {
   const target = `${to}#${section}`;
@@ -53,7 +52,6 @@ export function redirectPage({ from, to, section }: Redirect, site: string): str
 `;
 }
 
-/** Writes the file of each redirect into the built site, as `parity.html` for `/parity`. */
 export function writeRedirectPages(outDir: string, site: string): void {
   for (const redirect of REDIRECTS) {
     const file = join(outDir, `${redirect.from.slice(1)}.html`);

@@ -4,9 +4,8 @@ const START = '<!-- lower-headings -->';
 const END = '<!-- /lower-headings -->';
 
 /**
- * Lowers each heading between the lines `<!-- lower-headings -->` and `<!-- /lower-headings -->` by
- * one level. A page puts these lines around an include of a file whose first headings have the
- * level of the page heading above the include, such as `CHANGELOG.md`.
+ * A page puts the two lines around an include of a file whose first headings have the level of the
+ * page heading above the include, such as `CHANGELOG.md`.
  */
 export function markdownLowerHeadings(md: MarkdownRenderer): void {
   // The rules that read the level of a heading, such as the anchor rule, run after `block`.

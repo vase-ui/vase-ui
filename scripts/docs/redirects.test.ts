@@ -37,7 +37,6 @@ for (const { from, to, section } of REDIRECTS) {
   });
 }
 
-/** The address that the script of the file goes to, for an address with the anchor `hash`. */
 function destination(html: string, hash: string): string {
   const script = /<script>([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '';
   let destination = '';

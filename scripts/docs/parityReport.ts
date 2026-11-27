@@ -342,7 +342,6 @@ export function buildParityReport(input: ReportInput): ParityReport {
   };
 }
 
-/** Runs the check of `pnpm parity:check` and builds the data of the parity report. It throws when the check finds a problem. */
 export function loadParityReport(root = REPOSITORY_ROOT): ParityReport {
   const { parity, files, rowsOf, result } = runParityCheck(root);
   const { upstream } = parity;

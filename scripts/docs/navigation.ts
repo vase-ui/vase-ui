@@ -41,7 +41,6 @@ function linkOf(folder: string | undefined, file: string): string {
   return name === 'index' ? `/${folder}/` : `/${folder}/${name}`;
 }
 
-/** Reads a page of the navigation. A page with `navigation: false` in its front matter is not one. */
 function readPage(docsRoot: string, folder: string | undefined, file: string): Page | undefined {
   const path = folder === undefined ? file : `${folder}/${file}`;
   const lines = readFileSync(join(docsRoot, path), 'utf8').split(/\r?\n/);

@@ -9,7 +9,6 @@ after(disposeMdItInstance);
 
 const render = (source: string) => md.renderAsync(source, { relativePath: 'page.md' });
 
-/** The tag and the id of each heading of the HTML, such as `h3#fixed`. */
 function headings(html: string): string[] {
   return [...html.matchAll(/<(h[1-6]) id="([^"]*)"/g)].map(([, tag, id]) => `${tag}#${id}`);
 }
