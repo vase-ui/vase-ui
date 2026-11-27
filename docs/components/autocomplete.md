@@ -71,6 +71,8 @@ Import the component and assemble its parts:
 
 <<< ./autocomplete/Anatomy.vue
 
+Give the `z-index` of the popup to `Autocomplete.Positioner`: see [Portals](/quick-start#portals).
+
 ## Item values
 
 Each `<Autocomplete.Item>` takes a `value` prop that identifies it. Pass the item that the `item` slot of `<Autocomplete.List>` renders, so that props such as `itemToStringValue` get it. The slot gets `{ item, index }`.

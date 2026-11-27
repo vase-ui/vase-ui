@@ -57,6 +57,8 @@ Import the component and assemble its parts:
 
 <<< ./alert-dialog/Anatomy.vue
 
+Give the `z-index` of the dialog to `AlertDialog.Viewport`, or to `AlertDialog.Popup` when the dialog has no viewport: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Detached triggers

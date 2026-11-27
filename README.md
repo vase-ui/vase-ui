@@ -50,6 +50,8 @@ npm install @vase-ui/vue
 yarn add @vase-ui/vue
 ```
 
+The name of the package is `@vase-ui/vue`. The npm package `vase-ui`, with no scope, is another project.
+
 [The quick start](https://vase-ui.com/quick-start) shows the setup and your first component.
 
 ## Why

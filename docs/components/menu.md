@@ -71,6 +71,8 @@ Import the component and assemble its parts:
 
 <<< ./menu/Anatomy.vue
 
+Give the `z-index` of the popup to `Menu.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Open on hover

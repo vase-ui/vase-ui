@@ -32,6 +32,8 @@ yarn add @vase-ui/vue
 
 :::
 
+The name of the package is `@vase-ui/vue`. The npm package `vase-ui`, with no scope, is another project.
+
 The package needs:
 
 - Vue 3.5.46 or later. `vue` is a peer dependency of the package.
@@ -70,7 +72,66 @@ Give the root element the style `isolation: isolate`. In a Vue app, the root ele
 
 The root element then has its own stacking context. A popup shows above the page, and a `z-index` inside the root element cannot put an element above the popup.
 
-Give the `z-index` of a popup that has a positioner, such as a [Select](/components/select) or a [Popover](/components/popover), to its positioner. While a modal popup of this kind is open, an element with a lower `z-index` gets no pointer, the same as the rest of the page.
+#### Which element takes the `z-index`
+
+A portal renders its parts as children of `<body>`, with no element around them. It adds them at the end of `<body>` when the popup opens. So with no `z-index`, a popup that opens later is on top.
+
+Some parts enter `<body>` before their popup opens, and they keep that place:
+
+- The parts of a `Portal` part with `keepMounted` enter at the mount of the portal.
+- The parts of a [Select](/components/select) enter at the first focus of its trigger or at its first open, and they stay.
+
+Such a popup can open behind a popup that opened before it. To prevent this, give it a higher `z-index`.
+
+When your styles give a popup a `z-index`, give it to the part that has the `position`:
+
+| Popup                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Parts that take the `z-index`                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Popover](/components/popover), [Menu](/components/menu), [Context Menu](/components/context-menu), [Menubar](/components/menubar), [Navigation Menu](/components/navigation-menu), [Select](/components/select), [Combobox](/components/combobox), [Autocomplete](/components/autocomplete), [Tooltip](/components/tooltip), [Preview Card](/components/preview-card), [Date Picker](/components/date-picker), [Date Range Picker](/components/date-range-picker), [Time Picker](/components/time-picker) | The `Positioner` part, and not the `Popup` part. Vase UI gives the positioner its `position`, and the popup is in the positioner.             |
+| [Dialog](/components/dialog), [Alert Dialog](/components/alert-dialog)                                                                                                                                                                                                                                                                                                                                                                                                                                     | The `Viewport` part, or the `Popup` part when the dialog has no viewport. Vase UI gives these parts no `position`: your styles position them. |
+| [Drawer](/components/drawer)                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `Drawer.Viewport`, which your styles position.                                                                                                |
+| [Toast](/components/toast)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `Toast.Viewport`, which your styles position. For an anchored toast, `Toast.Positioner`.                                                      |
+
+A `Backdrop` part is a child of `<body>` of its own, before the parts in the table. Give it its own `z-index`: the `z-index` of the popup, or a lower one.
+
+While a modal popup with a positioner is open, an element with a lower `z-index` than the positioner gets no pointer. The rest of the page gets no pointer in the same way.
+
+#### A popup in a popup
+
+A popup in a popup, such as a [Select](/components/select) in a [Dialog](/components/dialog) or a [Drawer](/components/drawer), is not in the element of the outer popup. Its portal has the target of the portal of the outer popup, and its parts come after the parts of the outer popup.
+
+- With no `z-index` on the two popups, the inner popup is on top.
+- When the outer popup has a `z-index`, give the inner popup the same `z-index` or a higher one. With no `z-index`, or with a lower one, the inner popup opens behind the outer popup.
+
+The popups of an app can thus have the same `z-index`:
+
+```css
+.DialogBackdrop,
+.DialogViewport,
+.SelectPositioner {
+  z-index: 50;
+}
+```
+
+#### Toasts
+
+`Toast.Viewport` is in `<body>` from the mount of its portal, so it comes before each popup that opens later. With no `z-index`, or with the `z-index` of the popups, a popup that covers the toasts hides them. To show the toasts above the popups, give `Toast.Viewport` a higher `z-index`.
+
+#### A portal in another container
+
+The `to` prop of a `Portal` part gives another target: a CSS selector, an element or a shadow root. A popup in a popup uses the target of the popup around it, so the outer popup alone needs `to`:
+
+```vue-html
+<Dialog.Portal to="#overlays">
+  <Dialog.Popup>Account settings</Dialog.Popup>
+</Dialog.Portal>
+```
+
+- Put the container outside the root element. In a container inside the root element, an element of the page with a `z-index` can cover a popup.
+- A container can have a stacking context of its own, such as from `isolation: isolate`, or from a `position` and a `z-index`. The `z-index` of a popup then ranks it only among the popups of the container.
+- A container that has a `position` and `overflow: hidden` clips a positioner with `position: absolute`, the default of `positionMethod`.
+
+[Portals, Transition and KeepAlive](/handbook/composition#portals-transition-and-keepalive) lists the props of a `Portal` part.
 
 ### Server rendering
 

@@ -60,6 +60,27 @@ import 'temporal-polyfill/global';
 export default defineNuxtPlugin(() => {});
 ```
 
+### Load the polyfill only where `Temporal` is missing
+
+With a static import, each browser downloads and runs the polyfill, also a browser that has `Temporal`. To load it only where the engine has no `Temporal`, use a dynamic import, and mount the app after it:
+
+```ts
+import { createApp } from 'vue';
+import App from './App.vue';
+
+const ready = 'Temporal' in globalThis ? Promise.resolve() : import('temporal-polyfill/global');
+
+ready.then(() => {
+  createApp(App).mount('#app');
+});
+```
+
+A bundler, such as Vite, puts the polyfill in a file of its own. A browser that has `Temporal` does not request that file.
+
+The modules that the entry file imports run before the polyfill. Use `Temporal` in a function or in the `setup` of a component, and not at the top level of a module.
+
+The [Nuxt module](/quick-start#temporal-polyfill) loads the polyfill in this way, so a Nuxt app with the module needs no such code.
+
 ## TypeScript
 
 The types of Vase UI use the global `Temporal` types of TypeScript 6.0. The built declarations of each date and time entry point carry the line `/// <reference lib="esnext.temporal" preserve="true" />`. A project on TypeScript 6.0 needs no change of its `lib`.

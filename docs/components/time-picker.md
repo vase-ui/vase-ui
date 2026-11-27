@@ -62,6 +62,8 @@ Import the component and assemble its parts:
 
 <<< ./time-picker/Anatomy.vue
 
+Give the `z-index` of the popup to `TimePicker.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Columns
