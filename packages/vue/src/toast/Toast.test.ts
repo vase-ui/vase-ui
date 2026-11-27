@@ -2272,7 +2272,6 @@ describe('the names and the announcements', () => {
 });
 
 describe('a toast above a popup', () => {
-  // The viewport is above the fixed element of a modal popup.
   const ABOVE = 'position: fixed; right: 0; bottom: 0; z-index: 10';
   const open = { defaultOpen: true };
   interface PopupCase {
@@ -2280,7 +2279,6 @@ describe('a toast above a popup', () => {
     fixture: Component;
     props: Props;
   }
-  // A press on a toast above a modal dialog or drawer does not close the popup.
   const keeps: PopupCase[] = [
     { name: 'Dialog', fixture: DialogParts, props: { root: open } },
     {
@@ -2295,8 +2293,6 @@ describe('a toast above a popup', () => {
       props: { root: { ...open, modal: 'trap-focus' } },
     },
   ];
-  // Each of these closes at a press on a toast: one checks `modal: false`, the other checks a
-  // modal layer outside the dialog family.
   const closes: PopupCase[] = [
     {
       name: 'Dialog with modal false',
@@ -2312,8 +2308,7 @@ describe('a toast above a popup', () => {
   const popup = () => document.querySelector<HTMLElement>('[data-testid="popup"]');
 
   /**
-   * Mounts a viewport above the popup, then the popup, and then a toast with an action. The
-   * viewport mounts before the popup opens, so the layer does not treat it as an added element.
+   * The viewport mounts before the popup opens, so the layer does not treat it as an added element.
    */
   async function mountOver({ fixture, props }: PopupCase) {
     const { manager } = await mountToasts({ list: { viewport: { style: ABOVE } } });
@@ -2330,7 +2325,6 @@ describe('a toast above a popup', () => {
       HTMLElement,
       HTMLElement,
     ];
-    // The toast is above the popup at the point of each part.
     for (const part of [root, action, close]) {
       const { clientX, clientY } = clientCenter(part);
       expect(part.contains(document.elementFromPoint(clientX, clientY))).toBe(true);

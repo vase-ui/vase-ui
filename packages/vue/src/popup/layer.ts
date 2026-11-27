@@ -60,8 +60,8 @@ export interface Layer {
 export type LayerRules = Omit<Layer, 'root'>;
 
 /**
- * The live regions and the alerts. A modal layer leaves them in use, so that the page announces
- * its messages, such as toasts, under the popup.
+ * A modal layer leaves live regions and alerts in use, so that the page announces its messages,
+ * such as toasts, under the popup.
  */
 export const LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"]';
 
@@ -363,7 +363,6 @@ function closeOutside(event: Event, entries: Entry[]) {
   }
 }
 
-/** The event path has a live region or an alert. */
 function isOnLive(path: readonly EventTarget[]) {
   return path.some((node) => isElement(node) && node.matches(LIVE));
 }

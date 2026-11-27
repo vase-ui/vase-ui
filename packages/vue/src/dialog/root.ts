@@ -126,8 +126,7 @@ export function useDialogRoot<Payload>(
   );
   const layer = useModalLayer(root, () => ({
     escape: true,
-    // One press closes one dialog: a dialog with a dialog above it waits for its own press. A modal
-    // dialog leaves a toast in use, and a press on it closes nothing.
+    // One press closes one dialog: a dialog with a dialog above it waits for its own press.
     outsidePress:
       kind === 'dialog' &&
       !props.disablePointerDismissal &&
