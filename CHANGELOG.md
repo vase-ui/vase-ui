@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.11.12
+
+Same Base UI release and commit as 2026.11.11.
+
+### Fixed
+
+- A key that opens a `Menu`, a submenu or a `Menubar` menu highlights an item again: the first item, or the last item for Up Arrow. From 2026.11.2 to 2026.11.11, no item was highlighted in two cases. In the first case, the parent holds `open` (`v-model:open`, or `:open` with `@update:open`). In the second case, Down Arrow or Up Arrow opens a kept popup (`keepMounted`) again. A menu that owns `open` and unmounts its popup at the close did not fail. ([#896](https://github.com/vase-ui/vase-ui/pull/896))
+- Enter and Space on the trigger of a submenu that a press opened close the submenu. The focus stays on the trigger, or in the filter input of a menu with a filter. Before 2026.11.12, these keys left the submenu open. ([#896](https://github.com/vase-ui/vase-ui/pull/896))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.11 (B) | 2026.11.12 (B) |
+| ------- | -------------: | -------------: |
+| Raw     |      2,307,747 |      2,308,194 |
+| gzip    |        758,535 |        758,684 |
+| Brotli  |        661,600 |        661,791 |
+
 ## 2026.11.11
 
 Same Base UI release and commit as 2026.11.10.

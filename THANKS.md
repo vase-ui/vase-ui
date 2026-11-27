@@ -4,11 +4,11 @@
 
 Vase UI is a port, so the people on this page did the hard part before we started. They spent years on focus management, screen readers and browser bugs. We carried their work across, and we thank each of them.
 
-Each list is GitHub's contributor list of the project, read on `2026-11-26` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
+Each list is GitHub's contributor list of the project, read on `2026-11-27` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
 
 ## Base UI
 
-The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `7cf1db8bb75025333679cd394e3bef2b226747a4`. Vase UI is a port of Base UI.
+The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `7191b19147be24d2ad567acf92b30fa0babfa730`. Vase UI is a port of Base UI.
 
 - [atomiks](https://github.com/atomiks)
 - [Michał Dudak](https://github.com/michaldudak)
