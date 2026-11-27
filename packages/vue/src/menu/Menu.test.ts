@@ -49,17 +49,13 @@ function rootEvents(log: string[], props: Props = {}) {
   });
 }
 
-/**
- * Props of a root whose parent holds `open`, as `v-model:open` does: the parent writes the value
- * from `update:open`, so the root gets it at the next render of the parent.
- */
+/** The root gets `open` at the next render of the parent. */
 function heldOpen(props: Props = {}) {
   const root = reactive<Props>({ ...props, open: false });
   root['onUpdate:open'] = (open: boolean) => (root.open = open);
   return root;
 }
 
-/** A root that owns `open`, and a root whose parent holds it. */
 const owners = [
   { owner: 'the menu', root: (props: Props = {}) => props },
   { owner: 'its parent', root: heldOpen },

@@ -288,8 +288,8 @@ function inParent(menu: MenuContext, element: Element) {
 }
 
 /**
- * A key on the input clicks the highlighted item. On a submenu trigger, it opens a closed submenu
- * or enters one that a hover opened, and closes one that a press opened.
+ * A key on the input clicks the highlighted item. On a submenu trigger, it does what a key click
+ * on the trigger does.
  */
 function press(element: HTMLElement, event: KeyboardEvent) {
   const submenu = submenuOf(element);

@@ -204,7 +204,6 @@ export function useMenuRoot<Payload>(
       }
       emit('openChange', open, details);
       if (details.isCanceled) return;
-      // An accepted request drops the edge of an earlier key open.
       pendingEdge = null;
       const trigger = open ? (details.trigger ?? null) : root.activeTrigger;
       changeBar = place === 'root' ? (injectedBar ?? menubarOfTrigger(trigger) ?? null) : null;
@@ -393,7 +392,7 @@ export function useMenuRoot<Payload>(
         }
         openEvent = undefined;
       } else {
-        // A close before the first focus drops the edge, also when the `open` prop closes the menu.
+        // A close drops the edge, also when the `open` prop closes the menu.
         pendingEdge = null;
         // A typed string ends at the close, so a Space of the next open is a press.
         typeahead.reset();
@@ -572,8 +571,7 @@ export function useMenuRoot<Payload>(
         }
         return;
       }
-      // An open menu with no first focus highlights the item at once for a list key. Its input
-      // takes the focus back.
+      // An open menu with no first focus highlights the item at once.
       if (reason !== 'trigger-press') {
         filter?.input.value?.focus({ preventScroll: true });
         highlightEdge(edge);
