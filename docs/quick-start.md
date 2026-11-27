@@ -183,7 +183,7 @@ The date and time components need the global `Temporal`. See [Dates and times](/
 
 For the calendars other than ISO and Gregorian, set `temporal` to `'temporal-polyfill/full/global'`. When your app does not have the module that `temporal` names, the module loads no polyfill.
 
-Without the Nuxt module, load the polyfill in a plugin.
+Without the Nuxt module, load the polyfill in a plugin, as [Dates and times](/handbook/dates-and-times#polyfill) shows.
 
 ## Assemble a component
 
