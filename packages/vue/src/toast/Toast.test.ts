@@ -1,8 +1,11 @@
 import axe from 'axe-core';
 import { afterEach, describe, expect, inject, onTestFinished, test, vi } from 'vitest';
 import { server, userEvent } from 'vitest/browser';
-import { h, nextTick, reactive, watchEffect } from 'vue';
+import { h, nextTick, reactive, watchEffect, type Component } from 'vue';
 import type { UseToastManagerReturnValue } from '@vase-ui/vue/toast';
+import DialogParts from '../../test/fixtures/DialogParts.vue';
+import DialogWithInnerPopup from '../../test/fixtures/DialogWithInnerPopup.vue';
+import DrawerParts from '../../test/fixtures/DrawerParts.vue';
 import PopoverParts from '../../test/fixtures/PopoverParts.vue';
 import ToastAnchored from '../../test/fixtures/ToastAnchored.vue';
 import ToastConformance from '../../test/fixtures/ToastConformance.vue';
@@ -14,6 +17,7 @@ import ToastParts from '../../test/fixtures/ToastParts.vue';
 import ToastTwoProviders from '../../test/fixtures/ToastTwoProviders.vue';
 import { finishAnimations } from '../../test/animation';
 import { expectNoAxeViolations } from '../../test/axe';
+import { clientCenter, firePointer, touchDrag } from '../../test/pointer';
 import { mount, mountError } from '../../test/render';
 import { takeReportedMessages } from '../../test/reportedMessages';
 import { waitFor } from '../../test/waitFor';
@@ -2264,6 +2268,170 @@ describe('the names and the announcements', () => {
     await nextTick();
     expect(alert.closest('[inert]')).toBe(null);
     expect(viewport().closest('[inert]')).toBe(null);
+  });
+});
+
+describe('a toast above a popup', () => {
+  const ABOVE = 'position: fixed; right: 0; bottom: 0; z-index: 10';
+  const open = { defaultOpen: true };
+  interface PopupCase {
+    name: string;
+    fixture: Component;
+    props: Props;
+  }
+  const keeps: PopupCase[] = [
+    { name: 'Dialog', fixture: DialogParts, props: { root: open } },
+    {
+      name: "Dialog with modal 'trap-focus'",
+      fixture: DialogParts,
+      props: { root: { ...open, modal: 'trap-focus' } },
+    },
+    { name: 'Drawer', fixture: DrawerParts, props: { root: open } },
+    {
+      name: "Drawer with modal 'trap-focus'",
+      fixture: DrawerParts,
+      props: { root: { ...open, modal: 'trap-focus' } },
+    },
+  ];
+  const closes: PopupCase[] = [
+    {
+      name: 'Dialog with modal false',
+      fixture: DialogParts,
+      props: { root: { ...open, modal: false } },
+    },
+    {
+      name: 'Popover with modal true',
+      fixture: PopoverParts,
+      props: { root: { ...open, modal: true }, close: {} },
+    },
+  ];
+  const popup = () => document.querySelector<HTMLElement>('[data-testid="popup"]');
+
+  /**
+   * The viewport mounts before the popup opens, so the layer does not treat it as an added element.
+   */
+  async function mountOver({ fixture, props }: PopupCase) {
+    const { manager } = await mountToasts({ list: { viewport: { style: ABOVE } } });
+    mount(fixture, props);
+    await waitFor(() => expect(popup()).not.toBe(null));
+    const actions: string[] = [];
+    await added(manager, {
+      id: 'a',
+      title: 'A',
+      actionProps: { children: 'Undo', onClick: () => actions.push('undo') },
+    });
+    const root = toastRoot('a')!;
+    const [action, close] = root.querySelectorAll<HTMLElement>('button') as unknown as [
+      HTMLElement,
+      HTMLElement,
+    ];
+    for (const part of [root, action, close]) {
+      const { clientX, clientY } = clientCenter(part);
+      expect(part.contains(document.elementFromPoint(clientX, clientY))).toBe(true);
+    }
+    return { manager, actions, root, action, close };
+  }
+
+  test.each(keeps)(
+    '$name: a mouse press on the action, on the body and on Close of a toast above it closes only the toast',
+    async (popupCase) => {
+      const { manager, actions, root, action, close } = await mountOver(popupCase);
+      await userEvent.click(action);
+      expect(actions).toEqual(['undo']);
+      await userEvent.click(root, { position: { x: 4, y: 4 } });
+      await userEvent.click(close);
+      expect(manager.toasts.value).toEqual([]);
+      await wait(50);
+      expect(popup()).not.toBe(null);
+    },
+  );
+
+  test.each(keeps)('$name: a touch on a toast above it closes nothing', async (popupCase) => {
+    const { manager, action, close } = await mountOver(popupCase);
+    for (const part of [action, close]) {
+      const touch = { pointerType: 'touch', isPrimary: true, ...clientCenter(part) };
+      await firePointer.down(part, { ...touch, timeStamp: 1000 });
+      await firePointer.up(part, { ...touch, timeStamp: 1100 });
+    }
+    await wait(50);
+    expect(popup()).not.toBe(null);
+    expect(manager.toasts.value).toHaveLength(1);
+  });
+
+  test.skipIf(server.browser !== 'chromium').each(keeps)(
+    '$name: a real tap on the action, on the body and on Close of a toast above it closes only the toast',
+    async (popupCase) => {
+      const { manager, actions, root, action, close } = await mountOver(popupCase);
+      const center = (part: HTMLElement) => {
+        const { clientX, clientY } = clientCenter(part);
+        return { x: clientX, y: clientY };
+      };
+      const bodyRect = root.getBoundingClientRect();
+      const bodyPoint = { x: bodyRect.left + 4, y: bodyRect.top + 4 };
+      await touchDrag(center(action), center(action), 0);
+      await waitFor(() => expect(actions).toEqual(['undo']));
+      await touchDrag(bodyPoint, bodyPoint, 0);
+      await touchDrag(center(close), center(close), 0);
+      await waitFor(() => expect(manager.toasts.value).toEqual([]));
+      await wait(50);
+      expect(popup()).not.toBe(null);
+    },
+  );
+
+  test.each(keeps)(
+    '$name: F6 moves the focus to the toast, Tab reaches Action and Close, and Enter or Space closes only the toast',
+    async (popupCase) => {
+      const { manager, actions, action, close } = await mountOver(popupCase);
+      await pressF6();
+      expect(document.activeElement).toBe(viewport());
+      await userEvent.keyboard('{Tab}{Tab}');
+      expect(document.activeElement).toBe(action);
+      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(' ');
+      expect(actions).toEqual(['undo', 'undo']);
+      await userEvent.keyboard('{Tab}');
+      expect(document.activeElement).toBe(close);
+      await userEvent.keyboard('{Enter}');
+      expect(manager.toasts.value).toEqual([]);
+      await wait(50);
+      expect(popup()).not.toBe(null);
+    },
+  );
+
+  test.each(closes)(
+    '$name: a mouse press on Close of a toast above it closes the toast and the popup',
+    async (popupCase) => {
+      const { manager, close } = await mountOver(popupCase);
+      await userEvent.click(close);
+      expect(manager.toasts.value).toEqual([]);
+      await waitFor(() => expect(popup()).toBe(null));
+    },
+  );
+
+  test('a popover in a modal dialog: a mouse press on Close of a toast above both closes the toast and the popover, and keeps the dialog open', async () => {
+    const log: string[] = [];
+    const { manager } = await mountToasts({ list: { viewport: { style: ABOVE } } });
+    mount(DialogWithInnerPopup, {
+      inner: 'popover',
+      log: { add: (entry: string) => log.push(entry) },
+    });
+    const trigger = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-testid="trigger"]');
+      expect(element).not.toBe(null);
+      return element!;
+    });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(popup()).not.toBe(null));
+    await added(manager, { id: 'a', title: 'A' });
+    const close = toastRoot('a')!.querySelector<HTMLElement>('button')!;
+    const { clientX, clientY } = clientCenter(close);
+    expect(close.contains(document.elementFromPoint(clientX, clientY))).toBe(true);
+    await userEvent.click(close);
+    expect(manager.toasts.value).toEqual([]);
+    await waitFor(() => expect(popup()).toBe(null));
+    await wait(50);
+    expect(document.querySelector('[data-testid="dialog"]')).not.toBe(null);
+    expect(log).toEqual(['popover true trigger-press', 'popover false outside-press']);
   });
 });
 

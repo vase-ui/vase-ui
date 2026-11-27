@@ -127,7 +127,11 @@ export function useDialogRoot<Payload>(
   const layer = useModalLayer(root, () => ({
     escape: true,
     // One press closes one dialog: a dialog with a dialog above it waits for its own press.
-    outsidePress: kind === 'dialog' && !props.disablePointerDismissal && dialogsAbove.value === 0,
+    outsidePress:
+      kind === 'dialog' &&
+      !props.disablePointerDismissal &&
+      dialogsAbove.value === 0 &&
+      (modal.value === false || 'except-live'),
     focusOut: modal.value === false && !props.disablePointerDismissal,
     trap: modal.value !== false,
     hide: modal.value === true ? 'inert' : modal.value === 'trap-focus' ? 'aria-hidden' : false,

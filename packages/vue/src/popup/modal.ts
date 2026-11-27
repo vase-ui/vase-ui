@@ -1,6 +1,6 @@
 import { effectScope, watch, type EffectScope } from 'vue';
 import { isShadowRoot } from '@floating-ui/utils/dom';
-import { layerElements, openLayers, useLayer, type Layer, type LayerRules } from './layer';
+import { LIVE, layerElements, openLayers, useLayer, type Layer, type LayerRules } from './layer';
 import type { PopupRoot } from './root';
 import { useScrollLock } from './useScrollLock';
 
@@ -71,11 +71,7 @@ function writeHide(next: {
     const documents = new Set(
       [...next.whole, ...next.around].flatMap((each) => each?.ownerDocument ?? []),
     );
-    // A live region and an alert stay in use at each place of the document, so that the page
-    // announces its messages, such as toasts, under a modal popup.
-    const announcers = [...documents].flatMap((doc) => [
-      ...doc.querySelectorAll('[aria-live]:not([aria-live="off"]), [role="alert"]'),
-    ]);
+    const announcers = [...documents].flatMap((doc) => [...doc.querySelectorAll(LIVE)]);
     const whole = new Set([...next.whole, ...announcers].filter(connected));
     const kept = new Set(
       [...whole, ...next.around.filter(connected)].flatMap((element) => pathToBody(element, whole)),

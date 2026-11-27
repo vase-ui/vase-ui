@@ -884,6 +884,24 @@ describe('the dismissal', () => {
     }
   });
 
+  test.each([
+    { name: 'a live region', attributes: { 'aria-live': 'polite' } },
+    { name: 'an alert', attributes: { role: 'alert' } },
+  ])('a press on a button in $name above a modal dialog closes nothing', async ({ attributes }) => {
+    const region = append('div', 'position: fixed; left: 0; bottom: 0; z-index: 10');
+    for (const [name, value] of Object.entries(attributes)) region.setAttribute(name, value);
+    const button = region.appendChild(document.createElement('button'));
+    button.textContent = 'Region';
+    const clicks: string[] = [];
+    button.addEventListener('click', () => clicks.push('click'));
+    await mountDialog({ root: { defaultOpen: true } });
+    await opened();
+    await press(button);
+    expect(clicks).toEqual(['click']);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).not.toBe(null);
+  });
+
   test('a press that starts in the popup and ends outside closes nothing; a right button closes nothing', async () => {
     await mountDialog({ root: { defaultOpen: true, modal: 'trap-focus' } });
     const element = await opened();

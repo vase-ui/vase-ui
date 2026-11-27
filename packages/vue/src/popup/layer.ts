@@ -3,6 +3,7 @@ import { addEventListener } from '../common/addEventListener';
 import { mergeCleanups } from '../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../common/owner';
 import { isShadowRoot } from '@floating-ui/utils/dom';
+import { isElement } from '../common/element';
 import { activeElement, contains } from '../common/shadowDom';
 import { followRootNode } from '../common/observeRootNode';
 import type { PopupRoot } from './root';
@@ -12,8 +13,12 @@ export interface Layer {
   readonly root: PopupRoot;
   /** Escape closes the popup. */
   readonly escape: boolean;
-  /** A press outside closes the popup. */
-  readonly outsidePress: boolean;
+  /**
+   * A press outside closes the popup. With `'except-live'`, a press on a live region or an alert,
+   * such as a toast, closes nothing. A layer that hides the rest of the page leaves such an element
+   * in use (`LIVE`), so a person can operate it above the popup.
+   */
+  readonly outsidePress: boolean | 'except-live';
   /** A move of the focus to an element outside closes the popup. */
   readonly focusOut: boolean;
   /**
@@ -53,6 +58,12 @@ export interface Layer {
 }
 
 export type LayerRules = Omit<Layer, 'root'>;
+
+/**
+ * A modal layer leaves live regions and alerts in use, so that the page announces its messages,
+ * such as toasts, under the popup.
+ */
+export const LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"]';
 
 interface Entry {
   readonly layer: Layer;
@@ -352,13 +363,22 @@ function closeOutside(event: Event, entries: Entry[]) {
   }
 }
 
+function isOnLive(path: readonly EventTarget[]) {
+  return path.some((node) => isElement(node) && node.matches(LIVE));
+}
+
 /** The entries that a press is outside of, from the top one. */
 function outsideEntries(event: Event) {
   const path = event.composedPath();
-  return fromTop().filter(
-    (entry) =>
-      entry.layer.outsidePress && !isPathInside(entry, path) && !isAddedElement(entry, path),
-  );
+  return fromTop().filter((entry) => {
+    const { outsidePress } = entry.layer;
+    return (
+      outsidePress &&
+      !isPathInside(entry, path) &&
+      !(outsidePress === 'except-live' && isOnLive(path)) &&
+      !isAddedElement(entry, path)
+    );
+  });
 }
 
 /** A touch that started outside, while it can be a tap. */
