@@ -179,6 +179,8 @@ body {
 .vp-doc h5,
 .vp-doc h6 {
   width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-weight: 700;
   letter-spacing: normal;
   text-wrap: balance;

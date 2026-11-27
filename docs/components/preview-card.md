@@ -62,6 +62,8 @@ Import the component and assemble its parts:
 
 <<< ./preview-card/Anatomy.vue
 
+Give the `z-index` of the popup to `PreviewCard.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Detached triggers

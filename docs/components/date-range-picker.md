@@ -58,6 +58,8 @@ Import the component and assemble its parts:
 
 <<< ./date-range-picker/Anatomy.vue
 
+Give the `z-index` of the popup to `DateRangePicker.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### In a form

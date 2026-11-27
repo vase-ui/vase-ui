@@ -51,6 +51,8 @@ Import the component and assemble its parts:
 
 <<< ./menubar/Anatomy.vue
 
+Give the `z-index` of the popup to `Menu.Positioner`: see [Portals](/quick-start#portals).
+
 ## API reference
 
 <ApiReference />

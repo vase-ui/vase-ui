@@ -73,6 +73,8 @@ Import the component and assemble its parts:
 
 <<< ./combobox/Anatomy.vue
 
+Give the `z-index` of the popup to `Combobox.Positioner`: see [Portals](/quick-start#portals).
+
 ## Item values
 
 Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item that the `item` slot of `<Combobox.List>` renders. The slot renders each filtered item, and gets `{ item, index }`:

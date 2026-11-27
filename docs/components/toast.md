@@ -68,6 +68,8 @@ Import the component and assemble its parts:
 
 <<< ./toast/Anatomy.vue
 
+Give the `z-index` of the toasts to `Toast.Viewport`, or to `Toast.Positioner` for an anchored toast: see [Portals](/quick-start#portals).
+
 ## General usage
 
 - `<Toast.Provider>` can be wrapped around your entire app, so that all toasts render in the same viewport.

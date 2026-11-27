@@ -62,6 +62,8 @@ Import the component and assemble its parts:
 
 <<< ./tooltip/Anatomy.vue
 
+Give the `z-index` of the popup to `Tooltip.Positioner`: see [Portals](/quick-start#portals).
+
 ## Alternatives to tooltips
 
 Use a tooltip only to give extra clarity in a dense interface. A user who never sees a tooltip must not miss important information.

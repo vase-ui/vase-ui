@@ -65,6 +65,8 @@ Import the component and assemble its parts:
 
 <<< ./date-picker/Anatomy.vue
 
+Give the `z-index` of the popup to `DatePicker.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Date and time

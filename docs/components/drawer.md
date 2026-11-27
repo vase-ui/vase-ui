@@ -69,6 +69,8 @@ Import the component and assemble its parts:
 
 <<< ./drawer/Anatomy.vue
 
+Give the `z-index` of the drawer to `Drawer.Viewport`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### State

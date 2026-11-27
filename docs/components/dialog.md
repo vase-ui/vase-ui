@@ -71,6 +71,8 @@ Import the component and assemble its parts:
 
 <<< ./dialog/Anatomy.vue
 
+Give the `z-index` of the dialog to `Dialog.Viewport`, or to `Dialog.Popup` when the dialog has no viewport: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### State

@@ -57,6 +57,8 @@ Import the component and assemble its parts:
 
 <<< ./context-menu/Anatomy.vue
 
+Give the `z-index` of the popup to `ContextMenu.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 [Menu](/components/menu#examples) has more demos. Many of them apply to the context menu too.

@@ -55,6 +55,8 @@ Import the component and assemble its parts:
 
 <<< ./navigation-menu/Anatomy.vue
 
+Give the `z-index` of the popup to `NavigationMenu.Positioner`: see [Portals](/quick-start#portals).
+
 ## Examples
 
 ### Nested submenus

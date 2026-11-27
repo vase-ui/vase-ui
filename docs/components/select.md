@@ -64,6 +64,8 @@ Import the component and assemble its parts:
 
 <<< ./select/Anatomy.vue
 
+Give the `z-index` of the popup to `Select.Positioner`: see [Portals](/quick-start#portals).
+
 ## Positioning
 
 `<Select.Positioner>` has the prop `alignItemWithTrigger`. By default, it makes the popup cover the trigger, with the text of the selected item over the text of the value.
