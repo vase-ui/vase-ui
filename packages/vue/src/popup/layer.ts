@@ -21,8 +21,8 @@ export interface Layer {
   readonly outsidePress: boolean | 'except-live';
   /**
    * The popup closes when Tab moves the focus out of it, and at a press in a frame. A script that
-   * moves the focus out of it closes nothing. A focus that leaves a trigger, or an element of
-   * `inside`, closes the popup for each cause.
+   * moves the focus out of it closes nothing. A focus that moves from a trigger, or from an element
+   * of `inside`, to an outside element closes the popup for each cause.
    */
   readonly focusOut: boolean;
   /**
@@ -283,6 +283,7 @@ function listen(node: Document | ShadowRoot) {
     if (owned.count > 0) return;
     owned.stop();
     listeners.delete(node);
+    if (listeners.size === 0) tabKeydown = null;
   };
 }
 
@@ -512,17 +513,28 @@ function onClick(event: MouseEvent) {
 // The browser moves the focus for Tab after it sent `keydown` to the page, when no listener canceled
 // the event. A script that moves the focus in a listener of `keydown` runs during the dispatch, so
 // `eventPhase` is `NONE` only for the move of Tab (test/measurements/popup.test.ts, "the focus move
-// of Tab"). The move comes in the task of the key.
+// of Tab"). The first `focusout` after the dispatch takes the move, so a script in `focusin` or a
+// microtask closes nothing.
 let tabKeydown: KeyboardEvent | null = null;
 
 function onTabKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Tab') return;
+  if (event.key !== 'Tab' || !event.isTrusted) return;
   tabKeydown = event;
-  setTimeout(() => (tabKeydown = null));
+  setTimeout(() => {
+    if (tabKeydown === event) tabKeydown = null;
+  });
 }
 
-function isTabMove() {
-  return !!tabKeydown && tabKeydown.eventPhase === Event.NONE && !tabKeydown.defaultPrevented;
+function takeTabMove(event: FocusEvent) {
+  if (
+    tabKeydown?.eventPhase !== Event.NONE ||
+    tabKeydown.defaultPrevented ||
+    tabKeydown.view !== event.view
+  ) {
+    return false;
+  }
+  tabKeydown = null;
+  return true;
 }
 
 /** The event path has the popup of the layer, or an element of a layer above it. */
@@ -536,7 +548,7 @@ function onFocusout(event: FocusEvent) {
   // A press moves the focus at `pointerdown`. The rule of the press decides.
   if (handledFocusouts.has(event) || pressing) return;
   handledFocusouts.add(event);
-  const tab = isTabMove();
+  const tab = takeTabMove(event);
   const path = event.composedPath();
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {

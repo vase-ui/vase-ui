@@ -1240,7 +1240,6 @@ describe('the dismissal', () => {
     const host = document.body.appendChild(document.createElement('div'));
     const shadow = host.attachShadow({ mode: 'open' });
     const container = shadow.appendChild(document.createElement('div'));
-    shadow.appendChild(document.createElement('input'));
     const inShadow = () => container.querySelector<HTMLElement>('[data-testid="popup"]');
     try {
       mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
@@ -1252,6 +1251,7 @@ describe('the dismissal', () => {
       inShadow()!.querySelectorAll('button')[1]!.focus();
       await userEvent.keyboard('{Tab}');
       await waitFor(() => expect(inShadow()).toBe(null));
+      expect(shadow.activeElement?.id).toBe('after');
     } finally {
       host.remove();
     }

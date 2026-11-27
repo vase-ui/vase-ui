@@ -794,3 +794,160 @@ test('a focus that a script moves out of a popover in a popover closes neither',
   expect(child.isConnected).toBe(true);
   expect(document.querySelector('[data-testid="popup"]')).not.toBe(null);
 });
+
+test('a Tab inside a popup, followed by a script focus out in `focusin`, in a microtask or in a window timer, closes nothing', async () => {
+  const { first, second, after, stays } = await mountInPlace();
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const { signal } = controller;
+
+  second.addEventListener('focusin', () => after.focus(), { once: true, signal });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+
+  second.addEventListener('focusin', () => queueMicrotask(() => after.focus()), {
+    once: true,
+    signal,
+  });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+
+  first.addEventListener('keydown', () => queueMicrotask(() => after.focus()), {
+    once: true,
+    signal,
+  });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).not.toBe(first));
+  expect(await stays()).toBe(true);
+
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Tab') setTimeout(() => after.focus());
+    },
+    { capture: true, once: true, signal },
+  );
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+});
+
+test('a synthetic Tab `keydown` followed by a script focus out closes nothing', async () => {
+  const { second, after, stays } = await mountInPlace();
+  second.focus();
+  second.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true, view: window }),
+  );
+  after.focus();
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab that moves no focus does not close the popup on a later script focus out', async () => {
+  const { second, after, stays } = await mountInPlace();
+  let tabs = 0;
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Tab' && event.isTrusted) tabs += 1;
+    },
+    { capture: true, signal: controller.signal },
+  );
+  second.focus();
+  // Control+Tab in Chromium and WebKit, and Alt+Tab in Firefox, send a trusted Tab `keydown` with
+  // no `focusout`.
+  await userEvent.keyboard(
+    server.browser === 'firefox' ? '{Alt>}{Tab}{/Alt}' : '{Control>}{Tab}{/Control}',
+  );
+  expect(tabs).toBe(1);
+  expect(document.activeElement).toBe(second);
+  await wait(20);
+  after.focus();
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab in another document does not make a script focus out in this document close its popup', async () => {
+  const { second, after, stays } = await mountInPlace();
+  const frame = document.body.appendChild(document.createElement('iframe'));
+  onTestFinished(() => frame.remove());
+  frame.srcdoc = '<!doctype html><body><div id="mount"></div></body>';
+  await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+  const frameDoc = frame.contentDocument!;
+  const frameWin = frame.contentWindow!;
+  const mounted = mount(
+    PopoverParts,
+    { root: { defaultOpen: true }, portal: { disabled: true } },
+    frameDoc.getElementById('mount')!,
+  );
+  onTestFinished(() => mounted.unmount());
+  const frameButton = await waitFor(() => {
+    const button = frameDoc.querySelector<HTMLElement>('[data-testid="popup"] button');
+    expect(button).not.toBe(null);
+    return button!;
+  });
+  // When the Tab `keydown` runs in the frame, a capture listener on the frame window queues an
+  // unmount of the frame popup and a script focus out in the parent document before the timer of
+  // the layer runs.
+  let frameTabs = 0;
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  frameWin.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Tab' || !event.isTrusted) return;
+      frameTabs += 1;
+      setTimeout(() => {
+        mounted.unmount();
+        second.focus();
+        after.focus();
+      });
+    },
+    { capture: true, signal: controller.signal },
+  );
+  frameButton.focus();
+  await userEvent.keyboard(
+    server.browser === 'firefox' ? '{Alt>}{Tab}{/Alt}' : '{Control>}{Tab}{/Control}',
+  );
+  expect(frameTabs).toBe(1);
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+});
+
+test('Shift+Tab from a nested popup in place closes only the child into the parent, and Tab past the parent closes both', async () => {
+  mount(PopoverParts, {
+    root: { defaultOpen: true },
+    portal: { disabled: true },
+    nested: { root: { defaultOpen: true }, portal: { disabled: true } },
+  });
+  const parent = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[data-testid="popup"]');
+    expect(element?.checkVisibility()).toBe(true);
+    return element!;
+  });
+  const child = () => document.querySelector<HTMLElement>('[data-testid="nested-popup"]');
+  await waitFor(() => expect(child()?.checkVisibility()).toBe(true));
+  child()!.querySelector<HTMLElement>('[data-testid="nested-button"]')!.focus();
+  await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+  expect(document.activeElement).toBe(parent.querySelector('[data-key="nested"]'));
+  expect(child()).not.toBe(null);
+  await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+  await waitFor(() => expect(child()).toBe(null));
+  expect(parent.isConnected).toBe(true);
+  expect(document.activeElement).toBe(parent.querySelector('[data-testid="second"]'));
+  await userEvent.click(parent.querySelector<HTMLElement>('[data-key="nested"]')!);
+  await waitFor(() => expect(child()?.checkVisibility()).toBe(true));
+  child()!.querySelector<HTMLElement>('[data-testid="nested-button"]')!.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(child()).toBe(null));
+  await waitFor(() => expect(parent.isConnected).toBe(false));
+  expect(document.activeElement).toBe(document.getElementById('after'));
+});

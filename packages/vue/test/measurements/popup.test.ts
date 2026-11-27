@@ -127,6 +127,22 @@ describe('the focus move of Tab', () => {
     await waitFor(() => expect(activeId()).toBe('b'));
     expect(moves).toEqual(['a after true']);
   });
+
+  test('runs a microtask of `keydown` during the dispatch in Chromium and WebKit, and after the move in Firefox', async () => {
+    html(`<input id="a" aria-label="A"><input id="b" aria-label="B"><input id="c" aria-label="C">`);
+    const moves = recordMoves();
+    element('a').addEventListener('keydown', () => queueMicrotask(() => element('c').focus()), {
+      once: true,
+    });
+    element('a').focus();
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(moves).toHaveLength(2));
+    expect(moves).toEqual(
+      server.browser === 'firefox'
+        ? ['a after false', 'b after false']
+        : ['a during false', 'c after false'],
+    );
+  });
 });
 
 describe('inert', () => {
