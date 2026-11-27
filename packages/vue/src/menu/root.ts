@@ -1,6 +1,7 @@
 import {
   computed,
   inject,
+  nextTick,
   provide,
   shallowReactive,
   shallowRef,
@@ -187,6 +188,8 @@ export function useMenuRoot<Payload>(
   let replacesSibling = false;
   // The event of the last accepted open, for the close of the menu that it replaces.
   let openEvent: Event | undefined;
+  // The item that the last accepted key open asks for. The first focus of the popup highlights it.
+  let pendingEdge: 'first' | 'last' | null = null;
   const root = usePopupRoot<Payload>({
     name: 'Menu',
     open: () => props.open,
@@ -201,6 +204,7 @@ export function useMenuRoot<Payload>(
       }
       emit('openChange', open, details);
       if (details.isCanceled) return;
+      pendingEdge = null;
       const trigger = open ? (details.trigger ?? null) : root.activeTrigger;
       changeBar = place === 'root' ? (injectedBar ?? menubarOfTrigger(trigger) ?? null) : null;
       if (!open) {
@@ -296,7 +300,6 @@ export function useMenuRoot<Payload>(
     };
   });
 
-  let pendingEdge: 'first' | 'last' | null = null;
   const focus = usePopupFocus(root, layer, {
     takesFocus: () => !hoverOpen.value,
     placed: () => placed.value,
@@ -389,6 +392,8 @@ export function useMenuRoot<Payload>(
         }
         openEvent = undefined;
       } else {
+        // A close drops the edge, also when the `open` prop closes the menu.
+        pendingEdge = null;
         // A typed string ends at the close, so a Space of the next open is a press.
         typeahead.reset();
         if (list.highlighted) list.highlight(null, 'none');
@@ -552,12 +557,22 @@ export function useMenuRoot<Payload>(
     viewport: shallowRef(null),
     inside: (element) => isInPopup(layer, element),
     openWithKey(edge, reason, event, trigger) {
-      pendingEdge = edge;
-      root.request(true, reason, event, trigger);
-      if (!root.open) pendingEdge = null;
-      // An open menu highlights the item at once, and its input takes the focus back.
-      else if (placed.value && reason !== 'trigger-press') {
-        pendingEdge = null;
+      const wasOpen = root.open;
+      const wasHoverOpen = hoverOpen.value;
+      if (root.request(true, reason, event, trigger).isCanceled) return;
+      // A closed menu, or a hover-opened menu that takes focus after this request, highlights the
+      // item at its first focus. A controlled root that stays closed after the update drops it.
+      if (!wasOpen || (wasHoverOpen && !hoverOpen.value)) {
+        pendingEdge = edge;
+        if (!root.open) {
+          void nextTick(() => {
+            if (!root.open) pendingEdge = null;
+          });
+        }
+        return;
+      }
+      // An open menu with no first focus highlights the item at once.
+      if (reason !== 'trigger-press') {
         filter?.input.value?.focus({ preventScroll: true });
         highlightEdge(edge);
       }

@@ -115,7 +115,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 // A key that a listener prevented gave no click, and the click of this press is no key click.
-// A press of a screen reader opens the submenu as a key does, and closes it as a press does.
+// A press of a screen reader acts as a key click.
 let virtualPress = false;
 function onPointerdown(event: PointerEvent) {
   keyClick = false;
@@ -128,7 +128,7 @@ function onClick(event: MouseEvent) {
   keyClick = false;
   virtualPress = false;
   // A click with no press enters a submenu that a hover opened.
-  if (fromKey || (virtual && (!root.open || submenu.hoverOpen))) {
+  if ((fromKey || virtual) && (!root.open || submenu.hoverOpen)) {
     submenu.openWithKey('first', 'trigger-press', event, element.value);
     return;
   }
