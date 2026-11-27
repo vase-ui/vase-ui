@@ -74,6 +74,76 @@ describe('Tab after a key listener moved the focus', () => {
   });
 });
 
+describe('the focus move of Tab', () => {
+  function recordMoves() {
+    const controller = new AbortController();
+    onTestFinished(() => controller.abort());
+    let keydown: KeyboardEvent | undefined;
+    const moves: string[] = [];
+    const { signal } = controller;
+    document.addEventListener('keydown', (event) => (keydown = event), { capture: true, signal });
+    document.addEventListener(
+      'focusout',
+      (event) => {
+        const phase = keydown?.eventPhase === Event.NONE ? 'after' : 'during';
+        moves.push(`${(event.target as Element).id} ${phase} ${keydown?.defaultPrevented}`);
+      },
+      { signal },
+    );
+    return moves;
+  }
+
+  test('comes after the dispatch of `keydown`, and a script that moves the focus in a listener of `keydown` comes during it', async () => {
+    html(`<input id="a" aria-label="A"><input id="b" aria-label="B">`);
+    const moves = recordMoves();
+    element('a').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(activeId()).toBe('b');
+    expect(moves).toEqual(['a after false']);
+    moves.length = 0;
+    element('b').addEventListener('keydown', () => element('a').focus(), { once: true });
+    await userEvent.keyboard('{Tab}');
+    expect(moves).toEqual(['b during false', 'a after false']);
+  });
+
+  test('moves nothing when a listener cancels `keydown`, and a script that moves the focus in a timer sees the event as canceled', async () => {
+    html(`<input id="a" aria-label="A"><input id="b" aria-label="B">`);
+    const moves = recordMoves();
+    element('a').addEventListener('keydown', (event) => event.preventDefault(), { once: true });
+    element('a').focus();
+    await userEvent.keyboard('{Tab}');
+    expect(activeId()).toBe('a');
+    expect(moves).toEqual([]);
+    element('a').addEventListener(
+      'keydown',
+      (event) => {
+        event.preventDefault();
+        setTimeout(() => element('b').focus());
+      },
+      { once: true },
+    );
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(activeId()).toBe('b'));
+    expect(moves).toEqual(['a after true']);
+  });
+
+  test('runs a microtask of `keydown` during the dispatch in Chromium and WebKit, and after the move in Firefox', async () => {
+    html(`<input id="a" aria-label="A"><input id="b" aria-label="B"><input id="c" aria-label="C">`);
+    const moves = recordMoves();
+    element('a').addEventListener('keydown', () => queueMicrotask(() => element('c').focus()), {
+      once: true,
+    });
+    element('a').focus();
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(moves).toHaveLength(2));
+    expect(moves).toEqual(
+      server.browser === 'firefox'
+        ? ['a after false', 'b after false']
+        : ['a during false', 'c after false'],
+    );
+  });
+});
+
 describe('inert', () => {
   test('a press on inert content has the element under it that is not inert as its target, and no listener of the content runs', async () => {
     html(
@@ -124,7 +194,7 @@ describe('inert', () => {
 });
 
 describe('a press in a same-origin frame', () => {
-  test('sends `focusout` with no related target to a focused control of the page, and the frame is the active element one task later; no pointer event reaches the page', async () => {
+  async function mountFrame() {
     html(`<input id="control" aria-label="Control">
       <iframe id="frame" style="width: 200px; height: 100px" srcdoc="<button style='width: 150px; height: 60px'>In</button>"></iframe>`);
     const frame = element<HTMLIFrameElement>('frame');
@@ -140,14 +210,50 @@ describe('a press in a same-origin frame', () => {
     element('control').focus();
     document.addEventListener(
       'focusout',
-      (event) => log.push(`focusout ${event.relatedTarget === null ? 'null' : 'element'}`),
+      (event) => {
+        const related = event.relatedTarget === null ? 'null' : 'element';
+        log.push(`focusout ${related} ${frame.matches(':hover') ? 'hover' : 'no hover'}`);
+      },
       true,
     );
     document.addEventListener('pointerdown', () => log.push('pointerdown'), true);
+    return { frame, log };
+  }
+
+  test('sends `focusout` with no related target to a focused control of the page, and the frame is the active element one task later; the frame matches `:hover`, and no pointer event reaches the page', async () => {
+    const { frame, log } = await mountFrame();
     await userEvent.pointer({ coords: centerOf(frame), keys: '[MouseLeft]' });
     await new Promise((resolve) => setTimeout(resolve));
-    expect(log).toEqual(['focusout null']);
+    expect(log).toEqual(['focusout null hover']);
     expect(document.activeElement).toBe(frame);
+  });
+
+  // A real touch exists only in Chromium.
+  test.skipIf(server.browser !== 'chromium')(
+    'sends the same events for a tap, and `pointerdown` does not reach the page',
+    async () => {
+      const { frame, log } = await mountFrame();
+      const point = centerOf(frame);
+      await touchDrag(point, point, 0);
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(log).toEqual(['focusout null hover']);
+      expect(document.activeElement).toBe(frame);
+    },
+  );
+
+  test('sends the same `focusout` for a script that moves the focus into the frame, and the frame matches `:hover` only while the pointer is over it', async () => {
+    const { frame, log } = await mountFrame();
+    await userEvent.pointer({ coords: { x: innerWidth - 4, y: innerHeight - 4 } });
+    frame.contentDocument!.querySelector('button')!.focus();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(log).toEqual(['focusout null no hover']);
+    expect(document.activeElement).toBe(frame);
+    element('control').focus();
+    await userEvent.pointer({ coords: centerOf(frame) });
+    log.length = 0;
+    frame.contentDocument!.querySelector('button')!.focus();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(log).toEqual(['focusout null hover']);
   });
 });
 

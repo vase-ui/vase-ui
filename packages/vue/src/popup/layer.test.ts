@@ -14,6 +14,7 @@ import SelectParts from '../../test/fixtures/SelectParts.vue';
 import TooltipParts from '../../test/fixtures/TooltipParts.vue';
 import { firePointer, sendTouch, stopFling, touchDrag } from '../../test/pointer';
 import { mount } from '../../test/render';
+import { wait } from '../../test/wait';
 import { waitFor } from '../../test/waitFor';
 
 interface Family {
@@ -543,4 +544,401 @@ test('a tap in a popover that opened later closes no popover that opened before 
   await tap(popup('earlier')!, 2000);
   await waitFor(() => expect(popup('later')).toBe(null));
   expect(popup('earlier')).not.toBe(null);
+});
+
+interface Holder extends Family {
+  /** The trigger of the root. */
+  trigger: string;
+}
+
+const holders: Holder[] = [
+  {
+    name: 'Popover',
+    fixture: PopoverParts,
+    props: open,
+    popup: 'popup',
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: 'Popover with modal true',
+    fixture: PopoverParts,
+    props: { root: { defaultOpen: true, modal: true }, close: {} },
+    popup: 'popup',
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: "Popover with modal 'trap-focus'",
+    fixture: PopoverParts,
+    props: { root: { defaultOpen: true, modal: 'trap-focus' }, close: {} },
+    popup: 'popup',
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: 'Dialog with modal false',
+    fixture: DialogParts,
+    props: { root: { defaultOpen: true, modal: false } },
+    popup: 'popup',
+    trigger: '[data-key="t"]',
+  },
+  {
+    name: 'Drawer with modal false',
+    fixture: DrawerParts,
+    props: { root: { defaultOpen: true, modal: false } },
+    popup: 'popup',
+    trigger: '[data-testid="trigger"]',
+  },
+  {
+    name: 'Menu',
+    fixture: MenuParts,
+    props: open,
+    popup: 'popup',
+    trigger: '[data-testid="trigger"]',
+  },
+  {
+    name: 'Select',
+    fixture: SelectParts,
+    props: open,
+    popup: 'popup',
+    trigger: '[data-testid="trigger"]',
+  },
+];
+
+/**
+ * A modal popup leaves a live region in use, so the button in the live region takes a focus that a
+ * script moves. `stays` waits for the timers that a close can use.
+ */
+async function mountHolder(family: Family) {
+  const live = document.body.appendChild(document.createElement('div'));
+  live.setAttribute('aria-live', 'polite');
+  const away = live.appendChild(document.createElement('button'));
+  away.textContent = 'Live';
+  onTestFinished(() => live.remove());
+  const { shown } = await mountOpen(family);
+  const popup = document.querySelector<HTMLElement>(`[data-testid="${family.popup}"]`)!;
+  await waitFor(() => expect(popup.contains(document.activeElement)).toBe(true));
+  const inside = document.activeElement as HTMLElement;
+  const stays = async () => {
+    await nextTick();
+    await wait(0);
+    return shown();
+  };
+  return { live, away, inside, shown, stays };
+}
+
+test.each(holders)(
+  '$name: a focus that a script moves out of the popup, with `focus`, with `focusVisible` or with `blur`, closes nothing',
+  async (family) => {
+    const { away, inside, stays } = await mountHolder(family);
+    away.focus();
+    expect(await stays()).toBe(true);
+    expect(document.activeElement).toBe(away);
+    inside.focus();
+    away.focus({ focusVisible: true });
+    expect(await stays()).toBe(true);
+    inside.focus();
+    inside.blur();
+    expect(await stays()).toBe(true);
+  },
+);
+
+test.each(holders)(
+  '$name: a focus that a script moves out of the popup in a listener of `keydown` or `keyup` closes nothing',
+  async (family) => {
+    const { away, inside, stays } = await mountHolder(family);
+    for (const type of ['keydown', 'keyup'] as const) {
+      const controller = new AbortController();
+      const { signal } = controller;
+      // Firefox moves the focus out of the page for an F6 that no listener prevents.
+      window.addEventListener('keydown', (event) => event.preventDefault(), { signal });
+      window.addEventListener(type, () => away.focus(), { signal, once: true });
+      await userEvent.keyboard('{F6}');
+      controller.abort();
+      expect(await stays()).toBe(true);
+      expect(document.activeElement).toBe(away);
+      inside.focus();
+    }
+  },
+);
+
+test.each(holders)(
+  '$name: a focus that a script moves into a frame closes nothing, with the pointer away from the frame',
+  async (family) => {
+    const { live, inside, stays } = await mountHolder(family);
+    await userEvent.pointer({ coords: { x: 4, y: 4 } });
+    const frame = live.appendChild(document.createElement('iframe'));
+    frame.style.cssText = 'position: fixed; right: 0; bottom: 100px; width: 100px; height: 50px';
+    frame.srcdoc = '<button>In</button>';
+    await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+    frame.contentDocument!.querySelector('button')!.focus();
+    expect(document.activeElement).toBe(frame);
+    expect(await stays()).toBe(true);
+    inside.focus();
+    frame.focus();
+    expect(await stays()).toBe(true);
+  },
+);
+
+test.each(holders)(
+  '$name: the focus that a script moves from the trigger to an outside element closes the popup',
+  async (family) => {
+    const { away, shown, stays } = await mountHolder(family);
+    document.querySelector<HTMLElement>(family.trigger)!.focus();
+    expect(await stays()).toBe(true);
+    away.focus();
+    await waitFor(() => expect(shown()).toBe(false));
+  },
+);
+
+// A popup in place has no sentinel, so the order of the document moves the focus out of it.
+async function mountInPlace() {
+  mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } });
+  const popup = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[data-testid="popup"]');
+    expect(element?.checkVisibility()).toBe(true);
+    return element!;
+  });
+  await waitFor(() => expect(popup.contains(document.activeElement)).toBe(true));
+  const [first, second] = popup.querySelectorAll('button') as unknown as [HTMLElement, HTMLElement];
+  const after = document.getElementById('after')!;
+  const shown = () => popup.isConnected && popup.checkVisibility();
+  const stays = async () => {
+    await nextTick();
+    await wait(0);
+    return shown();
+  };
+  return { first, second, after, shown, stays };
+}
+
+test('Tab from the last tab stop of a popup in place closes it, and the focus goes to the next element', async () => {
+  const { second, after, shown } = await mountInPlace();
+  second.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).toBe(after);
+  await waitFor(() => expect(shown()).toBe(false));
+});
+
+test('Tab inside a popup in place closes nothing, and a script that moves the focus out of it later closes nothing', async () => {
+  const { first, second, after, stays } = await mountInPlace();
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).toBe(second);
+  await wait(20);
+  after.focus();
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab that a listener cancels closes nothing, and neither does a script that moves the focus in a timer after it', async () => {
+  const { second, after, stays } = await mountInPlace();
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  // A capture listener of the window runs first, so its timer runs before the timer of the layer.
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Tab') return;
+      event.preventDefault();
+      setTimeout(() => after.focus());
+    },
+    { capture: true, signal: controller.signal },
+  );
+  second.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab that a listener lets go on, after it moved the focus out of the popup in place, closes nothing', async () => {
+  const { second, after, stays } = await mountInPlace();
+  second.addEventListener('keydown', (event) => event.key === 'Tab' && after.focus(), {
+    once: true,
+  });
+  second.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).not.toBe(second);
+  expect(await stays()).toBe(true);
+});
+
+test('Tab from the last tab stop of a popup in place into a frame closes it', async () => {
+  const { second, after, shown } = await mountInPlace();
+  const outside = document.getElementById('outside')!;
+  after.tabIndex = -1;
+  outside.tabIndex = -1;
+  const frame = document.body.appendChild(document.createElement('iframe'));
+  onTestFinished(() => frame.remove());
+  frame.srcdoc = '<button>In</button>';
+  await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+  second.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(frame));
+  await waitFor(() => expect(shown()).toBe(false));
+});
+
+test('a focus that a script moves out of a popover in a popover closes neither', async () => {
+  mount(PopoverParts, { root: { defaultOpen: true }, nested: {} });
+  await waitFor(() => expect(document.querySelector('[data-testid="popup"]')).not.toBe(null));
+  await userEvent.click(document.querySelector<HTMLElement>('[data-key="nested"]')!);
+  const child = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[data-testid="nested-popup"]');
+    expect(element?.contains(document.activeElement)).toBe(true);
+    return element!;
+  });
+  document.getElementById('after')!.focus();
+  await nextTick();
+  await wait(0);
+  expect(child.isConnected).toBe(true);
+  expect(document.querySelector('[data-testid="popup"]')).not.toBe(null);
+});
+
+test('a Tab inside a popup, followed by a script focus out in `focusin`, in a microtask or in a window timer, closes nothing', async () => {
+  const { first, second, after, stays } = await mountInPlace();
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const { signal } = controller;
+
+  second.addEventListener('focusin', () => after.focus(), { once: true, signal });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+
+  second.addEventListener('focusin', () => queueMicrotask(() => after.focus()), {
+    once: true,
+    signal,
+  });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+
+  first.addEventListener('keydown', () => queueMicrotask(() => after.focus()), {
+    once: true,
+    signal,
+  });
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).not.toBe(first));
+  expect(await stays()).toBe(true);
+
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Tab') setTimeout(() => after.focus());
+    },
+    { capture: true, once: true, signal },
+  );
+  first.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+});
+
+test('a synthetic Tab `keydown` followed by a script focus out closes nothing', async () => {
+  const { second, after, stays } = await mountInPlace();
+  second.focus();
+  second.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true, view: window }),
+  );
+  after.focus();
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab that moves no focus does not close the popup on a later script focus out', async () => {
+  const { second, after, stays } = await mountInPlace();
+  let tabs = 0;
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Tab' && event.isTrusted) tabs += 1;
+    },
+    { capture: true, signal: controller.signal },
+  );
+  second.focus();
+  // The key combination of each browser sends a trusted Tab `keydown` and moves no focus.
+  await userEvent.keyboard(
+    server.browser === 'firefox' ? '{Alt>}{Tab}{/Alt}' : '{Control>}{Tab}{/Control}',
+  );
+  expect(tabs).toBe(1);
+  expect(document.activeElement).toBe(second);
+  await wait(20);
+  after.focus();
+  expect(document.activeElement).toBe(after);
+  expect(await stays()).toBe(true);
+});
+
+test('a Tab in another document does not make a script focus out in this document close its popup', async () => {
+  const { second, after, stays } = await mountInPlace();
+  const frame = document.body.appendChild(document.createElement('iframe'));
+  onTestFinished(() => frame.remove());
+  frame.srcdoc = '<!doctype html><body><div id="mount"></div></body>';
+  await new Promise((resolve) => frame.addEventListener('load', resolve, { once: true }));
+  const frameDoc = frame.contentDocument!;
+  const frameWin = frame.contentWindow!;
+  const mounted = mount(
+    PopoverParts,
+    { root: { defaultOpen: true }, portal: { disabled: true } },
+    frameDoc.getElementById('mount')!,
+  );
+  onTestFinished(() => mounted.unmount());
+  const frameButton = await waitFor(() => {
+    const button = frameDoc.querySelector<HTMLElement>('[data-testid="popup"] button');
+    expect(button).not.toBe(null);
+    return button!;
+  });
+  // A capture listener of the frame window runs first, so its timer runs before that of the layer.
+  let frameTabs = 0;
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  frameWin.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Tab' || !event.isTrusted) return;
+      frameTabs += 1;
+      setTimeout(() => {
+        mounted.unmount();
+        second.focus();
+        after.focus();
+      });
+    },
+    { capture: true, signal: controller.signal },
+  );
+  frameButton.focus();
+  await userEvent.keyboard(
+    server.browser === 'firefox' ? '{Alt>}{Tab}{/Alt}' : '{Control>}{Tab}{/Control}',
+  );
+  expect(frameTabs).toBe(1);
+  await waitFor(() => expect(document.activeElement).toBe(after));
+  expect(await stays()).toBe(true);
+});
+
+test('Shift+Tab from a nested popup in place closes only the child into the parent, and Tab past the parent closes both', async () => {
+  mount(PopoverParts, {
+    root: { defaultOpen: true },
+    portal: { disabled: true },
+    nested: { root: { defaultOpen: true }, portal: { disabled: true } },
+  });
+  const parent = await waitFor(() => {
+    const element = document.querySelector<HTMLElement>('[data-testid="popup"]');
+    expect(element?.checkVisibility()).toBe(true);
+    return element!;
+  });
+  const child = () => document.querySelector<HTMLElement>('[data-testid="nested-popup"]');
+  await waitFor(() => expect(child()?.checkVisibility()).toBe(true));
+  child()!.querySelector<HTMLElement>('[data-testid="nested-button"]')!.focus();
+  await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+  expect(document.activeElement).toBe(parent.querySelector('[data-key="nested"]'));
+  expect(child()).not.toBe(null);
+  await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+  await waitFor(() => expect(child()).toBe(null));
+  expect(parent.isConnected).toBe(true);
+  expect(document.activeElement).toBe(parent.querySelector('[data-testid="second"]'));
+  await userEvent.click(parent.querySelector<HTMLElement>('[data-key="nested"]')!);
+  await waitFor(() => expect(child()?.checkVisibility()).toBe(true));
+  child()!.querySelector<HTMLElement>('[data-testid="nested-button"]')!.focus();
+  await userEvent.keyboard('{Tab}');
+  await waitFor(() => expect(child()).toBe(null));
+  await waitFor(() => expect(parent.isConnected).toBe(false));
+  expect(document.activeElement).toBe(document.getElementById('after'));
 });

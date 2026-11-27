@@ -19,7 +19,11 @@ export interface Layer {
    * in use (`LIVE`), so a person can operate it above the popup.
    */
   readonly outsidePress: boolean | 'except-live';
-  /** A move of the focus to an element outside closes the popup. */
+  /**
+   * The popup closes when Tab moves the focus out of it, and at a press in a frame. A script that
+   * moves the focus out of it closes nothing. A focus that moves from a trigger, or from an element
+   * of `inside`, to an outside element closes the popup for each cause.
+   */
   readonly focusOut: boolean;
   /**
    * An outside press of a mouse or a pen closes the popup at `pointerdown`: of the main button, or
@@ -265,6 +269,7 @@ function listen(node: Document | ShadowRoot) {
         addEventListener(node, 'contextmenu', onContextmenu, true),
         addEventListener(node, 'click', decidedInRoot(onClick) as EventListener, true),
         addEventListener(node, 'focusout', onFocusout as EventListener),
+        addEventListener(node, 'keydown', onTabKeydown as EventListener, true),
         addEventListener(node, 'keydown', onKeydown as EventListener),
         addEventListener(node, 'compositionend', onCompositionend, true),
       ),
@@ -278,6 +283,7 @@ function listen(node: Document | ShadowRoot) {
     if (owned.count > 0) return;
     owned.stop();
     listeners.delete(node);
+    if (listeners.size === 0) tabKeydown = null;
   };
 }
 
@@ -504,15 +510,51 @@ function onClick(event: MouseEvent) {
   closeOutside(event, entries);
 }
 
+// The browser moves the focus for Tab after it sent `keydown` to the page, when no listener canceled
+// the event. A script that moves the focus in a listener of `keydown` runs during the dispatch, so
+// `eventPhase` is `NONE` only for the move of Tab (test/measurements/popup.test.ts, "the focus move
+// of Tab"). The first `focusout` after the dispatch takes the move, so a script in `focusin` or a
+// microtask closes nothing.
+let tabKeydown: KeyboardEvent | null = null;
+
+function onTabKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || !event.isTrusted) return;
+  tabKeydown = event;
+  setTimeout(() => {
+    if (tabKeydown === event) tabKeydown = null;
+  });
+}
+
+function takeTabMove(event: FocusEvent) {
+  if (
+    tabKeydown?.eventPhase !== Event.NONE ||
+    tabKeydown.defaultPrevented ||
+    tabKeydown.view !== event.view
+  ) {
+    return false;
+  }
+  tabKeydown = null;
+  return true;
+}
+
+function isPathInPopup(entry: Entry, path: readonly EventTarget[]) {
+  const above = stack.slice(stack.indexOf(entry) + 1).flatMap(entryElements);
+  const popups = [entry.layer.root.popup, ...above];
+  return path.some((node) => popups.includes(node as Element));
+}
+
 function onFocusout(event: FocusEvent) {
   // A press moves the focus at `pointerdown`. The rule of the press decides.
   if (handledFocusouts.has(event) || pressing) return;
   handledFocusouts.add(event);
+  const tab = takeTabMove(event);
   const path = event.composedPath();
   const related = event.relatedTarget as Element | null;
   for (const entry of fromTop()) {
     if (!entry.layer.focusOut || !isPathInside(entry, path)) continue;
+    const closes = tab || !isPathInPopup(entry, path);
     if (related) {
+      if (!closes) continue;
       const inside = insideElements(entry);
       if (inside.some((element) => element.contains(related))) continue;
       // A move of the focus into a shadow root has the host of the root, or of a shadow root
@@ -537,13 +579,14 @@ function onFocusout(event: FocusEvent) {
       continue;
     }
     // A press in a frame moves the focus there with no related target. The active element is the
-    // frame one task later (test/measurements/popup.test.ts).
+    // frame one task later, and the pointer is over it (test/measurements/popup.test.ts).
     const doc = ownerDocument(event.target as Element);
     setTimeout(() => {
       const active = activeElement(doc);
       if (
         stack.includes(entry) &&
         active?.localName === 'iframe' &&
+        (closes || active.matches(':hover')) &&
         !insideElements(entry).some((element) => contains(element, active))
       ) {
         entry.layer.root.request(false, 'focus-out', event);

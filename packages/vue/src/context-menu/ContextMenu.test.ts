@@ -542,6 +542,20 @@ describe('the focus', () => {
     expect(active()?.id).toBe('before');
   });
 
+  test('a focus that a script moves out of the menu closes nothing', async () => {
+    const { trigger } = await mountContextMenu();
+    trigger.dispatchEvent(
+      new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 100, clientY: 80 }),
+    );
+    await placed();
+    await waitFor(() => expect(active()).toBe(popup()));
+    document.getElementById('before')!.focus();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(popup()).not.toBe(null);
+    expect(active()?.id).toBe('before');
+  });
+
   test('a submenu opens at the inline end of its trigger', async () => {
     await mountContextMenu();
     await rightPress(100, 80);

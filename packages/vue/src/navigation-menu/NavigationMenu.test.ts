@@ -782,6 +782,21 @@ describe('the Tab order', () => {
     expect(log.at(-2)).toBe('valueChange null focus-out');
   });
 
+  test('a focus that a script moves out of the content closes nothing; one that a script moves from the trigger closes the menu with focus-out', async () => {
+    const log: string[] = [];
+    await mountMenu({ root: rootEvents(log, { defaultValue: 'one' }) });
+    await shows('one');
+    await placed();
+    get('link-one-b').focus();
+    byId('after').focus();
+    await wait(20);
+    expect(byTestId('popup')).not.toBe(null);
+    get('trigger-one').focus();
+    byId('after').focus();
+    await closed();
+    expect(log.at(-2)).toBe('valueChange null focus-out');
+  });
+
   test('a hover opens the menu, and Tab from the last tab stop of the page does not go into the popup; Shift+Tab into the page does not either', async () => {
     // Tab moves the focus to the browser UI. A click returns the focus of Firefox to the page.
     onTestFinished(() => userEvent.pointer({ coords: { x: 1, y: 1 }, keys: '[MouseLeft]' }));
