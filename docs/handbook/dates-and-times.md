@@ -62,7 +62,7 @@ export default defineNuxtPlugin(() => {});
 
 ### Load the polyfill only where `Temporal` is missing
 
-With a static import, each browser downloads and runs the polyfill, also a browser that has `Temporal`. To load it only where the engine has no `Temporal`, use a dynamic import, and mount the app after it:
+With a static import, each browser downloads and runs the polyfill, also a browser that has `Temporal`. To load it only where the engine has no `Temporal`, use a dynamic import. Mount the app after the polyfill loads:
 
 ```ts
 import { createApp } from 'vue';
@@ -77,7 +77,7 @@ ready.then(() => {
 
 A bundler, such as Vite, puts the polyfill in a file of its own. A browser that has `Temporal` does not request that file.
 
-The modules that the entry file imports run before the polyfill. Use `Temporal` in a function or in the `setup` of a component, and not at the top level of a module.
+The modules that the entry file imports run before the polyfill. Use `Temporal` in a function or in component `setup`, not at the top level of a module.
 
 The [Nuxt module](/quick-start#temporal-polyfill) loads the polyfill in this way, so a Nuxt app with the module needs no such code.
 

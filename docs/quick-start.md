@@ -79,7 +79,7 @@ A portal renders its parts as children of `<body>`, with no element around them.
 Some parts enter `<body>` before their popup opens, and they keep that place:
 
 - The parts of a `Portal` part with `keepMounted` enter at the mount of the portal.
-- The parts of a [Select](/components/select) enter at the first focus of its trigger or at its first open, and they stay.
+- The parts of a [Select](/components/select) enter at the first focus of its trigger, the first open or the first autofill, and they stay.
 
 Such a popup can open behind a popup that opened before it. To prevent this, give it a higher `z-index`.
 
@@ -92,7 +92,7 @@ When your styles give a popup a `z-index`, give it to the part that has the `pos
 | [Drawer](/components/drawer)                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `Drawer.Viewport`, which your styles position.                                                                                                |
 | [Toast](/components/toast)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `Toast.Viewport`, which your styles position. For an anchored toast, `Toast.Positioner`.                                                      |
 
-A `Backdrop` part is a child of `<body>` of its own, before the parts in the table. Give it its own `z-index`: the `z-index` of the popup, or a lower one.
+A `Backdrop` part is a child of `<body>` of its own. Put it before the popup in the portal. Give it the `z-index` of the popup, or a lower one.
 
 While a modal popup with a positioner is open, an element with a lower `z-index` than the positioner gets no pointer. The rest of the page gets no pointer in the same way.
 
@@ -115,7 +115,7 @@ The popups of an app can thus have the same `z-index`:
 
 #### Toasts
 
-`Toast.Viewport` is in `<body>` from the mount of its portal, so it comes before each popup that opens later. With no `z-index`, or with the `z-index` of the popups, a popup that covers the toasts hides them. To show the toasts above the popups, give `Toast.Viewport` a higher `z-index`.
+`Toast.Viewport` is in `<body>` from the mount of its portal, so it comes before each popup that opens later. With no `z-index`, or with the `z-index` of the popups, a popup that covers the toasts hides them. To show the toasts above the popups, give `Toast.Viewport` a higher `z-index`, or `Toast.Positioner` for an anchored toast.
 
 #### A portal in another container
 
