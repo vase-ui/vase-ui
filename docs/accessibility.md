@@ -47,7 +47,7 @@ An open popup that can hold the focus, such as a Dialog, a Menu, a Popover or a 
 
 [axe-core](https://github.com/dequelabs/axe-core) reports each sentinel under the rule `aria-hidden-focus`. The report is a false positive: [ACT rule 6cfa84](https://www.w3.org/WAI/standards-guidelines/act/rules/6cfa84/) passes a sentinel that moves the focus. Base UI and Floating UI render the same sentinels ([base-ui#5237](https://github.com/mui/base-ui/issues/5237), [floating-ui#2758](https://github.com/floating-ui/floating-ui/issues/2758)).
 
-An open Context Menu gives `aria-hidden="true"` to the rest of the page. A Dialog or a Drawer with `modal` set to `'trap-focus'` does the same. So does a Popover with `modal` set to `'trap-focus'` and a `Popover.Close`. axe-core then reports each control of the page under the same rule. No control of the page can get the focus while the popup is open: a `'trap-focus'` popup keeps the focus, and a Context Menu closes when the focus leaves it.
+An open Context Menu gives `aria-hidden="true"` to the rest of the page. A Dialog or a Drawer with `modal` set to `'trap-focus'` does the same. So does a Popover with `modal` set to `'trap-focus'` and a `Popover.Close`. axe-core then reports each control of the page under the same rule. No control of the page can get the focus while the popup is open: a `'trap-focus'` popup keeps the focus, and a Context Menu closes when Tab moves the focus out of it.
 
 Check the page while no popup is open. To check an open popup, turn off the rule `aria-hidden-focus` for that check only:
 

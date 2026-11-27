@@ -778,25 +778,20 @@ describe('in the DOM', () => {
     expect(element).not.toHaveAttribute('inert');
   });
 
-  test('the popup that leaves has the `data-instant` of its close: `dismiss` after Escape, `focus` after a focus that left', async () => {
+  test('the popup that leaves has the `data-instant` of its close: `dismiss` after Escape, `focus` after a Tab that left it', async () => {
     const { unmount } = mount(PopoverInTransition, { root: { defaultOpen: true } });
     const element = await opened();
     await userEvent.keyboard('{Escape}');
     await nextTick();
     expect(element).toHaveAttribute('data-instant', 'dismiss');
     unmount();
-    const outside = document.body.appendChild(document.createElement('input'));
-    try {
-      mount(PopoverInTransition, { root: { defaultOpen: true } });
-      const second = await opened();
-      await placed();
-      second.querySelector('button')!.focus();
-      outside.focus();
-      await nextTick();
-      expect(second).toHaveAttribute('data-instant', 'focus');
-    } finally {
-      outside.remove();
-    }
+    mount(PopoverInTransition, { root: { defaultOpen: true } });
+    const second = await opened();
+    await placed();
+    second.querySelector('button')!.focus();
+    await userEvent.keyboard('{Tab}');
+    await nextTick();
+    expect(second).toHaveAttribute('data-instant', 'focus');
   });
 
   test('a kept popup that closes and opens again stays when `keepMounted` turns off', async () => {
@@ -978,7 +973,7 @@ describe('the dismissal', () => {
     earlier.unmount();
   });
 
-  test('a close of a child popover by a key, then a focus that leaves both popups, closes the parent with `focus-out`', async () => {
+  test('a close of a child popover by a key, then a Tab that leaves both popups, closes the parent with `focus-out`', async () => {
     const log: string[] = [];
     await mountPopover({ root: rootEvents(log, { defaultOpen: true }), nested: {} });
     await opened();
@@ -987,7 +982,7 @@ describe('the dismissal', () => {
     await waitFor(() => expect(byTestId('nested-popup')).toBeTruthy());
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.querySelector('[data-testid="nested-popup"]')).toBe(null));
-    byId('after').focus();
+    await userEvent.keyboard('{Tab}');
     await closed();
     expect(log).toEqual(['openChange false focus-out', 'update false']);
   });
@@ -1153,12 +1148,12 @@ describe('the dismissal', () => {
     expect(log).toEqual(['child', 'openChange false outside-press', 'update false']);
   });
 
-  test('the focus that moves to an outside element closes the popup with `focus-out` and stays there', async () => {
+  test('the focus that moves from the trigger to an outside element closes the popup with `focus-out` and stays there', async () => {
     const log: string[] = [];
-    await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
+    const { trigger } = await mountPopover({ root: rootEvents(log, { defaultOpen: true }) });
     await opened();
     await placed();
-    popup()!.querySelector('button')!.focus();
+    trigger().focus();
     byId('after').focus();
     await closed();
     expect(log).toEqual(['openChange false focus-out', 'update false']);
@@ -1206,7 +1201,7 @@ describe('the dismissal', () => {
     }
   });
 
-  test('a popup in a shadow root closes with `focus-out` when the focus moves to another element of that root; a modal one makes the page outside the host inert', async () => {
+  test('a popup in a shadow root closes with `focus-out` when Tab leaves it; a modal one makes the page outside the host inert', async () => {
     const host = document.body.appendChild(document.createElement('div'));
     const shadow = host.attachShadow({ mode: 'open' });
     const container = shadow.appendChild(document.createElement('div'));
@@ -1223,8 +1218,8 @@ describe('the dismissal', () => {
           container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
-      inShadow()!.querySelector('button')!.focus();
-      input.focus();
+      inShadow()!.querySelectorAll('button')[1]!.focus();
+      await userEvent.keyboard('{Tab}');
       await waitFor(() => expect(inShadow()).toBe(null));
       expect(log).toEqual(['openChange false focus-out', 'update false']);
       first.unmount();
@@ -1241,11 +1236,11 @@ describe('the dismissal', () => {
     }
   });
 
-  test('a popup in place in a shadow root that is open at the mount closes when the focus moves to another element of that root', async () => {
+  test('a popup in place in a shadow root that is open at the mount closes when Tab moves the focus to another element of that root', async () => {
     const host = document.body.appendChild(document.createElement('div'));
     const shadow = host.attachShadow({ mode: 'open' });
     const container = shadow.appendChild(document.createElement('div'));
-    const input = shadow.appendChild(document.createElement('input'));
+    shadow.appendChild(document.createElement('input'));
     const inShadow = () => container.querySelector<HTMLElement>('[data-testid="popup"]');
     try {
       mount(PopoverParts, { root: { defaultOpen: true }, portal: { disabled: true } }, container);
@@ -1254,8 +1249,8 @@ describe('the dismissal', () => {
           container.querySelector<HTMLElement>('[data-testid="positioner"]')?.style.opacity,
         ).toBe(''),
       );
-      inShadow()!.querySelector('button')!.focus();
-      input.focus();
+      inShadow()!.querySelectorAll('button')[1]!.focus();
+      await userEvent.keyboard('{Tab}');
       await waitFor(() => expect(inShadow()).toBe(null));
     } finally {
       host.remove();

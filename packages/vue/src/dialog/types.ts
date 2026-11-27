@@ -39,7 +39,7 @@ export interface DialogRootProps<Payload = unknown> {
    *   scroll, and a fixed element covers it.
    * - `'trap-focus'`: the focus stays in the popup, and screen readers do not read the rest of the
    *   page. The page stays in use for the pointer.
-   * - `false`: the page stays in use. The dialog closes when the focus leaves it, unless
+   * - `false`: the page stays in use. The dialog closes when Tab moves the focus out of it, unless
    *   `disablePointerDismissal` is set.
    *
    * Put a `Close` part in the popup: a touch screen reader needs it to leave a dialog that keeps
@@ -48,8 +48,8 @@ export interface DialogRootProps<Payload = unknown> {
    */
   modal?: boolean | 'trap-focus' | undefined;
   /**
-   * A press outside does not close the dialog. A dialog that is not modal also stays open when the
-   * focus leaves it.
+   * A press outside does not close the dialog. A dialog that is not modal also stays open when Tab
+   * moves the focus out of it.
    * @default false
    */
   disablePointerDismissal?: boolean | undefined;
