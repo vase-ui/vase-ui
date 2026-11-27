@@ -115,7 +115,7 @@ function onKeydown(event: KeyboardEvent) {
 }
 
 // A key that a listener prevented gave no click, and the click of this press is no key click.
-// A press of a screen reader opens the submenu as a key does, and closes it as a press does.
+// A press of a screen reader acts as a key click.
 let virtualPress = false;
 function onPointerdown(event: PointerEvent) {
   keyClick = false;
