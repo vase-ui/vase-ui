@@ -32,7 +32,15 @@ function surfaceRows({ surface }: Family) {
 
 <template>
   <section v-for="family in data.families" :key="family.name">
-    <h4 :id="family.name">{{ family.name }}</h4>
+    <h4 :id="family.name" tabindex="-1">
+      {{ family.name }}
+      <a
+        class="header-anchor"
+        :href="`#${family.name}`"
+        :aria-label="`Permalink to “${family.name}”`"
+        >&#8203;</a
+      >
+    </h4>
     <p>
       Matches the Base UI commit
       <a :href="baseUiCommitUrl(family.matchedCommit.sha)">

@@ -11,6 +11,7 @@ const END = '<!-- /lower-headings -->';
 export function markdownLowerHeadings(md: MarkdownRenderer): void {
   // The rules that read the level of a heading, such as the anchor rule, run after `block`.
   md.core.ruler.after('block', 'lower_headings', (state) => {
+    const page = String(state.env.relativePath ?? state.env.path ?? 'page');
     let lowered = false;
     state.tokens = state.tokens.filter((token) => {
       const marker = token.type === 'html_block' ? token.content.trim() : undefined;
@@ -22,12 +23,17 @@ export function markdownLowerHeadings(md: MarkdownRenderer): void {
         const level = Number(token.tag.slice(1));
         if (level === 6) {
           throw new Error(
-            `${String(state.env.relativePath)}: a heading of level 6 is between "${START}" and "${END}". HTML has no heading of level 7. Raise the heading in its file.`,
+            `${page}: a heading of level 6 is between "${START}" and "${END}". HTML has no heading of level 7. Raise the heading in its file.`,
           );
         }
         token.tag = `h${String(level + 1)}`;
       }
       return true;
     });
+    if (lowered) {
+      throw new Error(
+        `${page}: "${START}" has no "${END}" after it. Add "${END}" after the included file.`,
+      );
+    }
   });
 }

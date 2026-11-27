@@ -38,7 +38,7 @@ const overviewLinks = [
     description: 'Meet the people whose work Vase UI carries.',
   },
   {
-    href: base,
+    href: `${base}about`,
     title: 'About',
     description: 'Learn more about Vase UI and why it exists.',
   },

@@ -55,4 +55,17 @@ test('throws for a heading of level 6 between the two lines, and names the page'
     render('<!-- lower-headings -->\n\n###### Deep\n\n<!-- /lower-headings -->\n'),
     /^Error: page\.md: a heading of level 6 is between/,
   );
+  await assert.rejects(
+    md.renderAsync('<!-- lower-headings -->\n\n###### Deep\n\n<!-- /lower-headings -->\n', {
+      path: '/docs/releases.md',
+    }),
+    /^Error: \/docs\/releases\.md: a heading of level 6 is between/,
+  );
+});
+
+test('throws when a start line has no end line after it, and names the page', async () => {
+  await assert.rejects(
+    render('<!-- lower-headings -->\n\n## Notes\n'),
+    /^Error: page\.md: "<!-- lower-headings -->" has no "<!-- \/lower-headings -->" after it\./,
+  );
 });

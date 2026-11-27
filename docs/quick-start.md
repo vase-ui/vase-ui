@@ -1,7 +1,6 @@
 ---
 order: 1
 description: Install Vase UI, set up your app and assemble your first component.
-outline: deep
 ---
 
 <script setup lang="ts">
@@ -44,6 +43,8 @@ Each component has its own entry point, such as `@vase-ui/vue/popover`. The entr
 In a Nuxt app, add the [Nuxt module](#nuxt) of the package. Your components then use each component with no import.
 
 ## Set up
+
+Every app needs [Portals](#portals). [Server rendering](#server-rendering) and [Nuxt](#nuxt) apply only when your app uses them. If your app does not use them, go to [Assemble a component](#assemble-a-component).
 
 ### Portals
 
@@ -111,8 +112,6 @@ Some parts render an inline `<style>` or `<script>` element. Under a strict Cont
 
 With the Nuxt module of the package, your components use each component of Vase UI with no import. When your app has `temporal-polyfill`, the module also loads it where the engine has no `Temporal`.
 
-For a link of the router in a part, see [The element slot](/handbook/composition#the-element-slot).
-
 #### Add the module
 
 The package has a Nuxt module for Nuxt 4. Add it to `nuxt.config.ts`:
@@ -124,6 +123,8 @@ export default defineNuxtConfig({
 ```
 
 The module is optional. Without it, import each component from its entry point, such as `@vase-ui/vue/dialog`, as in a Vue app. Vase UI needs no other configuration.
+
+For a link of the router in a part, see [The element slot](/handbook/composition#the-element-slot).
 
 #### Components with no import
 

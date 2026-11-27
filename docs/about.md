@@ -1,7 +1,6 @@
 ---
 order: 5
 description: The principles of Vase UI, the browsers and the Vue versions that it supports, and its benchmarks against other component libraries.
-outline: [2, 4]
 ---
 
 <script setup lang="ts">

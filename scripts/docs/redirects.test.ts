@@ -66,6 +66,7 @@ test('the script of the file keeps an anchor, and goes to the section with no an
 test('the file goes to the section in a browser that runs no script, and names the page as canonical', () => {
   const html = redirectPage({ from: '/benchmarks', to: '/about', section: 'benchmarks' }, SITE);
 
+  assert.ok(html.includes('<meta name="robots" content="noindex" />'));
   assert.ok(
     html.includes('<noscript><meta http-equiv="refresh" content="0; url=/about#benchmarks" />'),
   );

@@ -257,13 +257,13 @@ body {
   font-weight: 700;
 }
 
-/* As in Base UI, a heading of level 2 or 3 is the link to its own section, and no other heading
-   is a link. The anchor of VitePress covers the heading. */
-.vp-doc :is(h1, h4, h5, h6) .header-anchor {
+/* A heading of level 2 to 4 is the link to its own section, and no other heading is a link.
+   The anchor of VitePress covers the heading. */
+.vp-doc :is(h1, h5, h6) .header-anchor {
   display: none;
 }
 
-.vp-doc :is(h2, h3) .header-anchor {
+.vp-doc :is(h2, h3, h4) .header-anchor {
   inset: -0.25rem -0.5rem;
   margin: 0;
   border-radius: var(--vase-radius-6);
@@ -280,7 +280,7 @@ body {
 }
 
 @media (hover: hover) {
-  .vp-doc :is(h2, h3):has(> .header-anchor:hover) {
+  .vp-doc :is(h2, h3, h4):has(> .header-anchor:hover) {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;

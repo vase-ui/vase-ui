@@ -50,7 +50,12 @@ const behaviorLosses = data.behaviorLosses.map((loss) => ({
     library is faster or uses less memory.
   </p>
   <template v-for="group in groups" :key="group.id">
-    <h4 :id="group.id" tabindex="-1">{{ group.title }}</h4>
+    <h4 :id="group.id" tabindex="-1">
+      {{ group.title }}
+      <a class="header-anchor" :href="`#${group.id}`" :aria-label="`Permalink to “${group.title}”`"
+        >&#8203;</a
+      >
+    </h4>
     <p><TextWithCode :text="group.reason" /></p>
     <p v-if="group.sources.length > 0">
       Sources:
@@ -117,7 +122,15 @@ const behaviorLosses = data.behaviorLosses.map((loss) => ({
     </ScrollBox>
   </template>
   <template v-if="data.behaviorRuns.length > 0">
-    <h4 :id="BEHAVIOR_LOSSES" tabindex="-1">{{ BEHAVIOR_LOSSES_TITLE }}</h4>
+    <h4 :id="BEHAVIOR_LOSSES" tabindex="-1">
+      {{ BEHAVIOR_LOSSES_TITLE }}
+      <a
+        class="header-anchor"
+        :href="`#${BEHAVIOR_LOSSES}`"
+        :aria-label="`Permalink to “${BEHAVIOR_LOSSES_TITLE}”`"
+        >&#8203;</a
+      >
+    </h4>
     <p v-if="behaviorLosses.length === 0">Vase UI passes each behavior check in each engine.</p>
     <ScrollBox v-else label="Behavior checks that Vase UI does not pass">
       <table>
