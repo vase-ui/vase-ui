@@ -168,10 +168,7 @@ const linkCardClassName =
       </NavigationMenu.Item>
 
       <NavigationMenu.Item>
-        <NavigationMenu.Link
-          :class="triggerClassName"
-          :href="`${base}releases#parity-with-base-ui`"
-        >
+        <NavigationMenu.Link :class="triggerClassName" :href="`${base}releases`">
           Parity
         </NavigationMenu.Link>
       </NavigationMenu.Item>

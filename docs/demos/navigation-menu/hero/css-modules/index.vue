@@ -28,7 +28,7 @@ const overviewLinks = [
     description: 'Install and assemble your first component.',
   },
   {
-    href: `${base}releases#parity-with-base-ui`,
+    href: `${base}releases`,
     title: 'Parity',
     description: 'See which components are complete and which are not started.',
   },
