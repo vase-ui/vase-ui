@@ -293,6 +293,16 @@ describe.for([
     await nextTick();
     expect(active()).not.toBe(element('file'));
   });
+
+  test('ArrowDown opens a menu whose parent holds `open` with its first item highlighted', async () => {
+    const root = reactive<Props>({ open: false });
+    root['onUpdate:open'] = (open: boolean) => (root.open = open);
+    await mountForm(oneRoot ? { root } : { roots: { file: root } });
+    element('file').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(active()).toBe(element('file-1')));
+    expect(element('file-1')).toHaveAttribute('data-highlighted');
+  });
 });
 
 describe('a bar with a root around the first trigger and a root outside the bar for the other triggers', () => {

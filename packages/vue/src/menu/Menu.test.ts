@@ -49,6 +49,22 @@ function rootEvents(log: string[], props: Props = {}) {
   });
 }
 
+/**
+ * Props of a root whose parent holds `open`, as `v-model:open` does: the parent writes the value
+ * from `update:open`, so the root gets it at the next render of the parent.
+ */
+function heldOpen(props: Props = {}) {
+  const root = reactive<Props>({ ...props, open: false });
+  root['onUpdate:open'] = (open: boolean) => (root.open = open);
+  return root;
+}
+
+/** A root that owns `open`, and a root whose parent holds it. */
+const owners = [
+  { owner: 'the menu', root: (props: Props = {}) => props },
+  { owner: 'its parent', root: heldOpen },
+];
+
 async function opened(find = popup) {
   await waitFor(() => expect(find()).not.toBe(null));
   return find()!;
@@ -339,19 +355,85 @@ describe('the root', () => {
 });
 
 describe('the trigger', () => {
-  test.each([
-    { key: '{Enter}', first: 'a' },
-    { key: ' ', first: 'a' },
-    { key: '{ArrowDown}', first: 'a' },
-    { key: '{ArrowUp}', first: 'c' },
-  ])('$key opens the menu and highlights an item', async ({ key, first }) => {
-    const { trigger } = await mountMenu();
+  describe.for(owners)('while $owner holds `open`', ({ root }) => {
+    test.each([
+      { key: '{Enter}', first: 'a' },
+      { key: ' ', first: 'a' },
+      { key: '{ArrowDown}', first: 'a' },
+      { key: '{ArrowUp}', first: 'c' },
+    ])('$key opens the menu and highlights an item', async ({ key, first }) => {
+      const { trigger } = await mountMenu({ root: root() });
+      trigger.focus();
+      await userEvent.keyboard(key);
+      await opened();
+      await waitFor(() => expect(active()).toBe(item(first)));
+      expect(item(first)).toHaveAttribute('data-highlighted');
+      expect(item(first)).toHaveAttribute('tabindex', '0');
+    });
+
+    test.each([
+      { key: '{ArrowDown}', first: 'a' },
+      { key: '{ArrowUp}', first: 'c' },
+    ])('$key opens a kept popup again and highlights an item', async ({ key, first }) => {
+      const { trigger } = await mountMenu({ root: root(), portal: { keepMounted: true } });
+      await openWithKeyboard(trigger);
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(popup()).toHaveAttribute('hidden'));
+      await waitFor(() => expect(active()).toBe(trigger));
+      await userEvent.keyboard(key);
+      await waitFor(() => expect(active()).toBe(item(first)));
+      expect(item(first)).toHaveAttribute('data-highlighted');
+    });
+  });
+
+  test('a key open that a listener cancels leaves no highlight for a later open by the `open` prop', async () => {
+    const root = heldOpen({
+      onOpenChange: (_: boolean, details: MenuRootChangeEventDetails) => details.cancel(),
+    });
+    const { trigger } = await mountMenu({ root });
     trigger.focus();
-    await userEvent.keyboard(key);
+    await userEvent.keyboard('{ArrowDown}');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).toBe(null);
+    root.open = true;
     await opened();
-    await waitFor(() => expect(active()).toBe(item(first)));
-    expect(item(first)).toHaveAttribute('data-highlighted');
-    expect(item(first)).toHaveAttribute('tabindex', '0');
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+  });
+
+  test('a key open that its parent does not apply leaves no highlight for a later open with a pointer', async () => {
+    let applies = false;
+    const root = heldOpen();
+    root['onUpdate:open'] = (open: boolean) => {
+      if (applies) root.open = open;
+    };
+    const { trigger } = await mountMenu({ root });
+    trigger.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(popup()).toBe(null);
+    applies = true;
+    await userEvent.click(trigger);
+    await opened();
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+  });
+
+  test('Enter on another trigger of the handle gives the first focus to a menu that a hover opened', async () => {
+    const handle = Menu.createHandle();
+    await mountMenu({
+      root: { handle },
+      trigger: { id: 'first', handle, openOnHover: true, delay: 0 },
+      detached: { id: 'second', handle },
+    });
+    await userEvent.hover(document.getElementById('first')!);
+    await opened();
+    await placed();
+    document.getElementById('second')!.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(active()).toBe(item('a')));
+    expect(item('a')).toHaveAttribute('data-highlighted');
+    expect(popup()).toHaveAttribute('aria-labelledby', 'second');
   });
 
   test('a key click gives the instant `click`, and Escape gives `dismiss`', async () => {
@@ -1129,6 +1211,24 @@ describe('submenus', () => {
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(active()).toBe(item('s1')));
   });
+
+  test.each([
+    { key: '{ArrowRight}', name: 'ArrowRight' },
+    { key: '{Enter}', name: 'Enter' },
+    { key: ' ', name: 'Space' },
+  ])(
+    '$name on the trigger opens a submenu whose parent holds `open` and highlights its first item',
+    async ({ key }) => {
+      const { trigger } = await mountMenu(submenu({ root: heldOpen() }));
+      await openWithKeyboard(trigger);
+      await userEvent.keyboard('{End}');
+      expect(active()).toBe(item('sub'));
+      await userEvent.keyboard(key);
+      await opened(subPopup);
+      await waitFor(() => expect(active()).toBe(item('s1')));
+      expect(item('s1')).toHaveAttribute('data-highlighted');
+    },
+  );
 
   test('Escape closes the submenu only; with `closeParentOnEsc` it closes the parent too', async () => {
     const { trigger } = await mountMenu(submenu());
@@ -2405,6 +2505,25 @@ describe('more of the submenus', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(subPopup(), key).not.toBe(null);
       expect(popup()).not.toBe(null);
+      unmount();
+    }
+  });
+
+  test('Enter and Space on the trigger of a submenu that a press opened leave the focus on the trigger', async () => {
+    for (const key of ['{Enter}', ' ']) {
+      const { trigger, unmount } = await mountMenu({
+        submenu: { trigger: { delay: 0, openOnHover: false } },
+      });
+      await userEvent.click(trigger);
+      await placed();
+      await userEvent.click(item('sub'));
+      await opened(subPopup);
+      await waitFor(() => expect(active()).toBe(item('sub')));
+      await userEvent.keyboard(key);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(subPopup(), key).not.toBe(null);
+      expect(active(), key).toBe(item('sub'));
+      expect(item('s1'), key).not.toHaveAttribute('data-highlighted');
       unmount();
     }
   });

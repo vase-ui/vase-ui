@@ -187,6 +187,8 @@ export function useMenuRoot<Payload>(
   let replacesSibling = false;
   // The event of the last accepted open, for the close of the menu that it replaces.
   let openEvent: Event | undefined;
+  // The item that the last accepted key open asks for. The first focus of the popup highlights it.
+  let pendingEdge: 'first' | 'last' | null = null;
   const root = usePopupRoot<Payload>({
     name: 'Menu',
     open: () => props.open,
@@ -196,6 +198,8 @@ export function useMenuRoot<Payload>(
     handle: () => props.handle,
     emitChange(open, details) {
       const event = details.event;
+      // A request drops the edge of a key open that the parent did not apply.
+      pendingEdge = null;
       if (!open && details.reason === 'escape-key' && props.closeParentOnEsc && parent) {
         details.allowPropagation();
       }
@@ -296,7 +300,6 @@ export function useMenuRoot<Payload>(
     };
   });
 
-  let pendingEdge: 'first' | 'last' | null = null;
   const focus = usePopupFocus(root, layer, {
     takesFocus: () => !hoverOpen.value,
     placed: () => placed.value,
@@ -552,14 +555,17 @@ export function useMenuRoot<Payload>(
     viewport: shallowRef(null),
     inside: (element) => isInPopup(layer, element),
     openWithKey(edge, reason, event, trigger) {
-      pendingEdge = edge;
-      root.request(true, reason, event, trigger);
-      if (!root.open) pendingEdge = null;
-      // An open menu highlights the item at once, and its input takes the focus back.
-      else if (placed.value && reason !== 'trigger-press') {
-        pendingEdge = null;
+      const wasOpen = root.open;
+      if (root.request(true, reason, event, trigger).isCanceled) return;
+      // A controlled root opens, and a kept popup shows its items, after this call, so the first
+      // focus takes the edge. A menu that is open has no first focus, so its item gets the highlight
+      // at once, and its input takes the focus back. A press on a menu that a hover opened gives it
+      // the first focus.
+      if (wasOpen && reason !== 'trigger-press') {
         filter?.input.value?.focus({ preventScroll: true });
         highlightEdge(edge);
+      } else {
+        pendingEdge = edge;
       }
     },
     onKeydown,

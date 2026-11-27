@@ -551,6 +551,21 @@ describe('more of the filter', () => {
     expect(highlighted()).toBe('apple');
   });
 
+  test.each([
+    { key: '{Enter}', first: 'apple' },
+    { key: '{ArrowDown}', first: 'apple' },
+    { key: '{ArrowUp}', first: 'carrot' },
+  ])(
+    '$key opens a menu whose parent holds `open` with the focus in the input and an item highlighted',
+    async ({ key, first }) => {
+      const root = reactive<Props>({ open: false });
+      root['onUpdate:open'] = (open: boolean) => (root.open = open);
+      const { trigger } = await mountFilter({ root });
+      await open(trigger, key);
+      expect(highlighted()).toBe(first);
+    },
+  );
+
   test('Space on an empty input with no highlighted item types nothing and clicks nothing', async () => {
     const log: string[] = [];
     const { trigger } = await mountFilter({ provider: queryEvents(log) });
