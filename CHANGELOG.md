@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.11.14
+
+Same Base UI release and commit as 2026.11.13.
+
+### Fixed
+
+- A popup now stays open when `element.focus()` moves focus outside it or F6 moves focus to a toast, as in Base UI. From 2026.11.2 through 2026.11.13, these moves could close `Popover`, `Menu`, `Select`, or `ContextMenu`. They could also close a `Dialog` or `Drawer` with `modal` set to `false`. Tab or Shift+Tab out of a non-modal popup and a press outside still close it by default. So does a focus move from the trigger to an outside element, even by script. The same holds for the input that controls a `Combobox` or `Autocomplete`. ([#902](https://github.com/vase-ui/vase-ui/pull/902))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.13 (B) | 2026.11.14 (B) |
+| ------- | -------------: | -------------: |
+| Raw     |      2,310,730 |      2,317,641 |
+| gzip    |        759,593 |        762,035 |
+| Brotli  |        662,588 |        665,067 |
+
 ## 2026.11.13
 
 Same Base UI release and commit as 2026.11.12.
