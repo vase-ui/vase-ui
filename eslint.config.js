@@ -510,9 +510,10 @@ const RESTRICTED_HTML_IMPORTS = [
 
 // VitePress makes an SFC from a page, and Vue compiles the SFC. The processor makes an SFC from the
 // scripts of the page and the HTML of the renderer of VitePress. The rules for an SFC then apply to
-// a page. A page includes a region of `README.md` and of `THANKS.md`, and the synchronous render of
-// a processor does not expand an include. ESLint thus reads each of the two files as a page.
-const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md'];
+// a page. A page includes a region of `README.md` and of `THANKS.md`, and the sections of
+// `CHANGELOG.md`. The synchronous render of a processor does not expand an include. ESLint thus
+// reads each of the three files as a page.
+const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md', 'CHANGELOG.md'];
 const SFC_OF_PAGE_FILES = PAGE_FILES.map((page) => `${page}/*.vue`);
 
 // Vue reads `{{ }}` in a fence only when the language ends in `-vue`. As the site does, this reads

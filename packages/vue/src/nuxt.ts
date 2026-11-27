@@ -102,7 +102,7 @@ const nuxtModule: NuxtModule<
     name: PACKAGE_NAME,
     configKey: 'vaseUi',
     compatibility: { nuxt: '>=4.0.0' },
-    docs: 'https://vase-ui.com/handbook/nuxt',
+    docs: 'https://vase-ui.com/quick-start#nuxt',
   },
   defaults: { prefix: '', temporal: 'temporal-polyfill/global' },
   async setup({ prefix, temporal }, nuxt) {

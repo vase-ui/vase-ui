@@ -41,11 +41,14 @@ function linkOf(folder: string | undefined, file: string): string {
   return name === 'index' ? `/${folder}/` : `/${folder}/${name}`;
 }
 
-function readPage(docsRoot: string, folder: string | undefined, file: string): Page {
+function readPage(docsRoot: string, folder: string | undefined, file: string): Page | undefined {
   const path = folder === undefined ? file : `${folder}/${file}`;
   const lines = readFileSync(join(docsRoot, path), 'utf8').split(/\r?\n/);
   const frontMatterEnd = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
   const frontMatter = frontMatterEnd === -1 ? [] : lines.slice(1, frontMatterEnd);
+  if (frontMatter.includes('navigation: false')) {
+    return undefined;
+  }
   const text = firstMatch(lines.slice(frontMatterEnd + 1), /^# (\S.*?)\s*$/);
   if (text === undefined) {
     throw new Error(
@@ -55,7 +58,7 @@ function readPage(docsRoot: string, folder: string | undefined, file: string): P
   const order = firstMatch(frontMatter, /^order: (\d+)$/);
   if (order === undefined) {
     throw new Error(
-      `docs/${path}: the page has no "order" in its front matter. Add the line "order: <whole number>" between two "---" lines at the top of the file.`,
+      `docs/${path}: the page has no "order" in its front matter. Add the line "order: <whole number>" between two "---" lines at the top of the file. For a page that the navigation must not show, add the line "navigation: false".`,
     );
   }
   return { text, link: linkOf(folder, file), order: Number(order) };
@@ -65,7 +68,7 @@ function readPages(docsRoot: string, folder?: string): PageLink[] {
   return readdirSync(join(docsRoot, folder ?? ''), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
     .filter((entry) => folder !== undefined || entry.name !== 'index.md')
-    .map((entry) => readPage(docsRoot, folder, entry.name))
+    .flatMap((entry) => readPage(docsRoot, folder, entry.name) ?? [])
     .sort((a, b) => a.order - b.order || a.text.localeCompare(b.text, 'en'))
     .map(({ text, link }) => ({ text, link }));
 }

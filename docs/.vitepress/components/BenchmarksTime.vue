@@ -21,7 +21,7 @@ const tables = data.timeTables
 <template>
   <p v-if="tables.length === 0">Not measured yet.</p>
   <template v-for="{ table, heading } in tables" :key="heading">
-    <h4>{{ heading }}</h4>
+    <h5>{{ heading }}</h5>
     <BenchmarksTimeTable :table="table" :label="heading" />
   </template>
 </template>

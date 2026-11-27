@@ -342,14 +342,13 @@ export function buildParityReport(input: ReportInput): ParityReport {
   };
 }
 
-/** Runs the check of `pnpm parity:check` and builds the data of the parity page. It throws when the check finds a problem. */
 export function loadParityReport(root = REPOSITORY_ROOT): ParityReport {
   const { parity, files, rowsOf, result } = runParityCheck(root);
   const { upstream } = parity;
   if (result.problems.length > 0 || upstream === undefined) {
     throw new Error(
       [
-        'The parity page needs a clean parity check. Run `pnpm parity:check` and correct each problem.',
+        'The parity report needs a clean parity check. Run `pnpm parity:check` and correct each problem.',
         ...result.problems,
       ].join('\n'),
     );

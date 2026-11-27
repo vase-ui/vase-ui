@@ -13,7 +13,7 @@ const UNIT_NAMES = { raw: 'Raw bytes', brotli: 'Brotli bytes' } as const;
 
 <template>
   <template v-for="table in data.sizeTables" :key="table.setup">
-    <h4>{{ setupHeading(table.setup) }}</h4>
+    <h5>{{ setupHeading(table.setup) }}</h5>
     <BenchmarksSizeTable
       :table="table"
       :measure="measure"

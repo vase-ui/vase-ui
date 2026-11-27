@@ -7,11 +7,13 @@ import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { createBaseUiDifferencesReader } from '../../scripts/docs/baseUiDifferences.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
+import { writeRedirectPages } from '../../scripts/docs/redirects.ts';
 import { searchIndexHtml } from '../../scripts/docs/searchIndex.ts';
 import { VASE_SOURCE_ROOT } from '../../scripts/parity/paths.ts';
 import { REPOSITORY_ROOT } from '../../scripts/parity/repository.ts';
 import { DEMO_VARIANT_STORAGE_KEY } from './components/demoVariantStorageKey.ts';
 import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
+import { markdownLowerHeadings } from './markdownLowerHeadings.ts';
 import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 import { viteFollowSource } from './viteFollowSource.ts';
 
@@ -78,6 +80,7 @@ function markdownSiteLinks(md: MarkdownRenderer): void {
 // VitePress takes one function for the Markdown renderer.
 function markdownConfig(md: MarkdownRenderer): void {
   markdownHeadingBadge(md);
+  markdownLowerHeadings(md);
   markdownSiteLinks(md);
 }
 
@@ -155,6 +158,9 @@ export default defineConfig({
       frontmatter: { ...pageData.frontmatter, head: [...pageHead, ...frontmatterHead] },
       ...(family === undefined ? {} : readFamilyData(family)),
     };
+  },
+  buildEnd({ outDir }) {
+    writeRedirectPages(outDir, manifest.homepage);
   },
   themeConfig: {
     logo: { light: '/mark-light.svg', dark: '/mark-dark.svg', alt: 'Vase UI' },

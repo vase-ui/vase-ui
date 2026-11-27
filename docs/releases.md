@@ -1,6 +1,6 @@
 ---
-order: 4
-description: The state of each Vase UI family against Base UI.
+order: 3
+description: The state of each Vase UI family against Base UI, and the notes of each release.
 ---
 
 <script setup lang="ts">
@@ -12,13 +12,17 @@ import ParityOwnComponents from './.vitepress/components/ParityOwnComponents.vue
 import ParitySummary from './.vitepress/components/ParitySummary.vue';
 </script>
 
-# Parity
+# Releases
 
-This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports. A component is a family that has its own page in the components docs of Base UI. The column Component shows which families are components. A family whose parts are on the page of another component is not a component. A component that Base UI does not have is not a family. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
+This page has two parts. [Parity with Base UI](#parity-with-base-ui) shows the state of each Vase UI family against Base UI. [Release notes](#release-notes) gives the changes of each release.
+
+## Parity with Base UI
+
+This section shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports. A component is a family that has its own page in the components docs of Base UI. The column Component shows which families are components. A family whose parts are on the page of another component is not a component. A component that Base UI does not have is not a family. The site build makes this section from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
 
 <ParitySummary />
 
-## Families
+### Families
 
 Each source file, test and API row of Base UI needs a counterpart in Vase UI, or an exception row. A row has a reason and one of four kinds:
 
@@ -31,7 +35,7 @@ A member that Vase UI adds to a Base UI part, such as the event of a `v-model`, 
 
 <ParityFamilies />
 
-## Base UI changes
+### Base UI changes
 
 Each change has a state for each family that it touches:
 
@@ -46,20 +50,30 @@ A change that touches no family has one of two other states:
 
 <ParityChanges />
 
-## Edge cases
+### Edge cases
 
 Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.
 
 <ParityEdgeCases />
 
-## Components of Vase UI's own
+### Components of Vase UI's own
 
 A component of Vase UI's own is a component that Base UI does not have. Its behavior follows a standard, and its API follows the convention of the families. `parity/own` holds one record for each component. A utility of Vase UI's own has a record too, with its functions in place of parts.
 
 <ParityOwnComponents />
 
-## Not ported
+### Not ported
 
 `parity/scope.json` lists what Vase UI does not port, each with its reason.
 
 <ParityNotPorted />
+
+## Release notes
+
+Each release of `@vase-ui/vue` has a section. The newest release is first.
+
+<!-- lower-headings -->
+
+<!--@include: ../CHANGELOG.md{3,}-->
+
+<!-- /lower-headings -->

@@ -542,7 +542,7 @@ test('loadParityReport throws when the check finds a problem', () => {
   });
   assert.throws(
     () => loadParityReport(root),
-    /^Error: The parity page needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nalpha: parity\/families\/alpha\.upstream\.json does not exist/,
+    /^Error: The parity report needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nalpha: parity\/families\/alpha\.upstream\.json does not exist/,
   );
 });
 

@@ -61,6 +61,10 @@ In this sample, the type of the listener follows `default-value`: a number for o
 
 <<< ../examples/typescript/GenericValue.vue
 
+## Temporal types
+
+The types of the date and time components use the global `Temporal` types of TypeScript 6.0. [Dates and times](/handbook/dates-and-times#typescript) gives the setup of a project.
+
 ## Differences from Base UI
 
 | Base UI                                                         | Vase UI                                                                                                                                                    |

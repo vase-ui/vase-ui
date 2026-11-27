@@ -13,7 +13,6 @@ const SELF = 'scripts/repo/history.test.ts';
 /** Files that hold history by design, and text that the repository copies from Base UI or GitHub. */
 const SKIPPED_FILES = [
   /^CHANGELOG\.md$/,
-  /^docs\/philosophy\.md$/,
   /^THANKS\.md$/, // `pnpm thanks:render` writes it.
   /^pnpm-lock\.yaml$/,
   /^patches\//,
@@ -26,6 +25,11 @@ const SKIPPED_FILES = [
 
 /** A line that is not a trace, as its file and its text with no indent. */
 const ALLOWED_LINES: { file: string; text: string }[] = [
+  // A principle of Vase UI names the constraints of an API with this word.
+  {
+    file: 'docs/about.md',
+    text: '- **API evolution over legacy constraints.** We prioritize correctness and usability over preserving past decisions indefinitely. AI-assisted migrations can reduce the cost of change, strengthening the case for improving APIs instead of carrying their limitations forward. We evolve Vase’s API with that goal in mind, embracing Vue’s capabilities, including Vapor.',
+  },
   // `refactor` is a type of a Conventional Commit.
   { file: 'scripts/ci/checkTitle.ts', text: "'refactor'," },
   { file: 'scripts/ci/checkTitle.test.ts', text: "'refactor!: rename each export'," },

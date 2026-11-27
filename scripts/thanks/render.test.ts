@@ -505,7 +505,7 @@ test('THANKS.md has only what renderThanks writes', () => {
   assert.deepEqual(text.split('\n'), renderThanks({ readOn, projects }).split('\n'));
 });
 
-test('docs/thanks.md includes the region thanks of THANKS.md', () => {
-  const page = readFileSync(join(ROOT, 'docs', 'thanks.md'), 'utf8');
+test('docs/community.md includes the region thanks of THANKS.md', () => {
+  const page = readFileSync(join(ROOT, 'docs', 'community.md'), 'utf8');
   assert.match(page, /<!--\s*@include:\s*\.\.\/THANKS\.md#thanks\s*-->/);
 });
