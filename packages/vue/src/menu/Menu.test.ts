@@ -386,37 +386,100 @@ describe('the trigger', () => {
     });
   });
 
-  test('a key open that a listener cancels leaves no highlight for a later open by the `open` prop', async () => {
+  test('a key open that a listener cancels leaves no highlight for an open by the `open` prop', async () => {
     const root = heldOpen({
-      onOpenChange: (_: boolean, details: MenuRootChangeEventDetails) => details.cancel(),
+      onOpenChange: (_: boolean, details: MenuRootChangeEventDetails) => {
+        details.cancel();
+        root.open = true;
+      },
     });
     const { trigger } = await mountMenu({ root });
     trigger.focus();
     await userEvent.keyboard('{ArrowDown}');
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(popup()).toBe(null);
+    await opened();
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+  });
+
+  test('a key open that its parent does not apply leaves no highlight for a later open by the `open` prop or with a pointer', async () => {
+    for (const openLater of ['prop', 'pointer'] as const) {
+      let applies = false;
+      const root = heldOpen();
+      root['onUpdate:open'] = (open: boolean) => {
+        if (applies) root.open = open;
+      };
+      const { trigger, unmount } = await mountMenu({ root });
+      trigger.focus();
+      await userEvent.keyboard('{ArrowDown}');
+      await nextTick();
+      expect(popup(), openLater).toBe(null);
+      applies = true;
+      if (openLater === 'prop') root.open = true;
+      else await userEvent.click(trigger);
+      await opened();
+      await waitFor(() => expect(active(), openLater).toBe(popup()));
+      expect(document.querySelector('[data-highlighted]'), openLater).toBe(null);
+      unmount();
+    }
+  });
+
+  test('a key open that closes before the first focus leaves no highlight for a later open by the `open` prop', async () => {
+    let closeImmediately = true;
+    const root = heldOpen();
+    root['onUpdate:open'] = (open: boolean) => {
+      root.open = open;
+      if (open && closeImmediately) {
+        closeImmediately = false;
+        void nextTick(() => {
+          root.open = false;
+        });
+      }
+    };
+    const { trigger } = await mountMenu({ root });
+    trigger.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(popup()).toBe(null));
     root.open = true;
     await opened();
     await waitFor(() => expect(active()).toBe(popup()));
     expect(document.querySelector('[data-highlighted]')).toBe(null);
   });
 
-  test('a key open that its parent does not apply leaves no highlight for a later open with a pointer', async () => {
-    let applies = false;
-    const root = heldOpen();
-    root['onUpdate:open'] = (open: boolean) => {
-      if (applies) root.open = open;
-    };
-    const { trigger } = await mountMenu({ root });
-    trigger.focus();
-    await userEvent.keyboard('{ArrowDown}');
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(popup()).toBe(null);
-    applies = true;
-    await userEvent.click(trigger);
+  test('a pointer open on another trigger of the handle before the first focus drops the highlight of an earlier key open', async () => {
+    const handle = Menu.createHandle();
+    await mountMenu({
+      root: { handle },
+      trigger: { id: 'first', handle },
+      detached: { id: 'second', handle },
+    });
+    const first = document.getElementById('first')!;
+    const second = document.getElementById('second')!;
+    first.focus();
+    first.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+    second.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        button: 0,
+        buttons: 1,
+        pressure: 0.5,
+        pointerType: 'mouse',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    second.dispatchEvent(
+      new PointerEvent('pointerup', {
+        button: 0,
+        pointerType: 'mouse',
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     await opened();
     await waitFor(() => expect(active()).toBe(popup()));
     expect(document.querySelector('[data-highlighted]')).toBe(null);
+    expect(popup()).toHaveAttribute('aria-labelledby', 'second');
   });
 
   test('Enter on another trigger of the handle gives the first focus to a menu that a hover opened', async () => {
@@ -434,6 +497,32 @@ describe('the trigger', () => {
     await waitFor(() => expect(active()).toBe(item('a')));
     expect(item('a')).toHaveAttribute('data-highlighted');
     expect(popup()).toHaveAttribute('aria-labelledby', 'second');
+  });
+
+  test('Enter on another trigger of the handle moves a press-opened menu with no highlight and no leaked edge', async () => {
+    const handle = Menu.createHandle();
+    const shown = reactive<Record<string, boolean>>({});
+    await mountMenu({
+      root: { handle, modal: false },
+      trigger: { id: 'first', handle },
+      detached: { id: 'second', handle },
+      shown,
+    });
+    await userEvent.click(document.getElementById('first')!);
+    await opened();
+    await placed();
+    const second = document.getElementById('second')!;
+    second.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(popup()).toHaveAttribute('aria-labelledby', 'second'));
+    expect(active()).toBe(second);
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
+    shown.popup = false;
+    await nextTick();
+    shown.popup = true;
+    await opened();
+    await waitFor(() => expect(active()).toBe(popup()));
+    expect(document.querySelector('[data-highlighted]')).toBe(null);
   });
 
   test('a key click gives the instant `click`, and Escape gives `dismiss`', async () => {
@@ -2509,7 +2598,7 @@ describe('more of the submenus', () => {
     }
   });
 
-  test('Enter and Space on the trigger of a submenu that a press opened leave the focus on the trigger', async () => {
+  test('Enter and Space on the trigger of a submenu that a press opened close the submenu and keep the focus on the trigger', async () => {
     for (const key of ['{Enter}', ' ']) {
       const { trigger, unmount } = await mountMenu({
         submenu: { trigger: { delay: 0, openOnHover: false } },
@@ -2520,10 +2609,10 @@ describe('more of the submenus', () => {
       await opened(subPopup);
       await waitFor(() => expect(active()).toBe(item('sub')));
       await userEvent.keyboard(key);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(subPopup(), key).not.toBe(null);
+      await closed(subPopup);
+      expect(popup(), key).not.toBe(null);
       expect(active(), key).toBe(item('sub'));
-      expect(item('s1'), key).not.toHaveAttribute('data-highlighted');
+      expect(item('sub'), key).toHaveAttribute('data-highlighted');
       unmount();
     }
   });

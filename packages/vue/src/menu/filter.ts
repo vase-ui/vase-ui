@@ -288,8 +288,8 @@ function inParent(menu: MenuContext, element: Element) {
 }
 
 /**
- * A key on the input clicks the highlighted item. On a submenu trigger, it opens the submenu with
- * its first item highlighted, as a key on a trigger that has the focus does.
+ * A key on the input clicks the highlighted item. On a submenu trigger, it opens a closed submenu
+ * or enters one that a hover opened, and closes one that a press opened.
  */
 function press(element: HTMLElement, event: KeyboardEvent) {
   const submenu = submenuOf(element);
@@ -297,7 +297,12 @@ function press(element: HTMLElement, event: KeyboardEvent) {
     dispatchClickWithModifiers(element, event);
     return;
   }
-  if (!submenu.disabled) submenu.openWithKey('first', 'trigger-press', event, element);
+  if (submenu.disabled) return;
+  if (!submenu.root.open || submenu.hoverOpen) {
+    submenu.openWithKey('first', 'trigger-press', event, element);
+  } else {
+    submenu.root.request(false, 'trigger-press', event, element);
+  }
 }
 
 /** The menu around the part, with its filter. A part of the filter with no filter throws an error. */

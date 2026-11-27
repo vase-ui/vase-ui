@@ -553,6 +553,7 @@ describe('more of the filter', () => {
 
   test.each([
     { key: '{Enter}', first: 'apple' },
+    { key: ' ', first: 'apple' },
     { key: '{ArrowDown}', first: 'apple' },
     { key: '{ArrowUp}', first: 'carrot' },
   ])(

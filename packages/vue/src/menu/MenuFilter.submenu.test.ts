@@ -379,6 +379,27 @@ describe('the press and the pointer', () => {
     expect(activeDescendant()).toBe('Move');
   });
 
+  test('Enter in the input closes a plain submenu that a press opened', async () => {
+    await mountOpen({
+      entries: [
+        {
+          key: 'Move',
+          kind: 'submenu',
+          trigger: { openOnHover: false },
+          items: entries('Documents', 'Downloads'),
+        },
+      ],
+    });
+    await userEvent.click(item('Move'));
+    await opened('Move');
+    expect(active()).toBe(input());
+    expect(activeDescendant()).toBe('Move');
+    await userEvent.keyboard('{Enter}');
+    await closed('Move');
+    expect(active()).toBe(input());
+    expect(activeDescendant()).toBe('Move');
+  });
+
   test('Right after a hover open of a plain submenu gives the focus to its first item', async () => {
     await mountOpen({
       entries: [

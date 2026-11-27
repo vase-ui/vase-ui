@@ -127,8 +127,8 @@ function onClick(event: MouseEvent) {
   const virtual = virtualPress || event.detail === 0;
   keyClick = false;
   virtualPress = false;
-  // A click with no press enters a submenu that a hover opened.
-  if (fromKey || (virtual && (!root.open || submenu.hoverOpen))) {
+  // A key click or a press of a screen reader opens the submenu, or enters one that a hover opened.
+  if ((fromKey || virtual) && (!root.open || submenu.hoverOpen)) {
     submenu.openWithKey('first', 'trigger-press', event, element.value);
     return;
   }
