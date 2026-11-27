@@ -626,7 +626,7 @@ function timeLossesOf(tables: readonly TimeTable[]): TimeLoss[] {
   );
 }
 
-/** The anchor of the section "Where Vase UI is larger, slower or fails a check" of the benchmarks page. */
+/** The anchor of the section "Where Vase UI is larger, slower or fails a check" of the benchmarks section. */
 export const LOSSES_ANCHOR = 'where-vase-ui-is-larger-slower-or-fails-a-check';
 
 /** The time metrics of each engine, as the ratio of each other Vue library to Vase UI. */

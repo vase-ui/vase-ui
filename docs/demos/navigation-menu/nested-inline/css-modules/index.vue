@@ -117,7 +117,7 @@ const CaretDownIcon: FunctionalComponent = () =>
       </NavigationMenu.Item>
 
       <NavigationMenu.Item>
-        <NavigationMenu.Link :class="styles.Trigger" :href="`${base}parity`">
+        <NavigationMenu.Link :class="styles.Trigger" :href="`${base}releases#parity-with-base-ui`">
           Parity
         </NavigationMenu.Link>
       </NavigationMenu.Item>

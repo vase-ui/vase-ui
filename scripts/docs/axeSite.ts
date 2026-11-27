@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { DEMO_VARIANT_STORAGE_KEY } from '../../docs/.vitepress/components/demoVariantStorageKey.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { serveBuiltSite, vueRequire } from './builtSite.ts';
+import { REDIRECTS } from './redirects.ts';
 
 // 1440 is a desktop width: the site shows the sidebar and the outline. 320 is the width of the
 // Reflow criterion of WCAG (1.4.10): the tables of the API reference scroll there.
@@ -72,11 +73,16 @@ declare const Temporal: {
 
 const DIST = join(REPOSITORY_ROOT, 'docs/.vitepress/dist');
 
-/** `components/dialog.html` is the page `/components/dialog`, as the site links it. */
+/**
+ * `components/dialog.html` is the page `/components/dialog`, as the site links it. The file of a
+ * redirect is not a page of the site: it sends the reader to a page.
+ */
 function listPages(): string[] {
+  const redirects = new Set(REDIRECTS.map(({ from }) => from));
   return readdirSync(DIST, { recursive: true, encoding: 'utf8' })
     .filter((file) => file.endsWith('.html') && !file.startsWith('assets'))
     .map((file) => `/${file.replace(/(^|\/)index\.html$/, '$1').replace(/\.html$/, '')}`)
+    .filter((page) => !redirects.has(page))
     .sort();
 }
 

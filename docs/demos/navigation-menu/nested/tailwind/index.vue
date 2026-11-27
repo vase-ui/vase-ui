@@ -38,12 +38,12 @@ const overviewLinks = [
     description: 'Install and assemble your first component.',
   },
   {
-    href: `${base}parity`,
+    href: `${base}releases#parity-with-base-ui`,
     title: 'Parity',
     description: 'See which components are complete and which are not started.',
   },
   {
-    href: `${base}thanks`,
+    href: `${base}community#thanks`,
     title: 'Thanks',
     description: 'Meet the people whose work Vase UI carries.',
   },

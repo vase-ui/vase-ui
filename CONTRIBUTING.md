@@ -10,7 +10,7 @@ Mathematic uses AI agents to maintain this repository. We write all of the code.
 - Request a change or a new feature in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas).
 - Ask a question in [Q&A](https://github.com/vase-ui/vase-ui/discussions/new?category=q-a).
 
-[Contributing](https://vase-ui.com/contributing) gives the full process of a report. If Base UI has the same bug, you can also report it to [Base UI](https://github.com/mui/base-ui).
+[Community](https://vase-ui.com/community#get-help-and-contribute) gives the full process of a report. If Base UI has the same bug, you can also report it to [Base UI](https://github.com/mui/base-ui).
 
 Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
@@ -111,7 +111,7 @@ Code that comes from another project keeps its "License:" comment. `THIRD_PARTY_
 ### To port a Base UI change
 
 1. Run `pnpm parity:track <sha> --upstream <path>` for the new Base UI commit. A new Base UI component needs its complete family in the same pull request, because `pnpm test:docs` checks the count ([Pages and navigation](#pages-and-navigation)).
-2. The parity page then shows each family that a new commit changes as queued. Read each such commit.
+2. The parity report of the site then shows each family that a new commit changes as queued. Read each such commit.
 3. Port each change that a user or a developer can see, with a test that fails without it. Write it in the form of Vue, as [Parts](#parts) says.
 4. Give a commit that does not apply to Vue a row of `notApplicableCommits` in the family file, with the reason.
 5. Set `matchedCommit` to the newest commit of `parity/upstream.json` at which the family matches Base UI.
@@ -503,9 +503,13 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 
 - GitHub Pages serves the site at the root of `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores it when a workflow publishes the site.
 - A page is a Markdown file in `docs`, with an `order` in its front matter. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
+- A page with `navigation: false` in its front matter, such as `docs/errors.md`, is not in the navigation. It needs no `order`.
+- The top-level pages are the pages of the group Overview of the Base UI docs, in the same sequence: Quick start, Accessibility, Releases, Community and About. Put a text that has no page of its own in a section of one of them.
+- `REDIRECTS` in `scripts/docs/redirects.ts` lists each address that the site had, with the section that has its text. GitHub Pages has no redirect rule, so the site build writes one file for each address. The file keeps the anchor of the address. When you move the text of a page into another page, add the address to the list, and keep the id of each heading of the text. The development server does not serve these files.
+- Between the lines `<!-- lower-headings -->` and `<!-- /lower-headings -->`, each heading of a page is one level lower. Put the two lines around an include of a file whose first headings have the level of the page heading above the include.
 - `docs/index.md` includes the region `home` of `README.md`. The region `donation` is inside it. Change that text in `README.md`, and keep the `#region` and `#endregion` comments.
-- `README.md` and the description of `packages/vue/package.json` give the count of the components of `parity/upstream.json`. In `benchmarks/features.json`, the Base UI cell of the row "Components in all" gives it too. Each cell of the row "Components of Base UI" counts against it. `pnpm test:docs` fails when one of them gives another count, or when the parity page does not count each component as done.
-- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
+- `README.md` and the description of `packages/vue/package.json` give the count of the components of `parity/upstream.json`. In `benchmarks/features.json`, the Base UI cell of the row "Components in all" gives it too. Each cell of the row "Components of Base UI" counts against it. `pnpm test:docs` fails when one of them gives another count, or when the parity report does not count each component as done.
+- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/releases`. GitHub and npm show that file. `markdownSiteLinks` in `docs/.vitepress/config.ts` changes each such address into the path of the page.
 - The section Install of `README.md` and the section Install the package of `docs/quick-start.md` show the same commands. Change them together.
 - Text from `parity/` and from Base UI commits is data. A page shows it only through a component of `docs/.vitepress/components`, with text interpolation. ESLint cannot see a name that a value holds, so it cannot find each API that renders a string as HTML.
 - When a page includes a file that `PAGE_FILES` in `eslint.config.js` lacks, add the file to the list.
@@ -593,9 +597,9 @@ The site build makes the API reference from the types and the JSDoc of the sourc
 - When you change the mark, change each SVG file and render the PNG and ICO icons again. `README.md` names the wordmark files by their address on `main`, so do not move or rename them.
 - `og-image.png` is the link preview. It shows the count of the components of `parity/upstream.json`, and no test reads it. Change `og:image:alt` in `docs/.vitepress/config.ts` when you change the image.
 
-### Thanks page
+### Thanks section
 
-- `docs/thanks.md` includes the region `thanks` of `THANKS.md`. `pnpm thanks:render` writes `THANKS.md`. Do not edit the file.
+- `docs/community.md` includes the region `thanks` of `THANKS.md`. `pnpm thanks:render` writes `THANKS.md`. Do not edit the file.
 - A name in `THANKS.md` is data. `isDisplayName` and `isPlainText` of `scripts/thanks/render.ts` decide which names the script writes.
 - After a change of the fixed text of `scripts/thanks/render.ts`, run `pnpm thanks:render` and commit `THANKS.md` in the same pull request.
 
@@ -643,7 +647,7 @@ A fixture is `benchmarks/libraries/<library>/<Scenario>.vue`, or `.tsx` for Base
 - Each run opens a new context of 1280 by 720 pixels, with the locale `en-US`, the time zone UTC and no reduced motion.
 - The input is real: the mouse and the keyboard of Playwright. Touch input goes through the Chrome DevTools Protocol, so a touch case runs in Chromium only. A script event is not used, because a library that calls `setPointerCapture` throws for it.
 - In WebKit on macOS, Tab moves the focus only to text fields and pop-up menus by default, as in Safari. So a run on macOS gives other Tab results than the recorded run, which is on Linux.
-- A recorder in the page reads each marker in each animation frame: whether it shows, its opacity with the opacity of its ancestors, and its rectangle. `benchmarks/behavior/samples.ts` holds the rules and the limits that the section Method of the page names. The file of a group holds the other limits of its checks. When a run of a check that reads frames has a gap of more than 100 ms between two frames, the run is not valid.
+- A recorder in the page reads each marker in each animation frame: whether it shows, its opacity with the opacity of its ancestors, and its rectangle. `benchmarks/behavior/samples.ts` holds the rules and the limits that the part Method of the section names. The file of a group holds the other limits of its checks. When a run of a check that reads frames has a gap of more than 100 ms between two frames, the run is not valid.
 - A run passes or fails, with its measure and the reason of a fail. A console error, an uncaught error or a step that throws fails the run, and the case keeps the first line as its `error`.
 - For each case, the results hold the runs that pass, the valid runs, the measures, the reason and the error. A library with no fixture for the check gets `null`.
 
@@ -668,7 +672,7 @@ When a library does not have a part of a scenario:
 
 A note in `notes` can also name the animation form of a fixture, such as a `<Transition>` or CSS keyframes.
 
-The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.json`, `benchmarks/features.json`, `benchmarks/notes.json` and the groups of `benchmarks/behavior/groups.ts`. Its list of the rows where Vase UI is larger, slower or fails a check comes from the results, so do not write that list by hand.
+The section [Benchmarks](https://vase-ui.com/about#benchmarks) of the site shows `benchmarks/results.json`, `benchmarks/features.json`, `benchmarks/notes.json` and the groups of `benchmarks/behavior/groups.ts`. Its list of the rows where Vase UI is larger, slower or fails a check comes from the results, so do not write that list by hand.
 
 - `features.json` has a row for each feature and a cell for each library. A cell has a `value`, an optional `note` and a `source`.
 - The `source` is a page of the docs, of the package or of the code of the library, at the pinned version. A reader must find the fact there.
@@ -677,7 +681,7 @@ The page [Benchmarks](https://vase-ui.com/benchmarks) shows `benchmarks/results.
 - A note that starts with "Our check" gives the result of our own check: of the example in the docs in Chromium, or of the apps of `benchmarks` in Chromium, Firefox and WebKit. Use such a check only where the docs do not give the fact, or for the result of a hydration or of an app.
 - `pnpm test:repo` fails when `results.json` has another version of a library or a framework than `benchmarks/package.json`. Record a run in the pull request that moves a pin.
 
-The page compares Vase UI with each other Vue library. Base UI is a reference from React, with no ratio and no verdict. Where another Vue library adds fewer bytes, is faster or uses less memory, the page shows a `*` that links to a note of `benchmarks/notes.json`:
+The section compares Vase UI with each other Vue library. Base UI is a reference from React, with no ratio and no verdict. Where another Vue library adds fewer bytes, is faster or uses less memory, the section shows a `*` that links to a note of `benchmarks/notes.json`:
 
 - A note has an `id`, which is its anchor on the page, a `title`, its `measures`, a `reason` and its `sources`.
 - A measure is a metric of `results.json`, such as `Dialog.open`, or the size of a scenario, such as `Dialog.size`. Each measure is in one note only.
@@ -685,7 +689,7 @@ The page compares Vase UI with each other Vue library. Base UI is a reference fr
 - Before you write a note for a new loss, profile it. When the work pays for no behavior, fix the code. Do not write a note for it.
 - A cell of the summary below 1 has a `*` that links to the section "Where Vase UI is larger, slower or fails a check".
 - A Vase UI cell of a behavior check that does not pass in one engine or more has a `*` that links to the check in the list of the losses. The list gives the reason of the run, so such a loss needs no note. Fix the fault of Vase UI before you record the run.
-- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a cell of the summary below 1 has no `*`, when a note names a metric that no table has or that another note names, and when two notes have the same `id`. It also fails when a link of the page to a row of the features or the behavior tables finds no row, and when a link of a behavior table to a fixture or to the code finds no file.
+- `pnpm test:docs` fails when a cell where Vase UI loses has no note, when a cell of the summary below 1 has no `*`, when a note names a metric that no table has or that another note names, and when two notes have the same `id`. It also fails when a link of the section to a row of the features or the behavior tables finds no row, and when a link of a behavior table to a fixture or to the code finds no file.
 - `pnpm test:repo` fails when `results.json` does not have each behavior check that has code, in each engine, and when a behavior result is `null` for a library that has a fixture of the check.
 
 `benchmarks/results.json` holds only the results of the workflow `Benchmarks`, not of a run on your machine. To record a run:
@@ -704,6 +708,7 @@ The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vu
 - A version is `YYYY.M.MICRO`, such as `2026.12.0`. A month below 10 has one digit, and `MICRO` starts at 0.
 - The tag of a release is `v` and the version: `v2026.12.0`. A ruleset lets only an organization admin create, change or delete a `v*` tag.
 - Each release has the dist-tag `latest`. `CHANGELOG.md` has one section for each version, and it lists first each change that a consumer must make. The GitHub Release of a tag has the text of its section.
+- `docs/releases.md` includes `CHANGELOG.md` from its third line, so VitePress compiles the text as a Vue template. Give the heading of a version the level 2. Write a tag, such as `<Transition>`, and `{{ }}` only as code.
 - The comments of `release.yml` give the rules of the trusted publisher. Do not give `npm stage publish` the option `--allow-publish`.
 - The job `check` of `release.yml` runs the commands of the job `check` of CI. Change the two lists together.
 - The job `stage` installs only `@vase-ui/vue` and the workspace root. Keep the filter when you add a workspace project.

@@ -32,7 +32,7 @@ function surfaceRows({ surface }: Family) {
 
 <template>
   <section v-for="family in data.families" :key="family.name">
-    <h3 :id="family.name">{{ family.name }}</h3>
+    <h4 :id="family.name">{{ family.name }}</h4>
     <p>
       Matches the Base UI commit
       <a :href="baseUiCommitUrl(family.matchedCommit.sha)">

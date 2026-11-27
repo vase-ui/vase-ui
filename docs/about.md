@@ -1,6 +1,7 @@
 ---
 order: 5
-description: The features, the behavior, the size and the render time of Vase UI and of other component libraries.
+description: The principles of Vase UI, the browsers and the Vue versions that it supports, and its benchmarks against other component libraries.
+outline: [2, 4]
 ---
 
 <script setup lang="ts">
@@ -14,17 +15,44 @@ import BenchmarksSpeed from './.vitepress/components/BenchmarksSpeed.vue';
 import BenchmarksTime from './.vitepress/components/BenchmarksTime.vue';
 </script>
 
-# Benchmarks
+# About Vase UI
 
-This page compares Vase UI with other unstyled component libraries: the features of each library, its behavior with real input, the size of an app that uses it, and the time that the app takes to render. The site build makes the tables from `benchmarks/results.json`, `benchmarks/features.json`, `benchmarks/notes.json` and the checks of `benchmarks/behavior` of the repository.
+Vase UI is a library of unstyled Vue components. It is a port of [Base UI](https://base-ui.com) to Vue. Vase UI is an independent project. It is not affiliated with MUI.
+
+## Principles
+
+We build Vase UI around six principles:
+
+- **Robust foundations.** We build on Base UI’s engineering and the years of experience behind its design decisions. Carrying that work forward gives Vase a strong foundation for reliable components.
+- **Idiomatic Vue.** Base UI is built for React; Vase is built for Vue. We adapt its ideas to Vue’s compiler and reactivity model, keeping our components simple and using abstractions where they make sense for Vue.
+- **Measurement before abstraction.** We let the browser do what it already does well. Before adding an abstraction, we measure native behavior to understand where it meets our needs and where it falls short. Our measurement tests track that behavior across browsers, so we know when a browser change lets us remove a workaround—or requires us to introduce one.
+- **API evolution over legacy constraints.** We prioritize correctness and usability over preserving past decisions indefinitely. AI-assisted migrations can reduce the cost of change, strengthening the case for improving APIs instead of carrying their limitations forward. We evolve Vase’s API with that goal in mind, embracing Vue’s capabilities, including Vapor.
+- **Testing is non-negotiable.** We use Vase in enterprise applications, where incorrect behavior can have real financial consequences. Our tests verify the contracts our components expose. Those contracts may evolve, but developers must be able to depend on the behavior we promise.
+- **Consistency across browsers.** We care about the experience of users on every major browser. We test our components across those browsers and use pragmatic abstractions to address differences that affect their behavior. Cross-browser support is a commitment we verify continuously.
+
+## Browser support
+
+Vase UI needs a browser that has the web platform features that are [Baseline Widely available](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility). Each component has tests in Chromium, Firefox and WebKit.
+
+The date and time components need the global `Temporal`. Where the JavaScript engine does not have it, load a [polyfill](/handbook/dates-and-times#polyfill).
+
+## Vue versions
+
+Vase UI needs Vue 3.5.46 or later. `vue` is a peer dependency of the package.
+
+An application in [Vapor mode](/handbook/composition#vapor-mode) renders the parts with the `vaporInteropPlugin` of Vue.
+
+## Benchmarks
+
+This section compares Vase UI with other unstyled component libraries: the features of each library, its behavior with real input, the size of an app that uses it, and the time that the app takes to render. The site build makes the tables from `benchmarks/results.json`, `benchmarks/features.json`, `benchmarks/notes.json` and the checks of `benchmarks/behavior` of the repository.
 
 <BenchmarksRun />
 
-## Summary
+### Summary
 
 Vase UI is a port of Base UI to Vue. It gives the users and the developers of an app these behaviors:
 
-- Vase UI has each component of Base UI, and a Vase UI test runs each Base UI test case that applies to Vue ([Components of Base UI](#feature-components-of-base-ui), [Parity](/parity)).
+- Vase UI has each component of Base UI, and a Vase UI test runs each Base UI test case that applies to Vue ([Components of Base UI](#feature-components-of-base-ui), [Parity](/releases#parity-with-base-ui)).
 - A dialog or a drawer can open from another one, and the one below gets a style hook while the one on top is open ([dialogs](#feature-a-style-hook-on-a-dialog-while-a-dialog-on-top-of-it-is-open), [drawers](#feature-a-style-hook-on-a-drawer-while-a-drawer-on-top-of-it-is-open)).
 - A touch outside an open popup closes it only at a tap, so a touch that scrolls the page closes no popup ([Popover](/components/popover#differences-behavior)).
 - Toasts have a manager that a script calls, a stack, a limit, a swipe to close, and an announcement at once of an important toast ([Toast](#feature-a-toast-manager-that-a-script-calls), [swipe](#behavior-toasts-swipe-closes), [announcement](#behavior-toasts-important-is-assertive)).
@@ -42,7 +70,7 @@ The second table gives the time of each other Vue library over the time of Vase 
 A cell is the geometric mean of the ratios of all time measures of the two setups. It also gives the count of measures where Vase UI is faster.
 A `*` marks each cell below 1, where the other library is faster. It links to the list of the losses ([Where Vase UI is larger, slower or fails a check](#where-vase-ui-is-larger-slower-or-fails-a-check)).
 
-## How to read the numbers
+### How to read the numbers
 
 - We measure each Vue library in two setups. A virtual DOM app is a Vue 3.5 app of `createApp`. A Vapor app is a Vue 3.6 app of `createVaporApp`.
 - Each library on this page is made of virtual DOM components. A Vapor app renders them through `vaporInteropPlugin`, so each app of a library in that setup also holds the runtime of the plugin.
@@ -58,13 +86,13 @@ A `*` marks each cell below 1, where the other library is faster. It links to th
 - PrimeVue 5 needs a license key, so this page does not measure it.
 - Vase UI is not affiliated with the other projects.
 
-## Features
+### Features
 
 Each cell links to its source: the docs or the package of the library, at the measured version. A note that starts with "Our check" gives the result of our own check of the example in the docs, or of the apps on this page. [Method](#method) tells how we check. "No" means that the docs do not give the feature, or that our check failed. A feature that a behavior check measures has no row here ([Behavior](#behavior)).
 
 <BenchmarksFeatures />
 
-## Behavior
+### Behavior
 
 Each row is a check that we run in Chromium, Firefox and WebKit with real input: the mouse, the keyboard and the touch input of Playwright. The expectation of each row comes from a standard or a platform, such as the WAI-ARIA Authoring Practices or the HTML Standard. In each row, "Expectation" links to that source, and "Code" links to the code of the check.
 
@@ -76,87 +104,87 @@ Each row is a check that we run in Chromium, Firefox and WebKit with real input:
 - A fact row gives a value and no verdict.
 - Base UI is a React library. Its column is a reference, and the page does not compare it with Vase UI.
 
-### Nested dialogs
+#### Nested dialogs
 
 <BenchmarksBehavior group="nested-dialogs" />
 
-### Drawers
+#### Drawers
 
 <BenchmarksBehavior group="drawers" />
 
-### Toasts
+#### Toasts
 
 <BenchmarksBehavior group="toasts" />
 
-### Resizable panels
+#### Resizable panels
 
 <BenchmarksBehavior group="resizable-panels" />
 
-### Dates and times
+#### Dates and times
 
 <BenchmarksBehavior group="dates-and-times" />
 
-### Popup animations
+#### Popup animations
 
 <BenchmarksBehavior group="popup-animations" />
 
-## Size
+### Size
 
 Each app renders one component of one library, with the parts of the example in the docs of the library. The row "All ten components" renders each of the ten components once. The bytes are the sum of the JavaScript and CSS files of the production build. They count the app, the library, the dependencies of the library and the framework. The tables show gzip bytes. Open "Raw bytes" or "Brotli bytes" below a table for the other measures.
 
-### App size
+#### App size
 
 The first row is the empty app of each setup: the framework and one button. The empty app of the Vapor app has no interop plugin.
 
 <BenchmarksSize measure="app" />
 
-### Size that a component adds
+#### Size that a component adds
 
 Each cell is the app minus the empty app of its setup.
 
 <BenchmarksSize measure="added" />
 
-## Render time
+### Render time
 
 Each table gives one engine and one setup. Chromium runs with its CPU four times slower, which is the setting of Lighthouse for a phone of the middle class. Firefox and WebKit run with no CPU slowdown, because Playwright has no such control for them. Firefox and WebKit are the builds of Playwright for Linux, not the releases of Firefox and Safari.
 
-### Mount 100 instances
+#### Mount 100 instances
 
 The time from the start of the app to 100 instances of the component in the document.
 
 <BenchmarksTime group="mount" />
 
-### Open and close a popup
+#### Open and close a popup
 
 A click on the trigger opens Dialog and Popover. ArrowDown on the focused trigger opens Menu and Select, and ArrowDown on the focused input opens Combobox. A real Escape press closes each popup.
 
 <BenchmarksTime group="popup" />
 
-### A list of 1,000 options
+#### A list of 1,000 options
 
 Select and Combobox open with 1,000 options. Then ArrowDown moves the highlight. Then the filter `9` of Combobox leaves 271 options.
 
 <BenchmarksTime group="list" />
 
-### Hydration
+#### Hydration
 
 The time to hydrate the server HTML of the app of all ten components.
 
 <BenchmarksTime group="hydration" />
 
-### Memory
+#### Memory
 
 The heap that the mount of 100 instances adds in Chromium, after a garbage collection. Playwright gives no heap measure in Firefox and WebKit.
 
 <BenchmarksTime group="memory" />
 
-## Where Vase UI is larger, slower or fails a check
+### Where Vase UI is larger, slower or fails a check
 
 The site build makes this list from the tables above. It has each row where another Vue library adds fewer gzip bytes than Vase UI. The percent is the difference divided by the bytes of the other library. It also has each time or memory cell that reads "Faster" or "Less". Each group starts with the behavior that costs the bytes, the time or the memory. The last table has each behavior check that Vase UI does not pass in one engine or more, with the reason and the other Vue libraries that pass it.
 
 <BenchmarksLosses />
 
-## Method
+### Method
 
 - **Build.** Vite builds each app with its defaults for production, into one JavaScript file, with no module preload polyfill. Each app has one copy of its framework.
 - **Bytes.** The size is the sum of the bytes of each `.js` and `.css` file of the app. The compressed sizes come from the default levels of gzip and Brotli in Node.js. The results also record the versions of zlib and Brotli.

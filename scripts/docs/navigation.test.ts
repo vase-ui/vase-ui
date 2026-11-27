@@ -105,6 +105,14 @@ for (const { name, files } of [
   { name: 'the folder public', files: { 'public/page.md': page('Public', 1) } },
   { name: 'the folder node_modules', files: { 'node_modules/page.md': page('Module', 1) } },
   { name: 'a file that is not Markdown', files: { 'notes.txt': '# Notes\n' } },
+  {
+    name: 'a page with `navigation: false` in its front matter',
+    files: { 'errors.md': '---\nnavigation: false\n---\n\n# Errors\n' },
+  },
+  {
+    name: 'a page of a group with `navigation: false` in its front matter',
+    files: { 'guides/hidden.md': '---\nnavigation: false\n---\n\n# Hidden\n' },
+  },
 ]) {
   test(`the navigation leaves out ${name}`, () => {
     const root = makeDocs({ 'kept.md': page('Kept', 1), ...files });
@@ -131,6 +139,10 @@ for (const { name, text } of [
   { name: 'front matter with no order', text: '---\ndescription: Use it.\n---\n\n# Use\n' },
   { name: 'an order that is not a whole number', text: '---\norder: first\n---\n\n# Use\n' },
   { name: 'an order after the end of the front matter', text: '---\n---\n\norder: 1\n\n# Use\n' },
+  {
+    name: '`navigation: false` after the end of the front matter',
+    text: '---\n---\n\nnavigation: false\n\n# Use\n',
+  },
 ]) {
   test(`a listed page with ${name} throws and names the file`, () => {
     const root = makeDocs({ 'use.md': text });

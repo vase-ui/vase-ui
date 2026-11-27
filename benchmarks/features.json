@@ -268,7 +268,7 @@
             "vase-ui": {
               "value": "yes",
               "note": "Our check: each app hydrates with no message.",
-              "source": "https://vase-ui.com/handbook/server-rendering"
+              "source": "https://vase-ui.com/quick-start#server-rendering"
             },
             "reka-ui": {
               "value": "yes",
@@ -409,7 +409,7 @@
             "vase-ui": {
               "value": "yes",
               "note": "`@vase-ui/vue/nuxt`.",
-              "source": "https://vase-ui.com/handbook/nuxt"
+              "source": "https://vase-ui.com/quick-start#nuxt"
             },
             "reka-ui": {
               "value": "yes",
@@ -871,7 +871,7 @@
           "cells": {
             "vase-ui": {
               "value": "37 of 37",
-              "source": "https://vase-ui.com/parity"
+              "source": "https://vase-ui.com/releases#parity-with-base-ui"
             },
             "reka-ui": {
               "value": "33 of 37",

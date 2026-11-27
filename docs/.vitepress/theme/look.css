@@ -212,6 +212,12 @@ body {
   font-size: 1rem;
 }
 
+/* A heading of level 5 or 6 is the title of a table or of a list below a heading of level 4. */
+.vp-doc h5,
+.vp-doc h6 {
+  font-size: var(--vase-font-size-14);
+}
+
 /* The intro line under the title is the subtitle of a Base UI page. */
 .vp-doc h1 + p {
   margin: -0.75rem 0 1.5rem;

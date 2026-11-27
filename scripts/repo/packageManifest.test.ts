@@ -42,14 +42,15 @@ test('the job `test-vue-floor` of CI installs the lowest version of the peer ran
   assert.deepEqual(installed, [floor]);
 });
 
-test('docs/quick-start.md names the lowest version of the peer range', () => {
-  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/quick-start.md');
-  const versions: string[] = page.match(/\d+(?:\.\d+)+/g) ?? [];
-  assert.ok(
-    floor !== undefined && versions.includes(floor),
-    `The page names these versions: ${versions.join(', ')}.`,
-  );
-});
+for (const file of ['docs/quick-start.md', 'docs/about.md']) {
+  test(`${file} gives the lowest version of the peer range as the version that Vase UI needs`, () => {
+    const page = readRepositoryFile(REPOSITORY_ROOT, file);
+    const versions = [...page.matchAll(/Vue (\d+\.\d+\.\d+) or later/g)].map(
+      ([, version]) => version,
+    );
+    assert.deepEqual(versions, [floor]);
+  });
+}
 
 test('CONTRIBUTING.md names the lowest version of the peer range', () => {
   const guide = readRepositoryFile(REPOSITORY_ROOT, 'CONTRIBUTING.md');

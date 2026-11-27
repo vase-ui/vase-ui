@@ -55,7 +55,7 @@ export const audienceMenus = [
       'Use the docs to align on quality bars, upgrades, and extension points while still leaving teams space to customize.',
     links: [
       {
-        href: `${base}parity`,
+        href: `${base}releases#parity-with-base-ui`,
         title: 'Parity',
         description:
           'Track which changes are mirrored and which are queued before upgrades surprise teams.',

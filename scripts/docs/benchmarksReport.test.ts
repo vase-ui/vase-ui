@@ -701,8 +701,8 @@ test('each cell of the summary below 1 has a * that links to the losses', () => 
       .map((speed) => `${engine} ${speed.library}`),
   );
   assert.deepEqual(unmarked, []);
-  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
-  const headings = [...page.matchAll(/^## (.+)$/gm)].map((match) => anchorOf(match[1] ?? ''));
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/about.md');
+  const headings = [...page.matchAll(/^### (.+)$/gm)].map((match) => anchorOf(match[1] ?? ''));
   assert.ok(headings.includes(LOSSES_ANCHOR));
 });
 
@@ -724,8 +724,8 @@ test('each note, each table row and each behavior loss has an anchor of its own'
   );
 });
 
-test('each link of the benchmarks page to a feature row or a behavior row finds the row', () => {
-  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
+test('each link of the benchmarks section to a feature row or a behavior row finds the row', () => {
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/about.md');
   const ids = new Set(rowAnchors);
   const links = [...page.matchAll(/\]\(#((?:feature|behavior)-[a-z0-9-]+)\)/g)].map(
     (match) => match[1],
@@ -739,10 +739,10 @@ test('each link of the benchmarks page to a feature row or a behavior row finds 
 });
 
 // The summary links each group by its id, so the heading of each group has the id as its anchor.
-test('the benchmarks page has a heading and a table for each behavior group', () => {
-  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/benchmarks.md');
+test('the benchmarks section has a heading and a table for each behavior group', () => {
+  const page = readRepositoryFile(REPOSITORY_ROOT, 'docs/about.md');
   const sections = [
-    ...page.matchAll(/^### (.+)\n\n<BenchmarksBehavior group="([a-z-]+)" \/>$/gm),
+    ...page.matchAll(/^#### (.+)\n\n<BenchmarksBehavior group="([a-z-]+)" \/>$/gm),
   ].map((match) => [anchorOf(match[1] ?? ''), match[2]]);
   assert.deepEqual(
     sections,

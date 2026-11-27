@@ -41,7 +41,7 @@ test('the description of the package gives the count of parity/upstream.json, an
   );
 });
 
-test('the parity page counts each component of parity/upstream.json as complete', () => {
+test('the parity report counts each component of parity/upstream.json as complete', () => {
   const { done, total } = countComponents(families, upstream.components);
   assert.deepEqual(
     { done, total },

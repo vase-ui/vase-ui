@@ -1,13 +1,19 @@
 ---
-order: 7
-description: Report bugs, request features and ask questions about Vase UI.
+order: 4
+description: Where to get help with Vase UI, how to report a bug, request a feature and donate, and the people whose work Vase UI carries.
 ---
 
-# Contributing
+# Community
+
+Where to get help, how to contribute and donate, and the people whose work Vase UI carries.
+
+## Get help and contribute
+
+Vase UI uses [GitHub Discussions](https://github.com/vase-ui/vase-ui/discussions) for questions, bug reports and ideas.
 
 A clear report with a reproduction is the best way to help Vase UI. Mathematic writes all of the code with AI agents. GitHub lets only collaborators open a pull request.
 
-## Report a bug
+### Report a bug
 
 Open a discussion in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?category=bugs).
 
@@ -20,11 +26,11 @@ Open a discussion in [Bugs](https://github.com/vase-ui/vase-ui/discussions/new?c
 
 Vase UI is a port of Base UI. If Base UI has the same bug, you can also report it to [Base UI](https://github.com/mui/base-ui).
 
-## Request a feature or ask a question
+### Request a feature or ask a question
 
 Request a change or a new feature in [Ideas](https://github.com/vase-ui/vase-ui/discussions/new?category=ideas). Ask a question in [Q&A](https://github.com/vase-ui/vase-ui/discussions/new?category=q-a).
 
-## What happens next
+### What happens next
 
 An AI agent reads each new discussion in Bugs and Ideas.
 
@@ -38,6 +44,16 @@ The agent answers in the discussion from the maintainer's account. Each reply in
 
 The reply says when the fix reaches users. We publish package fixes in releases of `@vase-ui/vue`. We publish site fixes when we deploy the site.
 
-## Report a security problem
+### Report a security problem
 
 Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new). See our [security policy](https://github.com/vase-ui/vase-ui/blob/main/SECURITY.md) for the details to include.
+
+<!--@include: ../README.md#donation-->
+
+## Thanks
+
+<!-- lower-headings -->
+
+<!--@include: ../THANKS.md#thanks-->
+
+<!-- /lower-headings -->

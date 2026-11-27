@@ -1,5 +1,5 @@
 ---
-order: 3
+order: 2
 description: How Vase UI components help you make an accessible app, and what your app adds.
 ---
 

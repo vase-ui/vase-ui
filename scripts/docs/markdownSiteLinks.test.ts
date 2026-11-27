@@ -22,20 +22,20 @@ const render = (source: string, path = join(DOCS_ROOT, 'page.md')) =>
   md.renderAsync(source, { path, cleanUrls: config.cleanUrls });
 
 test('a link to a page of the site, by its full address, is a link by path in the same tab', async () => {
-  const html = await render('[The parity page](https://vase-ui.com/parity)');
+  const html = await render('[Releases](https://vase-ui.com/releases#release-notes)');
 
-  assert.equal(html.trim(), `<p><a href="${BASE}parity">The parity page</a></p>`);
+  assert.equal(html.trim(), `<p><a href="${BASE}releases#release-notes">Releases</a></p>`);
 });
 
 test('a link to another address keeps its address, also when its host starts with the host of the site', async () => {
-  const html = await render('[Other](https://vase-ui.community/parity)');
+  const html = await render('[Other](https://vase-ui.community/releases)');
 
-  assert.ok(html.includes('<a href="https://vase-ui.community/parity"'));
+  assert.ok(html.includes('<a href="https://vase-ui.community/releases"'));
 });
 
-test('the home page links its parity page by path', async () => {
+test('the home page links the parity report by path', async () => {
   const path = join(DOCS_ROOT, 'index.md');
   const html = await render(readFileSync(path, 'utf8'), path);
 
-  assert.ok(html.includes(`<a href="${BASE}parity">`));
+  assert.ok(html.includes(`<a href="${BASE}releases#parity-with-base-ui">`));
 });

@@ -1,5 +1,5 @@
 ---
-order: 7
+navigation: false
 description: The text of each error code that a production build of Vase UI gives.
 ---
 

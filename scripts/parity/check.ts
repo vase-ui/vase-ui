@@ -22,7 +22,7 @@ export interface ParityCheckRun {
   result: CheckResult;
 }
 
-/** Runs the check of `pnpm parity:check`. It gives the files that it read, so that the parity page does not read them again. */
+/** Runs the check of `pnpm parity:check`. It gives the files that it read, so that the parity report does not read them again. */
 export function runParityCheck(root = REPOSITORY_ROOT): ParityCheckRun {
   const rowCache = new Map<string, TestRow[]>();
   let project: VaseProject | undefined;
