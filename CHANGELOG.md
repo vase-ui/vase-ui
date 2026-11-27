@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.11.13
+
+Same Base UI release and commit as 2026.11.12.
+
+### Fixed
+
+- A press on a toast, or on another live region or alert, no longer closes the `Dialog` or `Drawer` under it. This holds when `modal` is `true` (the default) or `'trap-focus'`. It holds for a mouse press, a touch, and Enter or Space on a button of the toast. Base UI does the same for `modal` `true`. From 2026.11.2 to 2026.11.12, such a press closed the popup, with the reason `outside-press`. This happened when the toast viewport was in the page before the popup opened. A `Popover`, a `Menu`, a `Select`, a `Combobox`, a `ContextMenu`, and a `Dialog` or a `Drawer` with `modal` `false` still close at such a press. ([#900](https://github.com/vase-ui/vase-ui/pull/900))
+
+### Size
+
+The sums of the sizes of the public entries, each built with Vue as an external module:
+
+| Measure | 2026.11.12 (B) | 2026.11.13 (B) |
+| ------- | -------------: | -------------: |
+| Raw     |      2,308,194 |      2,310,730 |
+| gzip    |        758,684 |        759,593 |
+| Brotli  |        661,791 |        662,588 |
+
 ## 2026.11.12
 
 Same Base UI release and commit as 2026.11.11.
