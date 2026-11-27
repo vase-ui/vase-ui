@@ -77,7 +77,7 @@ Import the component and assemble its parts:
 - <kbd>F6</kbd> moves the focus into the landmark region of the toast viewport, so that users can move between the toasts with the keyboard. Press <kbd>F6</kbd> again to move the focus back to where it was.
 - <kbd>Esc</kbd> closes the toast that has the focus. After <kbd>F6</kbd>, <kbd>Esc</kbd> elsewhere in the viewport moves the focus back to where it was. A popup under the toasts, such as a dialog, stays open for that press.
 - Add the `data-vase-ui-swipe-ignore` attribute to an element in a toast to stop the swipe to dismiss on that element. An interactive element does not start a swipe.
-- The toasts stay in use under a modal popup, such as a dialog, and a screen reader announces them. A press on a toast does not close a dialog or a drawer under it that has `modal` `true` or `'trap-focus'`. A popover, a menu, or a dialog that is not modal closes at that press, as at each press outside.
+- The toasts stay in use under a modal popup, such as a dialog, and a screen reader announces them. A press on a toast does not close a dialog or a drawer under it with `modal` `true` or `'trap-focus'`. A popover, a menu, a select, a combobox, or a dialog or a drawer with `modal` `false` closes at that press.
 
 ## Global manager
 

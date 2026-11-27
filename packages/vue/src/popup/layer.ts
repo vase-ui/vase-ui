@@ -60,9 +60,8 @@ export interface Layer {
 export type LayerRules = Omit<Layer, 'root'>;
 
 /**
- * The live regions and the alerts. A layer that hides the rest of the page leaves them in use at
- * each place of the document, so that the page announces its messages, such as toasts, under a
- * modal popup.
+ * The live regions and the alerts. A modal layer leaves them in use, so that the page announces
+ * its messages, such as toasts, under the popup.
  */
 export const LIVE = '[aria-live]:not([aria-live="off"]), [role="alert"]';
 
@@ -364,16 +363,20 @@ function closeOutside(event: Event, entries: Entry[]) {
   }
 }
 
+/** The event path has a live region or an alert. */
+function isOnLive(path: readonly EventTarget[]) {
+  return path.some((node) => isElement(node) && node.matches(LIVE));
+}
+
 /** The entries that a press is outside of, from the top one. */
 function outsideEntries(event: Event) {
   const path = event.composedPath();
-  const onLive = path.some((node) => isElement(node) && node.matches(LIVE));
   return fromTop().filter((entry) => {
     const { outsidePress } = entry.layer;
     return (
       outsidePress &&
-      !(onLive && outsidePress === 'except-live') &&
       !isPathInside(entry, path) &&
+      !(outsidePress === 'except-live' && isOnLive(path)) &&
       !isAddedElement(entry, path)
     );
   });
